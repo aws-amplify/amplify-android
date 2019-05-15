@@ -16,12 +16,17 @@
 package com.amplifyframework.core;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
+import com.amplifyframework.analytics.AnalyticsCategory;
+import com.amplifyframework.api.APICategory;
+import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
+import com.amplifyframework.core.exception.MismatchedProviderException;
 import com.amplifyframework.core.exception.NoSuchProviderException;
 import com.amplifyframework.core.provider.Category;
 import com.amplifyframework.core.provider.Provider;
+import com.amplifyframework.logging.LoggingCategory;
+import com.amplifyframework.storage.StorageCategory;
 
 import org.json.JSONObject;
 
@@ -29,6 +34,20 @@ import java.util.Collection;
 import java.util.HashMap;
 
 public class Amplify {
+
+    public static final AnalyticsCategory Analytics;
+    public static final APICategory API;
+    public static final AuthCategory Auth;
+    public static final LoggingCategory Logging;
+    public static final StorageCategory Storage;
+
+    static {
+        Analytics = null;
+        API = null;
+        Auth = null;
+        Logging = null;
+        Storage = null;
+    }
 
     /**
      * Map of {Category, {providerClass, providerObject}}.
@@ -74,7 +93,7 @@ public class Amplify {
         }
     }
 
-    public static <P extends Provider> void add(P provider) {
+    public static <P extends Provider> void addProvider(P provider) throws MismatchedProviderException {
         synchronized (LOCK) {
             HashMap<Class<? extends Provider>, Provider> providersOfCategory = providers.get(provider.getCategory());
             if (providersOfCategory == null) {
@@ -84,7 +103,7 @@ public class Amplify {
         }
     }
 
-    public static <P extends Provider> void remove(P provider) {
+    public static <P extends Provider> void removeProvider(P provider) {
         synchronized (LOCK) {
             providers.get(provider.getCategory()).remove(provider.getClass());
         }
