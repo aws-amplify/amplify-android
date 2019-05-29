@@ -15,7 +15,7 @@
 
 package com.amplifyframework.core.exception;
 
-public class AmplifyException extends RuntimeException {
+public class AmplifyException extends Exception {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;

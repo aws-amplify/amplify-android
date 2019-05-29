@@ -1,1 +1,1 @@
-include ':amplify-core'
+include ':amplify-core', ':amplify-sample-app', ':aws-amplify-analytics-pinpoint'

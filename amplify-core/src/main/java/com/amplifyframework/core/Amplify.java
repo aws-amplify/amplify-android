@@ -33,14 +33,14 @@ import com.amplifyframework.storage.StorageCategory;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Amplify class lets you configure your project with the information
- * from amplifyconfiguration.json.
+ * The Amplify System has the following responsibilities:
+ *
+ * 1) Add, Get and Remove category plugins with the Amplify System
+ * 2) Configure and reset the Amplify System with the information
+ * from the amplifyconfiguration.json.
  *
  * Configure using amplifyconfiguration.json
  * <pre>
@@ -180,6 +180,9 @@ public class Amplify {
 
     /**
      * Reset Amplify to state where it is not configured.
+     *
+     * Remove all the plugins added.
+     * Remove the configuration stored.
      */
     public static void reset() {
         synchronized (LOCK) {
