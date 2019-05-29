@@ -26,6 +26,8 @@ public interface Plugin {
 
     void configure(@NonNull JSONObject jsonObject, @NonNull String key);
 
+    void reset();
+
     Plugin initWithConfiguration(@NonNull JSONObject jsonObject);
 
     Plugin initWithConfiguration(@NonNull JSONObject jsonObject, @NonNull String key);

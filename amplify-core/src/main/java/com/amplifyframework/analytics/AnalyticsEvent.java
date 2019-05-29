@@ -1,8 +1,16 @@
 package com.amplifyframework.analytics;
 
+import android.support.annotation.NonNull;
+
 import java.util.Map;
 
 public class AnalyticsEvent {
+
+    public AnalyticsEvent(@NonNull String eventName) {
+        this.eventName = eventName;
+    }
+
+    private String eventName;
     private Map<String, String> attributes;
     private String eventType;
     private Map<String, Double> metrics;

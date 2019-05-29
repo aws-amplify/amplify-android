@@ -1,8 +1,9 @@
 package com.amplifyframework.analytics;
 
 import com.amplifyframework.core.exception.AmplifyException;
+import com.amplifyframework.core.exception.AmplifyRuntimeException;
 
-public class AnalyticsException extends AmplifyException {
+public class AnalyticsException extends AmplifyRuntimeException {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;

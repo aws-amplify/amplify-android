@@ -9,6 +9,8 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/amplify-core" />
+            <option value="$PROJECT_DIR$/amplify-sample-app" />
+            <option value="$PROJECT_DIR$/aws-amplify-analytics-pinpoint" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

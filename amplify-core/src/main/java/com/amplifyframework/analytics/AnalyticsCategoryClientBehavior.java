@@ -15,5 +15,20 @@
 
 package com.amplifyframework.analytics;
 
+import android.support.annotation.NonNull;
+
 public interface AnalyticsCategoryClientBehavior {
+    void record(@NonNull String eventName) throws AnalyticsException;
+
+    void record(@NonNull String eventName,
+                @NonNull final String pluginKey) throws AnalyticsException;
+
+    void record(@NonNull AnalyticsEvent event) throws AnalyticsException;
+
+    void record(@NonNull final AnalyticsEvent analyticsEvent,
+                @NonNull final String pluginKey) throws AnalyticsException;
+
+    void enable();
+
+    void disable();
 }

@@ -15,8 +15,8 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.CategoryPlugin;
 
-public interface AnalyticsCategoryPlugin extends Plugin {
+public interface AnalyticsCategoryPlugin extends AnalyticsCategoryClientBehavior, CategoryPlugin {
 
 }

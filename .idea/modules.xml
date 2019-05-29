@@ -4,6 +4,8 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/amplify-android.iml" filepath="$PROJECT_DIR$/amplify-android.iml" />
       <module fileurl="file://$PROJECT_DIR$/amplify-core/amplify-core.iml" filepath="$PROJECT_DIR$/amplify-core/amplify-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/amplify-sample-app/amplify-sample-app.iml" filepath="$PROJECT_DIR$/amplify-sample-app/amplify-sample-app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/aws-amplify-analytics-pinpoint/aws-amplify-analytics-pinpoint.iml" filepath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/aws-amplify-analytics-pinpoint.iml" />
     </modules>
   </component>
 </project>

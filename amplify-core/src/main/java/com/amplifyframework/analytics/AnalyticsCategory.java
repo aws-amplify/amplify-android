@@ -17,36 +17,99 @@ package com.amplifyframework.analytics;
 
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.exception.NoSuchPluginException;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.plugin.CategoryPlugin;
 
-public class AnalyticsCategory implements AnalyticsCategoryClientBehavior {
-    public static AnalyticsCategoryPlugin getProvider(@NonNull String key)
-            throws NoSuchPluginException {
-        return null;
+public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClientBehavior {
+
+    private static Category category = Category.ANALYTICS;
+
+    private static boolean enabled = true;
+
+    private static final Object LOCK = new Object();
+
+    @Override
+    public void record(@NonNull String eventName) throws AnalyticsException {
+        if (enabled) {
+            CategoryPlugin analyticsCategoryPlugin = Amplify.getPluginForCategory(category);
+            if (analyticsCategoryPlugin instanceof AnalyticsCategoryPlugin) {
+                AnalyticsEvent analyticsEvent = new AnalyticsEvent(eventName);
+                ((AnalyticsCategoryPlugin) analyticsCategoryPlugin).record(analyticsEvent);
+            } else {
+                throw new AnalyticsException("Failed to record analyticsEvent. " +
+                        "Please check if a valid storage plugin is registered.");
+            }
+        }
     }
 
-    public static void removeProvider(@NonNull String key)
-            throws NoSuchPluginException {
-
+    @Override
+    public void record(@NonNull String eventName, @NonNull String pluginKey) throws AnalyticsException {
+        if (enabled) {
+            CategoryPlugin analyticsPlugin = Amplify.getPlugin(pluginKey);
+            if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
+                AnalyticsEvent analyticsEvent = new AnalyticsEvent(eventName);
+                ((AnalyticsCategoryPlugin) analyticsPlugin).record(analyticsEvent);
+            } else {
+                throw new AnalyticsException("Failed to record analyticsEvent. " +
+                        "Please check if a valid storage plugin is registered.");
+            }
+        }
     }
 
-    public static void disable() {
-
+    /**
+     * This will record the analyticsEvent and eventually submit to the
+     * registered plugin.
+     *
+     * @param analyticsEvent the object that encapsulates the event information
+     */
+    public void record(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
+        if (enabled) {
+            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(category);
+            if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
+                ((AnalyticsCategoryPlugin) analyticsPlugin).record(analyticsEvent);
+            } else {
+                throw new AnalyticsException("Failed to record analyticsEvent. " +
+                        "Please check if a valid storage plugin is registered.");
+            }
+        }
     }
 
-    public static void enable() {
-
+    /**
+     * This will record the analyticsEvent and eventually submit to the
+     * registered plugin.
+     *
+     * @param analyticsEvent the object that encapsulates the event information
+     * @param pluginKey Key that identifies the plugin
+     */
+    public void record(@NonNull final AnalyticsEvent analyticsEvent,
+                       @NonNull final String pluginKey) throws AnalyticsException {
+        if (enabled) {
+            CategoryPlugin analyticsPlugin = Amplify.getPlugin(pluginKey);
+            if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
+                ((AnalyticsCategoryPlugin) analyticsPlugin).record(analyticsEvent);
+            } else {
+                throw new AnalyticsException("Failed to record analyticsEvent. " +
+                        "Please check if a valid storage plugin is registered.");
+            }
+        }
     }
 
-    public static void recordEvent(String name) {
-
+    /**
+     * Enable collecting and sending Analytics events.
+     */
+    public void enable() {
+        synchronized (LOCK) {
+            enabled = true;
+        }
     }
 
-    public static void recordEvent(AnalyticsEvent event) {
-
-    }
-
-    public static void updateProfile(AnalyticsProfile profile) {
-
+    /**
+     * Disable collecting and sending Analytics events.
+     */
+    public void disable() {
+        synchronized (LOCK) {
+            enabled = false;
+        }
     }
 }
