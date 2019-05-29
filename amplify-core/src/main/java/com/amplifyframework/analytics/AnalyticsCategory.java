@@ -21,12 +21,28 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.plugin.Category;
 import com.amplifyframework.core.plugin.CategoryPlugin;
 
+/**
+ * Defines the Client API consumed by the application.
+ * Internally routes the calls to the Analytics Category
+ * plugins registered.
+ */
 public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClientBehavior {
 
+    /**
+     * Mark that this is Analytics category.
+     */
     private static Category category = Category.ANALYTICS;
 
+    /**
+     * By default collection and sending of Analytics events
+     * are enabled.
+     */
     private static boolean enabled = true;
 
+    /**
+     * Protect enabling and disabling of Analytics event
+     * collection and sending.
+     */
     private static final Object LOCK = new Object();
 
     @Override

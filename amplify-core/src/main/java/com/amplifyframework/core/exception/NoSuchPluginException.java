@@ -15,6 +15,9 @@
 
 package com.amplifyframework.core.exception;
 
+/**
+ * Exception thrown when there is no such plugin found.
+ */
 public class NoSuchPluginException extends AmplifyException {
     /**
      * Creates a new AmazonClientException with the specified message, and root

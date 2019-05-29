@@ -17,18 +17,61 @@ package com.amplifyframework.analytics;
 
 import android.support.annotation.NonNull;
 
+/**
+ * Defines the client behavior (client API) consumed
+ * by the app for collection and sending of Analytics
+ * events.
+ */
 public interface AnalyticsCategoryClientBehavior {
+    /**
+     * Record the event by storing in the local database.
+     *
+     * @param eventName name of the event. An AnalyticsEvent is constructed
+     *                  based on the name of the event.
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
+     */
     void record(@NonNull String eventName) throws AnalyticsException;
 
+    /**
+     * Record the event by storing in the local database.
+     *
+     * @param eventName name of the event. An AnalyticsEvent is constructed
+     *                  based on the name of the event.
+     * @param pluginKey the identifier of the Analytics plugin implementation
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
+     */
     void record(@NonNull String eventName,
                 @NonNull final String pluginKey) throws AnalyticsException;
 
-    void record(@NonNull AnalyticsEvent event) throws AnalyticsException;
+    /**
+     * Record the event by storing in the local database.
+     *
+     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
+     */
+    void record(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
 
+    /**
+     * Record the event by storing in the local database.
+     *
+     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
+     * @param pluginKey the identifier of the Analytics plugin implementation
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
+     */
     void record(@NonNull final AnalyticsEvent analyticsEvent,
                 @NonNull final String pluginKey) throws AnalyticsException;
 
+    /**
+     * Enable collection and sending of Analytics Events.
+     */
     void enable();
 
+    /**
+     * Disable collection and sending of Analytics Events.
+     */
     void disable();
 }

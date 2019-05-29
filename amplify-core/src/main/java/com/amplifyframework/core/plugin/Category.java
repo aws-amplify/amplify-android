@@ -15,6 +15,10 @@
 
 package com.amplifyframework.core.plugin;
 
+/**
+ * Enum that declares the various categories
+ * of APIs supported by Amplify System.
+ */
 public enum Category {
     AUTH,
     ANALYTICS,
