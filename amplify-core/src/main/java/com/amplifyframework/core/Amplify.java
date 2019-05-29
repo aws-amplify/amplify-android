@@ -15,31 +15,51 @@
 
 package com.amplifyframework.core;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.api.APICategory;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
-import com.amplifyframework.core.exception.MismatchedProviderException;
-import com.amplifyframework.core.exception.NoSuchProviderException;
-import com.amplifyframework.core.provider.Category;
-import com.amplifyframework.core.provider.Provider;
+import com.amplifyframework.core.exception.MismatchedPluginException;
+import com.amplifyframework.core.exception.NoSuchPluginException;
+import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.plugin.CategoryPlugin;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Amplify class lets you configure your project with the information
+ * from amplifyconfiguration.json.
+ *
+ * Configure using amplifyconfiguration.json
+ * <pre>
+ *     {@code
+ *      Amplify.configure(getApplicationContext());
+ *     }
+ * </pre>
+ */
 public class Amplify {
+
+    private static final String TAG = Amplify.class.getSimpleName();
 
     public static final AnalyticsCategory Analytics;
     public static final APICategory API;
     public static final AuthCategory Auth;
     public static final LoggingCategory Logging;
     public static final StorageCategory Storage;
+
+    private static boolean CONFIGURED = false;
 
     static {
         Analytics = null;
@@ -50,103 +70,155 @@ public class Amplify {
     }
 
     /**
-     * Map of {Category, {providerClass, providerObject}}.
+     * Map of {Category, {pluginClass, pluginObject}}.
      *
      * {
      *     "AUTH" => {
-     *         "AmazonCognitoAuthProvider.class" => "AmazonCognitoAuthProvider@object"
+     *         "AmazonCognitoAuthPlugin.class" => "AmazonCognitoAuthPlugin@object"
      *     },
      *     "STORAGE" => {
-     *         "AmazonS3StorageProvider.class" => "AmazonS3StorageProvider@object"
+     *         "AmazonS3StoragePlugin.class" => "AmazonS3StoragePlugin@object"
      *     },
      *     "ANALYTICS" => {
-     *         "AmazonPinpointAnalyticsProvider.class" => "AmazonPinpointAnalyticsProvider@object",
-     *         "AmazonKinesisAnalyticsProvider.class" => "AmazonKinesisAnalyticsProvider@object"
+     *         "AmazonPinpointAnalyticsPlugin.class" => "AmazonPinpointAnalyticsPlugin@object",
+     *         "AmazonKinesisAnalyticsPlugin.class" => "AmazonKinesisAnalyticsPlugin@object"
      *     },
      *     "API" => {
-     *         "AWSRESTAPIGatewayProvider.class" => "AWSRESTAPIGatewayProvider@object"
+     *         "AWSRESTAPIGatewayPlugin.class" => "AWSRESTAPIGatewayPlugin@object"
      *     }
      * }
      */
-    private static HashMap<Category, HashMap<Class<? extends Provider>, Provider>> providers =
-            new HashMap<Category, HashMap<Class<? extends Provider>, Provider>>();
+    private static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> plugins =
+            new ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>>();
 
     private static final Object LOCK = new Object();
 
-    public static void configure() throws AmplifyAlreadyConfiguredException, NoSuchProviderException {
+    /**
+     * Read the configuration from amplifyconfiguration.json file
+     *
+     * @param context Android context required to read the contents of file
+     * @throws AmplifyAlreadyConfiguredException thrown when already configured
+     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     */
+    public static void configure(@NonNull Context context) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
         }
     }
 
-    public static void configure(@NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchProviderException {
+    /**
+     * Read the configuration from amplifyconfiguration.json file
+     *
+     * @param context Android context required to read the contents of file
+     * @param environment specifies the name of the environment being operated on.
+     *                    For example, "Default", "Custom", etc.
+     * @throws AmplifyAlreadyConfiguredException thrown when already configured
+     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     */
+    public static void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
         }
     }
 
-    public static void configure(@NonNull JSONObject jsonObject) throws AmplifyAlreadyConfiguredException, NoSuchProviderException {
+    /**
+     * Read the configuration from amplifyconfiguration.json file
+     *
+     * @param context Android context required to read the contents of file
+     * @param jsonObject Pass a JSON object via code that contains the configuration
+     * @throws AmplifyAlreadyConfiguredException thrown when already configured
+     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     */
+    public static void configure(@NonNull Context context, @NonNull JSONObject jsonObject) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
         }
     }
 
-    public static void configure(@NonNull JSONObject jsonObject, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchProviderException {
+    /**
+     * Read the configuration from amplifyconfiguration.json file
+     *
+     * @param context Android context required to read the contents of file
+     * @param jsonObject Pass a JSON object via code that contains the configuration
+     * @param environment specifies the name of the environment being operated on.
+     *                    For example, "Default", "Custom", etc.
+     * @throws AmplifyAlreadyConfiguredException thrown when already configured
+     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     */
+    public static void configure(@NonNull Context context, @NonNull JSONObject jsonObject, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
         }
     }
 
-    public static <P extends Provider> void addProvider(P provider) throws MismatchedProviderException {
+    /**
+     * Register a plugin with Amplify
+     *
+     * @param plugin an implementation of a category that
+     *               conforms to the {@link CategoryPlugin} interface.
+     * @param <P> any plugin that conforms to the {@link CategoryPlugin} interface
+     * @throws MismatchedPluginException when a plugin cannot be registered for this category
+     */
+    public static <P extends CategoryPlugin> void addPlugin(P plugin) throws MismatchedPluginException {
         synchronized (LOCK) {
-            HashMap<Class<? extends Provider>, Provider> providersOfCategory = providers.get(provider.getCategory());
-            if (providersOfCategory == null) {
-                providersOfCategory = new HashMap<Class<? extends Provider>, Provider>();
+            ConcurrentHashMap<String, CategoryPlugin> pluginsOfCategory = plugins.get(plugin.getCategory());
+            if (pluginsOfCategory == null) {
+                pluginsOfCategory = new ConcurrentHashMap<String, CategoryPlugin>();
             }
-            providersOfCategory.put(provider.getClass(), provider);
+            pluginsOfCategory.put(plugin.getPluginKey(), plugin);
         }
     }
 
-    public static <P extends Provider> void removeProvider(P provider) {
+    /**
+     * Remove a registered plugin
+     *
+     * @param plugin an implementation of a category that
+     *               conforms to the {@link CategoryPlugin} interface.
+     * @param <P> any plugin that conforms to the {@link CategoryPlugin} interface
+     */
+    public static <P extends CategoryPlugin> void removePlugin(P plugin) {
         synchronized (LOCK) {
-            providers.get(provider.getCategory()).remove(provider.getClass());
+            plugins.get(plugin.getCategory()).remove(plugin.getPluginKey());
         }
     }
 
+    /**
+     * Reset Amplify to state where it is not configured.
+     */
     public static void reset() {
         synchronized (LOCK) {
 
         }
     }
 
-    public static <P extends Provider> Provider getProvider(Class<P> providerClass) {
+    /**
+     * Retrieve a plugin of category.
+     *
+     * @param pluginKey the key that identifies the plugin implementation
+     * @param <P> any plugin that conforms to the {@link CategoryPlugin} interface
+     * @return the plugin object
+     */
+    public static <P extends CategoryPlugin> CategoryPlugin getPlugin(@NonNull final String pluginKey) {
         synchronized (LOCK) {
-            for (final HashMap<Class<? extends Provider>, Provider> providersOfCategory: providers.values()) {
-                if (providersOfCategory.get(providerClass) != null) {
-                    return providersOfCategory.get(providerClass);
+            for (final ConcurrentHashMap<String, CategoryPlugin> pluginsOfCategory: plugins.values()) {
+                if (pluginsOfCategory.get(pluginKey) != null) {
+                    return pluginsOfCategory.get(pluginKey);
                 }
             }
             return null;
         }
     }
 
-    public static HashMap<Category, HashMap<Class<? extends Provider>, Provider>> getProviders() {
+    public static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> getPlugins() {
         synchronized (LOCK) {
-            return providers;
+            return plugins;
         }
     }
 
-    public static Collection<Provider> getProvidersForCategory(Category category) {
+    public static CategoryPlugin getPluginForCategory(Category category) {
         synchronized (LOCK) {
-            return providers.get(category).values();
-        }
-    }
-
-    public static Provider getDefaultProviderOfCategory(Category category) {
-        synchronized (LOCK) {
-            final HashMap<Class<? extends Provider>, Provider> providersOfCategory = providers.get(category);
-            for (Provider provider: providersOfCategory.values()) {
-                if (provider.isDefault()) {
-                    return provider;
-                }
+            try {
+                return new ArrayList<CategoryPlugin>(plugins.get(category).values()).get(0);
+            } catch (Exception ex) {
+                Log.e(TAG,"Error in retrieving the plugins of a category." + ex);
+                return null;
             }
-            return null;
         }
     }
 }

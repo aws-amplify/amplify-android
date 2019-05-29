@@ -4,7 +4,7 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.async.AsyncOperation;
 import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.provider.Provider;
+import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.task.Options;
 import com.amplifyframework.core.task.Result;
 
@@ -20,7 +20,7 @@ public class StorageOperation implements AsyncOperation {
     }
 
     @Override
-    public StorageOperation provider(Class<? extends Provider> providerClass) {
+    public StorageOperation provider(Class<? extends Plugin> providerClass) {
         return null;
     }
 

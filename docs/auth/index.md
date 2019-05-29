@@ -111,7 +111,7 @@ auth.signIn("bimin", "1234Password!", validationData, new Callback<UserpoolSignI
 
 ### Identity Id
 
-The identity id is associated with the user and the identity provider they used.
+The identity id is associated with the user and the identity plugin they used.
 This id can be used to store and identify user resources such as an S3 folder with the id as the name and contents belonging to that user `user-abcd-123/attachment.jpg`.
 
 {% include tabs.html %}

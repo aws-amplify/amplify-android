@@ -15,12 +15,11 @@
 
 package com.amplifyframework.analytics;
 
+import android.support.annotation.NonNull;
+
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.provider.Category;
-import com.amplifyframework.core.provider.Provider;
-
-import java.util.Collection;
-
+import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.plugin.CategoryPlugin;
 
 public class Analytics extends Amplify {
 
@@ -32,48 +31,54 @@ public class Analytics extends Amplify {
 
     /**
      * This will record the analyticsEvent and eventually submit to the
-     * default provider.
+     * registered plugin.
      *
      * @param analyticsEvent the object that encapsulates the event information
      */
-    public static void record(AnalyticsEvent analyticsEvent) throws AnalyticsException {
+    public static void record(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
         if (enabled) {
-            Collection<Provider> analyticsProviders = getProvidersForCategory(category);
-            for (Provider provider : analyticsProviders) {
-                if (provider != null && provider instanceof AnalyticsProvider) {
-                    ((AnalyticsProvider) provider).record(analyticsEvent);
-                } else {
-                    throw new AnalyticsException("Failed to record analyticsEvent. " +
-                            "Please check if a valid storage provider is registered.");
-                }
+            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(category);
+            if (analyticsPlugin instanceof AnalyticsPlugin) {
+                ((AnalyticsPlugin) analyticsPlugin).record(analyticsEvent);
+            } else {
+                throw new AnalyticsException("Failed to record analyticsEvent. " +
+                        "Please check if a valid storage plugin is registered.");
             }
         }
     }
 
     /**
+     * This will record the analyticsEvent and eventually submit to the
+     * registered plugin.
      *
      * @param analyticsEvent the object that encapsulates the event information
-     * @param providerClass AnalyticProvider class
+     * @param pluginKey Key that identifies the plugin
      */
-    public static void record(final AnalyticsEvent analyticsEvent,
-                              final Class<? extends Provider> providerClass) throws AnalyticsException {
+    public static void record(@NonNull final AnalyticsEvent analyticsEvent,
+                              @NonNull final String pluginKey) throws AnalyticsException {
         if (enabled) {
-            Provider provider = Amplify.getProvider(providerClass);
-            if (provider != null && provider instanceof AnalyticsProvider) {
-                ((AnalyticsProvider) provider).record(analyticsEvent);
+            CategoryPlugin analyticsPlugin = Amplify.getPlugin(pluginKey);
+            if (analyticsPlugin instanceof AnalyticsPlugin) {
+                ((AnalyticsPlugin) analyticsPlugin).record(analyticsEvent);
             } else {
                 throw new AnalyticsException("Failed to record analyticsEvent. " +
-                        "Please check if a valid storage provider is registered.");
+                        "Please check if a valid storage plugin is registered.");
             }
         }
     }
 
+    /**
+     * Enable collecting and sending Analytics events.
+     */
     public static void enable() {
         synchronized (LOCK) {
             enabled = true;
         }
     }
 
+    /**
+     * Disable collecting and sending Analytics events.
+     */
     public static void disable() {
         synchronized (LOCK) {
             enabled = false;

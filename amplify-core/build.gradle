@@ -24,8 +24,8 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
-    api "com.android.support:support-v4:28.0.0"
-    api "com.android.support:support-annotations:28.0.0"
+    implementation "com.android.support:support-v4:28.0.0"
+    implementation "com.android.support:support-annotations:28.0.0"
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
@@ -44,4 +44,19 @@ devicefarm {
     }
 
     devicePool "AWSAndroidKeyStoreTesterPool"
+}
+
+task generateReference(type: Javadoc) {
+    title = "Amplify for Android v${VERSION_NAME}"
+    source = android.sourceSets.main.java.srcDirs
+    ext.androidJar = "${android.sdkDirectory}/platforms/${android.compileSdkVersion}/android.jar"
+    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+    options.links("https://developer.android.com/reference/")
+    options.links("https://developers.google.com/android/reference/")
+    options.links("https://aws.github.io/aws-sdk-android/docs/reference/")
+    destinationDir = file("../docs/reference")
+
+    failOnError = false
+    options.showAll()
+    options.addStringOption('Xdoclint:none', '-quiet')
 }

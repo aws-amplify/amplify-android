@@ -17,16 +17,16 @@ package com.amplifyframework.analytics;
 
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.exception.NoSuchProviderException;
+import com.amplifyframework.core.exception.NoSuchPluginException;
 
 public class AnalyticsCategory implements AnalyticsCategoryClientBehavior {
-    public static AnalyticsCategoryProvider getProvider(@NonNull String key)
-            throws NoSuchProviderException {
+    public static AnalyticsCategoryPlugin getProvider(@NonNull String key)
+            throws NoSuchPluginException {
         return null;
     }
 
     public static void removeProvider(@NonNull String key)
-            throws NoSuchProviderException {
+            throws NoSuchPluginException {
 
     }
 
