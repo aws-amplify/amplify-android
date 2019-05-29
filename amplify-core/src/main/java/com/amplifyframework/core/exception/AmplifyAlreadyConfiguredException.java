@@ -15,6 +15,10 @@
 
 package com.amplifyframework.core.exception;
 
+/**
+ * Exception thrown when Amplify System is already
+ * configured and configure is attempted again.
+ */
 public class AmplifyAlreadyConfiguredException extends AmplifyException {
     /**
      * Creates a new AmazonClientException with the specified message, and root

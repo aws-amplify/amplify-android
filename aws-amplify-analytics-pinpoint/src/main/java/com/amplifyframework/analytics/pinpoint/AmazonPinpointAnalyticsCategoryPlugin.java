@@ -27,12 +27,21 @@ import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
 
+/**
+ * The plugin implementation for Amazon Pinpoint in Analytics Category.
+ */
 public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryPlugin {
 
     private static final String TAG = AmazonPinpointAnalyticsCategoryPlugin.class.getSimpleName();
 
     private Context context;
 
+    /**
+     * Construct the Amazon Pinpoint plugin, initialize
+     * and configure it.
+     *
+     * @param context Android application context
+     */
     public AmazonPinpointAnalyticsCategoryPlugin(@NonNull Context context) {
         this.context = context;
 

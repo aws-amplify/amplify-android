@@ -15,6 +15,10 @@
 
 package com.amplifyframework.core.exception;
 
+/**
+ * Exception thrown when the plugin passed in doesn't match
+ * with the category.
+ */
 public class MismatchedPluginException extends AmplifyException {
     /**
      * Creates a new AmazonClientException with the specified message, and root

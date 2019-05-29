@@ -10,66 +10,28 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6267679a-fdc0-4ab4-aea3-c8c3d5c3445b" name="Default Changelist" comment="">
-      <change afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/amplify-sample-app.iml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/proguard-rules.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/androidTest/java/com/amazonaws/amplifysample/ExampleInstrumentedTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/AndroidManifest.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/AmplifyApplication.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/MainActivity.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/drawable-v24/ic_launcher_foreground.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/layout/activity_main.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/layout/content_main.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/menu/menu_main.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-hdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-hdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-mdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-mdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-xhdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-xhdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-xxhdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/values/colors.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/values/dimens.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/values/strings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/main/res/values/styles.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/amplify-sample-app/src/test/java/com/amazonaws/amplifysample/ExampleUnitTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/proguard-rules.pro" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/androidTest/java/com/amplifyframework/analytics/pinpoint/ExampleInstrumentedTest.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/AndroidManifest.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/java/com/amplifyframework/analytics/pinpoint/AmazonPinpointAnalyticsCategoryPlugin.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/res/values/strings.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/test/java/com/amplifyframework/analytics/pinpoint/ExampleUnitTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.4/fileHashes/fileHashes.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/4.4/fileHashes/fileHashes.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/4.4/fileHashes/fileHashes.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/4.4/fileHashes/fileHashes.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/taskHistory/taskHistory.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/4.4/taskHistory/taskHistory.bin" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/4.4/taskHistory/taskHistory.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/4.4/taskHistory/taskHistory.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/buildOutputCleanup.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/buildOutputCleanup/outputFiles.bin" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/caches/build_file_checksums.ser" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/caches/build_file_checksums.ser" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amplify-core/amplify-core.iml" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/amplify-core.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/Analytics.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryClientBehavior.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryClientBehavior.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsException.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsException.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsPlugin.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/Amplify.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/Amplify.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsProfile.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsResult.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsResult.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyAlreadyConfiguredException.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyAlreadyConfiguredException.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/aws-amplify-analytics-pinpoint.iml" beforeDir="false" afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/aws-amplify-analytics-pinpoint.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/java/com/amplifyframework/analytics/pinpoint/AmazonPinpointAnalyticsCategoryPlugin.java" beforeDir="false" afterPath="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/java/com/amplifyframework/analytics/pinpoint/AmazonPinpointAnalyticsCategoryPlugin.java" afterDir="false" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
@@ -92,52 +54,130 @@
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/AmplifyApplication.java">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="828">
-              <caret line="36" lean-forward="true" selection-start-line="36" selection-end-line="36" />
+            <state relative-caret-position="345">
+              <caret line="15" selection-start-line="15" selection-end-line="15" />
               <folding>
-                <element signature="e#0#524#0" expanded="true" />
+                <element signature="e#0#1683#0" expanded="true" />
                 <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="437">
+              <caret line="19" column="39" selection-start-line="19" selection-start-column="39" selection-end-line="19" selection-end-column="39" />
+              <folding>
+                <element signature="e#0#701#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="368">
+              <caret line="29" column="41" selection-start-line="29" selection-start-column="41" selection-end-line="29" selection-end-column="41" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="989">
+              <caret line="58" column="7" lean-forward="true" selection-start-line="58" selection-start-column="7" selection-end-line="58" selection-end-column="7" />
+              <folding>
+                <element signature="imports" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="414">
+              <caret line="18" column="21" selection-start-line="18" selection-start-column="21" selection-end-line="18" selection-end-column="21" />
+              <folding>
+                <element signature="e#0#1869#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="437">
+              <caret line="19" column="21" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
+              <folding>
+                <element signature="e#0#1549#0" expanded="true" />
+                <element signature="e#1162#1163#0" expanded="true" />
+                <element signature="e#1195#1196#0" expanded="true" />
+                <element signature="e#1426#1427#0" expanded="true" />
+                <element signature="e#1456#1457#0" expanded="true" />
+                <element signature="e#1656#1657#0" expanded="true" />
+                <element signature="e#1688#1689#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/MainActivity.java">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="604">
-              <caret line="39" column="21" lean-forward="true" selection-start-line="39" selection-start-column="21" selection-end-line="39" selection-end-column="21" />
+            <state>
+              <caret lean-forward="true" />
               <folding>
-                <element signature="e#0#2334#0" expanded="true" />
-                <element signature="imports" expanded="true" />
-                <element signature="e#1593#1594#0" expanded="true" />
+                <element signature="e#0#1533#0" expanded="true" />
+                <element signature="e#1023#1024#0" expanded="true" />
+                <element signature="e#1056#1057#0" expanded="true" />
+                <element signature="e#1283#1284#0" expanded="true" />
+                <element signature="e#1313#1314#0" expanded="true" />
+                <element signature="e#1509#1510#0" expanded="true" />
+                <element signature="e#1541#1542#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="358">
-              <caret line="32" column="64" lean-forward="true" selection-start-line="32" selection-start-column="64" selection-end-line="32" selection-end-column="64" />
+            <state relative-caret-position="414">
+              <caret line="18" column="62" selection-start-line="18" selection-start-column="62" selection-end-line="18" selection-end-column="62" />
               <folding>
-                <element signature="e#0#4412#0" expanded="true" />
-                <element signature="imports" expanded="true" />
+                <element signature="e#0#1904#0" expanded="true" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsException.java">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsResult.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="111">
-              <caret line="5" column="63" selection-start-line="5" selection-start-column="63" selection-end-line="5" selection-end-column="63" />
+            <state relative-caret-position="483">
+              <caret line="21" column="26" selection-start-line="21" selection-start-column="26" selection-end-line="21" selection-end-column="26" />
               <folding>
-                <element signature="imports" expanded="true" />
+                <element signature="e#0#715#0" expanded="true" />
+              </folding>
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java">
+          <provider selected="true" editor-type-id="text-editor">
+            <state>
+              <caret selection-end-line="13" selection-end-column="3" />
+              <folding>
+                <element signature="e#0#990#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -171,32 +211,35 @@
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/provider/Provider.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/provider/Plugin.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedProviderException.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchProviderException.java" />
         <option value="$PROJECT_DIR$/amplify-core/build.gradle" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/storage/Storage.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java" />
         <option value="$PROJECT_DIR$/amplifysample/src/main/java/com/amazonaws/amplifysample/MainActivity.java" />
         <option value="$PROJECT_DIR$/amplifysample/src/main/AndroidManifest.xml" />
         <option value="$PROJECT_DIR$/amplifysample/build.gradle" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/Analytics.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryClientBehavior.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java" />
         <option value="$PROJECT_DIR$/amplifysample/src/main/java/com/amazonaws/amplifysample/AmplifyApplication.java" />
-        <option value="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle" />
         <option value="$PROJECT_DIR$/amplify-sample-app/build.gradle" />
-        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/Amplify.java" />
-        <option value="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/java/com/amplifyframework/analytics/pinpoint/AmazonPinpointAnalyticsCategoryPlugin.java" />
         <option value="$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/AmplifyApplication.java" />
         <option value="$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/MainActivity.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java" />
+        <option value="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/java/com/amplifyframework/analytics/pinpoint/AmazonPinpointAnalyticsCategoryPlugin.java" />
         <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsException.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java" />
+        <option value="$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryClientBehavior.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsResult.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsProfile.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyAlreadyConfiguredException.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java" />
+        <option value="$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java" />
       </list>
     </option>
   </component>
@@ -220,60 +263,25 @@
             <path>
               <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
               <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="amplify-sample-app" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
             </path>
             <path>
               <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
               <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="amplify-sample-app" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
               <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="amplify-sample-app" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
-              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="amplify-sample-app" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
-              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="amplify-sample-app" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="main" type="462c0819:PsiDirectoryNode" />
-              <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="amplifysample" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
-              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="aws-amplify-analytics-pinpoint" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-            </path>
-            <path>
-              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
-              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="aws-amplify-analytics-pinpoint" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="src" type="462c0819:PsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
-              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="aws-amplify-analytics-pinpoint" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
               <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="aws-amplify-analytics-pinpoint" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
@@ -281,18 +289,86 @@
             <path>
               <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
               <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="aws-amplify-analytics-pinpoint" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
               <item name="main" type="462c0819:PsiDirectoryNode" />
               <item name="java" type="462c0819:PsiDirectoryNode" />
-              <item name="pinpoint" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
             </path>
             <path>
               <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
               <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
-              <item name="aws-amplify-analytics-pinpoint" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
               <item name="src" type="462c0819:PsiDirectoryNode" />
-              <item name="test" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="analytics" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
+              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="core" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
+              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="core" type="462c0819:PsiDirectoryNode" />
+              <item name="async" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
+              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="core" type="462c0819:PsiDirectoryNode" />
+              <item name="exception" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
+              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="core" type="462c0819:PsiDirectoryNode" />
+              <item name="hub" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
+              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="core" type="462c0819:PsiDirectoryNode" />
+              <item name="network" type="462c0819:PsiDirectoryNode" />
+            </path>
+            <path>
+              <item name="amplify-android" type="b2602c69:ProjectViewProjectNode" />
+              <item name="amplify-android" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="amplify-core" type="8a07ba80:GradleTreeStructureProvider$GradleModuleDirectoryNode" />
+              <item name="src" type="462c0819:PsiDirectoryNode" />
+              <item name="main" type="462c0819:PsiDirectoryNode" />
+              <item name="java" type="462c0819:PsiDirectoryNode" />
+              <item name="amplifyframework" type="462c0819:PsiDirectoryNode" />
+              <item name="core" type="462c0819:PsiDirectoryNode" />
+              <item name="plugin" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -325,7 +401,7 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Android App.amplifysample">
+  <component name="RunManager" selected="Gradle.amplify-android [generateReference]">
     <configuration name="&lt;template&gt;" type="Applet" default="true" selected="false">
       <option name="MAIN_CLASS_NAME" />
       <option name="HTML_FILE_NAME" />
@@ -491,12 +567,12 @@
       <window_info anchor="bottom" id="GraphQL" order="1" />
       <window_info anchor="bottom" id="TODO" order="2" />
       <window_info anchor="bottom" id="Educational.CheckDetails" order="3" />
-      <window_info anchor="bottom" id="Terminal" order="4" weight="0.16640987" />
+      <window_info anchor="bottom" id="Terminal" order="4" weight="0.26271185" />
       <window_info anchor="bottom" id="Event Log" order="5" side_tool="true" />
       <window_info anchor="bottom" id="Version Control" order="6" />
       <window_info anchor="bottom" id="Logcat" order="7" />
       <window_info anchor="bottom" id="Android Profiler" order="8" show_stripe_button="false" />
-      <window_info anchor="bottom" id="Build" order="9" visible="true" weight="0.15254237" />
+      <window_info anchor="bottom" id="Build" order="9" weight="0.15254237" />
       <window_info anchor="right" id="Capture Analysis" order="0" />
       <window_info anchor="right" id="Theme Preview" order="1" />
       <window_info anchor="right" id="Palette&#9;" order="2" />
@@ -541,13 +617,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsResult.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="92">
-          <caret line="4" column="13" selection-start-line="4" selection-start-column="13" selection-end-line="4" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/build.gradle">
       <provider selected="true" editor-type-id="text-editor" />
     </entry>
@@ -561,35 +630,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="698">
           <caret line="62" selection-start-line="62" selection-end-line="62" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="322">
-          <caret line="14" selection-start-line="14" selection-end-line="14" />
-          <folding>
-            <element signature="e#0#1540#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <folding>
-            <element signature="e#0#1557#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="15" selection-start-line="15" selection-end-line="15" />
-          <folding>
-            <element signature="e#0#699#0" expanded="true" />
-          </folding>
         </state>
       </provider>
     </entry>
@@ -629,26 +669,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state>
-          <caret selection-end-line="14" />
-          <folding>
-            <element signature="e#0#1876#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="11">
-          <caret line="13" column="3" selection-start-line="13" selection-start-column="3" selection-end-line="13" selection-end-column="3" />
-          <folding>
-            <element signature="e#0#1905#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/amplify-sample-app/src/main/res/layout/content_main.xml">
       <provider editor-type-id="text-editor" />
       <provider selected="true" editor-type-id="android-designer2" />
@@ -660,23 +680,6 @@
         </state>
       </provider>
       <provider editor-type-id="android-manifest" />
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyAlreadyConfiguredException.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="73">
-          <caret line="17" column="13" selection-start-line="17" selection-start-column="13" selection-end-line="17" selection-end-column="13" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="110">
-          <caret line="28" column="17" selection-start-line="28" selection-start-column="17" selection-end-line="28" selection-end-column="17" />
-          <folding>
-            <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsPlugin.java">
       <provider selected="true" editor-type-id="text-editor">
@@ -691,35 +694,6 @@
           <caret line="21" column="13" selection-start-line="21" selection-start-column="13" selection-end-line="21" selection-end-column="13" />
           <folding>
             <element signature="imports" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryClientBehavior.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="138">
-          <caret line="19" column="17" selection-start-line="19" selection-start-column="17" selection-end-line="19" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="184">
-          <caret line="8" column="34" selection-start-line="8" selection-start-column="34" selection-end-line="8" selection-end-column="34" />
-          <folding>
-            <element signature="imports" expanded="true" />
-            <element signature="e#143#144#0" expanded="true" />
-            <element signature="e#185#186#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="345">
-          <caret line="15" column="35" selection-start-line="15" selection-start-column="35" selection-end-line="15" selection-end-column="35" />
-          <folding>
-            <element signature="e#0#566#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -744,36 +718,67 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java">
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsException.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="92">
-          <caret line="17" column="17" selection-start-line="17" selection-start-column="17" selection-end-line="17" selection-end-column="17" />
+        <state relative-caret-position="460">
+          <caret line="20" column="50" selection-start-line="20" selection-start-column="50" selection-end-line="20" selection-end-column="50" />
+          <folding>
+            <element signature="e#0#1953#0" expanded="true" />
+            <element signature="e#1188#1189#0" expanded="true" />
+            <element signature="e#1221#1222#0" expanded="true" />
+            <element signature="e#1451#1452#0" expanded="true" />
+            <element signature="e#1481#1482#0" expanded="true" />
+            <element signature="e#1680#1681#0" expanded="true" />
+            <element signature="e#1712#1713#0" expanded="true" />
+            <element signature="e#1936#1937#0" expanded="true" />
+            <element signature="e#1963#1964#0" expanded="true" />
+          </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java">
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="437">
-          <caret line="19" column="89" selection-start-line="19" selection-start-column="89" selection-end-line="19" selection-end-column="89" />
+        <state relative-caret-position="989">
+          <caret line="43" column="30" selection-start-line="43" selection-start-column="30" selection-end-line="43" selection-end-column="30" />
           <folding>
-            <element signature="e#0#765#0" expanded="true" />
+            <element signature="e#0#4412#0" expanded="true" />
+            <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/aws-amplify-analytics-pinpoint/src/main/java/com/amplifyframework/analytics/pinpoint/AmazonPinpointAnalyticsCategoryPlugin.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="874">
-          <caret line="38" column="8" selection-start-line="38" selection-start-column="8" selection-end-line="38" selection-end-column="8" />
+        <state relative-caret-position="721">
+          <caret line="51" column="70" selection-start-line="51" selection-start-column="70" selection-end-line="51" selection-end-column="70" />
           <folding>
-            <element signature="e#0#502#0" expanded="true" />
+            <element signature="e#0#2664#0" expanded="true" />
             <element signature="imports" expanded="true" />
-            <element signature="e#1641#1642#0" expanded="true" />
-            <element signature="e#1668#1669#0" expanded="true" />
-            <element signature="e#1990#1991#0" expanded="true" />
-            <element signature="e#2017#2018#0" expanded="true" />
-            <element signature="e#2247#2248#0" expanded="true" />
-            <element signature="e#2274#2275#0" expanded="true" />
+            <element signature="e#2195#2196#0" expanded="true" />
+            <element signature="e#2222#2223#0" expanded="true" />
+            <element signature="e#2544#2545#0" expanded="true" />
+            <element signature="e#2571#2572#0" expanded="true" />
+            <element signature="e#2759#2760#0" expanded="true" />
+            <element signature="e#2786#2787#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/settings.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="23">
+          <caret line="1" lean-forward="true" selection-start-line="1" selection-end-line="1" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/MainActivity.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="462">
+          <caret line="39" column="21" lean-forward="true" selection-start-line="39" selection-start-column="21" selection-end-line="39" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#2334#0" expanded="true" />
+            <element signature="imports" expanded="true" />
+            <element signature="e#1593#1594#0" expanded="true" />
           </folding>
         </state>
       </provider>
@@ -789,35 +794,158 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategory.java">
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryClientBehavior.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="358">
-          <caret line="32" column="64" lean-forward="true" selection-start-line="32" selection-start-column="64" selection-end-line="32" selection-end-column="64" />
+        <state relative-caret-position="1771">
+          <caret line="77" lean-forward="true" selection-start-line="77" selection-end-line="77" />
           <folding>
-            <element signature="e#0#4412#0" expanded="true" />
+            <element signature="e#0#1164#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/aws-amplify-analytics-pinpoint/build.gradle">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="773">
+          <caret line="48" selection-start-line="48" selection-end-line="48" />
+          <folding>
+            <element signature="e#0#566#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsCategoryPlugin.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret selection-end-line="13" selection-end-column="3" />
+          <folding>
+            <element signature="e#0#990#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsResult.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="483">
+          <caret line="21" column="26" selection-start-line="21" selection-start-column="26" selection-end-line="21" selection-end-column="26" />
+          <folding>
+            <element signature="e#0#715#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsProfile.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="18" column="38" selection-start-line="18" selection-start-column="38" selection-end-line="18" selection-end-column="38" />
+          <folding>
+            <element signature="e#0#656#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsEvent.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="345">
+          <caret line="15" selection-start-line="15" selection-end-line="15" />
+          <folding>
+            <element signature="e#0#1683#0" expanded="true" />
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/analytics/AnalyticsException.java">
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Category.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="111">
-          <caret line="5" column="63" selection-start-line="5" selection-start-column="63" selection-end-line="5" selection-end-column="63" />
+        <state relative-caret-position="437">
+          <caret line="19" column="39" selection-start-line="19" selection-start-column="39" selection-end-line="19" selection-end-column="39" />
+          <folding>
+            <element signature="e#0#701#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/CategoryPlugin.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="368">
+          <caret line="29" column="41" selection-start-line="29" selection-start-column="41" selection-end-line="29" selection-end-column="41" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyAlreadyConfiguredException.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="391">
+          <caret line="17" selection-start-line="17" selection-end-line="20" selection-end-column="3" />
+          <folding>
+            <element signature="e#0#1581#0" expanded="true" />
+            <element signature="e#1047#1048#0" expanded="true" />
+            <element signature="e#1080#1081#0" expanded="true" />
+            <element signature="e#1319#1320#0" expanded="true" />
+            <element signature="e#1349#1350#0" expanded="true" />
+            <element signature="e#1557#1558#0" expanded="true" />
+            <element signature="e#1589#1590#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/plugin/Plugin.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="989">
+          <caret line="58" column="7" lean-forward="true" selection-start-line="58" selection-start-column="7" selection-end-line="58" selection-end-column="7" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/amplify-sample-app/src/main/java/com/amazonaws/amplifysample/MainActivity.java">
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyRuntimeException.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="604">
-          <caret line="39" column="21" lean-forward="true" selection-start-line="39" selection-start-column="21" selection-end-line="39" selection-end-column="21" />
+        <state relative-caret-position="414">
+          <caret line="18" column="62" selection-start-line="18" selection-start-column="62" selection-end-line="18" selection-end-column="62" />
           <folding>
-            <element signature="e#0#2334#0" expanded="true" />
-            <element signature="imports" expanded="true" />
-            <element signature="e#1593#1594#0" expanded="true" />
+            <element signature="e#0#1904#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/AmplifyException.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="414">
+          <caret line="18" column="21" selection-start-line="18" selection-start-column="21" selection-end-line="18" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#1869#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/MismatchedPluginException.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="437">
+          <caret line="19" column="21" selection-start-line="19" selection-start-column="21" selection-end-line="19" selection-end-column="21" />
+          <folding>
+            <element signature="e#0#1549#0" expanded="true" />
+            <element signature="e#1162#1163#0" expanded="true" />
+            <element signature="e#1195#1196#0" expanded="true" />
+            <element signature="e#1426#1427#0" expanded="true" />
+            <element signature="e#1456#1457#0" expanded="true" />
+            <element signature="e#1656#1657#0" expanded="true" />
+            <element signature="e#1688#1689#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/amplify-core/src/main/java/com/amplifyframework/core/exception/NoSuchPluginException.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state>
+          <caret lean-forward="true" />
+          <folding>
+            <element signature="e#0#1533#0" expanded="true" />
+            <element signature="e#1023#1024#0" expanded="true" />
+            <element signature="e#1056#1057#0" expanded="true" />
+            <element signature="e#1283#1284#0" expanded="true" />
+            <element signature="e#1313#1314#0" expanded="true" />
+            <element signature="e#1509#1510#0" expanded="true" />
+            <element signature="e#1541#1542#0" expanded="true" />
           </folding>
         </state>
       </provider>

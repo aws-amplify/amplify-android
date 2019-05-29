@@ -15,8 +15,19 @@
 
 package com.amplifyframework.core.plugin;
 
+/**
+ * Interface that identifies the implementation
+ * of a category plugin. For example, plugins for
+ * categories such as Auth, Analytics, Storage, API.
+ */
 public interface CategoryPlugin extends Plugin {
+    /**
+     * Enum that specifies the category.
+     */
     Category category = null;
 
+    /**
+     * @return the category of the plugin
+     */
     Category getCategory();
 }

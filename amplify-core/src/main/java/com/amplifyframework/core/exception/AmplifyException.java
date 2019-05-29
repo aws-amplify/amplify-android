@@ -15,6 +15,10 @@
 
 package com.amplifyframework.core.exception;
 
+/**
+ * Top-level compile-time exception in the Amplify System. Any compile-time
+ * exception in Amplify should derive from this exception.
+ */
 public class AmplifyException extends Exception {
 
     /** Default serial version UID. */
