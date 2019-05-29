@@ -1,6 +1,6 @@
 package com.amplifyframework.core.async;
 
-import com.amplifyframework.core.provider.Provider;
+import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.task.Options;
 import com.amplifyframework.core.task.Result;
 
@@ -9,7 +9,7 @@ public interface AsyncOperation {
 
     AsyncOperation options(Options options);
 
-    AsyncOperation provider(Class<? extends Provider> providerClass);
+    AsyncOperation provider(Class<? extends Plugin> providerClass);
 
     AsyncOperation start();
 

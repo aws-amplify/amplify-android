@@ -171,12 +171,12 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code><a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html" title="class in com.amazonaws.amplify.auth">Auth.Builder</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html#credentialsProvider-AWSCredentialsProvider-">credentialsProvider</a></span>(AWSCredentialsProvider&nbsp;credentialsProvider)</code>
-<div class="block">Developer provides implementation of credential provider for use</div>
+<div class="block">Developer provides implementation of credential plugin for use</div>
 </td>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code><a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html" title="class in com.amazonaws.amplify.auth">Auth.Builder</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html#provider-com.amazonaws.amplify.auth.SignInProviderBuilder-">provider</a></span>(<a href="../../../../com/amazonaws/amplify/auth/SignInProviderBuilder.html" title="class in com.amazonaws.amplify.auth">SignInProviderBuilder</a>&nbsp;signInProviderBuilder)</code>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html#plugin-com.amazonaws.amplify.auth.SignInProviderBuilder-">plugin</a></span>(<a href="../../../../com/amazonaws/amplify/auth/SignInProviderBuilder.html" title="class in com.amazonaws.amplify.auth">SignInProviderBuilder</a>&nbsp;signInProviderBuilder)</code>
 <div class="block">Developer provides the input required to construct the
  SignInProvider through the SignInProviderBuilder.</div>
 </td>
@@ -220,13 +220,13 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 </dl>
 </li>
 </ul>
-<a name="provider-com.amazonaws.amplify.auth.SignInProviderBuilder-">
+<a name="plugin-com.amazonaws.amplify.auth.SignInProviderBuilder-">
 <!--   -->
 </a>
 <ul class="blockList">
 <li class="blockList">
-<h4>provider</h4>
-<pre>public&nbsp;<a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html" title="class in com.amazonaws.amplify.auth">Auth.Builder</a>&nbsp;provider(<a href="../../../../com/amazonaws/amplify/auth/SignInProviderBuilder.html" title="class in com.amazonaws.amplify.auth">SignInProviderBuilder</a>&nbsp;signInProviderBuilder)</pre>
+<h4>plugin</h4>
+<pre>public&nbsp;<a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html" title="class in com.amazonaws.amplify.auth">Auth.Builder</a>&nbsp;plugin(<a href="../../../../com/amazonaws/amplify/auth/SignInProviderBuilder.html" title="class in com.amazonaws.amplify.auth">SignInProviderBuilder</a>&nbsp;signInProviderBuilder)</pre>
 <div class="block">Developer provides the input required to construct the
  SignInProvider through the SignInProviderBuilder.</div>
 <dl>
@@ -244,7 +244,7 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <li class="blockList">
 <h4>credentialsProvider</h4>
 <pre>public&nbsp;<a href="../../../../com/amazonaws/amplify/auth/Auth.Builder.html" title="class in com.amazonaws.amplify.auth">Auth.Builder</a>&nbsp;credentialsProvider(AWSCredentialsProvider&nbsp;credentialsProvider)</pre>
-<div class="block">Developer provides implementation of credential provider for use</div>
+<div class="block">Developer provides implementation of credential plugin for use</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
 <dd><code>credentialsProvider</code> - instance of STSSessionCredentialsProvider, CognitoCredentialsProvider, StaticCredentialsProvider</dd>
