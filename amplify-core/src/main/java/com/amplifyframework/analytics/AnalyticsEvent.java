@@ -19,8 +19,17 @@ import android.support.annotation.NonNull;
 
 import java.util.Map;
 
+/**
+ * AnalyticsEvent wraps the information that is part of an event
+ * being recorded and sent by an {@link AnalyticsCategoryPlugin}.
+ */
 public class AnalyticsEvent {
 
+    /**
+     * Construct an AnalyticEvent based on the eventName.
+     *
+     * @param eventName name of the event.
+     */
     public AnalyticsEvent(@NonNull String eventName) {
         this.eventName = eventName;
     }
@@ -31,34 +40,63 @@ public class AnalyticsEvent {
     private Map<String, Double> metrics;
     private Map<String, String> data;
 
+    /**
+     * @return map representing the event attributes.
+     */
     public Map<String, String> getAttributes() {
         return attributes;
     }
 
+    /**
+     * Set the event attributes.
+     *
+     * @param attributes map of key-value pairs representing
+     *                   the attributes
+     */
     public void setAttributes(Map<String, String> attributes) {
         this.attributes = attributes;
     }
 
+    /**
+     * @return type of the event.
+     */
     public String getEventType() {
         return eventType;
     }
 
+    /**
+     * @param eventType type of the event
+     */
     public void setEventType(String eventType) {
         this.eventType = eventType;
     }
 
+    /**
+     * @return metrics map that
+     *         represents the numeric quantities
+     */
     public Map<String, Double> getMetrics() {
         return metrics;
     }
 
+    /**
+     * @param metrics map that
+     *                represents the numeric quantities
+     */
     public void setMetrics(Map<String, Double> metrics) {
         this.metrics = metrics;
     }
 
+    /**
+     * @return the event payload
+     */
     public Map<String, String> getData() {
         return data;
     }
 
+    /**
+     * @param data the event payload
+     */
     public void setData(Map<String, String> data) {
         this.data = data;
     }

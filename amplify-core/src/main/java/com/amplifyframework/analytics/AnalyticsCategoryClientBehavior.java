@@ -24,46 +24,9 @@ import android.support.annotation.NonNull;
  */
 public interface AnalyticsCategoryClientBehavior {
     /**
-     * Record the event by storing in the local database.
-     *
-     * @param eventName name of the event. An AnalyticsEvent is constructed
-     *                  based on the name of the event.
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
+     * Disable collection and sending of Analytics Events.
      */
-    void record(@NonNull String eventName) throws AnalyticsException;
-
-    /**
-     * Record the event by storing in the local database.
-     *
-     * @param eventName name of the event. An AnalyticsEvent is constructed
-     *                  based on the name of the event.
-     * @param pluginKey the identifier of the Analytics plugin implementation
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     */
-    void record(@NonNull String eventName,
-                @NonNull final String pluginKey) throws AnalyticsException;
-
-    /**
-     * Record the event by storing in the local database.
-     *
-     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     */
-    void record(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
-
-    /**
-     * Record the event by storing in the local database.
-     *
-     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
-     * @param pluginKey the identifier of the Analytics plugin implementation
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     */
-    void record(@NonNull final AnalyticsEvent analyticsEvent,
-                @NonNull final String pluginKey) throws AnalyticsException;
+    void disable();
 
     /**
      * Enable collection and sending of Analytics Events.
@@ -71,7 +34,32 @@ public interface AnalyticsCategoryClientBehavior {
     void enable();
 
     /**
-     * Disable collection and sending of Analytics Events.
+     * Record the event by storing in the local database.
+     *
+     * @param eventName name of the event. An AnalyticsEvent is constructed
+     *                  based on the name of the event.
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
      */
-    void disable();
+    void recordEvent(@NonNull String eventName) throws AnalyticsException;
+
+    /**
+     * Record the event by storing in the local database.
+     *
+     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
+     */
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
+
+    /**
+     * Update the profile of the end-user/device for whom/which you are
+     * collecting analytics.
+     *
+     * @param analyticsProfile the profile of the end-user/device for whom/which you are
+     *      * collecting analytics.
+     * @throws AnalyticsException when there is an error updating the
+     *                            profile with the registered/chosen {@link AnalyticsCategoryPlugin}.
+     */
+    void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException;
 }

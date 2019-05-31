@@ -32,7 +32,9 @@ import com.amplifyframework.storage.StorageCategory;
 
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -61,6 +63,9 @@ public class Amplify {
 
     private static boolean CONFIGURED = false;
 
+    private static Context context;
+    private static AmplifyConfiguration amplifyConfiguration;
+
     static {
         Analytics = null;
         API = null;
@@ -74,17 +79,17 @@ public class Amplify {
      *
      * {
      *     "AUTH" => {
-     *         "AmazonCognitoAuthPlugin.class" => "AmazonCognitoAuthPlugin@object"
+     *         "keyForAuth" => "AmazonCognitoAuthPlugin@object"
      *     },
      *     "STORAGE" => {
-     *         "AmazonS3StoragePlugin.class" => "AmazonS3StoragePlugin@object"
+     *         "keyForStorage" => "AmazonS3StoragePlugin@object"
      *     },
      *     "ANALYTICS" => {
-     *         "AmazonPinpointAnalyticsPlugin.class" => "AmazonPinpointAnalyticsPlugin@object",
-     *         "AmazonKinesisAnalyticsPlugin.class" => "AmazonKinesisAnalyticsPlugin@object"
+     *         "keyForAmazonPinpoint" => "AmazonPinpointAnalyticsPlugin@object",
+     *         "keyForAmazonKinesis" => "AmazonKinesisAnalyticsPlugin@object"
      *     },
      *     "API" => {
-     *         "AWSRESTAPIGatewayPlugin.class" => "AWSRESTAPIGatewayPlugin@object"
+     *         "keyForAWSAPIGatewayPlugin" => "AWSRESTAPIGatewayPlugin@object"
      *     }
      * }
      */
@@ -102,6 +107,7 @@ public class Amplify {
      */
     public static void configure(@NonNull Context context) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
+            configure(context, AmplifyConfiguration.DEFAULT_ENVIRONMENT_NAME);
         }
     }
 
@@ -116,6 +122,9 @@ public class Amplify {
      */
     public static void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
+            amplifyConfiguration = new AmplifyConfiguration(context);
+            amplifyConfiguration.setEnvironment(environment);
+            CONFIGURED = true;
         }
     }
 
@@ -123,12 +132,13 @@ public class Amplify {
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context Android context required to read the contents of file
-     * @param jsonObject Pass a JSON object via code that contains the configuration
+     * @param amplifyConfiguration Pass the object via code that contains the configuration
      * @throws AmplifyAlreadyConfiguredException thrown when already configured
      * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context, @NonNull JSONObject jsonObject) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
+    public static void configure(@NonNull Context context, @NonNull AmplifyConfiguration amplifyConfiguration) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
+            configure(context, amplifyConfiguration, AmplifyConfiguration.DEFAULT_ENVIRONMENT_NAME);
         }
     }
 
@@ -136,14 +146,18 @@ public class Amplify {
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context Android context required to read the contents of file
-     * @param jsonObject Pass a JSON object via code that contains the configuration
+     * @param amplifyConfiguration Pass the object via code that contains the configuration
      * @param environment specifies the name of the environment being operated on.
      *                    For example, "Default", "Custom", etc.
      * @throws AmplifyAlreadyConfiguredException thrown when already configured
      * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context, @NonNull JSONObject jsonObject, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
+    public static void configure(@NonNull Context context, @NonNull AmplifyConfiguration amplifyConfiguration, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
         synchronized (LOCK) {
+            Amplify.context = context;
+            Amplify.amplifyConfiguration = amplifyConfiguration;
+            amplifyConfiguration.setEnvironment(environment);
+            CONFIGURED = true;
         }
     }
 
@@ -186,7 +200,8 @@ public class Amplify {
      */
     public static void reset() {
         synchronized (LOCK) {
-
+            Amplify.amplifyConfiguration = null;
+            CONFIGURED = false;
         }
     }
 
@@ -208,12 +223,28 @@ public class Amplify {
         }
     }
 
+    /**
+     * Retrieve the map of category plugins.
+     *     {Category => {PluginName => PluginObject}}
+     *     A category can have more than one plugins registered through
+     *     the Amplify System. Each plugin is identified with a name.
+     *
+     * @return the map that represents the category plugins.
+     */
     public static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> getPlugins() {
         synchronized (LOCK) {
             return plugins;
         }
     }
 
+    /**
+     * Retrieve the plugin for a particular category.
+     * Returns the plugin registered for a category if one.
+     *         the plugin returned by the selector if there are more than one plugin.
+     *
+     * @param category Name of the category
+     * @return the plugin registered and chosen for the catgeory passed in.
+     */
     public static CategoryPlugin getPluginForCategory(Category category) {
         synchronized (LOCK) {
             try {
@@ -225,3 +256,4 @@ public class Amplify {
         }
     }
 }
+
