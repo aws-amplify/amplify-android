@@ -53,7 +53,7 @@ public class AmplifyConfiguration {
      *                from the default amplify configuration file.
      */
     public AmplifyConfiguration(Context context) {
-        readInputJson(context, getConfigResourceId(context));
+        readInputJson(context, getConfigResourceId(context, null));
     }
 
     /**
@@ -63,7 +63,7 @@ public class AmplifyConfiguration {
      *                from the default amplify configuration file.
      */
     public AmplifyConfiguration(Context context, String environment) {
-        readInputJson(context, getConfigResourceId(context));
+        readInputJson(context, getConfigResourceId(context, environment));
     }
 
     /**
@@ -75,13 +75,17 @@ public class AmplifyConfiguration {
         this.mEnvironment = environment;
     }
 
-    private static int getConfigResourceId(Context context) {
+    private static int getConfigResourceId(Context context, String environment) {
+        String env = DEFAULT_IDENTIFIER;
         try {
-            return context.getResources().getIdentifier(DEFAULT_IDENTIFIER,
+            if (environment != null) {
+                env = environment;
+            }
+            return context.getResources().getIdentifier(env,
                     "raw", context.getPackageName());
         } catch (Exception e) {
             throw new RuntimeException(
-                    "Failed to read " + DEFAULT_IDENTIFIER
+                    "Failed to read " + env
                             + " please check that it is correctly formed.",
                     e);
         }
