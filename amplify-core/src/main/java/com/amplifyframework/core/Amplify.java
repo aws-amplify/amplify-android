@@ -25,16 +25,12 @@ import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
 import com.amplifyframework.core.exception.MismatchedPluginException;
 import com.amplifyframework.core.exception.NoSuchPluginException;
-import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.plugin.CategoryType;
 import com.amplifyframework.core.plugin.CategoryPlugin;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 
-import org.json.JSONObject;
-
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -75,7 +71,7 @@ public class Amplify {
     }
 
     /**
-     * Map of {Category, {pluginClass, pluginObject}}.
+     * Map of {CategoryType, {pluginClass, pluginObject}}.
      *
      * {
      *     "AUTH" => {
@@ -93,8 +89,8 @@ public class Amplify {
      *     }
      * }
      */
-    private static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> plugins =
-            new ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>>();
+    private static ConcurrentHashMap<CategoryType, ConcurrentHashMap<String, CategoryPlugin>> plugins =
+            new ConcurrentHashMap<CategoryType, ConcurrentHashMap<String, CategoryPlugin>>();
 
     private static final Object LOCK = new Object();
 
@@ -225,13 +221,13 @@ public class Amplify {
 
     /**
      * Retrieve the map of category plugins.
-     *     {Category => {PluginName => PluginObject}}
+     *     {CategoryType => {PluginName => PluginObject}}
      *     A category can have more than one plugins registered through
      *     the Amplify System. Each plugin is identified with a name.
      *
      * @return the map that represents the category plugins.
      */
-    public static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> getPlugins() {
+    public static ConcurrentHashMap<CategoryType, ConcurrentHashMap<String, CategoryPlugin>> getPlugins() {
         synchronized (LOCK) {
             return plugins;
         }
@@ -242,15 +238,15 @@ public class Amplify {
      * Returns the plugin registered for a category if one.
      *         the plugin returned by the selector if there are more than one plugin.
      *
-     * @param category Name of the category
+     * @param categoryType Name of the category
      * @return the plugin registered and chosen for the catgeory passed in.
      */
-    public static CategoryPlugin getPluginForCategory(Category category) {
+    public static CategoryPlugin getPluginForCategory(CategoryType categoryType) {
         synchronized (LOCK) {
             try {
-                return new ArrayList<CategoryPlugin>(plugins.get(category).values()).get(0);
+                return new ArrayList<CategoryPlugin>(plugins.get(categoryType).values()).get(0);
             } catch (Exception ex) {
-                Log.e(TAG,"Error in retrieving the plugins of a category." + ex);
+                Log.e(TAG,"Error in retrieving the plugins of a categoryType." + ex);
                 return null;
             }
         }

@@ -23,7 +23,7 @@ import com.amplifyframework.analytics.AnalyticsCategoryPlugin;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.plugin.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
@@ -129,7 +129,7 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryP
     }
 
     @Override
-    public Category getCategory() {
+    public CategoryType getCategory() {
         return null;
     }
 }

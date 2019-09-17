@@ -18,7 +18,7 @@ package com.amplifyframework.analytics;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.plugin.CategoryType;
 import com.amplifyframework.core.plugin.CategoryPlugin;
 
 /**
@@ -31,7 +31,7 @@ public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClien
     /**
      * Mark that this is Analytics category.
      */
-    private static Category category = Category.ANALYTICS;
+    private static CategoryType categoryType = CategoryType.ANALYTICS;
 
     /**
      * By default collection and sending of Analytics events
@@ -62,7 +62,7 @@ public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClien
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
         if (enabled) {
-            CategoryPlugin analyticsCategoryPlugin = Amplify.getPluginForCategory(category);
+            CategoryPlugin analyticsCategoryPlugin = Amplify.getPluginForCategory(categoryType);
             if (analyticsCategoryPlugin instanceof AnalyticsCategoryPlugin) {
                 AnalyticsEvent analyticsEvent = new AnalyticsEvent(eventName);
                 ((AnalyticsCategoryPlugin) analyticsCategoryPlugin).recordEvent(analyticsEvent);
@@ -76,7 +76,7 @@ public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClien
     @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
         if (enabled) {
-            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(category);
+            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(categoryType);
             if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
                 ((AnalyticsCategoryPlugin) analyticsPlugin).recordEvent(analyticsEvent);
             } else {
@@ -89,7 +89,7 @@ public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClien
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
         if (enabled) {
-            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(category);
+            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(categoryType);
             if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
                 ((AnalyticsCategoryPlugin) analyticsPlugin).updateProfile(analyticsProfile);
             } else {

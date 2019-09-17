@@ -13,21 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.plugin;
+package com.amplifyframework.storage.result;
 
-/**
- * Interface that identifies the implementation
- * of a category plugin. For example, plugins for
- * categories such as Auth, Analytics, Storage, API.
- */
-public interface CategoryPlugin extends Plugin {
-    /**
-     * Enum that specifies the category type.
-     */
-    CategoryType categoryType = null;
+import com.amplifyframework.core.task.Result;
 
-    /**
-     * @return the category type of the plugin
-     */
-    CategoryType getCategory();
+import java.io.File;
+
+public class StorageGetResult extends Result {
+    public File file;
+    public String url;
+
+    public StorageGetResult(File file) {
+        this.file = file;
+    }
+
+    public StorageGetResult(String url) {
+        this.url = url;
+    }
 }

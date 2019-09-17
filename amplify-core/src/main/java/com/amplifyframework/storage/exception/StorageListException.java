@@ -13,16 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.plugin;
+package com.amplifyframework.storage.exception;
 
-/**
- * Enum that declares the various categories
- * of APIs supported by Amplify System.
- */
-public enum Category {
-    AUTH,
-    ANALYTICS,
-    STORAGE,
-    API
-    ;
+import com.amplifyframework.core.exception.AmplifyException;
+
+public class StorageListException extends AmplifyException {
+    public StorageListException(final String message, final Throwable t) { super(message, t); }
+
+    public StorageListException(final String message) {
+        super(message);
+    }
+
+    public StorageListException(final Throwable throwable) {
+        super(throwable);
+    }
 }
