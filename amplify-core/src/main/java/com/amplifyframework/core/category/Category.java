@@ -18,23 +18,21 @@ package com.amplifyframework.core.category;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
-import com.amplifyframework.core.exception.MismatchedPluginException;
-import com.amplifyframework.core.exception.NoSuchPluginException;
+import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
 
 import java.util.Map;
 
 public interface Category extends CategoryTypeable {
-
     /**
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context Android context required to read the contents of file
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    void configure(@NonNull Context context) throws AmplifyAlreadyConfiguredException, NoSuchPluginException;
+    void configure(@NonNull Context context) throws ConfigurationException, PluginException;
 
     /**
      * Read the configuration from amplifyconfiguration.json file
@@ -42,10 +40,10 @@ public interface Category extends CategoryTypeable {
      * @param context Android context required to read the contents of file
      * @param environment specifies the name of the environment being operated on.
      *                    For example, "Default", "Custom", etc.
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException;
+    void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException;
 
     /**
      * Register a plugin with Amplify
@@ -53,18 +51,17 @@ public interface Category extends CategoryTypeable {
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
      * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws MismatchedPluginException when a plugin cannot be registered for this CATEGORY_TYPE
+     * @throws PluginException when a plugin cannot be registered for this CATEGORY_TYPE
      */
-    <P extends Plugin> void addPlugin(@NonNull final P plugin) throws MismatchedPluginException;
+    <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginException;
 
     /**
      * Remove a registered plugin
      *
-     * @param pluginKey an implementation of a CATEGORY_TYPE that
+     * @param pluginKey key to an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
-     * @param <P> any plugin that conforms to the {@link Plugin} interface
      */
-    <P extends Plugin> void removePlugin(@NonNull final String pluginKey);
+    void removePlugin(@NonNull final String pluginKey);
 
     /**
      * Reset Amplify to state where it is not configured.
@@ -81,7 +78,7 @@ public interface Category extends CategoryTypeable {
      * @param <P> any plugin that conforms to the {@link Plugin} interface
      * @return the plugin object
      */
-    <P extends Plugin> Plugin getPlugin(@NonNull final String pluginKey);
+    <P extends Plugin> P getPlugin(@NonNull final String pluginKey) throws PluginException;
 
     /**
      * Retrieve the map of plugins: {PluginName => PluginObject}}
@@ -90,5 +87,5 @@ public interface Category extends CategoryTypeable {
      *
      * @return the map that represents the plugins.
      */
-    Map<String, Plugin> getPlugins();
+    <P extends Plugin> Map<String, P> getPlugins();
 }
