@@ -13,15 +13,8 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics;
+package com.amplifyframework.core.category;
 
-import com.amplifyframework.core.plugin.Plugin;
-
-/**
- * Interface that a plugin implementation of Analytics CATEGORY_TYPE
- * would implement. This includes the client behavior dictated by
- * {@link AnalyticsCategoryClientBehavior} and {@link Plugin}.
- */
-public interface AnalyticsCategoryPlugin extends AnalyticsCategoryClientBehavior, Plugin {
-
+public interface CategoryTypeable {
+    CategoryType getCategoryType();
 }
