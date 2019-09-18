@@ -19,7 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.amplifyframework.analytics.AnalyticsCategoryPlugin;
+import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsProfile;
@@ -31,7 +31,7 @@ import org.json.JSONObject;
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics CategoryType.
  */
-public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryPlugin {
+public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
 
     private static final String TAG = AmazonPinpointAnalyticsCategoryPlugin.class.getSimpleName();
 
@@ -86,7 +86,7 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryP
      * @param analyticsProfile the profile of the end-user/device for whom/which you are
      *                         * collecting analytics.
      * @throws AnalyticsException when there is an error updating the
-     *                            profile with the registered/chosen {@link AnalyticsCategoryPlugin}.
+     *                            profile with the registered/chosen {@link AnalyticsPlugin}.
      */
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
@@ -129,7 +129,7 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryP
     }
 
     @Override
-    public CategoryType getCategory() {
-        return null;
+    public CategoryType getCategoryType() {
+        return CategoryType.ANALYTICS;
     }
 }

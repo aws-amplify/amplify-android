@@ -21,7 +21,7 @@ import java.util.Map;
 
 /**
  * AnalyticsEvent wraps the information that is part of an event
- * being recorded and sent by an {@link AnalyticsCategoryPlugin}.
+ * being recorded and sent by an {@link AnalyticsPlugin}.
  */
 public class AnalyticsEvent {
 

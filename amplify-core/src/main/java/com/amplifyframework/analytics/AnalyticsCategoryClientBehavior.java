@@ -59,7 +59,7 @@ public interface AnalyticsCategoryClientBehavior {
      * @param analyticsProfile the profile of the end-user/device for whom/which you are
      *      * collecting analytics.
      * @throws AnalyticsException when there is an error updating the
-     *                            profile with the registered/chosen {@link AnalyticsCategoryPlugin}.
+     *                            profile with the registered/chosen {@link AnalyticsPlugin}.
      */
     void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException;
 }
