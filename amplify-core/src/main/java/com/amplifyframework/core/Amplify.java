@@ -18,15 +18,14 @@ package com.amplifyframework.core;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.analytics.Analytics;
 import com.amplifyframework.api.APICategory;
 import com.amplifyframework.auth.AuthCategory;
-import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
-import com.amplifyframework.core.exception.MismatchedPluginException;
-import com.amplifyframework.core.exception.NoSuchPluginException;
-import com.amplifyframework.core.exception.PluginConfigurationException;
+import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.logging.LoggingCategory;
-import com.amplifyframework.storage.StorageCategory;
+import com.amplifyframework.storage.Storage;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -46,11 +45,11 @@ public class Amplify {
 
     private static final String TAG = Amplify.class.getSimpleName();
 
-    public static final com.amplifyframework.analytics.Analytics Analytics;
+    public static final Analytics Analytics;
     public static final APICategory API;
     public static final AuthCategory Auth;
     public static final LoggingCategory Logging;
-    public static final StorageCategory Storage;
+    public static final Storage Storage;
 
     private static boolean CONFIGURED = false;
 
@@ -70,10 +69,10 @@ public class Amplify {
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context Android context required to read the contents of file
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
+    public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
         synchronized (LOCK) {
             configure(context, AmplifyConfiguration.DEFAULT_ENVIRONMENT_NAME);
         }
@@ -85,13 +84,13 @@ public class Amplify {
      * @param context Android context required to read the contents of file
      * @param environment specifies the name of the environment being operated on.
      *                    For example, "Default", "Custom", etc.
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException {
+    public static void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
         synchronized (LOCK) {
             if (CONFIGURED) {
-                throw new AmplifyAlreadyConfiguredException("Amplify is already configured.");
+                throw new ConfigurationException.AmplifyAlreadyConfiguredException();
             }
             amplifyConfiguration = new AmplifyConfiguration(context);
             amplifyConfiguration.setEnvironment(environment);
@@ -105,10 +104,10 @@ public class Amplify {
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
      * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws MismatchedPluginException when a plugin cannot be registered for the category type it belongs to.
-     * @throws PluginConfigurationException when the plugin's category type is not supported by Amplify.
+     * @throws PluginException when a plugin cannot be registered for the category type it belongs to
+     *                         or when when the plugin's category type is not supported by Amplify.
      */
-    public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginConfigurationException, MismatchedPluginException {
+    public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             switch (plugin.getCategoryType()) {
                 case API:
@@ -121,9 +120,10 @@ public class Amplify {
                 case LOGGING:
                     break;
                 case STORAGE:
+                    Storage.addPlugin(plugin);
                     break;
                 default:
-                    throw new PluginConfigurationException("Plugin category does not exist. " +
+                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
                             "Verify that the library version is correct and supports the plugin's category.");
             }
         }

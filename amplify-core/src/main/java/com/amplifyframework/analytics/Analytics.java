@@ -20,11 +20,9 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.category.CategoryTypeable;
-import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
-import com.amplifyframework.core.exception.MismatchedPluginException;
-import com.amplifyframework.core.exception.NoSuchPluginException;
+import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.Map;
 
@@ -33,7 +31,7 @@ import java.util.Map;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class Analytics implements AnalyticsCategoryClientBehavior, Category, CategoryTypeable {
+public class Analytics implements Category, AnalyticsCategoryClientBehavior {
 
     /**
      * By default collection and sending of Analytics events
@@ -86,11 +84,11 @@ public class Analytics implements AnalyticsCategoryClientBehavior, Category, Cat
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context Android context required to read the contents of file
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException             thrown when there is no plugin found for a configuration
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException        thrown when there is no plugin found for a configuration
      */
     @Override
-    public void configure(@NonNull Context context) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
+    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
 
     }
 
@@ -100,11 +98,11 @@ public class Analytics implements AnalyticsCategoryClientBehavior, Category, Cat
      * @param context     Android context required to read the contents of file
      * @param environment specifies the name of the environment being operated on.
      *                    For example, "Default", "Custom", etc.
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException             thrown when there is no plugin found for a configuration
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException        thrown when there is no plugin found for a configuration
      */
     @Override
-    public void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
+    public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
 
     }
 
@@ -113,10 +111,10 @@ public class Analytics implements AnalyticsCategoryClientBehavior, Category, Cat
      *
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
-     * @throws MismatchedPluginException when a plugin cannot be registered for this CATEGORY_TYPE
+     * @throws PluginException when a plugin cannot be registered for this CATEGORY_TYPE
      */
     @Override
-    public <P extends Plugin> void addPlugin(@NonNull P plugin) throws MismatchedPluginException {
+    public <P extends Plugin> void addPlugin(@NonNull P plugin) throws PluginException {
 
     }
 
@@ -127,7 +125,7 @@ public class Analytics implements AnalyticsCategoryClientBehavior, Category, Cat
      *                  conforms to the {@link Plugin} interface.
      */
     @Override
-    public <P extends Plugin> void removePlugin(@NonNull String pluginKey) {
+    public void removePlugin(@NonNull String pluginKey) {
 
     }
 
@@ -149,7 +147,7 @@ public class Analytics implements AnalyticsCategoryClientBehavior, Category, Cat
      * @return the plugin object
      */
     @Override
-    public <P extends Plugin> Plugin getPlugin(@NonNull String pluginKey) {
+    public <P extends Plugin> P getPlugin(@NonNull String pluginKey) {
         return null;
     }
 
@@ -161,7 +159,7 @@ public class Analytics implements AnalyticsCategoryClientBehavior, Category, Cat
      * @return the map that represents the plugins.
      */
     @Override
-    public Map<String, Plugin> getPlugins() {
+    public <P extends Plugin> Map<String, P> getPlugins() {
         return null;
     }
 

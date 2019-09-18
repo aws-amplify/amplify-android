@@ -9,7 +9,7 @@ public interface AsyncOperation {
 
     AsyncOperation options(Options options);
 
-    AsyncOperation provider(Class<? extends Plugin> providerClass);
+    AsyncOperation plugin(Class<? extends Plugin> pluginClass);
 
     AsyncOperation start();
 
