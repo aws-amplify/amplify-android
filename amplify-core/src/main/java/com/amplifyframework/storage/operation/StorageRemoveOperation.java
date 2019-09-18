@@ -33,7 +33,7 @@ public class StorageRemoveOperation implements AsyncOperation {
     }
 
     @Override
-    public StorageRemoveOperation provider(Class<? extends Plugin> providerClass) {
+    public StorageRemoveOperation plugin(Class<? extends Plugin> pluginClass) {
         return null;
     }
 

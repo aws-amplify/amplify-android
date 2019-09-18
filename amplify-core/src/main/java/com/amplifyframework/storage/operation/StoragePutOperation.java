@@ -33,7 +33,7 @@ public class StoragePutOperation implements AsyncOperation {
     }
 
     @Override
-    public StoragePutOperation provider(Class<? extends Plugin> providerClass) {
+    public StoragePutOperation plugin(Class<? extends Plugin> pluginClass) {
         return null;
     }
 

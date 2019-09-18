@@ -33,7 +33,7 @@ public class StorageGetOperation implements AsyncOperation {
     }
 
     @Override
-    public StorageGetOperation provider(Class<? extends Plugin> providerClass) {
+    public StorageGetOperation plugin(Class<? extends Plugin> pluginClass) {
         return null;
     }
 

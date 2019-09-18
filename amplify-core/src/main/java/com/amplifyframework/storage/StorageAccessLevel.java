@@ -17,7 +17,7 @@ package com.amplifyframework.storage;
 
 public enum StorageAccessLevel {
     PUBLIC,
-    PRIVATE,
-    PROTECTED
+    PROTECTED,
+    PRIVATE
     ;
 }
