@@ -18,6 +18,10 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.core.exception.AmplifyException;
 
 public class StorageListException extends AmplifyException {
+    public static class AccessDenied extends StorageListException {
+        public AccessDenied() { super("Access denied"); }
+    }
+
     public StorageListException(final String message, final Throwable t) { super(message, t); }
 
     public StorageListException(final String message) {

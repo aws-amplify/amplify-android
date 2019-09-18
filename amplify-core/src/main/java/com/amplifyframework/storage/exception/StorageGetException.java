@@ -18,6 +18,10 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.core.exception.AmplifyException;
 
 public class StorageGetException extends AmplifyException {
+    public static class NotFound extends StorageGetException {
+        public NotFound() { super("Object not found"); }
+    }
+
     public StorageGetException(final String message, final Throwable t) { super(message, t); }
 
     public StorageGetException(final String message) {
