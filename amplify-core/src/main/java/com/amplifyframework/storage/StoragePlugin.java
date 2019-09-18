@@ -6,7 +6,7 @@ import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Plugin API for Storage Category. Any Storage Plugin
+ * Plugin API for Storage CategoryType. Any Storage Plugin
  * would implement this interface.
  */
 public interface StoragePlugin extends Plugin {

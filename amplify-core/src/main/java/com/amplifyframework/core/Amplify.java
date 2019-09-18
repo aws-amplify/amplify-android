@@ -17,7 +17,6 @@ package com.amplifyframework.core;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.api.APICategory;
@@ -25,22 +24,17 @@ import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
 import com.amplifyframework.core.exception.MismatchedPluginException;
 import com.amplifyframework.core.exception.NoSuchPluginException;
-import com.amplifyframework.core.plugin.Category;
-import com.amplifyframework.core.plugin.CategoryPlugin;
+import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 
-import org.json.JSONObject;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Scanner;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Amplify System has the following responsibilities:
  *
- * 1) Add, Get and Remove category plugins with the Amplify System
+ * 1) Add, Get and Remove CATEGORY_TYPE plugins with the Amplify System
  * 2) Configure and reset the Amplify System with the information
  * from the amplifyconfiguration.json.
  *
@@ -63,7 +57,6 @@ public class Amplify {
 
     private static boolean CONFIGURED = false;
 
-    private static Context context;
     private static AmplifyConfiguration amplifyConfiguration;
 
     static {
@@ -75,7 +68,7 @@ public class Amplify {
     }
 
     /**
-     * Map of {Category, {pluginClass, pluginObject}}.
+     * Map of {CategoryType, {pluginClass, pluginObject}}.
      *
      * {
      *     "AUTH" => {
@@ -93,8 +86,8 @@ public class Amplify {
      *     }
      * }
      */
-    private static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> plugins =
-            new ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>>();
+    private static Map<String, Plugin> plugins =
+            new ConcurrentHashMap<String, Plugin>();
 
     private static final Object LOCK = new Object();
 
@@ -129,66 +122,28 @@ public class Amplify {
     }
 
     /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context Android context required to read the contents of file
-     * @param amplifyConfiguration Pass the object via code that contains the configuration
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
-     */
-    public static void configure(@NonNull Context context, @NonNull AmplifyConfiguration amplifyConfiguration) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
-        synchronized (LOCK) {
-            configure(context, amplifyConfiguration, AmplifyConfiguration.DEFAULT_ENVIRONMENT_NAME);
-        }
-    }
-
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context Android context required to read the contents of file
-     * @param amplifyConfiguration Pass the object via code that contains the configuration
-     * @param environment specifies the name of the environment being operated on.
-     *                    For example, "Default", "Custom", etc.
-     * @throws AmplifyAlreadyConfiguredException thrown when already configured
-     * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
-     */
-    public static void configure(@NonNull Context context, @NonNull AmplifyConfiguration amplifyConfiguration, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
-        synchronized (LOCK) {
-            Amplify.context = context;
-            Amplify.amplifyConfiguration = amplifyConfiguration;
-            amplifyConfiguration.setEnvironment(environment);
-            CONFIGURED = true;
-        }
-    }
-
-    /**
      * Register a plugin with Amplify
      *
-     * @param plugin an implementation of a category that
-     *               conforms to the {@link CategoryPlugin} interface.
-     * @param <P> any plugin that conforms to the {@link CategoryPlugin} interface
-     * @throws MismatchedPluginException when a plugin cannot be registered for this category
+     * @param plugin an implementation of a CATEGORY_TYPE that
+     *               conforms to the {@link Plugin} interface.
+     * @param <P> any plugin that conforms to the {@link Plugin} interface
+     * @throws MismatchedPluginException when a plugin cannot be registered for this CATEGORY_TYPE
      */
-    public static <P extends CategoryPlugin> void addPlugin(P plugin) throws MismatchedPluginException {
+    public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws MismatchedPluginException {
         synchronized (LOCK) {
-            ConcurrentHashMap<String, CategoryPlugin> pluginsOfCategory = plugins.get(plugin.getCategory());
-            if (pluginsOfCategory == null) {
-                pluginsOfCategory = new ConcurrentHashMap<String, CategoryPlugin>();
-            }
-            pluginsOfCategory.put(plugin.getPluginKey(), plugin);
+            plugins.put(plugin.getPluginKey(), plugin);
         }
     }
 
     /**
      * Remove a registered plugin
      *
-     * @param plugin an implementation of a category that
-     *               conforms to the {@link CategoryPlugin} interface.
-     * @param <P> any plugin that conforms to the {@link CategoryPlugin} interface
+     * @param pluginKey key that identifies the plugin
+     * @param <P> any plugin that conforms to the {@link Plugin} interface
      */
-    public static <P extends CategoryPlugin> void removePlugin(P plugin) {
+    public static <P extends Plugin> void removePlugin(@NonNull final String pluginKey) {
         synchronized (LOCK) {
-            plugins.get(plugin.getCategory()).remove(plugin.getPluginKey());
+            plugins.remove(pluginKey);
         }
     }
 
@@ -206,54 +161,29 @@ public class Amplify {
     }
 
     /**
-     * Retrieve a plugin of category.
+     * Retrieve a plugin of CATEGORY_TYPE.
      *
      * @param pluginKey the key that identifies the plugin implementation
-     * @param <P> any plugin that conforms to the {@link CategoryPlugin} interface
+     * @param <P> any plugin that conforms to the {@link Plugin} interface
      * @return the plugin object
      */
-    public static <P extends CategoryPlugin> CategoryPlugin getPlugin(@NonNull final String pluginKey) {
+    public static <P extends Plugin> Plugin getPlugin(@NonNull final String pluginKey) {
         synchronized (LOCK) {
-            for (final ConcurrentHashMap<String, CategoryPlugin> pluginsOfCategory: plugins.values()) {
-                if (pluginsOfCategory.get(pluginKey) != null) {
-                    return pluginsOfCategory.get(pluginKey);
-                }
-            }
-            return null;
+            return plugins.get(pluginKey);
         }
     }
 
     /**
-     * Retrieve the map of category plugins.
-     *     {Category => {PluginName => PluginObject}}
-     *     A category can have more than one plugins registered through
+     * Retrieve the map of CATEGORY_TYPE plugins.
+     *     {CategoryType => {PluginName => PluginObject}}
+     *     A CATEGORY_TYPE can have more than one plugins registered through
      *     the Amplify System. Each plugin is identified with a name.
      *
-     * @return the map that represents the category plugins.
+     * @return the map that represents the CATEGORY_TYPE plugins.
      */
-    public static ConcurrentHashMap<Category, ConcurrentHashMap<String, CategoryPlugin>> getPlugins() {
+    public static Map<String, Plugin> getPlugins() {
         synchronized (LOCK) {
             return plugins;
         }
     }
-
-    /**
-     * Retrieve the plugin for a particular category.
-     * Returns the plugin registered for a category if one.
-     *         the plugin returned by the selector if there are more than one plugin.
-     *
-     * @param category Name of the category
-     * @return the plugin registered and chosen for the catgeory passed in.
-     */
-    public static CategoryPlugin getPluginForCategory(Category category) {
-        synchronized (LOCK) {
-            try {
-                return new ArrayList<CategoryPlugin>(plugins.get(category).values()).get(0);
-            } catch (Exception ex) {
-                Log.e(TAG,"Error in retrieving the plugins of a category." + ex);
-                return null;
-            }
-        }
-    }
 }
-

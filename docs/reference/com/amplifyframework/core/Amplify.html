@@ -116,7 +116,7 @@ var activeTableTab = "activeTableTab";
 extends <a href="https://developer.android.com/reference/java/lang/Object.html?is-external=true" title="class or interface in java.lang">Object</a></pre>
 <div class="block">The Amplify System has the following responsibilities:
 
- 1) Add, Get and Remove category plugins with the Amplify System
+ 1) Add, Get and Remove categoryType plugins with the Amplify System
  2) Configure and reset the Amplify System with the information
  from the amplifyconfiguration.json.
 
@@ -259,19 +259,19 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <tr id="i5" class="rowColor">
 <td class="colFirst"><code>static &lt;P extends <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&gt;<br><a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a></code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplifyframework/core/Amplify.html#getPlugin-java.lang.String-">getPlugin</a></span>(<a href="https://developer.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;pluginKey)</code>
-<div class="block">Retrieve a plugin of category.</div>
+<div class="block">Retrieve a plugin of categoryType.</div>
 </td>
 </tr>
 <tr id="i6" class="altColor">
 <td class="colFirst"><code>static <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a></code></td>
-<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplifyframework/core/Amplify.html#getPluginForCategory-com.amplifyframework.core.plugin.Category-">getPluginForCategory</a></span>(<a href="../../../com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a>&nbsp;category)</code>
-<div class="block">Retrieve the plugin for a particular category.</div>
+<td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplifyframework/core/Amplify.html#getPluginForCategory-com.amplifyframework.core.category.CategoryType-">getPluginForCategory</a></span>(<a href="../../../com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a>&nbsp;categoryType)</code>
+<div class="block">Retrieve the plugin for a particular categoryType.</div>
 </td>
 </tr>
 <tr id="i7" class="rowColor">
 <td class="colFirst"><code>static <a href="https://developer.android.com/reference/java/util/concurrent/ConcurrentHashMap.html?is-external=true" title="class or interface in java.util.concurrent">ConcurrentHashMap</a>&lt;<a href="../../../com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a>,<a href="https://developer.android.com/reference/java/util/concurrent/ConcurrentHashMap.html?is-external=true" title="class or interface in java.util.concurrent">ConcurrentHashMap</a>&lt;<a href="https://developer.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&gt;&gt;</code></td>
 <td class="colLast"><code><span class="memberNameLink"><a href="../../../com/amplifyframework/core/Amplify.html#getPlugins--">getPlugins</a></span>()</code>
-<div class="block">Retrieve the map of category plugins.</div>
+<div class="block">Retrieve the map of categoryType plugins.</div>
 </td>
 </tr>
 <tr id="i8" class="altColor">
@@ -550,10 +550,10 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <dt><span class="paramLabel">Type Parameters:</span></dt>
 <dd><code>P</code> - any plugin that conforms to the <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin"><code>CategoryPlugin</code></a> interface</dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>plugin</code> - an implementation of a category that
+<dd><code>plugin</code> - an implementation of a categoryType that
                conforms to the <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin"><code>CategoryPlugin</code></a> interface.</dd>
 <dt><span class="throwsLabel">Throws:</span></dt>
-<dd><code><a href="../../../com/amplifyframework/core/exception/MismatchedPluginException.html" title="class in com.amplifyframework.core.exception">MismatchedPluginException</a></code> - when a plugin cannot be registered for this category</dd>
+<dd><code><a href="../../../com/amplifyframework/core/exception/MismatchedPluginException.html" title="class in com.amplifyframework.core.exception">MismatchedPluginException</a></code> - when a plugin cannot be registered for this categoryType</dd>
 </dl>
 </li>
 </ul>
@@ -571,7 +571,7 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <dt><span class="paramLabel">Type Parameters:</span></dt>
 <dd><code>P</code> - any plugin that conforms to the <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin"><code>CategoryPlugin</code></a> interface</dd>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>plugin</code> - an implementation of a category that
+<dd><code>plugin</code> - an implementation of a categoryType that
                conforms to the <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin"><code>CategoryPlugin</code></a> interface.</dd>
 </dl>
 </li>
@@ -596,7 +596,7 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <li class="blockList">
 <h4>getPlugin</h4>
 <pre>public static&nbsp;&lt;P extends <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&gt;&nbsp;<a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&nbsp;getPlugin(<a href="https://developer.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>&nbsp;pluginKey)</pre>
-<div class="block">Retrieve a plugin of category.</div>
+<div class="block">Retrieve a plugin of categoryType.</div>
 <dl>
 <dt><span class="paramLabel">Type Parameters:</span></dt>
 <dd><code>P</code> - any plugin that conforms to the <a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin"><code>CategoryPlugin</code></a> interface</dd>
@@ -614,29 +614,29 @@ extends <a href="https://developer.android.com/reference/java/lang/Object.html?i
 <li class="blockList">
 <h4>getPlugins</h4>
 <pre>public static&nbsp;<a href="https://developer.android.com/reference/java/util/concurrent/ConcurrentHashMap.html?is-external=true" title="class or interface in java.util.concurrent">ConcurrentHashMap</a>&lt;<a href="../../../com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a>,<a href="https://developer.android.com/reference/java/util/concurrent/ConcurrentHashMap.html?is-external=true" title="class or interface in java.util.concurrent">ConcurrentHashMap</a>&lt;<a href="https://developer.android.com/reference/java/lang/String.html?is-external=true" title="class or interface in java.lang">String</a>,<a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&gt;&gt;&nbsp;getPlugins()</pre>
-<div class="block">Retrieve the map of category plugins.
+<div class="block">Retrieve the map of categoryType plugins.
      {Category => {PluginName => PluginObject}}
-     A category can have more than one plugins registered through
+     A categoryType can have more than one plugins registered through
      the Amplify System. Each plugin is identified with a name.</div>
 <dl>
 <dt><span class="returnLabel">Returns:</span></dt>
-<dd>the map that represents the category plugins.</dd>
+<dd>the map that represents the categoryType plugins.</dd>
 </dl>
 </li>
 </ul>
-<a name="getPluginForCategory-com.amplifyframework.core.plugin.Category-">
+<a name="getPluginForCategory-com.amplifyframework.core.category.CategoryType-">
 <!--   -->
 </a>
 <ul class="blockListLast">
 <li class="blockList">
 <h4>getPluginForCategory</h4>
-<pre>public static&nbsp;<a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&nbsp;getPluginForCategory(<a href="../../../com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a>&nbsp;category)</pre>
-<div class="block">Retrieve the plugin for a particular category.
- Returns the plugin registered for a category if one.
+<pre>public static&nbsp;<a href="../../../com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a>&nbsp;getPluginForCategory(<a href="../../../com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a>&nbsp;categoryType)</pre>
+<div class="block">Retrieve the plugin for a particular categoryType.
+ Returns the plugin registered for a categoryType if one.
          the plugin returned by the selector if there are more than one plugin.</div>
 <dl>
 <dt><span class="paramLabel">Parameters:</span></dt>
-<dd><code>category</code> - Name of the category</dd>
+<dd><code>categoryType</code> - Name of the categoryType</dd>
 <dt><span class="returnLabel">Returns:</span></dt>
 <dd>the plugin registered and chosen for the catgeory passed in.</dd>
 </dl>

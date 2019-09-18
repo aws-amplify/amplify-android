@@ -18,50 +18,22 @@ package com.amplifyframework.storage;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.category.CategoryType;
 
 public class Storage {
     public static StorageOperation put(@NonNull String remotePath, @NonNull String localPath) throws StorageException {
-        StoragePlugin storagePlugin = (StoragePlugin) Amplify.getPluginForCategory(Category.STORAGE);
-        if (storagePlugin != null) {
-            return storagePlugin.put(remotePath, localPath);
-        } else {
-            throw new StorageException("No valid StoragePlugin found. " +
-                    "You need to configure a StoragePlugin by calling " +
-                    "Amplify.configure() or Amplify.addProvider(StoragePlugin).");
-        }
+        return null;
     }
 
     public static StorageOperation get(@NonNull String remotePath, @NonNull String localPath) throws StorageException {
-        StoragePlugin storagePlugin = (StoragePlugin) Amplify.getPluginForCategory(Category.STORAGE);
-        if (storagePlugin != null) {
-            return storagePlugin.get(remotePath, localPath);
-        } else {
-            throw new StorageException("No valid StoragePlugin found. " +
-                    "You need to configure a StoragePlugin by calling " +
-                    "Amplify.configure() or Amplify.addProvider(StoragePlugin).");
-        }
+        return null;
     }
 
     public static StorageOperation list(@NonNull String remotePath) throws StorageException {
-        StoragePlugin storagePlugin = (StoragePlugin) Amplify.getPluginForCategory(Category.STORAGE);
-        if (storagePlugin != null) {
-            return storagePlugin.list(remotePath);
-        } else {
-            throw new StorageException("No valid StoragePlugin found. " +
-                    "You need to configure a StoragePlugin by calling " +
-                    "Amplify.configure() or Amplify.addProvider(StoragePlugin).");
-        }
+        return null;
     }
 
     public static StorageOperation remove(String remotePath) throws StorageException {
-        StoragePlugin storagePlugin = (StoragePlugin) Amplify.getPluginForCategory(Category.STORAGE);
-        if (storagePlugin != null) {
-            return storagePlugin.remove(remotePath);
-        } else {
-            throw new StorageException("No valid StoragePlugin found. " +
-                    "You need to configure a StoragePlugin by calling " +
-                    "Amplify.configure() or Amplify.addProvider(StoragePlugin).");
-        }
+        return null;
     }
 }

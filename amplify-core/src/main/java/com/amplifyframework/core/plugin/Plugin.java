@@ -17,13 +17,15 @@ package com.amplifyframework.core.plugin;
 
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.category.CategoryTypable;
+
 import org.json.JSONObject;
 
 /**
  * Interface that defines the contract that every plugin
  * in Amplify System will adhere to.
  */
-public interface Plugin {
+public interface Plugin extends CategoryTypable {
     /**
      * @return the identifier that identifies
      *         the plugin implementation

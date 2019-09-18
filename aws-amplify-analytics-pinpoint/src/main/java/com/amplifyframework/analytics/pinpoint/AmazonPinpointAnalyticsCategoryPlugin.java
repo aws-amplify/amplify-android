@@ -23,13 +23,13 @@ import com.amplifyframework.analytics.AnalyticsCategoryPlugin;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.core.plugin.Category;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
 
 /**
- * The plugin implementation for Amazon Pinpoint in Analytics Category.
+ * The plugin implementation for Amazon Pinpoint in Analytics CategoryType.
  */
 public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryPlugin {
 
@@ -46,7 +46,7 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryP
     public AmazonPinpointAnalyticsCategoryPlugin(@NonNull Context context) {
         this.context = context;
 
-        Log.d(TAG, "Amazon Pinpoint Analytics Category Plugin is initialized.");
+        Log.d(TAG, "Amazon Pinpoint Analytics CategoryType Plugin is initialized.");
     }
 
     @Override
@@ -129,7 +129,7 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsCategoryP
     }
 
     @Override
-    public Category getCategory() {
+    public CategoryType getCategory() {
         return null;
     }
 }
