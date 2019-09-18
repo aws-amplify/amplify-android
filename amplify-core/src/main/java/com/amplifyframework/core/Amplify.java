@@ -18,18 +18,15 @@ package com.amplifyframework.core;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.api.APICategory;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.AmplifyAlreadyConfiguredException;
 import com.amplifyframework.core.exception.MismatchedPluginException;
 import com.amplifyframework.core.exception.NoSuchPluginException;
+import com.amplifyframework.core.exception.PluginConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -49,7 +46,7 @@ public class Amplify {
 
     private static final String TAG = Amplify.class.getSimpleName();
 
-    public static final AnalyticsCategory Analytics;
+    public static final com.amplifyframework.analytics.Analytics Analytics;
     public static final APICategory API;
     public static final AuthCategory Auth;
     public static final LoggingCategory Logging;
@@ -66,28 +63,6 @@ public class Amplify {
         Logging = null;
         Storage = null;
     }
-
-    /**
-     * Map of {CategoryType, {pluginClass, pluginObject}}.
-     *
-     * {
-     *     "AUTH" => {
-     *         "keyForAuth" => "AmazonCognitoAuthPlugin@object"
-     *     },
-     *     "STORAGE" => {
-     *         "keyForStorage" => "AmazonS3StoragePlugin@object"
-     *     },
-     *     "ANALYTICS" => {
-     *         "keyForAmazonPinpoint" => "AmazonPinpointAnalyticsPlugin@object",
-     *         "keyForAmazonKinesis" => "AmazonKinesisAnalyticsPlugin@object"
-     *     },
-     *     "API" => {
-     *         "keyForAWSAPIGatewayPlugin" => "AWSRESTAPIGatewayPlugin@object"
-     *     }
-     * }
-     */
-    private static Map<String, Plugin> plugins =
-            new ConcurrentHashMap<String, Plugin>();
 
     private static final Object LOCK = new Object();
 
@@ -113,8 +88,11 @@ public class Amplify {
      * @throws AmplifyAlreadyConfiguredException thrown when already configured
      * @throws NoSuchPluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException, NoSuchPluginException {
+    public static void configure(@NonNull Context context, @NonNull String environment) throws AmplifyAlreadyConfiguredException {
         synchronized (LOCK) {
+            if (CONFIGURED) {
+                throw new AmplifyAlreadyConfiguredException("Amplify is already configured.");
+            }
             amplifyConfiguration = new AmplifyConfiguration(context);
             amplifyConfiguration.setEnvironment(environment);
             CONFIGURED = true;
@@ -127,23 +105,27 @@ public class Amplify {
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
      * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws MismatchedPluginException when a plugin cannot be registered for this CATEGORY_TYPE
+     * @throws MismatchedPluginException when a plugin cannot be registered for the category type it belongs to.
+     * @throws PluginConfigurationException when the plugin's category type is not supported by Amplify.
      */
-    public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws MismatchedPluginException {
+    public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginConfigurationException, MismatchedPluginException {
         synchronized (LOCK) {
-            plugins.put(plugin.getPluginKey(), plugin);
-        }
-    }
-
-    /**
-     * Remove a registered plugin
-     *
-     * @param pluginKey key that identifies the plugin
-     * @param <P> any plugin that conforms to the {@link Plugin} interface
-     */
-    public static <P extends Plugin> void removePlugin(@NonNull final String pluginKey) {
-        synchronized (LOCK) {
-            plugins.remove(pluginKey);
+            switch (plugin.getCategoryType()) {
+                case API:
+                    break;
+                case ANALYTICS:
+                    Analytics.addPlugin(plugin);
+                    break;
+                case HUB:
+                    break;
+                case LOGGING:
+                    break;
+                case STORAGE:
+                    break;
+                default:
+                    throw new PluginConfigurationException("Plugin category does not exist. " +
+                            "Verify that the library version is correct and supports the plugin's category.");
+            }
         }
     }
 
@@ -157,33 +139,6 @@ public class Amplify {
         synchronized (LOCK) {
             Amplify.amplifyConfiguration = null;
             CONFIGURED = false;
-        }
-    }
-
-    /**
-     * Retrieve a plugin of CATEGORY_TYPE.
-     *
-     * @param pluginKey the key that identifies the plugin implementation
-     * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @return the plugin object
-     */
-    public static <P extends Plugin> Plugin getPlugin(@NonNull final String pluginKey) {
-        synchronized (LOCK) {
-            return plugins.get(pluginKey);
-        }
-    }
-
-    /**
-     * Retrieve the map of CATEGORY_TYPE plugins.
-     *     {CategoryType => {PluginName => PluginObject}}
-     *     A CATEGORY_TYPE can have more than one plugins registered through
-     *     the Amplify System. Each plugin is identified with a name.
-     *
-     * @return the map that represents the CATEGORY_TYPE plugins.
-     */
-    public static Map<String, Plugin> getPlugins() {
-        synchronized (LOCK) {
-            return plugins;
         }
     }
 }

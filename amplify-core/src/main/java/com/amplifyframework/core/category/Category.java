@@ -25,7 +25,7 @@ import com.amplifyframework.core.plugin.Plugin;
 
 import java.util.Map;
 
-public interface Category extends CategoryTypable {
+public interface Category extends CategoryTypeable {
 
     /**
      * Read the configuration from amplifyconfiguration.json file

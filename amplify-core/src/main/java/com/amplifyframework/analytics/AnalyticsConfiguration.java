@@ -13,8 +13,8 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.category;
 
-public interface CategoryTypable {
-    CategoryType getCategoryType();
+package com.amplifyframework.analytics;
+
+public abstract class AnalyticsConfiguration {
 }
