@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Amplify.Analytics.record("MainActivity is created.");
+        Amplify.Analytics.recordEvent("MainActivity is created.");
     }
 
     @Override
