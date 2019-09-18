@@ -15,25 +15,114 @@
 
 package com.amplifyframework.storage;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.storage.exception.*;
+import com.amplifyframework.storage.operation.*;
+import com.amplifyframework.storage.option.*;
 
-public class Storage {
-    public static StorageOperation put(@NonNull String remotePath, @NonNull String localPath) throws StorageException {
-        return null;
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Storage implements Category, StorageCategoryBehavior {
+    private Map<String, StoragePlugin> plugins = new HashMap<>();
+    private StoragePlugin plugin;
+
+    private boolean isConfigured = false;
+
+    @Override
+    public StorageGetOperation get(@NonNull String key, StorageGetOption option) throws StorageGetException {
+        assert isConfigured;
+        return plugin.get(key, option);
     }
 
-    public static StorageOperation get(@NonNull String remotePath, @NonNull String localPath) throws StorageException {
-        return null;
+    @Override
+    public StoragePutOperation put(@NonNull String key, @NonNull File file, StoragePutOption option) throws StoragePutException {
+        assert isConfigured;
+        return plugin.put(key, file, option);
     }
 
-    public static StorageOperation list(@NonNull String remotePath) throws StorageException {
-        return null;
+    @Override
+    public StoragePutOperation put(@NonNull String key, @NonNull String path, StoragePutOption option) throws StoragePutException {
+        assert isConfigured;
+        return plugin.put(key, path, option);
     }
 
-    public static StorageOperation remove(String remotePath) throws StorageException {
-        return null;
+    @Override
+    public StorageListOperation list(StorageListOption option) throws StorageListException {
+        assert isConfigured;
+        return plugin.list(option);
+    }
+
+    @Override
+    public StorageRemoveOperation remove(@NonNull String key, StorageRemoveOption option) throws StorageRemoveException {
+        assert isConfigured;
+        return plugin.remove(key, option);
+    }
+
+    @Override
+    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+        configure(context, ""); //TODO: REPLACE WITH REAL DEFAULT PARAMETER
+    }
+
+    @Override
+    public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
+        if (isConfigured) {
+            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
+        }
+        if (plugins.size() == 1) {
+            plugin = (StoragePlugin) plugins.values().toArray()[0];
+        } else {
+            //TODO: Set up a selector
+        }
+        isConfigured = true;
+    }
+
+    @Override
+    public void addPlugin(@NonNull Plugin plugin) throws PluginException {
+        if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
+            throw new PluginException.EmptyKeyException();
+        }
+        if (plugin instanceof StoragePlugin) {
+            plugins.put(plugin.getPluginKey(), (StoragePlugin) plugin);
+        } else {
+            throw new PluginException.MismatchedPluginException();
+        }
+    }
+
+    @Override
+    public void removePlugin(@NonNull String pluginKey) {
+        plugins.remove(pluginKey);
+    }
+
+    @Override
+    public void reset() {
+        //TODO: Implement
+    }
+
+    @Override
+    public StoragePlugin getPlugin(@NonNull String pluginKey) throws PluginException {
+        if (plugins.containsKey(pluginKey)) {
+            return plugins.get(pluginKey);
+        } else {
+            throw new PluginException.NoSuchPluginException();
+        }
+    }
+
+    @Override
+    public Map<String, StoragePlugin> getPlugins() {
+        return plugins;
+    }
+
+    @Override
+    public CategoryType getCategoryType() {
+        return CategoryType.STORAGE;
     }
 }
