@@ -13,9 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage;
+package com.amplifyframework.core.category;
 
-import com.amplifyframework.core.plugin.CategoryPlugin;
-
-public interface StorageCategoryPlugin extends CategoryPlugin, StorageCategoryClientBehavior {
+/**
+ * Enum that declares the various categories
+ * of APIs supported by Amplify System.
+ */
+public enum CategoryType {
+    ANALYTICS,
+    API,
+    HUB,
+    LOGGING,
+    STORAGE
+    ;
 }

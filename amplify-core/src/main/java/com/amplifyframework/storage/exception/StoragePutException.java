@@ -19,7 +19,16 @@ import com.amplifyframework.core.exception.AmplifyException;
 
 public class StoragePutException extends AmplifyException {
     public static class MissingFile extends StoragePutException {
-        public MissingFile() { super("Missing file"); }
+        public MissingFile() { super("Missing file to store."); }
+        public MissingFile(String message) {
+            super(message);
+        }
+        public MissingFile(Throwable throwable) {
+            super(throwable);
+        }
+        public MissingFile(String message, Throwable t) {
+            super(message, t);
+        }
     }
 
     public StoragePutException(final String message, final Throwable t) { super(message, t); }

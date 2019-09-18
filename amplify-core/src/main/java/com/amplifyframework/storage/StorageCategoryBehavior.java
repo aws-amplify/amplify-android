@@ -23,7 +23,7 @@ import com.amplifyframework.storage.option.*;
 
 import java.io.File;
 
-public interface StorageCategoryClientBehavior {
+public interface StorageCategoryBehavior {
     StorageGetOperation get(@NonNull String key, StorageGetOption option) throws StorageGetException;
 
     StoragePutOperation put(@NonNull String key, @NonNull File file, StoragePutOption option) throws StoragePutException;
