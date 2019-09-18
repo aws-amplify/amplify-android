@@ -18,20 +18,21 @@ package com.amplifyframework.analytics;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.plugin.Category;
-import com.amplifyframework.core.plugin.CategoryPlugin;
+import com.amplifyframework.core.category.Category;
+import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.plugin.Plugin;
 
 /**
  * Defines the Client API consumed by the application.
- * Internally routes the calls to the Analytics Category
+ * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClientBehavior {
+public abstract class AnalyticsCategory implements AnalyticsCategoryClientBehavior, Category {
 
     /**
-     * Mark that this is Analytics category.
+     * Mark that this is Analytics CATEGORY_TYPE.
      */
-    private static Category category = Category.ANALYTICS;
+    private static CategoryType categoryType = CategoryType.ANALYTICS;
 
     /**
      * By default collection and sending of Analytics events
@@ -62,40 +63,21 @@ public class AnalyticsCategory extends Amplify implements AnalyticsCategoryClien
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
         if (enabled) {
-            CategoryPlugin analyticsCategoryPlugin = Amplify.getPluginForCategory(category);
-            if (analyticsCategoryPlugin instanceof AnalyticsCategoryPlugin) {
-                AnalyticsEvent analyticsEvent = new AnalyticsEvent(eventName);
-                ((AnalyticsCategoryPlugin) analyticsCategoryPlugin).recordEvent(analyticsEvent);
-            } else {
-                throw new AnalyticsException("Failed to record analyticsEvent. " +
-                        "Please check if a valid storage plugin is registered.");
-            }
+
         }
     }
 
     @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
         if (enabled) {
-            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(category);
-            if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
-                ((AnalyticsCategoryPlugin) analyticsPlugin).recordEvent(analyticsEvent);
-            } else {
-                throw new AnalyticsException("Failed to record analyticsEvent. " +
-                        "Please check if a valid storage plugin is registered.");
-            }
+
         }
     }
 
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
         if (enabled) {
-            CategoryPlugin analyticsPlugin = Amplify.getPluginForCategory(category);
-            if (analyticsPlugin instanceof AnalyticsCategoryPlugin) {
-                ((AnalyticsCategoryPlugin) analyticsPlugin).updateProfile(analyticsProfile);
-            } else {
-                throw new AnalyticsException("Failed to record analyticsEvent. " +
-                        "Please check if a valid storage plugin is registered.");
-            }
+
         }
     }
 }

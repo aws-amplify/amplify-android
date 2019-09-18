@@ -17,7 +17,7 @@ package com.amplifyframework.core.exception;
 
 /**
  * Exception thrown when the plugin passed in doesn't match
- * with the category.
+ * with the CATEGORY_TYPE.
  */
 public class MismatchedPluginException extends AmplifyException {
     /**

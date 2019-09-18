@@ -13,16 +13,8 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.plugin;
+package com.amplifyframework.core.category;
 
-/**
- * Enum that declares the various categories
- * of APIs supported by Amplify System.
- */
-public enum Category {
-    AUTH,
-    ANALYTICS,
-    STORAGE,
-    API
-    ;
+public interface CategoryTypable {
+    CategoryType getCategoryType();
 }

@@ -13,21 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.plugin;
+package com.amplifyframework.core.category;
 
 /**
- * Interface that identifies the implementation
- * of a category plugin. For example, plugins for
- * categories such as Auth, Analytics, Storage, API.
+ * Enum that declares the various categories
+ * of APIs supported by Amplify System.
  */
-public interface CategoryPlugin extends Plugin {
-    /**
-     * Enum that specifies the category.
-     */
-    Category category = null;
-
-    /**
-     * @return the category of the plugin
-     */
-    Category getCategory();
+public enum CategoryType {
+    ANALYTICS,
+    API,
+    HUB,
+    LOGGING,
+    STORAGE
+    ;
 }

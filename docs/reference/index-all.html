@@ -81,7 +81,7 @@
 <dd>
 <div class="block">The Amplify System has the following responsibilities:
 
- 1) Add, Get and Remove category plugins with the Amplify System
+ 1) Add, Get and Remove categoryType plugins with the Amplify System
  2) Configure and reset the Amplify System with the information
  from the amplifyconfiguration.json.</div>
 </dd>
@@ -182,7 +182,7 @@
 </dd>
 <dt><a href="com/amplifyframework/analytics/AnalyticsCategoryPlugin.html" title="interface in com.amplifyframework.analytics"><span class="typeNameLink">AnalyticsCategoryPlugin</span></a> - Interface in <a href="com/amplifyframework/analytics/package-summary.html">com.amplifyframework.analytics</a></dt>
 <dd>
-<div class="block">Interface that a plugin implementation of Analytics category
+<div class="block">Interface that a plugin implementation of Analytics categoryType
  would implement.</div>
 </dd>
 <dt><a href="com/amplifyframework/analytics/AnalyticsEvent.html" title="class in com.amplifyframework.analytics"><span class="typeNameLink">AnalyticsEvent</span></a> - Class in <a href="com/amplifyframework/analytics/package-summary.html">com.amplifyframework.analytics</a></dt>
@@ -196,7 +196,7 @@
 </dd>
 <dt><a href="com/amplifyframework/analytics/AnalyticsException.html" title="class in com.amplifyframework.analytics"><span class="typeNameLink">AnalyticsException</span></a> - Exception in <a href="com/amplifyframework/analytics/package-summary.html">com.amplifyframework.analytics</a></dt>
 <dd>
-<div class="block">Exception thrown by Analytics category plugins.</div>
+<div class="block">Exception thrown by Analytics categoryType plugins.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/analytics/AnalyticsException.html#AnalyticsException-java.lang.String-java.lang.Throwable-">AnalyticsException(String, Throwable)</a></span> - Constructor for exception com.amplifyframework.analytics.<a href="com/amplifyframework/analytics/AnalyticsException.html" title="class in com.amplifyframework.analytics">AnalyticsException</a></dt>
 <dd>
@@ -290,9 +290,9 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/storage/StorageOperation.html#cancel--">cancel()</a></span> - Method in class com.amplifyframework.storage.<a href="com/amplifyframework/storage/StorageOperation.html" title="class in com.amplifyframework.storage">StorageOperation</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="com/amplifyframework/analytics/AnalyticsCategory.html#category">category</a></span> - Static variable in class com.amplifyframework.analytics.<a href="com/amplifyframework/analytics/AnalyticsCategory.html" title="class in com.amplifyframework.analytics">AnalyticsCategory</a></dt>
+<dt><span class="memberNameLink"><a href="com/amplifyframework/analytics/AnalyticsCategory.html#categoryType">categoryType</a></span> - Static variable in class com.amplifyframework.analytics.<a href="com/amplifyframework/analytics/AnalyticsCategory.html" title="class in com.amplifyframework.analytics">AnalyticsCategory</a></dt>
 <dd>
-<div class="block">Mark that this is Analytics category.</div>
+<div class="block">Mark that this is Analytics categoryType.</div>
 </dd>
 <dt><a href="com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin"><span class="typeNameLink">Category</span></a> - Enum in <a href="com/amplifyframework/core/plugin/package-summary.html">com.amplifyframework.core.plugin</a></dt>
 <dd>
@@ -301,14 +301,14 @@
 </dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/core/plugin/Category.html#Category--">Category()</a></span> - Constructor for enum com.amplifyframework.core.plugin.<a href="com/amplifyframework/core/plugin/Category.html" title="enum in com.amplifyframework.core.plugin">Category</a></dt>
 <dd>&nbsp;</dd>
-<dt><span class="memberNameLink"><a href="com/amplifyframework/core/plugin/CategoryPlugin.html#category">category</a></span> - Static variable in interface com.amplifyframework.core.plugin.<a href="com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a></dt>
+<dt><span class="memberNameLink"><a href="com/amplifyframework/core/plugin/CategoryPlugin.html#categoryType">categoryType</a></span> - Static variable in interface com.amplifyframework.core.plugin.<a href="com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin">CategoryPlugin</a></dt>
 <dd>
-<div class="block">Enum that specifies the category.</div>
+<div class="block">Enum that specifies the categoryType.</div>
 </dd>
 <dt><a href="com/amplifyframework/core/plugin/CategoryPlugin.html" title="interface in com.amplifyframework.core.plugin"><span class="typeNameLink">CategoryPlugin</span></a> - Interface in <a href="com/amplifyframework/core/plugin/package-summary.html">com.amplifyframework.core.plugin</a></dt>
 <dd>
 <div class="block">Interface that identifies the implementation
- of a category plugin.</div>
+ of a categoryType plugin.</div>
 </dd>
 <dt><a href="com/amplifyframework/analytics/package-summary.html">com.amplifyframework.analytics</a> - package com.amplifyframework.analytics</dt>
 <dd>&nbsp;</dd>
@@ -501,17 +501,17 @@
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/core/Amplify.html#getPlugin-java.lang.String-">getPlugin(String)</a></span> - Static method in class com.amplifyframework.core.<a href="com/amplifyframework/core/Amplify.html" title="class in com.amplifyframework.core">Amplify</a></dt>
 <dd>
-<div class="block">Retrieve a plugin of category.</div>
+<div class="block">Retrieve a plugin of categoryType.</div>
 </dd>
-<dt><span class="memberNameLink"><a href="com/amplifyframework/core/Amplify.html#getPluginForCategory-com.amplifyframework.core.plugin.Category-">getPluginForCategory(Category)</a></span> - Static method in class com.amplifyframework.core.<a href="com/amplifyframework/core/Amplify.html" title="class in com.amplifyframework.core">Amplify</a></dt>
+<dt><span class="memberNameLink"><a href="com/amplifyframework/core/Amplify.html#getPluginForCategory-com.amplifyframework.core.category.CategoryType-">getPluginForCategory(Category)</a></span> - Static method in class com.amplifyframework.core.<a href="com/amplifyframework/core/Amplify.html" title="class in com.amplifyframework.core">Amplify</a></dt>
 <dd>
-<div class="block">Retrieve the plugin for a particular category.</div>
+<div class="block">Retrieve the plugin for a particular categoryType.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/core/plugin/Plugin.html#getPluginKey--">getPluginKey()</a></span> - Method in interface com.amplifyframework.core.plugin.<a href="com/amplifyframework/core/plugin/Plugin.html" title="interface in com.amplifyframework.core.plugin">Plugin</a></dt>
 <dd>&nbsp;</dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/core/Amplify.html#getPlugins--">getPlugins()</a></span> - Static method in class com.amplifyframework.core.<a href="com/amplifyframework/core/Amplify.html" title="class in com.amplifyframework.core">Amplify</a></dt>
 <dd>
-<div class="block">Retrieve the map of category plugins.</div>
+<div class="block">Retrieve the map of categoryType plugins.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/core/task/Progress.html#getProgressPercentage--">getProgressPercentage()</a></span> - Method in class com.amplifyframework.core.task.<a href="com/amplifyframework/core/task/Progress.html" title="class in com.amplifyframework.core.task">Progress</a></dt>
 <dd>&nbsp;</dd>
@@ -677,7 +677,7 @@
 <dt><a href="com/amplifyframework/core/exception/MismatchedPluginException.html" title="class in com.amplifyframework.core.exception"><span class="typeNameLink">MismatchedPluginException</span></a> - Exception in <a href="com/amplifyframework/core/exception/package-summary.html">com.amplifyframework.core.exception</a></dt>
 <dd>
 <div class="block">Exception thrown when the plugin passed in doesn't match
- with the category.</div>
+ with the categoryType.</div>
 </dd>
 <dt><span class="memberNameLink"><a href="com/amplifyframework/core/exception/MismatchedPluginException.html#MismatchedPluginException-java.lang.String-java.lang.Throwable-">MismatchedPluginException(String, Throwable)</a></span> - Constructor for exception com.amplifyframework.core.exception.<a href="com/amplifyframework/core/exception/MismatchedPluginException.html" title="class in com.amplifyframework.core.exception">MismatchedPluginException</a></dt>
 <dd>
