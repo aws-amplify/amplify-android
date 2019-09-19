@@ -24,7 +24,7 @@ import com.amplifyframework.core.plugin.Plugin;
 
 import java.util.Map;
 
-public interface Category extends CategoryTypeable {
+public interface Category<P> extends CategoryTypeable {
     /**
      * Read the configuration from amplifyconfiguration.json file
      *
@@ -50,18 +50,18 @@ public interface Category extends CategoryTypeable {
      *
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
-     * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws PluginException when a plugin cannot be registered for this CATEGORY_TYPE
+     * @throws PluginException when a plugin cannot be registered for this category
      */
-    <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginException;
+    void addPlugin(@NonNull final P plugin) throws PluginException;
 
     /**
      * Remove a registered plugin
      *
-     * @param pluginKey key to an implementation of a CATEGORY_TYPE that
-     *               conforms to the {@link Plugin} interface.
+     * @param plugin an implementation of a CATEGORY_TYPE that
+     *               conforms to the {@link Plugin} interface
+     * @throws PluginException when a plugin cannot be registered for this category
      */
-    void removePlugin(@NonNull final String pluginKey);
+    void removePlugin(@NonNull final P plugin) throws PluginException;
 
     /**
      * Reset Amplify to state where it is not configured.
@@ -75,10 +75,9 @@ public interface Category extends CategoryTypeable {
      * Retrieve a plugin of CATEGORY_TYPE.
      *
      * @param pluginKey the key that identifies the plugin implementation
-     * @param <P> any plugin that conforms to the {@link Plugin} interface
      * @return the plugin object
      */
-    <P extends Plugin> P getPlugin(@NonNull final String pluginKey) throws PluginException;
+    P getPlugin(@NonNull final String pluginKey) throws PluginException;
 
     /**
      * Retrieve the map of plugins: {PluginName => PluginObject}}
@@ -87,5 +86,5 @@ public interface Category extends CategoryTypeable {
      *
      * @return the map that represents the plugins.
      */
-    <P extends Plugin> Map<String, P> getPlugins();
+    Map<String, P> getPlugins();
 }

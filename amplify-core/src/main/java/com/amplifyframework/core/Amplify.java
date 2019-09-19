@@ -19,6 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.analytics.Analytics;
+import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.api.APICategory;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.ConfigurationException;
@@ -26,6 +27,7 @@ import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.Storage;
+import com.amplifyframework.storage.StoragePlugin;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -109,18 +111,60 @@ public class Amplify {
      */
     public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
+            if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
+                throw new PluginException.EmptyKeyException();
+            }
+
             switch (plugin.getCategoryType()) {
                 case API:
                     break;
                 case ANALYTICS:
-                    Analytics.addPlugin(plugin);
+                    if (plugin instanceof AnalyticsPlugin) {
+                        Analytics.addPlugin((AnalyticsPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case HUB:
                     break;
                 case LOGGING:
                     break;
                 case STORAGE:
-                    Storage.addPlugin(plugin);
+                    if (plugin instanceof StoragePlugin) {
+                        Storage.addPlugin((StoragePlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
+                    break;
+                default:
+                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
+                            "Verify that the library version is correct and supports the plugin's category.");
+            }
+        }
+    }
+
+    public static <P extends Plugin> void removePlugin(@NonNull final P plugin) throws PluginException {
+        synchronized (LOCK) {
+            switch (plugin.getCategoryType()) {
+                case API:
+                    break;
+                case ANALYTICS:
+                    if (plugin instanceof AnalyticsPlugin) {
+                        Analytics.removePlugin((AnalyticsPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
+                    break;
+                case HUB:
+                    break;
+                case LOGGING:
+                    break;
+                case STORAGE:
+                    if (plugin instanceof StoragePlugin) {
+                        Storage.removePlugin((StoragePlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 default:
                     throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +

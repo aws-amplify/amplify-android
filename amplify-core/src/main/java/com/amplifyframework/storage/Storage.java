@@ -30,12 +30,18 @@ import com.amplifyframework.storage.option.*;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-public class Storage implements Category, StorageCategoryBehavior {
-    private Map<String, StoragePlugin> plugins = new HashMap<>();
+public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior {
+    private Map<String, StoragePlugin> plugins;
     private StoragePlugin plugin;
 
-    private boolean isConfigured = false;
+    private boolean isConfigured;
+
+    public Storage() {
+        plugins = new ConcurrentHashMap<String, StoragePlugin>();
+        isConfigured = false;
+    }
 
     @Override
     public StorageGetOperation get(@NonNull String key, StorageGetOption option) throws StorageGetException {
@@ -86,20 +92,25 @@ public class Storage implements Category, StorageCategoryBehavior {
     }
 
     @Override
-    public void addPlugin(@NonNull Plugin plugin) throws PluginException {
-        if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
-            throw new PluginException.EmptyKeyException();
-        }
-        if (plugin instanceof StoragePlugin) {
-            plugins.put(plugin.getPluginKey(), (StoragePlugin) plugin);
-        } else {
-            throw new PluginException.MismatchedPluginException();
+    public void addPlugin(@NonNull StoragePlugin plugin) throws PluginException {
+        try {
+            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
         }
     }
 
     @Override
-    public void removePlugin(@NonNull String pluginKey) {
-        plugins.remove(pluginKey);
+    public void removePlugin(@NonNull StoragePlugin plugin) throws PluginException {
+        try {
+            if (plugins.remove(plugin.getPluginKey()) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     @Override
