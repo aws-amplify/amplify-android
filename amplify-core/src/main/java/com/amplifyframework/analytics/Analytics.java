@@ -25,25 +25,36 @@ import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class Analytics implements Category, AnalyticsCategoryClientBehavior {
+public class Analytics implements Category<AnalyticsPlugin>, AnalyticsCategoryClientBehavior {
+
+    /**
+     * Map of the { pluginKey => plugin } object
+     */
+    private Map<String, AnalyticsPlugin> plugins;
 
     /**
      * By default collection and sending of Analytics events
      * are enabled.
      */
-    private static boolean enabled = true;
+    private boolean enabled = true;
 
     /**
      * Protect enabling and disabling of Analytics event
      * collection and sending.
      */
     private static final Object LOCK = new Object();
+
+    public Analytics() {
+        this.plugins = new ConcurrentHashMap<String, AnalyticsPlugin>();
+        this.enabled = true;
+    }
 
     @Override
     public void disable() {
@@ -114,19 +125,31 @@ public class Analytics implements Category, AnalyticsCategoryClientBehavior {
      * @throws PluginException when a plugin cannot be registered for this CATEGORY_TYPE
      */
     @Override
-    public <P extends Plugin> void addPlugin(@NonNull P plugin) throws PluginException {
-
+    public void addPlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
+        try {
+            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     /**
      * Remove a registered plugin
      *
-     * @param pluginKey an implementation of a CATEGORY_TYPE that
-     *                  conforms to the {@link Plugin} interface.
+     * @param plugin an implementation of a CATEGORY_TYPE that
+     *               conforms to the {@link Plugin} interface.
      */
     @Override
-    public void removePlugin(@NonNull String pluginKey) {
-
+    public void removePlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
+        try {
+            if (plugins.remove(plugin.getPluginKey()) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     /**
@@ -147,8 +170,12 @@ public class Analytics implements Category, AnalyticsCategoryClientBehavior {
      * @return the plugin object
      */
     @Override
-    public <P extends Plugin> P getPlugin(@NonNull String pluginKey) {
-        return null;
+    public AnalyticsPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
+        if (plugins.containsKey(pluginKey)) {
+            return plugins.get(pluginKey);
+        } else {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     /**
@@ -159,8 +186,8 @@ public class Analytics implements Category, AnalyticsCategoryClientBehavior {
      * @return the map that represents the plugins.
      */
     @Override
-    public <P extends Plugin> Map<String, P> getPlugins() {
-        return null;
+    public Map<String, AnalyticsPlugin> getPlugins() {
+        return plugins;
     }
 
     @Override
