@@ -16,5 +16,7 @@
 
 package com.amplifyframework.analytics;
 
-public abstract class AnalyticsConfiguration {
+import com.amplifyframework.core.plugin.PluginConfiguration;
+
+public class AnalyticsPluginConfiguration extends PluginConfiguration {
 }

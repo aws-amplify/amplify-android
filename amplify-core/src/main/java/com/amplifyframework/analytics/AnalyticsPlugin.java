@@ -20,8 +20,8 @@ import com.amplifyframework.core.plugin.Plugin;
 /**
  * Interface that a plugin implementation of Analytics CATEGORY_TYPE
  * would implement. This includes the client behavior dictated by
- * {@link AnalyticsCategoryClientBehavior} and {@link Plugin}.
+ * {@link AnalyticsCategoryBehavior} and {@link Plugin}.
  */
-public interface AnalyticsPlugin extends AnalyticsCategoryClientBehavior, Plugin {
+public interface AnalyticsPlugin extends AnalyticsCategoryBehavior, Plugin {
 
 }

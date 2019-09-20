@@ -25,6 +25,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.storage.Storage;
 
 public class MainActivity extends AppCompatActivity {
 

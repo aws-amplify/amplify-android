@@ -20,14 +20,17 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.analytics.Analytics;
 import com.amplifyframework.analytics.AnalyticsPlugin;
+import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.api.APICategory;
 import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.PluginConfiguration;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.Storage;
 import com.amplifyframework.storage.StoragePlugin;
+import com.amplifyframework.storage.StoragePluginConfiguration;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -132,6 +135,49 @@ public class Amplify {
                 case STORAGE:
                     if (plugin instanceof StoragePlugin) {
                         Storage.addPlugin((StoragePlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
+                    break;
+                default:
+                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
+                            "Verify that the library version is correct and supports the plugin's category.");
+            }
+        }
+    }
+
+    /**
+     * Register a plugin with Amplify
+     *
+     * @param plugin an implementation of a CATEGORY_TYPE that
+     *               conforms to the {@link Plugin} interface.
+     * @param <P> any plugin that conforms to the {@link Plugin} interface
+     * @throws PluginException when a plugin cannot be registered for the category type it belongs to
+     *                         or when when the plugin's category type is not supported by Amplify.
+     */
+    public static <P extends Plugin, C extends PluginConfiguration> void addPlugin(@NonNull final P plugin, @NonNull final C pluginConfiguration) throws PluginException {
+        synchronized (LOCK) {
+            if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
+                throw new PluginException.EmptyKeyException();
+            }
+
+            switch (plugin.getCategoryType()) {
+                case API:
+                    break;
+                case ANALYTICS:
+                    if (plugin instanceof AnalyticsPlugin && pluginConfiguration instanceof AnalyticsPluginConfiguration) {
+                        Analytics.addPlugin((AnalyticsPlugin) plugin, (AnalyticsPluginConfiguration) pluginConfiguration);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
+                    break;
+                case HUB:
+                    break;
+                case LOGGING:
+                    break;
+                case STORAGE:
+                    if (plugin instanceof StoragePlugin && pluginConfiguration instanceof StoragePluginConfiguration) {
+                        Storage.addPlugin((StoragePlugin) plugin, (StoragePluginConfiguration) pluginConfiguration);
                     } else {
                         throw new PluginException.MismatchedPluginException();
                     }

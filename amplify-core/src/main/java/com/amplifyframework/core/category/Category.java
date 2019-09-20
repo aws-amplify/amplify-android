@@ -24,7 +24,7 @@ import com.amplifyframework.core.plugin.Plugin;
 
 import java.util.Map;
 
-public interface Category<P> extends CategoryTypeable {
+public interface Category<P, C> extends CategoryTypeable {
     /**
      * Read the configuration from amplifyconfiguration.json file
      *
@@ -55,9 +55,19 @@ public interface Category<P> extends CategoryTypeable {
     void addPlugin(@NonNull final P plugin) throws PluginException;
 
     /**
+     * Register a plugin with Amplify
+     *
+     * @param plugin an implementation of a Category that
+     *               conforms to the {@link Plugin} interface.
+     * @param pluginConfiguration configuration information for the plugin.
+     * @throws PluginException when a plugin cannot be registered for this category
+     */
+    void addPlugin(@NonNull final P plugin, @NonNull final C pluginConfiguration) throws PluginException;
+
+    /**
      * Remove a registered plugin
      *
-     * @param plugin an implementation of a CATEGORY_TYPE that
+     * @param plugin an implementation of a Category that
      *               conforms to the {@link Plugin} interface
      * @throws PluginException when a plugin cannot be registered for this category
      */

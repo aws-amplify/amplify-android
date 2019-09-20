@@ -22,7 +22,7 @@ import android.support.annotation.NonNull;
  * by the app for collection and sending of Analytics
  * events.
  */
-public interface AnalyticsCategoryClientBehavior {
+public interface AnalyticsCategoryBehavior {
     /**
      * Disable collection and sending of Analytics Events.
      */

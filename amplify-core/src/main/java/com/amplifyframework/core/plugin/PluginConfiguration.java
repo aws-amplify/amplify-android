@@ -13,12 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage;
+package com.amplifyframework.core.plugin;
 
 /**
  * Configuration specific to Storage category.
  * Storage plugins will be configured in code with custom
  * configuration objects that inherit from this.
  */
-public abstract class StorageConfiguration {
+public class PluginConfiguration {
+
 }
