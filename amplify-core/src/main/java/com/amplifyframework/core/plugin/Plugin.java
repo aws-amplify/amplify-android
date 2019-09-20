@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core.plugin;
 
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.category.CategoryTypeable;
@@ -34,8 +35,17 @@ public interface Plugin<C> extends CategoryTypeable {
      * Configure the Plugin with the configuration passed.
      *
      * @param pluginConfiguration configuration for the plugin
+     * @throws PluginException when configuration for a plugin was not found
      */
-    void configure(@NonNull C pluginConfiguration);
+    void configure(@NonNull C pluginConfiguration) throws PluginException;
+
+    /**
+     * Configure the Plugin using the details in amplifyconfiguration.json
+     *
+     * @param context Android context required to read the contents of file
+     * @throws PluginException when configuration for a plugin was not found
+     */
+    void configure(@NonNull Context context) throws PluginException;
 
     /**
      * Reset the plugin to the state where it's not configured.

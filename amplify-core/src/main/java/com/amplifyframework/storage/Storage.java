@@ -18,13 +18,11 @@ package com.amplifyframework.storage;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.analytics.Analytics;
-import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
@@ -39,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Defines the Client API consumed by the application.
- * Internally routes the calls to the Analytics CategoryType
+ * Internally routes the calls to the Storage Category
  * plugins registered.
  */
 
@@ -97,7 +95,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
                                    StorageGetOptions options,
                                    Callback<StorageGetResult> callback) throws StorageGetException {
         assert isConfigured;
-        return plugin.get(key, options);
+        return plugin.get(key, options, callback);
     }
 
     @Override
@@ -113,7 +111,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
                                    StoragePutOptions options,
                                    Callback<StoragePutResult> callback) throws StoragePutException {
         assert isConfigured;
-        return plugin.put(key, local, options);
+        return plugin.put(key, local, options, callback);
     }
 
     @Override
@@ -125,7 +123,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
     public StorageListOperation list(StorageListOptions options,
                                      Callback<StorageListResult> callback) throws StorageListException {
         assert isConfigured;
-        return plugin.list(options);
+        return plugin.list(options, callback);
     }
 
     @Override
@@ -139,7 +137,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
                                          StorageRemoveOptions options,
                                          Callback<StorageRemoveResult> callback) throws StorageRemoveException {
         assert isConfigured;
-        return plugin.remove(key, options);
+        return plugin.remove(key, options, callback);
     }
 
     /**
@@ -174,10 +172,11 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
             if (plugins.values().iterator().hasNext()) {
                 PluginDetails pluginDetails = plugins.values().iterator().next();
                 if (pluginDetails.storagePluginConfiguration == null) {
-                    pluginDetails.storagePluginConfiguration(new StoragePluginConfiguration(context));
+                    pluginDetails.storagePlugin.configure(context);
+                } else {
+                    pluginDetails.storagePlugin.configure(pluginDetails.storagePluginConfiguration);
                 }
 
-                pluginDetails.storagePlugin.configure(pluginDetails.storagePluginConfiguration);
             }
         }
 
@@ -205,12 +204,11 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
     }
 
     /**
-     * Register a plugin with Amplify
+     * Register a Storage plugin with Amplify
      *
-     * @param plugin              an implementation of a Category that
-     *                            conforms to the {@link com.amplifyframework.core.plugin.Plugin} interface.
+     * @param plugin              an implementation of a StoragePlugin
      * @param pluginConfiguration configuration information for the plugin.
-     * @throws PluginException when a plugin cannot be registered for this category
+     * @throws PluginException when a plugin cannot be registered for Storage category
      */
     @Override
     public void addPlugin(@NonNull StoragePlugin plugin, @NonNull StoragePluginConfiguration pluginConfiguration) throws PluginException {
@@ -227,11 +225,15 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
         }
     }
 
+    /**
+     * Remove a registered Storage plugin
+     *
+     * @param plugin an implementation of StoragePlugin
+     */
     @Override
     public void removePlugin(@NonNull StoragePlugin plugin) throws PluginException {
         if (plugins.containsKey(plugin.getPluginKey())) {
             plugins.remove(plugin.getPluginKey());
-            //TODO: Remove configuration as well when it is added
         } else {
             throw new PluginException.NoSuchPluginException();
         }
@@ -266,7 +268,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
      * @return enum that represents Storage category
      */
     @Override
-    public CategoryType getCategoryType() {
+    public final CategoryType getCategoryType() {
         return CategoryType.STORAGE;
     }
 }
