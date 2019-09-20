@@ -39,10 +39,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior {
-    /**
-     * Map of the { pluginKey => plugin } object
-     */
+
+public class Storage implements Category<StoragePlugin, StoragePluginConfiguration>, StorageCategoryBehavior {
+
     private Map<String, StoragePlugin> plugins;
 
     /**
@@ -168,11 +167,26 @@ public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior
     }
 
     /**
-     * Remove a registered plugin
+     * Register a plugin with Amplify
      *
-     * @param plugin an implementation of StoragePlugin
-     * @throws PluginException when this plugin was not registered
+     * @param plugin              an implementation of a Category that
+     *                            conforms to the {@link Plugin} interface.
+     * @param pluginConfiguration configuration information for the plugin.
+     * @throws PluginException when a plugin cannot be registered for this category
      */
+    @Override
+    public void addPlugin(@NonNull StoragePlugin plugin, @NonNull StoragePluginConfiguration pluginConfiguration) throws PluginException {
+        try {
+            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
+
+        plugin.setConfiguration(pluginConfiguration);
+    }
+    
     @Override
     public void removePlugin(@NonNull StoragePlugin plugin) throws PluginException {
         if (plugins.containsKey(plugin.getPluginKey())) {

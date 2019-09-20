@@ -25,7 +25,7 @@ import org.json.JSONObject;
  * Interface that defines the contract that every plugin
  * in Amplify System will adhere to.
  */
-public interface Plugin extends CategoryTypeable {
+public interface Plugin<C> extends CategoryTypeable {
     /**
      * @return the identifier that identifies
      *         the plugin implementation
@@ -56,16 +56,7 @@ public interface Plugin extends CategoryTypeable {
 
     /**
      * Initialize the plugin with the configuration passed.
-     * @param jsonObject configuration for the plugin
-     * @return the plugin object configured
+     * @param pluginConfiguration configuration for the plugin
      */
-    Plugin initWithConfiguration(@NonNull JSONObject jsonObject);
-
-    /**
-     * Initialize the plugin with the configuration passed.
-     * @param jsonObject configuration for the plugin
-     * @param key the identifier that identifies the plugin implementation
-     * @return the plugin object configured
-     */
-    Plugin initWithConfiguration(@NonNull JSONObject jsonObject, @NonNull String key);
+    void setConfiguration(@NonNull PluginConfiguration pluginConfiguration);
 }

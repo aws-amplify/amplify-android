@@ -32,7 +32,12 @@ import java.util.concurrent.ConcurrentHashMap;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class Analytics implements Category<AnalyticsPlugin>, AnalyticsCategoryClientBehavior {
+public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfiguration>, AnalyticsCategoryBehavior {
+
+    static class PluginDetails {
+        AnalyticsPlugin analyticsPlugin;
+        AnalyticsPluginConfiguration analyticsPluginConfiguration;
+    }
 
     /**
      * Map of the { pluginKey => plugin } object
@@ -43,7 +48,7 @@ public class Analytics implements Category<AnalyticsPlugin>, AnalyticsCategoryCl
      * By default collection and sending of Analytics events
      * are enabled.
      */
-    private boolean enabled = true;
+    private boolean enabled;
 
     /**
      * Protect enabling and disabling of Analytics event
@@ -133,6 +138,27 @@ public class Analytics implements Category<AnalyticsPlugin>, AnalyticsCategoryCl
         } catch (Exception ex) {
             throw new PluginException.NoSuchPluginException();
         }
+    }
+
+    /**
+     * Register a plugin with Amplify
+     *
+     * @param plugin              an implementation of a Category that
+     *                            conforms to the {@link Plugin} interface.
+     * @param pluginConfiguration configuration information for the plugin.
+     * @throws PluginException when a plugin cannot be registered for this category
+     */
+    @Override
+    public void addPlugin(@NonNull AnalyticsPlugin plugin, @NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
+        try {
+            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
+
+        plugin.setConfiguration(pluginConfiguration);
     }
 
     /**

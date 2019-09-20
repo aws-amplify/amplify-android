@@ -19,12 +19,12 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.PluginConfiguration;
 
 import org.json.JSONObject;
 
@@ -118,14 +118,14 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
 
     }
 
+    /**
+     * Initialize the plugin with the configuration passed.
+     *
+     * @param pluginConfiguration configuration for the plugin
+     */
     @Override
-    public Plugin initWithConfiguration(@NonNull JSONObject jsonObject) {
-        return null;
-    }
+    public void setConfiguration(@NonNull PluginConfiguration pluginConfiguration) {
 
-    @Override
-    public Plugin initWithConfiguration(@NonNull JSONObject jsonObject, @NonNull String key) {
-        return null;
     }
 
     @Override
