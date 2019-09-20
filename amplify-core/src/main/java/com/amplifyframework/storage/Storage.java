@@ -18,6 +18,7 @@ package com.amplifyframework.storage;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
@@ -25,50 +26,119 @@ import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
 import com.amplifyframework.storage.options.*;
+import com.amplifyframework.storage.result.StorageGetResult;
+import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.result.StoragePutResult;
+import com.amplifyframework.storage.result.StorageRemoveResult;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Defines the Client API consumed by the application.
+ * Internally routes the calls to the Analytics CategoryType
+ * plugins registered.
+ */
 public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior {
+    /**
+     * Map of the { pluginKey => plugin } object
+     */
     private Map<String, StoragePlugin> plugins;
+
+    /**
+     * Currently selected plugin
+     */
     private StoragePlugin plugin;
 
+    /**
+     * Flag to remember that Storage category is already configured by Amplify
+     * and throw an error if configure method is called again
+     */
     private boolean isConfigured;
 
     public Storage() {
-        plugins = new ConcurrentHashMap<String, StoragePlugin>();
-        isConfigured = false;
+        this.plugins = new ConcurrentHashMap<String, StoragePlugin>();
+        this.isConfigured = false;
     }
 
     @Override
-    public StorageGetOperation get(@NonNull String key, StorageGetOptions options) throws StorageGetException {
+    public StorageGetOperation get(@NonNull String key,
+                                   StorageGetOptions options) throws StorageGetException {
+        return get(key, options, null);
+    }
+
+    @Override
+    public StorageGetOperation get(@NonNull String key,
+                                   StorageGetOptions options,
+                                   Callback<StorageGetResult> callback) throws StorageGetException {
         assert isConfigured;
         return plugin.get(key, options);
     }
 
     @Override
-    public StoragePutOperation put(@NonNull String key, @NonNull String local, StoragePutOptions options) throws StoragePutException {
+    public StoragePutOperation put(@NonNull String key,
+                                   @NonNull String local,
+                                   StoragePutOptions options) throws StoragePutException {
+        return put(key, local, options, null);
+    }
+
+    @Override
+    public StoragePutOperation put(@NonNull String key,
+                                   @NonNull String local,
+                                   StoragePutOptions options,
+                                   Callback<StoragePutResult> callback) throws StoragePutException {
         assert isConfigured;
         return plugin.put(key, local, options);
     }
 
     @Override
     public StorageListOperation list(StorageListOptions options) throws StorageListException {
+        return list(options, null);
+    }
+
+    @Override
+    public StorageListOperation list(StorageListOptions options,
+                                     Callback<StorageListResult> callback) throws StorageListException {
         assert isConfigured;
         return plugin.list(options);
     }
 
     @Override
-    public StorageRemoveOperation remove(@NonNull String key, StorageRemoveOptions options) throws StorageRemoveException {
+    public StorageRemoveOperation remove(@NonNull String key,
+                                         StorageRemoveOptions options) throws StorageRemoveException {
+        return remove(key, options, null);
+    }
+
+    @Override
+    public StorageRemoveOperation remove(@NonNull String key,
+                                         StorageRemoveOptions options,
+                                         Callback<StorageRemoveResult> callback) throws StorageRemoveException {
         assert isConfigured;
         return plugin.remove(key, options);
     }
 
+    /**
+     * Read the configuration from amplifyconfiguration.json file.
+     * Defaults to "Default" for environment.
+     *
+     * @param context Android context required to read the contents of file
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException        thrown when there is no plugin found for a configuration
+     */
     @Override
     public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        configure(context, "default");
+        configure(context, "Default");
     }
 
+    /**
+     * Read the configuration from amplifyconfiguration.json file
+     *
+     * @param context     Android context required to read the contents of file
+     * @param environment specifies the name of the environment being operated on.
+     *                    For example, "Default", "Custom", etc.
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException        thrown when there is no plugin found for a configuration
+     */
     @Override
     public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
         if (isConfigured) {
@@ -82,33 +152,51 @@ public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior
         isConfigured = true;
     }
 
+    /**
+     * Register a Storage plugin with Amplify
+     *
+     * @param plugin an implementation of StoragePlugin
+     * @throws PluginException when this plugin cannot be found
+     */
     @Override
     public void addPlugin(@NonNull StoragePlugin plugin) throws PluginException {
         try {
-            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
-                throw new PluginException.NoSuchPluginException();
-            }
+            plugins.put(plugin.getPluginKey(), plugin);
         } catch (Exception ex) {
             throw new PluginException.NoSuchPluginException();
         }
     }
 
+    /**
+     * Remove a registered plugin
+     *
+     * @param plugin an implementation of StoragePlugin
+     * @throws PluginException when this plugin was not registered
+     */
     @Override
     public void removePlugin(@NonNull StoragePlugin plugin) throws PluginException {
-        try {
-            if (plugins.remove(plugin.getPluginKey()) == null) {
-                throw new PluginException.NoSuchPluginException();
-            }
-        } catch (Exception ex) {
+        if (plugins.containsKey(plugin.getPluginKey())) {
+            plugins.remove(plugin.getPluginKey());
+            //TODO: Remove configuration as well when it is added
+        } else {
             throw new PluginException.NoSuchPluginException();
         }
     }
 
+    /**
+     * Reset Storage category to state where it is not configured
+     */
     @Override
     public void reset() {
         //TODO: Implement
     }
 
+    /**
+     * Retrieve a registered Storage plugin.
+     *
+     * @param pluginKey the key that identifies the plugin implementation
+     * @return the Storage plugin object
+     */
     @Override
     public StoragePlugin getPlugin(@NonNull String pluginKey) throws PluginException {
         if (plugins.containsKey(pluginKey)) {
@@ -118,11 +206,21 @@ public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior
         }
     }
 
+    /**
+     * Retrieve the map of plugins registered for Storage category
+     *
+     * @return the map that represents the plugins.
+     */
     @Override
     public Map<String, StoragePlugin> getPlugins() {
         return plugins;
     }
 
+    /**
+     * Retrieve the Storage category type enum
+     *
+     * @return enum that represents Storage category
+     */
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.STORAGE;

@@ -18,15 +18,10 @@ package com.amplifyframework.storage.operation;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.async.AsyncOperation;
-import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.task.Options;
-import com.amplifyframework.core.task.Result;
 
 public class StorageGetOperation implements AsyncOperation {
-    @Override
-    public StorageGetOperation callback(@NonNull Callback<? extends Result> callback) { return this; }
-
     @Override
     public StorageGetOperation options(@NonNull Options options) {
         return this;

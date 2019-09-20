@@ -25,9 +25,6 @@ import com.amplifyframework.core.task.Result;
 
 public class StorageRemoveOperation implements AsyncOperation {
     @Override
-    public StorageRemoveOperation callback(@NonNull Callback<? extends Result> callback) { return this; }
-
-    @Override
     public StorageRemoveOperation options(@NonNull Options options) {
         return this;
     }

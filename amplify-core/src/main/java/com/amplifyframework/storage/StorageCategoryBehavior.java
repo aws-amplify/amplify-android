@@ -17,11 +17,11 @@ package com.amplifyframework.storage;
 
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
 import com.amplifyframework.storage.options.*;
-
-import java.io.File;
+import com.amplifyframework.storage.result.*;
 
 /**
  * Defines the behavior of the Storage category that clients will use
@@ -32,44 +32,110 @@ public interface StorageCategoryBehavior {
      * options to download to local file or retrieve remote URL
      *
      * @param key the unique identifier for the object in storage
-     * @param option parameters specific to plugin behavior
+     * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageGetException
      */
-    StorageGetOperation get(@NonNull String key, StorageGetOptions option) throws StorageGetException;
+    StorageGetOperation get(@NonNull String key,
+                            StorageGetOptions options) throws StorageGetException;
+
+    /**
+     * Download object to memory from storage. Specify in the
+     * options to download to local file or retrieve remote URL.
+     * Register a callback to observe progress
+     *
+     * @param key the unique identifier for the object in storage
+     * @param options parameters specific to plugin behavior
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageGetException
+     */
+    StorageGetOperation get(@NonNull String key,
+                            StorageGetOptions options,
+                            Callback<StorageGetResult> callback) throws StorageGetException;
 
     /**
      * Upload local file on given path to storage
      *
      * @param key the unique identifier of the object in storage
      * @param local the path to a local file
-     * @param option parameters specific to plugin behavior
+     * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StoragePutException
      */
-    StoragePutOperation put(@NonNull String key, @NonNull String local, StoragePutOptions option) throws StoragePutException;
+    StoragePutOperation put(@NonNull String key,
+                            @NonNull String local,
+                            StoragePutOptions options) throws StoragePutException;
+
+    /**
+     * Upload local file on given path to storage.
+     * Register a callback to observe progress
+     *
+     * @param key the unique identifier of the object in storage
+     * @param local the path to a local file
+     * @param options parameters specific to plugin behavior
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StoragePutException
+     */
+    StoragePutOperation put(@NonNull String key,
+                            @NonNull String local,
+                            StoragePutOptions options,
+                            Callback<StoragePutResult> callback) throws StoragePutException;
 
     /**
      * Delete object from storage
      *
      * @param key the unique identifier of the object in storage
-     * @param option parameters specific to plugin behavior
+     * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
      * @throws StorageRemoveException
      */
-    StorageRemoveOperation remove(@NonNull String key, StorageRemoveOptions option) throws StorageRemoveException;
+    StorageRemoveOperation remove(@NonNull String key,
+                                  StorageRemoveOptions options) throws StorageRemoveException;
+
+    /**
+     * Delete object from storage.
+     * Register a callback to observe progress
+     *
+     * @param key the unique identifier of the object in storage
+     * @param options parameters specific to plugin behavior
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     * @throws StorageRemoveException
+     */
+    StorageRemoveOperation remove(@NonNull String key,
+                                  StorageRemoveOptions options,
+                                  Callback<StorageRemoveResult> callback) throws StorageRemoveException;
 
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage
      *
-     * @param option parameters specific to plugin behavior
+     * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageListException
      */
-    StorageListOperation list(StorageListOptions option) throws StorageListException;
+    StorageListOperation list(StorageListOptions options) throws StorageListException;
+
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage.
+     * Register a callback to observe progress
+     *
+     * @param options parameters specific to plugin behavior
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageListException
+     */
+    StorageListOperation list(StorageListOptions options,
+                              Callback<StorageListResult> callback) throws StorageListException;
 }

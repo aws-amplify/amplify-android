@@ -25,9 +25,6 @@ import com.amplifyframework.core.task.Result;
 
 public class StoragePutOperation implements AsyncOperation {
     @Override
-    public StoragePutOperation callback(@NonNull Callback<? extends Result> callback) { return this; }
-
-    @Override
     public StoragePutOperation options(@NonNull Options options) {
         return this;
     }
