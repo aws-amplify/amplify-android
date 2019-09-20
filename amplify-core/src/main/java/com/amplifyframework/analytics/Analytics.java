@@ -63,6 +63,12 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     private Map<String, PluginDetails> plugins;
 
     /**
+     * Flag to remember that Analytics category is already configured by Amplify
+     * and throw an error if configure method is called again
+     */
+    private boolean isConfigured;
+
+    /**
      * By default collection and sending of Analytics events
      * are enabled.
      */
@@ -81,6 +87,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void disable() {
+        assert isConfigured;
         synchronized (LOCK) {
             enabled = false;
         }
@@ -88,6 +95,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void enable() {
+        assert isConfigured;
         synchronized (LOCK) {
             enabled = true;
         }
@@ -95,6 +103,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
+        assert isConfigured;
         if (enabled) {
 
         }
@@ -102,6 +111,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
+        assert isConfigured;
         if (enabled) {
 
         }
@@ -109,6 +119,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
+        assert isConfigured;
         if (enabled) {
 
         }
@@ -123,16 +134,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     @Override
     public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        if (!plugins.values().isEmpty()) {
-            if (plugins.values().iterator().hasNext()) {
-                PluginDetails pluginDetails = plugins.values().iterator().next();
-                if (pluginDetails.analyticsPluginConfiguration == null) {
-                    pluginDetails.analyticsPluginConfiguration(new AnalyticsPluginConfiguration(context));
-                }
-
-                pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
-            }
-        }
+        configure(context, "Default");
     }
 
     /**
@@ -146,15 +148,29 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     @Override
     public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
+        if (isConfigured) {
+            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
+        }
 
+        if (!plugins.values().isEmpty()) {
+            if (plugins.values().iterator().hasNext()) {
+                PluginDetails pluginDetails = plugins.values().iterator().next();
+                if (pluginDetails.analyticsPluginConfiguration == null) {
+                    pluginDetails.analyticsPlugin.configure(context);
+                } else {
+                    pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
+                }
+            }
+        }
+
+        isConfigured = true;
     }
 
     /**
-     * Register a plugin with Amplify
+     * Register an Analytics plugin with Amplify
      *
-     * @param plugin an implementation of a CATEGORY_TYPE that
-     *               conforms to the {@link Plugin} interface.
-     * @throws PluginException when a plugin cannot be registered for this CATEGORY_TYPE
+     * @param plugin an implementation of AnalyticsPlugin
+     * @throws PluginException when a plugin cannot be registered for Analytics category
      */
     @Override
     public void addPlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
@@ -171,10 +187,9 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     }
 
     /**
-     * Register a plugin with Amplify
+     * Register an Analytics plugin with Amplify
      *
-     * @param plugin              an implementation of a Category that
-     *                            conforms to the {@link Plugin} interface.
+     * @param plugin              an implementation of AnalyticsPlugin
      * @param pluginConfiguration configuration information for the plugin.
      * @throws PluginException when a plugin cannot be registered for this category
      */
@@ -194,24 +209,21 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     }
 
     /**
-     * Remove a registered plugin
+     * Remove a registered Analytics plugin
      *
-     * @param plugin an implementation of a CATEGORY_TYPE that
-     *               conforms to the {@link Plugin} interface.
+     * @param plugin an implementation of AnalyticsPlugin
      */
     @Override
     public void removePlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
-        try {
-            if (plugins.remove(plugin.getPluginKey()) == null) {
-                throw new PluginException.NoSuchPluginException();
-            }
-        } catch (Exception ex) {
+        if (plugins.containsKey(plugin.getPluginKey())) {
+            plugins.remove(plugin.getPluginKey());
+        } else {
             throw new PluginException.NoSuchPluginException();
         }
     }
 
     /**
-     * Reset Amplify to state where it is not configured.
+     * Reset Analytics category to state where it is not configured.
      * <p>
      * Remove all the plugins added.
      * Remove the configuration stored.
@@ -222,7 +234,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     }
 
     /**
-     * Retrieve a plugin of CATEGORY_TYPE.
+     * Retrieve a registered Analytics plugin
      *
      * @param pluginKey the key that identifies the plugin implementation
      * @return the plugin object
@@ -236,8 +248,13 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
         }
     }
 
+    /**
+     * Retrieve the Analytics category type enum
+     *
+     * @return enum that represents Analytics category
+     */
     @Override
-    public CategoryType getCategoryType() {
+    public final CategoryType getCategoryType() {
         return CategoryType.ANALYTICS;
     }
 }
