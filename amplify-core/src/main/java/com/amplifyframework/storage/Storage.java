@@ -22,13 +22,10 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
-import com.amplifyframework.storage.option.*;
+import com.amplifyframework.storage.options.*;
 
-import java.io.File;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -44,38 +41,32 @@ public class Storage implements Category<StoragePlugin>, StorageCategoryBehavior
     }
 
     @Override
-    public StorageGetOperation get(@NonNull String key, StorageGetOption option) throws StorageGetException {
+    public StorageGetOperation get(@NonNull String key, StorageGetOptions options) throws StorageGetException {
         assert isConfigured;
-        return plugin.get(key, option);
+        return plugin.get(key, options);
     }
 
     @Override
-    public StoragePutOperation put(@NonNull String key, @NonNull File file, StoragePutOption option) throws StoragePutException {
+    public StoragePutOperation put(@NonNull String key, @NonNull String local, StoragePutOptions options) throws StoragePutException {
         assert isConfigured;
-        return plugin.put(key, file, option);
+        return plugin.put(key, local, options);
     }
 
     @Override
-    public StoragePutOperation put(@NonNull String key, @NonNull String path, StoragePutOption option) throws StoragePutException {
+    public StorageListOperation list(StorageListOptions options) throws StorageListException {
         assert isConfigured;
-        return plugin.put(key, path, option);
+        return plugin.list(options);
     }
 
     @Override
-    public StorageListOperation list(StorageListOption option) throws StorageListException {
+    public StorageRemoveOperation remove(@NonNull String key, StorageRemoveOptions options) throws StorageRemoveException {
         assert isConfigured;
-        return plugin.list(option);
-    }
-
-    @Override
-    public StorageRemoveOperation remove(@NonNull String key, StorageRemoveOption option) throws StorageRemoveException {
-        assert isConfigured;
-        return plugin.remove(key, option);
+        return plugin.remove(key, options);
     }
 
     @Override
     public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        configure(context, ""); //TODO: REPLACE WITH REAL DEFAULT PARAMETER
+        configure(context, "default");
     }
 
     @Override

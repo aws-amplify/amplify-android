@@ -13,26 +13,37 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.option;
+package com.amplifyframework.storage.options;
 
 import com.amplifyframework.core.task.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
-import java.util.HashMap;
-
-public class StoragePutOption extends Options {
+/**
+ * Options to specify attributes of remove API invocation
+ */
+public class StorageRemoveOptions extends Options {
     public StorageAccessLevel accessLevel;
-    public String contentType;
-    public HashMap<String, String> metadata;
     public Options options;
 
-    public StoragePutOption(StorageAccessLevel accessLevel,
-                            String contentType,
-                            HashMap<String, String> metadata,
-                            Options options) {
+    /**
+     * Attaches storage access level attribute
+     *
+     * @param accessLevel access level for invoking API
+     * @return this options object for chaining other attributes
+     */
+    public StorageRemoveOptions withAccessLevel(StorageAccessLevel accessLevel) {
         this.accessLevel = accessLevel;
-        this.contentType = contentType;
-        this.metadata = metadata;
+        return this;
+    }
+
+    /**
+     * Attaches additional options
+     *
+     * @param options additional options for custom purposes
+     * @return this options object for chaining other attributes
+     */
+    public StorageRemoveOptions withOptions(Options options) {
         this.options = options;
+        return this;
     }
 }

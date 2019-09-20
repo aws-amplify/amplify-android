@@ -19,18 +19,57 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
-import com.amplifyframework.storage.option.*;
+import com.amplifyframework.storage.options.*;
 
 import java.io.File;
 
+/**
+ * Defines the behavior of the Storage category that clients will use
+ */
 public interface StorageCategoryBehavior {
-    StorageGetOperation get(@NonNull String key, StorageGetOption option) throws StorageGetException;
+    /**
+     * Download object to memory from storage. Specify in the
+     * options to download to local file or retrieve remote URL
+     *
+     * @param key the unique identifier for the object in storage
+     * @param option parameters specific to plugin behavior
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageGetException
+     */
+    StorageGetOperation get(@NonNull String key, StorageGetOptions option) throws StorageGetException;
 
-    StoragePutOperation put(@NonNull String key, @NonNull File file, StoragePutOption option) throws StoragePutException;
+    /**
+     * Upload local file on given path to storage
+     *
+     * @param key the unique identifier of the object in storage
+     * @param local the path to a local file
+     * @param option parameters specific to plugin behavior
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StoragePutException
+     */
+    StoragePutOperation put(@NonNull String key, @NonNull String local, StoragePutOptions option) throws StoragePutException;
 
-    StoragePutOperation put(@NonNull String key, @NonNull String path, StoragePutOption option) throws StoragePutException;
+    /**
+     * Delete object from storage
+     *
+     * @param key the unique identifier of the object in storage
+     * @param option parameters specific to plugin behavior
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     * @throws StorageRemoveException
+     */
+    StorageRemoveOperation remove(@NonNull String key, StorageRemoveOptions option) throws StorageRemoveException;
 
-    StorageListOperation list(StorageListOption option) throws StorageListException;
-
-    StorageRemoveOperation remove(@NonNull String key, StorageRemoveOption option) throws StorageRemoveException;
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage
+     *
+     * @param option parameters specific to plugin behavior
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageListException
+     */
+    StorageListOperation list(StorageListOptions option) throws StorageListException;
 }

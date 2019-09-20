@@ -20,7 +20,14 @@ import com.amplifyframework.core.task.Result;
 import java.io.File;
 
 public class StorageGetResult extends Result {
+    /**
+     * Downloaded local file
+     */
     public File file;
+
+    /**
+     * Remote pre-signed URL for downloading file
+     */
     public String url;
 
     public StorageGetResult(File file) {

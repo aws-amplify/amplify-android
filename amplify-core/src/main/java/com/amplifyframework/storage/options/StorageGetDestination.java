@@ -13,13 +13,27 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.option;
+package com.amplifyframework.storage.options;
 
+/**
+ * Enum to specify the return type for storage get invocation
+ */
 public enum StorageGetDestination {
+    /**
+     * Obtain data in memory
+     */
     DATA,
+
+    /**
+     * Write to local file
+     */
     FILE() {
         protected String path;
     },
+
+    /**
+     * Obtain pre-signed download URL that expires
+     */
     URL() {
         protected int expires;
     };
