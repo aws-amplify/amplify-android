@@ -15,11 +15,17 @@
 
 package com.amplifyframework.core.plugin;
 
+import android.content.Context;
+
 /**
  * Configuration specific to Storage category.
  * Storage plugins will be configured in code with custom
  * configuration objects that inherit from this.
  */
 public class PluginConfiguration {
+
+    public PluginConfiguration(Context context) {
+
+    }
 
 }

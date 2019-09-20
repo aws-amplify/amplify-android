@@ -37,12 +37,30 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     static class PluginDetails {
         AnalyticsPlugin analyticsPlugin;
         AnalyticsPluginConfiguration analyticsPluginConfiguration;
+
+        public AnalyticsPlugin getAnalyticsPlugin() {
+            return analyticsPlugin;
+        }
+
+        public PluginDetails analyticsPlugin(AnalyticsPlugin analyticsPlugin) {
+            this.analyticsPlugin = analyticsPlugin;
+            return this;
+        }
+
+        public AnalyticsPluginConfiguration getAnalyticsPluginConfiguration() {
+            return analyticsPluginConfiguration;
+        }
+
+        public PluginDetails analyticsPluginConfiguration(AnalyticsPluginConfiguration analyticsPluginConfiguration) {
+            this.analyticsPluginConfiguration = analyticsPluginConfiguration;
+            return this;
+        }
     }
 
     /**
      * Map of the { pluginKey => plugin } object
      */
-    private Map<String, AnalyticsPlugin> plugins;
+    private Map<String, PluginDetails> plugins;
 
     /**
      * By default collection and sending of Analytics events
@@ -57,7 +75,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     private static final Object LOCK = new Object();
 
     public Analytics() {
-        this.plugins = new ConcurrentHashMap<String, AnalyticsPlugin>();
+        this.plugins = new ConcurrentHashMap<String, PluginDetails>();
         this.enabled = true;
     }
 
@@ -105,7 +123,16 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     @Override
     public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+        if (!plugins.values().isEmpty()) {
+            if (plugins.values().iterator().hasNext()) {
+                PluginDetails pluginDetails = plugins.values().iterator().next();
+                if (pluginDetails.analyticsPluginConfiguration == null) {
+                    pluginDetails.analyticsPluginConfiguration(new AnalyticsPluginConfiguration(context));
+                }
 
+                pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
+            }
+        }
     }
 
     /**
@@ -131,8 +158,11 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     @Override
     public void addPlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
+        PluginDetails pluginDetails = new PluginDetails()
+                .analyticsPlugin(plugin);
+
         try {
-            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
                 throw new PluginException.NoSuchPluginException();
             }
         } catch (Exception ex) {
@@ -150,15 +180,17 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     @Override
     public void addPlugin(@NonNull AnalyticsPlugin plugin, @NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
+        PluginDetails pluginDetails = new PluginDetails()
+                .analyticsPlugin(plugin)
+                .analyticsPluginConfiguration(pluginConfiguration);
+
         try {
-            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
                 throw new PluginException.NoSuchPluginException();
             }
         } catch (Exception ex) {
             throw new PluginException.NoSuchPluginException();
         }
-
-        plugin.setConfiguration(pluginConfiguration);
     }
 
     /**
@@ -198,22 +230,10 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     @Override
     public AnalyticsPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
         if (plugins.containsKey(pluginKey)) {
-            return plugins.get(pluginKey);
+            return plugins.get(pluginKey).analyticsPlugin;
         } else {
             throw new PluginException.NoSuchPluginException();
         }
-    }
-
-    /**
-     * Retrieve the map of plugins: {PluginName => PluginObject}}
-     * A category can have more than one plugins registered through
-     * the Amplify System. Each plugin is identified with a name.
-     *
-     * @return the map that represents the plugins.
-     */
-    @Override
-    public Map<String, AnalyticsPlugin> getPlugins() {
-        return plugins;
     }
 
     @Override

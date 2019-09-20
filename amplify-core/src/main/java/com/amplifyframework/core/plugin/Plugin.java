@@ -19,8 +19,6 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.category.CategoryTypeable;
 
-import org.json.JSONObject;
-
 /**
  * Interface that defines the contract that every plugin
  * in Amplify System will adhere to.
@@ -33,30 +31,14 @@ public interface Plugin<C> extends CategoryTypeable {
     String getPluginKey();
 
     /**
-     * Configure the Plugin with the configuration passed via
-     * the JSONObject.
+     * Configure the Plugin with the configuration passed.
      *
-     * @param jsonObject configuration passed via the JSONObject
+     * @param pluginConfiguration configuration for the plugin
      */
-    void configure(@NonNull JSONObject jsonObject);
-
-    /**
-     * Configure the Plugin with the configuration passed via
-     * the JSONObject.
-     *
-     * @param jsonObject configuration passed via the JSONObject
-     * @param key the identifier that identifies the plugin implementation
-     */
-    void configure(@NonNull JSONObject jsonObject, @NonNull String key);
+    void configure(@NonNull C pluginConfiguration);
 
     /**
      * Reset the plugin to the state where it's not configured.
      */
     void reset();
-
-    /**
-     * Initialize the plugin with the configuration passed.
-     * @param pluginConfiguration configuration for the plugin
-     */
-    void setConfiguration(@NonNull PluginConfiguration pluginConfiguration);
 }

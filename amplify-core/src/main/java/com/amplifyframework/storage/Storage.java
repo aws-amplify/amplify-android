@@ -183,10 +183,8 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
         } catch (Exception ex) {
             throw new PluginException.NoSuchPluginException();
         }
-
-        plugin.setConfiguration(pluginConfiguration);
     }
-    
+
     @Override
     public void removePlugin(@NonNull StoragePlugin plugin) throws PluginException {
         if (plugins.containsKey(plugin.getPluginKey())) {
@@ -218,16 +216,6 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
         } else {
             throw new PluginException.NoSuchPluginException();
         }
-    }
-
-    /**
-     * Retrieve the map of plugins registered for Storage category
-     *
-     * @return the map that represents the plugins.
-     */
-    @Override
-    public Map<String, StoragePlugin> getPlugins() {
-        return plugins;
     }
 
     /**

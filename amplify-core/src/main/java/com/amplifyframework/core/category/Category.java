@@ -22,8 +22,6 @@ import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
 
-import java.util.Map;
-
 public interface Category<P, C> extends CategoryTypeable {
     /**
      * Read the configuration from amplifyconfiguration.json file
@@ -88,13 +86,4 @@ public interface Category<P, C> extends CategoryTypeable {
      * @return the plugin object
      */
     P getPlugin(@NonNull final String pluginKey) throws PluginException;
-
-    /**
-     * Retrieve the map of plugins: {PluginName => PluginObject}}
-     *     A category can have more than one plugins registered through
-     *     the Amplify System. Each plugin is identified with a name.
-     *
-     * @return the map that represents the plugins.
-     */
-    Map<String, P> getPlugins();
 }

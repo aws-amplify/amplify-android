@@ -22,6 +22,6 @@ import com.amplifyframework.core.plugin.Plugin;
  * would implement. This includes the client behavior dictated by
  * {@link AnalyticsCategoryBehavior} and {@link Plugin}.
  */
-public interface AnalyticsPlugin extends AnalyticsCategoryBehavior, Plugin {
+public interface AnalyticsPlugin extends AnalyticsCategoryBehavior, Plugin<AnalyticsPluginConfiguration> {
 
 }

@@ -22,11 +22,9 @@ import android.util.Log;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
+import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.PluginConfiguration;
-
-import org.json.JSONObject;
 
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics CategoryType.
@@ -103,28 +101,18 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
         return null;
     }
 
+    /**
+     * Configure the Plugin with the configuration passed.
+     *
+     * @param pluginConfiguration configuration for the plugin
+     */
     @Override
-    public void configure(@NonNull JSONObject jsonObject) {
-
-    }
-
-    @Override
-    public void configure(@NonNull JSONObject jsonObject, @NonNull String key) {
+    public void configure(@NonNull AnalyticsPluginConfiguration pluginConfiguration) {
 
     }
 
     @Override
     public void reset() {
-
-    }
-
-    /**
-     * Initialize the plugin with the configuration passed.
-     *
-     * @param pluginConfiguration configuration for the plugin
-     */
-    @Override
-    public void setConfiguration(@NonNull PluginConfiguration pluginConfiguration) {
 
     }
 
