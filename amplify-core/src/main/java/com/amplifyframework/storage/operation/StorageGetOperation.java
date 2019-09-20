@@ -38,9 +38,7 @@ public class StorageGetOperation implements AsyncOperation {
     }
 
     @Override
-    public StorageGetOperation start() {
-        return this;
-    }
+    public StorageGetOperation start() { return this; }
 
     @Override
     public StorageGetOperation pause() {

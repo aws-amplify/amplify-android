@@ -15,6 +15,10 @@
 
 package com.amplifyframework.storage;
 
+/**
+ * An enum of permission levels on storage operations.
+ * This information should be passed in API options.
+ */
 public enum StorageAccessLevel {
     PUBLIC,
     PROTECTED,

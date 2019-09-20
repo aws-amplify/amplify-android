@@ -17,27 +17,40 @@ package com.amplifyframework.storage.exception;
 
 import com.amplifyframework.core.exception.AmplifyException;
 
+/**
+ * Exception encountered in get API of Storage category
+ */
 public class StorageGetException extends AmplifyException {
-    public static class NotFound extends StorageGetException {
-        public NotFound() { super("No object is associated with provided key."); }
-        public NotFound(String message) {
-            super(message);
-        }
-        public NotFound(Throwable throwable) {
-            super(throwable);
-        }
-        public NotFound(String message, Throwable t) {
-            super(message, t);
-        }
+    /**
+     * Specifies that exception was due to object not being found
+     */
+    public static class NotFoundException extends StorageGetException {
+        public NotFoundException() { super("No object is associated with provided key."); }
+        public NotFoundException(String message) { super(message); }
+        public NotFoundException(Throwable throwable) { super(throwable); }
+        public NotFoundException(String message, Throwable t) { super(message, t); }
     }
 
+    /**
+     * Creates a new StorageGetException with the specified message, and root
+     * cause.
+     *
+     * @param message An error message describing why this exception was thrown.
+     * @param t The underlying cause of this exception.
+     */
     public StorageGetException(final String message, final Throwable t) { super(message, t); }
 
-    public StorageGetException(final String message) {
-        super(message);
-    }
+    /**
+     * Creates a new StorageGetException with the specified message.
+     *
+     * @param message An error message describing why this exception was thrown.
+     */
+    public StorageGetException(final String message) { super(message); }
 
-    public StorageGetException(final Throwable throwable) {
-        super(throwable);
-    }
+    /**
+     * Creates a new StorageGetException with the root cause.
+     *
+     * @param throwable The underlying cause of this exception.
+     */
+    public StorageGetException(final Throwable throwable) { super(throwable); }
 }

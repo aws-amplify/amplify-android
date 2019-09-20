@@ -17,10 +17,15 @@ package com.amplifyframework.storage.result;
 
 import com.amplifyframework.core.task.Result;
 
-public class StorageListResult extends Result {
-    public String key;
+import java.util.List;
 
-    public StorageListResult(String key) {
-        this.key = key;
+public class StorageListResult extends Result {
+    /**
+     * Keys retrieved by list API
+     */
+    public List<String> keys;
+
+    public StorageListResult(List<String> keys) {
+        this.keys = keys;
     }
 }
