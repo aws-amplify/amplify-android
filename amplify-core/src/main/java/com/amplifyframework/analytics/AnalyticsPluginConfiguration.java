@@ -16,7 +16,13 @@
 
 package com.amplifyframework.analytics;
 
+import android.content.Context;
+
 import com.amplifyframework.core.plugin.PluginConfiguration;
 
 public class AnalyticsPluginConfiguration extends PluginConfiguration {
+
+    public AnalyticsPluginConfiguration(Context context) {
+        super(context);
+    }
 }

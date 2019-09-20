@@ -8,8 +8,12 @@
 
 package com.amplifyframework.storage;
 
-import com.amplifyframework.core.plugin.Plugin;
+import android.content.Context;
+
 import com.amplifyframework.core.plugin.PluginConfiguration;
 
 public class StoragePluginConfiguration extends PluginConfiguration {
+    public StoragePluginConfiguration(Context context) {
+        super(context);
+    }
 }
