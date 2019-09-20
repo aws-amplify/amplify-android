@@ -18,6 +18,9 @@ package com.amplifyframework.storage;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.analytics.Analytics;
+import com.amplifyframework.analytics.AnalyticsPlugin;
+import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -42,7 +45,30 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class Storage implements Category<StoragePlugin, StoragePluginConfiguration>, StorageCategoryBehavior {
 
-    private Map<String, StoragePlugin> plugins;
+    static class PluginDetails {
+        StoragePlugin storagePlugin;
+        StoragePluginConfiguration storagePluginConfiguration;
+
+        public StoragePlugin getStoragePlugin() {
+            return storagePlugin;
+        }
+
+        public PluginDetails storagePlugin(StoragePlugin storagePlugin) {
+            this.storagePlugin = storagePlugin;
+            return this;
+        }
+
+        public StoragePluginConfiguration getStoragePluginConfiguration() {
+            return storagePluginConfiguration;
+        }
+
+        public PluginDetails storagePluginConfiguration(StoragePluginConfiguration storagePluginConfiguration) {
+            this.storagePluginConfiguration = storagePluginConfiguration;
+            return this;
+        }
+    }
+
+    private Map<String, PluginDetails> plugins;
 
     /**
      * Currently selected plugin
@@ -56,7 +82,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
     private boolean isConfigured;
 
     public Storage() {
-        this.plugins = new ConcurrentHashMap<String, StoragePlugin>();
+        this.plugins = new ConcurrentHashMap<String, PluginDetails>();
         this.isConfigured = false;
     }
 
@@ -143,11 +169,18 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
-        if (plugins.size() == 1) {
-            plugin = (StoragePlugin) plugins.values().toArray()[0];
-        } else {
-            //TODO: Set up a selector
+
+        if (!plugins.values().isEmpty()) {
+            if (plugins.values().iterator().hasNext()) {
+                PluginDetails pluginDetails = plugins.values().iterator().next();
+                if (pluginDetails.storagePluginConfiguration == null) {
+                    pluginDetails.storagePluginConfiguration(new StoragePluginConfiguration(context));
+                }
+
+                pluginDetails.storagePlugin.configure(pluginDetails.storagePluginConfiguration);
+            }
         }
+
         isConfigured = true;
     }
 
@@ -159,8 +192,13 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
      */
     @Override
     public void addPlugin(@NonNull StoragePlugin plugin) throws PluginException {
+        PluginDetails pluginDetails = new PluginDetails()
+                .storagePlugin(plugin);
+
         try {
-            plugins.put(plugin.getPluginKey(), plugin);
+            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
         } catch (Exception ex) {
             throw new PluginException.NoSuchPluginException();
         }
@@ -170,14 +208,18 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
      * Register a plugin with Amplify
      *
      * @param plugin              an implementation of a Category that
-     *                            conforms to the {@link Plugin} interface.
+     *                            conforms to the {@link com.amplifyframework.core.plugin.Plugin} interface.
      * @param pluginConfiguration configuration information for the plugin.
      * @throws PluginException when a plugin cannot be registered for this category
      */
     @Override
     public void addPlugin(@NonNull StoragePlugin plugin, @NonNull StoragePluginConfiguration pluginConfiguration) throws PluginException {
+        PluginDetails pluginDetails = new PluginDetails()
+                .storagePlugin(plugin)
+                .storagePluginConfiguration(pluginConfiguration);
+
         try {
-            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
+            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
                 throw new PluginException.NoSuchPluginException();
             }
         } catch (Exception ex) {
@@ -212,7 +254,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
     @Override
     public StoragePlugin getPlugin(@NonNull String pluginKey) throws PluginException {
         if (plugins.containsKey(pluginKey)) {
-            return plugins.get(pluginKey);
+            return plugins.get(pluginKey).storagePlugin;
         } else {
             throw new PluginException.NoSuchPluginException();
         }
