@@ -8,6 +8,9 @@
 
 package com.amplifyframework.core.exception;
 
+/**
+ * Exceptions associated with configuring and inspecting Amplify Categories
+ */
 public class ConfigurationException extends AmplifyException {
     public static class AmplifyAlreadyConfiguredException extends ConfigurationException {
         public AmplifyAlreadyConfiguredException() { super("The client issued a subsequent call to `Amplify.configure` after the first had already succeeded."); }
@@ -30,14 +33,29 @@ public class ConfigurationException extends AmplifyException {
         public UnableToDecodeException(Throwable throwable) { super(throwable); }
     }
 
-    public ConfigurationException(final String message, final Throwable t) {
-        super(message, t);
-    }
+    /**
+     * Creates a new ConfigurationException with the specified message, and root
+     * cause.
+     *
+     * @param message An error message describing why this exception was thrown.
+     * @param t The underlying cause of this exception.
+     */
+    public ConfigurationException(final String message, final Throwable t) { super(message, t); }
 
+    /**
+     * Creates a new ConfigurationException with the specified message.
+     *
+     * @param message An error message describing why this exception was thrown.
+     */
     public ConfigurationException(final String message) {
         super(message);
     }
 
+    /**
+     * Create an ConfigurationException with an exception cause.
+     *
+     * @param throwable the cause of the exception.
+     */
     public ConfigurationException(final Throwable throwable) {
         super(throwable);
     }

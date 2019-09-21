@@ -24,19 +24,20 @@ public class AmplifyException extends Exception {
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
+    /** Optional recovery suggestion message */
+    protected String recoverySuggestion;
+
     /**
-     * Creates a new AmazonClientException with the specified message, and root
+     * Creates a new AmplifyException with the specified message, and root
      * cause.
      *
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public AmplifyException(final String message, final Throwable t) {
-        super(message, t);
-    }
+    public AmplifyException(final String message, final Throwable t) { super(message, t); }
 
     /**
-     * Creates a new AmazonClientException with the specified message.
+     * Creates a new AmplifyException with the specified message.
      *
      * @param message An error message describing why this exception was thrown.
      */
@@ -45,13 +46,18 @@ public class AmplifyException extends Exception {
     }
 
     /**
-     * Create an AmazonClientException with an exception cause.
+     * Create an AmplifyException with an exception cause.
      *
      * @param throwable the cause of the exception.
      */
     public AmplifyException(final Throwable throwable) {
         super(throwable);
     }
+
+    /**
+     * Returns customized recovery suggestion message
+     */
+    public String getRecoverySuggestion() { return recoverySuggestion; }
 
     /**
      * Returns a hint as to whether it makes sense to retry upon this exception.
