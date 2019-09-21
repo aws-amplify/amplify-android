@@ -24,8 +24,11 @@ public class AmplifyRuntimeException extends RuntimeException {
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
+    /** Optional recovery suggestion message */
+    protected String recoverySuggestion;
+
     /**
-     * Creates a new AmazonClientException with the specified message, and root
+     * Creates a new AmplifyRuntimeException with the specified message, and root
      * cause.
      *
      * @param message An error message describing why this exception was thrown.
@@ -36,7 +39,7 @@ public class AmplifyRuntimeException extends RuntimeException {
     }
 
     /**
-     * Creates a new AmazonClientException with the specified message.
+     * Creates a new AmplifyRuntimeException with the specified message.
      *
      * @param message An error message describing why this exception was thrown.
      */
@@ -45,13 +48,18 @@ public class AmplifyRuntimeException extends RuntimeException {
     }
 
     /**
-     * Create an AmazonClientException with an exception cause.
+     * Create an AmplifyRuntimeException with an exception cause.
      *
      * @param throwable the cause of the exception.
      */
     public AmplifyRuntimeException(final Throwable throwable) {
         super(throwable);
     }
+
+    /**
+     * Returns customized recovery suggestion message
+     */
+    public String getRecoverySuggestion() { return recoverySuggestion; }
 
     /**
      * Returns a hint as to whether it makes sense to retry upon this exception.
