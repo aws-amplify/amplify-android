@@ -1,4 +1,4 @@
-package com.amplifyframework.core.hub;
+package com.amplifyframework.hub;
 
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.task.Result;

@@ -13,29 +13,22 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.hub;
+package com.amplifyframework.hub;
+
+import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.task.Result;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+/**
+ * Defines the client behavior (client API) consumed
+ * by the app for collection and sending of Analytics
+ * events.
+ */
+public interface HubCategoryBehavior {
+    void listen(HubChannel hubChannel, Callback<? extends Result> callback);
 
-public class Hub {
+    void dispatch(HubChannel hubChannel, HubPayload hubpayload);
 
-    private static Map<HubChannel, ArrayList<Callback<? extends Result>>> callbacks =
-            new HashMap<HubChannel, ArrayList<Callback<? extends Result>>>();
-
-    public static void listen(HubChannel hubChannel, Callback<? extends Result> callback) {
-
-    }
-
-    public static void dispatch(HubChannel hubChannel, HubPayload hubpayload) {
-
-    }
-
-    public static void remove(HubChannel hubChannel, Callback<? extends Result> callback) {
-
-    }
+    void remove(HubChannel hubChannel, Callback<? extends Result> callback);
 }

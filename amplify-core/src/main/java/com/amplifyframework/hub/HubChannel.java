@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.hub;
+package com.amplifyframework.hub;
 
 public enum HubChannel {
     ANALYTICS_SUBMIT_EVENTS

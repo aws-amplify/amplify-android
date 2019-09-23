@@ -21,13 +21,10 @@ import android.support.annotation.NonNull;
 import com.amplifyframework.analytics.Analytics;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
-import com.amplifyframework.api.APICategory;
-import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginConfiguration;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.Storage;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.StoragePluginConfiguration;
@@ -51,21 +48,21 @@ public class Amplify {
     private static final String TAG = Amplify.class.getSimpleName();
 
     public static final Analytics Analytics;
-    public static final APICategory API;
-    public static final AuthCategory Auth;
-    public static final LoggingCategory Logging;
+    public static final com.amplifyframework.api.API API;
+    public static final com.amplifyframework.logging.Logging Logging;
     public static final Storage Storage;
+    public static final com.amplifyframework.hub.Hub Hub;
 
     private static boolean CONFIGURED = false;
 
-    private static AmplifyConfiguration amplifyConfiguration;
+    static AmplifyConfiguration amplifyConfiguration;
 
     static {
         Analytics = null;
         API = null;
-        Auth = null;
         Logging = null;
         Storage = null;
+        Hub = null;
     }
 
     private static final Object LOCK = new Object();
@@ -99,6 +96,13 @@ public class Amplify {
             }
             amplifyConfiguration = new AmplifyConfiguration(context);
             amplifyConfiguration.setEnvironment(environment);
+
+            Analytics.configure(context, environment);
+            API.configure(context, environment);
+            Hub.configure(context, environment);
+            Logging.configure(context, environment);
+            Storage.configure(context, environment);
+
             CONFIGURED = true;
         }
     }

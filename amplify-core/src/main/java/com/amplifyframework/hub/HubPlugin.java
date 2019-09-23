@@ -13,7 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.hub;
 
-public class APICategory {
+import com.amplifyframework.core.plugin.Plugin;
+
+/**
+ * Interface that a plugin implementation of Hub Category
+ * would implement. This includes the client behavior dictated by
+ * {@link HubCategoryBehavior} and {@link Plugin}.
+ */
+public interface HubPlugin extends HubCategoryBehavior, Plugin<HubPluginConfiguration> {
+
 }
