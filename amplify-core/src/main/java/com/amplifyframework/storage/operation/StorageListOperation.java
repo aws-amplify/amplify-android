@@ -15,42 +15,10 @@
 
 package com.amplifyframework.storage.operation;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.async.AsyncOperation;
-import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.task.Options;
-import com.amplifyframework.core.task.Result;
 
 public class StorageListOperation implements AsyncOperation {
     @Override
-    public StorageListOperation options(@NonNull Options options) {
-        return this;
-    }
-
-    @Override
-    public StorageListOperation plugin(Class<? extends Plugin> pluginClass) {
-        return null;
-    }
-
-    @Override
-    public StorageListOperation start() {
-        return this;
-    }
-
-    @Override
-    public StorageListOperation pause() {
-        return this;
-    }
-
-    @Override
-    public StorageListOperation resume() {
-        return this;
-    }
-
-    @Override
-    public StorageListOperation cancel() {
-        return this;
+    public void start() {
     }
 }
