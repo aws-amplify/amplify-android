@@ -25,13 +25,14 @@ import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.plugin.PluginException;
 
 /**
- * The plugin implementation for Amazon Pinpoint in Analytics CategoryType.
+ * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
+public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
 
-    private static final String TAG = AmazonPinpointAnalyticsCategoryPlugin.class.getSimpleName();
+    private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
 
     private Context context;
 
@@ -41,14 +42,19 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
      *
      * @param context Android application context
      */
-    public AmazonPinpointAnalyticsCategoryPlugin(@NonNull Context context) {
+    public AmazonPinpointAnalyticsPlugin(@NonNull Context context) {
         this.context = context;
 
-        Log.d(TAG, "Amazon Pinpoint Analytics CategoryType Plugin is initialized.");
+        Log.d(TAG, "Amazon Pinpoint Analytics Plugin is initialized.");
     }
 
     @Override
     public void enable() {
+
+    }
+
+    @Override
+    public void disable() {
 
     }
 
@@ -91,10 +97,6 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
 
     }
 
-    @Override
-    public void disable() {
-
-    }
 
     @Override
     public String getPluginKey() {
@@ -106,8 +108,14 @@ public class AmazonPinpointAnalyticsCategoryPlugin implements AnalyticsPlugin {
      *
      * @param pluginConfiguration configuration for the plugin
      */
+
     @Override
-    public void configure(@NonNull AnalyticsPluginConfiguration pluginConfiguration) {
+    public void configure(@NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
+
+    }
+
+    @Override
+    public void configure(@NonNull Context context) throws PluginException {
 
     }
 
