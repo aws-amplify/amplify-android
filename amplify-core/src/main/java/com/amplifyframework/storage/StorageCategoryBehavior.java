@@ -32,6 +32,17 @@ public interface StorageCategoryBehavior {
      * options to download to local file or retrieve remote URL
      *
      * @param key the unique identifier for the object in storage
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageGetException
+     */
+    StorageGetOperation get(@NonNull String key) throws StorageGetException;
+
+    /**
+     * Download object to memory from storage. Specify in the
+     * options to download to local file or retrieve remote URL
+     *
+     * @param key the unique identifier for the object in storage
      * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
@@ -55,6 +66,18 @@ public interface StorageCategoryBehavior {
     StorageGetOperation get(@NonNull String key,
                             StorageGetOptions options,
                             Callback<StorageGetResult> callback) throws StorageGetException;
+
+    /**
+     * Upload local file on given path to storage
+     *
+     * @param key the unique identifier of the object in storage
+     * @param local the path to a local file
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StoragePutException
+     */
+    StoragePutOperation put(@NonNull String key,
+                            @NonNull String local) throws StoragePutException;
 
     /**
      * Upload local file on given path to storage
@@ -91,6 +114,16 @@ public interface StorageCategoryBehavior {
      * Delete object from storage
      *
      * @param key the unique identifier of the object in storage
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     * @throws StorageRemoveException
+     */
+    StorageRemoveOperation remove(@NonNull String key) throws StorageRemoveException;
+
+    /**
+     * Delete object from storage
+     *
+     * @param key the unique identifier of the object in storage
      * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
@@ -113,6 +146,16 @@ public interface StorageCategoryBehavior {
     StorageRemoveOperation remove(@NonNull String key,
                                   StorageRemoveOptions options,
                                   Callback<StorageRemoveResult> callback) throws StorageRemoveException;
+
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage
+     *
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageListException
+     */
+    StorageListOperation list() throws StorageListException;
 
     /**
      * List the object identifiers under the hierarchy specified

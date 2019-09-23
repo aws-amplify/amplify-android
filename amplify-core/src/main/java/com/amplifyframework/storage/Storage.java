@@ -22,7 +22,6 @@ import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
-import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
@@ -85,45 +84,71 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
     }
 
     @Override
+    public StorageGetOperation get(@NonNull String key) throws StorageGetException {
+        return get(key, new StorageGetOptions(), null);
+    }
+
+    @Override
     public StorageGetOperation get(@NonNull String key,
-                                   StorageGetOptions options) throws StorageGetException {
+                                   @NonNull StorageGetOptions options) throws StorageGetException {
         return get(key, options, null);
     }
 
     @Override
     public StorageGetOperation get(@NonNull String key,
-                                   StorageGetOptions options,
+                                   @NonNull StorageGetOptions options,
                                    Callback<StorageGetResult> callback) throws StorageGetException {
-        assert isConfigured;
         return plugin.get(key, options, callback);
+    }
+
+    /**
+     * Upload local file on given path to storage
+     *
+     * @param key   the unique identifier of the object in storage
+     * @param local the path to a local file
+     * @return an operation object that provides notifications and
+     * actions related to the execution of the work
+     * @throws StoragePutException
+     */
+    @Override
+    public StoragePutOperation put(@NonNull String key, @NonNull String local) throws StoragePutException {
+        return put(key, local, new StoragePutOptions(), null);
     }
 
     @Override
     public StoragePutOperation put(@NonNull String key,
                                    @NonNull String local,
-                                   StoragePutOptions options) throws StoragePutException {
+                                   @NonNull StoragePutOptions options) throws StoragePutException {
         return put(key, local, options, null);
     }
 
     @Override
     public StoragePutOperation put(@NonNull String key,
                                    @NonNull String local,
-                                   StoragePutOptions options,
+                                   @NonNull StoragePutOptions options,
                                    Callback<StoragePutResult> callback) throws StoragePutException {
-        assert isConfigured;
         return plugin.put(key, local, options, callback);
     }
 
     @Override
-    public StorageListOperation list(StorageListOptions options) throws StorageListException {
+    public StorageListOperation list() throws StorageListException {
+        return list(new StorageListOptions());
+    }
+
+    @Override
+    public StorageListOperation list(@NonNull StorageListOptions options) throws StorageListException {
         return list(options, null);
     }
 
     @Override
-    public StorageListOperation list(StorageListOptions options,
+    public StorageListOperation list(@NonNull StorageListOptions options,
                                      Callback<StorageListResult> callback) throws StorageListException {
-        assert isConfigured;
         return plugin.list(options, callback);
+    }
+
+    @Override
+    public StorageRemoveOperation remove(@NonNull String key) throws StorageRemoveException {
+        return remove(key, new StorageRemoveOptions());
     }
 
     @Override
@@ -134,9 +159,8 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
 
     @Override
     public StorageRemoveOperation remove(@NonNull String key,
-                                         StorageRemoveOptions options,
+                                         @NonNull StorageRemoveOptions options,
                                          Callback<StorageRemoveResult> callback) throws StorageRemoveException {
-        assert isConfigured;
         return plugin.remove(key, options, callback);
     }
 
