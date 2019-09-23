@@ -15,42 +15,10 @@
 
 package com.amplifyframework.storage.operation;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.async.AsyncOperation;
-import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.task.Options;
-import com.amplifyframework.core.task.Result;
 
 public class StorageRemoveOperation implements AsyncOperation {
     @Override
-    public StorageRemoveOperation options(@NonNull Options options) {
-        return this;
-    }
-
-    @Override
-    public StorageRemoveOperation plugin(Class<? extends Plugin> pluginClass) {
-        return null;
-    }
-
-    @Override
-    public StorageRemoveOperation start() {
-        return this;
-    }
-
-    @Override
-    public StorageRemoveOperation pause() {
-        return this;
-    }
-
-    @Override
-    public StorageRemoveOperation resume() {
-        return this;
-    }
-
-    @Override
-    public StorageRemoveOperation cancel() {
-        return this;
+    public void start() {
     }
 }

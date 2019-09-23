@@ -15,42 +15,24 @@
 
 package com.amplifyframework.storage.operation;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.async.AsyncOperation;
-import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.task.Options;
-import com.amplifyframework.core.task.Result;
+import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.async.Resumable;
 
-public class StoragePutOperation implements AsyncOperation {
+public class StoragePutOperation implements AsyncOperation, Resumable, Cancelable {
     @Override
-    public StoragePutOperation options(@NonNull Options options) {
-        return this;
+    public void start() {
     }
 
     @Override
-    public StoragePutOperation plugin(Class<? extends Plugin> pluginClass) {
-        return null;
+    public void pause() {
     }
 
     @Override
-    public StoragePutOperation start() {
-        return this;
+    public void resume() {
     }
 
     @Override
-    public StoragePutOperation pause() {
-        return this;
-    }
-
-    @Override
-    public StoragePutOperation resume() {
-        return this;
-    }
-
-    @Override
-    public StoragePutOperation cancel() {
-        return this;
+    public void cancel() {
     }
 }
