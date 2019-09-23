@@ -21,7 +21,6 @@ import android.support.annotation.NonNull;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
-import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.Map;
@@ -87,7 +86,6 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void disable() {
-        assert isConfigured;
         synchronized (LOCK) {
             enabled = false;
         }
@@ -95,7 +93,6 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void enable() {
-        assert isConfigured;
         synchronized (LOCK) {
             enabled = true;
         }
@@ -103,7 +100,6 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
-        assert isConfigured;
         if (enabled) {
 
         }
@@ -111,7 +107,6 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
-        assert isConfigured;
         if (enabled) {
 
         }
@@ -119,7 +114,6 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
 
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
-        assert isConfigured;
         if (enabled) {
 
         }
