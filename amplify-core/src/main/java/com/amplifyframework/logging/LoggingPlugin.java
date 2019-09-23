@@ -13,7 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.auth;
+package com.amplifyframework.logging;
 
-public class AuthCategory {
+import com.amplifyframework.core.plugin.Plugin;
+
+/**
+ * Interface that a plugin implementation of Analytics CATEGORY_TYPE
+ * would implement. This includes the client behavior dictated by
+ * {@link LoggingCategoryBehavior} and {@link Plugin}.
+ */
+public interface LoggingPlugin extends LoggingCategoryBehavior, Plugin<LoggingPluginConfiguration> {
+
 }

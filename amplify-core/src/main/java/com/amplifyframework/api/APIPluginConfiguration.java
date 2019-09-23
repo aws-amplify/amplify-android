@@ -13,7 +13,16 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.logging;
 
-public class LoggingCategory {
+package com.amplifyframework.api;
+
+import android.content.Context;
+
+import com.amplifyframework.core.plugin.PluginConfiguration;
+
+public class APIPluginConfiguration extends PluginConfiguration {
+
+    public APIPluginConfiguration(Context context) {
+        super(context);
+    }
 }
