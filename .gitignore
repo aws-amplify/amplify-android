@@ -85,3 +85,11 @@ __pycache__/
 
 # Gradle
 .gradle/**
+
+#amplify
+amplify/
+build/
+dist/
+node_modules/
+aws-exports.js
+awsconfiguration.json
