@@ -22,8 +22,12 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.storage.Storage;
+import com.amplifyframework.storage.StoragePlugin;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -122,18 +126,6 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     /**
      * Read the configuration from amplifyconfiguration.json file
      *
-     * @param context Android context required to read the contents of file
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
-    @Override
-    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        configure(context, "Default");
-    }
-
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
      * @param context     Android context required to read the contents of file
      * @param environment specifies the name of the environment being operated on.
      *                    For example, "Default", "Custom", etc.
@@ -150,7 +142,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
             if (plugins.values().iterator().hasNext()) {
                 PluginDetails pluginDetails = plugins.values().iterator().next();
                 if (pluginDetails.analyticsPluginConfiguration == null) {
-                    pluginDetails.analyticsPlugin.configure(context);
+                    pluginDetails.analyticsPlugin.configure(context, environment);
                 } else {
                     pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
                 }
@@ -240,6 +232,20 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
         } else {
             throw new PluginException.NoSuchPluginException();
         }
+    }
+
+    /**
+     * @return the set of plugins added to a Category.
+     */
+    @Override
+    public Set<AnalyticsPlugin> getPlugins() {
+        Set<AnalyticsPlugin> analyticsPlugins = new HashSet<AnalyticsPlugin>();
+        if (!plugins.isEmpty()) {
+            for (PluginDetails pluginDetails : plugins.values()) {
+                analyticsPlugins.add(pluginDetails.analyticsPlugin);
+            }
+        }
+        return analyticsPlugins;
     }
 
     /**

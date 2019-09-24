@@ -36,12 +36,6 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
 
     private Context context;
 
-    /**
-     * Construct the Amazon Pinpoint plugin, initialize
-     * and configure it.
-     *
-     * @param context Android application context
-     */
     public AmazonPinpointAnalyticsPlugin(@NonNull Context context) {
         this.context = context;
 
@@ -58,40 +52,16 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
 
     }
 
-    /**
-     * Record the event by storing in the local database.
-     *
-     * @param eventName name of the event. An AnalyticsEvent is constructed
-     *                  based on the name of the event.
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     */
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
 
     }
 
-    /**
-     * Record the event by storing in the local database.
-     *
-     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     */
     @Override
     public void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException {
 
     }
 
-    /**
-     * Update the profile of the end-user/device for whom/which you are
-     * collecting analytics.
-     *
-     * @param analyticsProfile the profile of the end-user/device for whom/which you are
-     *                         * collecting analytics.
-     * @throws AnalyticsException when there is an error updating the
-     *                            profile with the registered/chosen {@link AnalyticsPlugin}.
-     */
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
 
@@ -103,11 +73,6 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
         return null;
     }
 
-    /**
-     * Configure the Plugin with the configuration passed.
-     *
-     * @param pluginConfiguration configuration for the plugin
-     */
 
     @Override
     public void configure(@NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
@@ -115,7 +80,7 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
     }
 
     @Override
-    public void configure(@NonNull Context context) throws PluginException {
+    public void configure(@NonNull Context context, @NonNull String environment) throws PluginException {
 
     }
 

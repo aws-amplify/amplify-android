@@ -15,13 +15,7 @@
 
 package com.amplifyframework.api;
 
-import android.support.annotation.NonNull;
+import com.amplifyframework.core.plugin.Plugin;
 
-/**
- * Defines the client behavior (client API) consumed
- * by the app for collection and sending of Analytics
- * events.
- */
-public interface APICategoryBehavior {
-
+public interface ApiPlugin extends Plugin<ApiPluginConfiguration> {
 }
