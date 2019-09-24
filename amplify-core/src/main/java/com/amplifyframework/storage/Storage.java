@@ -31,7 +31,9 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StoragePutResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -165,19 +167,6 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
     }
 
     /**
-     * Read the configuration from amplifyconfiguration.json file.
-     * Defaults to "Default" for environment.
-     *
-     * @param context Android context required to read the contents of file
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
-    @Override
-    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        configure(context, "Default");
-    }
-
-    /**
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context     Android context required to read the contents of file
@@ -196,7 +185,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
             if (plugins.values().iterator().hasNext()) {
                 PluginDetails pluginDetails = plugins.values().iterator().next();
                 if (pluginDetails.storagePluginConfiguration == null) {
-                    pluginDetails.storagePlugin.configure(context);
+                    pluginDetails.storagePlugin.configure(context, environment);
                 } else {
                     pluginDetails.storagePlugin.configure(pluginDetails.storagePluginConfiguration);
                 }
@@ -284,6 +273,20 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
         } else {
             throw new PluginException.NoSuchPluginException();
         }
+    }
+
+    /**
+     * @return the set of plugins added to a Category.
+     */
+    @Override
+    public Set<StoragePlugin> getPlugins() {
+        Set<StoragePlugin> storagePlugins = new HashSet<StoragePlugin>();
+        if (!plugins.isEmpty()) {
+            for (PluginDetails pluginDetails : plugins.values()) {
+                storagePlugins.add(pluginDetails.storagePlugin);
+            }
+        }
+        return storagePlugins;
     }
 
     /**

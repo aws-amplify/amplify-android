@@ -21,18 +21,25 @@ import android.support.annotation.NonNull;
 import com.amplifyframework.analytics.Analytics;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
+import com.amplifyframework.api.Api;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginConfiguration;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.hub.Hub;
+import com.amplifyframework.logging.Logging;
 import com.amplifyframework.storage.Storage;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.StoragePluginConfiguration;
 
+import java.util.HashSet;
+import java.util.Set;
+
 /**
  * The Amplify System has the following responsibilities:
  *
- * 1) Add, Get and Remove CATEGORY_TYPE plugins with the Amplify System
+ * 1) Add, Get and Remove Category plugins with the Amplify System
  * 2) Configure and reset the Amplify System with the information
  * from the amplifyconfiguration.json.
  *
@@ -48,21 +55,21 @@ public class Amplify {
     private static final String TAG = Amplify.class.getSimpleName();
 
     public static final Analytics Analytics;
-    public static final com.amplifyframework.api.API API;
-    public static final com.amplifyframework.logging.Logging Logging;
+    public static final Api API;
+    public static final Logging Logging;
     public static final Storage Storage;
-    public static final com.amplifyframework.hub.Hub Hub;
+    public static final Hub Hub;
 
     private static boolean CONFIGURED = false;
 
     static AmplifyConfiguration amplifyConfiguration;
 
     static {
-        Analytics = null;
-        API = null;
-        Logging = null;
-        Storage = null;
-        Hub = null;
+        Analytics = new Analytics();
+        API = new Api();
+        Logging = new Logging();
+        Storage = new Storage();
+        Hub = new Hub();
     }
 
     private static final Object LOCK = new Object();
@@ -97,11 +104,25 @@ public class Amplify {
             amplifyConfiguration = new AmplifyConfiguration(context);
             amplifyConfiguration.setEnvironment(environment);
 
-            Analytics.configure(context, environment);
-            API.configure(context, environment);
-            Hub.configure(context, environment);
-            Logging.configure(context, environment);
-            Storage.configure(context, environment);
+            if (Analytics.getPlugins().size() > 0) {
+                Analytics.configure(context, environment);
+            }
+
+            if (API.getPlugins().size() > 0) {
+                API.configure(context, environment);
+            }
+
+            if (Hub.getPlugins().size() > 0) {
+                Hub.configure(context, environment);
+            }
+
+            if (Logging.getPlugins().size() > 0) {
+                Logging.configure(context, environment);
+            }
+
+            if (Storage.getPlugins().size() > 0) {
+                Storage.configure(context, environment);
+            }
 
             CONFIGURED = true;
         }
@@ -231,6 +252,26 @@ public class Amplify {
      */
     public static void reset() {
         synchronized (LOCK) {
+            if (Analytics.getPlugins().size() > 0) {
+                Analytics.reset();
+            }
+
+            if (API.getPlugins().size() > 0) {
+                API.reset();
+            }
+
+            if (Hub.getPlugins().size() > 0) {
+                Hub.reset();
+            }
+
+            if (Logging.getPlugins().size() > 0) {
+                Logging.reset();
+            }
+
+            if (Storage.getPlugins().size() > 0) {
+                Storage.reset();
+            }
+
             Amplify.amplifyConfiguration = null;
             CONFIGURED = false;
         }

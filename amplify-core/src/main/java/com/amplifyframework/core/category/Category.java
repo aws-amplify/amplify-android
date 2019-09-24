@@ -22,15 +22,9 @@ import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
 
+import java.util.Set;
+
 public interface Category<P, C> extends CategoryTypeable {
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context Android context required to read the contents of file
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no plugin found for a configuration
-     */
-    void configure(@NonNull Context context) throws ConfigurationException, PluginException;
 
     /**
      * Read the configuration from amplifyconfiguration.json file
@@ -80,10 +74,15 @@ public interface Category<P, C> extends CategoryTypeable {
     void reset();
 
     /**
-     * Retrieve a plugin of CATEGORY_TYPE.
+     * Retrieve a plugin of category.
      *
      * @param pluginKey the key that identifies the plugin implementation
      * @return the plugin object
      */
     P getPlugin(@NonNull final String pluginKey) throws PluginException;
+
+    /**
+     * @return the set of plugins added to a Category.
+     */
+    Set<P> getPlugins();
 }

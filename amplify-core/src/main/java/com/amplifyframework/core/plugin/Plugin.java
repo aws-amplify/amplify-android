@@ -45,7 +45,7 @@ public interface Plugin<C> extends CategoryTypeable {
      * @param context Android context required to read the contents of file
      * @throws PluginException when configuration for a plugin was not found
      */
-    void configure(@NonNull Context context) throws PluginException;
+    void configure(@NonNull Context context, @NonNull String environment) throws PluginException;
 
     /**
      * Reset the plugin to the state where it's not configured.

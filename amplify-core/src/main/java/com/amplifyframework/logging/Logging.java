@@ -23,89 +23,42 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 
+import java.util.Set;
+
 public class Logging implements Category<LoggingPlugin, LoggingPluginConfiguration>, LoggingCategoryBehavior {
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context Android context required to read the contents of file
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
-    @Override
-    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
 
-    }
-
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context     Android context required to read the contents of file
-     * @param environment specifies the name of the environment being operated on.
-     *                    For example, "Default", "Custom", etc.
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
     @Override
     public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
 
     }
 
-    /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin an implementation of a CATEGORY_TYPE that
-     *               conforms to the {@link Plugin} interface.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
     @Override
     public void addPlugin(@NonNull LoggingPlugin plugin) throws PluginException {
 
     }
 
-    /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin              an implementation of a Category that
-     *                            conforms to the {@link Plugin} interface.
-     * @param pluginConfiguration configuration information for the plugin.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
     @Override
     public void addPlugin(@NonNull LoggingPlugin plugin, @NonNull LoggingPluginConfiguration pluginConfiguration) throws PluginException {
 
     }
 
-    /**
-     * Remove a registered plugin
-     *
-     * @param plugin an implementation of a Category that
-     *               conforms to the {@link Plugin} interface
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
     @Override
     public void removePlugin(@NonNull LoggingPlugin plugin) throws PluginException {
 
     }
 
-    /**
-     * Reset Amplify to state where it is not configured.
-     * <p>
-     * Remove all the plugins added.
-     * Remove the configuration stored.
-     */
     @Override
     public void reset() {
 
     }
 
-    /**
-     * Retrieve a plugin of CATEGORY_TYPE.
-     *
-     * @param pluginKey the key that identifies the plugin implementation
-     * @return the plugin object
-     */
     @Override
     public LoggingPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
+        return null;
+    }
+
+    @Override
+    public Set<LoggingPlugin> getPlugins() {
         return null;
     }
 

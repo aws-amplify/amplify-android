@@ -15,13 +15,12 @@
 
 package com.amplifyframework.api;
 
-import com.amplifyframework.core.plugin.Plugin;
+import android.content.Context;
 
-/**
- * Interface that a plugin implementation of API Category
- * would implement. This includes the client behavior dictated by
- * {@link APICategoryBehavior} and {@link Plugin}.
- */
-public interface APIPlugin extends APICategoryBehavior, Plugin<APIPluginConfiguration> {
+import com.amplifyframework.core.plugin.PluginConfiguration;
 
+public class ApiPluginConfiguration extends PluginConfiguration {
+    public ApiPluginConfiguration(Context context) {
+        super(context);
+    }
 }
