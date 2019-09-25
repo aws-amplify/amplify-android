@@ -22,8 +22,7 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.storage.Storage;
-import com.amplifyframework.storage.StoragePlugin;
+import com.amplifyframework.core.plugin.PluginRuntimeException;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -88,6 +87,26 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
         this.enabled = true;
     }
 
+    /**
+     * Obtain the registered plugin. Throw runtime exception if
+     * no plugin is registered or multiple plugins are registered.
+     *
+     * @return the only registered plugin for this category
+     */
+    private AnalyticsPlugin plugin() {
+        if (!isConfigured) {
+            throw new ConfigurationException("Analytics category is not yet configured.");
+        }
+        if (plugins.isEmpty()) {
+            throw new PluginRuntimeException.NoPluginException();
+        }
+        if (plugins.size() > 1) {
+            throw new PluginRuntimeException.MultiplePluginsException();
+        }
+
+        return plugins.values().iterator().next().analyticsPlugin;
+    }
+
     @Override
     public void disable() {
         synchronized (LOCK) {
@@ -105,21 +124,21 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
         if (enabled) {
-
+            plugin().recordEvent(eventName);
         }
     }
 
     @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
         if (enabled) {
-
+            plugin().recordEvent(analyticsEvent);
         }
     }
 
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
         if (enabled) {
-
+            plugin().updateProfile(analyticsProfile);
         }
     }
 
@@ -138,14 +157,11 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
 
-        if (!plugins.values().isEmpty()) {
-            if (plugins.values().iterator().hasNext()) {
-                PluginDetails pluginDetails = plugins.values().iterator().next();
-                if (pluginDetails.analyticsPluginConfiguration == null) {
-                    pluginDetails.analyticsPlugin.configure(context, environment);
-                } else {
-                    pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
-                }
+        for (PluginDetails pluginDetails : plugins.values()) {
+            if (pluginDetails.analyticsPluginConfiguration == null) {
+                pluginDetails.analyticsPlugin.configure(context, environment);
+            } else {
+                pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
             }
         }
 
@@ -201,9 +217,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     @Override
     public void removePlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
-        if (plugins.containsKey(plugin.getPluginKey())) {
-            plugins.remove(plugin.getPluginKey());
-        } else {
+        if (plugins.remove(plugin.getPluginKey()) == null) {
             throw new PluginException.NoSuchPluginException();
         }
     }
