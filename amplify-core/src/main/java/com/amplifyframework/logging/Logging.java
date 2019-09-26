@@ -28,7 +28,7 @@ import java.util.Set;
 public class Logging implements Category<LoggingPlugin, LoggingPluginConfiguration>, LoggingCategoryBehavior {
 
     @Override
-    public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
+    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
 
     }
 

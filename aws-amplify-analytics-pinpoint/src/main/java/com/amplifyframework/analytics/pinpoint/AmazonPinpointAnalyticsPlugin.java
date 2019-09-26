@@ -80,7 +80,7 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
     }
 
     @Override
-    public void configure(@NonNull Context context, @NonNull String environment) throws PluginException {
+    public void configure(@NonNull Context context) throws PluginException {
 
     }
 

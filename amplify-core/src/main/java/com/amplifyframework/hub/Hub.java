@@ -36,36 +36,80 @@ public class Hub implements Category<HubPlugin,HubPluginConfiguration>, HubCateg
             new HashMap<HubChannel, ArrayList<Callback<? extends Result>>>();
 
 
+    /**
+     * Read the configuration from amplifyconfiguration.json file
+     *
+     * @param context     Android context required to read the contents of file
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException        thrown when there is no plugin found for a configuration
+     */
     @Override
-    public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
+    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
 
     }
 
+    /**
+     * Register a plugin with Amplify
+     *
+     * @param plugin an implementation of a CATEGORY_TYPE that
+     *               conforms to the {@link Plugin} interface.
+     * @throws PluginException when a plugin cannot be registered for this category
+     */
     @Override
     public void addPlugin(@NonNull HubPlugin plugin) throws PluginException {
 
     }
 
+    /**
+     * Register a plugin with Amplify
+     *
+     * @param plugin              an implementation of a Category that
+     *                            conforms to the {@link Plugin} interface.
+     * @param pluginConfiguration configuration information for the plugin.
+     * @throws PluginException when a plugin cannot be registered for this category
+     */
     @Override
     public void addPlugin(@NonNull HubPlugin plugin, @NonNull HubPluginConfiguration pluginConfiguration) throws PluginException {
 
     }
 
+    /**
+     * Remove a registered plugin
+     *
+     * @param plugin an implementation of a Category that
+     *               conforms to the {@link Plugin} interface
+     * @throws PluginException when a plugin cannot be registered for this category
+     */
     @Override
     public void removePlugin(@NonNull HubPlugin plugin) throws PluginException {
 
     }
 
+    /**
+     * Reset Amplify to state where it is not configured.
+     * <p>
+     * Remove all the plugins added.
+     * Remove the configuration stored.
+     */
     @Override
     public void reset() {
 
     }
 
+    /**
+     * Retrieve a plugin of category.
+     *
+     * @param pluginKey the key that identifies the plugin implementation
+     * @return the plugin object
+     */
     @Override
     public HubPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
         return null;
     }
 
+    /**
+     * @return the set of plugins added to a Category.
+     */
     @Override
     public Set<HubPlugin> getPlugins() {
         return null;
@@ -77,7 +121,7 @@ public class Hub implements Category<HubPlugin,HubPluginConfiguration>, HubCateg
     }
 
     @Override
-    public void listen(HubChannel hubChannel, Callback<? extends Result> callback) {
+    public void listen(HubChannel hubChannel, HubCallback callback) {
 
     }
 
@@ -87,7 +131,7 @@ public class Hub implements Category<HubPlugin,HubPluginConfiguration>, HubCateg
     }
 
     @Override
-    public void remove(HubChannel hubChannel, Callback<? extends Result> callback) {
+    public void remove(HubChannel hubChannel, HubCallback callback) {
 
     }
 }
