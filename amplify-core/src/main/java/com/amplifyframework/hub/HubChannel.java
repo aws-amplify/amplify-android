@@ -16,6 +16,10 @@
 package com.amplifyframework.hub;
 
 public enum HubChannel {
-    ANALYTICS_SUBMIT_EVENTS
+    ANALYTICS,
+    API,
+    HUB,
+    LOGGING,
+    STORAGE
     ;
 }

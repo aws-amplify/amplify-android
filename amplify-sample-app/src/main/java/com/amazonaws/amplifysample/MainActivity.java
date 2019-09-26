@@ -45,7 +45,13 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Amplify.Analytics.recordEvent("MainActivity is created.");
+        s3Plugin = new AWSS3StoragePlugin(this);
+        Amplify.addPlugin(s3Plugin);
+        Amplify.addPlugin(new AzureStoragePlugin(this));
+        Amplify.addPlugin(new AWSPinpointAnalyticsPlugin(this));
+        Amplify.configure(this);
+
+        Amplify.Storage.getPlugin(s3Plugin.getPluginKey()).put(key, local, new Callback());
     }
 
     @Override

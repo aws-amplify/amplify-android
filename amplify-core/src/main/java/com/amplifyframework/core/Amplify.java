@@ -105,23 +105,23 @@ public class Amplify {
             amplifyConfiguration.setEnvironment(environment);
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(context, environment);
+                Analytics.configure(context);
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(context, environment);
+                API.configure(context);
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(context, environment);
+                Hub.configure(context);
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(context, environment);
+                Logging.configure(context);
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(context, environment);
+                Storage.configure(context);
             }
 
             CONFIGURED = true;

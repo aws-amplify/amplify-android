@@ -35,7 +35,7 @@ public interface Category<P, C> extends CategoryTypeable {
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException;
+    void configure(@NonNull Context context) throws ConfigurationException, PluginException;
 
     /**
      * Register a plugin with Amplify
