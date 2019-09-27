@@ -170,13 +170,11 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context     Android context required to read the contents of file
-     * @param environment specifies the name of the environment being operated on.
-     *                    For example, "Default", "Custom", etc.
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException        thrown when there is no plugin found for a configuration
      */
     @Override
-    public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
+    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
@@ -185,7 +183,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
             if (plugins.values().iterator().hasNext()) {
                 PluginDetails pluginDetails = plugins.values().iterator().next();
                 if (pluginDetails.storagePluginConfiguration == null) {
-                    pluginDetails.storagePlugin.configure(context, environment);
+                    pluginDetails.storagePlugin.configure(context);
                 } else {
                     pluginDetails.storagePlugin.configure(pluginDetails.storagePluginConfiguration);
                 }

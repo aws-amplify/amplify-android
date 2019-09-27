@@ -26,9 +26,9 @@ import com.amplifyframework.core.task.Result;
  * events.
  */
 public interface HubCategoryBehavior {
-    void listen(HubChannel hubChannel, Callback<? extends Result> callback);
+    void listen(HubChannel hubChannel, HubCallback callback);
 
     void dispatch(HubChannel hubChannel, HubPayload hubpayload);
 
-    void remove(HubChannel hubChannel, Callback<? extends Result> callback);
+    void remove(HubChannel hubChannel, HubCallback callback);
 }

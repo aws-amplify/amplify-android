@@ -24,8 +24,15 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.amplifyframework.analytics.AnalyticsPlugin;
+import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
+import com.amplifyframework.analytics.pinpoint.AmazonPinpointAnalyticsPlugin;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.storage.Storage;
+
+import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -45,7 +52,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        Amplify.Analytics.recordEvent("MainActivity is created.");
+//        AnalyticsPlugin pinpoint1 = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
+//        AnalyticsPlugin pinpoint2 = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
+//        AnalyticsPlugin kinesis = new AmazonKinesisAnalyticsPlugin(getApplicationContext());
+//        Amplify.addPlugin(pinpoint);
+//        Amplify.addPlugin(kinesis);
+//        Amplify.configure(getApplicationContext());
+//
+//        Amplify.Analytics.recordEvent(); // throws exception
+//
+//        Amplify.Analytics.getPlugin(pinpoint.getPluginKey()).recordEvent();
+//        Amplify.Analytics.getPlugin(kinesis.getPluginKey()).recordEvent();
     }
 
     @Override

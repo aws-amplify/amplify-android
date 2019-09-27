@@ -146,22 +146,23 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context     Android context required to read the contents of file
-     * @param environment specifies the name of the environment being operated on.
-     *                    For example, "Default", "Custom", etc.
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException        thrown when there is no plugin found for a configuration
      */
     @Override
-    public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
+    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
 
-        for (PluginDetails pluginDetails : plugins.values()) {
-            if (pluginDetails.analyticsPluginConfiguration == null) {
-                pluginDetails.analyticsPlugin.configure(context, environment);
-            } else {
-                pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
+        if (!plugins.values().isEmpty()) {
+            if (plugins.values().iterator().hasNext()) {
+                PluginDetails pluginDetails = plugins.values().iterator().next();
+                if (pluginDetails.analyticsPluginConfiguration == null) {
+                    pluginDetails.analyticsPlugin.configure(context);
+                } else {
+                    pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
+                }
             }
         }
 

@@ -1,10 +1,13 @@
 package com.amplifyframework.hub;
 
-import com.amplifyframework.core.exception.AmplifyException;
-import com.amplifyframework.core.task.Result;
-
 public class HubPayload {
-    private HubEvent hubEvent;
-    private Result result;
-    private AmplifyException amplifyException;
+    private String event;
+    private Object data;
+    private String message;
+
+    public HubPayload(String event, Object data, String message) {
+        this.event = event;
+        this.data = data;
+        this.message = message;
+    }
 }

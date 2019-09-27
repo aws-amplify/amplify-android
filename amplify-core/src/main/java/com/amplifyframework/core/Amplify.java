@@ -22,7 +22,6 @@ import com.amplifyframework.analytics.Analytics;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.api.Api;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginConfiguration;
@@ -32,9 +31,6 @@ import com.amplifyframework.logging.Logging;
 import com.amplifyframework.storage.Storage;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.StoragePluginConfiguration;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -83,45 +79,29 @@ public class Amplify {
      */
     public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
         synchronized (LOCK) {
-            configure(context, AmplifyConfiguration.DEFAULT_ENVIRONMENT_NAME);
-        }
-    }
-
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context Android context required to read the contents of file
-     * @param environment specifies the name of the environment being operated on.
-     *                    For example, "Default", "Custom", etc.
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no plugin found for a configuration
-     */
-    public static void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
-        synchronized (LOCK) {
             if (CONFIGURED) {
                 throw new ConfigurationException.AmplifyAlreadyConfiguredException();
             }
             amplifyConfiguration = new AmplifyConfiguration(context);
-            amplifyConfiguration.setEnvironment(environment);
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(context, environment);
+                Analytics.configure(context);
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(context, environment);
+                API.configure(context);
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(context, environment);
+                Hub.configure(context);
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(context, environment);
+                Logging.configure(context);
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(context, environment);
+                Storage.configure(context);
             }
 
             CONFIGURED = true;

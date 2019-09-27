@@ -30,12 +30,10 @@ public interface Category<P, C> extends CategoryTypeable {
      * Read the configuration from amplifyconfiguration.json file
      *
      * @param context Android context required to read the contents of file
-     * @param environment specifies the name of the environment being operated on.
-     *                    For example, "Default", "Custom", etc.
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException;
+    void configure(@NonNull Context context) throws ConfigurationException, PluginException;
 
     /**
      * Register a plugin with Amplify

@@ -1,1 +1,5 @@
+<<<<<<< HEAD
 include ':amplify-core', ':aws-amplify-analytics-pinpoint', ':aws-amplify-storage-s3', ':aws-amplify-api-okhttp'
+=======
+include ':amplify-core', ':aws-amplify-analytics-pinpoint', ':aws-amplify-storage-s3', ':amplify-sample-app'
+>>>>>>> master
