@@ -165,4 +165,12 @@ public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCate
     public CategoryType getCategoryType() {
         return CategoryType.API;
     }
+
+    private ApiPlugin getSelectedPlugin() {
+        if (!plugins.values().isEmpty()) {
+            return (ApiPlugin) plugins.values().toArray()[0];
+        } else {
+            return null;
+        }
+    }
 }
