@@ -40,7 +40,7 @@ public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCate
             plugin().query(query);
         }
     }
-    
+
     static class PluginDetails {
         ApiPlugin apiPlugin;
         ApiPluginConfiguration apiPluginConfiguration;
