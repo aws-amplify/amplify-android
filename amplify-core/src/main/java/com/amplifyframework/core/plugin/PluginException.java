@@ -16,11 +16,12 @@
 package com.amplifyframework.core.plugin;
 
 import com.amplifyframework.core.exception.AmplifyException;
+import com.amplifyframework.core.exception.AmplifyRuntimeException;
 
 /**
  * Exceptions associated with configuring and inspecting Amplify Plugins
  */
-public class PluginException extends AmplifyException {
+public class PluginException extends AmplifyRuntimeException {
     /**
      * The plugin's `key` property is empty
      */

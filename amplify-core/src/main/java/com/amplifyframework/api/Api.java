@@ -23,27 +23,114 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCategoryBehavior {
+
+    static class PluginDetails {
+        ApiPlugin apiPlugin;
+        ApiPluginConfiguration apiPluginConfiguration;
+
+        public ApiPlugin getApiPlugin() {
+            return apiPlugin;
+        }
+
+        public PluginDetails apiPlugin(ApiPlugin apiPlugin) {
+            this.apiPlugin = apiPlugin;
+            return this;
+        }
+
+        public ApiPluginConfiguration getApiPluginConfiguration() {
+            return apiPluginConfiguration;
+        }
+
+        public PluginDetails apiPluginConfiguration(ApiPluginConfiguration apiPluginConfiguration) {
+            this.apiPluginConfiguration = apiPluginConfiguration;
+            return this;
+        }
+    }
+
+    /**
+     * Map of the { pluginKey => plugin } object
+     */
+    private Map<String, PluginDetails> plugins;
+
+    /**
+     * Flag to remember that Analytics category is already configured by Amplify
+     * and throw an error if configure method is called again
+     */
+    private boolean isConfigured;
+
+    /**
+     * Protect enabling and disabling of Analytics event
+     * collection and sending.
+     */
+    private static final Object LOCK = new Object();
+
+    public Api() {
+        this.plugins = new ConcurrentHashMap<String, PluginDetails>();
+    }
+
+
     @Override
     public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+        if (isConfigured) {
+            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
+        }
 
+        if (!plugins.values().isEmpty()) {
+            if (plugins.values().iterator().hasNext()) {
+                PluginDetails pluginDetails = plugins.values().iterator().next();
+                if (pluginDetails.apiPluginConfiguration == null) {
+                    pluginDetails.apiPlugin.configure(context);
+                } else {
+                    pluginDetails.apiPlugin.configure(pluginDetails.apiPluginConfiguration);
+                }
+            }
+        }
+
+        isConfigured = true;
     }
 
     @Override
     public void addPlugin(@NonNull ApiPlugin plugin) throws PluginException {
+        PluginDetails pluginDetails = new PluginDetails()
+                .apiPlugin(plugin);
 
+        try {
+            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     @Override
     public void addPlugin(@NonNull ApiPlugin plugin, @NonNull ApiPluginConfiguration pluginConfiguration) throws PluginException {
+        PluginDetails pluginDetails = new PluginDetails()
+                .apiPlugin(plugin)
+                .apiPluginConfiguration(pluginConfiguration);
 
+        try {
+            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
+                throw new PluginException.NoSuchPluginException();
+            }
+        } catch (Exception ex) {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     @Override
     public void removePlugin(@NonNull ApiPlugin plugin) throws PluginException {
-
+        if (plugins.containsKey(plugin.getPluginKey())) {
+            plugins.remove(plugin.getPluginKey());
+        } else {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     @Override
@@ -53,7 +140,11 @@ public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCate
 
     @Override
     public ApiPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
-        return null;
+        if (plugins.containsKey(pluginKey)) {
+            return plugins.get(pluginKey).apiPlugin;
+        } else {
+            throw new PluginException.NoSuchPluginException();
+        }
     }
 
     /**
@@ -61,11 +152,17 @@ public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCate
      */
     @Override
     public Set<ApiPlugin> getPlugins() {
-        return null;
+        Set<ApiPlugin> analyticsPlugins = new HashSet<ApiPlugin>();
+        if (!plugins.isEmpty()) {
+            for (PluginDetails pluginDetails : plugins.values()) {
+                analyticsPlugins.add(pluginDetails.apiPlugin);
+            }
+        }
+        return analyticsPlugins;
     }
 
     @Override
     public CategoryType getCategoryType() {
-        return null;
+        return CategoryType.API;
     }
 }
