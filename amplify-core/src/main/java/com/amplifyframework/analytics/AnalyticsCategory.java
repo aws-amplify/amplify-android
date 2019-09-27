@@ -34,7 +34,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfiguration>, AnalyticsCategoryBehavior {
+public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPluginConfiguration>, AnalyticsCategoryBehavior {
 
     static class PluginDetails {
         AnalyticsPlugin analyticsPlugin;
@@ -82,7 +82,7 @@ public class Analytics implements Category<AnalyticsPlugin, AnalyticsPluginConfi
      */
     private static final Object LOCK = new Object();
 
-    public Analytics() {
+    public AnalyticsCategory() {
         this.plugins = new ConcurrentHashMap<String, PluginDetails>();
         this.enabled = true;
     }

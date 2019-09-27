@@ -28,7 +28,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCategoryBehavior {
+public class ApiCategory implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCategoryBehavior {
 
     static class PluginDetails {
         ApiPlugin apiPlugin;
@@ -70,7 +70,7 @@ public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCate
      */
     private static final Object LOCK = new Object();
 
-    public Api() {
+    public ApiCategory() {
         this.plugins = new ConcurrentHashMap<String, PluginDetails>();
     }
 

@@ -25,7 +25,7 @@ import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.Set;
 
-public class Logging implements Category<LoggingPlugin, LoggingPluginConfiguration>, LoggingCategoryBehavior {
+public class LoggingCategory implements Category<LoggingPlugin, LoggingPluginConfiguration>, LoggingCategoryBehavior {
 
     @Override
     public void configure(@NonNull Context context) throws ConfigurationException, PluginException {

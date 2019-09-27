@@ -42,7 +42,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * plugins registered.
  */
 
-public class Storage implements Category<StoragePlugin, StoragePluginConfiguration>, StorageCategoryBehavior {
+public class StorageCategory implements Category<StoragePlugin, StoragePluginConfiguration>, StorageCategoryBehavior {
 
     static class PluginDetails {
         StoragePlugin storagePlugin;
@@ -80,7 +80,7 @@ public class Storage implements Category<StoragePlugin, StoragePluginConfigurati
      */
     private boolean isConfigured;
 
-    public Storage() {
+    public StorageCategory() {
         this.plugins = new ConcurrentHashMap<String, PluginDetails>();
         this.isConfigured = false;
     }
