@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class Hub implements Category<HubPlugin,HubPluginConfiguration>, HubCategoryBehavior {
+public class HubCategory implements Category<HubPlugin,HubPluginConfiguration>, HubCategoryBehavior {
 
     private static Map<HubChannel, ArrayList<Callback<? extends Result>>> callbacks =
             new HashMap<HubChannel, ArrayList<Callback<? extends Result>>>();

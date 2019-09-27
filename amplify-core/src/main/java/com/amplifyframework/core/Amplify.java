@@ -18,17 +18,17 @@ package com.amplifyframework.core;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.analytics.Analytics;
+import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
-import com.amplifyframework.api.Api;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginConfiguration;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.hub.Hub;
-import com.amplifyframework.logging.Logging;
-import com.amplifyframework.storage.Storage;
+import com.amplifyframework.hub.HubCategory;
+import com.amplifyframework.logging.LoggingCategory;
+import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.StoragePluginConfiguration;
 
@@ -50,22 +50,22 @@ public class Amplify {
 
     private static final String TAG = Amplify.class.getSimpleName();
 
-    public static final Analytics Analytics;
-    public static final Api API;
-    public static final Logging Logging;
-    public static final Storage Storage;
-    public static final Hub Hub;
+    public static final AnalyticsCategory Analytics;
+    public static final ApiCategory API;
+    public static final LoggingCategory Logging;
+    public static final StorageCategory Storage;
+    public static final HubCategory Hub;
 
     private static boolean CONFIGURED = false;
 
     static AmplifyConfiguration amplifyConfiguration;
 
     static {
-        Analytics = new Analytics();
-        API = new Api();
-        Logging = new Logging();
-        Storage = new Storage();
-        Hub = new Hub();
+        Analytics = new AnalyticsCategory();
+        API = new ApiCategory();
+        Logging = new LoggingCategory();
+        Storage = new StorageCategory();
+        Hub = new HubCategory();
     }
 
     private static final Object LOCK = new Object();
