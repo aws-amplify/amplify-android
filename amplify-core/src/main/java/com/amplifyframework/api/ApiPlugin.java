@@ -17,5 +17,5 @@ package com.amplifyframework.api;
 
 import com.amplifyframework.core.plugin.Plugin;
 
-public interface ApiPlugin extends Plugin<ApiPluginConfiguration> {
+public interface ApiPlugin extends Plugin<ApiPluginConfiguration>, ApiCategoryBehavior {
 }

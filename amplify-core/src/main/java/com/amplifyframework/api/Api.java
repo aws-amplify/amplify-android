@@ -18,6 +18,7 @@ package com.amplifyframework.api;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.api.graphql.GraphQLQuery;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
@@ -26,6 +27,16 @@ import com.amplifyframework.core.plugin.PluginException;
 import java.util.Set;
 
 public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCategoryBehavior {
+
+    private boolean enabled;
+
+    @Override
+    public GraphQLQuery query(@NonNull String query) {
+        if (enabled){
+            plugin().query(query);
+        }
+    }
+
     @Override
     public void configure(@NonNull Context context, @NonNull String environment) throws ConfigurationException, PluginException {
 

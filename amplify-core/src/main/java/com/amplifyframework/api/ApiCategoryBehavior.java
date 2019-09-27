@@ -15,5 +15,17 @@
 
 package com.amplifyframework.api;
 
+import android.support.annotation.NonNull;
+
+import com.amplifyframework.api.graphql.GraphQLQuery;
+
 public interface ApiCategoryBehavior {
+
+    /**
+     * Send a GraphQL document to endpoint as POST
+     *
+     * @param query valid GraphQL string
+     */
+    GraphQLQuery query(@NonNull String query);
+
 }
