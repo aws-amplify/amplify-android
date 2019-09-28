@@ -15,44 +15,33 @@
 
 package com.amplifyframework.core.category;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
 
 import java.util.Set;
 
-public interface Category<P, C> extends CategoryTypeable {
+public interface Category<P> extends CategoryTypeable {
 
     /**
-     * Read the configuration from amplifyconfiguration.json file
+     * Configure category with provided AmplifyConfiguration object
      *
-     * @param context Android context required to read the contents of file
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    void configure(@NonNull Context context) throws ConfigurationException, PluginException;
+    void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException;
 
     /**
      * Register a plugin with Amplify
      *
-     * @param plugin an implementation of a CATEGORY_TYPE that
+     * @param plugin an implementation of a category plugin that
      *               conforms to the {@link Plugin} interface.
      * @throws PluginException when a plugin cannot be registered for this category
      */
     void addPlugin(@NonNull final P plugin) throws PluginException;
-
-    /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin an implementation of a Category that
-     *               conforms to the {@link Plugin} interface.
-     * @param pluginConfiguration configuration information for the plugin.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
-    void addPlugin(@NonNull final P plugin, @NonNull final C pluginConfiguration) throws PluginException;
 
     /**
      * Remove a registered plugin
@@ -62,14 +51,6 @@ public interface Category<P, C> extends CategoryTypeable {
      * @throws PluginException when a plugin cannot be registered for this category
      */
     void removePlugin(@NonNull final P plugin) throws PluginException;
-
-    /**
-     * Reset Amplify to state where it is not configured.
-     *
-     * Remove all the plugins added.
-     * Remove the configuration stored.
-     */
-    void reset();
 
     /**
      * Retrieve a plugin of category.

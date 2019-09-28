@@ -13,16 +13,22 @@
  * permissions and limitations under the License.
  */
 
+package com.amplifyframework.api;
 
-package com.amplifyframework.analytics;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import android.content.Context;
+/**
+ * Strongly-typed configuration for API category that also
+ * contains configuration for individual plugins
+ */
+public class ApiCategoryConfiguration {
+    /** Map of the { pluginKey => pluginConfiguration } object */
+    public Map<String, Object> pluginConfigs;
 
-import com.amplifyframework.core.plugin.PluginConfiguration;
+    //TODO: Place global (category-wise) configuration options here
 
-public class AnalyticsPluginConfiguration extends PluginConfiguration {
-
-    public AnalyticsPluginConfiguration(Context context) {
-        super(context);
+    public ApiCategoryConfiguration() {
+        pluginConfigs = new ConcurrentHashMap<String, Object>();
     }
 }

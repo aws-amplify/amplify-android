@@ -15,9 +15,9 @@
 
 package com.amplifyframework.logging;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
@@ -25,10 +25,9 @@ import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.Set;
 
-public class LoggingCategory implements Category<LoggingPlugin, LoggingPluginConfiguration>, LoggingCategoryBehavior {
-
+public class LoggingCategory implements Category<LoggingPlugin>, LoggingCategoryBehavior {
     @Override
-    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
 
     }
 
@@ -38,17 +37,7 @@ public class LoggingCategory implements Category<LoggingPlugin, LoggingPluginCon
     }
 
     @Override
-    public void addPlugin(@NonNull LoggingPlugin plugin, @NonNull LoggingPluginConfiguration pluginConfiguration) throws PluginException {
-
-    }
-
-    @Override
     public void removePlugin(@NonNull LoggingPlugin plugin) throws PluginException {
-
-    }
-
-    @Override
-    public void reset() {
 
     }
 
