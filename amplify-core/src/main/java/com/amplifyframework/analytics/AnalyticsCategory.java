@@ -15,14 +15,13 @@
 
 package com.amplifyframework.analytics;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.core.plugin.PluginRuntimeException;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -34,35 +33,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPluginConfiguration>, AnalyticsCategoryBehavior {
-
-    static class PluginDetails {
-        AnalyticsPlugin analyticsPlugin;
-        AnalyticsPluginConfiguration analyticsPluginConfiguration;
-
-        public AnalyticsPlugin getAnalyticsPlugin() {
-            return analyticsPlugin;
-        }
-
-        public PluginDetails analyticsPlugin(AnalyticsPlugin analyticsPlugin) {
-            this.analyticsPlugin = analyticsPlugin;
-            return this;
-        }
-
-        public AnalyticsPluginConfiguration getAnalyticsPluginConfiguration() {
-            return analyticsPluginConfiguration;
-        }
-
-        public PluginDetails analyticsPluginConfiguration(AnalyticsPluginConfiguration analyticsPluginConfiguration) {
-            this.analyticsPluginConfiguration = analyticsPluginConfiguration;
-            return this;
-        }
-    }
-
+public class AnalyticsCategory implements Category<AnalyticsPlugin>, AnalyticsCategoryBehavior {
     /**
      * Map of the { pluginKey => plugin } object
      */
-    private Map<String, PluginDetails> plugins;
+    private Map<String, AnalyticsPlugin> plugins;
 
     /**
      * Flag to remember that Analytics category is already configured by Amplify
@@ -83,7 +58,7 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
     private static final Object LOCK = new Object();
 
     public AnalyticsCategory() {
-        this.plugins = new ConcurrentHashMap<String, PluginDetails>();
+        this.plugins = new ConcurrentHashMap<String, AnalyticsPlugin>();
         this.enabled = true;
     }
 
@@ -93,18 +68,18 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
      *
      * @return the only registered plugin for this category
      */
-    private AnalyticsPlugin plugin() {
+    private AnalyticsPlugin getSelectedPlugin() {
         if (!isConfigured) {
             throw new ConfigurationException("Analytics category is not yet configured.");
         }
         if (plugins.isEmpty()) {
-            throw new PluginRuntimeException.NoPluginException();
+            throw new PluginException.NoSuchPluginException();
         }
         if (plugins.size() > 1) {
-            throw new PluginRuntimeException.MultiplePluginsException();
+            throw new PluginException.MultiplePluginsException();
         }
 
-        return plugins.values().iterator().next().analyticsPlugin;
+        return plugins.values().iterator().next();
     }
 
     @Override
@@ -124,45 +99,45 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
     @Override
     public void recordEvent(@NonNull String eventName) throws AnalyticsException {
         if (enabled) {
-            plugin().recordEvent(eventName);
+            getSelectedPlugin().recordEvent(eventName);
         }
     }
 
     @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
         if (enabled) {
-            plugin().recordEvent(analyticsEvent);
+            getSelectedPlugin().recordEvent(analyticsEvent);
         }
     }
 
     @Override
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
         if (enabled) {
-            plugin().updateProfile(analyticsProfile);
+            getSelectedPlugin().updateProfile(analyticsProfile);
         }
     }
 
     /**
-     * Read the configuration from amplifyconfiguration.json file
+     * Configure Analytics category based on AmplifyConfiguration object
      *
-     * @param context     Android context required to read the contents of file
+     * @param configuration AmplifyConfiguration object for configuration via code
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException        thrown when there is no plugin found for a configuration
      */
     @Override
-    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
 
-        if (!plugins.values().isEmpty()) {
-            if (plugins.values().iterator().hasNext()) {
-                PluginDetails pluginDetails = plugins.values().iterator().next();
-                if (pluginDetails.analyticsPluginConfiguration == null) {
-                    pluginDetails.analyticsPlugin.configure(context);
-                } else {
-                    pluginDetails.analyticsPlugin.configure(pluginDetails.analyticsPluginConfiguration);
-                }
+        for (AnalyticsPlugin plugin : plugins.values()) {
+            String pluginKey = plugin.getPluginKey();
+            Object pluginConfig = configuration.analytics.pluginConfigs.get(pluginKey);
+
+            if (pluginConfig != null) {
+                plugin.configure(pluginConfig);
+            } else {
+                throw new PluginException.NoSuchPluginException();
             }
         }
 
@@ -177,33 +152,8 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
      */
     @Override
     public void addPlugin(@NonNull AnalyticsPlugin plugin) throws PluginException {
-        PluginDetails pluginDetails = new PluginDetails()
-                .analyticsPlugin(plugin);
-
         try {
-            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
-                throw new PluginException.NoSuchPluginException();
-            }
-        } catch (Exception ex) {
-            throw new PluginException.NoSuchPluginException();
-        }
-    }
-
-    /**
-     * Register an Analytics plugin with Amplify
-     *
-     * @param plugin              an implementation of AnalyticsPlugin
-     * @param pluginConfiguration configuration information for the plugin.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
-    @Override
-    public void addPlugin(@NonNull AnalyticsPlugin plugin, @NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
-        PluginDetails pluginDetails = new PluginDetails()
-                .analyticsPlugin(plugin)
-                .analyticsPluginConfiguration(pluginConfiguration);
-
-        try {
-            if (plugins.put(plugin.getPluginKey(), pluginDetails) == null) {
+            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
                 throw new PluginException.NoSuchPluginException();
             }
         } catch (Exception ex) {
@@ -224,17 +174,6 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
     }
 
     /**
-     * Reset Analytics category to state where it is not configured.
-     * <p>
-     * Remove all the plugins added.
-     * Remove the configuration stored.
-     */
-    @Override
-    public void reset() {
-
-    }
-
-    /**
      * Retrieve a registered Analytics plugin
      *
      * @param pluginKey the key that identifies the plugin implementation
@@ -243,7 +182,7 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
     @Override
     public AnalyticsPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
         if (plugins.containsKey(pluginKey)) {
-            return plugins.get(pluginKey).analyticsPlugin;
+            return plugins.get(pluginKey);
         } else {
             throw new PluginException.NoSuchPluginException();
         }
@@ -254,13 +193,7 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
      */
     @Override
     public Set<AnalyticsPlugin> getPlugins() {
-        Set<AnalyticsPlugin> analyticsPlugins = new HashSet<AnalyticsPlugin>();
-        if (!plugins.isEmpty()) {
-            for (PluginDetails pluginDetails : plugins.values()) {
-                analyticsPlugins.add(pluginDetails.analyticsPlugin);
-            }
-        }
-        return analyticsPlugins;
+        return new HashSet<AnalyticsPlugin>(plugins.values());
     }
 
     /**

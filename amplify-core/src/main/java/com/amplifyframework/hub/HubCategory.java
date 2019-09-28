@@ -15,9 +15,9 @@
 
 package com.amplifyframework.hub;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -30,29 +30,21 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class HubCategory implements Category<HubPlugin,HubPluginConfiguration>, HubCategoryBehavior {
+public class HubCategory implements Category<HubPlugin>, HubCategoryBehavior {
 
     private static Map<HubChannel, ArrayList<Callback<? extends Result>>> callbacks =
             new HashMap<HubChannel, ArrayList<Callback<? extends Result>>>();
 
 
-    /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
-     * @param context     Android context required to read the contents of file
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
     @Override
-    public void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
 
     }
 
     /**
      * Register a plugin with Amplify
      *
-     * @param plugin an implementation of a CATEGORY_TYPE that
-     *               conforms to the {@link Plugin} interface.
+     * @param plugin an implementation of HubPlugin interface.
      * @throws PluginException when a plugin cannot be registered for this category
      */
     @Override
@@ -61,38 +53,13 @@ public class HubCategory implements Category<HubPlugin,HubPluginConfiguration>, 
     }
 
     /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin              an implementation of a Category that
-     *                            conforms to the {@link Plugin} interface.
-     * @param pluginConfiguration configuration information for the plugin.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
-    @Override
-    public void addPlugin(@NonNull HubPlugin plugin, @NonNull HubPluginConfiguration pluginConfiguration) throws PluginException {
-
-    }
-
-    /**
      * Remove a registered plugin
      *
-     * @param plugin an implementation of a Category that
-     *               conforms to the {@link Plugin} interface
+     * @param plugin an implementation of HubPlugin interface.
      * @throws PluginException when a plugin cannot be registered for this category
      */
     @Override
     public void removePlugin(@NonNull HubPlugin plugin) throws PluginException {
-
-    }
-
-    /**
-     * Reset Amplify to state where it is not configured.
-     * <p>
-     * Remove all the plugins added.
-     * Remove the configuration stored.
-     */
-    @Override
-    public void reset() {
 
     }
 

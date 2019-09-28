@@ -80,34 +80,14 @@ public class DefaultHubPlugin implements HubPlugin {
         return TAG;
     }
 
-    /**
-     * Configure the Plugin with the configuration passed.
-     *
-     * @param pluginConfiguration configuration for the plugin
-     * @throws PluginException when configuration for a plugin was not found
-     */
     @Override
-    public void configure(@NonNull HubPluginConfiguration pluginConfiguration) throws PluginException {
+    public void configure(@NonNull Object pluginConfiguration) throws PluginException {
 
     }
 
-    /**
-     * Configure the Plugin using the details in amplifyconfiguration.json
-     *
-     * @param context Android context required to read the contents of file
-     * @throws PluginException when configuration for a plugin was not found
-     */
     @Override
-    public void configure(@NonNull Context context) throws PluginException {
-
-    }
-
-    /**
-     * Reset the plugin to the state where it's not configured.
-     */
-    @Override
-    public void reset() {
-
+    public Object getEscapeHatch() {
+        return null;
     }
 
     @Override

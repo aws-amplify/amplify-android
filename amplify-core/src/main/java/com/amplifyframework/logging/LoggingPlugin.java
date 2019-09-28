@@ -18,10 +18,10 @@ package com.amplifyframework.logging;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Interface that a plugin implementation of Analytics CATEGORY_TYPE
+ * Interface that a plugin implementation of Analytics category
  * would implement. This includes the client behavior dictated by
  * {@link LoggingCategoryBehavior} and {@link Plugin}.
  */
-public interface LoggingPlugin extends LoggingCategoryBehavior, Plugin<LoggingPluginConfiguration> {
+public interface LoggingPlugin<C, E> extends LoggingCategoryBehavior, Plugin<C, E> {
 
 }

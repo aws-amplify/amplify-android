@@ -18,6 +18,12 @@ package com.amplifyframework.core;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
+import com.amplifyframework.api.ApiCategoryConfiguration;
+import com.amplifyframework.hub.HubCategoryConfiguration;
+import com.amplifyframework.logging.LoggingCategoryConfiguration;
+import com.amplifyframework.storage.StorageCategoryConfiguration;
+
 import org.json.JSONObject;
 
 import java.io.InputStream;
@@ -31,11 +37,15 @@ import java.util.Scanner;
  */
 public class AmplifyConfiguration {
 
-    static final String DEFAULT_ENVIRONMENT_NAME = "Default";
+    public AnalyticsCategoryConfiguration analytics;
+    public ApiCategoryConfiguration api;
+    public HubCategoryConfiguration hub;
+    public LoggingCategoryConfiguration logging;
+    public StorageCategoryConfiguration storage;
+
     static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
     private JSONObject mJSONObject;
-    private String mEnvironment;
 
     /**
      * Constructor.
@@ -54,25 +64,6 @@ public class AmplifyConfiguration {
      */
     public AmplifyConfiguration(Context context) {
         readInputJson(context, getConfigResourceId(context));
-    }
-
-    /**
-     * Constructor.
-     *
-     * @param context The configuration information can be read
-     *                from the default amplify configuration file.
-     */
-    public AmplifyConfiguration(Context context, String environment) {
-        readInputJson(context, getConfigResourceId(context));
-    }
-
-    /**
-     * Set the Amplify environment.
-     *
-     * @param environment name of the environment such as "Default", "Dev", "Beta", etc.
-     */
-    public void setEnvironment(@NonNull String environment) {
-        this.mEnvironment = environment;
     }
 
     private static int getConfigResourceId(Context context) {

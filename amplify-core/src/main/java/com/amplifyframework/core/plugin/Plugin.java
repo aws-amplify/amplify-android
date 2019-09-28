@@ -15,7 +15,6 @@
 
 package com.amplifyframework.core.plugin;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.category.CategoryTypeable;
@@ -24,7 +23,7 @@ import com.amplifyframework.core.category.CategoryTypeable;
  * Interface that defines the contract that every plugin
  * in Amplify System will adhere to.
  */
-public interface Plugin<C> extends CategoryTypeable {
+public interface Plugin<C, E> extends CategoryTypeable {
     /**
      * @return the identifier that identifies
      *         the plugin implementation
@@ -32,23 +31,17 @@ public interface Plugin<C> extends CategoryTypeable {
     String getPluginKey();
 
     /**
-     * Configure the Plugin with the configuration passed.
+     * Configure the plugin with customized configuration object
      *
-     * @param pluginConfiguration configuration for the plugin
+     * @param pluginConfiguration plugin-specific configuration
      * @throws PluginException when configuration for a plugin was not found
      */
     void configure(@NonNull C pluginConfiguration) throws PluginException;
 
     /**
-     * Configure the Plugin using the details in amplifyconfiguration.json
+     * Returns escape hatch for plugin to enable lower-level client use-cases
      *
-     * @param context Android context required to read the contents of file
-     * @throws PluginException when configuration for a plugin was not found
+     * @return the client used by category plugin
      */
-    void configure(@NonNull Context context) throws PluginException;
-
-    /**
-     * Reset the plugin to the state where it's not configured.
-     */
-    void reset();
+    E getEscapeHatch();
 }

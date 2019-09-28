@@ -22,7 +22,6 @@ import android.util.Log;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.PluginException;
@@ -73,20 +72,14 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
         return null;
     }
 
-
     @Override
-    public void configure(@NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
+    public void configure(@NonNull Object pluginConfiguration) throws PluginException {
 
     }
 
     @Override
-    public void configure(@NonNull Context context) throws PluginException {
-
-    }
-
-    @Override
-    public void reset() {
-
+    public Object getEscapeHatch() {
+        return null;
     }
 
     @Override

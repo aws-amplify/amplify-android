@@ -13,14 +13,22 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.storage;
 
-import android.content.Context;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
-import com.amplifyframework.core.plugin.PluginConfiguration;
+/**
+ * Strongly-typed configuration for Storage category that also
+ * contains configuration for individual plugins
+ */
+public class StorageCategoryConfiguration {
+    /** Map of the { pluginKey => pluginConfiguration } object */
+    public Map<String, Object> pluginConfigs;
 
-public class ApiPluginConfiguration extends PluginConfiguration {
-    public ApiPluginConfiguration(Context context) {
-        super(context);
+    //TODO: Place global (category-wise) configuration options here
+
+    public StorageCategoryConfiguration() {
+        pluginConfigs = new ConcurrentHashMap<String, Object>();
     }
 }

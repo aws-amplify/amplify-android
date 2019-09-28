@@ -20,17 +20,14 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.plugin.PluginConfiguration;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StoragePlugin;
-import com.amplifyframework.storage.StoragePluginConfiguration;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -78,30 +75,41 @@ public class Amplify {
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
     public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+        configure(new AmplifyConfiguration(context));
+    }
+
+    /**
+     * Configure Amplify with AmplifyConfiguration object
+     *
+     * @param configuration AmplifyConfiguration object for configuration via code
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException thrown when there is no plugin found for a configuration
+     */
+    public static void configure(final AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
         synchronized (LOCK) {
             if (CONFIGURED) {
                 throw new ConfigurationException.AmplifyAlreadyConfiguredException();
             }
-            amplifyConfiguration = new AmplifyConfiguration(context);
+            amplifyConfiguration = configuration;
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(context);
+                Analytics.configure(amplifyConfiguration);
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(context);
+                API.configure(amplifyConfiguration);
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(context);
+                Hub.configure(amplifyConfiguration);
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(context);
+                Logging.configure(amplifyConfiguration);
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(context);
+                Storage.configure(amplifyConfiguration);
             }
 
             CONFIGURED = true;
@@ -151,49 +159,6 @@ public class Amplify {
         }
     }
 
-    /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin an implementation of a CATEGORY_TYPE that
-     *               conforms to the {@link Plugin} interface.
-     * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws PluginException when a plugin cannot be registered for the category type it belongs to
-     *                         or when when the plugin's category type is not supported by Amplify.
-     */
-    public static <P extends Plugin, C extends PluginConfiguration> void addPlugin(@NonNull final P plugin, @NonNull final C pluginConfiguration) throws PluginException {
-        synchronized (LOCK) {
-            if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
-                throw new PluginException.EmptyKeyException();
-            }
-
-            switch (plugin.getCategoryType()) {
-                case API:
-                    break;
-                case ANALYTICS:
-                    if (plugin instanceof AnalyticsPlugin && pluginConfiguration instanceof AnalyticsPluginConfiguration) {
-                        Analytics.addPlugin((AnalyticsPlugin) plugin, (AnalyticsPluginConfiguration) pluginConfiguration);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case HUB:
-                    break;
-                case LOGGING:
-                    break;
-                case STORAGE:
-                    if (plugin instanceof StoragePlugin && pluginConfiguration instanceof StoragePluginConfiguration) {
-                        Storage.addPlugin((StoragePlugin) plugin, (StoragePluginConfiguration) pluginConfiguration);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                default:
-                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
-                            "Verify that the library version is correct and supports the plugin's category.");
-            }
-        }
-    }
-
     public static <P extends Plugin> void removePlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             switch (plugin.getCategoryType()) {
@@ -221,39 +186,6 @@ public class Amplify {
                     throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
                             "Verify that the library version is correct and supports the plugin's category.");
             }
-        }
-    }
-
-    /**
-     * Reset Amplify to state where it is not configured.
-     *
-     * Remove all the plugins added.
-     * Remove the configuration stored.
-     */
-    public static void reset() {
-        synchronized (LOCK) {
-            if (Analytics.getPlugins().size() > 0) {
-                Analytics.reset();
-            }
-
-            if (API.getPlugins().size() > 0) {
-                API.reset();
-            }
-
-            if (Hub.getPlugins().size() > 0) {
-                Hub.reset();
-            }
-
-            if (Logging.getPlugins().size() > 0) {
-                Logging.reset();
-            }
-
-            if (Storage.getPlugins().size() > 0) {
-                Storage.reset();
-            }
-
-            Amplify.amplifyConfiguration = null;
-            CONFIGURED = false;
         }
     }
 }
