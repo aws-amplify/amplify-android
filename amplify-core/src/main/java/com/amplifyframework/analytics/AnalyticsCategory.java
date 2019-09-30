@@ -104,16 +104,19 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin>, AnalyticsCa
     }
 
     @Override
+    public void identifyUser(@NonNull String id, @NonNull AnalyticsUserProfile analyticsUserProfile) {
+
+    }
+
+    @Override
     public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }
     }
 
-    @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
+    public void updateProfile(@NonNull AnalyticsUserProfile analyticsUserProfile) throws AnalyticsException {
         if (enabled) {
-            getSelectedPlugin().updateProfile(analyticsProfile);
         }
     }
 

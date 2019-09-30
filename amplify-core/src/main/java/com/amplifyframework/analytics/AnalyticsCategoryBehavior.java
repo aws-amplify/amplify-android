@@ -18,48 +18,46 @@ package com.amplifyframework.analytics;
 import android.support.annotation.NonNull;
 
 /**
- * Defines the client behavior (client API) consumed
- * by the app for collection and sending of Analytics
- * events.
+ * API contract for `Analytics` category that plugins should implement to provide
+ * the Analytics functionality.
  */
 public interface AnalyticsCategoryBehavior {
     /**
-     * Disable collection and sending of Analytics Events.
+     * Disable analytics data collection. Useful to implement flows that require users
+     * to *opt-in*.
      */
     void disable();
 
     /**
-     * Enable collection and sending of Analytics Events.
+     * Enable analytics data collection. Useful to implement flows that require users
+     * to *opt-in*.
      */
     void enable();
 
     /**
-     * Record the event by storing in the local database.
+     * Record the actions your users perform. Every action triggers what we call an “event”,
+     * which can also have associated properties.
+     *
+     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
+     */
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent);
+
+
+    /**
+     * Convenience method to record events. It constructs an instance of AnalyticsEvent and calls
+     * `recordEvent(@NonNull AnalyticsEvent analyticsEvent)` method.
      *
      * @param eventName name of the event. An AnalyticsEvent is constructed
      *                  based on the name of the event.
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
      */
-    void recordEvent(@NonNull String eventName) throws AnalyticsException;
+    void recordEvent(@NonNull String eventName);
 
     /**
-     * Record the event by storing in the local database.
+     * Allows you to tie a user to their actions and record traits about them. It includes
+     * an unique User ID and any optional traits you know about them like their email, name, etc.
      *
-     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
+     * @param id The unique identifier for the user
+     * @param analyticsUserProfile User specific data (e.g. plan, accountType, email, age, location, etc)
      */
-    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
-
-    /**
-     * Update the profile of the end-user/device for whom/which you are
-     * collecting analytics.
-     *
-     * @param analyticsProfile the profile of the end-user/device for whom/which you are
-     *      * collecting analytics.
-     * @throws AnalyticsException when there is an error updating the
-     *                            profile with the registered/chosen {@link AnalyticsPlugin}.
-     */
-    void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException;
+    void identifyUser(@NonNull String id, @NonNull AnalyticsUserProfile analyticsUserProfile);
 }

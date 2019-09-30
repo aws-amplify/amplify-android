@@ -22,7 +22,7 @@ import android.util.Log;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsProfile;
+import com.amplifyframework.analytics.AnalyticsUserProfile;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.PluginException;
 
@@ -57,12 +57,12 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
     }
 
     @Override
-    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException {
+    public void identifyUser(@NonNull String id, @NonNull AnalyticsUserProfile analyticsUserProfile) {
 
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
+    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException {
 
     }
 
