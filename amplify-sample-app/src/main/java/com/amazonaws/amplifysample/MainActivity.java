@@ -25,12 +25,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.analytics.pinpoint.AmazonPinpointAnalyticsPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.storage.Storage;
 
 import org.json.JSONObject;
 
