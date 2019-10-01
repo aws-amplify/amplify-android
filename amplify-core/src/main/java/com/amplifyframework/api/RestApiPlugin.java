@@ -15,5 +15,14 @@
 
 package com.amplifyframework.api;
 
-public interface ApiCategoryBehavior {
+/**
+ * Abstract class that a plugin implementation of REST API category
+ * would extend. This includes the client behavior dictated by
+ * {@link RestApiCategoryBehavior} and {@link ApiPlugin}.
+ */
+public abstract class RestApiPlugin<C, E> extends ApiPlugin<C, E> implements RestApiCategoryBehavior {
+    @Override
+    public final ApiType getApiType() {
+        return ApiType.REST;
+    }
 }

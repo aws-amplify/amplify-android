@@ -15,25 +15,10 @@
 
 package com.amplifyframework.api;
 
-import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.Plugin;
-
-/**
- * Abstract class to group Plugins for API subcategories.
- *
- * @param <C> Configuration for API category
- * @param <E> Escape Hatch for API category's low level client
- */
-public abstract class ApiPlugin<C, E> implements Plugin<C, E> {
-    @Override
-    public final CategoryType getCategoryType() {
-        return CategoryType.API;
-    }
-
-    /**
-     * Returns whether this plugin implements REST API or GRAPHQL API
-     *
-     * @return API Type enum
-     */
-    abstract ApiType getApiType();
+public interface RestApiCategoryBehavior {
+    void get();
+    void put();
+    void post();
+    void patch();
+    void delete();
 }
