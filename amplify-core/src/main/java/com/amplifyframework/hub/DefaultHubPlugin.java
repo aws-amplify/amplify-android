@@ -32,7 +32,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DefaultHubPlugin implements HubPlugin {
+public class DefaultHubPlugin extends HubPlugin {
 
     private static final String TAG = DefaultHubPlugin.class.getSimpleName();
 
@@ -88,10 +88,5 @@ public class DefaultHubPlugin implements HubPlugin {
     @Override
     public Object getEscapeHatch() {
         return null;
-    }
-
-    @Override
-    public CategoryType getCategoryType() {
-        return CategoryType.HUB;
     }
 }
