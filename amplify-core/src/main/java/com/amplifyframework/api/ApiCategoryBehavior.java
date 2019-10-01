@@ -27,5 +27,4 @@ public interface ApiCategoryBehavior {
      * @param query valid GraphQL string
      */
     GraphQLQuery query(@NonNull String query);
-
 }

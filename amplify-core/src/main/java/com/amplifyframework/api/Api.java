@@ -37,8 +37,9 @@ public class Api implements Category<ApiPlugin, ApiPluginConfiguration>, ApiCate
     @Override
     public GraphQLQuery query(@NonNull String query) {
         if (enabled){
-            plugin().query(query);
+            return getSelectedPlugin().query(query);
         }
+        return null;
     }
 
     static class PluginDetails {

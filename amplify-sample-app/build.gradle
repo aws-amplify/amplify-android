@@ -48,4 +48,5 @@ dependencies {
 
     implementation project(':amplify-core')
     implementation project(':aws-amplify-analytics-pinpoint')
+    implementation project(':aws-amplify-api-okhttp')
 }

@@ -16,21 +16,43 @@
 package com.amazonaws.amplifysample;
 
 import android.app.Application;
+import android.support.annotation.NonNull;
+import android.util.Log;
+import android.widget.Toast;
 
 import com.amplifyframework.analytics.pinpoint.AmazonPinpointAnalyticsPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.exception.AmplifyException;
+import com.example.aws_amplify_api_okhttp.Callback;
+import com.example.aws_amplify_api_okhttp.OkhttpApiPlugin;
 
 public class AmplifyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
 
-        try {
-            Amplify.addPlugin(new AmazonPinpointAnalyticsPlugin(getApplicationContext()));
-            Amplify.configure(getApplicationContext());
-        } catch (AmplifyException e) {
-            e.printStackTrace();
-        }
+//        try {
+            //Amplify.addPlugin(new AmazonPinpointAnalyticsPlugin(getApplicationContext()));
+            //Amplify.addPlugin(new OkhttpApiPlugin());
+            //Amplify.configure(getApplicationContext());
+
+            //Amplify.API.query("Called via plugin");
+//
+            OkhttpApiPlugin okhttpApiPlugin = new OkhttpApiPlugin();
+            okhttpApiPlugin.graphql("{ list {id name}}").enqueue(new Callback<String>() {
+                @Override
+                public void onResponse(@NonNull String data) {
+                    Log.i("GRAPHQL", data.toString());
+                }
+
+                @Override
+                public void onError(@NonNull Throwable error) {
+                    Log.e("GRAPHQL", error.toString());
+                }
+            });
+
+//        } catch (AmplifyException e) {
+//            e.printStackTrace();
+//        }
     }
 }
