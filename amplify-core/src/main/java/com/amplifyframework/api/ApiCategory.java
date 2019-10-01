@@ -196,7 +196,8 @@ public class ApiCategory implements Category<ApiPlugin>, RestApiCategoryBehavior
             throw new ConfigurationException("API category is not yet configured.");
         }
         if (restApiPlugins.isEmpty()) {
-            throw new PluginException.NoSuchPluginException();
+            throw new PluginException.NoSuchPluginException("Plugin for REST API was not registered in this category.")
+                    .withRecoverySuggestion("Please register a plugin that implements RestApiPlugin using `Amplify.addPlugin`.");
         }
         if (restApiPlugins.size() > 1) {
             throw new PluginException.MultiplePluginsException();
@@ -216,7 +217,8 @@ public class ApiCategory implements Category<ApiPlugin>, RestApiCategoryBehavior
             throw new ConfigurationException("API category is not yet configured.");
         }
         if (gqlApiPlugins.isEmpty()) {
-            throw new PluginException.NoSuchPluginException();
+            throw new PluginException.NoSuchPluginException("Plugin for GraphQL API was not registered in this category.")
+                    .withRecoverySuggestion("Please register a plugin that implements GraphQLApiPlugin using `Amplify.addPlugin`.");
         }
         if (gqlApiPlugins.size() > 1) {
             throw new PluginException.MultiplePluginsException();
