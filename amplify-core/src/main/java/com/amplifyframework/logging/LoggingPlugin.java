@@ -15,13 +15,17 @@
 
 package com.amplifyframework.logging;
 
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Interface that a plugin implementation of Analytics category
- * would implement. This includes the client behavior dictated by
+ * Abstract class that a plugin implementation of Logging category
+ * would extend. This includes the client behavior dictated by
  * {@link LoggingCategoryBehavior} and {@link Plugin}.
  */
-public interface LoggingPlugin<C, E> extends LoggingCategoryBehavior, Plugin<C, E> {
-
+public abstract class LoggingPlugin<C, E> implements LoggingCategoryBehavior, Plugin<C, E> {
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.LOGGING;
+    }
 }
