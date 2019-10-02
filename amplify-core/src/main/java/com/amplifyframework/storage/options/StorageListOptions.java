@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.options;
 
-import com.amplifyframework.core.task.Options;
+import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**

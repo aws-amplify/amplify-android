@@ -15,11 +15,21 @@
 
 package com.amplifyframework.storage.operation;
 
-import com.amplifyframework.core.async.AsyncOperation;
-import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.async.Resumable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-public class StorageGetOperation implements AsyncOperation, Resumable, Cancelable {
+import com.amplifyframework.core.async.AmplifyOperation;
+import com.amplifyframework.core.async.AmplifyOperationRequest;
+import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.async.EventListener;
+import com.amplifyframework.core.async.Resumable;
+import com.amplifyframework.core.category.CategoryType;
+
+public class StorageGetOperation extends AmplifyOperation implements Resumable, Cancelable {
+    public StorageGetOperation(@NonNull CategoryType categoryType, @NonNull String eventName, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
+        super(categoryType, eventName, request, eventListener);
+    }
+
     @Override
     public void start() {
     }

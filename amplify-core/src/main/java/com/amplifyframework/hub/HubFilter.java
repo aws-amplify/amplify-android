@@ -13,19 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.result;
+package com.amplifyframework.hub;
 
-import com.amplifyframework.core.async.Result;
+import android.support.annotation.NonNull;
 
-import java.util.List;
-
-public class StorageListResult extends Result {
+public interface HubFilter {
     /**
-     * Keys retrieved by list API
+     * Filter the HubPayload based on your criteria.
+     * An implementation of a HubFilter can be passed to
+     * the {@link HubCategory#listen(HubChannel, HubListener)}
+     * filter listening to events from HubChannel.
+     *
+     * @param payload the payload that is part of the event
+     *                that is transported by the Hub.
+     * @return true if the payload meets your criteria,
+     *         false otherwise.
      */
-    public List<String> keys;
-
-    public StorageListResult(List<String> keys) {
-        this.keys = keys;
-    }
+    boolean filter(@NonNull final HubPayload payload);
 }

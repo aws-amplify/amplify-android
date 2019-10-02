@@ -1,0 +1,53 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.core.async;
+
+/**
+ * The high-level status of an AsyncEvent
+ */
+public class AsyncEvent<T> {
+
+    public static enum State {
+        UNKNOWN,
+        NOT_IN_PROCESS,
+        IN_PROCESS,
+        COMPLETED,
+        FAILED
+        ;
+    }
+
+    private State eventState;
+
+    private T eventData;
+
+    public State getEventState() {
+        return eventState;
+    }
+
+    public AsyncEvent<T> setEventState(State eventState) {
+        this.eventState = eventState;
+        return this;
+    }
+
+    public T getEventData() {
+        return eventData;
+    }
+
+    public AsyncEvent<T> setEventData(T eventData) {
+        this.eventData = eventData;
+        return this;
+    }
+}

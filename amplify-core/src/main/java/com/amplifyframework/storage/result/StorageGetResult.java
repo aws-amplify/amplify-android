@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.result;
 
-import com.amplifyframework.core.task.Result;
+import com.amplifyframework.core.async.Result;
 
 import java.io.File;
 

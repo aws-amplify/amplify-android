@@ -13,17 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.core.async;
 
-import com.amplifyframework.core.async.Listener;
-import com.amplifyframework.core.async.Result;
+/**
+ * Listener async operations.
+ * @param <Result>
+ */
+public interface Listener<Result> {
 
-public interface DataStore<T> {
-    void save(T object, Listener<Result> callback);
+    void onResult(Result result);
 
-    void delete(T object, Listener<Result> callback);
-
-    void query(Class<T> objects, Listener<Result> callback);
-
-    void observe(T object, Listener<Result> callback);
+    void onError(Exception e);
 }

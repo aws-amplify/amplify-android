@@ -13,17 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.hub;
 
-import com.amplifyframework.core.async.Listener;
-import com.amplifyframework.core.async.Result;
+import android.support.annotation.NonNull;
 
-public interface DataStore<T> {
-    void save(T object, Listener<Result> callback);
-
-    void delete(T object, Listener<Result> callback);
-
-    void query(Class<T> objects, Listener<Result> callback);
-
-    void observe(T object, Listener<Result> callback);
+public interface HubListener {
+    void onHubEvent(@NonNull final HubPayload payload);
 }

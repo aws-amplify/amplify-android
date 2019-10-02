@@ -15,9 +15,19 @@
 
 package com.amplifyframework.storage.operation;
 
-import com.amplifyframework.core.async.AsyncOperation;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-public class StorageRemoveOperation implements AsyncOperation {
+import com.amplifyframework.core.async.AmplifyOperation;
+import com.amplifyframework.core.async.AmplifyOperationRequest;
+import com.amplifyframework.core.async.EventListener;
+import com.amplifyframework.core.category.CategoryType;
+
+public class StorageRemoveOperation extends AmplifyOperation {
+    public StorageRemoveOperation(@NonNull CategoryType categoryType, @NonNull String eventName, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
+        super(categoryType, eventName, request, eventListener);
+    }
+
     @Override
     public void start() {
     }

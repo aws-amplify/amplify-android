@@ -17,6 +17,8 @@ package com.amplifyframework.analytics;
 
 import android.support.annotation.NonNull;
 
+import com.amplifyframework.core.exception.ConfigurationException;
+
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
@@ -41,7 +43,7 @@ public interface AnalyticsCategoryBehavior {
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
      */
-    void recordEvent(@NonNull String eventName) throws AnalyticsException;
+    void recordEvent(@NonNull String eventName) throws AnalyticsException, ConfigurationException;
 
     /**
      * Record the event by storing in the local database.
@@ -50,7 +52,7 @@ public interface AnalyticsCategoryBehavior {
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
      */
-    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
 
     /**
      * Update the profile of the end-user/device for whom/which you are
@@ -61,5 +63,5 @@ public interface AnalyticsCategoryBehavior {
      * @throws AnalyticsException when there is an error updating the
      *                            profile with the registered/chosen {@link AnalyticsPlugin}.
      */
-    void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException;
+    void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException;
 }

@@ -93,7 +93,7 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
      *
      * @return the only registered plugin for this category
      */
-    private AnalyticsPlugin plugin() {
+    private AnalyticsPlugin plugin() throws ConfigurationException {
         if (!isConfigured) {
             throw new ConfigurationException("Analytics category is not yet configured.");
         }
@@ -122,21 +122,21 @@ public class AnalyticsCategory implements Category<AnalyticsPlugin, AnalyticsPlu
     }
 
     @Override
-    public void recordEvent(@NonNull String eventName) throws AnalyticsException {
+    public void recordEvent(@NonNull String eventName) throws AnalyticsException, ConfigurationException {
         if (enabled) {
             plugin().recordEvent(eventName);
         }
     }
 
     @Override
-    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
+    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException {
         if (enabled) {
             plugin().recordEvent(analyticsEvent);
         }
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
+    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException {
         if (enabled) {
             plugin().updateProfile(analyticsProfile);
         }

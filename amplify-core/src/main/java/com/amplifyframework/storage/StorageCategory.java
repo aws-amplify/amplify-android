@@ -18,7 +18,7 @@ package com.amplifyframework.storage;
 import android.content.Context;
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.async.Callback;
+import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
@@ -99,7 +99,7 @@ public class StorageCategory implements Category<StoragePlugin, StoragePluginCon
     @Override
     public StorageGetOperation get(@NonNull String key,
                                    @NonNull StorageGetOptions options,
-                                   Callback<StorageGetResult> callback) throws StorageGetException {
+                                   Listener<StorageGetResult> callback) throws StorageGetException {
         return plugin.get(key, options, callback);
     }
 
@@ -128,7 +128,7 @@ public class StorageCategory implements Category<StoragePlugin, StoragePluginCon
     public StoragePutOperation put(@NonNull String key,
                                    @NonNull String local,
                                    @NonNull StoragePutOptions options,
-                                   Callback<StoragePutResult> callback) throws StoragePutException {
+                                   Listener<StoragePutResult> callback) throws StoragePutException {
         return plugin.put(key, local, options, callback);
     }
 
@@ -144,7 +144,7 @@ public class StorageCategory implements Category<StoragePlugin, StoragePluginCon
 
     @Override
     public StorageListOperation list(@NonNull StorageListOptions options,
-                                     Callback<StorageListResult> callback) throws StorageListException {
+                                     Listener<StorageListResult> callback) throws StorageListException {
         return plugin.list(options, callback);
     }
 
@@ -162,7 +162,7 @@ public class StorageCategory implements Category<StoragePlugin, StoragePluginCon
     @Override
     public StorageRemoveOperation remove(@NonNull String key,
                                          @NonNull StorageRemoveOptions options,
-                                         Callback<StorageRemoveResult> callback) throws StorageRemoveException {
+                                         Listener<StorageRemoveResult> callback) throws StorageRemoveException {
         return plugin.remove(key, options, callback);
     }
 

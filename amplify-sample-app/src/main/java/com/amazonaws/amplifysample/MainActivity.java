@@ -16,25 +16,31 @@
 package com.amazonaws.amplifysample;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
-import com.amplifyframework.analytics.pinpoint.AmazonPinpointAnalyticsPlugin;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.storage.Storage;
+import com.amplifyframework.core.async.AmplifyOperationContext;
+import com.amplifyframework.core.async.AsyncEvent;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubFilter;
+import com.amplifyframework.hub.HubListener;
+import com.amplifyframework.hub.HubPayload;
+import com.amplifyframework.hub.UnsubscribeToken;
+import com.amplifyframework.storage.exception.StorageException;
 
 import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
+
+    private static final String TAG = MainActivity.class.getSimpleName();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +69,39 @@ public class MainActivity extends AppCompatActivity {
 //
 //        Amplify.Analytics.getPlugin(pinpoint.getPluginKey()).recordEvent();
 //        Amplify.Analytics.getPlugin(kinesis.getPluginKey()).recordEvent();
+
+        UnsubscribeToken unsubscribeToken = Amplify.Hub.listen(HubChannel.STORAGE, new HubListener() {
+            @Override
+            public void onHubEvent(@NonNull HubPayload payload) {
+                Log.d(TAG, payload.data.toString());
+            }
+        });
+
+//        unsubscribeToken = Amplify.Hub.listen(HubChannel.STORAGE,
+//                new HubFilter() {
+//                    @Override
+//                    public boolean filter(@NonNull HubPayload payload) {
+//                        return payload.context instanceof AmplifyOperationContext;
+//                    }
+//                },
+//                new HubListener() {
+//                    @Override
+//                    public void onHubEvent(@NonNull HubPayload payload) {
+//                        Log.d(TAG, payload.data.toString());
+//
+//                        StorageFileOperation.Event event = (StorageFileOperation.Event) payload.data;
+//                        if (AsyncEvent.State.COMPLETED.equals(event.getEventState())) {
+//                            Log.d(TAG, "Result: " + ((StorageFileOperation.Event<StorageDownloadFileResult>)event).getEventData());
+//                        } else if (AsyncEvent.State.FAILED.equals(event.getEventState())) {
+//                            Log.d(TAG, "Error: " + ((StorageFileOperation.Event<StorageException>)event).getEventData());
+//                        } else if (AsyncEvent.State.IN_PROCESS.equals(event.getEventState())) {
+//                            Log.d(TAG, "Progress: " + ((StorageFileOperation.Event<Progress>)event).getEventData());
+//                        }
+//                    }
+//                }
+//        );
+
+        Amplify.Hub.dispatch(HubChannel.CUSTOM, new HubPayload().eventName("Some event happened"));
     }
 
     @Override

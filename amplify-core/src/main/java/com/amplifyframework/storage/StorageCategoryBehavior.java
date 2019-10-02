@@ -17,7 +17,7 @@ package com.amplifyframework.storage;
 
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.async.Callback;
+import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
 import com.amplifyframework.storage.options.*;
@@ -65,7 +65,7 @@ public interface StorageCategoryBehavior {
      */
     StorageGetOperation get(@NonNull String key,
                             StorageGetOptions options,
-                            Callback<StorageGetResult> callback) throws StorageGetException;
+                            Listener<StorageGetResult> callback) throws StorageGetException;
 
     /**
      * Upload local file on given path to storage
@@ -108,7 +108,7 @@ public interface StorageCategoryBehavior {
     StoragePutOperation put(@NonNull String key,
                             @NonNull String local,
                             StoragePutOptions options,
-                            Callback<StoragePutResult> callback) throws StoragePutException;
+                            Listener<StoragePutResult> callback) throws StoragePutException;
 
     /**
      * Delete object from storage
@@ -145,7 +145,7 @@ public interface StorageCategoryBehavior {
      */
     StorageRemoveOperation remove(@NonNull String key,
                                   StorageRemoveOptions options,
-                                  Callback<StorageRemoveResult> callback) throws StorageRemoveException;
+                                  Listener<StorageRemoveResult> callback) throws StorageRemoveException;
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -180,5 +180,5 @@ public interface StorageCategoryBehavior {
      * @throws StorageListException
      */
     StorageListOperation list(StorageListOptions options,
-                              Callback<StorageListResult> callback) throws StorageListException;
+                              Listener<StorageListResult> callback) throws StorageListException;
 }

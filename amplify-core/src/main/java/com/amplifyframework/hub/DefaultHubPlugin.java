@@ -16,18 +16,17 @@
 package com.amplifyframework.hub;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
-import android.util.Log;
+import android.support.annotation.Nullable;
 
-import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.core.task.Result;
-
-import org.json.JSONObject;
+import com.amplifyframework.hub.internal.FilteredHubListener;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -36,36 +35,55 @@ public class DefaultHubPlugin implements HubPlugin {
 
     private static final String TAG = DefaultHubPlugin.class.getSimpleName();
 
-    private Context context;
+    private Map<UUID, FilteredHubListener> listeners;
 
-    private static Map<Integer, HubCallback> listeners =
-            new ConcurrentHashMap<Integer, HubCallback>();
+    private ExecutorService executorService;
 
-    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private final Handler mainHandler;
 
-    public DefaultHubPlugin(@NonNull final Context context) {
-        this.context = context;
+    public DefaultHubPlugin() {
+        this.listeners = new ConcurrentHashMap<UUID, FilteredHubListener>();
+        this.executorService = Executors.newCachedThreadPool();
+        this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
-    public void listen(HubChannel hubChannel, HubCallback callback) {
-        listeners.put(hubChannel.hashCode(), callback);
+    public UnsubscribeToken listen(@NonNull final HubChannel hubChannel,
+                                   @Nullable final HubListener listener) {
+        return listen(hubChannel, null, listener);
     }
 
     @Override
-    public void remove(HubChannel hubChannel, HubCallback callback) {
-        listeners.remove(hubChannel.hashCode());
+    public UnsubscribeToken listen(@NonNull final HubChannel hubChannel,
+                                   @Nullable final HubFilter hubFilter,
+                                   @Nullable final HubListener listener) {
+        final UUID listenerId = UUID.randomUUID();
+        listeners.put(listenerId, new FilteredHubListener(hubChannel, listenerId, hubFilter, listener));
+        return new UnsubscribeToken(listenerId, hubChannel);
     }
 
     @Override
-    public void dispatch(final HubChannel hubChannel, final HubPayload hubPayload) {
+    public void removeListener(@NonNull final UnsubscribeToken unsubscribeToken) {
+        listeners.remove(unsubscribeToken.uuid);
+    }
+
+    @Override
+    public void dispatch(@NonNull final HubChannel hubChannel,
+                         @NonNull final HubPayload hubPayload) {
         executorService.submit(new Runnable() {
             @Override
             public void run() {
-                try {
-                    listeners.get(hubChannel.hashCode()).onHubEvent(hubPayload);
-                } catch (Exception ex) {
-                    Log.e(TAG, ex.getLocalizedMessage());
+                // TODO: Optimize this loop by storing the listeners by channel
+                // so we could save on the compute time.
+                for (final FilteredHubListener listener: listeners.values()) {
+                    if (hubChannel.equals(listener.getChannel())) {
+                        mainHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                listener.getHubListener().onHubEvent(hubPayload);
+                            }
+                        });
+                    }
                 }
             }
         });
@@ -77,7 +95,7 @@ public class DefaultHubPlugin implements HubPlugin {
      */
     @Override
     public String getPluginKey() {
-        return TAG;
+        return "DefaultHubCategoryPlugin";
     }
 
     /**

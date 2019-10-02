@@ -25,6 +25,7 @@ import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 
 /**
@@ -53,17 +54,17 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
     }
 
     @Override
-    public void recordEvent(@NonNull String eventName) throws AnalyticsException {
+    public void recordEvent(@NonNull String eventName) throws AnalyticsException, ConfigurationException {
 
     }
 
     @Override
-    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException {
+    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException {
 
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
+    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException {
 
     }
 
