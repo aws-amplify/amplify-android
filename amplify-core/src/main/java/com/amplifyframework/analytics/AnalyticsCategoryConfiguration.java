@@ -15,20 +15,16 @@
 
 package com.amplifyframework.analytics;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
  * Strongly-typed configuration for Analytics category that also
  * contains configuration for individual plugins
  */
-public class AnalyticsCategoryConfiguration {
-    /** Map of the { pluginKey => pluginConfiguration } object */
-    public Map<String, Object> pluginConfigs;
-
+public class AnalyticsCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
     public AnalyticsCategoryConfiguration() {
-        pluginConfigs = new ConcurrentHashMap<String, Object>();
+        super();
     }
 }

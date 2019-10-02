@@ -21,11 +21,14 @@ import android.support.annotation.NonNull;
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.HubCategory;
+import com.amplifyframework.hub.HubPlugin;
 import com.amplifyframework.logging.LoggingCategory;
+import com.amplifyframework.logging.LoggingPlugin;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StoragePlugin;
 
@@ -93,23 +96,23 @@ public class Amplify {
             amplifyConfiguration = configuration;
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(amplifyConfiguration);
+                Analytics.configure(amplifyConfiguration.analytics);
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(amplifyConfiguration);
+                API.configure(amplifyConfiguration.api);
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(amplifyConfiguration);
+                Hub.configure(amplifyConfiguration.hub);
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(amplifyConfiguration);
+                Logging.configure(amplifyConfiguration.logging);
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(amplifyConfiguration);
+                Storage.configure(amplifyConfiguration.storage);
             }
 
             CONFIGURED = true;
@@ -133,6 +136,11 @@ public class Amplify {
 
             switch (plugin.getCategoryType()) {
                 case API:
+                    if (plugin instanceof ApiPlugin) {
+                        API.addPlugin((ApiPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case ANALYTICS:
                     if (plugin instanceof AnalyticsPlugin) {
@@ -142,8 +150,18 @@ public class Amplify {
                     }
                     break;
                 case HUB:
+                    if (plugin instanceof HubPlugin) {
+                        Hub.addPlugin((HubPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case LOGGING:
+                    if (plugin instanceof LoggingPlugin) {
+                        Logging.addPlugin((LoggingPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case STORAGE:
                     if (plugin instanceof StoragePlugin) {
@@ -163,6 +181,11 @@ public class Amplify {
         synchronized (LOCK) {
             switch (plugin.getCategoryType()) {
                 case API:
+                    if (plugin instanceof ApiPlugin) {
+                        API.removePlugin((ApiPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case ANALYTICS:
                     if (plugin instanceof AnalyticsPlugin) {
@@ -172,8 +195,18 @@ public class Amplify {
                     }
                     break;
                 case HUB:
+                    if (plugin instanceof HubPlugin) {
+                        Hub.removePlugin((HubPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case LOGGING:
+                    if (plugin instanceof LoggingPlugin) {
+                        Logging.removePlugin((LoggingPlugin) plugin);
+                    } else {
+                        throw new PluginException.MismatchedPluginException();
+                    }
                     break;
                 case STORAGE:
                     if (plugin instanceof StoragePlugin) {
