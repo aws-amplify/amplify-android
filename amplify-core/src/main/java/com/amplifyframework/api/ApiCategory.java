@@ -93,6 +93,8 @@ public class ApiCategory extends Category<ApiPlugin> implements RestApiCategoryB
             case GRAPHQL:
                 gqlApiPlugins.put(plugin.getPluginKey(), (GraphQLApiPlugin) plugin);
                 break;
+            default:
+                throw new ApiException.UnsupportedAPITypeException();
         }
     }
 
@@ -106,6 +108,8 @@ public class ApiCategory extends Category<ApiPlugin> implements RestApiCategoryB
             case GRAPHQL:
                 gqlApiPlugins.remove(plugin.getPluginKey());
                 break;
+            default:
+                throw new ApiException.UnsupportedAPITypeException();
         }
     }
 
