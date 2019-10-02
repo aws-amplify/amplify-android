@@ -15,20 +15,16 @@
 
 package com.amplifyframework.api;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
  * Strongly-typed configuration for API category that also
  * contains configuration for individual plugins
  */
-public class ApiCategoryConfiguration {
-    /** Map of the { pluginKey => pluginConfiguration } object */
-    public Map<String, Object> pluginConfigs;
-
+public class ApiCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
     public ApiCategoryConfiguration() {
-        pluginConfigs = new ConcurrentHashMap<String, Object>();
+        super();
     }
 }

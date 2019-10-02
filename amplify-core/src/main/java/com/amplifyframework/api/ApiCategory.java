@@ -17,40 +17,25 @@ package com.amplifyframework.api;
 
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ApiCategory implements Category<ApiPlugin>, RestApiCategoryBehavior, GraphQLApiCategoryBehavior {
-    /**
-     * Map of the { pluginKey => plugin } object
-     */
+public class ApiCategory extends Category<ApiPlugin> implements RestApiCategoryBehavior, GraphQLApiCategoryBehavior {
     private Map<String, RestApiPlugin> restApiPlugins;
     private Map<String, GraphQLApiPlugin> gqlApiPlugins;
-
-    /**
-     * Flag to remember that API category is already configured by Amplify
-     * and throw an error if configure method is called again
-     */
-    private boolean isConfigured;
-
-    /**
-     * Protect enabling and disabling of Analytics event
-     * collection and sending.
-     */
-    private static final Object LOCK = new Object();
 
     public ApiCategory() {
         this.restApiPlugins = new ConcurrentHashMap<String, RestApiPlugin>();
         this.gqlApiPlugins = new ConcurrentHashMap<String, GraphQLApiPlugin>();
-        this.isConfigured = false;
+    }
+
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.API;
     }
 
     @Override
@@ -98,103 +83,34 @@ public class ApiCategory implements Category<ApiPlugin>, RestApiCategoryBehavior
         getSelectedRestApiPlugin().delete();
     }
 
-    /**
-     * Configure API category based on AmplifyConfiguration object
-     *
-     * @param configuration AmplifyConfiguration object for configuration via code
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
-    @Override
-    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
-        if (isConfigured) {
-            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
-        }
-
-        for (ApiPlugin plugin : getPlugins()) {
-            String pluginKey = plugin.getPluginKey();
-            Object pluginConfig = configuration.api.pluginConfigs.get(pluginKey);
-            if (pluginConfig != null) {
-                plugin.configure(pluginConfig);
-            } else {
-                throw new PluginException.PluginConfigurationException();
-            }
-        }
-
-        isConfigured = true;
-    }
-
     @Override
     public void addPlugin(@NonNull ApiPlugin plugin) throws PluginException {
-        try {
-            switch (plugin.getApiType()) {
-                case REST:
-                    restApiPlugins.put(plugin.getPluginKey(), (RestApiPlugin) plugin);
-                    break;
-                case GRAPHQL:
-                    gqlApiPlugins.put(plugin.getPluginKey(), (GraphQLApiPlugin) plugin);
-                    break;
-            }
-        } catch (Exception ex) {
-            throw new PluginException.NoSuchPluginException();
+        super.addPlugin(plugin);
+        switch (plugin.getApiType()) {
+            case REST:
+                restApiPlugins.put(plugin.getPluginKey(), (RestApiPlugin) plugin);
+                break;
+            case GRAPHQL:
+                gqlApiPlugins.put(plugin.getPluginKey(), (GraphQLApiPlugin) plugin);
+                break;
         }
     }
 
     @Override
     public void removePlugin(@NonNull ApiPlugin plugin) throws PluginException {
-        ApiPlugin removed;
+        super.removePlugin(plugin);
         switch (plugin.getApiType()) {
             case REST:
-                removed = restApiPlugins.remove(plugin.getPluginKey());
+                restApiPlugins.remove(plugin.getPluginKey());
                 break;
             case GRAPHQL:
-                removed = gqlApiPlugins.remove(plugin.getPluginKey());
+                gqlApiPlugins.remove(plugin.getPluginKey());
                 break;
-            default:
-                removed = null;
-        }
-        if (removed == null) {
-            throw new PluginException.NoSuchPluginException();
         }
     }
 
-    @Override
-    public ApiPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
-        if (restApiPlugins.containsKey(pluginKey)) {
-            return restApiPlugins.get(pluginKey);
-        } else if (gqlApiPlugins.containsKey(pluginKey)) {
-            return gqlApiPlugins.get(pluginKey);
-        } else {
-            throw new PluginException.NoSuchPluginException();
-        }
-    }
-
-    /**
-     * @return the set of plugins added to a Category.
-     */
-    @Override
-    public Set<ApiPlugin> getPlugins() {
-        Set<ApiPlugin> plugins = new HashSet<ApiPlugin>();
-        plugins.addAll(restApiPlugins.values());
-        plugins.addAll(gqlApiPlugins.values());
-        return plugins;
-    }
-
-    @Override
-    public final CategoryType getCategoryType() {
-        return CategoryType.API;
-    }
-
-    /**
-     * Obtain the registered plugin. Throw runtime exception if
-     * no plugin is registered or multiple plugins are registered.
-     *
-     * @return the only registered plugin for this category
-     */
     private RestApiPlugin getSelectedRestApiPlugin() {
-        if (!isConfigured) {
-            throw new ConfigurationException("API category is not yet configured.");
-        }
+        guardConfigured();
         if (restApiPlugins.isEmpty()) {
             throw new PluginException.NoSuchPluginException("Plugin for REST API was not registered in this category.")
                     .withRecoverySuggestion("Please register a plugin that implements RestApiPlugin using `Amplify.addPlugin`.");
@@ -206,16 +122,8 @@ public class ApiCategory implements Category<ApiPlugin>, RestApiCategoryBehavior
         return restApiPlugins.values().iterator().next();
     }
 
-    /**
-     * Obtain the registered plugin. Throw runtime exception if
-     * no plugin is registered or multiple plugins are registered.
-     *
-     * @return the only registered plugin for this category
-     */
     private GraphQLApiPlugin getSelectedGraphQLApiPlugin() {
-        if (!isConfigured) {
-            throw new ConfigurationException("API category is not yet configured.");
-        }
+        guardConfigured();
         if (gqlApiPlugins.isEmpty()) {
             throw new PluginException.NoSuchPluginException("Plugin for GraphQL API was not registered in this category.")
                     .withRecoverySuggestion("Please register a plugin that implements GraphQLApiPlugin using `Amplify.addPlugin`.");

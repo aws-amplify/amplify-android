@@ -15,76 +15,22 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.exception.ConfigurationException;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.task.Result;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
-public class HubCategory implements Category<HubPlugin>, HubCategoryBehavior {
-
+public class HubCategory extends Category<HubPlugin> implements HubCategoryBehavior {
     private static Map<HubChannel, ArrayList<Callback<? extends Result>>> callbacks =
             new HashMap<HubChannel, ArrayList<Callback<? extends Result>>>();
 
-
     @Override
-    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
-
-    }
-
-    /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin an implementation of HubPlugin interface.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
-    @Override
-    public void addPlugin(@NonNull HubPlugin plugin) throws PluginException {
-
-    }
-
-    /**
-     * Remove a registered plugin
-     *
-     * @param plugin an implementation of HubPlugin interface.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
-    @Override
-    public void removePlugin(@NonNull HubPlugin plugin) throws PluginException {
-
-    }
-
-    /**
-     * Retrieve a plugin of category.
-     *
-     * @param pluginKey the key that identifies the plugin implementation
-     * @return the plugin object
-     */
-    @Override
-    public HubPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
-        return null;
-    }
-
-    /**
-     * @return the set of plugins added to a Category.
-     */
-    @Override
-    public Set<HubPlugin> getPlugins() {
-        return null;
-    }
-
-    @Override
-    public CategoryType getCategoryType() {
-        return null;
+    public final CategoryType getCategoryType() {
+        return CategoryType.HUB;
     }
 
     @Override

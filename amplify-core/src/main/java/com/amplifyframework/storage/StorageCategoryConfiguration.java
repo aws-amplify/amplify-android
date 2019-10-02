@@ -15,20 +15,16 @@
 
 package com.amplifyframework.storage;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
  * Strongly-typed configuration for Storage category that also
  * contains configuration for individual plugins
  */
-public class StorageCategoryConfiguration {
-    /** Map of the { pluginKey => pluginConfiguration } object */
-    public Map<String, Object> pluginConfigs;
-
+public class StorageCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
     public StorageCategoryConfiguration() {
-        pluginConfigs = new ConcurrentHashMap<String, Object>();
+        super();
     }
 }
