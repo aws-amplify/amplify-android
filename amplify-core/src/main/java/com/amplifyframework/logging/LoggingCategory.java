@@ -15,44 +15,12 @@
 
 package com.amplifyframework.logging;
 
-import android.support.annotation.NonNull;
-
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.exception.ConfigurationException;
-import com.amplifyframework.core.plugin.PluginException;
 
-import java.util.Set;
-
-public class LoggingCategory implements Category<LoggingPlugin>, LoggingCategoryBehavior {
+public class LoggingCategory extends Category<LoggingPlugin> implements LoggingCategoryBehavior {
     @Override
-    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
-
-    }
-
-    @Override
-    public void addPlugin(@NonNull LoggingPlugin plugin) throws PluginException {
-
-    }
-
-    @Override
-    public void removePlugin(@NonNull LoggingPlugin plugin) throws PluginException {
-
-    }
-
-    @Override
-    public LoggingPlugin getPlugin(@NonNull String pluginKey) throws PluginException {
-        return null;
-    }
-
-    @Override
-    public Set<LoggingPlugin> getPlugins() {
-        return null;
-    }
-
-    @Override
-    public CategoryType getCategoryType() {
-        return null;
+    public final CategoryType getCategoryType() {
+        return CategoryType.LOGGING;
     }
 }

@@ -17,24 +17,14 @@ package com.amplifyframework.storage;
 
 import android.support.annotation.NonNull;
 
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.exception.ConfigurationException;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.storage.exception.*;
 import com.amplifyframework.storage.operation.*;
 import com.amplifyframework.storage.options.*;
-import com.amplifyframework.storage.result.StorageGetResult;
-import com.amplifyframework.storage.result.StorageListResult;
-import com.amplifyframework.storage.result.StoragePutResult;
-import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.*;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Defines the Client API consumed by the application.
@@ -42,39 +32,15 @@ import java.util.concurrent.ConcurrentHashMap;
  * plugins registered.
  */
 
-public class StorageCategory implements Category<StoragePlugin>, StorageCategoryBehavior {
-
-    private Map<String, StoragePlugin> plugins;
-
+public class StorageCategory extends Category<StoragePlugin> implements StorageCategoryBehavior {
     /**
-     * Flag to remember that Storage category is already configured by Amplify
-     * and throw an error if configure method is called again
-     */
-    private boolean isConfigured;
-
-    public StorageCategory() {
-        this.plugins = new ConcurrentHashMap<String, StoragePlugin>();
-        this.isConfigured = false;
-    }
-
-    /**
-     * Obtain the registered plugin. Throw runtime exception if
-     * no plugin is registered or multiple plugins are registered.
+     * Retrieve the Storage category type enum
      *
-     * @return the only registered plugin for this category
+     * @return enum that represents Storage category
      */
-    private StoragePlugin getSelectedPlugin() {
-        if (!isConfigured) {
-            throw new ConfigurationException("Storage category is not yet configured.");
-        }
-        if (plugins.isEmpty()) {
-            throw new PluginException.NoSuchPluginException();
-        }
-        if (plugins.size() > 1) {
-            throw new PluginException.MultiplePluginsException();
-        }
-
-        return plugins.values().iterator().next();
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.STORAGE;
     }
 
     @Override
@@ -156,96 +122,5 @@ public class StorageCategory implements Category<StoragePlugin>, StorageCategory
                                          @NonNull StorageRemoveOptions options,
                                          Callback<StorageRemoveResult> callback) throws StorageRemoveException {
         return getSelectedPlugin().remove(key, options, callback);
-    }
-
-    /**
-     * Configure Storage category based on AmplifyConfiguration object
-     *
-     * @param configuration AmplifyConfiguration object for configuration via code
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException        thrown when there is no plugin found for a configuration
-     */
-    @Override
-    public void configure(AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
-        if (isConfigured) {
-            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
-        }
-
-        if (!plugins.values().isEmpty()) {
-            if (plugins.values().iterator().hasNext()) {
-                StoragePlugin plugin = plugins.values().iterator().next();
-                String pluginKey = plugin.getPluginKey();
-                Object pluginConfig = configuration.storage.pluginConfigs.get(pluginKey);
-                if (pluginConfig != null) {
-                    plugin.configure(pluginConfig);
-                } else {
-                    throw new PluginException.NoSuchPluginException();
-                }
-            }
-        }
-
-        isConfigured = true;
-    }
-
-    /**
-     * Register a Storage plugin with Amplify
-     *
-     * @param plugin an implementation of StoragePlugin
-     * @throws PluginException when this plugin cannot be found
-     */
-    @Override
-    public void addPlugin(@NonNull StoragePlugin plugin) throws PluginException {
-        try {
-            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
-                throw new PluginException.NoSuchPluginException();
-            }
-        } catch (Exception ex) {
-            throw new PluginException.NoSuchPluginException();
-        }
-    }
-
-    /**
-     * Remove a registered Storage plugin
-     *
-     * @param plugin an implementation of StoragePlugin
-     */
-    @Override
-    public void removePlugin(@NonNull StoragePlugin plugin) throws PluginException {
-        if (plugins.remove(plugin.getPluginKey()) == null) {
-            throw new PluginException.NoSuchPluginException();
-        }
-    }
-
-    /**
-     * Retrieve a registered Storage plugin.
-     *
-     * @param pluginKey the key that identifies the plugin implementation
-     * @return the Storage plugin object
-     */
-    @Override
-    public StoragePlugin getPlugin(@NonNull String pluginKey) throws PluginException {
-        if (plugins.containsKey(pluginKey)) {
-            return plugins.get(pluginKey);
-        } else {
-            throw new PluginException.NoSuchPluginException();
-        }
-    }
-
-    /**
-     * @return the set of plugins added to a Category.
-     */
-    @Override
-    public Set<StoragePlugin> getPlugins() {
-        return new HashSet<StoragePlugin>(plugins.values());
-    }
-
-    /**
-     * Retrieve the Storage category type enum
-     *
-     * @return enum that represents Storage category
-     */
-    @Override
-    public final CategoryType getCategoryType() {
-        return CategoryType.STORAGE;
     }
 }

@@ -15,20 +15,16 @@
 
 package com.amplifyframework.hub;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
  * Strongly-typed configuration for Hub category that also
  * contains configuration for individual plugins
  */
-public class HubCategoryConfiguration {
-    /** Map of the { pluginKey => pluginConfiguration } object */
-    public Map<String, Object> pluginConfigs;
-
+public class HubCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
     public HubCategoryConfiguration() {
-        pluginConfigs = new ConcurrentHashMap<String, Object>();
+        super();
     }
 }
