@@ -24,7 +24,7 @@ public class AmplifyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        Amplify.addPlugin(new AmazonPinpointAnalyticsPlugin(getApplicationContext()));
-        Amplify.configure(getApplicationContext());
+        //Amplify.addPlugin(new AmazonPinpointAnalyticsPlugin(getApplicationContext()));
+        //Amplify.configure(getApplicationContext());
     }
 }

@@ -50,17 +50,20 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        AnalyticsPlugin pinpoint1 = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
-//        AnalyticsPlugin pinpoint2 = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
-//        AnalyticsPlugin kinesis = new AmazonKinesisAnalyticsPlugin(getApplicationContext());
-//        Amplify.addPlugin(pinpoint);
-//        Amplify.addPlugin(kinesis);
-//        Amplify.configure(getApplicationContext());
-//
-//        Amplify.Analytics.recordEvent(); // throws exception
-//
-//        Amplify.Analytics.getPlugin(pinpoint.getPluginKey()).recordEvent();
-//        Amplify.Analytics.getPlugin(kinesis.getPluginKey()).recordEvent();
+        MockGqlClient mockGql = new MockGqlClient(); // GraphQL plugin dev didn't need to implement REST API verbs
+        MockRestClient mockRest = new MockRestClient(); // RestAPI plugin dev didn't need to implement GraphQL operations
+
+        // This sets up mock Amplify config for testing
+        AmplifyConfiguration mockConfig = new AmplifyConfiguration(getApplicationContext());
+        mockConfig.api.pluginConfigs.put(mockRest.getPluginKey(), new Object());
+        mockConfig.api.pluginConfigs.put(mockGql.getPluginKey(), new Object());
+
+        Amplify.addPlugin(mockRest);
+        //Amplify.addPlugin(mockGql);
+        Amplify.configure(mockConfig);
+
+        Amplify.API.get(); // Works; Calls mockRest.get()
+        Amplify.API.query(); // Throws runtime exception; Operation is still exposed in IDE, but no plugin was registered for GraphQL
     }
 
     @Override
