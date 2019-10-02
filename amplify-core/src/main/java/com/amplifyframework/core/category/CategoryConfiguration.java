@@ -5,7 +5,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class CategoryConfiguration {
     /** Map of the { pluginKey => pluginConfiguration } object */
-    protected Map<String, Object> pluginConfigs;
+    public Map<String, Object> pluginConfigs;
 
     public CategoryConfiguration() {
         pluginConfigs = new ConcurrentHashMap<String, Object>();
