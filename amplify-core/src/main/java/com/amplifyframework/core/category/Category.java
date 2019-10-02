@@ -77,11 +77,9 @@ public abstract class Category<P extends Plugin> implements CategoryTypeable {
      */
     public void addPlugin(@NonNull P plugin) throws PluginException {
         try {
-            if (plugins.put(plugin.getPluginKey(), plugin) == null) {
-                throw new PluginException.NoSuchPluginException();
-            }
+            plugins.put(plugin.getPluginKey(), plugin);
         } catch (Exception ex) {
-            throw new PluginException.NoSuchPluginException();
+            throw new PluginException.EmptyKeyException();
         }
     }
 

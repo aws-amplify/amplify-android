@@ -50,19 +50,16 @@ public class AmplifyConfiguration {
     /**
      * Constructor.
      *
-     * @param jsonObject JSONObject that contains the configuration.
-     */
-    public AmplifyConfiguration(JSONObject jsonObject) {
-        this.mJSONObject = jsonObject;
-    }
-
-    /**
-     * Constructor.
-     *
      * @param context The configuration information can be read
      *                from the default amplify configuration file.
      */
     public AmplifyConfiguration(Context context) {
+        analytics = new AnalyticsCategoryConfiguration();
+        api = new ApiCategoryConfiguration();
+        hub = new HubCategoryConfiguration();
+        logging = new LoggingCategoryConfiguration();
+        storage = new StorageCategoryConfiguration();
+
         readInputJson(context, getConfigResourceId(context));
     }
 
