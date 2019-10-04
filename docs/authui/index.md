@@ -62,7 +62,7 @@ val authUI = AuthUI(this@CallingActivity)
 {% include tab_content_start.html lang="java" %}
 
 ```java
-        authUI.signIn(new Listener<Void>() {
+        authUI.signIn(new Callback<Void>() {
             @Override
             public void onResult(Void result) {
                 Intent intent = new Intent(context, NextActivity.class);
@@ -80,7 +80,7 @@ val authUI = AuthUI(this@CallingActivity)
 {% include tab_content_start.html lang="kt" %}
 
 ```kotlin
-authUI.signIn(object : Listener<Void>() {
+authUI.signIn(object : Callback<Void>() {
     fun onResult(result: Void) {
         val intent = Intent(context, NextActivity::class.java)
         context.startActivity(intent)
@@ -101,7 +101,7 @@ authUI.signIn(object : Listener<Void>() {
 {% include tab_content_start.html lang="java" %}
 
 ```java
-    authUI.signOut(new Listener<Void>() {
+    authUI.signOut(new Callback<Void>() {
         @Override
         public void onResult(Void result) {
             Log.e(LOG_TAG, "Sign out succeeded");
@@ -118,7 +118,7 @@ authUI.signIn(object : Listener<Void>() {
 {% include tab_content_start.html lang="kt" %}
 
 ```kotlin
-    authUI.signOut(object : Listener<Void>() {
+    authUI.signOut(object : Callback<Void>() {
         fun onResult(result: Void) {
             Log.e(LOG_TAG, "Sign out succeeded")
         }
@@ -138,7 +138,7 @@ authUI.signIn(object : Listener<Void>() {
 {% include tab_content_start.html lang="java" %}
 
 ```java
-authUI.changePassword(activity, new Listener<Void>() {
+authUI.changePassword(activity, new Callback<Void>() {
             @Override
             public void onResult(Void result) {
                 MessageDialog.showDialog(activity, "Password Change", "Password change successfully.");
@@ -156,7 +156,7 @@ authUI.changePassword(activity, new Listener<Void>() {
 {% include tab_content_start.html lang="kt" %}
 
 ```kotlin
-authUI.changePassword(activity, object : Listener<Void>() {
+authUI.changePassword(activity, object : Callback<Void>() {
     fun onResult(result: Void) {
         MessageDialog.showDialog(activity, "Password Change", "Password change successfully.")
     }

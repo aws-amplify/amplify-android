@@ -15,6 +15,8 @@
 
 package com.amplifyframework.hub;
 
+import android.support.annotation.NonNull;
+
 import java.util.UUID;
 
 /**
@@ -24,6 +26,7 @@ import java.util.UUID;
  */
 public final class SubscriptionToken {
     private final UUID uuid;
+    private final HubChannel hubChannel;
 
     @Override
     public boolean equals(Object o) {
@@ -38,11 +41,16 @@ public final class SubscriptionToken {
         return uuid.hashCode();
     }
 
-    public SubscriptionToken(UUID uuid) {
+    public SubscriptionToken(@NonNull final UUID uuid, @NonNull final HubChannel hubChannel) {
         this.uuid = uuid;
+        this.hubChannel = hubChannel;
     }
 
     public UUID getUuid() {
         return uuid;
+    }
+
+    public HubChannel getHubChannel() {
+        return hubChannel;
     }
 }

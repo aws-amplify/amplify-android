@@ -19,11 +19,13 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.util.Log;
 
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.internal.FilteredHubListener;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -111,13 +113,14 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
         final FilteredHubListener filteredHubListener = new FilteredHubListener(hubChannel, listenerId, hubPayloadFilter, listener);
 
         listenersByUUID.put(listenerId, filteredHubListener);
-        Set<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(hubChannel);
+        HashSet<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(hubChannel);
         if (filteredHubListeners == null) {
             filteredHubListeners = new HashSet<FilteredHubListener>();
         }
         filteredHubListeners.add(filteredHubListener);
+        listenersByHubChannel.put(hubChannel, filteredHubListeners);
 
-        return new SubscriptionToken(listenerId);
+        return new SubscriptionToken(listenerId, hubChannel);
     }
 
     /**
@@ -130,7 +133,24 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
      */
     @Override
     public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
+        final UUID listenerId = subscriptionToken.getUuid();
+        final HubChannel hubChannel = subscriptionToken.getHubChannel();
         listenersByUUID.remove(subscriptionToken.getUuid());
+
+        HashSet<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(subscriptionToken.getHubChannel());
+        if (filteredHubListeners == null) {
+            Log.e(TAG, "Cannot find the listener for listenerId: " + listenerId + " by channel: " + hubChannel);
+            return;
+        }
+
+        Iterator<FilteredHubListener> filteredHubListenersIterator = filteredHubListeners.iterator();
+        while (filteredHubListenersIterator.hasNext()) {
+            FilteredHubListener filteredHubListener = filteredHubListenersIterator.next();
+            if (listenerId.equals(filteredHubListener.getListenerId())) {
+                filteredHubListeners.remove(filteredHubListener);
+                return;
+            }
+        }
     }
 
     /**

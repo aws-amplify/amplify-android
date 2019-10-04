@@ -67,7 +67,7 @@ The following example talks about how to upload a file.
     {% include tab_content_start.html lang="java" %}
 
     ```java
-    storage.put("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Listener<StorageResult>() {
+    storage.put("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Callback<StorageResult>() {
             @Override
             public void onResult(StorageResult result) {
                
@@ -87,7 +87,7 @@ The following example talks about how to upload a file.
    {% include tab_content_start.html lang="java" %}
 
    ```java
-   StorageTask storageTask = storage.put("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Listener<StorageResult>() {
+   StorageTask storageTask = storage.put("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Callback<StorageResult>() {
             @Override
             public void onResult(StorageResult result) {
                
@@ -113,7 +113,7 @@ The following example talks about how to upload a file.
    {% include tab_content_start.html lang="java" %}
 
    ```java
-   StorageTask storageTask = storage.put("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Listener<StorageResult>() {
+   StorageTask storageTask = storage.put("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Callback<StorageResult>() {
             @Override
             public void onResult(StorageResult result) {
                
@@ -169,7 +169,7 @@ The following example talks about how to upload a file.
     {% include tab_content_start.html lang="java" %}
 
     ```java
-    storage.get("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Listener<StorageResult>() {
+    storage.get("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Callback<StorageResult>() {
             @Override
             public void onResult(StorageResult result) {
                 File myFile = result.getFile();
@@ -190,7 +190,7 @@ The following example talks about how to upload a file.
    {% include tab_content_start.html lang="java" %}
 
    ```java
-   StorageTask storageTask = storage.get("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Listener<StorageResult>() {
+   StorageTask storageTask = storage.get("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Callback<StorageResult>() {
             @Override
             public void onResult(StorageResult result) {
                
@@ -216,7 +216,7 @@ The following example talks about how to upload a file.
    {% include tab_content_start.html lang="java" %}
 
    ```java
-   StorageTask storageTask = storage.get("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Listener<StorageResult>() {
+   StorageTask storageTask = storage.get("barcelona.jpeg", "/storage/emulated/0/barcelona.jpeg", new Callback<StorageResult>() {
             @Override
             public void onResult(StorageResult result) {
                
@@ -275,7 +275,7 @@ The following example talks about how to upload a file.
     {% include tab_content_start.html lang="java" %}
 
     ```java
-    storage.list("videos", new Listener<List<String>>() {
+    storage.list("videos", new Callback<List<String>>() {
             @Override
             public void onResult(List<String> keys) {
             		
@@ -316,7 +316,7 @@ The following example talks about how to upload a file.
     {% include tab_content_start.html lang="java" %}
 
     ```java
-    storage.remove("barcelona.jpeg", new Listener<Void>() {
+    storage.remove("barcelona.jpeg", new Callback<Void>() {
             @Override
             public void onResult(Void result) {
             		

@@ -70,7 +70,7 @@ Auth auth = new Auth(MainActivity.getApplicationContext());
 {% include tab_content_start.html lang="kt" %}
 
 ```kotlin
-auth.signIn("bimin", "1234Password!", validationData, object: Listener<UserpoolSignInResult>() {
+auth.signIn("bimin", "1234Password!", validationData, object: Callback<UserpoolSignInResult>() {
     override fun onResult(result: UserpoolSignInResult) {
         when (result.signInState) {
             SignInState.SMS_MFA -> // Request MFA code from user, call auth.confirmSignIn(...)
@@ -90,7 +90,7 @@ auth.signIn("bimin", "1234Password!", validationData, object: Listener<UserpoolS
 {% include tab_content_start.html lang="java" %}
 
 ```java
-auth.signIn("bimin", "1234Password!", validationData, new Listener<UserpoolSignInResult>() {
+auth.signIn("bimin", "1234Password!", validationData, new Callback<UserpoolSignInResult>() {
     @Override
     void onResult(final UserpoolSignInResult result) {
         switch (result.getSignInState()) {
@@ -142,7 +142,7 @@ However, next time `person A` signs in with Google will get identity id `efgh-45
 {% include tab_content_start.html lang="kt" %}
 
 ```kotlin
-userpool.signUp("bimin", "1234Password!", object: Listener<UserpoolSignUpResult>() {
+userpool.signUp("bimin", "1234Password!", object: Callback<UserpoolSignUpResult>() {
     override fun onResult(result: UserpoolSignUpResult) {
         when (result.signUpState) {
             SignUpState.SMS_MFA -> // Request MFA code from user, call auth.confirmSignUp(..)
@@ -161,7 +161,7 @@ userpool.signUp("bimin", "1234Password!", object: Listener<UserpoolSignUpResult>
 {% include tab_content_start.html lang="java" %}
 
 ```java
-auth.signUp("bimin", "1234Password!", new Listener<UserpoolSignUpResult>() {
+auth.signUp("bimin", "1234Password!", new Callback<UserpoolSignUpResult>() {
     @Override
     public void onResult(UserpoolSignUpResult result) {
         switch (result.getSignUpState()) {

@@ -54,14 +54,15 @@ public abstract class Category<P extends Plugin> implements CategoryTypeable {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
 
-            for (P plugin : getPlugins()) {
+        for (P plugin : getPlugins()) {
             String pluginKey = plugin.getPluginKey();
             Object pluginConfig = configuration.pluginConfigs.get(pluginKey);
 
             if (pluginConfig != null) {
                 plugin.configure(pluginConfig);
             } else {
-                throw new PluginException.NoSuchPluginException();
+                // TODO
+                // The plugin does not have any configuration.
             }
         }
 
