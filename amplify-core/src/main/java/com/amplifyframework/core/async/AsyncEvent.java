@@ -16,9 +16,10 @@
 package com.amplifyframework.core.async;
 
 /**
- * The high-level status of an AsyncEvent
+ * The event wraps the name, state, data of the event
+ * and the operation that generated this event.
  */
-public class AsyncEvent<T> {
+public final class AsyncEvent<T> {
 
     public static enum State {
         UNKNOWN,
@@ -29,25 +30,34 @@ public class AsyncEvent<T> {
         ;
     }
 
-    private State eventState;
+    private final String eventName;
 
-    private T eventData;
+    private final State eventState;
+
+    private final T eventData;
+
+    private final AmplifyOperation generatedByAmplifyOperation;
+
+    public AsyncEvent(String eventName, State eventState, T eventData, AmplifyOperation generatedByAmplifyOperation) {
+        this.eventName = eventName;
+        this.eventState = eventState;
+        this.eventData = eventData;
+        this.generatedByAmplifyOperation = generatedByAmplifyOperation;
+    }
+
+    public String getEventName() {
+        return eventName;
+    }
 
     public State getEventState() {
         return eventState;
-    }
-
-    public AsyncEvent<T> setEventState(State eventState) {
-        this.eventState = eventState;
-        return this;
     }
 
     public T getEventData() {
         return eventData;
     }
 
-    public AsyncEvent<T> setEventData(T eventData) {
-        this.eventData = eventData;
-        return this;
+    public AmplifyOperation getGeneratedByAmplifyOperation() {
+        return generatedByAmplifyOperation;
     }
 }

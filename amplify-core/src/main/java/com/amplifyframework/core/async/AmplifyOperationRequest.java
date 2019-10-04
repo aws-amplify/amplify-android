@@ -17,18 +17,18 @@ package com.amplifyframework.core.async;
 
 /**
  * Describes the parameters that are passed during the creation of an AmplifyOperation
- * @param <RequestOptions> The concrete type that adjusts the behavior of the request type.
+ * @param <R> The concrete type that adjusts the behavior of the request type.
  *                        Any operation request object that derives from AmplifyOperationRequest
  *                        will define the type and structure of the options. The options is used
  *                        to specify the details of a request.
  */
-public abstract class AmplifyOperationRequest<RequestOptions> {
-    RequestOptions requestOptions;
+public abstract class AmplifyOperationRequest<R> {
+    R requestOptions;
 
     /**
      * Options to adjust the behavior of this request, including plugin options
      *
      * @return the options object
      */
-    abstract RequestOptions getRequestOptions();
+    abstract R getRequestOptions();
 }

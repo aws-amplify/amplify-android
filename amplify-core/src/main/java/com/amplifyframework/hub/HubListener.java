@@ -15,8 +15,7 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
+import com.amplifyframework.core.async.EventListener;
 
-public interface HubListener {
-    void onHubEvent(@NonNull final HubPayload payload);
+public interface HubListener extends EventListener<HubPayload> {
 }

@@ -26,8 +26,9 @@ import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.core.category.CategoryType;
 
 public class StoragePutOperation extends AmplifyOperation implements Resumable, Cancelable {
-    public StoragePutOperation(@NonNull CategoryType categoryType, @NonNull String eventName, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
-        super(categoryType, eventName, request, eventListener);
+
+    public StoragePutOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
+        super(categoryType, request, eventListener);
     }
 
     @Override

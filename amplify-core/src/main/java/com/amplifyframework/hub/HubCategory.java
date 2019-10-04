@@ -17,9 +17,10 @@ package com.amplifyframework.hub;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import com.amplifyframework.core.async.AmplifyOperation;
-import com.amplifyframework.core.async.AsyncEvent;
+import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.async.Result;
@@ -35,13 +36,70 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-/** Amplify has a local eventing system called Hub. It is a lightweight implementation of
+/**
+ * Amplify has a local eventing system called Hub. It is a lightweight implementation of
  * Publisher-Subscriber pattern, and is used to share data between modules and components
  * in your app. Amplify uses Hub for different categories to communicate with one another
  * when specific events occur, such as authentication events like a user sign-in or
  * notification of a file download.
  */
 public class HubCategory implements Category<HubPlugin,HubPluginConfiguration>, HubCategoryBehavior {
+
+    /**
+     * Dispatch a Hub message on the specified channel
+     *
+     * @param hubChannel The channel to send the message on
+     * @param hubpayload The payload to send
+     */
+    @Override
+    public void publish(@NonNull HubChannel hubChannel, @NonNull HubPayload hubpayload) throws HubException {
+        plugin().publish(hubChannel, hubpayload);
+    }
+
+    /**
+     * Listen to Hub messages on a particular channel,
+     *
+     * @param hubChannel The channel to listen for messages on
+     * @param listener   The callback to invoke with the received message
+     * @return the token which serves as an identifier for the listener
+     * registered. The token can be used with
+     * {@link #unsubscribe(SubscriptionToken)}
+     * to de-register the listener.
+     */
+    @Override
+    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel, @Nullable HubListener listener) throws HubException {
+        return plugin().subscribe(hubChannel, listener);
+    }
+
+    /**
+     * Listen to Hub messages on a particular channel,
+     *
+     * @param hubChannel The channel to listen for messages on
+     * @param hubPayloadFilter  candidate messages will be passed to this closure prior to dispatching to
+     *                   the {@link HubListener}. Only messages for which the closure returns
+     *                   `true` will be dispatched.
+     * @param listener   The callback to invoke with the received message
+     * @return the token which serves as an identifier for the listener
+     * registered. The token can be used with #unsubscribe(SubscriptionToken)
+     * to de-register the listener.
+     */
+    @Override
+    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel, @Nullable HubPayloadFilter hubPayloadFilter, @Nullable HubListener listener) throws HubException {
+        return plugin().subscribe(hubChannel, hubPayloadFilter, listener);
+    }
+
+    /**
+     * The registered listener can be removed from the Hub system by passing the
+     * token received from {@link #subscribe(HubChannel, HubListener)} or
+     * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
+     *
+     * @param subscriptionToken the token which serves as an identifier for the listener
+     *                          {@link HubListener} registered
+     */
+    @Override
+    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException {
+        plugin().unsubscribe(subscriptionToken);
+    }
 
     static class PluginDetails {
         HubPlugin hubPlugin;
@@ -191,35 +249,15 @@ public class HubCategory implements Category<HubPlugin,HubPluginConfiguration>, 
         return CategoryType.HUB;
     }
 
-    @Override
-    public UnsubscribeToken listen(@NonNull HubChannel hubChannel, @NonNull HubListener listener) {
-        return null;
-    }
-
-    @Override
-    public UnsubscribeToken listen(@NonNull HubChannel hubChannel, @NonNull HubFilter hubFilter, @NonNull HubListener listener) {
-        return null;
-    }
-
-    @Override
-    public void dispatch(@NonNull HubChannel hubChannel, @NonNull HubPayload hubpayload) {
-
-    }
-
-    @Override
-    public void removeListener(@NonNull final UnsubscribeToken unsubscribeToken) {
-
-    }
-
     /**
      * Obtain the registered plugin. Throw runtime exception if
      * no plugin is registered or multiple plugins are registered.
      *
      * @return the only registered plugin for this category
      */
-    private HubPlugin plugin() throws ConfigurationException {
+    private HubPlugin plugin() throws HubException {
         if (!isConfigured) {
-            throw new ConfigurationException("Hub category is not yet configured.");
+            throw new HubException("Hub category is not yet configured.");
         }
         if (plugins.isEmpty()) {
             throw new PluginRuntimeException.NoPluginException();
@@ -240,19 +278,19 @@ public class HubCategory implements Category<HubPlugin,HubPluginConfiguration>, 
      * @param eventListener The Operation-specific listener callback to be invoked
      *                 when an AsyncEvent for that operation is received.
      */
-    public UnsubscribeToken listen(@NonNull final AmplifyOperation operation,
-                                   @NonNull final EventListener eventListener) {
-        HubChannel channel = HubChannel.fromCategoryType(operation.getCategoryType());
-        HubFilter filter = HubFilters.hubFilter(operation);
+    public <R extends AmplifyOperationRequest, E> SubscriptionToken subscribe(@NonNull final AmplifyOperation<R> operation,
+                                                                              @NonNull final EventListener<E> eventListener) {
+        HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
+        HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);
         HubListener transformingListener = new HubListener() {
             @Override
-            public void onHubEvent(@NonNull HubPayload payload) {
-                if (payload.data instanceof AsyncEvent) {
-                    eventListener.onEvent((AsyncEvent) payload.data);
-                }
+            public void onEvent(@NonNull HubPayload payload) {
+                // TODO: check for casting of Object to E and
+                // see if it can be prevented.
+                eventListener.onEvent((E) payload.getEventData());
             }
         };
 
-        return listen(channel, filter, transformingListener);
+        return subscribe(channel, filter, transformingListener);
     }
 }

@@ -26,17 +26,11 @@ import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
 
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.async.AmplifyOperationContext;
-import com.amplifyframework.core.async.AsyncEvent;
+import com.amplifyframework.hub.BackgroundExecutorHubPlugin;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubFilter;
+import com.amplifyframework.hub.HubPayloadFilter;
 import com.amplifyframework.hub.HubListener;
 import com.amplifyframework.hub.HubPayload;
-import com.amplifyframework.hub.UnsubscribeToken;
-import com.amplifyframework.storage.exception.StorageException;
-
-import org.json.JSONObject;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -58,50 +52,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-//        AnalyticsPlugin pinpoint1 = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
-//        AnalyticsPlugin pinpoint2 = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
-//        AnalyticsPlugin kinesis = new AmazonKinesisAnalyticsPlugin(getApplicationContext());
-//        Amplify.addPlugin(pinpoint);
-//        Amplify.addPlugin(kinesis);
-//        Amplify.configure(getApplicationContext());
-//
-//        Amplify.Analytics.recordEvent(); // throws exception
-//
-//        Amplify.Analytics.getPlugin(pinpoint.getPluginKey()).recordEvent();
-//        Amplify.Analytics.getPlugin(kinesis.getPluginKey()).recordEvent();
-
-        UnsubscribeToken unsubscribeToken = Amplify.Hub.listen(HubChannel.STORAGE, new HubListener() {
-            @Override
-            public void onHubEvent(@NonNull HubPayload payload) {
-                Log.d(TAG, payload.data.toString());
-            }
-        });
-
-//        unsubscribeToken = Amplify.Hub.listen(HubChannel.STORAGE,
-//                new HubFilter() {
-//                    @Override
-//                    public boolean filter(@NonNull HubPayload payload) {
-//                        return payload.context instanceof AmplifyOperationContext;
-//                    }
-//                },
-//                new HubListener() {
-//                    @Override
-//                    public void onHubEvent(@NonNull HubPayload payload) {
-//                        Log.d(TAG, payload.data.toString());
-//
-//                        StorageFileOperation.Event event = (StorageFileOperation.Event) payload.data;
-//                        if (AsyncEvent.State.COMPLETED.equals(event.getEventState())) {
-//                            Log.d(TAG, "Result: " + ((StorageFileOperation.Event<StorageDownloadFileResult>)event).getEventData());
-//                        } else if (AsyncEvent.State.FAILED.equals(event.getEventState())) {
-//                            Log.d(TAG, "Error: " + ((StorageFileOperation.Event<StorageException>)event).getEventData());
-//                        } else if (AsyncEvent.State.IN_PROCESS.equals(event.getEventState())) {
-//                            Log.d(TAG, "Progress: " + ((StorageFileOperation.Event<Progress>)event).getEventData());
-//                        }
-//                    }
-//                }
-//        );
-
-        Amplify.Hub.dispatch(HubChannel.CUSTOM, new HubPayload().eventName("Some event happened"));
+        performHubOperations();
     }
 
     @Override
@@ -124,5 +75,43 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    private void performHubOperations() {
+
+        BackgroundExecutorHubPlugin backgroundExecutorHubPlugin = new BackgroundExecutorHubPlugin();
+
+        backgroundExecutorHubPlugin.subscribe(HubChannel.STORAGE, new HubListener() {
+            @Override
+            public void onEvent(@NonNull HubPayload payload) {
+                if (payload.getEventData() instanceof String) {
+                    Log.d(TAG, "String: => " + payload.getEventName() + ":" + (String) payload.getEventData());
+                } else if (payload.getEventData() instanceof Float) {
+                    Log.d(TAG, "Float: => " + payload.getEventName() + ":" + (Float) payload.getEventData());
+                }
+            }
+        });
+
+        backgroundExecutorHubPlugin.subscribe(HubChannel.STORAGE, new HubPayloadFilter() {
+            @Override
+            public boolean filter(@NonNull HubPayload payload) {
+                return true;
+            }
+        }, new HubListener() {
+            @Override
+            public void onEvent(@NonNull HubPayload payload) {
+                if (payload.getEventData() instanceof String) {
+                    Log.d(TAG, "String: => " + payload.getEventName() + ":" + (String) payload.getEventData());
+                } else if (payload.getEventData() instanceof Float) {
+                    Log.d(TAG, "Float: => " + payload.getEventName() + ":" + (Float) payload.getEventData());
+                }
+            }
+        });
+
+        backgroundExecutorHubPlugin.publish(HubChannel.STORAGE,
+                new HubPayload("weatherString", new String("Too Cold in Seattle")));
+
+        backgroundExecutorHubPlugin.publish(HubChannel.STORAGE,
+                new HubPayload("weatherFloat", 5.3F));
     }
 }

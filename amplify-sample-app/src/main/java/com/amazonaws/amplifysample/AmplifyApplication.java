@@ -17,20 +17,9 @@ package com.amazonaws.amplifysample;
 
 import android.app.Application;
 
-import com.amplifyframework.analytics.pinpoint.AmazonPinpointAnalyticsPlugin;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.exception.AmplifyException;
-
 public class AmplifyApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-
-        try {
-            Amplify.addPlugin(new AmazonPinpointAnalyticsPlugin(getApplicationContext()));
-            Amplify.configure(getApplicationContext());
-        } catch (AmplifyException e) {
-            e.printStackTrace();
-        }
     }
 }

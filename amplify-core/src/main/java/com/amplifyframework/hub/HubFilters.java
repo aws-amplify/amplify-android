@@ -20,8 +20,8 @@ import android.support.annotation.NonNull;
 import com.amplifyframework.core.async.AmplifyOperation;
 
 public class HubFilters {
-    public static HubFilter always() {
-        return new HubFilter() {
+    public static HubPayloadFilter always() {
+        return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
                 return true;
@@ -29,34 +29,34 @@ public class HubFilters {
         };
     }
 
-    public static HubFilter all(@NonNull final HubFilter... filters) {
-        return new HubFilter() {
+    public static HubPayloadFilter all(@NonNull final HubPayloadFilter... filters) {
+        return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
                 boolean allFiltersSatisfied = true;
-                for (HubFilter hubFilter: filters) {
-                    allFiltersSatisfied &= hubFilter.filter(payload);
+                for (HubPayloadFilter hubPayloadFilter: filters) {
+                    allFiltersSatisfied &= hubPayloadFilter.filter(payload);
                 }
                 return allFiltersSatisfied;
             }
         };
     }
 
-    public static HubFilter any(@NonNull final HubFilter... filters) {
-        return new HubFilter() {
+    public static HubPayloadFilter any(@NonNull final HubPayloadFilter... filters) {
+        return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
                 boolean anyFilterSatisfied = false;
-                for (HubFilter hubFilter: filters) {
-                    anyFilterSatisfied |= hubFilter.filter(payload);
+                for (HubPayloadFilter hubPayloadFilter: filters) {
+                    anyFilterSatisfied |= hubPayloadFilter.filter(payload);
                 }
                 return anyFilterSatisfied;
             }
         };
     }
 
-    public static HubFilter and(@NonNull final HubFilter leftFilter, @NonNull final HubFilter rightFilter) {
-        return new HubFilter() {
+    public static HubPayloadFilter and(@NonNull final HubPayloadFilter leftFilter, @NonNull final HubPayloadFilter rightFilter) {
+        return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
                 return leftFilter.filter(payload) && rightFilter.filter(payload);
@@ -64,8 +64,8 @@ public class HubFilters {
         };
     }
 
-    public static HubFilter or(@NonNull final HubFilter leftFilter, @NonNull final HubFilter rightFilter) {
-        return new HubFilter() {
+    public static HubPayloadFilter or(@NonNull final HubPayloadFilter leftFilter, @NonNull final HubPayloadFilter rightFilter) {
+        return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
                 return leftFilter.filter(payload) || rightFilter.filter(payload);
@@ -73,8 +73,8 @@ public class HubFilters {
         };
     }
 
-    public static HubFilter hubFilter(@NonNull final AmplifyOperation operation) {
-        return new HubFilter() {
+    public static HubPayloadFilter hubPayloadFilter(@NonNull final AmplifyOperation operation) {
+        return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
                 // TODO

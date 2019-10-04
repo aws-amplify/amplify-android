@@ -17,11 +17,11 @@ package com.amplifyframework.hub;
 
 import android.support.annotation.NonNull;
 
-public interface HubFilter {
+public interface HubPayloadFilter {
     /**
      * Filter the HubPayload based on your criteria.
-     * An implementation of a HubFilter can be passed to
-     * the {@link HubCategory#listen(HubChannel, HubListener)}
+     * An implementation of a HubPayloadFilter can be passed to
+     * the {@link HubCategory#subscribe(HubChannel, HubListener)}
      * filter listening to events from HubChannel.
      *
      * @param payload the payload that is part of the event

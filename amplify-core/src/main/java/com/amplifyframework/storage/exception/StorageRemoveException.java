@@ -18,7 +18,7 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.core.exception.AmplifyException;
 
 /**
- * Exception encountered in removeListener API of Storage category
+ * Exception encountered in unsubscribe API of Storage category
  */
 public class StorageRemoveException extends AmplifyException {
     /**

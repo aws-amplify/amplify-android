@@ -15,12 +15,7 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.category.CategoryType;
-
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * HubChannel represents the channels on which Amplify category messages will be dispatched.
@@ -31,65 +26,49 @@ public enum HubChannel {
     /**
      * Hub messages relating to Amplify Analytics
      */
-    ANALYTICS,
+    ANALYTICS(CategoryType.ANALYTICS),
 
     /**
      * Hub messages relating to Amplify Api
      */
-    API,
+    API(CategoryType.API),
 
     /**
      * Hub messages relating to Amplify Hub
      */
-    HUB,
+    HUB(CategoryType.HUB),
 
     /**
      * Hub messages relating to Amplify Logging
      */
-    LOGGING,
+    LOGGING(CategoryType.LOGGING),
 
     /**
      * Hub messages relating to Amplify Storage
      */
-    STORAGE,
-
-    /**
-     * A custom channel with its own name
-     */
-    CUSTOM("myCustomChannel")
+    STORAGE(CategoryType.STORAGE)
     ;
 
-    private String channelName;
 
-    public static Set<HubChannel> amplifyChannels() {
-        Set<HubChannel> channels = new HashSet<HubChannel>();
-        for (CategoryType categoryType: CategoryType.values()) {
-            channels.add(fromCategoryType(categoryType));
+    private CategoryType categoryType;
+
+    HubChannel(CategoryType categoryType) {
+        this.categoryType = categoryType;
+    }
+
+    /**
+     * Look up HubChannel based on CategoryType
+     * @param categoryType identifies an Amplify category
+     * @return the hub channel corresponding to it
+     * @throws NoHubChannelException
+     *               If there is no HubChannel known for CategoryType, possibly because
+     *               a HubChannel is not mapped or the CategoryType passed is not a valid
+     *               category type.
+     */
+    public static HubChannel forCategoryType(final CategoryType categoryType) {
+        for (final HubChannel possibleMatch : values()) {
+            if (possibleMatch.categoryType.equals(categoryType)) return possibleMatch;
         }
-        return channels;
-    }
-
-    public static HubChannel fromCategoryType(final CategoryType categoryType) {
-        HubChannel hubChannel = null;
-        if (CategoryType.ANALYTICS.equals(categoryType)) {
-            hubChannel = HubChannel.ANALYTICS;
-        } else if (CategoryType.API.equals(categoryType)) {
-            hubChannel = HubChannel.API;
-        } else if (CategoryType.HUB.equals(categoryType)) {
-            hubChannel = HubChannel.HUB;
-        } else if (CategoryType.LOGGING.equals(categoryType)) {
-            hubChannel = HubChannel.LOGGING;
-        } else if (CategoryType.STORAGE.equals(categoryType)) {
-            hubChannel = HubChannel.STORAGE;
-        }
-        return hubChannel;
-    }
-
-    HubChannel() {
-
-    }
-
-    HubChannel(@NonNull final String channelName) {
-        this.channelName = channelName;
+        throw new NoHubChannelException("No HubChannel found for the CategoryType: " + categoryType);
     }
 }

@@ -29,8 +29,8 @@ public interface HubCategoryBehavior {
      * @param hubChannel The channel to send the message on
      * @param hubpayload The payload to send
      */
-    void dispatch(@NonNull final HubChannel hubChannel,
-                  @NonNull final HubPayload hubpayload);
+    void publish(@NonNull final HubChannel hubChannel,
+                 @NonNull final HubPayload hubpayload) throws HubException;
 
     /**
      * Listen to Hub messages on a particular channel,
@@ -39,35 +39,35 @@ public interface HubCategoryBehavior {
      * @param listener The callback to invoke with the received message
      * @return the token which serves as an identifier for the listener
      *          registered. The token can be used with
-     *          {@link #removeListener(UnsubscribeToken)}
+     *          {@link #unsubscribe(SubscriptionToken)}
      *          to de-register the listener.
      */
-    UnsubscribeToken listen(@NonNull final HubChannel hubChannel,
-                            @Nullable final HubListener listener);
+    SubscriptionToken subscribe(@NonNull final HubChannel hubChannel,
+                                @Nullable final HubListener listener) throws HubException;
 
     /**
      * Listen to Hub messages on a particular channel,
      *
      * @param hubChannel The channel to listen for messages on
-     * @param hubFilter candidate messages will be passed to this closure prior to dispatching to
+     * @param hubPayloadFilter candidate messages will be passed to this closure prior to dispatching to
      *                  the {@link HubListener}. Only messages for which the closure returns
      *                  `true` will be dispatched.
      * @param listener The callback to invoke with the received message
      * @return the token which serves as an identifier for the listener
-     *          registered. The token can be used with #removeListener(UnsubscribeToken)
+     *          registered. The token can be used with #unsubscribe(SubscriptionToken)
      *          to de-register the listener.
      */
-    UnsubscribeToken listen(@NonNull final HubChannel hubChannel,
-                            @Nullable final HubFilter hubFilter,
-                            @Nullable final HubListener listener);
+    SubscriptionToken subscribe(@NonNull final HubChannel hubChannel,
+                                @Nullable final HubPayloadFilter hubPayloadFilter,
+                                @Nullable final HubListener listener) throws HubException;
 
     /**
      * The registered listener can be removed from the Hub system by passing the
-     * token received from {@link #listen(HubChannel, HubListener)} or
-     * {@link #listen(HubChannel, HubFilter, HubListener)}.
+     * token received from {@link #subscribe(HubChannel, HubListener)} or
+     * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
      *
-     * @param unsubscribeToken the token which serves as an identifier for the listener
+     * @param subscriptionToken the token which serves as an identifier for the listener
      *                 {@link HubListener} registered
      */
-    void removeListener(@NonNull final UnsubscribeToken unsubscribeToken);
+    void unsubscribe(@NonNull final SubscriptionToken subscriptionToken) throws HubException;
 }

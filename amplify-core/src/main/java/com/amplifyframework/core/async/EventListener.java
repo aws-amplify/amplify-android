@@ -1,5 +1,5 @@
 package com.amplifyframework.core.async;
 
-public interface EventListener {
-    void onEvent(AsyncEvent event);
+public interface EventListener<T> {
+    void onEvent(T event);
 }

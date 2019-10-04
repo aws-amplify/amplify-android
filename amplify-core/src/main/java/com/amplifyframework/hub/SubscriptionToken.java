@@ -18,21 +18,19 @@ package com.amplifyframework.hub;
 import java.util.UUID;
 
 /**
- * UnsubscribeToken can be used to unsubscribe a Hub listener. Although UnsubscribeToken
+ * SubscriptionToken can be used to unsubscribe a Hub listener. Although SubscriptionToken
  * conforms to Hashable, only the `id` property is considered for equality and hash value;
  * `channel` is used only for routing an unsubscribe request to the correct HubChannel.
  */
-public class UnsubscribeToken {
-    UUID uuid;
-    HubChannel hubChannel;
+public final class SubscriptionToken {
+    private final UUID uuid;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        UnsubscribeToken that = (UnsubscribeToken) o;
-        return uuid.equals(that.uuid) &&
-                hubChannel == that.hubChannel;
+        SubscriptionToken that = (SubscriptionToken) o;
+        return uuid.equals(that.uuid);
     }
 
     @Override
@@ -40,8 +38,11 @@ public class UnsubscribeToken {
         return uuid.hashCode();
     }
 
-    public UnsubscribeToken(UUID uuid, HubChannel hubChannel) {
+    public SubscriptionToken(UUID uuid) {
         this.uuid = uuid;
-        this.hubChannel = hubChannel;
+    }
+
+    public UUID getUuid() {
+        return uuid;
     }
 }

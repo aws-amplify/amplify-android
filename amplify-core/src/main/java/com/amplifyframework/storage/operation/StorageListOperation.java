@@ -24,8 +24,10 @@ import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
 
 public class StorageListOperation extends AmplifyOperation {
-    public StorageListOperation(@NonNull CategoryType categoryType, @NonNull String eventName, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
-        super(categoryType, eventName, request, eventListener);
+
+
+    public StorageListOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
+        super(categoryType, request, eventListener);
     }
 
     @Override

@@ -17,11 +17,11 @@ package com.amplifyframework.core.async;
 
 /**
  * Listener async operations.
- * @param <Result>
+ * @param <R>
  */
-public interface Listener<Result> {
+public interface Listener<R> {
 
-    void onResult(Result result);
+    void onResult(R result);
 
     void onError(Exception e);
 }
