@@ -13,19 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.plugin;
+package com.amplifyframework.hub;
 
-import android.content.Context;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
- * Configuration specific to Storage category.
- * Storage plugins will be configured in code with custom
- * configuration objects that inherit from this.
+ * Strongly-typed configuration for Hub category that also
+ * contains configuration for individual plugins
  */
-public class PluginConfiguration {
+public class HubCategoryConfiguration extends CategoryConfiguration {
+    //TODO: Place global (category-wise) configuration options here
 
-    public PluginConfiguration(Context context) {
-
+    public HubCategoryConfiguration() {
+        super();
     }
-
 }

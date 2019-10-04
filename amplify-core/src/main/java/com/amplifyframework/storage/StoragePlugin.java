@@ -15,11 +15,17 @@
 
 package com.amplifyframework.storage;
 
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Plugin API for Storage Category. Any Storage Plugin
- * would implement this interface.
+ * Abstract class that a plugin implementation of Hub Category
+ * would extend. This includes the client behavior dictated by
+ * {@link StorageCategoryBehavior} and {@link Plugin}.
  */
-public interface StoragePlugin extends StorageCategoryBehavior, Plugin<StoragePluginConfiguration> {
+public abstract class StoragePlugin<C, E> implements StorageCategoryBehavior, Plugin<C, E> {
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.STORAGE;
+    }
 }

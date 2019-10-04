@@ -13,16 +13,18 @@
  * permissions and limitations under the License.
  */
 
+package com.amplifyframework.logging;
 
-package com.amplifyframework.analytics;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
-import android.content.Context;
+/**
+ * Strongly-typed configuration for Logging category that also
+ * contains configuration for individual plugins
+ */
+public class LoggingCategoryConfiguration extends CategoryConfiguration {
+    //TODO: Place global (category-wise) configuration options here
 
-import com.amplifyframework.core.plugin.PluginConfiguration;
-
-public class AnalyticsPluginConfiguration extends PluginConfiguration {
-
-    public AnalyticsPluginConfiguration(Context context) {
-        super(context);
+    public LoggingCategoryConfiguration() {
+        super();
     }
 }

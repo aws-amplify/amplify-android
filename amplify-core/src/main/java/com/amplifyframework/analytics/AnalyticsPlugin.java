@@ -15,13 +15,17 @@
 
 package com.amplifyframework.analytics;
 
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Interface that a plugin implementation of Analytics CATEGORY_TYPE
- * would implement. This includes the client behavior dictated by
+ * Abstract class that a plugin implementation of Analytics category
+ * would extend. This includes the client behavior dictated by
  * {@link AnalyticsCategoryBehavior} and {@link Plugin}.
  */
-public interface AnalyticsPlugin extends AnalyticsCategoryBehavior, Plugin<AnalyticsPluginConfiguration> {
-
+public abstract class AnalyticsPlugin<C, E> implements AnalyticsCategoryBehavior, Plugin<C, E> {
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.ANALYTICS;
+    }
 }

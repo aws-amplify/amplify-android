@@ -22,7 +22,6 @@ import android.util.Log;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsPluginConfiguration;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.exception.ConfigurationException;
@@ -31,7 +30,7 @@ import com.amplifyframework.core.plugin.PluginException;
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
+public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin {
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
 
@@ -74,24 +73,13 @@ public class AmazonPinpointAnalyticsPlugin implements AnalyticsPlugin {
         return null;
     }
 
-
     @Override
-    public void configure(@NonNull AnalyticsPluginConfiguration pluginConfiguration) throws PluginException {
+    public void configure(@NonNull Object pluginConfiguration) throws PluginException {
 
     }
 
     @Override
-    public void configure(@NonNull Context context) throws PluginException {
-
-    }
-
-    @Override
-    public void reset() {
-
-    }
-
-    @Override
-    public CategoryType getCategoryType() {
-        return CategoryType.ANALYTICS;
+    public Object getEscapeHatch() {
+        return null;
     }
 }

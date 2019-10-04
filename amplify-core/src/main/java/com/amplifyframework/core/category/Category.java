@@ -15,44 +15,73 @@
 
 package com.amplifyframework.core.category;
 
-import android.content.Context;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
 
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
-public interface Category<P, C> extends CategoryTypeable {
+public abstract class Category<P extends Plugin> implements CategoryTypeable {
+    /**
+     * Map of the { pluginKey => plugin } object
+     */
+    private Map<String, P> plugins;
 
     /**
-     * Read the configuration from amplifyconfiguration.json file
+     * Flag to remember that the category is already configured by Amplify
+     * and throw an error if configure method is called again
+     */
+    private boolean isConfigured;
+
+    public Category() {
+        this.plugins = new ConcurrentHashMap<String, P>();
+        this.isConfigured = false;
+    }
+
+    /**
+     * Configure category with provided AmplifyConfiguration object
      *
-     * @param context Android context required to read the contents of file
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    void configure(@NonNull Context context) throws ConfigurationException, PluginException;
+    public void configure(CategoryConfiguration configuration) throws ConfigurationException, PluginException {
+        if (isConfigured) {
+            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
+        }
+
+            for (P plugin : getPlugins()) {
+            String pluginKey = plugin.getPluginKey();
+            Object pluginConfig = configuration.pluginConfigs.get(pluginKey);
+
+            if (pluginConfig != null) {
+                plugin.configure(pluginConfig);
+            } else {
+                throw new PluginException.NoSuchPluginException();
+            }
+        }
+
+        isConfigured = true;
+    }
 
     /**
      * Register a plugin with Amplify
      *
-     * @param plugin an implementation of a CATEGORY_TYPE that
+     * @param plugin an implementation of a category plugin that
      *               conforms to the {@link Plugin} interface.
      * @throws PluginException when a plugin cannot be registered for this category
      */
-    void addPlugin(@NonNull final P plugin) throws PluginException;
-
-    /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin an implementation of a Category that
-     *               conforms to the {@link Plugin} interface.
-     * @param pluginConfiguration configuration information for the plugin.
-     * @throws PluginException when a plugin cannot be registered for this category
-     */
-    void addPlugin(@NonNull final P plugin, @NonNull final C pluginConfiguration) throws PluginException;
+    public void addPlugin(@NonNull P plugin) throws PluginException {
+        try {
+            plugins.put(plugin.getPluginKey(), plugin);
+        } catch (Exception ex) {
+            throw new PluginException.EmptyKeyException();
+        }
+    }
 
     /**
      * Remove a registered plugin
@@ -61,15 +90,11 @@ public interface Category<P, C> extends CategoryTypeable {
      *               conforms to the {@link Plugin} interface
      * @throws PluginException when a plugin cannot be registered for this category
      */
-    void removePlugin(@NonNull final P plugin) throws PluginException;
-
-    /**
-     * Reset Amplify to state where it is not configured.
-     *
-     * Remove all the plugins added.
-     * Remove the configuration stored.
-     */
-    void reset();
+    public void removePlugin(@NonNull P plugin) throws PluginException {
+        if (plugins.remove(plugin.getPluginKey()) == null) {
+            throw new PluginException.NoSuchPluginException();
+        }
+    }
 
     /**
      * Retrieve a plugin of category.
@@ -77,10 +102,39 @@ public interface Category<P, C> extends CategoryTypeable {
      * @param pluginKey the key that identifies the plugin implementation
      * @return the plugin object
      */
-    P getPlugin(@NonNull final String pluginKey) throws PluginException;
+    public P getPlugin(@NonNull final String pluginKey) throws PluginException {
+        if (plugins.containsKey(pluginKey)) {
+            return plugins.get(pluginKey);
+        } else {
+            throw new PluginException.NoSuchPluginException();
+        }
+    }
 
     /**
      * @return the set of plugins added to a Category.
      */
-    Set<P> getPlugins();
+    public Set<P> getPlugins() {
+        return new HashSet<P>(plugins.values());
+    }
+
+    /**
+     * Obtain the registered plugin for this category. Throw
+     * runtime exception if no plugin is registered or
+     * multiple plugins are registered.
+     *
+     * @return the only registered plugin for this category
+     */
+    protected P getSelectedPlugin() throws ConfigurationException {
+        if (!isConfigured) {
+            throw new ConfigurationException("This category is not yet configured.");
+        }
+        if (plugins.isEmpty()) {
+            throw new PluginException.NoSuchPluginException();
+        }
+        if (plugins.size() > 1) {
+            throw new PluginException.MultiplePluginsException();
+        }
+
+        return getPlugins().iterator().next();
+    }
 }

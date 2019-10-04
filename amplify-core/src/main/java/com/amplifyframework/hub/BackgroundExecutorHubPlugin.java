@@ -15,13 +15,11 @@
 
 package com.amplifyframework.hub;
 
-import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.internal.FilteredHubListener;
 
@@ -33,7 +31,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public final class BackgroundExecutorHubPlugin implements HubPlugin {
+public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
 
     private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
 
@@ -145,37 +143,23 @@ public final class BackgroundExecutorHubPlugin implements HubPlugin {
     }
 
     /**
-     * Configure the Plugin with the configuration passed.
+     * Configure the plugin with customized configuration object
      *
-     * @param pluginConfiguration configuration for the plugin
+     * @param pluginConfiguration plugin-specific configuration
      * @throws PluginException when configuration for a plugin was not found
      */
     @Override
-    public void configure(@NonNull HubPluginConfiguration pluginConfiguration) throws PluginException {
+    public void configure(Void pluginConfiguration) throws PluginException {
 
     }
 
     /**
-     * Configure the Plugin using the details in amplifyconfiguration.json
+     * Returns escape hatch for plugin to enable lower-level client use-cases
      *
-     * @param context Android context required to read the contents of file
-     * @throws PluginException when configuration for a plugin was not found
+     * @return the client used by category plugin
      */
     @Override
-    public void configure(@NonNull Context context) throws PluginException {
-
-    }
-
-    /**
-     * Reset the plugin to the state where it's not configured.
-     */
-    @Override
-    public void reset() {
-
-    }
-
-    @Override
-    public CategoryType getCategoryType() {
-        return CategoryType.HUB;
+    public Void getEscapeHatch() {
+        return null;
     }
 }

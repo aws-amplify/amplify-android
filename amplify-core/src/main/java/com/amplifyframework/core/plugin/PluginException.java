@@ -15,13 +15,26 @@
 
 package com.amplifyframework.core.plugin;
 
-import com.amplifyframework.core.exception.AmplifyException;
 import com.amplifyframework.core.exception.AmplifyRuntimeException;
 
 /**
  * Exceptions associated with configuring and inspecting Amplify Plugins
  */
 public class PluginException extends AmplifyRuntimeException {
+    /**
+     * The plugin encountered an error during configuration
+     */
+    public static class PluginConfigurationException extends PluginException {
+        public PluginConfigurationException() { super("The plugin encountered an error during configuration"); }
+        public PluginConfigurationException(String message) {
+            super(message);
+        }
+        public PluginConfigurationException(Throwable throwable) {
+            super(throwable);
+        }
+        public PluginConfigurationException(String message, Throwable t) { super(message, t); }
+    }
+
     /**
      * The plugin's `key` property is empty
      */
@@ -62,6 +75,14 @@ public class PluginException extends AmplifyRuntimeException {
         public NoSuchPluginException(String message) { super(message); }
         public NoSuchPluginException(Throwable throwable) { super(throwable); }
         public NoSuchPluginException(String message, Throwable t) { super(message, t); }
+    }
+
+    /** There are multiple registered plugins for a category */
+    public static class MultiplePluginsException extends PluginException {
+        public MultiplePluginsException() { super("There is more than one plugin registered in this category"); }
+        public MultiplePluginsException(String message) { super(message); }
+        public MultiplePluginsException(Throwable throwable) { super(throwable); }
+        public MultiplePluginsException(String message, Throwable t) { super(message, t); }
     }
 
     /**

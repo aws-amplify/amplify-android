@@ -13,16 +13,18 @@
  * permissions and limitations under the License.
  */
 
+package com.amplifyframework.analytics;
 
-package com.amplifyframework.hub;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
-import android.content.Context;
+/**
+ * Strongly-typed configuration for Analytics category that also
+ * contains configuration for individual plugins
+ */
+public class AnalyticsCategoryConfiguration extends CategoryConfiguration {
+    //TODO: Place global (category-wise) configuration options here
 
-import com.amplifyframework.core.plugin.PluginConfiguration;
-
-public class HubPluginConfiguration extends PluginConfiguration {
-
-    public HubPluginConfiguration(Context context) {
-        super(context);
+    public AnalyticsCategoryConfiguration() {
+        super();
     }
 }

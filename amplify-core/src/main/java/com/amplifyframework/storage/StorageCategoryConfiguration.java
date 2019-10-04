@@ -13,16 +13,18 @@
  * permissions and limitations under the License.
  */
 
+package com.amplifyframework.storage;
 
-package com.amplifyframework.logging;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
-import android.content.Context;
+/**
+ * Strongly-typed configuration for Storage category that also
+ * contains configuration for individual plugins
+ */
+public class StorageCategoryConfiguration extends CategoryConfiguration {
+    //TODO: Place global (category-wise) configuration options here
 
-import com.amplifyframework.core.plugin.PluginConfiguration;
-
-public class LoggingPluginConfiguration extends PluginConfiguration {
-
-    public LoggingPluginConfiguration(Context context) {
-        super(context);
+    public StorageCategoryConfiguration() {
+        super();
     }
 }

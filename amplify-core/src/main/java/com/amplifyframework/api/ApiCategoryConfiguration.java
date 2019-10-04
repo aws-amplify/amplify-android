@@ -15,12 +15,16 @@
 
 package com.amplifyframework.api;
 
-import android.content.Context;
+import com.amplifyframework.core.category.CategoryConfiguration;
 
-import com.amplifyframework.core.plugin.PluginConfiguration;
+/**
+ * Strongly-typed configuration for API category that also
+ * contains configuration for individual plugins
+ */
+public class ApiCategoryConfiguration extends CategoryConfiguration {
+    //TODO: Place global (category-wise) configuration options here
 
-public class ApiPluginConfiguration extends PluginConfiguration {
-    public ApiPluginConfiguration(Context context) {
-        super(context);
+    public ApiCategoryConfiguration() {
+        super();
     }
 }

@@ -15,13 +15,17 @@
 
 package com.amplifyframework.hub;
 
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Interface that a plugin implementation of Hub Category
- * would implement. This includes the client behavior dictated by
+ * Abstract class that a plugin implementation of Hub Category
+ * would extend. This includes the client behavior dictated by
  * {@link HubCategoryBehavior} and {@link Plugin}.
  */
-public interface HubPlugin extends HubCategoryBehavior, Plugin<HubPluginConfiguration> {
-
+public abstract class HubPlugin<C, E> implements HubCategoryBehavior, Plugin<C, E> {
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.HUB;
+    }
 }

@@ -18,7 +18,7 @@ package com.amplifyframework.core.exception;
 /**
  * Exceptions associated with configuring and inspecting Amplify Categories
  */
-public class ConfigurationException extends AmplifyException {
+public class ConfigurationException extends AmplifyRuntimeException {
     public static class AmplifyAlreadyConfiguredException extends ConfigurationException {
         public AmplifyAlreadyConfiguredException() { super("The client issued a subsequent call to `Amplify.configure` after the first had already succeeded."); }
         public AmplifyAlreadyConfiguredException(String message, Throwable t) { super(message, t); }
