@@ -24,6 +24,5 @@ public enum CategoryType {
     API,
     HUB,
     LOGGING,
-    STORAGE
-    ;
+    STORAGE;
 }

@@ -59,7 +59,9 @@ public class AmplifyRuntimeException extends RuntimeException {
     /**
      * Returns customized recovery suggestion message
      */
-    public String getRecoverySuggestion() { return recoverySuggestion; }
+    public String getRecoverySuggestion() {
+        return recoverySuggestion;
+    }
 
     /**
      * Returns a hint as to whether it makes sense to retry upon this exception.

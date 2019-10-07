@@ -1,0 +1,201 @@
+<?xml version="1.0"?>
+<!--
+   Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+
+   Licensed under the Apache License, Version 2.0 (the "License").
+   You may not use this file except in compliance with the License.
+   A copy of the License is located at
+
+    http://aws.amazon.com/apache2.0
+
+   or in the "license" file accompanying this file. This file is distributed
+   on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+   express or implied. See the License for the specific language governing
+   permissions and limitations under the License.
+-->
+
+<!DOCTYPE module PUBLIC
+    "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+    "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<module name="Checker">
+    <property name="charset" value="UTF-8" />
+    <property name="severity" value="error" />
+    <property name="fileExtensions" value="java" />
+
+    <!-- Check that source files have a license header. -->
+    <module name="Header">
+        <property name="headerFile" value="configuration/java.header" />
+    </module>
+
+    <!-- Complain if files become too long by count of lines. -->
+    <module name="FileLength" />
+
+    <!-- We don't use tab characters, here. -->
+    <module name="FileTabCharacter" />
+
+    <!--
+        All source files end with a newline, by UNIX convention.
+        See a discussion at https://unix.stackexchange.com/a/18789/192936 .
+    -->
+    <module name="NewlineAtEndOfFile" />
+
+    <module name="TreeWalker">
+        <!-- Disallows runs of consecutive empty lines. We allow at most 1.  -->
+        <module name="EmptyLineSeparator">
+            <!--
+                 This is okay:
+                 private Boolean one;
+                 private Boolean two;
+            -->
+            <property name="allowNoEmptyLineBetweenFields" value="true" />
+
+            <!--
+                This is NOT okay:
+                Statement a;
+
+
+                Statement b;
+            -->
+            <property name="allowMultipleEmptyLines" value="false"/>
+            <property name="allowMultipleEmptyLinesInsideClassMembers" value="false"/>
+        </module>
+
+        <!-- Obscure rules about for (;;) type use-cases: no extra spaces. -->
+        <module name="EmptyForInitializerPad" />
+        <module name="EmptyForIteratorPad" />
+
+        <!-- No spaces padding () when used for cast. -->
+        <module name="TypecastParenPad" />
+
+        <!-- Only a single space may be used as a whitespace separator.  -->
+        <module name="SingleSpaceSeparator" />
+
+        <!-- "Standard" rules about whitespace. -->
+        <module name="GenericWhitespace" />
+        <module name="MethodParamPad" />
+        <module name="NoWhitespaceAfter" />
+        <module name="NoWhitespaceBefore" />
+        <module name="ParenPad" />
+        <module name="WhitespaceAfter" />
+        <module name="WhitespaceAround" />
+
+        <!-- Disallow methods from having too many paramaters. -->
+        <module name="ParameterNumber" />
+
+        <!--
+            If your method gets too long, you should refactor it into
+            more legible pieces.
+        -->
+        <module name="MethodLength" />
+
+        <!--
+            Lines should be short, for reading ergonomics. We believe
+            Checkstyle's default of 80 is overly aggressive for Java,
+            which is a syntactically verbose language. 120 is already
+            way too long for ergonomics, but allows some wiggle room for
+            special circumstances, such as where Java is overly verbose.
+        -->
+        <module name="LineLength">
+            <property name="max" value="120" />
+        </module>
+
+        <!-- "Standard" rules regarding annotation positioning. -->
+        <module name="AnnotationLocation" />
+
+        <!-- Always use @Override with method inheritance. -->
+        <module name="MissingOverride" />
+
+        <!-- @deprecated and @Deprecated should come in pairs. -->
+        <module name="MissingDeprecated" />
+
+        <!-- Always require braces around code blocks. (No if (foo) bar();) -->
+        <module name="NeedBraces">
+            <property name="allowSingleLineStatement" value="false" />
+        </module>
+
+        <!-- Validate "standard" positioning of {} block characters -->
+        <module name="LeftCurly" />
+        <module name="RightCurly" />
+
+        <!-- It's technically possible to nest blocks, but it's bad practice. -->
+        <module name="AvoidNestedBlocks" />
+
+        <!-- Things have reasonable and idiomatic names. -->
+        <module name="ClassTypeParameterName" />
+        <module name="ConstantName" />
+        <module name="InterfaceTypeParameterName" />
+        <module name="LocalVariableName" />
+        <module name="MemberName" />
+        <module name="MethodName" />
+        <module name="MethodTypeParameterName" />
+        <module name="PackageName" />
+        <module name="ParameterName" />
+        <module name="StaticVariableName" />
+        <module name="TypeName" />
+
+        <!-- 400L not 400l, cause lower 'l' looks like a number '1'. -->
+        <module name="UpperEll" />
+
+        <!-- In Java, we should write String[] args, not String args[]. -->
+        <module name="ArrayTypeStyle" />
+
+        <!-- Standard indentation on all sources. -->
+        <module name="Indentation" />
+
+        <!-- Store @SuppressWarnings annotations for later evalutation -->
+        <module name="SuppressWarningsHolder"  />
+
+        <!-- Use a standard ordering of Java language modifiers. -->
+        <module name="ModifierOrder" />
+        <module name="RedundantModifier" />
+    
+        <!--
+            Java imports are an important part of the documentation of the
+            structure of a code base. They should help the reader understand
+            how the code is composed, with only a quick visual inspection.
+        -->
+        <module name="AvoidStarImport" />
+        <module name="AvoidStaticImport" />
+        <module name="RedundantImport" />
+        <module name="UnusedImports" />
+        <module name="ImportOrder">
+            <property name="groups" value="android,com.amplifyframework,/(com|org|net)/,/^javax?\./"/>
+            <property name="option" value="bottom" />
+            <property name="separated" value="true" />
+            <property name="sortStaticImportsAlphabetically" value="true" />
+        </module>
+    
+        <!-- Miscellaneous / General code quality checks. -->
+        <module name="StringLiteralEquality" />
+        <module name="SimplifyBooleanReturn" />
+        <module name="ParameterAssignment" />
+        <module name="PackageDeclaration" />
+        <module name="MultipleVariableDeclarations" />
+        <module name="MissingSwitchDefault" />
+        <module name="ModifiedControlVariable" />
+        <module name="MagicNumber" />
+        <module name="FallThrough" />
+        <module name="EqualsHashCode" />
+        <module name="EqualsAvoidNull" />
+        <module name="EmptyStatement" />
+        <module name="DefaultComesLast" />
+        <module name="DeclarationOrder" />
+
+        <!-- Class design checks -->
+        <module name="FinalClass" />
+        <module name="HideUtilityClassConstructor" />
+        <module name="InnerTypeLast" />
+        <module name="OneTopLevelClass" />
+    </module>
+
+    <!-- Analyze stored @SuppressWarnings annotations. -->
+    <module name="SuppressWarningsFilter" />
+
+    <!-- Apply project-wide suppressions from checkstyle-suppressions.xml. -->
+    <module name="SuppressionFilter">
+        <property name="file" value="configuration/checkstyle-suppressions.xml"/>
+        <property name="optional" value="false"/>
+    </module>
+</module>
+

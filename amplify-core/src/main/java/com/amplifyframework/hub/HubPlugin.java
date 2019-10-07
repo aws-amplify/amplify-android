@@ -29,3 +29,4 @@ public abstract class HubPlugin<C, E> implements HubCategoryBehavior, Plugin<C, 
         return CategoryType.HUB;
     }
 }
+
