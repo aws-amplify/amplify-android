@@ -23,7 +23,6 @@ import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.PluginException;
 
 /**
@@ -65,7 +64,6 @@ public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin {
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
 
     }
-
 
     @Override
     public String getPluginKey() {

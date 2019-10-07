@@ -29,3 +29,4 @@ public abstract class LoggingPlugin<C, E> implements LoggingCategoryBehavior, Pl
         return CategoryType.LOGGING;
     }
 }
+

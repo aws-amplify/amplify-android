@@ -21,6 +21,7 @@ import com.amplifyframework.core.exception.AmplifyException;
  * Exception encountered in remove API of Storage category
  */
 public class StorageRemoveException extends AmplifyException {
+
     /**
      * Creates a new StorageRemoveException with the specified message, and root
      * cause.
@@ -28,19 +29,26 @@ public class StorageRemoveException extends AmplifyException {
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public StorageRemoveException(final String message, final Throwable t) { super(message, t); }
+    public StorageRemoveException(final String message, final Throwable t) {
+        super(message, t);
+    }
 
     /**
      * Creates a new StorageRemoveException with the specified message.
      *
      * @param message An error message describing why this exception was thrown.
      */
-    public StorageRemoveException(final String message) { super(message); }
+    public StorageRemoveException(final String message) {
+        super(message);
+    }
 
     /**
      * Creates a new StorageRemoveException with the root cause.
      *
      * @param throwable The underlying cause of this exception.
      */
-    public StorageRemoveException(final Throwable throwable) { super(throwable); }
+    public StorageRemoveException(final Throwable throwable) {
+        super(throwable);
+    }
 }
+

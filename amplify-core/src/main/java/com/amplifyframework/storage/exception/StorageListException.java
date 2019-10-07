@@ -21,14 +21,26 @@ import com.amplifyframework.core.exception.AmplifyException;
  * Exception encountered in list API of Storage category
  */
 public class StorageListException extends AmplifyException {
+
     /**
      * Specifies that access to storage was denied
      */
     public static class AccessDeniedException extends StorageListException {
-        public AccessDeniedException() { super("Access to storage denied."); }
-        public AccessDeniedException(String message) { super(message); }
-        public AccessDeniedException(Throwable throwable) { super(throwable); }
-        public AccessDeniedException(String message, Throwable t) { super(message, t); }
+        public AccessDeniedException() {
+            super("Access to storage denied.");
+        }
+
+        public AccessDeniedException(String message) {
+            super(message);
+        }
+
+        public AccessDeniedException(Throwable throwable) {
+            super(throwable);
+        }
+
+        public AccessDeniedException(String message, Throwable t) {
+            super(message, t);
+        }
     }
 
     /**
@@ -38,19 +50,25 @@ public class StorageListException extends AmplifyException {
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public StorageListException(final String message, final Throwable t) { super(message, t); }
+    public StorageListException(final String message, final Throwable t) {
+        super(message, t);
+    }
 
     /**
      * Creates a new StorageListException with the specified message.
      *
      * @param message An error message describing why this exception was thrown.
      */
-    public StorageListException(final String message) { super(message); }
+    public StorageListException(final String message) {
+        super(message);
+    }
 
     /**
      * Creates a new StorageListException with the root cause cause.
      *
      * @param throwable The underlying cause of this exception.
      */
-    public StorageListException(final Throwable throwable) { super(throwable); }
+    public StorageListException(final Throwable throwable) {
+        super(throwable);
+    }
 }

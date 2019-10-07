@@ -15,13 +15,11 @@
 
 package com.amplifyframework.logging;
 
-import android.support.annotation.NonNull;
-
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
  * events.
  */
 public interface LoggingCategoryBehavior {
-
 }
+

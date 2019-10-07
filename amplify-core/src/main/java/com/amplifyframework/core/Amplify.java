@@ -46,19 +46,19 @@ import com.amplifyframework.storage.StoragePlugin;
  *     }
  * </pre>
  */
-public class Amplify {
+public final class Amplify {
+
+    @SuppressWarnings("all") public static final AnalyticsCategory Analytics;
+    @SuppressWarnings("all") public static final ApiCategory API;
+    @SuppressWarnings("all") public static final LoggingCategory Logging;
+    @SuppressWarnings("all") public static final StorageCategory Storage;
+    @SuppressWarnings("all") public static final HubCategory Hub;
+
+    static AmplifyConfiguration amplifyConfiguration;
 
     private static final String TAG = Amplify.class.getSimpleName();
 
-    public static final AnalyticsCategory Analytics;
-    public static final ApiCategory API;
-    public static final LoggingCategory Logging;
-    public static final StorageCategory Storage;
-    public static final HubCategory Hub;
-
-    private static boolean CONFIGURED = false;
-
-    static AmplifyConfiguration amplifyConfiguration;
+    private static boolean configured = false;
 
     static {
         Analytics = new AnalyticsCategory();
@@ -69,6 +69,13 @@ public class Amplify {
     }
 
     private static final Object LOCK = new Object();
+
+    /**
+     * Dis-allows instantiation of this utility class.
+     */
+    private Amplify() {
+        throw new UnsupportedOperationException("No instances allowed.");
+    }
 
     /**
      * Read the configuration from amplifyconfiguration.json file
@@ -88,9 +95,11 @@ public class Amplify {
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(final AmplifyConfiguration configuration) throws ConfigurationException, PluginException {
+    public static void configure(final AmplifyConfiguration configuration)
+            throws ConfigurationException, PluginException {
+
         synchronized (LOCK) {
-            if (CONFIGURED) {
+            if (configured) {
                 throw new ConfigurationException.AmplifyAlreadyConfiguredException();
             }
             amplifyConfiguration = configuration;
@@ -115,7 +124,7 @@ public class Amplify {
                 Storage.configure(amplifyConfiguration.storage);
             }
 
-            CONFIGURED = true;
+            configured = true;
         }
     }
 
@@ -222,3 +231,4 @@ public class Amplify {
         }
     }
 }
+
