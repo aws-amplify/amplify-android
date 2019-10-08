@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.exception;
+package com.amplifyframework;
 
 /**
- * Top-level run-time exception in the Amplify System. Any run-time
+ * Top-level compile-time exception in the Amplify System. Any compile-time
  * exception in Amplify should derive from this exception.
  */
-public class AmplifyRuntimeException extends RuntimeException {
+public class AmplifyException extends Exception {
 
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
@@ -28,31 +28,29 @@ public class AmplifyRuntimeException extends RuntimeException {
     protected String recoverySuggestion;
 
     /**
-     * Creates a new AmplifyRuntimeException with the specified message, and root
+     * Creates a new AmplifyException with the specified message, and root
      * cause.
      *
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public AmplifyRuntimeException(final String message, final Throwable t) {
-        super(message, t);
-    }
+    public AmplifyException(final String message, final Throwable t) { super(message, t); }
 
     /**
-     * Creates a new AmplifyRuntimeException with the specified message.
+     * Creates a new AmplifyException with the specified message.
      *
      * @param message An error message describing why this exception was thrown.
      */
-    public AmplifyRuntimeException(final String message) {
+    public AmplifyException(final String message) {
         super(message);
     }
 
     /**
-     * Create an AmplifyRuntimeException with an exception cause.
+     * Create an AmplifyException with an exception cause.
      *
      * @param throwable the cause of the exception.
      */
-    public AmplifyRuntimeException(final Throwable throwable) {
+    public AmplifyException(final Throwable throwable) {
         super(throwable);
     }
 

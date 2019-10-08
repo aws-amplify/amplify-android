@@ -25,6 +25,10 @@ import com.amplifyframework.hub.HubListener;
 import java.io.Serializable;
 import java.util.UUID;
 
+/**
+ * This encapsulation is to combine all the metadata of a subscriber
+ * that will be useful in the implementation of the Hub methods.
+ */
 public final class FilteredHubListener implements Serializable {
     private final HubChannel channel;
     private final UUID listenerId;

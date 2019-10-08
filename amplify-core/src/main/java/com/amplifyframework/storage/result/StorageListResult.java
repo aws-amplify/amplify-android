@@ -19,7 +19,7 @@ import com.amplifyframework.core.async.Result;
 
 import java.util.List;
 
-public class StorageListResult extends Result {
+public class StorageListResult implements Result {
     /**
      * Keys retrieved by list API
      */

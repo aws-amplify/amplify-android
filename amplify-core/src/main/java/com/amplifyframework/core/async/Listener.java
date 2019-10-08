@@ -16,12 +16,26 @@
 package com.amplifyframework.core.async;
 
 /**
- * Listener async operations.
- * @param <R>
+ * Listener for async operations. This listener can be
+ * used in cases where a result (for success) and error
+ * (for failure) need to be reported for an asynchronous
+ * operation.
+ *
+ * @param <R> the parameter type of the result object.
  */
 public interface Listener<R> {
 
+    /**
+     * Listener method for reporting success
+     * of an operation.
+     * @param result represents the object for success
+     */
     void onResult(R result);
 
+    /**
+     * Listener method for reporting failure
+     * of an operation.
+     * @param e represents the exception object
+     */
     void onError(Exception e);
 }

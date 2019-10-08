@@ -27,7 +27,6 @@ import com.amplifyframework.core.category.CategoryType;
 
 public class StorageGetOperation extends AmplifyOperation implements Resumable, Cancelable {
 
-
     public StorageGetOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
         super(categoryType, request, eventListener);
     }

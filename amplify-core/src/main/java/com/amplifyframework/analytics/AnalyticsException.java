@@ -15,7 +15,7 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.core.exception.AmplifyRuntimeException;
+import com.amplifyframework.AmplifyRuntimeException;
 
 /**
  * Exception thrown by Analytics category plugins.

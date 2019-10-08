@@ -25,7 +25,17 @@ import java.util.UUID;
  * `channel` is used only for routing an unsubscribe request to the correct HubChannel.
  */
 public final class SubscriptionToken {
+    /**
+     * This is used to identify an instance of the
+     * subscriber {@link HubListener} subscribed with Hub.
+     */
     private final UUID uuid;
+
+    /**
+     * The HubChannel is stored here in order to optimally
+     * locate the channel of the subscriber. This is used to
+     * optimally remove listeners in unsubscribe.
+     */
     private final HubChannel hubChannel;
 
     @Override
@@ -41,15 +51,27 @@ public final class SubscriptionToken {
         return uuid.hashCode();
     }
 
+    /**
+     * Construct the subscription token object.
+     *
+     * @param uuid uniquely identifies the subscriber.
+     * @param hubChannel the channel of the subscriber.
+     */
     public SubscriptionToken(@NonNull final UUID uuid, @NonNull final HubChannel hubChannel) {
         this.uuid = uuid;
         this.hubChannel = hubChannel;
     }
 
+    /**
+     * @return the unique identifier of the subscriber.
+     */
     public UUID getUuid() {
         return uuid;
     }
 
+    /**
+     * @return the hub channel of the subscriber.
+     */
     public HubChannel getHubChannel() {
         return hubChannel;
     }

@@ -6,7 +6,7 @@
  * Vestibulum commodo. Ut rhoncus gravida arcu.
  */
 
-package com.amazonaws.amplifysample;
+package com.amazonaws.sampleapp;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

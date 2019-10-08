@@ -17,7 +17,7 @@ package com.amplifyframework.storage.result;
 
 import com.amplifyframework.core.async.Result;
 
-public class StorageRemoveResult extends Result {
+public class StorageRemoveResult implements Result {
     public String key;
 
     public StorageRemoveResult(String key) {

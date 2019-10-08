@@ -23,8 +23,7 @@ import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
 
 /**

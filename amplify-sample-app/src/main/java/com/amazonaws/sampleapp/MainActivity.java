@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amazonaws.amplifysample;
+package com.amazonaws.sampleapp;
 
 import android.os.Bundle;
 import android.support.annotation.NonNull;

@@ -6,7 +6,7 @@
  * Vestibulum commodo. Ut rhoncus gravida arcu.
  */
 
-package com.amazonaws.amplifysample;
+package com.amazonaws.sampleapp;
 
 import org.junit.Test;
 

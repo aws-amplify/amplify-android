@@ -21,7 +21,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 /**
  * Options to specify attributes of get API invocation
  */
-public class StorageGetOptions extends Options {
+public class StorageGetOptions implements Options {
     public StorageAccessLevel accessLevel;
     public String targetIdentityId;
     public StorageGetDestination storageGetDestination;

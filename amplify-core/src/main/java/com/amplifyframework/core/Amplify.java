@@ -22,7 +22,7 @@ import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiPlugin;
-import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.HubCategory;

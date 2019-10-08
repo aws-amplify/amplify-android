@@ -1,6 +1,6 @@
 package com.amplifyframework.hub;
 
-import com.amplifyframework.core.exception.AmplifyRuntimeException;
+import com.amplifyframework.AmplifyRuntimeException;
 
 public class NoHubChannelException extends AmplifyRuntimeException {
     /**

@@ -38,19 +38,19 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
     private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
 
     private final Map<UUID, FilteredHubListener> listenersByUUID;
-    private final Map<HubChannel, HashSet<FilteredHubListener>> listenersByHubChannel;
+    private final Map<HubChannel, Set<FilteredHubListener>> listenersByHubChannel;
     private final ExecutorService executorService;
     private final Handler mainHandler;
 
     public BackgroundExecutorHubPlugin() {
         this.listenersByUUID = new ConcurrentHashMap<UUID, FilteredHubListener>();
-        this.listenersByHubChannel = new ConcurrentHashMap<HubChannel, HashSet<FilteredHubListener>>();
+        this.listenersByHubChannel = new ConcurrentHashMap<HubChannel, Set<FilteredHubListener>>();
         this.executorService = Executors.newCachedThreadPool();
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
     /**
-     * Dispatch a Hub message on the specified channel
+     * Dispatch a Hub message on the specified channel.
      *
      * @param hubChannel The channel to send the message on
      * @param hubpayload The payload to send
@@ -63,15 +63,12 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        Set<FilteredHubListener> listenersOfHubChannel = listenersByHubChannel.get(hubChannel);
-                        if (listenersOfHubChannel == null) {
-                            return;
-                        }
-
-                        for (FilteredHubListener filteredHubListener: listenersOfHubChannel) {
-                            if (filteredHubListener.getHubFilter() == null ||
-                                filteredHubListener.getHubFilter().filter(hubpayload)) {
-                                filteredHubListener.getHubListener().onEvent(hubpayload);
+                        if (listenersByHubChannel.containsKey(hubChannel)) {
+                            for (FilteredHubListener filteredHubListener : listenersByHubChannel.get(hubChannel)) {
+                                if (filteredHubListener.getHubFilter() == null ||
+                                        filteredHubListener.getHubFilter().filter(hubpayload)) {
+                                    filteredHubListener.getHubListener().onEvent(hubpayload);
+                                }
                             }
                         }
                     }
@@ -81,7 +78,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
     }
 
     /**
-     * Listen to Hub messages on a particular channel,
+     * Listen to Hub messages on a particular channel.
      *
      * @param hubChannel The channel to listen for messages on
      * @param listener   The callback to invoke with the received message
@@ -96,7 +93,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
     }
 
     /**
-     * Listen to Hub messages on a particular channel,
+     * Listen to Hub messages on a particular channel.
      *
      * @param hubChannel The channel to listen for messages on
      * @param hubPayloadFilter  candidate messages will be passed to this closure prior to dispatching to
@@ -113,8 +110,10 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
         final FilteredHubListener filteredHubListener = new FilteredHubListener(hubChannel, listenerId, hubPayloadFilter, listener);
 
         listenersByUUID.put(listenerId, filteredHubListener);
-        HashSet<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(hubChannel);
-        if (filteredHubListeners == null) {
+        Set<FilteredHubListener> filteredHubListeners;
+        if (listenersByHubChannel.containsKey(hubChannel)) {
+            filteredHubListeners = listenersByHubChannel.get(hubChannel);
+        } else {
             filteredHubListeners = new HashSet<FilteredHubListener>();
         }
         filteredHubListeners.add(filteredHubListener);
@@ -124,7 +123,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
     }
 
     /**
-     * The registered listener can be removed from the Hub system by passing the
+     * A subscribed listener can be removed from the Hub system by passing the
      * token received from {@link #subscribe(HubChannel, HubListener)} or
      * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
      *
@@ -137,7 +136,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
         final HubChannel hubChannel = subscriptionToken.getHubChannel();
         listenersByUUID.remove(subscriptionToken.getUuid());
 
-        HashSet<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(subscriptionToken.getHubChannel());
+        Set<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(subscriptionToken.getHubChannel());
         if (filteredHubListeners == null) {
             Log.e(TAG, "Cannot find the listener for listenerId: " + listenerId + " by channel: " + hubChannel);
             return;
@@ -159,7 +158,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
      */
     @Override
     public String getPluginKey() {
-        return "DefaultHubCategoryPlugin";
+        return BackgroundExecutorHubPlugin.class.getSimpleName();
     }
 
     /**

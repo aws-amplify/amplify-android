@@ -19,7 +19,7 @@ import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.ConfigurationException;
 
 /**
  * Defines the Client API consumed by the application.

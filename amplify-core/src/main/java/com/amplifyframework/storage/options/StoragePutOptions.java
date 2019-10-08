@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * Options to specify attributes of put API invocation
  */
-public class StoragePutOptions extends Options {
+public class StoragePutOptions implements Options {
     public StorageAccessLevel accessLevel;
     public String contentType;
     public Map<String, String> metadata;

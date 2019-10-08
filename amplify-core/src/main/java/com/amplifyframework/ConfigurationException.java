@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.exception;
+package com.amplifyframework;
 
 /**
  * Exceptions associated with configuring and inspecting Amplify Categories

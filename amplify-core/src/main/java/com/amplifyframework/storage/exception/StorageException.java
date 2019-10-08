@@ -1,6 +1,6 @@
 package com.amplifyframework.storage.exception;
 
-import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.ConfigurationException;
 
 public class StorageException extends ConfigurationException {
 

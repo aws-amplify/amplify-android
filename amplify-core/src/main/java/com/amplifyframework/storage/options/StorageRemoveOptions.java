@@ -21,7 +21,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 /**
  * Options to specify attributes of unsubscribe API invocation
  */
-public class StorageRemoveOptions extends Options {
+public class StorageRemoveOptions implements Options {
     public StorageAccessLevel accessLevel;
     public Options options;
 

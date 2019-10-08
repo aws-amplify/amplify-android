@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.exception;
 
-import com.amplifyframework.core.exception.AmplifyException;
+import com.amplifyframework.AmplifyException;
 
 /**
  * Exception encountered in list API of Storage category
