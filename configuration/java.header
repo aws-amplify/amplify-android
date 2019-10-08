@@ -13,7 +13,3 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.task;
-
-public class Result {
-}

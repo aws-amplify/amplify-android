@@ -29,3 +29,4 @@ public abstract class AnalyticsPlugin<C, E> implements AnalyticsCategoryBehavior
         return CategoryType.ANALYTICS;
     }
 }
+

@@ -18,8 +18,8 @@ package com.amplifyframework.core.category;
 import android.support.annotation.NonNull;
 
 import com.amplifyframework.core.exception.ConfigurationException;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.HashSet;
 import java.util.Map;
@@ -54,7 +54,7 @@ public abstract class Category<P extends Plugin> implements CategoryTypeable {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
 
-            for (P plugin : getPlugins()) {
+        for (P plugin : getPlugins()) {
             String pluginKey = plugin.getPluginKey();
             Object pluginConfig = configuration.pluginConfigs.get(pluginKey);
 

@@ -16,7 +16,6 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
@@ -37,13 +36,13 @@ import java.util.Scanner;
  */
 public class AmplifyConfiguration {
 
+    static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
+
     public AnalyticsCategoryConfiguration analytics;
     public ApiCategoryConfiguration api;
     public HubCategoryConfiguration hub;
     public LoggingCategoryConfiguration logging;
     public StorageCategoryConfiguration storage;
-
-    static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
     private JSONObject mJSONObject;
 

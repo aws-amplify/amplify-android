@@ -19,13 +19,7 @@ import android.content.Context;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.core.task.Result;
-
-import org.json.JSONObject;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,10 +30,10 @@ public class DefaultHubPlugin extends HubPlugin {
 
     private static final String TAG = DefaultHubPlugin.class.getSimpleName();
 
-    private Context context;
-
     private static Map<Integer, HubCallback> listeners =
             new ConcurrentHashMap<Integer, HubCallback>();
+
+    private Context context;
 
     private ExecutorService executorService = Executors.newCachedThreadPool();
 
