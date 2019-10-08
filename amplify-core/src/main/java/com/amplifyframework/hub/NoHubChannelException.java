@@ -3,6 +3,10 @@ package com.amplifyframework.hub;
 import com.amplifyframework.AmplifyRuntimeException;
 
 public class NoHubChannelException extends AmplifyRuntimeException {
+
+    /** Default serial version UID. */
+    private static final long serialVersionUID = 4L;
+
     /**
      * Creates a new AmplifyRuntimeException with the specified message, and root
      * cause.

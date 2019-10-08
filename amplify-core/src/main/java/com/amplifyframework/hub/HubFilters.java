@@ -73,7 +73,7 @@ public class HubFilters {
         };
     }
 
-    public static HubPayloadFilter hubPayloadFilter(@NonNull final AmplifyOperation operation) {
+    public static HubPayloadFilter hubPayloadFilter(@NonNull final AmplifyOperation<?> operation) {
         return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {

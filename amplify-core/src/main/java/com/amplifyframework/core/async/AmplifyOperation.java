@@ -33,7 +33,7 @@ import java.util.UUID;
  * Pausable/resumable tasks that do not require Hub dispatching should use {@link AsyncOperation} instead.
  */
 public abstract class AmplifyOperation
-        <R extends AmplifyOperationRequest>
+        <R extends AmplifyOperationRequest<?>>
         implements AsyncOperation {
 
     // Incoming parameters of the original request. The Request will be included as part of the
@@ -69,7 +69,7 @@ public abstract class AmplifyOperation
      */
     public AmplifyOperation(@NonNull final CategoryType categoryType,
                             @NonNull final R request,
-                            @Nullable final EventListener eventListener) {
+                            @Nullable final EventListener<?> eventListener) {
         this.categoryType = categoryType;
         this.request = request;
         this.operationId = UUID.randomUUID();

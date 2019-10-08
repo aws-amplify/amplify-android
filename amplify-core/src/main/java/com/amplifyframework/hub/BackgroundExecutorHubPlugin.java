@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
+public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
 
@@ -168,7 +168,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void, Void> {
      * @throws PluginException when configuration for a plugin was not found
      */
     @Override
-    public void configure(Void pluginConfiguration) throws PluginException {
+    public void configure(@NonNull Object pluginConfiguration) throws PluginException {
 
     }
 

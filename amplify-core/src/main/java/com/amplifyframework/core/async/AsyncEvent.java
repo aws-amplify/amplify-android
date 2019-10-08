@@ -36,9 +36,9 @@ public final class AsyncEvent<T> {
 
     private final T eventData;
 
-    private final AmplifyOperation generatedByAmplifyOperation;
+    private final AmplifyOperation<?> generatedByAmplifyOperation;
 
-    public AsyncEvent(String eventName, State eventState, T eventData, AmplifyOperation generatedByAmplifyOperation) {
+    public AsyncEvent(String eventName, State eventState, T eventData, AmplifyOperation<?> generatedByAmplifyOperation) {
         this.eventName = eventName;
         this.eventState = eventState;
         this.eventData = eventData;
@@ -57,7 +57,7 @@ public final class AsyncEvent<T> {
         return eventData;
     }
 
-    public AmplifyOperation getGeneratedByAmplifyOperation() {
+    public AmplifyOperation<?> getGeneratedByAmplifyOperation() {
         return generatedByAmplifyOperation;
     }
 }

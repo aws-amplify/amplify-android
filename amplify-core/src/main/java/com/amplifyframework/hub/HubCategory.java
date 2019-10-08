@@ -103,8 +103,8 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
      * @param eventListener The Operation-specific listener callback to be invoked
      *                 when an AsyncEvent for that operation is received.
      */
-    public <R extends AmplifyOperationRequest, E> SubscriptionToken subscribe(@NonNull final AmplifyOperation<R> operation,
-                                                                              @NonNull final EventListener<E> eventListener) {
+    public <R extends AmplifyOperationRequest<?>, E> SubscriptionToken subscribe(@NonNull final AmplifyOperation<R> operation,
+                                                                                 @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);
         HubListener transformingListener = new HubListener() {
@@ -112,7 +112,7 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
             public void onEvent(@NonNull HubPayload payload) {
                 // TODO: check for casting of Object to E and
                 // see if it can be prevented.
-                eventListener.onEvent((E) payload.getEventData());
+                // eventListener.onEvent(payload.getEventData());
             }
         };
 

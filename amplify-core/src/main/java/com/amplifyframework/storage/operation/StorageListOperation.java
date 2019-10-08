@@ -23,9 +23,9 @@ import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
 
-public class StorageListOperation extends AmplifyOperation {
+public class StorageListOperation extends AmplifyOperation<AmplifyOperationRequest<?>> {
 
-    public StorageListOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
+    public StorageListOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest<?> request, @Nullable EventListener<?> eventListener) {
         super(categoryType, request, eventListener);
     }
 

@@ -23,9 +23,9 @@ import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
 
-public class StorageRemoveOperation extends AmplifyOperation {
+public class StorageRemoveOperation extends AmplifyOperation<AmplifyOperationRequest<?>> {
 
-    public StorageRemoveOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest request, @Nullable EventListener eventListener) {
+    public StorageRemoveOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest<?> request, @Nullable EventListener<?> eventListener) {
         super(categoryType, request, eventListener);
     }
 

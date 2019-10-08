@@ -15,12 +15,9 @@
 
 package com.amplifyframework.hub;
 
-<<<<<<< HEAD
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-=======
->>>>>>> master
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
@@ -64,7 +61,6 @@ public interface HubCategoryBehavior {
                                 @Nullable final HubPayloadFilter hubPayloadFilter,
                                 @Nullable final HubListener listener) throws HubException;
 
-<<<<<<< HEAD
     /**
      * The registered listener can be removed from the Hub system by passing the
      * token received from {@link #subscribe(HubChannel, HubListener)} or
@@ -75,8 +71,3 @@ public interface HubCategoryBehavior {
      */
     void unsubscribe(@NonNull final SubscriptionToken subscriptionToken) throws HubException;
 }
-=======
-    void remove(HubChannel hubChannel, HubCallback callback);
-}
-
->>>>>>> master
