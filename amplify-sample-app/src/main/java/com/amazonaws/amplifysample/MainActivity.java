@@ -20,17 +20,9 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-
-import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.pinpoint.AmazonPinpointAnalyticsPlugin;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.plugin.PluginException;
-
-import org.json.JSONObject;
+import android.view.View;
 
 public class MainActivity extends AppCompatActivity {
 

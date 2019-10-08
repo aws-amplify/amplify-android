@@ -25,6 +25,12 @@ import java.util.Map;
  */
 public class AnalyticsEvent {
 
+    private String eventName;
+    private Map<String, String> attributes;
+    private String eventType;
+    private Map<String, Double> metrics;
+    private Map<String, String> data;
+
     /**
      * Construct an AnalyticEvent based on the eventName.
      *
@@ -33,12 +39,6 @@ public class AnalyticsEvent {
     public AnalyticsEvent(@NonNull String eventName) {
         this.eventName = eventName;
     }
-
-    private String eventName;
-    private Map<String, String> attributes;
-    private String eventType;
-    private Map<String, Double> metrics;
-    private Map<String, String> data;
 
     /**
      * @return map representing the event attributes.
@@ -101,3 +101,4 @@ public class AnalyticsEvent {
         this.data = data;
     }
 }
+

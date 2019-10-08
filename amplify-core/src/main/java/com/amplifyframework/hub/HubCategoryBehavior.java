@@ -15,11 +15,6 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-
-import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.task.Result;
-
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
@@ -32,3 +27,4 @@ public interface HubCategoryBehavior {
 
     void remove(HubChannel hubChannel, HubCallback callback);
 }
+

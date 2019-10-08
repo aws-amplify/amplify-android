@@ -63,3 +63,4 @@ public interface AnalyticsCategoryBehavior {
      */
     void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException;
 }
+

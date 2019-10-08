@@ -20,6 +20,6 @@ public enum HubChannel {
     API,
     HUB,
     LOGGING,
-    STORAGE
-    ;
+    STORAGE;
 }
+
