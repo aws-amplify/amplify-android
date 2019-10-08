@@ -23,9 +23,10 @@ import com.amplifyframework.core.plugin.Plugin;
  * would extend. This includes the client behavior dictated by
  * {@link LoggingCategoryBehavior} and {@link Plugin}.
  */
-public abstract class LoggingPlugin<C, E> implements LoggingCategoryBehavior, Plugin<C, E> {
+public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugin<E> {
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.LOGGING;
     }
 }
+

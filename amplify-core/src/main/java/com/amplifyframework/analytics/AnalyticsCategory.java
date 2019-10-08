@@ -26,18 +26,24 @@ import com.amplifyframework.ConfigurationException;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class AnalyticsCategory extends Category<AnalyticsPlugin> implements AnalyticsCategoryBehavior {
-    /**
-     * By default collection and sending of Analytics events
-     * are enabled.
-     */
-    private boolean enabled;
+public class AnalyticsCategory extends Category<AnalyticsPlugin<?>> implements AnalyticsCategoryBehavior {
 
     /**
      * Protect enabling and disabling of Analytics event
      * collection and sending.
      */
     private static final Object LOCK = new Object();
+
+    /**
+     * By default collection and sending of Analytics events
+     * are enabled.
+     */
+    private boolean enabled;
+
+    public AnalyticsCategory() {
+        super();
+        this.enabled = true;
+    }
 
     /**
      * Retrieve the Analytics category type enum
@@ -47,11 +53,6 @@ public class AnalyticsCategory extends Category<AnalyticsPlugin> implements Anal
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.ANALYTICS;
-    }
-
-    public AnalyticsCategory() {
-        super();
-        this.enabled = true;
     }
 
     @Override

@@ -29,7 +29,7 @@ import com.amplifyframework.core.plugin.PluginException;
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin {
+public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
 
@@ -65,7 +65,6 @@ public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin {
     public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException {
 
     }
-
 
     @Override
     public String getPluginKey() {

@@ -72,3 +72,4 @@ public enum HubChannel {
         throw new NoHubChannelException("No HubChannel found for the CategoryType: " + categoryType);
     }
 }
+

@@ -34,7 +34,9 @@ public class AmplifyException extends Exception {
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public AmplifyException(final String message, final Throwable t) { super(message, t); }
+    public AmplifyException(final String message, final Throwable t) {
+        super(message, t);
+    }
 
     /**
      * Creates a new AmplifyException with the specified message.
@@ -57,7 +59,9 @@ public class AmplifyException extends Exception {
     /**
      * Returns customized recovery suggestion message
      */
-    public String getRecoverySuggestion() { return recoverySuggestion; }
+    public String getRecoverySuggestion() {
+        return recoverySuggestion;
+    }
 
     /**
      * Returns a hint as to whether it makes sense to retry upon this exception.
@@ -68,3 +72,4 @@ public class AmplifyException extends Exception {
         return true;
     }
 }
+

@@ -31,7 +31,7 @@ import com.amplifyframework.core.category.CategoryType;
  * when specific events occur, such as authentication events like a user sign-in or
  * notification of a file download.
  */
-public class HubCategory extends Category<HubPlugin> implements HubCategoryBehavior {
+public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBehavior {
 
     /**
      * Dispatch a Hub message on the specified channel

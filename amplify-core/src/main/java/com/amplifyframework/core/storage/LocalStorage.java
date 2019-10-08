@@ -13,14 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.logging;
+package com.amplifyframework.core.storage;
 
-import com.amplifyframework.core.category.Category;
-import com.amplifyframework.core.category.CategoryType;
-
-public class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
-    @Override
-    public final CategoryType getCategoryType() {
-        return CategoryType.LOGGING;
-    }
+public class LocalStorage {
 }

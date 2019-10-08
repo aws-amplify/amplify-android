@@ -91,3 +91,4 @@ public final class HubPayload {
         return getPayloadId().hashCode();
     }
 }
+

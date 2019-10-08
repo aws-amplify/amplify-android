@@ -23,7 +23,7 @@ import com.amplifyframework.core.category.CategoryTypeable;
  * Interface that defines the contract that every plugin
  * in Amplify System will adhere to.
  */
-public interface Plugin<C, E> extends CategoryTypeable {
+public interface Plugin<E> extends CategoryTypeable {
     /**
      * @return the identifier that identifies
      *         the plugin implementation
@@ -36,7 +36,7 @@ public interface Plugin<C, E> extends CategoryTypeable {
      * @param pluginConfiguration plugin-specific configuration
      * @throws PluginException when configuration for a plugin was not found
      */
-    void configure(@NonNull C pluginConfiguration) throws PluginException;
+    void configure(@NonNull Object pluginConfiguration) throws PluginException;
 
     /**
      * Returns escape hatch for plugin to enable lower-level client use-cases

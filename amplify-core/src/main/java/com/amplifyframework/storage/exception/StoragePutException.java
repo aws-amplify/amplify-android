@@ -21,14 +21,31 @@ import com.amplifyframework.AmplifyException;
  * Exception encountered in put API of Storage category
  */
 public class StoragePutException extends AmplifyException {
+
+    private static final long serialVersionUID = 1L;
+
     /**
      * Specifies that exception was due to missing file
      */
     public static class MissingFileException extends StoragePutException {
-        public MissingFileException() { super("Missing file to store."); }
-        public MissingFileException(String message) { super(message); }
-        public MissingFileException(Throwable throwable) { super(throwable); }
-        public MissingFileException(String message, Throwable t) { super(message, t); }
+
+        private static final long serialVersionUID = 1L;
+
+        public MissingFileException() {
+            super("Missing file to store.");
+        }
+
+        public MissingFileException(String message) {
+            super(message);
+        }
+
+        public MissingFileException(Throwable throwable) {
+            super(throwable);
+        }
+
+        public MissingFileException(String message, Throwable t) {
+            super(message, t);
+        }
     }
 
     /**
@@ -38,19 +55,26 @@ public class StoragePutException extends AmplifyException {
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public StoragePutException(final String message, final Throwable t) { super(message, t); }
+    public StoragePutException(final String message, final Throwable t) {
+        super(message, t);
+    }
 
     /**
      * Creates a new StoragePutException with the specified message.
      *
      * @param message An error message describing why this exception was thrown.
      */
-    public StoragePutException(final String message) { super(message); }
+    public StoragePutException(final String message) {
+        super(message);
+    }
 
     /**
      * Creates a new StoragePutException with the root cause.
      *
      * @param throwable The underlying cause of this exception.
      */
-    public StoragePutException(final Throwable throwable) { super(throwable); }
+    public StoragePutException(final Throwable throwable) {
+        super(throwable);
+    }
 }
+

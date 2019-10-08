@@ -26,7 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
-public abstract class Category<P extends Plugin> implements CategoryTypeable {
+public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
     /**
      * Map of the { pluginKey => plugin } object
      */

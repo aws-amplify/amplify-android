@@ -20,11 +20,22 @@ import android.support.annotation.NonNull;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.storage.exception.*;
-import com.amplifyframework.storage.operation.*;
-import com.amplifyframework.storage.options.*;
-import com.amplifyframework.storage.result.*;
-
+import com.amplifyframework.storage.exception.StorageGetException;
+import com.amplifyframework.storage.exception.StorageListException;
+import com.amplifyframework.storage.exception.StoragePutException;
+import com.amplifyframework.storage.exception.StorageRemoveException;
+import com.amplifyframework.storage.operation.StorageGetOperation;
+import com.amplifyframework.storage.operation.StorageListOperation;
+import com.amplifyframework.storage.operation.StoragePutOperation;
+import com.amplifyframework.storage.operation.StorageRemoveOperation;
+import com.amplifyframework.storage.options.StorageGetOptions;
+import com.amplifyframework.storage.options.StorageListOptions;
+import com.amplifyframework.storage.options.StoragePutOptions;
+import com.amplifyframework.storage.options.StorageRemoveOptions;
+import com.amplifyframework.storage.result.StorageGetResult;
+import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.result.StoragePutResult;
+import com.amplifyframework.storage.result.StorageRemoveResult;
 
 /**
  * Defines the Client API consumed by the application.
@@ -32,7 +43,7 @@ import com.amplifyframework.storage.result.*;
  * plugins registered.
  */
 
-public class StorageCategory extends Category<StoragePlugin> implements StorageCategoryBehavior {
+public class StorageCategory extends Category<StoragePlugin<?>> implements StorageCategoryBehavior {
     /**
      * Retrieve the Storage category type enum
      *
