@@ -23,7 +23,7 @@ import com.amplifyframework.core.plugin.Plugin;
  * would extend. This includes the client behavior dictated by
  * {@link HubCategoryBehavior} and {@link Plugin}.
  */
-public abstract class HubPlugin<C, E> implements HubCategoryBehavior, Plugin<C, E> {
+public abstract class HubPlugin<E> implements HubCategoryBehavior, Plugin<E> {
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.HUB;

@@ -23,7 +23,7 @@ import com.amplifyframework.core.plugin.Plugin;
  * would extend. This includes the client behavior dictated by
  * {@link StorageCategoryBehavior} and {@link Plugin}.
  */
-public abstract class StoragePlugin<C, E> implements StorageCategoryBehavior, Plugin<C, E> {
+public abstract class StoragePlugin<E> implements StorageCategoryBehavior, Plugin<E> {
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.STORAGE;
