@@ -19,7 +19,13 @@ package com.amplifyframework.core.exception;
  * Exceptions associated with configuring and inspecting Amplify Categories
  */
 public class ConfigurationException extends AmplifyRuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     public static class AmplifyAlreadyConfiguredException extends ConfigurationException {
+
+        private static final long serialVersionUID = 1L;
+
         public AmplifyAlreadyConfiguredException() {
             super("The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.");
         }
@@ -38,6 +44,9 @@ public class ConfigurationException extends AmplifyRuntimeException {
     }
 
     public static class InvalidAmplifyConfigurationFileException extends ConfigurationException {
+
+        private static final long serialVersionUID = 1L;
+
         public InvalidAmplifyConfigurationFileException() {
             super("The specified `amplifyconfiguration.json` file was not present or unreadable.");
         }
@@ -56,6 +65,9 @@ public class ConfigurationException extends AmplifyRuntimeException {
     }
 
     public static class UnableToDecodeException extends ConfigurationException {
+
+        private static final long serialVersionUID = 1L;
+
         public UnableToDecodeException() {
             super("Unable to decode `amplifyconfiguration.json` into a valid AmplifyConfiguration object");
         }
@@ -102,3 +114,4 @@ public class ConfigurationException extends AmplifyRuntimeException {
         super(throwable);
     }
 }
+

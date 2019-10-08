@@ -137,7 +137,7 @@ public final class Amplify {
      * @throws PluginException when a plugin cannot be registered for the category type it belongs to
      *                         or when when the plugin's category type is not supported by Amplify.
      */
-    public static <P extends Plugin> void addPlugin(@NonNull final P plugin) throws PluginException {
+    public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
                 throw new PluginException.EmptyKeyException();
@@ -186,7 +186,7 @@ public final class Amplify {
         }
     }
 
-    public static <P extends Plugin> void removePlugin(@NonNull final P plugin) throws PluginException {
+    public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             switch (plugin.getCategoryType()) {
                 case API:

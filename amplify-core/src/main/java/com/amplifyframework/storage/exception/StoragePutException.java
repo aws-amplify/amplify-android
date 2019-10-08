@@ -22,10 +22,15 @@ import com.amplifyframework.core.exception.AmplifyException;
  */
 public class StoragePutException extends AmplifyException {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Specifies that exception was due to missing file
      */
     public static class MissingFileException extends StoragePutException {
+
+        private static final long serialVersionUID = 1L;
+
         public MissingFileException() {
             super("Missing file to store.");
         }

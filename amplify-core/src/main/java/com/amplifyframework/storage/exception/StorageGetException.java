@@ -22,10 +22,15 @@ import com.amplifyframework.core.exception.AmplifyException;
  */
 public class StorageGetException extends AmplifyException {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Specifies that exception was due to object not being found
      */
     public static class NotFoundException extends StorageGetException {
+
+        private static final long serialVersionUID = 1L;
+
         public NotFoundException() {
             super("No object is associated with provided key.");
         }
