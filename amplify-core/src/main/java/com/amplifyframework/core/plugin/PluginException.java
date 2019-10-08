@@ -21,10 +21,16 @@ import com.amplifyframework.core.exception.AmplifyRuntimeException;
  * Exceptions associated with configuring and inspecting Amplify Plugins
  */
 public class PluginException extends AmplifyRuntimeException {
+
+    private static final long serialVersionUID = 1L;
+
     /**
      * The plugin encountered an error during configuration
      */
     public static class PluginConfigurationException extends PluginException {
+
+        private static final long serialVersionUID = 1L;
+
         public PluginConfigurationException() {
             super("The plugin encountered an error during configuration");
         }
@@ -46,6 +52,9 @@ public class PluginException extends AmplifyRuntimeException {
      * The plugin's `key` property is empty
      */
     public static class EmptyKeyException extends PluginException {
+
+        private static final long serialVersionUID = 1L;
+
         public EmptyKeyException() {
             super("The plugin's `key` property is empty");
         }
@@ -67,6 +76,9 @@ public class PluginException extends AmplifyRuntimeException {
      * A plugin is being added to the wrong category
      */
     public static class MismatchedPluginException extends PluginException {
+
+        private static final long serialVersionUID = 1L;
+
         public MismatchedPluginException() {
             super("A plugin is being added to the wrong category");
         }
@@ -88,6 +100,9 @@ public class PluginException extends AmplifyRuntimeException {
      * The plugin specified by `getPlugin(key)` does not exist
      */
     public static class NoSuchPluginException extends PluginException {
+
+        private static final long serialVersionUID = 1L;
+
         public NoSuchPluginException() {
             super("The plugin specified by `getPlugin(key)` does not exist");
         }
@@ -107,6 +122,9 @@ public class PluginException extends AmplifyRuntimeException {
 
     /** There are multiple registered plugins for a category */
     public static class MultiplePluginsException extends PluginException {
+
+        private static final long serialVersionUID = 1L;
+
         public MultiplePluginsException() {
             super("There is more than one plugin registered in this category");
         }

@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class DefaultHubPlugin extends HubPlugin {
+public class DefaultHubPlugin extends HubPlugin<Object> {
 
     private static final String TAG = DefaultHubPlugin.class.getSimpleName();
 

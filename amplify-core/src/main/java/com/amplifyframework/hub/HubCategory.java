@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class HubCategory extends Category<HubPlugin> implements HubCategoryBehavior {
+public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBehavior {
     private static Map<HubChannel, ArrayList<Callback<? extends Result>>> callbacks =
             new HashMap<HubChannel, ArrayList<Callback<? extends Result>>>();
 
