@@ -19,7 +19,12 @@ import com.amplifyframework.core.exception.ConfigurationException;
 
 public class StorageException extends ConfigurationException {
 
+    private static final long serialVersionUID = 1L;
+
     public static class StorageNotConfiguredException extends StorageException {
+
+        private static final long serialVersionUID = 1L;
+
         public StorageNotConfiguredException() {
             super("Storage category is not configured. Please configure it through Amplify.configure(context)");
         }
@@ -66,3 +71,4 @@ public class StorageException extends ConfigurationException {
         super(throwable);
     }
 }
+

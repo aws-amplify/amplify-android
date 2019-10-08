@@ -22,6 +22,8 @@ import com.amplifyframework.core.exception.AmplifyException;
  */
 public class StorageRemoveException extends AmplifyException {
 
+    private static final long serialVersionUID = 1L;
+
     /**
      * Creates a new StorageRemoveException with the specified message, and root
      * cause.

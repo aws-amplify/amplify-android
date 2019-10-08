@@ -23,7 +23,7 @@ import com.amplifyframework.core.plugin.Plugin;
  * would extend. This includes the client behavior dictated by
  * {@link AnalyticsCategoryBehavior} and {@link Plugin}.
  */
-public abstract class AnalyticsPlugin<C, E> implements AnalyticsCategoryBehavior, Plugin<C, E> {
+public abstract class AnalyticsPlugin<E> implements AnalyticsCategoryBehavior, Plugin<E> {
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.ANALYTICS;

@@ -43,7 +43,7 @@ import com.amplifyframework.storage.result.StorageRemoveResult;
  * plugins registered.
  */
 
-public class StorageCategory extends Category<StoragePlugin> implements StorageCategoryBehavior {
+public class StorageCategory extends Category<StoragePlugin<?>> implements StorageCategoryBehavior {
     /**
      * Retrieve the Storage category type enum
      *

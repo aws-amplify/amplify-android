@@ -18,7 +18,7 @@ package com.amplifyframework.api;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
-public abstract class ApiPlugin<C, E> implements ApiCategoryBehavior, Plugin<C, E> {
+public abstract class ApiPlugin<E> implements ApiCategoryBehavior, Plugin<E> {
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.API;

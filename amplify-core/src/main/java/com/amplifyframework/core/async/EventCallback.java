@@ -17,6 +17,6 @@ package com.amplifyframework.core.async;
 
 import com.amplifyframework.core.task.AmplifyEvent;
 
-public interface EventCallback extends Callback {
+public interface EventCallback extends Callback<AmplifyEvent> {
     void onEvent(AmplifyEvent event);
 }

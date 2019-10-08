@@ -25,7 +25,7 @@ import com.amplifyframework.core.category.CategoryType;
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class AnalyticsCategory extends Category<AnalyticsPlugin> implements AnalyticsCategoryBehavior {
+public class AnalyticsCategory extends Category<AnalyticsPlugin<?>> implements AnalyticsCategoryBehavior {
 
     /**
      * Protect enabling and disabling of Analytics event
@@ -89,3 +89,4 @@ public class AnalyticsCategory extends Category<AnalyticsPlugin> implements Anal
         }
     }
 }
+
