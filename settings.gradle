@@ -13,4 +13,4 @@
  * permissions and limitations under the License.
  */
 
-include ':amplify-core', ':aws-amplify-analytics-pinpoint', ':aws-amplify-storage-s3', ':amplify-sample-app'
+include ':amplify-core', ':aws-amplify-analytics-pinpoint', ':aws-amplify-storage-s3'

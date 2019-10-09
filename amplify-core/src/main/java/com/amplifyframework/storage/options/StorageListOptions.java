@@ -15,13 +15,13 @@
 
 package com.amplifyframework.storage.options;
 
-import com.amplifyframework.core.task.Options;
+import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
  * Options to specify attributes of list API invocation
  */
-public class StorageListOptions extends Options {
+public class StorageListOptions implements Options {
     public StorageAccessLevel accessLevel;
     public String targetIdentityId;
     public String path;

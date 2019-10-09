@@ -15,7 +15,7 @@
 
 package com.amplifyframework.core.plugin;
 
-import com.amplifyframework.core.exception.AmplifyRuntimeException;
+import com.amplifyframework.AmplifyRuntimeException;
 
 /**
  * Exceptions associated with configuring and inspecting Amplify Plugins

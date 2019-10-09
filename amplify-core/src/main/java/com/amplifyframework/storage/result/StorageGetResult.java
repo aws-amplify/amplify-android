@@ -15,11 +15,11 @@
 
 package com.amplifyframework.storage.result;
 
-import com.amplifyframework.core.task.Result;
+import com.amplifyframework.core.async.Result;
 
 import java.io.File;
 
-public class StorageGetResult extends Result {
+public class StorageGetResult implements Result {
     /**
      * Downloaded local file
      */

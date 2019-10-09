@@ -15,9 +15,9 @@
 
 package com.amplifyframework.storage.result;
 
-import com.amplifyframework.core.task.Result;
+import com.amplifyframework.core.async.Result;
 
-public class StoragePutResult extends Result {
+public class StoragePutResult implements Result {
     public String key;
 
     public StoragePutResult(String key) {

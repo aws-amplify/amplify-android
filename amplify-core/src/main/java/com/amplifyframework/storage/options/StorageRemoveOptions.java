@@ -15,13 +15,13 @@
 
 package com.amplifyframework.storage.options;
 
-import com.amplifyframework.core.task.Options;
+import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Options to specify attributes of remove API invocation
+ * Options to specify attributes of unsubscribe API invocation
  */
-public class StorageRemoveOptions extends Options {
+public class StorageRemoveOptions implements Options {
     public StorageAccessLevel accessLevel;
     public Options options;
 

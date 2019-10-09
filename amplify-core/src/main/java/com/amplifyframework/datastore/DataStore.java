@@ -15,15 +15,15 @@
 
 package com.amplifyframework.datastore;
 
-import com.amplifyframework.core.async.Callback;
-import com.amplifyframework.core.task.Result;
+import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.async.Result;
 
 public interface DataStore<T> {
-    void save(T object, Callback<Result> callback);
+    void save(T object, Listener<Result> callback);
 
-    void delete(T object, Callback<Result> callback);
+    void delete(T object, Listener<Result> callback);
 
-    void query(Class<T> objects, Callback<Result> callback);
+    void query(Class<T> objects, Listener<Result> callback);
 
-    void observe(T object, Callback<Result> callback);
+    void observe(T object, Listener<Result> callback);
 }
