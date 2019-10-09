@@ -16,7 +16,6 @@
 package com.amplifyframework.hub;
 
 import android.util.Log;
-import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
@@ -54,13 +53,9 @@ public final class HubInstrumentedTest {
     @Test
     public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-                new HubListener() {
-                    @Override
-                    public void onEvent(@NonNull HubPayload payload) {
-                        waitUntilSubscriptionIsReceived.countDown();
-                    }
-                });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
+            waitUntilSubscriptionIsReceived.countDown();
+        });
         assertNotNull(token);
         assertNotNull(token.getUuid());
 
@@ -80,17 +75,12 @@ public final class HubInstrumentedTest {
     public void isSubscriptionReceived() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-                new HubListener() {
-                    @Override
-                    public void onEvent(@NonNull HubPayload payload) {
-                        if (payload.getEventData() instanceof String) {
-                            Log.d(TAG, "String: => " + payload.getEventName() + ":" +
-                                    payload.getEventData());
-                            waitUntilSubscriptionIsReceived.countDown();
-                        }
-                    }
-                });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
+            if (payload.getEventData() instanceof String) {
+                Log.d(TAG, "String: => " + payload.getEventName() + ":" + payload.getEventData());
+                waitUntilSubscriptionIsReceived.countDown();
+            }
+        });
 
         Amplify.Hub.publish(HubChannel.STORAGE,
                 new HubPayload("weatherString", "Too Cold in Seattle."));
@@ -110,15 +100,10 @@ public final class HubInstrumentedTest {
     public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException {
         final CountDownLatch subscriptionReceived = new CountDownLatch(1);
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-                new HubListener() {
-                    @Override
-                    public void onEvent(@NonNull HubPayload payload) {
-                        Log.e(TAG, "Not expecting a subscription to be " +
-                                "received after unsubscribe.");
-                        subscriptionReceived.countDown();
-                    }
-                });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
+            Log.e(TAG, "Not expecting a subscription to be received after unsubscribe.");
+            subscriptionReceived.countDown();
+        });
 
         Amplify.Hub.unsubscribe(token);
 
@@ -140,18 +125,13 @@ public final class HubInstrumentedTest {
         final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
         final List<Integer> subscriptionsReceived = new ArrayList<Integer>();
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-                new HubListener() {
-                    @Override
-                    public void onEvent(@NonNull HubPayload payload) {
-                        if (payload.getEventData() instanceof Integer) {
-                            Log.d(TAG, "Integer: => " + payload.getEventName() +
-                                    ":" + payload.getEventData());
-                            subscriptionsReceived.add((Integer) payload.getEventData());
-                            allSubscriptionsReceived.countDown();
-                        }
-                    }
-                });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
+            if (payload.getEventData() instanceof Integer) {
+                Log.d(TAG, "Integer: => " + payload.getEventName() + ":" + payload.getEventData());
+                subscriptionsReceived.add((Integer) payload.getEventData());
+                allSubscriptionsReceived.countDown();
+            }
+        });
 
         for (int i = 0; i < numPublications; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,
@@ -185,23 +165,17 @@ public final class HubInstrumentedTest {
         final List<String> stringSubscriptionsReceived = new ArrayList<String>();
         final String stringSubscriptionValue = "weatherAlwaysRemainsTheSame";
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-                new HubListener() {
-                    @Override
-                    public void onEvent(@NonNull HubPayload payload) {
-                        if (payload.getEventData() instanceof Integer) {
-                            Log.d(TAG, "Integer: => " + payload.getEventName() +
-                                    ":" + payload.getEventData());
-                            integerSubscriptionsReceived.add((Integer) payload.getEventData());
-                            allSubscriptionsReceived.countDown();
-                        } else if (payload.getEventData() instanceof String) {
-                            Log.d(TAG, "String: => " + payload.getEventName() +
-                                    ":" + payload.getEventData());
-                            stringSubscriptionsReceived.add((String) payload.getEventData());
-                            allSubscriptionsReceived.countDown();
-                        }
-                    }
-                });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
+            if (payload.getEventData() instanceof Integer) {
+                Log.d(TAG, "Integer: => " + payload.getEventName() + ":" + payload.getEventData());
+                integerSubscriptionsReceived.add((Integer) payload.getEventData());
+                allSubscriptionsReceived.countDown();
+            } else if (payload.getEventData() instanceof String) {
+                Log.d(TAG, "String: => " + payload.getEventName() + ":" + payload.getEventData());
+                stringSubscriptionsReceived.add((String) payload.getEventData());
+                allSubscriptionsReceived.countDown();
+            }
+        });
 
         for (int i = 0; i < numPublications / numDataTypes; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,

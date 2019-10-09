@@ -57,24 +57,19 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      */
     @Override
     public void publish(@NonNull final HubChannel hubChannel, @NonNull final HubPayload hubpayload) {
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                mainHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (listenersByHubChannel.containsKey(hubChannel)) {
-                            for (FilteredHubListener filteredHubListener :
-                                    listenersByHubChannel.get(hubChannel)) {
-                                if (filteredHubListener.getHubFilter() == null ||
-                                        filteredHubListener.getHubFilter().filter(hubpayload)) {
-                                    filteredHubListener.getHubListener().onEvent(hubpayload);
-                                }
-                            }
-                        }
+        executorService.submit(() -> {
+            mainHandler.post(() -> {
+                if (!listenersByHubChannel.containsKey(hubChannel)) {
+                    return;
+                }
+
+                for (FilteredHubListener filteredHubListener : listenersByHubChannel.get(hubChannel)) {
+                    if (filteredHubListener.getHubFilter() == null ||
+                            filteredHubListener.getHubFilter().filter(hubpayload)) {
+                        filteredHubListener.getHubListener().onEvent(hubpayload);
                     }
-                });
-            }
+                }
+            });
         });
     }
 

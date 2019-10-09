@@ -112,13 +112,10 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
             @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);
-        HubListener transformingListener = new HubListener() {
-            @Override
-            public void onEvent(@NonNull HubPayload payload) {
-                // TODO: check for casting of Object to E and
-                // see if it can be prevented.
-                // eventListener.onEvent(payload.getEventData());
-            }
+        HubListener transformingListener = payload -> {
+            // TODO: check for casting of Object to E and
+            // see if it can be prevented.
+            // eventListener.onEvent(payload.getEventData());
         };
 
         return subscribe(channel, filter, transformingListener);
