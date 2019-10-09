@@ -15,9 +15,9 @@
 
 package com.amplifyframework.core.plugin;
 
-import com.amplifyframework.core.category.CategoryTypeable;
-
 import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.category.CategoryTypeable;
 
 /**
  * Interface that defines the contract that every plugin

@@ -15,9 +15,9 @@
 
 package com.amplifyframework.hub;
 
-import com.amplifyframework.core.async.AmplifyOperation;
-
 import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.async.AmplifyOperation;
 
 public final class HubFilters {
 

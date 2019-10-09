@@ -23,53 +23,90 @@ import java.util.Map;
 /**
  * Options to specify attributes of put API invocation
  */
-public class StoragePutOptions implements Options {
-    public StorageAccessLevel accessLevel;
-    public String contentType;
-    public Map<String, String> metadata;
-    public Options options;
+public final class StoragePutOptions implements Options {
+    private final StorageAccessLevel accessLevel;
+    private final String contentType;
+    private final Map<String, String> metadata;
+    private final Options options;
 
-    /**
-     * Attaches storage access level attribute
-     *
-     * @param accessLevel access level for invoking API
-     * @return this options object for chaining other attributes
-     */
-    public StoragePutOptions withAccessLevel(StorageAccessLevel accessLevel) {
-        this.accessLevel = accessLevel;
-        return this;
+    StoragePutOptions(Builder builder) {
+        this.accessLevel = builder.accessLevel();
+        this.contentType = builder.contentType();
+        this.metadata = builder.metadata();
+        this.options = builder.options();
     }
 
-    /**
-     * Attaches content type of object
-     *
-     * @param contentType content type of object being stored
-     * @return this options object for chaining other attributes
-     */
-    public StoragePutOptions withContentType(String contentType) {
-        this.contentType = contentType;
-        return this;
+    public StorageAccessLevel accessLevel() {
+        return accessLevel;
     }
 
-    /**
-     * Attaches metadata to object being stored
-     *
-     * @param metadata map of metadata being attached to stored object
-     * @return this options object for chaining other attributes
-     */
-    public StoragePutOptions withMetadata(Map<String, String> metadata) {
-        this.metadata = metadata;
-        return this;
+    public String contentType() {
+        return contentType;
     }
 
-    /**
-     * Attaches additional options
-     *
-     * @param options additional options for custom purposes
-     * @return this options object for chaining other attributes
-     */
-    public StoragePutOptions withOptions(Options options) {
-        this.options = options;
-        return this;
+    public Map<String, String> metadata() {
+        return metadata;
+    }
+
+    public Options options() {
+        return options;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static StoragePutOptions create() {
+        return builder().build();
+    }
+
+    public static final class Builder {
+        private StorageAccessLevel accessLevel;
+        private String contentType;
+        private Map<String, String> metadata;
+        private Options options;
+
+        Builder() {
+        }
+
+        public Builder accessLevel(StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
+            return this;
+        }
+
+        public Builder contentType(String contentType) {
+            this.contentType = contentType;
+            return this;
+        }
+
+        public Builder metadata(Map<String, String> metadata) {
+            this.metadata = metadata;
+            return this;
+        }
+
+        public Builder options(Options options) {
+            this.options = options;
+            return this;
+        }
+
+        StorageAccessLevel accessLevel() {
+            return accessLevel;
+        }
+
+        String contentType() {
+            return contentType;
+        }
+
+        Map<String, String> metadata() {
+            return metadata;
+        }
+
+        Options options() {
+            return options;
+        }
+
+        public StoragePutOptions build() {
+            return new StoragePutOptions(this);
+        }
     }
 }

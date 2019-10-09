@@ -27,14 +27,10 @@ public enum StorageGetDestination {
     /**
      * Write to local file
      */
-    FILE() {
-        protected String path;
-    },
+    FILE,
 
     /**
      * Obtain pre-signed download URL that expires
      */
-    URL() {
-        protected int expires;
-    };
+    URL;
 }

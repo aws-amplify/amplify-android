@@ -160,7 +160,7 @@
         <module name="RedundantImport" />
         <module name="UnusedImports" />
         <module name="ImportOrder">
-            <property name="groups" value="android,com.amplifyframework,/(com|org|net)/,/^javax?\./"/>
+            <property name="groups" value="/^androidx?\./,com.amplifyframework,/(com|org|net)/,/^javax?\./"/>
             <property name="option" value="bottom" />
             <property name="separated" value="true" />
             <property name="sortStaticImportsAlphabetically" value="true" />
@@ -183,10 +183,13 @@
         <module name="DeclarationOrder" />
 
         <!-- Class design checks -->
+        <module name="DesignForExtension" />
         <module name="FinalClass" />
         <module name="HideUtilityClassConstructor" />
         <module name="InnerTypeLast" />
+        <module name="MutableException" />
         <module name="OneTopLevelClass" />
+        <module name="VisibilityModifier" />
     </module>
 
     <!-- Analyze stored @SuppressWarnings annotations. -->

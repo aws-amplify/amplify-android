@@ -33,7 +33,7 @@ public class AnalyticsException extends AmplifyRuntimeException {
      * @param t The underlying cause of this exception.
      */
     public AnalyticsException(final String message, final Throwable t) {
-        super(message, t);
+        super(message, t, null, true);
     }
 
     /**
@@ -42,7 +42,7 @@ public class AnalyticsException extends AmplifyRuntimeException {
      * @param message An error message describing why this exception was thrown.
      */
     public AnalyticsException(final String message) {
-        super(message);
+        this(message, null);
     }
 
     /**
@@ -51,15 +51,7 @@ public class AnalyticsException extends AmplifyRuntimeException {
      * @param throwable the cause of the exception.
      */
     public AnalyticsException(final Throwable throwable) {
-        super(throwable);
-    }
-
-    /**
-     * Returns a hint as to whether it makes sense to retry upon this exception.
-     * Default is true, but subclass may override.
-     * @return true if it is retryable.
-     */
-    public boolean isRetryable() {
-        return true;
+        this(null, throwable);
     }
 }
+

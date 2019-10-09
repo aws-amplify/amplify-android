@@ -21,53 +21,91 @@ import com.amplifyframework.storage.StorageAccessLevel;
 /**
  * Options to specify attributes of list API invocation
  */
-public class StorageListOptions implements Options {
-    public StorageAccessLevel accessLevel;
-    public String targetIdentityId;
-    public String path;
-    public Options options;
+public final class StorageListOptions implements Options {
+    private final StorageAccessLevel accessLevel;
+    private final String targetIdentityId;
+    private final String path;
+    private final Options options;
 
-    /**
-     * Attaches storage access level attribute
-     *
-     * @param accessLevel access level for invoking API
-     * @return this options object for chaining other attributes
-     */
-    public StorageListOptions withAccessLevel(StorageAccessLevel accessLevel) {
-        this.accessLevel = accessLevel;
-        return this;
+    public StorageListOptions(final Builder builder) {
+        this.accessLevel = builder.accessLevel();
+        this.targetIdentityId = builder.targetIdentityId();
+        this.path = builder.path();
+        this.options = builder.options();
     }
 
-    /**
-     * Attaches target identity ID attribute
-     *
-     * @param targetIdentityId target identity identifier for invoking get API
-     * @return this options object for chaining other attributes
-     */
-    public StorageListOptions withTargetIdentityId(String targetIdentityId) {
-        this.targetIdentityId = targetIdentityId;
-        return this;
+    public StorageAccessLevel getAccessLevel() {
+        return accessLevel;
     }
 
-    /**
-     * Attaches specific path to obtain list of objects from
-     *
-     * @param path the path to retrieve list of stored objects from
-     * @return this options object for chaining other attributes
-     */
-    public StorageListOptions withPath(String path) {
-        this.path = path;
-        return this;
+    public String getTargetIdentityId() {
+        return targetIdentityId;
     }
 
-    /**
-     * Attaches additional options
-     *
-     * @param options additional options for custom purposes
-     * @return this options object for chaining other attributes
-     */
-    public StorageListOptions withOptions(Options options) {
-        this.options = options;
-        return this;
+    public String getPath() {
+        return path;
+    }
+
+    public Options getOptions() {
+        return options;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static StorageListOptions create() {
+        return builder().build();
+    }
+
+    public static final class Builder {
+
+        private StorageAccessLevel accessLevel;
+        private String targetIdentityId;
+        private String path;
+        private Options options;
+
+        Builder() {
+        }
+
+        public Builder accessLevel(StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
+            return this;
+        }
+
+        public Builder trgetIdentityId(String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
+            return this;
+        }
+
+        public Builder path(String path) {
+            this.path = path;
+            return this;
+        }
+
+        public Builder options(Options options) {
+            this.options = options;
+            return this;
+        }
+
+        StorageAccessLevel accessLevel() {
+            return accessLevel;
+        }
+
+        String targetIdentityId() {
+            return targetIdentityId;
+        }
+
+        String path() {
+            return path;
+        }
+
+        Options options() {
+            return options;
+        }
+
+        public StorageListOptions build() {
+            return new StorageListOptions(this);
+        }
     }
 }

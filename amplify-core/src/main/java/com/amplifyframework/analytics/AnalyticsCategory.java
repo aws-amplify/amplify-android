@@ -15,18 +15,18 @@
 
 package com.amplifyframework.analytics;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-
-import androidx.annotation.NonNull;
 
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
+public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
         implements AnalyticsCategoryBehavior {
 
     /**
@@ -52,7 +52,7 @@ public class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
      * @return enum that represents Analytics category
      */
     @Override
-    public final CategoryType getCategoryType() {
+    public CategoryType getCategoryType() {
         return CategoryType.ANALYTICS;
     }
 

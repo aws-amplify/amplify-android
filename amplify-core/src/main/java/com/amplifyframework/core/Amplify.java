@@ -16,6 +16,7 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsCategory;
@@ -30,8 +31,6 @@ import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.logging.LoggingPlugin;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StoragePlugin;
-
-import androidx.annotation.NonNull;
 
 /**
  * The Amplify System has the following responsibilities:
@@ -55,10 +54,9 @@ public final class Amplify {
     @SuppressWarnings("all") public static final StorageCategory Storage;
     @SuppressWarnings("all") public static final HubCategory Hub;
 
-    static AmplifyConfiguration amplifyConfiguration;
-
     private static final String TAG = Amplify.class.getSimpleName();
 
+    private static AmplifyConfiguration amplifyConfiguration;
     private static boolean configured = false;
 
     static {
@@ -85,8 +83,7 @@ public final class Amplify {
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context)
-            throws ConfigurationException, PluginException {
+    public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
         configure(new AmplifyConfiguration(context));
     }
 
@@ -107,23 +104,23 @@ public final class Amplify {
             amplifyConfiguration = configuration;
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(amplifyConfiguration.analytics);
+                Analytics.configure(amplifyConfiguration.getAnalytics());
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(amplifyConfiguration.api);
+                API.configure(amplifyConfiguration.getApi());
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(amplifyConfiguration.hub);
+                Hub.configure(amplifyConfiguration.getHub());
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(amplifyConfiguration.logging);
+                Logging.configure(amplifyConfiguration.getLogging());
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(amplifyConfiguration.storage);
+                Storage.configure(amplifyConfiguration.getStorage());
             }
 
             configured = true;
@@ -136,12 +133,10 @@ public final class Amplify {
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
      * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws PluginException when a plugin cannot be registered for the category type it
-     *                         belongs to or when when the plugin's category type is not
-     *                         supported by Amplify.
+     * @throws PluginException when a plugin cannot be registered for the category type it belongs to
+     *                         or when when the plugin's category type is not supported by Amplify.
      */
-    public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin)
-            throws PluginException {
+    public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
                 throw new PluginException.EmptyKeyException();
@@ -184,15 +179,13 @@ public final class Amplify {
                     }
                     break;
                 default:
-                    throw new PluginException.NoSuchPluginException("Plugin category does not " +
-                            "exist. Verify that the library version is correct and supports the " +
-                            "plugin's category.");
+                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
+                            "Verify that the library version is correct and supports the plugin's category.");
             }
         }
     }
 
-    public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin)
-            throws PluginException {
+    public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             switch (plugin.getCategoryType()) {
                 case API:
@@ -231,10 +224,14 @@ public final class Amplify {
                     }
                     break;
                 default:
-                    throw new PluginException.NoSuchPluginException("Plugin category does not " +
-                            "exist. Verify that the library version is correct and supports the " +
-                            "plugin's category.");
+                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
+                            "Verify that the library version is correct and supports the plugin's category.");
             }
         }
     }
+
+    static AmplifyConfiguration getAmplifyConfiguration() {
+        return amplifyConfiguration;
+    }
 }
+
