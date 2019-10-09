@@ -23,7 +23,11 @@ package com.amplifyframework.core.async;
  *                        to specify the details of a request.
  */
 public abstract class AmplifyOperationRequest<R> {
-    R requestOptions;
+    private final R requestOptions;
+
+    protected AmplifyOperationRequest(R requestOptions) {
+        this.requestOptions = requestOptions;
+    }
 
     /**
      * Options to adjust the behavior of this request, including plugin options

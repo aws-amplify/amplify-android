@@ -15,7 +15,7 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public interface HubPayloadFilter {
     /**

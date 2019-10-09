@@ -15,16 +15,16 @@
 
 package com.amplifyframework.core.category;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.ConfigurationException;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.core.plugin.PluginException;
 
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import androidx.annotation.NonNull;
 
 public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
     /**

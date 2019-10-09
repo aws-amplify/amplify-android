@@ -15,8 +15,6 @@
 
 package com.amplifyframework.storage;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageGetException;
 import com.amplifyframework.storage.exception.StorageListException;
@@ -34,6 +32,8 @@ import com.amplifyframework.storage.result.StorageGetResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StoragePutResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines the behavior of the Storage category that clients will use

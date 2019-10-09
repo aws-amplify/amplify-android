@@ -15,12 +15,12 @@
 
 package com.amplifyframework.core.async;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.amplifyframework.core.category.CategoryType;
 
 import java.util.UUID;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * An abstract representation of an Amplify unit of work. Subclasses may aggregate multiple work items
@@ -39,16 +39,16 @@ public abstract class AmplifyOperation
     // Incoming parameters of the original request. The Request will be included as part of the
     // events being emitted by this operation. The request gives context about the operation that
     // emitted the events.
-    private R request;
+    private final R request;
 
     // The unique ID of the operation. In categories where operations are persisted for future
     // processing, this id can be used to identify previously-scheduled work for progress tracking
     // or other functions.
-    private UUID operationId;
+    private final UUID operationId;
 
     // Required by Hub to find the HubChannel mapped to the
     // CategoryType.
-    private CategoryType categoryType;
+    private final CategoryType categoryType;
 
     /**
      * Constructor.

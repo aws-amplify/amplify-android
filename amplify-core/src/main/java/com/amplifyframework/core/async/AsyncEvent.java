@@ -21,13 +21,12 @@ package com.amplifyframework.core.async;
  */
 public final class AsyncEvent<T> {
 
-    public static enum State {
+    public enum State {
         UNKNOWN,
         NOT_IN_PROCESS,
         IN_PROCESS,
         COMPLETED,
-        FAILED
-        ;
+        FAILED;
     }
 
     private final String eventName;
@@ -38,7 +37,10 @@ public final class AsyncEvent<T> {
 
     private final AmplifyOperation<?> generatedByAmplifyOperation;
 
-    public AsyncEvent(String eventName, State eventState, T eventData, AmplifyOperation<?> generatedByAmplifyOperation) {
+    public AsyncEvent(String eventName,
+                      State eventState,
+                      T eventData,
+                      AmplifyOperation<?> generatedByAmplifyOperation) {
         this.eventName = eventName;
         this.eventState = eventState;
         this.eventData = eventData;

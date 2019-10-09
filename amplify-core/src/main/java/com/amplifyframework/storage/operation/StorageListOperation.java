@@ -15,17 +15,19 @@
 
 package com.amplifyframework.storage.operation;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 public class StorageListOperation extends AmplifyOperation<AmplifyOperationRequest<?>> {
 
-    public StorageListOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest<?> request, @Nullable EventListener<?> eventListener) {
+    public StorageListOperation(@NonNull CategoryType categoryType,
+                                @NonNull AmplifyOperationRequest<?> request,
+                                @Nullable EventListener<?> eventListener) {
         super(categoryType, request, eventListener);
     }
 

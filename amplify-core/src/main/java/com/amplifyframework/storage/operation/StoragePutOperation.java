@@ -15,9 +15,6 @@
 
 package com.amplifyframework.storage.operation;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.Cancelable;
@@ -25,9 +22,15 @@ import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.core.category.CategoryType;
 
-public class StoragePutOperation extends AmplifyOperation<AmplifyOperationRequest<?>> implements Resumable, Cancelable {
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-    public StoragePutOperation(@NonNull CategoryType categoryType, @NonNull AmplifyOperationRequest<?> request, @Nullable EventListener<?> eventListener) {
+public class StoragePutOperation extends AmplifyOperation<AmplifyOperationRequest<?>>
+        implements Resumable, Cancelable {
+
+    public StoragePutOperation(@NonNull CategoryType categoryType,
+                               @NonNull AmplifyOperationRequest<?> request,
+                               @Nullable EventListener<?> eventListener) {
         super(categoryType, request, eventListener);
     }
 

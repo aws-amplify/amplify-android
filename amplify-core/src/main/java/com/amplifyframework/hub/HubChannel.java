@@ -46,11 +46,9 @@ public enum HubChannel {
     /**
      * Hub messages relating to Amplify Storage
      */
-    STORAGE(CategoryType.STORAGE)
-    ;
+    STORAGE(CategoryType.STORAGE);
 
-
-    private CategoryType categoryType;
+    private final CategoryType categoryType;
 
     HubChannel(CategoryType categoryType) {
         this.categoryType = categoryType;
@@ -67,9 +65,12 @@ public enum HubChannel {
      */
     public static HubChannel forCategoryType(final CategoryType categoryType) {
         for (final HubChannel possibleMatch : values()) {
-            if (possibleMatch.categoryType.equals(categoryType)) return possibleMatch;
+            if (possibleMatch.categoryType.equals(categoryType)) {
+                return possibleMatch;
+            }
         }
-        throw new NoHubChannelException("No HubChannel found for the CategoryType: " + categoryType);
+        throw new NoHubChannelException("No HubChannel found for the CategoryType: " +
+                categoryType);
     }
 }
 

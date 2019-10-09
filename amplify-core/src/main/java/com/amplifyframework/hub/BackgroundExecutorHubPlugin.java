@@ -17,8 +17,6 @@ package com.amplifyframework.hub;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.util.Log;
 
 import com.amplifyframework.core.plugin.PluginException;
@@ -32,6 +30,9 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
@@ -64,7 +65,8 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
                     @Override
                     public void run() {
                         if (listenersByHubChannel.containsKey(hubChannel)) {
-                            for (FilteredHubListener filteredHubListener : listenersByHubChannel.get(hubChannel)) {
+                            for (FilteredHubListener filteredHubListener :
+                                    listenersByHubChannel.get(hubChannel)) {
                                 if (filteredHubListener.getHubFilter() == null ||
                                         filteredHubListener.getHubFilter().filter(hubpayload)) {
                                     filteredHubListener.getHubListener().onEvent(hubpayload);
@@ -88,7 +90,8 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      * to de-register the listener.
      */
     @Override
-    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel, @Nullable HubListener listener) {
+    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
+                                       @Nullable HubListener listener) {
         return subscribe(hubChannel, null, listener);
     }
 
@@ -105,9 +108,12 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      * to de-register the listener.
      */
     @Override
-    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel, @Nullable HubPayloadFilter hubPayloadFilter, @Nullable HubListener listener) {
+    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
+                                       @Nullable HubPayloadFilter hubPayloadFilter,
+                                       @Nullable HubListener listener) {
         final UUID listenerId = UUID.randomUUID();
-        final FilteredHubListener filteredHubListener = new FilteredHubListener(hubChannel, listenerId, hubPayloadFilter, listener);
+        final FilteredHubListener filteredHubListener = new FilteredHubListener(hubChannel,
+                listenerId, hubPayloadFilter, listener);
 
         listenersByUUID.put(listenerId, filteredHubListener);
         Set<FilteredHubListener> filteredHubListeners;
@@ -136,9 +142,11 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
         final HubChannel hubChannel = subscriptionToken.getHubChannel();
         listenersByUUID.remove(subscriptionToken.getUuid());
 
-        Set<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(subscriptionToken.getHubChannel());
+        Set<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(
+                subscriptionToken.getHubChannel());
         if (filteredHubListeners == null) {
-            Log.e(TAG, "Cannot find the listener for listenerId: " + listenerId + " by channel: " + hubChannel);
+            Log.e(TAG, "Cannot find the listener for listenerId: " +
+                    listenerId + " by channel: " + hubChannel);
             return;
         }
 

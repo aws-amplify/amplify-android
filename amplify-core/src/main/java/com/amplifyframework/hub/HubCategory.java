@@ -15,14 +15,14 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Amplify has a local eventing system called Hub. It is a lightweight implementation of
@@ -40,7 +40,8 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
      * @param hubpayload The payload to send
      */
     @Override
-    public void publish(@NonNull HubChannel hubChannel, @NonNull HubPayload hubpayload) throws HubException {
+    public void publish(@NonNull HubChannel hubChannel, @NonNull HubPayload hubpayload)
+            throws HubException {
         getSelectedPlugin().publish(hubChannel, hubpayload);
     }
 
@@ -55,7 +56,8 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
      * to de-register the listener.
      */
     @Override
-    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel, @Nullable HubListener listener) throws HubException {
+    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
+                                       @Nullable HubListener listener) throws HubException {
         return getSelectedPlugin().subscribe(hubChannel, listener);
     }
 
@@ -72,7 +74,9 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
      * to de-register the listener.
      */
     @Override
-    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel, @Nullable HubPayloadFilter hubPayloadFilter, @Nullable HubListener listener) throws HubException {
+    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
+                                       @Nullable HubPayloadFilter hubPayloadFilter,
+                                       @Nullable HubListener listener) throws HubException {
         return getSelectedPlugin().subscribe(hubChannel, hubPayloadFilter, listener);
     }
 
@@ -103,8 +107,9 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
      * @param eventListener The Operation-specific listener callback to be invoked
      *                 when an AsyncEvent for that operation is received.
      */
-    public <R extends AmplifyOperationRequest<?>, E> SubscriptionToken subscribe(@NonNull final AmplifyOperation<R> operation,
-                                                                                 @NonNull final EventListener<E> eventListener) {
+    public <R extends AmplifyOperationRequest<?>, E> SubscriptionToken subscribe(
+            @NonNull final AmplifyOperation<R> operation,
+            @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);
         HubListener transformingListener = new HubListener() {

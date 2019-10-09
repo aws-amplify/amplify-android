@@ -21,21 +21,22 @@ public final class HubPayload {
 
     /**
      * The name, tag, or grouping of the HubPayload. Recommended to be a small string without spaces,
-     * such as `signIn` or `hang_up`. For AmplifyOperations, this will be a concatenation of the category display name
-     * and a short name of the operation type, as in "Storage.getURL" or "Storage.downloadFile".
+     * such as `signIn` or `hang_up`. For AmplifyOperations, this will be a concatenation of the
+     * category display name and a short name of the operation type, as in "Storage.getURL" or
+     * "Storage.downloadFile".
      */
-    private String eventName;
+    private final String eventName;
 
     /**
-     * A free-form structure used to pass objects or custom data. For HubPayloads that are generated from
-     * AmplifyOperations, this field will be the Operation's associated AsyncEvent.
+     * A free-form structure used to pass objects or custom data. For HubPayloads that are generated
+     * from AmplifyOperations, this field will be the Operation's associated AsyncEvent.
      */
-    private Object eventData;
+    private final Object eventData;
 
     /**
      * A unique identifier that identifies the payload.
      */
-    private UUID payloadId;
+    private final UUID payloadId;
 
     /**
      * Construct a Hub payload.
@@ -66,7 +67,7 @@ public final class HubPayload {
     }
 
     public UUID getPayloadId() {
-        return  payloadId;
+        return payloadId;
     }
 
     @Override
@@ -80,8 +81,12 @@ public final class HubPayload {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof HubPayload)) return false;
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof HubPayload)) {
+            return false;
+        }
         HubPayload that = (HubPayload) o;
         return getPayloadId().equals(that.getPayloadId());
     }

@@ -15,8 +15,6 @@
 
 package com.amplifyframework.storage;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -36,6 +34,8 @@ import com.amplifyframework.storage.result.StorageGetResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StoragePutResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines the Client API consumed by the application.

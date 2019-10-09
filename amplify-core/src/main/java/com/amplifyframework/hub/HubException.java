@@ -23,13 +23,26 @@ public class HubException extends AmplifyRuntimeException {
     private static final long serialVersionUID = 2L;
 
     public static class HubNotConfiguredException extends AmplifyRuntimeException {
+
         /** Default serial version UID. */
         private static final long serialVersionUID = 3L;
 
-        public HubNotConfiguredException() { super("Hub category is not configured. Please configure it through Amplify.configure(context)"); }
-        public HubNotConfiguredException(String message) { super(message); }
-        public HubNotConfiguredException(Throwable throwable) { super(throwable); }
-        public HubNotConfiguredException(String message, Throwable t) { super(message, t); }
+        public HubNotConfiguredException() {
+            super("Hub category is not configured. " +
+                    "Please configure it through Amplify.configure(context)");
+        }
+
+        public HubNotConfiguredException(String message) {
+            super(message);
+        }
+
+        public HubNotConfiguredException(Throwable throwable) {
+            super(throwable);
+        }
+
+        public HubNotConfiguredException(String message, Throwable t) {
+            super(message, t);
+        }
     }
 
     /**

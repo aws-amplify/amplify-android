@@ -15,14 +15,13 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-import android.support.test.InstrumentationRegistry;
 import android.util.Log;
 
 import com.amplifyframework.core.Amplify;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -35,26 +34,43 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
+
 public class HubInstrumentedTest {
 
     private static final String TAG = HubInstrumentedTest.class.getSimpleName();
 
+    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS = 100;
+
     @BeforeClass
     public static void setUpBeforeClass() {
         Amplify.addPlugin(new BackgroundExecutorHubPlugin());
-        Amplify.configure(InstrumentationRegistry.getTargetContext());
+        Amplify.configure(ApplicationProvider.getApplicationContext());
     }
 
+    /**
+     * @throws InterruptedException when waiting for CountDownLatch to
+     *                              meet the desired condition is interrupted.
+     */
     @Test
-    public void subscription_token_not_null() {
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, new HubListener() {
-            @Override
-            public void onEvent(@NonNull HubPayload payload) { }
-        });
+    public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException {
+        final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
+                new HubListener() {
+                    @Override
+                    public void onEvent(@NonNull HubPayload payload) {
+                        waitUntilSubscriptionIsReceived.countDown();
+                    }
+                });
         assertNotNull(token);
         assertNotNull(token.getUuid());
 
         Amplify.Hub.unsubscribe(token);
+
+        assertFalse("Expecting no subscription to be received within the given time.",
+                waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
+                        TimeUnit.MILLISECONDS));
     }
 
 
@@ -63,25 +79,27 @@ public class HubInstrumentedTest {
      *                              meet the desired condition is interrupted.
      */
     @Test
-    public void is_subscription_received() throws InterruptedException {
+    public void isSubscriptionReceived() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, new HubListener() {
-            @Override
-            public void onEvent(@NonNull HubPayload payload) {
-                if (payload.getEventData() instanceof String) {
-                    Log.d(TAG, "String: => " + payload.getEventName() + ":" + payload.getEventData());
-                    waitUntilSubscriptionIsReceived.countDown();
-                }
-            }
-        });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
+                new HubListener() {
+                    @Override
+                    public void onEvent(@NonNull HubPayload payload) {
+                        if (payload.getEventData() instanceof String) {
+                            Log.d(TAG, "String: => " + payload.getEventName() + ":" +
+                                    payload.getEventData());
+                            waitUntilSubscriptionIsReceived.countDown();
+                        }
+                    }
+                });
 
         Amplify.Hub.publish(HubChannel.STORAGE,
-                new HubPayload("weatherString","Too Cold in Seattle."));
-
+                new HubPayload("weatherString", "Too Cold in Seattle."));
 
         assertTrue("Subscription not received within the expected time.",
-                waitUntilSubscriptionIsReceived.await(5, TimeUnit.SECONDS));
+                waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
+                        TimeUnit.MILLISECONDS));
 
         Amplify.Hub.unsubscribe(token);
     }
@@ -91,16 +109,18 @@ public class HubInstrumentedTest {
      *                              meet the desired condition is interrupted.
      */
     @Test
-    public void no_subscription_received_after_unsubscribe() throws InterruptedException {
+    public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException {
         final CountDownLatch subscriptionReceived = new CountDownLatch(1);
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, new HubListener() {
-            @Override
-            public void onEvent(@NonNull HubPayload payload) {
-                Log.e(TAG, "Not expecting a subscription to be received after unsubscribe.");
-                subscriptionReceived.countDown();
-            }
-        });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
+                new HubListener() {
+                    @Override
+                    public void onEvent(@NonNull HubPayload payload) {
+                        Log.e(TAG, "Not expecting a subscription to be " +
+                                "received after unsubscribe.");
+                        subscriptionReceived.countDown();
+                    }
+                });
 
         Amplify.Hub.unsubscribe(token);
 
@@ -108,7 +128,8 @@ public class HubInstrumentedTest {
                 new HubPayload("weatherString", "Too Cold in Seattle"));
 
         assertFalse("Expecting no subscription to be received within the given time.",
-                    subscriptionReceived.await(5, TimeUnit.SECONDS));
+                    subscriptionReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
+                            TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -116,29 +137,32 @@ public class HubInstrumentedTest {
      *                              meet the desired condition is interrupted.
      */
     @Test
-    public void multiple_publications() throws InterruptedException {
-        final int NUM_PUBLICATIONS = 10;
-        final CountDownLatch allSubscriptionsReceived = new CountDownLatch(NUM_PUBLICATIONS);
+    public void multiplePublications() throws InterruptedException {
+        final int numPublications = 10;
+        final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
         final List<Integer> subscriptionsReceived = new ArrayList<Integer>();
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, new HubListener() {
-            @Override
-            public void onEvent(@NonNull HubPayload payload) {
-                if (payload.getEventData() instanceof Integer) {
-                    Log.d(TAG, "Integer: => " + payload.getEventName() + ":" + payload.getEventData());
-                    subscriptionsReceived.add((Integer) payload.getEventData());
-                    allSubscriptionsReceived.countDown();
-                }
-            }
-        });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
+                new HubListener() {
+                    @Override
+                    public void onEvent(@NonNull HubPayload payload) {
+                        if (payload.getEventData() instanceof Integer) {
+                            Log.d(TAG, "Integer: => " + payload.getEventName() +
+                                    ":" + payload.getEventData());
+                            subscriptionsReceived.add((Integer) payload.getEventData());
+                            allSubscriptionsReceived.countDown();
+                        }
+                    }
+                });
 
-        for (int i = 0; i < NUM_PUBLICATIONS; i++) {
+        for (int i = 0; i < numPublications; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,
                     new HubPayload("weatherInteger:" + i, i));
         }
 
-        assertTrue("Expecting to receive all " + NUM_PUBLICATIONS + " subscriptions.",
-                    allSubscriptionsReceived.await(10, TimeUnit.SECONDS));
+        assertTrue("Expecting to receive all " + numPublications + " subscriptions.",
+                    allSubscriptionsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
+                            TimeUnit.MILLISECONDS));
 
         Collections.sort(subscriptionsReceived);
         int expectedMessageValue = 0;
@@ -155,38 +179,42 @@ public class HubInstrumentedTest {
      *                              meet the desired condition is interrupted.
      */
     @Test
-    public void multiple_subscriptions_multiple_datatypes() throws InterruptedException {
-        final int NUM_PUBLICATIONS = 10;
-        final int NUM_DATA_TYPES = 2;
-        final CountDownLatch allSubscriptionsReceived = new CountDownLatch(NUM_PUBLICATIONS);
+    public void multiplePublicationsMultipleDataTypes() throws InterruptedException {
+        final int numPublications = 10;
+        final int numDataTypes = 2;
+        final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
         final List<Integer> integerSubscriptionsReceived = new ArrayList<Integer>();
         final List<String> stringSubscriptionsReceived = new ArrayList<String>();
         final String stringSubscriptionValue = "weatherAlwaysRemainsTheSame";
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, new HubListener() {
-            @Override
-            public void onEvent(@NonNull HubPayload payload) {
-                if (payload.getEventData() instanceof Integer) {
-                    Log.d(TAG, "Integer: => " + payload.getEventName() + ":" + payload.getEventData());
-                    integerSubscriptionsReceived.add((Integer) payload.getEventData());
-                    allSubscriptionsReceived.countDown();
-                } else if (payload.getEventData() instanceof String) {
-                    Log.d(TAG, "String: => " + payload.getEventName() + ":" + payload.getEventData());
-                    stringSubscriptionsReceived.add((String) payload.getEventData());
-                    allSubscriptionsReceived.countDown();
-                }
-            }
-        });
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
+                new HubListener() {
+                    @Override
+                    public void onEvent(@NonNull HubPayload payload) {
+                        if (payload.getEventData() instanceof Integer) {
+                            Log.d(TAG, "Integer: => " + payload.getEventName() +
+                                    ":" + payload.getEventData());
+                            integerSubscriptionsReceived.add((Integer) payload.getEventData());
+                            allSubscriptionsReceived.countDown();
+                        } else if (payload.getEventData() instanceof String) {
+                            Log.d(TAG, "String: => " + payload.getEventName() +
+                                    ":" + payload.getEventData());
+                            stringSubscriptionsReceived.add((String) payload.getEventData());
+                            allSubscriptionsReceived.countDown();
+                        }
+                    }
+                });
 
-        for (int i = 0; i < NUM_PUBLICATIONS / NUM_DATA_TYPES; i++) {
+        for (int i = 0; i < numPublications / numDataTypes; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,
                     new HubPayload("weatherInteger:" + i, i));
             Amplify.Hub.publish(HubChannel.STORAGE,
                     new HubPayload("weatherString:" + i, stringSubscriptionValue));
         }
 
-        assertTrue("Expecting to receive all " + NUM_PUBLICATIONS + " subscriptions.",
-                    allSubscriptionsReceived.await(10, TimeUnit.SECONDS));
+        assertTrue("Expecting to receive all " + numPublications + " subscriptions.",
+                    allSubscriptionsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
+                            TimeUnit.MILLISECONDS));
 
         Collections.sort(integerSubscriptionsReceived);
         int expectedIntegerSubscriptionValue = 0;

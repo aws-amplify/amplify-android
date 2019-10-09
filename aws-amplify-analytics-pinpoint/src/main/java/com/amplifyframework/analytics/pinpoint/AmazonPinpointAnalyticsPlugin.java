@@ -16,15 +16,16 @@
 package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.plugin.PluginException;
+
+import androidx.annotation.NonNull;
 
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
@@ -33,7 +34,7 @@ public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
 
-    private Context context;
+    private final Context context;
 
     public AmazonPinpointAnalyticsPlugin(@NonNull Context context) {
         this.context = context;
@@ -52,17 +53,20 @@ public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     }
 
     @Override
-    public void recordEvent(@NonNull String eventName) throws AnalyticsException, ConfigurationException {
+    public void recordEvent(@NonNull String eventName)
+            throws AnalyticsException, ConfigurationException {
 
     }
 
     @Override
-    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException {
+    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent)
+            throws AnalyticsException, ConfigurationException {
 
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException {
+    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile)
+            throws AnalyticsException, ConfigurationException {
 
     }
 

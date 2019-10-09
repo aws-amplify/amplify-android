@@ -15,14 +15,14 @@
 
 package com.amplifyframework.hub.internal;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubPayloadFilter;
 import com.amplifyframework.hub.HubListener;
+import com.amplifyframework.hub.HubPayloadFilter;
 
 import java.util.UUID;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * This encapsulation is to combine all the metadata of a subscriber

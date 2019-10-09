@@ -15,11 +15,17 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-
 import com.amplifyframework.core.async.AmplifyOperation;
 
-public class HubFilters {
+import androidx.annotation.NonNull;
+
+public final class HubFilters {
+
+    private HubFilters() {
+        // Since HubFilters is a utility class,
+        // hiding the default constructor.
+    }
+
     public static HubPayloadFilter always() {
         return new HubPayloadFilter() {
             @Override
@@ -55,7 +61,8 @@ public class HubFilters {
         };
     }
 
-    public static HubPayloadFilter and(@NonNull final HubPayloadFilter leftFilter, @NonNull final HubPayloadFilter rightFilter) {
+    public static HubPayloadFilter and(@NonNull final HubPayloadFilter leftFilter,
+                                       @NonNull final HubPayloadFilter rightFilter) {
         return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {
@@ -64,7 +71,8 @@ public class HubFilters {
         };
     }
 
-    public static HubPayloadFilter or(@NonNull final HubPayloadFilter leftFilter, @NonNull final HubPayloadFilter rightFilter) {
+    public static HubPayloadFilter or(@NonNull final HubPayloadFilter leftFilter,
+                                      @NonNull final HubPayloadFilter rightFilter) {
         return new HubPayloadFilter() {
             @Override
             public boolean filter(@NonNull final HubPayload payload) {

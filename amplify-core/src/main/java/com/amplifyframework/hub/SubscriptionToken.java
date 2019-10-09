@@ -15,9 +15,9 @@
 
 package com.amplifyframework.hub;
 
-import android.support.annotation.NonNull;
-
 import java.util.UUID;
+
+import androidx.annotation.NonNull;
 
 /**
  * SubscriptionToken can be used to unsubscribe a Hub listener. Although SubscriptionToken
@@ -37,19 +37,6 @@ public final class SubscriptionToken {
      * optimally remove listeners in unsubscribe.
      */
     private final HubChannel hubChannel;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        SubscriptionToken that = (SubscriptionToken) o;
-        return uuid.equals(that.uuid);
-    }
-
-    @Override
-    public int hashCode() {
-        return uuid.hashCode();
-    }
 
     /**
      * Construct the subscription token object.
@@ -74,5 +61,22 @@ public final class SubscriptionToken {
      */
     public HubChannel getHubChannel() {
         return hubChannel;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        SubscriptionToken that = (SubscriptionToken) o;
+        return uuid.equals(that.uuid);
+    }
+
+    @Override
+    public int hashCode() {
+        return uuid.hashCode();
     }
 }
