@@ -15,9 +15,7 @@
 
 package com.amplifyframework.storage;
 
-import android.support.annotation.NonNull;
-
-import com.amplifyframework.core.async.Callback;
+import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.storage.exception.StorageGetException;
@@ -36,6 +34,8 @@ import com.amplifyframework.storage.result.StorageGetResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StoragePutResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines the Client API consumed by the application.
@@ -68,8 +68,8 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
     @Override
     public StorageGetOperation get(@NonNull String key,
                                    @NonNull StorageGetOptions options,
-                                   Callback<StorageGetResult> callback) throws StorageGetException {
-        return getSelectedPlugin().get(key, options, callback);
+                                   Listener<StorageGetResult> listener) throws StorageGetException {
+        return getSelectedPlugin().get(key, options, listener);
     }
 
     /**
@@ -97,8 +97,8 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
     public StoragePutOperation put(@NonNull String key,
                                    @NonNull String local,
                                    @NonNull StoragePutOptions options,
-                                   Callback<StoragePutResult> callback) throws StoragePutException {
-        return getSelectedPlugin().put(key, local, options, callback);
+                                   Listener<StoragePutResult> listener) throws StoragePutException {
+        return getSelectedPlugin().put(key, local, options, listener);
     }
 
     @Override
@@ -113,8 +113,8 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
 
     @Override
     public StorageListOperation list(@NonNull StorageListOptions options,
-                                     Callback<StorageListResult> callback) throws StorageListException {
-        return getSelectedPlugin().list(options, callback);
+                                     Listener<StorageListResult> listener) throws StorageListException {
+        return getSelectedPlugin().list(options, listener);
     }
 
     @Override
@@ -131,7 +131,7 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
     @Override
     public StorageRemoveOperation remove(@NonNull String key,
                                          @NonNull StorageRemoveOptions options,
-                                         Callback<StorageRemoveResult> callback) throws StorageRemoveException {
-        return getSelectedPlugin().remove(key, options, callback);
+                                         Listener<StorageRemoveResult> listener) throws StorageRemoveException {
+        return getSelectedPlugin().remove(key, options, listener);
     }
 }

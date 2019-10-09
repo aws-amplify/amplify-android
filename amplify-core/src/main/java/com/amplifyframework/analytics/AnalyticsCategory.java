@@ -15,17 +15,19 @@
 
 package com.amplifyframework.analytics;
 
-import android.support.annotation.NonNull;
-
+import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Analytics CategoryType
  * plugins registered.
  */
-public class AnalyticsCategory extends Category<AnalyticsPlugin<?>> implements AnalyticsCategoryBehavior {
+public class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
+        implements AnalyticsCategoryBehavior {
 
     /**
      * Protect enabling and disabling of Analytics event
@@ -69,24 +71,26 @@ public class AnalyticsCategory extends Category<AnalyticsPlugin<?>> implements A
     }
 
     @Override
-    public void recordEvent(@NonNull String eventName) throws AnalyticsException {
+    public void recordEvent(@NonNull String eventName)
+            throws AnalyticsException, ConfigurationException {
         if (enabled) {
             getSelectedPlugin().recordEvent(eventName);
         }
     }
 
     @Override
-    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
+    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent)
+            throws AnalyticsException, ConfigurationException {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException {
+    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile)
+            throws AnalyticsException, ConfigurationException {
         if (enabled) {
             getSelectedPlugin().updateProfile(analyticsProfile);
         }
     }
 }
-

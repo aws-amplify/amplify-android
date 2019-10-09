@@ -15,9 +15,9 @@
 
 package com.amplifyframework.analytics;
 
-import android.support.annotation.NonNull;
-
 import java.util.Map;
+
+import androidx.annotation.NonNull;
 
 /**
  * AnalyticsEvent wraps the information that is part of an event

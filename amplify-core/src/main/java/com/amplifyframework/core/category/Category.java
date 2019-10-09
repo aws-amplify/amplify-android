@@ -15,9 +15,7 @@
 
 package com.amplifyframework.core.category;
 
-import android.support.annotation.NonNull;
-
-import com.amplifyframework.core.exception.ConfigurationException;
+import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 
@@ -25,6 +23,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
+import androidx.annotation.NonNull;
 
 public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
     /**
@@ -61,7 +61,8 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             if (pluginConfig != null) {
                 plugin.configure(pluginConfig);
             } else {
-                throw new PluginException.NoSuchPluginException();
+                // TODO
+                // The plugin does not have any configuration.
             }
         }
 
@@ -124,7 +125,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *
      * @return the only registered plugin for this category
      */
-    protected P getSelectedPlugin() {
+    protected P getSelectedPlugin() throws ConfigurationException {
         if (!isConfigured) {
             throw new ConfigurationException("This category is not yet configured.");
         }

@@ -15,9 +15,7 @@
 
 package com.amplifyframework.storage;
 
-import android.support.annotation.NonNull;
-
-import com.amplifyframework.core.async.Callback;
+import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageGetException;
 import com.amplifyframework.storage.exception.StorageListException;
 import com.amplifyframework.storage.exception.StoragePutException;
@@ -34,6 +32,8 @@ import com.amplifyframework.storage.result.StorageGetResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StoragePutResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+
+import androidx.annotation.NonNull;
 
 /**
  * Defines the behavior of the Storage category that clients will use
@@ -77,7 +77,7 @@ public interface StorageCategoryBehavior {
      */
     StorageGetOperation get(@NonNull String key,
                             StorageGetOptions options,
-                            Callback<StorageGetResult> callback) throws StorageGetException;
+                            Listener<StorageGetResult> callback) throws StorageGetException;
 
     /**
      * Upload local file on given path to storage
@@ -120,7 +120,7 @@ public interface StorageCategoryBehavior {
     StoragePutOperation put(@NonNull String key,
                             @NonNull String local,
                             StoragePutOptions options,
-                            Callback<StoragePutResult> callback) throws StoragePutException;
+                            Listener<StoragePutResult> callback) throws StoragePutException;
 
     /**
      * Delete object from storage
@@ -157,7 +157,7 @@ public interface StorageCategoryBehavior {
      */
     StorageRemoveOperation remove(@NonNull String key,
                                   StorageRemoveOptions options,
-                                  Callback<StorageRemoveResult> callback) throws StorageRemoveException;
+                                  Listener<StorageRemoveResult> callback) throws StorageRemoveException;
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -192,5 +192,5 @@ public interface StorageCategoryBehavior {
      * @throws StorageListException
      */
     StorageListOperation list(StorageListOptions options,
-                              Callback<StorageListResult> callback) throws StorageListException;
+                              Listener<StorageListResult> callback) throws StorageListException;
 }

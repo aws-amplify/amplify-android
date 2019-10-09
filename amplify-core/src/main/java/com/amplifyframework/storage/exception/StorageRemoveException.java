@@ -15,10 +15,10 @@
 
 package com.amplifyframework.storage.exception;
 
-import com.amplifyframework.core.exception.AmplifyException;
+import com.amplifyframework.AmplifyException;
 
 /**
- * Exception encountered in remove API of Storage category
+ * Exception encountered in unsubscribe API of Storage category
  */
 public class StorageRemoveException extends AmplifyException {
 

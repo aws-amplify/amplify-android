@@ -15,11 +15,62 @@
 
 package com.amplifyframework.hub;
 
+import com.amplifyframework.core.category.CategoryType;
+
+/**
+ * HubChannel represents the channels on which Amplify category messages will be dispatched.
+ * Apps can define their own channels for intra-app communication. Internally, Amplify uses the Hub
+ * for dispatching notifications about events associated with different categories.
+ */
 public enum HubChannel {
-    ANALYTICS,
-    API,
-    HUB,
-    LOGGING,
-    STORAGE;
+    /**
+     * Hub messages relating to Amplify Analytics
+     */
+    ANALYTICS(CategoryType.ANALYTICS),
+
+    /**
+     * Hub messages relating to Amplify Api
+     */
+    API(CategoryType.API),
+
+    /**
+     * Hub messages relating to Amplify Hub
+     */
+    HUB(CategoryType.HUB),
+
+    /**
+     * Hub messages relating to Amplify Logging
+     */
+    LOGGING(CategoryType.LOGGING),
+
+    /**
+     * Hub messages relating to Amplify Storage
+     */
+    STORAGE(CategoryType.STORAGE);
+
+    private final CategoryType categoryType;
+
+    HubChannel(CategoryType categoryType) {
+        this.categoryType = categoryType;
+    }
+
+    /**
+     * Look up HubChannel based on CategoryType
+     * @param categoryType identifies an Amplify category
+     * @return the hub channel corresponding to it
+     * @throws NoHubChannelException
+     *               If there is no HubChannel known for CategoryType, possibly because
+     *               a HubChannel is not mapped or the CategoryType passed is not a valid
+     *               category type.
+     */
+    public static HubChannel forCategoryType(final CategoryType categoryType) {
+        for (final HubChannel possibleMatch : values()) {
+            if (possibleMatch.categoryType.equals(categoryType)) {
+                return possibleMatch;
+            }
+        }
+        throw new NoHubChannelException("No HubChannel found for the CategoryType: " +
+                categoryType);
+    }
 }
 

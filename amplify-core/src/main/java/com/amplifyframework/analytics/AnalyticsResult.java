@@ -15,11 +15,11 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.core.task.Result;
+import com.amplifyframework.core.async.Result;
 
 /**
  * Result object returned when the analytics events are
  * successfully submitted.
  */
-public class AnalyticsResult extends Result {
+public class AnalyticsResult implements Result {
 }
