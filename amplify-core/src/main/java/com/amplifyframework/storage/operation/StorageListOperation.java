@@ -15,13 +15,13 @@
 
 package com.amplifyframework.storage.operation;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public class StorageListOperation extends AmplifyOperation<AmplifyOperationRequest<?>> {
 

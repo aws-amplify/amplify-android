@@ -21,7 +21,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
  * Strongly-typed configuration for Storage category that also
  * contains configuration for individual plugins
  */
-public class StorageCategoryConfiguration extends CategoryConfiguration {
+public final class StorageCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
     public StorageCategoryConfiguration() {

@@ -15,14 +15,14 @@
 
 package com.amplifyframework.hub;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Amplify has a local eventing system called Hub. It is a lightweight implementation of
@@ -31,7 +31,7 @@ import androidx.annotation.Nullable;
  * when specific events occur, such as authentication events like a user sign-in or
  * notification of a file download.
  */
-public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBehavior {
+public final class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBehavior {
 
     /**
      * Dispatch a Hub message on the specified channel
@@ -94,7 +94,7 @@ public class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBe
     }
 
     @Override
-    public final CategoryType getCategoryType() {
+    public CategoryType getCategoryType() {
         return CategoryType.HUB;
     }
 

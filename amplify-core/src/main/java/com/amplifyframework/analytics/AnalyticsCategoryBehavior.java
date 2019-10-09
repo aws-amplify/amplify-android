@@ -15,9 +15,9 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.ConfigurationException;
-
 import androidx.annotation.NonNull;
+
+import com.amplifyframework.ConfigurationException;
 
 /**
  * Defines the client behavior (client API) consumed

@@ -17,10 +17,18 @@ package com.amplifyframework.storage.result;
 
 import com.amplifyframework.core.async.Result;
 
-public class StoragePutResult implements Result {
-    public String key;
+public final class StoragePutResult implements Result {
+    private String key;
 
-    public StoragePutResult(String key) {
+    private StoragePutResult(String key) {
         this.key = key;
+    }
+
+    public static StoragePutResult fromKey(String key) {
+        return new StoragePutResult(key);
+    }
+
+    public String getKey() {
+        return key;
     }
 }

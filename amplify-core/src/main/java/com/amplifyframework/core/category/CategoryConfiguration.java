@@ -19,10 +19,14 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class CategoryConfiguration {
-    /** Map of the { pluginKey => pluginConfiguration } object */
-    public Map<String, Object> pluginConfigs;
+    private Map<String, Object> pluginConfigs;
 
     public CategoryConfiguration() {
         pluginConfigs = new ConcurrentHashMap<String, Object>();
+    }
+
+    /** Map of the { pluginKey => pluginConfiguration } object */
+    public final Object getPluginConfig(final String key) {
+        return pluginConfigs.get(key);
     }
 }

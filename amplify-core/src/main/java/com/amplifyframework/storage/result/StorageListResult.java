@@ -17,15 +17,26 @@ package com.amplifyframework.storage.result;
 
 import com.amplifyframework.core.async.Result;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
-public class StorageListResult implements Result {
+public final class StorageListResult implements Result {
+    private List<String> keys;
+
+    private StorageListResult(List<String> keys) {
+        this.keys = new ArrayList<>();
+        this.keys.addAll(keys);
+    }
+
+    public static StorageListResult fromKeys(List<String> keys) {
+        return new StorageListResult(keys);
+    }
+
     /**
      * Keys retrieved by list API
      */
-    public List<String> keys;
-
-    public StorageListResult(List<String> keys) {
-        this.keys = keys;
+    public List<String> getKeys() {
+        return Collections.unmodifiableList(keys);
     }
 }

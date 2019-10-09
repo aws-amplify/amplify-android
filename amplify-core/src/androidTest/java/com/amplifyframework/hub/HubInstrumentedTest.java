@@ -16,12 +16,13 @@
 package com.amplifyframework.hub;
 
 import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -34,10 +35,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
-
-public class HubInstrumentedTest {
+public final class HubInstrumentedTest {
 
     private static final String TAG = HubInstrumentedTest.class.getSimpleName();
 

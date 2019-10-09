@@ -19,31 +19,60 @@ import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Options to specify attributes of unsubscribe API invocation
+ * Options to specify attributes of remove API invocation
  */
-public class StorageRemoveOptions implements Options {
-    public StorageAccessLevel accessLevel;
-    public Options options;
+public final class StorageRemoveOptions implements Options {
+    private final StorageAccessLevel accessLevel;
+    private final Options options;
 
-    /**
-     * Attaches storage access level attribute
-     *
-     * @param accessLevel access level for invoking API
-     * @return this options object for chaining other attributes
-     */
-    public StorageRemoveOptions withAccessLevel(StorageAccessLevel accessLevel) {
-        this.accessLevel = accessLevel;
-        return this;
+    StorageRemoveOptions(Builder builder) {
+        this.accessLevel = builder.accessLevel();
+        this.options = builder.options();
     }
 
-    /**
-     * Attaches additional options
-     *
-     * @param options additional options for custom purposes
-     * @return this options object for chaining other attributes
-     */
-    public StorageRemoveOptions withOptions(Options options) {
-        this.options = options;
-        return this;
+    public StorageAccessLevel accessLevel() {
+        return accessLevel;
+    }
+
+    public Options options() {
+        return options;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static StorageRemoveOptions create() {
+        return builder().build();
+    }
+
+    public static final class Builder {
+        private StorageAccessLevel accessLevel;
+        private Options options;
+
+        Builder() {
+        }
+
+        public Builder accessLevel(StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
+            return this;
+        }
+
+        public Builder options(Options options) {
+            this.options = options;
+            return this;
+        }
+
+        StorageAccessLevel accessLevel() {
+            return accessLevel;
+        }
+
+        Options options() {
+            return options;
+        }
+
+        public StorageRemoveOptions build() {
+            return new StorageRemoveOptions(this);
+        }
     }
 }

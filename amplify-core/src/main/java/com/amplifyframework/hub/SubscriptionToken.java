@@ -15,9 +15,9 @@
 
 package com.amplifyframework.hub;
 
-import java.util.UUID;
-
 import androidx.annotation.NonNull;
+
+import java.util.UUID;
 
 /**
  * SubscriptionToken can be used to unsubscribe a Hub listener. Although SubscriptionToken

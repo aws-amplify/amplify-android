@@ -19,22 +19,60 @@ import com.amplifyframework.core.async.Result;
 
 import java.io.File;
 
-public class StorageGetResult implements Result {
+public final class StorageGetResult implements Result {
+    private final File file;
+    private final String url;
+
+    StorageGetResult(Builder builder) {
+        this.file = builder.file();
+        this.url = builder.url();
+    }
+
     /**
      * Downloaded local file
      */
-    public File file;
+    public File file() {
+        return file;
+    }
 
     /**
      * Remote pre-signed URL for downloading file
      */
-    public String url;
-
-    public StorageGetResult(File file) {
-        this.file = file;
+    public String url() {
+        return url;
     }
 
-    public StorageGetResult(String url) {
-        this.url = url;
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private File file;
+        private String url;
+
+        Builder() {
+        }
+
+        public Builder file(File file) {
+            this.file = file;
+            return this;
+        }
+
+        public Builder url(String url) {
+            this.url = url;
+            return this;
+        }
+
+        File file() {
+            return file;
+        }
+
+        String url() {
+            return url;
+        }
+
+        public StorageGetResult build() {
+            return new StorageGetResult(this);
+        }
     }
 }
