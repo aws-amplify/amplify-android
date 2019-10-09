@@ -15,7 +15,7 @@
 
 package com.amplifyframework.analytics;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;

@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.async.Callback;
 import com.amplifyframework.core.category.Category;

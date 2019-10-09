@@ -15,7 +15,7 @@
 
 package com.amplifyframework.analytics;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 /**
  * Defines the client behavior (client API) consumed

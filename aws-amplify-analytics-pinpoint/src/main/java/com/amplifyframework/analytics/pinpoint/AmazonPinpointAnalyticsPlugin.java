@@ -16,8 +16,8 @@
 package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
 import android.util.Log;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;

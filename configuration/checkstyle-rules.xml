@@ -160,7 +160,7 @@
         <module name="RedundantImport" />
         <module name="UnusedImports" />
         <module name="ImportOrder">
-            <property name="groups" value="android,com.amplifyframework,/(com|org|net)/,/^javax?\./"/>
+            <property name="groups" value="/^androidx?\./,com.amplifyframework,/(com|org|net)/,/^javax?\./"/>
             <property name="option" value="bottom" />
             <property name="separated" value="true" />
             <property name="sortStaticImportsAlphabetically" value="true" />

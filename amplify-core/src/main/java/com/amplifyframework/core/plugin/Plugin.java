@@ -15,7 +15,7 @@
 
 package com.amplifyframework.core.plugin;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.category.CategoryTypeable;
 

@@ -15,7 +15,7 @@
 
 package com.amplifyframework.core.category;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.exception.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;

@@ -16,7 +16,7 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsPlugin;
