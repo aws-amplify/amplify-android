@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -35,28 +37,26 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StoragePutResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 
-import androidx.annotation.NonNull;
-
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Storage Category
  * plugins registered.
  */
 
-public class StorageCategory extends Category<StoragePlugin<?>> implements StorageCategoryBehavior {
+public final class StorageCategory extends Category<StoragePlugin<?>> implements StorageCategoryBehavior {
     /**
      * Retrieve the Storage category type enum
      *
      * @return enum that represents Storage category
      */
     @Override
-    public final CategoryType getCategoryType() {
+    public CategoryType getCategoryType() {
         return CategoryType.STORAGE;
     }
 
     @Override
     public StorageGetOperation get(@NonNull String key) throws StorageGetException {
-        return get(key, new StorageGetOptions(), null);
+        return get(key, StorageGetOptions.create(), null);
     }
 
     @Override
@@ -83,7 +83,7 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
      */
     @Override
     public StoragePutOperation put(@NonNull String key, @NonNull String local) throws StoragePutException {
-        return put(key, local, new StoragePutOptions(), null);
+        return put(key, local, StoragePutOptions.create(), null);
     }
 
     @Override
@@ -103,7 +103,7 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
 
     @Override
     public StorageListOperation list() throws StorageListException {
-        return list(new StorageListOptions());
+        return list(StorageListOptions.create());
     }
 
     @Override
@@ -119,7 +119,7 @@ public class StorageCategory extends Category<StoragePlugin<?>> implements Stora
 
     @Override
     public StorageRemoveOperation remove(@NonNull String key) throws StorageRemoveException {
-        return remove(key, new StorageRemoveOptions());
+        return remove(key, StorageRemoveOptions.create());
     }
 
     @Override

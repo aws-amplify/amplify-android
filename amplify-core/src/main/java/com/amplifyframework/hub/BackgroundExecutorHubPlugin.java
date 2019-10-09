@@ -18,6 +18,8 @@ package com.amplifyframework.hub;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.internal.FilteredHubListener;
@@ -30,9 +32,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 

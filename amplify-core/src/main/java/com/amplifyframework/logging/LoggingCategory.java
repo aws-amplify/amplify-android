@@ -18,9 +18,9 @@ package com.amplifyframework.logging;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
-public class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
+public final class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
     @Override
-    public final CategoryType getCategoryType() {
+    public CategoryType getCategoryType() {
         return CategoryType.LOGGING;
     }
 }

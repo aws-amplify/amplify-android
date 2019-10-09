@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
@@ -23,8 +25,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import androidx.annotation.NonNull;
 
 public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
     /**
@@ -49,14 +49,14 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public void configure(CategoryConfiguration configuration) throws ConfigurationException, PluginException {
+    public final void configure(CategoryConfiguration configuration) throws ConfigurationException, PluginException {
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
 
         for (P plugin : getPlugins()) {
             String pluginKey = plugin.getPluginKey();
-            Object pluginConfig = configuration.pluginConfigs.get(pluginKey);
+            Object pluginConfig = configuration.getPluginConfig(pluginKey);
 
             if (pluginConfig != null) {
                 plugin.configure(pluginConfig);
@@ -76,7 +76,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *               conforms to the {@link Plugin} interface.
      * @throws PluginException when a plugin cannot be registered for this category
      */
-    public void addPlugin(@NonNull P plugin) throws PluginException {
+    public final void addPlugin(@NonNull P plugin) throws PluginException {
         try {
             plugins.put(plugin.getPluginKey(), plugin);
         } catch (Exception ex) {
@@ -91,7 +91,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *               conforms to the {@link Plugin} interface
      * @throws PluginException when a plugin cannot be registered for this category
      */
-    public void removePlugin(@NonNull P plugin) throws PluginException {
+    public final void removePlugin(@NonNull P plugin) throws PluginException {
         if (plugins.remove(plugin.getPluginKey()) == null) {
             throw new PluginException.NoSuchPluginException();
         }
@@ -103,7 +103,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param pluginKey the key that identifies the plugin implementation
      * @return the plugin object
      */
-    public P getPlugin(@NonNull final String pluginKey) throws PluginException {
+    public final P getPlugin(@NonNull final String pluginKey) throws PluginException {
         if (plugins.containsKey(pluginKey)) {
             return plugins.get(pluginKey);
         } else {
@@ -114,7 +114,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * @return the set of plugins added to a Category.
      */
-    public Set<P> getPlugins() {
+    public final Set<P> getPlugins() {
         return new HashSet<P>(plugins.values());
     }
 
@@ -125,7 +125,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *
      * @return the only registered plugin for this category
      */
-    protected P getSelectedPlugin() throws ConfigurationException {
+    protected final P getSelectedPlugin() throws ConfigurationException {
         if (!isConfigured) {
             throw new ConfigurationException("This category is not yet configured.");
         }
@@ -139,3 +139,4 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         return getPlugins().iterator().next();
     }
 }
+

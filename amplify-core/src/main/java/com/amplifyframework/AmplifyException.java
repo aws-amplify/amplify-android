@@ -24,8 +24,8 @@ public class AmplifyException extends Exception {
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
-    /** Optional recovery suggestion message */
-    protected String recoverySuggestion;
+    private final String recoverySuggestion;
+    private final boolean isRetryable;
 
     /**
      * Creates a new AmplifyException with the specified message, and root
@@ -34,8 +34,18 @@ public class AmplifyException extends Exception {
      * @param message An error message describing why this exception was thrown.
      * @param t The underlying cause of this exception.
      */
-    public AmplifyException(final String message, final Throwable t) {
+    public AmplifyException(
+            final String message,
+            final Throwable t,
+            final String recoverySuggestion,
+            final boolean isRetryable) {
         super(message, t);
+        this.recoverySuggestion = recoverySuggestion;
+        this.isRetryable = isRetryable;
+    }
+
+    public AmplifyException(final String message, final Throwable throwable) {
+        this(message, throwable, null, false);
     }
 
     /**
@@ -44,7 +54,7 @@ public class AmplifyException extends Exception {
      * @param message An error message describing why this exception was thrown.
      */
     public AmplifyException(final String message) {
-        super(message);
+        this(message, null, null, false);
     }
 
     /**
@@ -53,13 +63,13 @@ public class AmplifyException extends Exception {
      * @param throwable the cause of the exception.
      */
     public AmplifyException(final Throwable throwable) {
-        super(throwable);
+        this(null, throwable);
     }
 
-    /**
+    /** Optional recovery suggestion message */ /**
      * Returns customized recovery suggestion message
      */
-    public String getRecoverySuggestion() {
+    public final String getRecoverySuggestion() {
         return recoverySuggestion;
     }
 
@@ -68,8 +78,8 @@ public class AmplifyException extends Exception {
      * Default is true, but subclass may override.
      * @return true if it is retryable.
      */
-    public boolean isRetryable() {
-        return true;
+    public final boolean isRetryable() {
+        return isRetryable;
     }
 }
 

@@ -15,12 +15,12 @@
 
 package com.amplifyframework.core.async;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.category.CategoryType;
 
 import java.util.UUID;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * An abstract representation of an Amplify unit of work. Subclasses may aggregate multiple work items
@@ -80,15 +80,16 @@ public abstract class AmplifyOperation
 
     }
 
-    public R getRequest() {
+    public final R getRequest() {
         return request;
     }
 
-    public UUID getOperationId() {
+    public final UUID getOperationId() {
         return operationId;
     }
 
-    public CategoryType getCategoryType() {
+    public final CategoryType getCategoryType() {
         return categoryType;
     }
 }
+

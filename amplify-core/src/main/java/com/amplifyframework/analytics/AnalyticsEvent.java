@@ -17,88 +17,121 @@ package com.amplifyframework.analytics;
 
 import java.util.Map;
 
-import androidx.annotation.NonNull;
-
 /**
  * AnalyticsEvent wraps the information that is part of an event
  * being recorded and sent by an {@link AnalyticsPlugin}.
  */
-public class AnalyticsEvent {
+public final class AnalyticsEvent {
 
-    private String eventName;
-    private Map<String, String> attributes;
-    private String eventType;
-    private Map<String, Double> metrics;
-    private Map<String, String> data;
+    private final String eventName;
+    private final Map<String, String> attributes;
+    private final String eventType;
+    private final Map<String, Double> metrics;
+    private final Map<String, String> data;
 
-    /**
-     * Construct an AnalyticEvent based on the eventName.
-     *
-     * @param eventName name of the event.
-     */
-    public AnalyticsEvent(@NonNull String eventName) {
-        this.eventName = eventName;
+    AnalyticsEvent(Builder builder) {
+        this.eventName = builder.eventName();
+        this.attributes = builder.attributes();
+        this.eventType = builder.eventType();
+        this.metrics = builder.metrics();
+        this.data = builder.data();
     }
 
     /**
      * @return map representing the event attributes.
      */
-    public Map<String, String> getAttributes() {
+    public Map<String, String> attributes() {
         return attributes;
-    }
-
-    /**
-     * Set the event attributes.
-     *
-     * @param attributes map of key-value pairs representing
-     *                   the attributes
-     */
-    public void setAttributes(Map<String, String> attributes) {
-        this.attributes = attributes;
     }
 
     /**
      * @return type of the event.
      */
-    public String getEventType() {
+    public String eventType() {
         return eventType;
-    }
-
-    /**
-     * @param eventType type of the event
-     */
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
     }
 
     /**
      * @return metrics map that
      *         represents the numeric quantities
      */
-    public Map<String, Double> getMetrics() {
+    public Map<String, Double> metrics() {
         return metrics;
-    }
-
-    /**
-     * @param metrics map that
-     *                represents the numeric quantities
-     */
-    public void setMetrics(Map<String, Double> metrics) {
-        this.metrics = metrics;
     }
 
     /**
      * @return the event payload
      */
-    public Map<String, String> getData() {
+    public Map<String, String> data() {
         return data;
     }
 
-    /**
-     * @param data the event payload
-     */
-    public void setData(Map<String, String> data) {
-        this.data = data;
+    public String eventName() {
+        return eventName;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private String eventName;
+        private Map<String, String> attributes;
+        private String eventType;
+        private Map<String, Double> metrics;
+        private Map<String, String> data;
+
+        Builder() {
+        }
+
+        public Builder eventName(String eventName) {
+            this.eventName = eventName;
+            return this;
+        }
+
+        public Builder attributes(Map<String, String> attributes) {
+            this.attributes = attributes;
+            return this;
+        }
+
+        public Builder eventType(String eventType) {
+            this.eventType = eventType;
+            return this;
+        }
+
+        public Builder metrics(Map<String, Double> metrics) {
+            this.metrics = metrics;
+            return this;
+        }
+
+        public Builder data(Map<String, String> data) {
+            this.data = data;
+            return this;
+        }
+
+        String eventName() {
+            return eventName;
+        }
+
+        Map<String, String> attributes() {
+            return attributes;
+        }
+
+        String eventType() {
+            return eventType;
+        }
+
+        Map<String, Double> metrics() {
+            return metrics;
+        }
+
+        Map<String, String> data() {
+            return data;
+        }
+
+        public AnalyticsEvent build() {
+            return new AnalyticsEvent(this);
+        }
     }
 }
 

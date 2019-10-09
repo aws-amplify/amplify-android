@@ -17,6 +17,7 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
 import android.util.Log;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsEvent;
@@ -25,12 +26,10 @@ import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.plugin.PluginException;
 
-import androidx.annotation.NonNull;
-
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-public class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
+public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
 

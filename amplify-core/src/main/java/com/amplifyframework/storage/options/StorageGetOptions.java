@@ -21,54 +21,74 @@ import com.amplifyframework.storage.StorageAccessLevel;
 /**
  * Options to specify attributes of get API invocation
  */
-public class StorageGetOptions implements Options {
-    public StorageAccessLevel accessLevel;
-    public String targetIdentityId;
-    public StorageGetDestination storageGetDestination;
-    public Options options;
+public final class StorageGetOptions implements Options {
+    private final StorageAccessLevel accessLevel;
+    private final String targetIdentityId;
+    private final StorageGetDestination storageGetDestination;
+    private final Options options;
 
-    /**
-     * Attaches storage access level attribute
-     *
-     * @param accessLevel access level for invoking API
-     * @return this options object for chaining other attributes
-     */
-    public StorageGetOptions withAccessLevel(StorageAccessLevel accessLevel) {
-        this.accessLevel = accessLevel;
-        return this;
+    StorageGetOptions(final Builder builder) {
+        this.accessLevel = builder.accessLevel;
+        this.targetIdentityId = builder.targetIdentityId;
+        this.storageGetDestination = builder.storageGetDestination;
+        this.options = builder.options;
     }
 
-    /**
-     * Attaches target identity ID attribute
-     *
-     * @param targetIdentityId target identity identifier for invoking API
-     * @return this options object for chaining other attributes
-     */
-    public StorageGetOptions withTargetIdentityId(String targetIdentityId) {
-        this.targetIdentityId = targetIdentityId;
-        return this;
+    public StorageAccessLevel getAccessLevel() {
+        return accessLevel;
     }
 
-    /**
-     * Attaches specifics to storage get destination
-     *
-     * @param getDestination enum to specifiy whether to get a pre-signed download-URL
-     *                       or download the file to local device
-     * @return this options object for chaining other attributes
-     */
-    public StorageGetOptions withGetDestination(StorageGetDestination getDestination) {
-        this.storageGetDestination = getDestination;
-        return this;
+    public String getTargetIdentityId() {
+        return targetIdentityId;
     }
 
-    /**
-     * Attaches additional options
-     *
-     * @param options additional options for custom purposes
-     * @return this options object for chaining other attributes
-     */
-    public StorageGetOptions withOptions(Options options) {
-        this.options = options;
-        return this;
+    public StorageGetDestination getStorageGetDestination() {
+        return storageGetDestination;
+    }
+
+    public Options getOptions() {
+        return options;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static StorageGetOptions create() {
+        return builder().build();
+    }
+
+    public static final class Builder {
+        private StorageAccessLevel accessLevel;
+        private String targetIdentityId;
+        private StorageGetDestination storageGetDestination;
+        private Options options;
+
+        Builder() {
+        }
+
+        public Builder accessLevel(StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
+            return this;
+        }
+
+        public Builder targetIdentityId(String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
+            return this;
+        }
+
+        public Builder storageGetDestination(StorageGetDestination storageGetDestination) {
+            this.storageGetDestination = storageGetDestination;
+            return this;
+        }
+
+        public Builder options(Options options) {
+            this.options = options;
+            return this;
+        }
+
+        public StorageGetOptions build() {
+            return new StorageGetOptions(this);
+        }
     }
 }

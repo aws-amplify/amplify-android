@@ -24,18 +24,28 @@ public class AmplifyRuntimeException extends RuntimeException {
     /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
-    /** Optional recovery suggestion message */
-    protected String recoverySuggestion;
+    private final String recoverySuggestion;
+    private final boolean isRetryable;
 
     /**
      * Creates a new AmplifyRuntimeException with the specified message, and root
      * cause.
      *
      * @param message An error message describing why this exception was thrown.
-     * @param t The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
      */
-    public AmplifyRuntimeException(final String message, final Throwable t) {
-        super(message, t);
+    public AmplifyRuntimeException(
+            final String message,
+            final Throwable throwable,
+            final String recoverySuggestion,
+            final boolean isRetryable) {
+        super(message, throwable);
+        this.recoverySuggestion = recoverySuggestion;
+        this.isRetryable = isRetryable;
+    }
+
+    public AmplifyRuntimeException(final String message, final Throwable throwable) {
+        this(message, throwable, null, false);
     }
 
     /**
@@ -44,7 +54,7 @@ public class AmplifyRuntimeException extends RuntimeException {
      * @param message An error message describing why this exception was thrown.
      */
     public AmplifyRuntimeException(final String message) {
-        super(message);
+        this(message, null, null, false);
     }
 
     /**
@@ -53,13 +63,13 @@ public class AmplifyRuntimeException extends RuntimeException {
      * @param throwable the cause of the exception.
      */
     public AmplifyRuntimeException(final Throwable throwable) {
-        super(throwable);
+        this(null, throwable, null, false);
     }
 
-    /**
+    /** Optional recovery suggestion message */ /**
      * Returns customized recovery suggestion message
      */
-    public String getRecoverySuggestion() {
+    public final String getRecoverySuggestion() {
         return recoverySuggestion;
     }
 
@@ -68,7 +78,7 @@ public class AmplifyRuntimeException extends RuntimeException {
      * Default is true, but subclass may override.
      * @return true if it is retryable.
      */
-    public boolean isRetryable() {
-        return true;
+    public final boolean isRetryable() {
+        return isRetryable;
     }
 }

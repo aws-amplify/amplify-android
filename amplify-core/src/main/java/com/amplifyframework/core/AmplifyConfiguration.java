@@ -34,17 +34,15 @@ import java.util.Scanner;
  * in-memory objects for the different Amplify plugins to
  * use.
  */
-public class AmplifyConfiguration {
+final class AmplifyConfiguration {
 
-    static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
+    private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
-    public AnalyticsCategoryConfiguration analytics;
-    public ApiCategoryConfiguration api;
-    public HubCategoryConfiguration hub;
-    public LoggingCategoryConfiguration logging;
-    public StorageCategoryConfiguration storage;
-
-    private JSONObject mJSONObject;
+    private final AnalyticsCategoryConfiguration analytics;
+    private final ApiCategoryConfiguration api;
+    private final HubCategoryConfiguration hub;
+    private final LoggingCategoryConfiguration logging;
+    private final StorageCategoryConfiguration storage;
 
     /**
      * Constructor.
@@ -52,12 +50,12 @@ public class AmplifyConfiguration {
      * @param context The configuration information can be read
      *                from the default amplify configuration file.
      */
-    public AmplifyConfiguration(Context context) {
-        analytics = new AnalyticsCategoryConfiguration();
-        api = new ApiCategoryConfiguration();
-        hub = new HubCategoryConfiguration();
-        logging = new LoggingCategoryConfiguration();
-        storage = new StorageCategoryConfiguration();
+    AmplifyConfiguration(Context context) {
+        this.analytics = new AnalyticsCategoryConfiguration();
+        this.api = new ApiCategoryConfiguration();
+        this.hub = new HubCategoryConfiguration();
+        this.logging = new LoggingCategoryConfiguration();
+        this.storage = new StorageCategoryConfiguration();
 
         readInputJson(context, getConfigResourceId(context));
     }
@@ -85,11 +83,31 @@ public class AmplifyConfiguration {
             }
             in.close();
 
-            this.mJSONObject = new JSONObject(sb.toString());
+            JSONObject jsonObject = new JSONObject(sb.toString());
         } catch (Exception je) {
             throw new RuntimeException(
                     "Failed to read " + DEFAULT_IDENTIFIER + " please check that it is correctly formed.",
                     je);
         }
+    }
+
+    public AnalyticsCategoryConfiguration getAnalytics() {
+        return analytics;
+    }
+
+    public ApiCategoryConfiguration getApi() {
+        return api;
+    }
+
+    public HubCategoryConfiguration getHub() {
+        return hub;
+    }
+
+    public LoggingCategoryConfiguration getLogging() {
+        return logging;
+    }
+
+    public StorageCategoryConfiguration getStorage() {
+        return storage;
     }
 }
