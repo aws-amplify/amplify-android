@@ -27,67 +27,41 @@ public final class HubFilters {
     }
 
     public static HubPayloadFilter always() {
-        return new HubPayloadFilter() {
-            @Override
-            public boolean filter(@NonNull final HubPayload payload) {
-                return true;
-            }
-        };
+        return payload -> true;
     }
 
     public static HubPayloadFilter all(@NonNull final HubPayloadFilter... filters) {
-        return new HubPayloadFilter() {
-            @Override
-            public boolean filter(@NonNull final HubPayload payload) {
-                boolean allFiltersSatisfied = true;
-                for (HubPayloadFilter hubPayloadFilter: filters) {
-                    allFiltersSatisfied &= hubPayloadFilter.filter(payload);
-                }
-                return allFiltersSatisfied;
+        return payload -> {
+            boolean allFiltersSatisfied = true;
+            for (HubPayloadFilter hubPayloadFilter: filters) {
+                allFiltersSatisfied &= hubPayloadFilter.filter(payload);
             }
+            return allFiltersSatisfied;
         };
     }
 
     public static HubPayloadFilter any(@NonNull final HubPayloadFilter... filters) {
-        return new HubPayloadFilter() {
-            @Override
-            public boolean filter(@NonNull final HubPayload payload) {
-                boolean anyFilterSatisfied = false;
-                for (HubPayloadFilter hubPayloadFilter: filters) {
-                    anyFilterSatisfied |= hubPayloadFilter.filter(payload);
-                }
-                return anyFilterSatisfied;
+        return payload -> {
+            boolean anyFilterSatisfied = false;
+            for (HubPayloadFilter hubPayloadFilter: filters) {
+                anyFilterSatisfied |= hubPayloadFilter.filter(payload);
             }
+            return anyFilterSatisfied;
         };
     }
 
     public static HubPayloadFilter and(@NonNull final HubPayloadFilter leftFilter,
                                        @NonNull final HubPayloadFilter rightFilter) {
-        return new HubPayloadFilter() {
-            @Override
-            public boolean filter(@NonNull final HubPayload payload) {
-                return leftFilter.filter(payload) && rightFilter.filter(payload);
-            }
-        };
+        return payload -> leftFilter.filter(payload) && rightFilter.filter(payload);
     }
 
     public static HubPayloadFilter or(@NonNull final HubPayloadFilter leftFilter,
                                       @NonNull final HubPayloadFilter rightFilter) {
-        return new HubPayloadFilter() {
-            @Override
-            public boolean filter(@NonNull final HubPayload payload) {
-                return leftFilter.filter(payload) || rightFilter.filter(payload);
-            }
-        };
+        return payload -> leftFilter.filter(payload) || rightFilter.filter(payload);
     }
 
     public static HubPayloadFilter hubPayloadFilter(@NonNull final AmplifyOperation<?> operation) {
-        return new HubPayloadFilter() {
-            @Override
-            public boolean filter(@NonNull final HubPayload payload) {
-                // TODO
-                return true;
-            }
-        };
+        return payload -> /* TODO */ true;
     }
 }
+
