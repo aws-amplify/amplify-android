@@ -19,33 +19,56 @@ import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Options to specify attributes of remove API invocation
+ * Options to specify attributes of remove API invocation.
  */
 public final class StorageRemoveOptions implements Options {
     private final StorageAccessLevel accessLevel;
     private final Options options;
 
     StorageRemoveOptions(Builder builder) {
-        this.accessLevel = builder.accessLevel();
-        this.options = builder.options();
+        this.accessLevel = builder.getAccessLevel();
+        this.options = builder.getOptions();
     }
 
-    public StorageAccessLevel accessLevel() {
+    /**
+     * Gets the storage access level.
+     * @return Storage access level
+     */
+    public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
 
-    public Options options() {
+    /**
+     * Gets the storage options.
+     * @return Storage options
+     */
+    public Options getOptions() {
         return options;
     }
 
+    /**
+     * Gets a new instance of {@link StorageRemoveOptions.Builder}, which can be used
+     * to configure and construct new immutable instances of {@link StorageRemoveOptions}.
+     * @return a new instance of the {@link StorageRemoveOptions.Builder}.
+     */
     public static Builder builder() {
         return new Builder();
     }
 
-    public static StorageRemoveOptions create() {
+    /**
+     * Creates a default instance of the {@link StorageRemoveOptions}, which has
+     * no special/unique configurations.
+     * @return Default instance of StorageRemoveOptions
+     */
+    public static StorageRemoveOptions defaultInstance() {
         return builder().build();
     }
 
+    /**
+     * Provides a mechanism to prepare and construct immutable instances
+     * of {@link StorageRemoveOptions}, using fluent method configuration API
+     * via chained method invocations.
+     */
     public static final class Builder {
         private StorageAccessLevel accessLevel;
         private Options options;
@@ -53,24 +76,39 @@ public final class StorageRemoveOptions implements Options {
         Builder() {
         }
 
+        /**
+         * Configures the storage access level to use on newly built StorageRemoveOptions instances.
+         * @param accessLevel Storage access level
+         * @return Current Builder instance, for fluent method chaining
+         */
         public Builder accessLevel(StorageAccessLevel accessLevel) {
             this.accessLevel = accessLevel;
             return this;
         }
 
+        /**
+         * Configures the options to use on newly built StorageRemoveOptions instances.
+         * @param options Options bundle
+         * @return Current Builder instance, for fluent method chaining
+         */
         public Builder options(Options options) {
             this.options = options;
             return this;
         }
 
-        StorageAccessLevel accessLevel() {
+        StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
-        Options options() {
+        Options getOptions() {
             return options;
         }
 
+        /**
+         * Constructs and returns a new immutable {@link StorageRemoveOptions} instance, using the
+         * values that had been configured on the current builder instance.
+         * @return A new immutable instance of the {@link StorageRemoveOptions}.
+         */
         public StorageRemoveOptions build() {
             return new StorageRemoveOptions(this);
         }

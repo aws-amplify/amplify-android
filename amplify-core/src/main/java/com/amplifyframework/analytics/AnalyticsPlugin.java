@@ -22,6 +22,7 @@ import com.amplifyframework.core.plugin.Plugin;
  * Abstract class that a plugin implementation of Analytics category
  * would extend. This includes the client behavior dictated by
  * {@link AnalyticsCategoryBehavior} and {@link Plugin}.
+ * @param <E> The type of class returned by the plugin implementation to be used as an escape hatch
  */
 public abstract class AnalyticsPlugin<E> implements AnalyticsCategoryBehavior, Plugin<E> {
     @Override

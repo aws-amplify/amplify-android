@@ -15,5 +15,8 @@
 
 package com.amplifyframework.analytics;
 
+/**
+ * TODO: write down what this is.
+ */
 public class AnalyticsProfile {
 }

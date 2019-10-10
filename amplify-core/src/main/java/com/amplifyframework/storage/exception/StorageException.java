@@ -17,45 +17,72 @@ package com.amplifyframework.storage.exception;
 
 import com.amplifyframework.ConfigurationException;
 
+/**
+ * Base exception type for any exception that is raised from within the
+ * storage category.
+ */
 public class StorageException extends ConfigurationException {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * An attempt has been made to use the storage category, but the
+     * storage category was never configured.
+     */
     public static class StorageNotConfiguredException extends StorageException {
 
         private static final long serialVersionUID = 1L;
 
+        /**
+         * Constructs a new StorageNotConfiguredException using a
+         * default message.
+         */
         public StorageNotConfiguredException() {
             super("Storage category is not configured. Please configure it through Amplify.configure(context)");
         }
 
+        /**
+         * Constructs a new StorageNotConfiguredException using a
+         * user-provided message.
+         * @param message Explains in more detail why the exception was thrown
+         */
         public StorageNotConfiguredException(String message) {
             super(message);
         }
 
+        /**
+         * Constructs a new StorageNotConfiguredException that has been
+         * caused by another error.
+         * @param throwable The error that caused storage to not be configured
+         */
         public StorageNotConfiguredException(Throwable throwable) {
             super(throwable);
         }
 
-        public StorageNotConfiguredException(String message, Throwable t) {
-            super(message, t);
+        /**
+         * Constructs a new StorageNotConfiguredException, providing a
+         * custom message and an underlying error that caused this
+         * state.
+         * @param message Explanation of why the exception has been raised
+         * @param throwable An underlying error that caused this * exception
+         */
+        public StorageNotConfiguredException(String message, Throwable throwable) {
+            super(message, throwable);
         }
     }
 
     /**
      * Creates a new ConfigurationException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
-     * @param t       The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
      */
-    public StorageException(String message, Throwable t) {
-        super(message, t);
+    public StorageException(String message, Throwable throwable) {
+        super(message, throwable);
     }
 
     /**
      * Creates a new ConfigurationException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public StorageException(String message) {
@@ -64,7 +91,6 @@ public class StorageException extends ConfigurationException {
 
     /**
      * Create an ConfigurationException with an exception cause.
-     *
      * @param throwable the cause of the exception.
      */
     public StorageException(Throwable throwable) {

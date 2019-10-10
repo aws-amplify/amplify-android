@@ -22,23 +22,20 @@ import com.amplifyframework.AmplifyRuntimeException;
  */
 public class AnalyticsException extends AmplifyRuntimeException {
 
-    /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
     /**
      * Creates a new AmazonClientException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
-     * @param t The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
      */
-    public AnalyticsException(final String message, final Throwable t) {
-        super(message, t, null, true);
+    public AnalyticsException(final String message, final Throwable throwable) {
+        super(message, throwable, null, true);
     }
 
     /**
      * Creates a new AmazonClientException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public AnalyticsException(final String message) {
@@ -47,7 +44,6 @@ public class AnalyticsException extends AmplifyRuntimeException {
 
     /**
      * Create an AmazonClientException with an exception cause.
-     *
      * @param throwable the cause of the exception.
      */
     public AnalyticsException(final Throwable throwable) {

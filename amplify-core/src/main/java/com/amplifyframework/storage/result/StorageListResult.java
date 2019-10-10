@@ -15,28 +15,43 @@
 
 package com.amplifyframework.storage.result;
 
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.Result;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * A result of an list operation on the Storage category.
+ */
 public final class StorageListResult implements Result {
-    private List<String> keys;
+    private final List<String> keys;
 
     private StorageListResult(List<String> keys) {
-        this.keys = new ArrayList<>();
-        this.keys.addAll(keys);
-    }
-
-    public static StorageListResult fromKeys(List<String> keys) {
-        return new StorageListResult(keys);
+        this.keys = keys;
     }
 
     /**
-     * Keys retrieved by list API
+     * Factory method to construct a storage list result from a list of keys.
+     * @param keys A possibly null, possibly empty list of key
+     * @return A new immutable instance of StorageListResult
+     */
+    public static StorageListResult fromKeys(@Nullable List<String> keys) {
+        final List<String> safeKeys = new ArrayList<>();
+        if (keys != null) {
+            safeKeys.addAll(keys);
+        }
+        return new StorageListResult(Collections.unmodifiableList(safeKeys));
+    }
+
+    /**
+     * Gets the keys retrieved by the list API.
+     * @return List of keys that were returned by the Storage category's list API(s).
      */
     public List<String> getKeys() {
-        return Collections.unmodifiableList(keys);
+        return keys;
     }
 }
+

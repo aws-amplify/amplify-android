@@ -18,12 +18,41 @@ package com.amplifyframework.datastore;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.async.Result;
 
+/**
+ * A high-level interface to an object repository.
+ * @param <T> The type of object that this data store manages, e.g. Integer.
+ */
 public interface DataStore<T> {
-    void save(T object, Listener<Result> callback);
+    /**
+     * Saves an object into the data store.
+     * @param object The object to save
+     * @param resultListener A listener which will be invoked when the save
+     *                       is complete or if the save fails
+     */
+    void save(T object, Listener<Result> resultListener);
 
-    void delete(T object, Listener<Result> callback);
+    /**
+     * Deletes an object from the data store.
+     * @param object The object to delete from the data store
+     * @param resultListener A listener which will be invoked when the delete is
+     *                       complete or if the delete fails
+     */
+    void delete(T object, Listener<Result> resultListener);
 
-    void query(Class<T> objects, Listener<Result> callback);
+    /**
+     * Query the data store to find objects of the provided type.
+     * @param objectType The class type of the objects being queried
+     * @param resultListener A listener which will be invoked when the query
+     *                       returns results, or if there is a failure to query
+     */
+    void query(Class<T> objectType, Listener<Result> resultListener);
 
-    void observe(T object, Listener<Result> callback);
+    /**
+     * Observe changes to an object, in the data store.
+     * @param object An object in the data store (matched somehow)
+     * @param resultListener A listener that will be invoked when changes are
+     *                       made to the object or on failure to observe
+     *                       the data store
+     */
+    void observe(T object, Listener<Result> resultListener);
 }

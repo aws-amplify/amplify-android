@@ -24,27 +24,27 @@ import com.amplifyframework.core.category.CategoryType;
  */
 public enum HubChannel {
     /**
-     * Hub messages relating to Amplify Analytics
+     * Hub messages relating to Amplify Analytics.
      */
     ANALYTICS(CategoryType.ANALYTICS),
 
     /**
-     * Hub messages relating to Amplify Api
+     * Hub messages relating to Amplify Api.
      */
     API(CategoryType.API),
 
     /**
-     * Hub messages relating to Amplify Hub
+     * Hub messages relating to Amplify Hub.
      */
     HUB(CategoryType.HUB),
 
     /**
-     * Hub messages relating to Amplify Logging
+     * Hub messages relating to Amplify Logging.
      */
     LOGGING(CategoryType.LOGGING),
 
     /**
-     * Hub messages relating to Amplify Storage
+     * Hub messages relating to Amplify Storage.
      */
     STORAGE(CategoryType.STORAGE);
 
@@ -55,13 +55,9 @@ public enum HubChannel {
     }
 
     /**
-     * Look up HubChannel based on CategoryType
+     * Look up HubChannel based on CategoryType.
      * @param categoryType identifies an Amplify category
      * @return the hub channel corresponding to it
-     * @throws NoHubChannelException
-     *               If there is no HubChannel known for CategoryType, possibly because
-     *               a HubChannel is not mapped or the CategoryType passed is not a valid
-     *               category type.
      */
     public static HubChannel forCategoryType(final CategoryType categoryType) {
         for (final HubChannel possibleMatch : values()) {

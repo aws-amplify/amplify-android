@@ -18,50 +18,65 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.AmplifyException;
 
 /**
- * Exception encountered in get API of Storage category
+ * Exception encountered in get API of Storage category.
  */
 public class StorageGetException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Specifies that exception was due to object not being found
+     * Specifies that exception was due to object not being found.
      */
     public static class NotFoundException extends StorageGetException {
 
         private static final long serialVersionUID = 1L;
 
+        /**
+         * Constructs a new NotFoundException with a default error message.
+         */
         public NotFoundException() {
             super("No object is associated with provided key.");
         }
 
+        /**
+         * Constructs a new NotFoundException with a custom error message.
+         * @param message Explains that an object was not found
+         */
         public NotFoundException(String message) {
             super(message);
         }
 
+        /**
+         * Constructs a new NotFoundException associated to an error.
+         * @param throwable An associated error
+         */
         public NotFoundException(Throwable throwable) {
             super(throwable);
         }
 
-        public NotFoundException(String message, Throwable t) {
-            super(message, t);
+        /**
+         * Constructs a new NotFoundException using a provided error message,
+         * and associated to a provided error.
+         * @param message Explains that an object was not found
+         * @param throwable An associated error
+         */
+        public NotFoundException(String message, Throwable throwable) {
+            super(message, throwable);
         }
     }
 
     /**
      * Creates a new StorageGetException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
-     * @param t The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
      */
-    public StorageGetException(final String message, final Throwable t) {
-        super(message, t);
+    public StorageGetException(final String message, final Throwable throwable) {
+        super(message, throwable);
     }
 
     /**
      * Creates a new StorageGetException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public StorageGetException(final String message) {
@@ -70,11 +85,9 @@ public class StorageGetException extends AmplifyException {
 
     /**
      * Creates a new StorageGetException with the root cause.
-     *
      * @param throwable The underlying cause of this exception.
      */
     public StorageGetException(final Throwable throwable) {
         super(throwable);
     }
 }
-

@@ -25,9 +25,19 @@ import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ * An operation to get an item from storage.
+ */
 public class StorageGetOperation extends AmplifyOperation<AmplifyOperationRequest<?>>
         implements Resumable, Cancelable {
 
+    /**
+     * Constructs a new StorageGetOperation.
+     * @param categoryType The category type to which this operation is bound (Storage, duh!)
+     * @param request A bundling of the parameters that were passed to the Storage get API
+     * @param eventListener A listener that will be notified when events occur during
+     *                      the execution of this operation
+     */
     public StorageGetOperation(@NonNull CategoryType categoryType,
                                @NonNull AmplifyOperationRequest<?> request,
                                @Nullable EventListener<?> eventListener) {

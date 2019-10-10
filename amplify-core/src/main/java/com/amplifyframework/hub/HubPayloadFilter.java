@@ -17,7 +17,15 @@ package com.amplifyframework.hub;
 
 import androidx.annotation.NonNull;
 
+/**
+ * A filter which can be used to control which {@link HubPayload}s a
+ * subscribed {@link HubListener} will receive from the Hub. The
+ * {@link HubPaylods} utility constants factories for some commonly
+ * used types of {@HubPayloadFilter}. Alternately, you are free to
+ * implement your own custom, more complex, logic.
+ */
 public interface HubPayloadFilter {
+
     /**
      * Filter the HubPayload based on your criteria.
      * An implementation of a HubPayloadFilter can be passed to
@@ -31,3 +39,4 @@ public interface HubPayloadFilter {
      */
     boolean filter(@NonNull final HubPayload payload);
 }
+

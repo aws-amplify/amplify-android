@@ -18,12 +18,14 @@ package com.amplifyframework.api;
 import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
- * Strongly-typed configuration for API category that also
- * contains configuration for individual plugins
+ * Configurations for all plugins of the API category.
  */
-public class ApiCategoryConfiguration extends CategoryConfiguration {
+public final class ApiCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
+    /**
+     * Constructs a new ApiCategoryConfiguration.
+     */
     public ApiCategoryConfiguration() {
         super();
     }

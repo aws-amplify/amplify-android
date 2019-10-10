@@ -22,6 +22,7 @@ import com.amplifyframework.core.plugin.Plugin;
  * Abstract class that a plugin implementation of Hub Category
  * would extend. This includes the client behavior dictated by
  * {@link StorageCategoryBehavior} and {@link Plugin}.
+ * @param <E> The class type of the escape hatch provided by the plugin
  */
 public abstract class StoragePlugin<E> implements StorageCategoryBehavior, Plugin<E> {
     @Override

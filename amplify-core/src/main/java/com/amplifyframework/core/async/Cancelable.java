@@ -15,7 +15,17 @@
 
 package com.amplifyframework.core.async;
 
+/**
+ * An entity is called "cancelable" if it can be cancelled.
+ * A dentist appointment is an example of a cancelable; the appointment was made
+ * somehow, at some point, but you can (usually) call to cancel the appointment
+ * if you need to.
+ */
 public interface Cancelable {
+
+    /**
+     * Cancels a previous agreement/condition/state.
+     */
     void cancel();
 }
 

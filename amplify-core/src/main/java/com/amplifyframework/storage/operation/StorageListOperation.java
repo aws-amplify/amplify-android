@@ -23,8 +23,18 @@ import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ * An operation to list the items available in storage.
+ */
 public class StorageListOperation extends AmplifyOperation<AmplifyOperationRequest<?>> {
 
+    /**
+     * Constructs a new StorageListOperation.
+     * @param categoryType The category to which this operation is associated (Storage, duh!)
+     * @param request A bundling of the parameters that were passed to the Storage List API
+     * @param eventListener A listener that will be notified of events that occur during
+     *                      execution of this operation
+     */
     public StorageListOperation(@NonNull CategoryType categoryType,
                                 @NonNull AmplifyOperationRequest<?> request,
                                 @Nullable EventListener<?> eventListener) {

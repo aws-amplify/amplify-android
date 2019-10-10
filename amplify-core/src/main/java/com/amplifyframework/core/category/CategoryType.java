@@ -20,9 +20,40 @@ package com.amplifyframework.core.category;
  * of APIs supported by Amplify System.
  */
 public enum CategoryType {
+
+    /**
+     * Analytics track your app's operational status and customer
+     * engagement, recording to an AWS backend service.
+     */
     ANALYTICS,
+
+    /**
+     * API simplifies interactions with a remove AWS backend via REST
+     * And GraphQL operations.
+     */
     API,
+
+    /**
+     * Hub is an event bus style pub/sub system that is used to
+     * communicate state inside and outside of the Amplify framework.
+     * This category is expected to operate locally to the device,
+     * without talking to AWS backend services, directly.
+     */
     HUB,
+
+    /**
+     * Logging for troubleshooting of component behaviors during
+     * development, or when deployed in production.  This category is
+     * expected to operate locally to the device, without talking to AWS
+     * backend services, directly.
+     */
     LOGGING,
+
+    /**
+     * Storage is an interface to a remote repository to store and
+     * retrieve instances of domain models. AWS provides several backend
+     * systems that are suitable for storage of your data.
+     */
     STORAGE;
 }
+

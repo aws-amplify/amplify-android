@@ -15,13 +15,14 @@
 
 package com.amplifyframework;
 
+import androidx.annotation.Nullable;
+
 /**
  * Top-level compile-time exception in the Amplify System. Any compile-time
  * exception in Amplify should derive from this exception.
  */
 public class AmplifyException extends Exception {
 
-    /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
     private final String recoverySuggestion;
@@ -30,27 +31,35 @@ public class AmplifyException extends Exception {
     /**
      * Creates a new AmplifyException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
-     * @param t The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
+     * @param recoverySuggestion An optional text suggesting a way to recover
+     *                           from the error being described
+     * @param isRetryable A boolean indicating whether or not this exception
+     *                    indicates a recoverable state, or if a consumer
+     *                    should not retry the operation that failed
      */
     public AmplifyException(
             final String message,
-            final Throwable t,
-            final String recoverySuggestion,
+            final Throwable throwable,
+            @Nullable final String recoverySuggestion,
             final boolean isRetryable) {
-        super(message, t);
+        super(message, throwable);
         this.recoverySuggestion = recoverySuggestion;
         this.isRetryable = isRetryable;
     }
 
+    /**
+     * Constructs a new AmplifyException using a provided message and an associated error.
+     * @param message Explains the reason for the exception
+     * @param throwable An error associated with this exception
+     */
     public AmplifyException(final String message, final Throwable throwable) {
         this(message, throwable, null, false);
     }
 
     /**
      * Creates a new AmplifyException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public AmplifyException(final String message) {
@@ -59,15 +68,15 @@ public class AmplifyException extends Exception {
 
     /**
      * Create an AmplifyException with an exception cause.
-     *
      * @param throwable the cause of the exception.
      */
     public AmplifyException(final Throwable throwable) {
         this(null, throwable);
     }
 
-    /** Optional recovery suggestion message */ /**
-     * Returns customized recovery suggestion message
+    /**
+     * Gets the optional recovery suggestion message.
+     * @return customized recovery suggestion message
      */
     public final String getRecoverySuggestion() {
         return recoverySuggestion;

@@ -15,8 +15,17 @@
 
 package com.amplifyframework.storage.result;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.Result;
 
+import java.util.Objects;
+
+
+/**
+ * A result of a remove operation on the Storage category.
+ */
 public final class StorageRemoveResult implements Result {
     private final String key;
 
@@ -24,11 +33,36 @@ public final class StorageRemoveResult implements Result {
         this.key = key;
     }
 
-    public static StorageRemoveResult fromKey(String key) {
-        return new StorageRemoveResult(key);
+    /**
+     * Creates a StorageRemoveResult from a storage key.
+     * @param key The key of the storage item that was removed
+     * @return A storage remove result describing key
+     */
+    @NonNull
+    public static StorageRemoveResult fromKey(@NonNull String key) {
+        return new StorageRemoveResult(Objects.requireNonNull(key));
     }
 
+    /**
+     * Gets the key of the item that was removed from storage.
+     * @return Key for item that was removed from storage
+     */
+    @NonNull
     public String getKey() {
         return key;
+    }
+
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (!(thatObject instanceof StorageRemoveResult)) {
+            return false;
+        }
+        final StorageRemoveResult that = (StorageRemoveResult) thatObject;
+        return (this.key.equals(that.getKey()));
     }
 }

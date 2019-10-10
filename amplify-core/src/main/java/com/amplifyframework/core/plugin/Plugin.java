@@ -22,25 +22,25 @@ import com.amplifyframework.core.category.CategoryTypeable;
 /**
  * Interface that defines the contract that every plugin
  * in Amplify System will adhere to.
+ * @param <E> The class type of the escape hatch used to circumvent the generic plugin APIs
  */
 public interface Plugin<E> extends CategoryTypeable {
+
     /**
-     * @return the identifier that identifies
-     *         the plugin implementation
+     * Gets a key which uniquely identifies the plugin instance.
+     * @return the identifier that identifies the plugin implementation
      */
     String getPluginKey();
 
     /**
-     * Configure the plugin with customized configuration object
-     *
+     * Configure the plugin with customized configuration object.
      * @param pluginConfiguration plugin-specific configuration
      * @throws PluginException when configuration for a plugin was not found
      */
     void configure(@NonNull Object pluginConfiguration) throws PluginException;
 
     /**
-     * Returns escape hatch for plugin to enable lower-level client use-cases
-     *
+     * Returns escape hatch for plugin to enable lower-level client use-cases.
      * @return the client used by category plugin
      */
     E getEscapeHatch();

@@ -18,9 +18,16 @@ package com.amplifyframework.api;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ * The API category provides methods for interacting with remote systems
+ * using REST and GraphQL constructs. The category is implemented by
+ * zero or more {@link ApiPlugin}. The operations made available by the
+ * category are defined in the {@link ApiCategoryBehavior}.
+ */
 public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCategoryBehavior {
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.API;
     }
 }
+

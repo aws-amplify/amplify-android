@@ -15,13 +15,14 @@
 
 package com.amplifyframework;
 
+import androidx.annotation.Nullable;
+
 /**
  * Top-level run-time exception in the Amplify System. Any run-time
  * exception in Amplify should derive from this exception.
  */
 public class AmplifyRuntimeException extends RuntimeException {
 
-    /** Default serial version UID. */
     private static final long serialVersionUID = 1L;
 
     private final String recoverySuggestion;
@@ -30,27 +31,35 @@ public class AmplifyRuntimeException extends RuntimeException {
     /**
      * Creates a new AmplifyRuntimeException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
      * @param throwable The underlying cause of this exception.
+     * @param recoverySuggestion An optional text containing a hint on how
+     *                           the user might recover from the current error
+     * @param isRetryable A boolean indicating whether or not a consumer
+     *                    should retry the operation which raised this exception,
+     *                    or alternately, if the exception is not recoverable
      */
     public AmplifyRuntimeException(
             final String message,
             final Throwable throwable,
-            final String recoverySuggestion,
+            @Nullable final String recoverySuggestion,
             final boolean isRetryable) {
         super(message, throwable);
         this.recoverySuggestion = recoverySuggestion;
         this.isRetryable = isRetryable;
     }
 
+    /**
+     * Constructs a new AmplifyRuntimeException.
+     * @param message A message explaining why the exception occurred
+     * @param throwable An associated error, perhaps a cause of this exception
+     */
     public AmplifyRuntimeException(final String message, final Throwable throwable) {
         this(message, throwable, null, false);
     }
 
     /**
      * Creates a new AmplifyRuntimeException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public AmplifyRuntimeException(final String message) {
@@ -66,8 +75,9 @@ public class AmplifyRuntimeException extends RuntimeException {
         this(null, throwable, null, false);
     }
 
-    /** Optional recovery suggestion message */ /**
-     * Returns customized recovery suggestion message
+    /**
+     * Gets an optional recovery suggestion message.
+     * @return customized recovery suggestion message
      */
     public final String getRecoverySuggestion() {
         return recoverySuggestion;
@@ -75,7 +85,6 @@ public class AmplifyRuntimeException extends RuntimeException {
 
     /**
      * Returns a hint as to whether it makes sense to retry upon this exception.
-     * Default is true, but subclass may override.
      * @return true if it is retryable.
      */
     public final boolean isRetryable() {
