@@ -25,17 +25,15 @@ import java.util.Map;
 /**
  * Options to specify attributes of put API invocation.
  */
-public final class StoragePutOptions implements Options {
+public final class StorageUploadFileOptions implements Options {
     private final StorageAccessLevel accessLevel;
     private final String contentType;
     private final Map<String, String> metadata;
-    private final Options options;
 
-    StoragePutOptions(Builder builder) {
+    StorageUploadFileOptions(Builder builder) {
         this.accessLevel = builder.getAccessLevel();
         this.contentType = builder.getContentType();
         this.metadata = builder.getMetadata();
-        this.options = builder.getOptions();
     }
 
     /**
@@ -63,16 +61,8 @@ public final class StoragePutOptions implements Options {
     }
 
     /**
-     * Gets the options.
-     * @return Options
-     */
-    public Options getOptions() {
-        return options;
-    }
-
-    /**
      * Returns a new Builder instance that can be used to configure
-     * and build a new immutable instance of StoragePutOptions.
+     * and build a new immutable instance of StorageUploadFileOptions.
      * @return a new builder instance
      */
     public static Builder builder() {
@@ -80,29 +70,30 @@ public final class StoragePutOptions implements Options {
     }
 
     /**
-     * Creates a new default instance of the StoragePutOptions.
+     * Creates a new default instance of the StorageUploadFileOptions.
      * @return default storage put options
      */
-    public static StoragePutOptions defaultInstance() {
+    public static StorageUploadFileOptions defaultInstance() {
         return builder().build();
     }
 
     /**
-     * Use to configure and build immutable instances of the StoragePutOptions,
-     * using fluent of property configuration methods.
+     * Use to configure and build immutable instances of the
+     * StorageUploadFileOptions, using fluent of property configuration
+     * methods.
      */
     public static final class Builder {
         private StorageAccessLevel accessLevel;
         private String contentType;
         private Map<String, String> metadata;
-        private Options options;
 
         Builder() {
             Builder.this.metadata = new HashMap<>();
         }
 
         /**
-         * Configures the storage access level for the new StoragePutOptions instance.
+         * Configures the storage access level for the new
+         * StorageUploadFileOptions instance.
          * @param accessLevel Storage access level
          * @return Current Builder instance for fluent chaining
          */
@@ -112,7 +103,7 @@ public final class StoragePutOptions implements Options {
         }
 
         /**
-         * Configures the content type for a new StoragePutOptions instance.
+         * Configures the content type for a new StorageUploadFileOptions instance.
          * @param contentType Content type
          * @return Current Builder instance for fluent chaining
          */
@@ -122,8 +113,8 @@ public final class StoragePutOptions implements Options {
         }
 
         /**
-         * Configures metadata for new StoragePutOptions instance.
-         * @param metadata Metadata for StoragePutOptions
+         * Configures metadata for new StorageUploadFileOptions instance.
+         * @param metadata Metadata for StorageUploadFileOptions
          * @return Current Builder instance for fluent method chaining
          */
         public Builder metadata(Map<String, String> metadata) {
@@ -135,13 +126,13 @@ public final class StoragePutOptions implements Options {
         }
 
         /**
-         * Configures options on the StoragePutOptions which is under construction.
-         * @param options Options bundle
-         * @return Current Builder instance, for fluent method chaining
+         * Builds a new immutable StorageUploadFileOptions instance,
+         * based on the configuration options that have been previously
+         * set on this Builder instance.
+         * @return A new immutable StorageUploadFileOptions instance
          */
-        public Builder options(Options options) {
-            this.options = options;
-            return this;
+        public StorageUploadFileOptions build() {
+            return new StorageUploadFileOptions(this);
         }
 
         StorageAccessLevel getAccessLevel() {
@@ -155,18 +146,6 @@ public final class StoragePutOptions implements Options {
         Map<String, String> getMetadata() {
             return Collections.unmodifiableMap(metadata);
         }
-
-        Options getOptions() {
-            return options;
-        }
-
-        /**
-         * Builds a new immutable StoragePutOptions instance, based on the configuration
-         * options that have been previously set on this Builder instance.
-         * @return A new immutable StoragePutOptions instance
-         */
-        public StoragePutOptions build() {
-            return new StoragePutOptions(this);
-        }
     }
 }
+

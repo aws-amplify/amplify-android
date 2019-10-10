@@ -13,25 +13,22 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.options;
+package com.amplifyframework.storage.operation;
+
+import com.amplifyframework.core.async.AmplifyOperation;
+import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.async.Resumable;
+import com.amplifyframework.core.category.CategoryType;
 
 /**
- * Enum to specify the return type for storage get invocation.
+ * Base operation type for all behaviors on the Storage category.
  */
-public enum StorageGetDestination {
-    
+public abstract class StorageOperation extends AmplifyOperation implements Resumable, Cancelable {
     /**
-     * Obtain data in memory.
+     * Constructs a new instance of a StorageOperation.
      */
-    DATA,
-
-    /**
-     * Write to local file.
-     */
-    FILE,
-
-    /**
-     * Obtain pre-signed download URL that expires.
-     */
-    URL;
+    public StorageOperation() {
+        super(CategoryType.STORAGE);
+    }
 }
+

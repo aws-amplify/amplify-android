@@ -23,28 +23,28 @@ import com.amplifyframework.core.async.Result;
 import java.util.Objects;
 
 /**
- * A result of a put operation on the Storage category.
+ * The result of a file upload operation in the Storage category.
  */
-public final class StoragePutResult implements Result {
+public final class StorageUploadFileResult implements Result {
     private final String key;
 
-    private StoragePutResult(String key) {
+    private StorageUploadFileResult(String key) {
         this.key = key;
     }
 
     /**
-     * Creates a new StoragePutResult from a storage item key.
-     * @param key Key for an item that was put successfully
-     * @return A storage put result containing the item key
+     * Creates a new StorageUploadFileResult from a storage item key.
+     * @param key Key for an item that was uploaded successfully
+     * @return A storage upload result containing the item key
      */
     @NonNull
-    public static StoragePutResult fromKey(@NonNull String key) {
-        return new StoragePutResult(Objects.requireNonNull(key));
+    public static StorageUploadFileResult fromKey(@NonNull String key) {
+        return new StorageUploadFileResult(Objects.requireNonNull(key));
     }
 
     /**
-     * Gets the key for the item was successfully put.
-     * @return Key for item that was put
+     * Gets the key for the item was successfully uploaded.
+     * @return Key for item that was uploaded
      */
     @NonNull
     public String getKey() {
@@ -58,10 +58,11 @@ public final class StoragePutResult implements Result {
 
     @Override
     public boolean equals(@Nullable Object thatObject) {
-        if (!(thatObject instanceof StoragePutResult)) {
+        if (!(thatObject instanceof StorageUploadFileResult)) {
             return false;
         }
-        final StoragePutResult that = (StoragePutResult) thatObject;
+        final StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
         return this.key.equals(that.getKey());
     }
 }
+
