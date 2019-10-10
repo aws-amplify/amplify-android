@@ -35,7 +35,7 @@ public interface Listener<R> {
     /**
      * Listener method for reporting failure
      * of an operation.
-     * @param e represents the exception object
+     * @param error The error that occurred
      */
-    void onError(Exception e);
+    void onError(Exception error);
 }

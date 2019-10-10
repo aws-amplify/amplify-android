@@ -23,6 +23,7 @@ import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.HubCategory;
@@ -33,6 +34,9 @@ import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StoragePlugin;
 
 /**
+ * This is the top-level customer-facing interface to the Amplify
+ * framework.
+ *
  * The Amplify System has the following responsibilities:
  *
  * 1) Add, Get and Remove Category plugins with the Amplify System
@@ -77,8 +81,7 @@ public final class Amplify {
     }
 
     /**
-     * Read the configuration from amplifyconfiguration.json file
-     *
+     * Read the configuration from amplifyconfiguration.json file.
      * @param context Android context required to read the contents of file
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
@@ -88,8 +91,7 @@ public final class Amplify {
     }
 
     /**
-     * Configure Amplify with AmplifyConfiguration object
-     *
+     * Configure Amplify with AmplifyConfiguration object.
      * @param configuration AmplifyConfiguration object for configuration via code
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
@@ -104,23 +106,23 @@ public final class Amplify {
             amplifyConfiguration = configuration;
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(amplifyConfiguration.getAnalytics());
+                Analytics.configure(amplifyConfiguration.forCategoryType(CategoryType.ANALYTICS));
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(amplifyConfiguration.getApi());
+                API.configure(amplifyConfiguration.forCategoryType(CategoryType.API));
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(amplifyConfiguration.getHub());
+                Hub.configure(amplifyConfiguration.forCategoryType(CategoryType.HUB));
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(amplifyConfiguration.getLogging());
+                Logging.configure(amplifyConfiguration.forCategoryType(CategoryType.LOGGING));
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(amplifyConfiguration.getStorage());
+                Storage.configure(amplifyConfiguration.forCategoryType(CategoryType.STORAGE));
             }
 
             configured = true;
@@ -128,8 +130,7 @@ public final class Amplify {
     }
 
     /**
-     * Register a plugin with Amplify
-     *
+     * Register a plugin with Amplify.
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
      * @param <P> any plugin that conforms to the {@link Plugin} interface
@@ -185,6 +186,12 @@ public final class Amplify {
         }
     }
 
+    /**
+     * Removes a plugin form the Amplify framework.
+     * @param plugin The plugin to remove from the Amplify framework
+     * @param <P> The type of the plugin being removed
+     * @throws PluginException On failure to remove a plugin
+     */
     public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws PluginException {
         synchronized (LOCK) {
             switch (plugin.getCategoryType()) {
@@ -230,6 +237,13 @@ public final class Amplify {
         }
     }
 
+    /**
+     * Gets the Amplify configuration. The amplify configuration
+     * includes all details about the various categories/plugins that
+     * are available for use by the framework.
+     * @return The current Amplify configuration, possibly null if
+     *         Amplify has not yet been configured
+     */
     static AmplifyConfiguration getAmplifyConfiguration() {
         return amplifyConfiguration;
     }

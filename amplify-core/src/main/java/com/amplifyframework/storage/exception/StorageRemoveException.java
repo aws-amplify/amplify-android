@@ -18,7 +18,7 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.AmplifyException;
 
 /**
- * Exception encountered in unsubscribe API of Storage category
+ * Exception encountered in unsubscribe API of Storage category.
  */
 public class StorageRemoveException extends AmplifyException {
 
@@ -27,17 +27,15 @@ public class StorageRemoveException extends AmplifyException {
     /**
      * Creates a new StorageRemoveException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
-     * @param t The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
      */
-    public StorageRemoveException(final String message, final Throwable t) {
-        super(message, t);
+    public StorageRemoveException(final String message, final Throwable throwable) {
+        super(message, throwable);
     }
 
     /**
      * Creates a new StorageRemoveException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public StorageRemoveException(final String message) {
@@ -46,7 +44,6 @@ public class StorageRemoveException extends AmplifyException {
 
     /**
      * Creates a new StorageRemoveException with the root cause.
-     *
      * @param throwable The underlying cause of this exception.
      */
     public StorageRemoveException(final Throwable throwable) {

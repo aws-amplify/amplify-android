@@ -15,7 +15,15 @@
 
 package com.amplifyframework.core.async;
 
+/**
+ * An asynchronous operation is a unit of work that can be started without
+ * blocking the current thread of execution.
+ */
 public interface AsyncOperation {
+
+    /**
+     * Start performing the operation.
+     */
     void start();
 }
 

@@ -18,50 +18,65 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.AmplifyException;
 
 /**
- * Exception encountered in list API of Storage category
+ * Exception encountered in list API of Storage category.
  */
 public class StorageListException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Specifies that access to storage was denied
+     * Specifies that access to storage was denied.
      */
     public static class AccessDeniedException extends StorageListException {
 
         private static final long serialVersionUID = 1L;
 
+        /**
+         * Constructs a new AccessDeniedException using a default error message.
+         */
         public AccessDeniedException() {
             super("Access to storage denied.");
         }
 
+        /**
+         * Constructs a new AccessDeniedException using a provided error message.
+         * @param message Explains that access to a storage resource was denied
+         */
         public AccessDeniedException(String message) {
             super(message);
         }
 
+        /**
+         * Constructs a new AccessDeniedException associated to an error.
+         * @param throwable An error associated to this exception
+         */
         public AccessDeniedException(Throwable throwable) {
             super(throwable);
         }
 
-        public AccessDeniedException(String message, Throwable t) {
-            super(message, t);
+        /**
+         * Constructs a new AccessDeniedException using a provided message and
+         * associated to a provided error.
+         * @param message Explains that access to a storage resource was denied
+         * @param throwable An error associated with this exception
+         */
+        public AccessDeniedException(String message, Throwable throwable) {
+            super(message, throwable);
         }
     }
 
     /**
      * Creates a new StorageListException with the specified message, and root
      * cause.
-     *
      * @param message An error message describing why this exception was thrown.
-     * @param t The underlying cause of this exception.
+     * @param throwable The underlying cause of this exception.
      */
-    public StorageListException(final String message, final Throwable t) {
-        super(message, t);
+    public StorageListException(final String message, final Throwable throwable) {
+        super(message, throwable);
     }
 
     /**
      * Creates a new StorageListException with the specified message.
-     *
      * @param message An error message describing why this exception was thrown.
      */
     public StorageListException(final String message) {
@@ -70,11 +85,9 @@ public class StorageListException extends AmplifyException {
 
     /**
      * Creates a new StorageListException with the root cause cause.
-     *
      * @param throwable The underlying cause of this exception.
      */
     public StorageListException(final Throwable throwable) {
         super(throwable);
     }
 }
-

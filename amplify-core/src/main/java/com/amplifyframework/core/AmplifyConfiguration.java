@@ -17,8 +17,11 @@ package com.amplifyframework.core;
 
 import android.content.Context;
 
+import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
+import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
@@ -29,10 +32,9 @@ import java.io.InputStream;
 import java.util.Scanner;
 
 /**
- * AmplifyConfiguration parses the configuration from
- * the amplifyconfiguration.json file and stores in the
- * in-memory objects for the different Amplify plugins to
- * use.
+ * AmplifyConfiguration parses the configuration from the
+ * amplifyconfiguration.json file and stores in the in-memory objects
+ * for the different Amplify plugins to use.
  */
 final class AmplifyConfiguration {
 
@@ -45,8 +47,7 @@ final class AmplifyConfiguration {
     private final StorageCategoryConfiguration storage;
 
     /**
-     * Constructor.
-     *
+     * Constructs a new AmplifyConfiguration object.
      * @param context The configuration information can be read
      *                from the default amplify configuration file.
      */
@@ -64,11 +65,11 @@ final class AmplifyConfiguration {
         try {
             return context.getResources().getIdentifier(DEFAULT_IDENTIFIER,
                     "raw", context.getPackageName());
-        } catch (Exception e) {
+        } catch (Exception exception) {
             throw new RuntimeException(
                     "Failed to read " + DEFAULT_IDENTIFIER
                             + " please check that it is correctly formed.",
-                    e);
+                    exception);
         }
     }
 
@@ -84,30 +85,32 @@ final class AmplifyConfiguration {
             in.close();
 
             JSONObject jsonObject = new JSONObject(sb.toString());
-        } catch (Exception je) {
+        } catch (Exception exception) {
             throw new RuntimeException(
                     "Failed to read " + DEFAULT_IDENTIFIER + " please check that it is correctly formed.",
-                    je);
+                    exception);
         }
     }
 
-    public AnalyticsCategoryConfiguration getAnalytics() {
-        return analytics;
-    }
-
-    public ApiCategoryConfiguration getApi() {
-        return api;
-    }
-
-    public HubCategoryConfiguration getHub() {
-        return hub;
-    }
-
-    public LoggingCategoryConfiguration getLogging() {
-        return logging;
-    }
-
-    public StorageCategoryConfiguration getStorage() {
-        return storage;
+    /**
+     * Gets the configuration for the storage category.
+     * @return Storage category configuration
+     */
+    public CategoryConfiguration forCategoryType(final CategoryType categoryType) {
+        switch (categoryType) {
+            case LOGGING:
+                return logging;
+            case HUB:
+                return hub;
+            case API:
+                return api;
+            case ANALYTICS:
+                return analytics;
+            case STORAGE:
+                return storage;
+            default:
+                throw new ConfigurationException("Uknown/bad category type: " + categoryType);
+        }
     }
 }
+

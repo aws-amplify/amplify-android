@@ -23,8 +23,18 @@ import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ * Desrcibes an operation being carried out to remove an item from storage.
+ */
 public class StorageRemoveOperation extends AmplifyOperation<AmplifyOperationRequest<?>> {
 
+    /**
+     * Constructs a new StorageRemoveOperation.
+     * @param categoryType The category associated to this operation (Storage, duh?)
+     * @param request Bundle of the parameters that were provided the remove API
+     * @param eventListener A listener to be notified of events that occur during the
+     *                      execution of this operation
+     */
     public StorageRemoveOperation(@NonNull CategoryType categoryType,
                                   @NonNull AmplifyOperationRequest<?> request,
                                   @Nullable EventListener<?> eventListener) {
@@ -35,3 +45,4 @@ public class StorageRemoveOperation extends AmplifyOperation<AmplifyOperationReq
     public void start() {
     }
 }
+

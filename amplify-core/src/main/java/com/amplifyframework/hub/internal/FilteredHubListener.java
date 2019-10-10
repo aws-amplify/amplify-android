@@ -34,6 +34,14 @@ public final class FilteredHubListener {
     private final HubPayloadFilter hubPayloadFilter;
     private final HubListener hubListener;
 
+    /**
+     * Constructs a new FilteredHubListener.
+     * @param channel The channel on which this listener is listening
+     * @param listenerId TODO: document this field
+     * @param hubPayloadFilter A filter to apply when hubListener receives a payload,
+     *                         if this field is null, it means "don't apply a filter"
+     * @param hubListener A listener that listens to the provided channel
+     */
     public FilteredHubListener(@NonNull final HubChannel channel,
                                @NonNull final UUID listenerId,
                                @Nullable final HubPayloadFilter hubPayloadFilter,
@@ -44,18 +52,34 @@ public final class FilteredHubListener {
         this.hubListener = hubListener;
     }
 
-    public HubChannel getChannel() {
+    /**
+     * Gets the channel on which the listener is listening.
+     * @return Channel on which the listener is listening
+     */
+    public HubChannel getHubChannel() {
         return channel;
     }
 
+    /**
+     * An ID for one of the listeners. TODO: document which one.
+     * @return ID for one of the listeners
+     */
     public UUID getListenerId() {
         return listenerId;
     }
 
-    public HubPayloadFilter getHubFilter() {
+    /**
+     * A filter that is applied when the listener receives a payload.
+     * @return Filter applied when listener receives payload
+     */
+    public HubPayloadFilter getHubPayloadFilter() {
         return hubPayloadFilter;
     }
 
+    /**
+     * A listener, before filter is applied.
+     * @return The listener before the filter is applied
+     */
     public HubListener getHubListener() {
         return hubListener;
     }

@@ -16,21 +16,22 @@
 package com.amplifyframework.storage.options;
 
 /**
- * Enum to specify the return type for storage get invocation
+ * Enum to specify the return type for storage get invocation.
  */
 public enum StorageGetDestination {
+    
     /**
-     * Obtain data in memory
+     * Obtain data in memory.
      */
     DATA,
 
     /**
-     * Write to local file
+     * Write to local file.
      */
     FILE,
 
     /**
-     * Obtain pre-signed download URL that expires
+     * Obtain pre-signed download URL that expires.
      */
     URL;
 }

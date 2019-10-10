@@ -15,8 +15,17 @@
 
 package com.amplifyframework.core.async;
 
+/**
+ * Resumable models a behavior that can be paused and resumed.
+ */
 public interface Resumable {
+    /**
+     * Pauses the operation/state of the resumable.
+     */
     void pause();
 
+    /**
+     * Resumes the operation/state of the resumable.
+     */
     void resume();
 }

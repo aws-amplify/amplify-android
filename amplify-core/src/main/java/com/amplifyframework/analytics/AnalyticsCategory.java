@@ -41,14 +41,16 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
      */
     private boolean enabled;
 
+    /**
+     * Constructs a new AnalyticsCategory instance.
+     */
     public AnalyticsCategory() {
         super();
         this.enabled = true;
     }
 
     /**
-     * Retrieve the Analytics category type enum
-     *
+     * Retrieve the Analytics category type enum.
      * @return enum that represents Analytics category
      */
     @Override

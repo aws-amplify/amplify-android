@@ -25,6 +25,7 @@ import com.amplifyframework.ConfigurationException;
  * events.
  */
 public interface AnalyticsCategoryBehavior {
+
     /**
      * Disable collection and sending of Analytics Events.
      */
@@ -37,31 +38,31 @@ public interface AnalyticsCategoryBehavior {
 
     /**
      * Record the event by storing in the local database.
-     *
      * @param eventName name of the event. An AnalyticsEvent is constructed
      *                  based on the name of the event.
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
+     * @throws ConfigurationException If the category is badly/not yet configured
      */
     void recordEvent(@NonNull String eventName) throws AnalyticsException, ConfigurationException;
 
     /**
      * Record the event by storing in the local database.
-     *
      * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
+     * @throws ConfigurationException If the category is badly/not yet configured
      */
     void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
 
     /**
      * Update the profile of the end-user/device for whom/which you are
      * collecting analytics.
-     *
      * @param analyticsProfile the profile of the end-user/device for whom/which you are
-     *      * collecting analytics.
+     *                         collecting analytics.
      * @throws AnalyticsException when there is an error updating the
-     *                            profile with the registered/chosen {@link AnalyticsPlugin}.
+     *                            profile with the registered/chosen {@link AnalyticsPlugin}
+     * @throws ConfigurationException If the category is badly/not yet configured
      */
     void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException;
 }

@@ -18,12 +18,15 @@ package com.amplifyframework.hub;
 import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
- * Strongly-typed configuration for Hub category that also
- * contains configuration for individual plugins
+ * Configuration for the Hub category, that also
+ * references configuration(s) for its managed plugins.
  */
-public class HubCategoryConfiguration extends CategoryConfiguration {
+public final class HubCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
+    /**
+     * Constructs a new HubCategoryConfiguration instance.
+     */
     public HubCategoryConfiguration() {
         super();
     }

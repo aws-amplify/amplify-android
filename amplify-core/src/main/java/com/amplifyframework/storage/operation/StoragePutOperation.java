@@ -25,9 +25,19 @@ import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ * An operation to put an item into storage.
+ */
 public class StoragePutOperation extends AmplifyOperation<AmplifyOperationRequest<?>>
         implements Resumable, Cancelable {
 
+    /**
+     * Constructs a new StoragePutOperation.
+     * @param categoryType The category to which this operation is associated (Storage, duh!)
+     * @param request The request parameters that were passed to the Storage put API
+     * @param eventListener A listener that will be notified of events that occur
+     *                      during execution of this operation
+     */
     public StoragePutOperation(@NonNull CategoryType categoryType,
                                @NonNull AmplifyOperationRequest<?> request,
                                @Nullable EventListener<?> eventListener) {

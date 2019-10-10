@@ -130,7 +130,12 @@
         <module name="MethodName" />
         <module name="MethodTypeParameterName" />
         <module name="PackageName" />
-        <module name="ParameterName" />
+        <module name="ParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]{2,}$" />
+        </module>
+        <module name="CatchParameterName">
+            <property name="format" value="^[a-z][a-zA-Z0-9]{2,}$" />
+        </module>
         <module name="StaticVariableName" />
         <module name="TypeName" />
 
@@ -190,6 +195,43 @@
         <module name="MutableException" />
         <module name="OneTopLevelClass" />
         <module name="VisibilityModifier" />
+
+        <!-- @property Javadocs must be in a consistent order. -->
+        <module name="AtclauseOrder" />
+        <!--
+            public and protected methods should include a Javadoc
+            explaining how customer-exposed functionality ought to be
+            used.
+        -->
+        <module name="JavadocMethod">
+            <property name="scope" value="protected" />
+            <property name="validateThrows" value="true" />
+            <property name="allowUndeclaredRTE" value="true" />
+        </module>
+        <!--
+            public and protected class/interface definitions should
+            include a high-level descriptive doc.
+        -->
+        <module name="JavadocType">
+            <property name="scope" value="protected" />
+        </module>
+        <!--
+            public and protected fields should include a high-level descriptive doc.
+        -->
+        <module name="JavadocVariable">
+            <property name="scope" value="protected" />
+        </module>
+
+        <!-- disallow empty at-clasues. -->
+        <module name="NonEmptyAtclauseDescription" />
+        <!-- Javadocs contain a valid summary statement. -->
+        <module name="SummaryJavadocCheck" />
+        <!-- Prefer a single-line Javadoc, if it'll fit (e.g., no at-clauses) -->
+        <module name="SingleLineJavadoc" />
+        <!-- Common style checks for javadocs, when they do already exist. -->
+        <module name="JavadocStyle">
+            <property name="checkEmptyJavadoc" value="true" />
+        </module>
     </module>
 
     <!-- Analyze stored @SuppressWarnings annotations. -->

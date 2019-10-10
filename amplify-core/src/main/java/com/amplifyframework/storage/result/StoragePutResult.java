@@ -15,20 +15,53 @@
 
 package com.amplifyframework.storage.result;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.Result;
 
+import java.util.Objects;
+
+/**
+ * A result of a put operation on the Storage category.
+ */
 public final class StoragePutResult implements Result {
-    private String key;
+    private final String key;
 
     private StoragePutResult(String key) {
         this.key = key;
     }
 
-    public static StoragePutResult fromKey(String key) {
-        return new StoragePutResult(key);
+    /**
+     * Creates a new StoragePutResult from a storage item key.
+     * @param key Key for an item that was put successfully
+     * @return A storage put result containing the item key
+     */
+    @NonNull
+    public static StoragePutResult fromKey(@NonNull String key) {
+        return new StoragePutResult(Objects.requireNonNull(key));
     }
 
+    /**
+     * Gets the key for the item was successfully put.
+     * @return Key for item that was put
+     */
+    @NonNull
     public String getKey() {
         return key;
+    }
+
+    @Override
+    public int hashCode() {
+        return key.hashCode();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (!(thatObject instanceof StoragePutResult)) {
+            return false;
+        }
+        final StoragePutResult that = (StoragePutResult) thatObject;
+        return this.key.equals(that.getKey());
     }
 }

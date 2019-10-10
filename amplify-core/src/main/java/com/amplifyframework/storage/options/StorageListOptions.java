@@ -19,7 +19,7 @@ import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Options to specify attributes of list API invocation
+ * Options to specify attributes of list API invocation.
  */
 public final class StorageListOptions implements Options {
     private final StorageAccessLevel accessLevel;
@@ -27,37 +27,67 @@ public final class StorageListOptions implements Options {
     private final String path;
     private final Options options;
 
-    public StorageListOptions(final Builder builder) {
-        this.accessLevel = builder.accessLevel();
-        this.targetIdentityId = builder.targetIdentityId();
-        this.path = builder.path();
-        this.options = builder.options();
+    StorageListOptions(final Builder builder) {
+        this.accessLevel = builder.getAccessLevel();
+        this.targetIdentityId = builder.getTargetIdentityId();
+        this.path = builder.getPath();
+        this.options = builder.getOptions();
     }
 
+    /**
+     * Gets the storage access level.
+     * @return Storage access level
+     */
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
 
+    /**
+     * Gets the target identity id.
+     * @return target identity id
+     */
     public String getTargetIdentityId() {
         return targetIdentityId;
     }
 
+    /**
+     * Gets the storage path.
+     * @return storage path
+     */
     public String getPath() {
         return path;
     }
 
+    /**
+     * Gets the options.
+     * @return options
+     */
     public Options getOptions() {
         return options;
     }
 
+    /**
+     * Factory method to return an {@link StorageListOptions.Builder} instance
+     * which may be used to configure and build an immutable {@link StorageListOptions} object.
+     * @return Builder used to construct {@link StorageListOptions}
+     */
     public static Builder builder() {
         return new Builder();
     }
 
-    public static StorageListOptions create() {
+    /**
+     * Factory method to create a simple, defaulted instance of the
+     * {@link StorageListOptions}.
+     * @return Default storage list options instance
+     */
+    public static StorageListOptions defaultInstance() {
         return builder().build();
     }
 
+    /**
+     * Used to construct instance of StorageListOptions via
+     * fluent configuration methods.
+     */
     public static final class Builder {
 
         private StorageAccessLevel accessLevel;
@@ -68,42 +98,68 @@ public final class StorageListOptions implements Options {
         Builder() {
         }
 
+        /**
+         * Configures the storage access level.
+         * @param accessLevel Storage access level
+         * @return Builder instance for fluent chaining
+         */
         public Builder accessLevel(StorageAccessLevel accessLevel) {
             this.accessLevel = accessLevel;
             return this;
         }
 
+        /**
+         * Configures the target identity ID.
+         * @param targetIdentityId target identity ID
+         * @return current Builder instance, for fluent chaining
+         */
         public Builder trgetIdentityId(String targetIdentityId) {
             this.targetIdentityId = targetIdentityId;
             return this;
         }
 
+        /**
+         * Configures the path.
+         * @param path Storage path
+         * @return Current builder instance, for fluent chaining
+         */
         public Builder path(String path) {
             this.path = path;
             return this;
         }
 
+        /**
+         * Configures the options.
+         * @param options Options
+         * @return Current builder instance, for fluent chaining
+         */
         public Builder options(Options options) {
             this.options = options;
             return this;
         }
 
-        StorageAccessLevel accessLevel() {
+        StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
-        String targetIdentityId() {
+        String getTargetIdentityId() {
             return targetIdentityId;
         }
 
-        String path() {
+        String getPath() {
             return path;
         }
 
-        Options options() {
+        Options getOptions() {
             return options;
         }
 
+        /**
+         * Constructs a new immutable instance of the {@link StorageListOptions},
+         * using the values that have been configured on the current instance of this
+         * {@link StorageListOptions.Builder} instance, via prior method calls.
+         * @return A new immutable instance of {@link StorageListOptions}.
+         */
         public StorageListOptions build() {
             return new StorageListOptions(this);
         }
