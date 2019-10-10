@@ -18,12 +18,15 @@ package com.amplifyframework.analytics;
 import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
- * Strongly-typed configuration for Analytics category that also
- * contains configuration for individual plugins
+ * Configuration for Analytics category that also
+ * contains configuration for individual plugins.
  */
-public class AnalyticsCategoryConfiguration extends CategoryConfiguration {
+public final class AnalyticsCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
+    /**
+     * Constructs a new AnalyticsCategoryConfiguration.
+     */
     public AnalyticsCategoryConfiguration() {
         super();
     }

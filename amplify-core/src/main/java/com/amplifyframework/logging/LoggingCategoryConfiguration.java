@@ -18,12 +18,15 @@ package com.amplifyframework.logging;
 import com.amplifyframework.core.category.CategoryConfiguration;
 
 /**
- * Strongly-typed configuration for Logging category that also
- * contains configuration for individual plugins
+ * Configuration for Logging category that also
+ * contains configuration(s) for its individual plugins.
  */
-public class LoggingCategoryConfiguration extends CategoryConfiguration {
+public final class LoggingCategoryConfiguration extends CategoryConfiguration {
     //TODO: Place global (category-wise) configuration options here
 
+    /**
+     * Constructs a new LoggingCategoryConfiguration.
+     */
     public LoggingCategoryConfiguration() {
         super();
     }

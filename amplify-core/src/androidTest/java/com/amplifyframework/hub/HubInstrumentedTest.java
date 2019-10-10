@@ -34,12 +34,19 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Validates the functionality of the {@link BackgroundExecutorHubPlugin}.
+ */
 public final class HubInstrumentedTest {
 
     private static final String TAG = HubInstrumentedTest.class.getSimpleName();
 
     private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS = 100;
 
+    /**
+     * Before any test is run, configure Amplify to use an
+     * {@link BackgroundExecutorHubPlugin} to satify the Hub category.
+     */
     @BeforeClass
     public static void setUpBeforeClass() {
         Amplify.addPlugin(new BackgroundExecutorHubPlugin());
@@ -47,6 +54,8 @@ public final class HubInstrumentedTest {
     }
 
     /**
+     * Validates that the token returned from a subscription call can be
+     * used to unsubscribe from the hub.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
@@ -68,6 +77,8 @@ public final class HubInstrumentedTest {
 
 
     /**
+     * Validates that a subscribed listener will receive a published
+     * event.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
@@ -93,6 +104,8 @@ public final class HubInstrumentedTest {
     }
 
     /**
+     * Validates that a listener will not continue to receive events
+     * from the hub, once it has unsubscribed.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
@@ -116,6 +129,8 @@ public final class HubInstrumentedTest {
     }
 
     /**
+     * Validates that a hub listener will receive all of a series of
+     * multiple publications.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
@@ -153,6 +168,8 @@ public final class HubInstrumentedTest {
     }
 
     /**
+     * Validates that a hub listener will receive publications of
+     * multiple events of different types.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
@@ -201,3 +218,4 @@ public final class HubInstrumentedTest {
         Amplify.Hub.unsubscribe(token);
     }
 }
+

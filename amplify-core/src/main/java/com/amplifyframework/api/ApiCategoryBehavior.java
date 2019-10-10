@@ -15,5 +15,11 @@
 
 package com.amplifyframework.api;
 
+/**
+ * API category behaviors include REST and GraphQL operations. These
+ * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
+ * query/subscribe/mutate operations.
+ */
 public interface ApiCategoryBehavior {
 }
+

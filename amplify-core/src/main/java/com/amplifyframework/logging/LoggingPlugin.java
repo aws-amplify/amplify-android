@@ -22,6 +22,8 @@ import com.amplifyframework.core.plugin.Plugin;
  * Abstract class that a plugin implementation of Logging category
  * would extend. This includes the client behavior dictated by
  * {@link LoggingCategoryBehavior} and {@link Plugin}.
+ * @param <E> The class type of the escape hatch used to perform
+ *            low-level, implementation-specific logging operations
  */
 public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugin<E> {
     @Override

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.analytics;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -30,50 +32,64 @@ public final class AnalyticsEvent {
     private final Map<String, String> data;
 
     AnalyticsEvent(Builder builder) {
-        this.eventName = builder.eventName();
-        this.attributes = builder.attributes();
-        this.eventType = builder.eventType();
-        this.metrics = builder.metrics();
-        this.data = builder.data();
+        this.eventName = builder.getEventName();
+        this.attributes = builder.getAttributes();
+        this.eventType = builder.getEventType();
+        this.metrics = builder.getMetrics();
+        this.data = builder.getData();
     }
 
     /**
-     * @return map representing the event attributes.
+     * Gets the event's attributes.
+     * @return map representing the event attributes
      */
-    public Map<String, String> attributes() {
+    public Map<String, String> getAttributes() {
         return attributes;
     }
 
     /**
-     * @return type of the event.
+     * Gets the event's type.
+     * @return type of the event
      */
-    public String eventType() {
+    public String getEventType() {
         return eventType;
     }
 
     /**
-     * @return metrics map that
-     *         represents the numeric quantities
+     * Gets the event's metrics properties.
+     * @return metrics map that represents the numeric quantities
      */
-    public Map<String, Double> metrics() {
+    public Map<String, Double> getMetrics() {
         return metrics;
     }
 
     /**
-     * @return the event payload
+     * Gets the event's data.
+     * @return the event data
      */
-    public Map<String, String> data() {
+    public Map<String, String> getData() {
         return data;
     }
 
-    public String eventName() {
+    /**
+     * Gets the name of the event.
+     * @return The event name
+     */
+    public String getEventName() {
         return eventName;
     }
 
+    /**
+     * Return a builder that can be used to construct a new instance of {@link AnalyticsEvent}.
+     * @return An {@link AnalyticsEvent.Builder} instance
+     */
     public static Builder builder() {
         return new Builder();
     }
 
+    /**
+     * Used for fluent construction of an immutable {@link AnalyticsEvent} object.
+     */
     public static final class Builder {
         private String eventName;
         private Map<String, String> attributes;
@@ -82,53 +98,95 @@ public final class AnalyticsEvent {
         private Map<String, String> data;
 
         Builder() {
+            this.attributes = new HashMap<>();
+            this.metrics = new HashMap<>();
+            this.data = new HashMap<>();
         }
 
+        /**
+         * Configure an event name for the AnalyticsEvent under construction.
+         * @param eventName Event name that will be used for final AnalyticsEvent
+         * @return current Builder instance for fluent chaining
+         */
         public Builder eventName(String eventName) {
             this.eventName = eventName;
             return this;
         }
 
+        /**
+         * Set the attributes for the AnalyticsEvent that is being constructed.
+         * @param attributes Attributes to populate into AnalyticsEvent
+         * @return current Builder instance for fluent chaining
+         */
         public Builder attributes(Map<String, String> attributes) {
-            this.attributes = attributes;
+            this.attributes.clear();
+            if (attributes != null) {
+                this.attributes.putAll(attributes);
+            }
             return this;
         }
 
+        /**
+         * Sets the event type for the AnalyticsEvent under construction.
+         * @param eventType Event type to put in AnalyticsEvent
+         * @return current Builder instance for fluent chaining
+         */
         public Builder eventType(String eventType) {
             this.eventType = eventType;
             return this;
         }
 
+        /**
+         * Configures the metrics that will be put into the constructed AnalyticsEvent.
+         * @param metrics Metrics for AnalyticsEvent
+         * @return current Builder instance, for fluent chaining
+         */
         public Builder metrics(Map<String, Double> metrics) {
-            this.metrics = metrics;
+            this.metrics.clear();
+            if (metrics != null) {
+                this.metrics.putAll(metrics);
+            }
             return this;
         }
 
+        /**
+         * Configures the data that will be used to construct the AnalyticsEvent.
+         * @param data to be put into the AnalyticsEvent
+         * @return current Builder instance, for fluent chaining
+         */
         public Builder data(Map<String, String> data) {
-            this.data = data;
+            this.data.clear();
+            if (data != null) {
+                this.data.putAll(data);
+            }
             return this;
         }
 
-        String eventName() {
+        String getEventName() {
             return eventName;
         }
 
-        Map<String, String> attributes() {
-            return attributes;
+        Map<String, String> getAttributes() {
+            return Collections.unmodifiableMap(attributes);
         }
 
-        String eventType() {
+        String getEventType() {
             return eventType;
         }
 
-        Map<String, Double> metrics() {
-            return metrics;
+        Map<String, Double> getMetrics() {
+            return Collections.unmodifiableMap(metrics);
         }
 
-        Map<String, String> data() {
-            return data;
+        Map<String, String> getData() {
+            return Collections.unmodifiableMap(data);
         }
 
+        /**
+         * Builds an immutable AnalyticsEvent, given the values provided
+         * in previous invocations on the builder instance.
+         * @return An immutable AnalyticsEvent instance
+         */
         public AnalyticsEvent build() {
             return new AnalyticsEvent(this);
         }

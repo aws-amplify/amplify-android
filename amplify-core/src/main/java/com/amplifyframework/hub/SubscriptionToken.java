@@ -17,6 +17,7 @@ package com.amplifyframework.hub;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -40,16 +41,16 @@ public final class SubscriptionToken {
 
     /**
      * Construct the subscription token object.
-     *
      * @param uuid uniquely identifies the subscriber.
      * @param hubChannel the channel of the subscriber.
      */
     public SubscriptionToken(@NonNull final UUID uuid, @NonNull final HubChannel hubChannel) {
-        this.uuid = uuid;
-        this.hubChannel = hubChannel;
+        this.uuid = Objects.requireNonNull(uuid);
+        this.hubChannel = Objects.requireNonNull(hubChannel);
     }
 
     /**
+     * Gets the UUID of the subscription.
      * @return the unique identifier of the subscriber.
      */
     public UUID getUuid() {
@@ -57,6 +58,7 @@ public final class SubscriptionToken {
     }
 
     /**
+     * Gets the hub channel to which the subscriber is bound.
      * @return the hub channel of the subscriber.
      */
     public HubChannel getHubChannel() {
@@ -64,15 +66,15 @@ public final class SubscriptionToken {
     }
 
     @Override
-    public boolean equals(Object o) {
-        if (this == o) {
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
             return true;
         }
-        if (o == null || getClass() != o.getClass()) {
+        if (!(thatObject instanceof SubscriptionToken)) {
             return false;
         }
-        SubscriptionToken that = (SubscriptionToken) o;
-        return uuid.equals(that.uuid);
+        final SubscriptionToken that = (SubscriptionToken) thatObject;
+        return uuid.equals(that.getUuid());
     }
 
     @Override

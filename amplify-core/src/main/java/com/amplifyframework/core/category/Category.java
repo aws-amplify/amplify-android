@@ -26,30 +26,40 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * A category groups together zero or more plugins that share the same
+ * category type.
+ * @param <P> A base class type for plugins that this category will
+ *            support, e.g. StoragePlugin, AnalyticsPlugin, etc.
+ */
 public abstract class Category<P extends Plugin<?>> implements CategoryTypeable {
+
     /**
-     * Map of the { pluginKey => plugin } object
+     * Map of the { pluginKey => plugin } object.
      */
     private Map<String, P> plugins;
 
     /**
      * Flag to remember that the category is already configured by Amplify
-     * and throw an error if configure method is called again
+     * and throw an error if configure method is called again.
      */
     private boolean isConfigured;
 
+    /**
+     * Constructs a new, not-yet-configured, Category.
+     */
     public Category() {
         this.plugins = new ConcurrentHashMap<String, P>();
         this.isConfigured = false;
     }
 
     /**
-     * Configure category with provided AmplifyConfiguration object
-     *
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no plugin found for a configuration
+     * Configure category with provided AmplifyConfiguration object.
+     * @param configuration Configuration for all plugins in the category
+     * @throws ConfigurationException
+     *         The category has already been configured
      */
-    public final void configure(CategoryConfiguration configuration) throws ConfigurationException, PluginException {
+    public final void configure(CategoryConfiguration configuration) throws ConfigurationException {
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
@@ -70,26 +80,25 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     }
 
     /**
-     * Register a plugin with Amplify
-     *
-     * @param plugin an implementation of a category plugin that
-     *               conforms to the {@link Plugin} interface.
-     * @throws PluginException when a plugin cannot be registered for this category
+     * Register a plugin into the Category.
+     * @param plugin A plugin to add
+     * @throws PluginException On failure to add the plugin
      */
     public final void addPlugin(@NonNull P plugin) throws PluginException {
         try {
             plugins.put(plugin.getPluginKey(), plugin);
-        } catch (Exception ex) {
+        } catch (Exception exception) {
             throw new PluginException.EmptyKeyException();
         }
     }
 
     /**
-     * Remove a registered plugin
-     *
-     * @param plugin an implementation of a Category that
-     *               conforms to the {@link Plugin} interface
-     * @throws PluginException when a plugin cannot be registered for this category
+     * Remove a plugin from the category.
+     * @param plugin A plugin to remove 
+     * @throws PluginException
+     *         If the provided plugin was not associated to the
+     *         category, perhaps because it never was, or because it was
+     *         already removed
      */
     public final void removePlugin(@NonNull P plugin) throws PluginException {
         if (plugins.remove(plugin.getPluginKey()) == null) {
@@ -98,10 +107,11 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     }
 
     /**
-     * Retrieve a plugin of category.
-     *
-     * @param pluginKey the key that identifies the plugin implementation
-     * @return the plugin object
+     * Retrieve a plugin by its key.
+     * @param pluginKey A key that identifies a plugin implementation
+     * @return The plugin object assocaited to pluginKey, if registered
+     * @throws PluginException
+     *         If there is no plugin associated to the requested key
      */
     public final P getPlugin(@NonNull final String pluginKey) throws PluginException {
         if (plugins.containsKey(pluginKey)) {
@@ -112,18 +122,20 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     }
 
     /**
-     * @return the set of plugins added to a Category.
+     * Gets the set of plugins associated with the Category.
+     * @return The set of plugins associated to the Category
      */
     public final Set<P> getPlugins() {
         return new HashSet<P>(plugins.values());
     }
 
     /**
-     * Obtain the registered plugin for this category. Throw
-     * runtime exception if no plugin is registered or
-     * multiple plugins are registered.
-     *
-     * @return the only registered plugin for this category
+     * Obtain the registered plugin for this category.
+     * @return The only registered plugin for this category
+     * @throws ConfigurationException
+     *         If the category has not yet been configured, or if
+     *         category configuration had been attempted previously but
+     *         did not succeed
      */
     protected final P getSelectedPlugin() throws ConfigurationException {
         if (!isConfigured) {

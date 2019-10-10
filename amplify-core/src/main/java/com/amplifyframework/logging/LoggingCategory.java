@@ -18,9 +18,16 @@ package com.amplifyframework.logging;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ * The LoggingCategory is a collection of zero or more plugin
+ * implementations which implement the logging category behavior. The
+ * LoggingCategoryBehavior itself is provided by this top-level
+ * LoggingCategory class.
+ */
 public final class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.LOGGING;
     }
 }
+

@@ -33,6 +33,10 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * An implementation of the {@link HubPlugin} which dispatches messages via
+ * an {@link ExecutorService}.
+ */
 public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
@@ -42,6 +46,11 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     private final ExecutorService executorService;
     private final Handler mainHandler;
 
+    /**
+     * Constructs a new BackgroundExecutorHubPlugin. The plugin will dispatch work onto a
+     * newly instantiated cached thread pool. The threads immediately post work back onto the
+     * main thread. TODO: does this make any sense?
+     */
     public BackgroundExecutorHubPlugin() {
         this.listenersByUUID = new ConcurrentHashMap<UUID, FilteredHubListener>();
         this.listenersByHubChannel = new ConcurrentHashMap<HubChannel, Set<FilteredHubListener>>();
@@ -51,7 +60,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     /**
      * Dispatch a Hub message on the specified channel.
-     *
      * @param hubChannel The channel to send the message on
      * @param hubpayload The payload to send
      */
@@ -64,8 +72,8 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
                 }
 
                 for (FilteredHubListener filteredHubListener : listenersByHubChannel.get(hubChannel)) {
-                    if (filteredHubListener.getHubFilter() == null ||
-                            filteredHubListener.getHubFilter().filter(hubpayload)) {
+                    if (filteredHubListener.getHubPayloadFilter() == null ||
+                            filteredHubListener.getHubPayloadFilter().filter(hubpayload)) {
                         filteredHubListener.getHubListener().onEvent(hubpayload);
                     }
                 }
@@ -75,7 +83,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     /**
      * Listen to Hub messages on a particular channel.
-     *
      * @param hubChannel The channel to listen for messages on
      * @param listener   The callback to invoke with the received message
      * @return the token which serves as an identifier for the listener
@@ -91,7 +98,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     /**
      * Listen to Hub messages on a particular channel.
-     *
      * @param hubChannel The channel to listen for messages on
      * @param hubPayloadFilter  candidate messages will be passed to this closure prior to dispatching to
      *                   the {@link HubListener}. Only messages for which the closure returns
@@ -126,7 +132,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      * A subscribed listener can be removed from the Hub system by passing the
      * token received from {@link #subscribe(HubChannel, HubListener)} or
      * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
-     *
      * @param subscriptionToken the token which serves as an identifier for the listener
      *                         {@link HubListener} registered
      */
@@ -155,8 +160,8 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     }
 
     /**
-     * @return the identifier that identifies
-     * the plugin implementation
+     * Gets the key for this plugin.
+     * @return An identifier that uniquely identifies this plugin implementation
      */
     @Override
     public String getPluginKey() {
@@ -164,8 +169,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     }
 
     /**
-     * Configure the plugin with customized configuration object
-     *
+     * Configure the plugin with customized configuration object.
      * @param pluginConfiguration plugin-specific configuration
      * @throws PluginException when configuration for a plugin was not found
      */
@@ -175,8 +179,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     }
 
     /**
-     * Returns escape hatch for plugin to enable lower-level client use-cases
-     *
+     * Returns escape hatch for plugin to enable lower-level client use-cases.
      * @return the client used by category plugin
      */
     @Override

@@ -44,11 +44,7 @@ import com.amplifyframework.storage.result.StorageRemoveResult;
  */
 
 public final class StorageCategory extends Category<StoragePlugin<?>> implements StorageCategoryBehavior {
-    /**
-     * Retrieve the Storage category type enum
-     *
-     * @return enum that represents Storage category
-     */
+
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.STORAGE;
@@ -56,7 +52,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @Override
     public StorageGetOperation get(@NonNull String key) throws StorageGetException {
-        return get(key, StorageGetOptions.create(), null);
+        return get(key, StorageGetOptions.defaultInstance(), null);
     }
 
     @Override
@@ -72,18 +68,9 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
         return getSelectedPlugin().get(key, options, listener);
     }
 
-    /**
-     * Upload local file on given path to storage
-     *
-     * @param key   the unique identifier of the object in storage
-     * @param local the path to a local file
-     * @return an operation object that provides notifications and
-     * actions related to the execution of the work
-     * @throws StoragePutException
-     */
     @Override
     public StoragePutOperation put(@NonNull String key, @NonNull String local) throws StoragePutException {
-        return put(key, local, StoragePutOptions.create(), null);
+        return put(key, local, StoragePutOptions.defaultInstance(), null);
     }
 
     @Override
@@ -103,7 +90,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @Override
     public StorageListOperation list() throws StorageListException {
-        return list(StorageListOptions.create());
+        return list(StorageListOptions.defaultInstance());
     }
 
     @Override
@@ -119,7 +106,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
 
     @Override
     public StorageRemoveOperation remove(@NonNull String key) throws StorageRemoveException {
-        return remove(key, StorageRemoveOptions.create());
+        return remove(key, StorageRemoveOptions.defaultInstance());
     }
 
     @Override

@@ -15,6 +15,16 @@
 
 package com.amplifyframework.core.category;
 
+/**
+ * A component which is {@link CategoryType}-able is one that is able to
+ * respond by saying to which {@link CategoryType} it belongs.
+ */
 public interface CategoryTypeable {
+
+    /**
+     * Gets the category type associated with the current object.
+     * @return The category type to which the current object is affiliated
+     */
     CategoryType getCategoryType();
 }
+
