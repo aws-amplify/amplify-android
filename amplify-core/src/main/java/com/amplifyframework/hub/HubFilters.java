@@ -120,7 +120,7 @@ public final class HubFilters {
 
     @SuppressWarnings("JavadocMethod") // Not clear how this will work until its implemented
     @NonNull
-    public static HubPayloadFilter hubPayloadFilter(@NonNull final AmplifyOperation<?> operation) {
+    public static HubPayloadFilter hubPayloadFilter(@NonNull final AmplifyOperation operation) {
         return payload -> /* TODO */ true;
     }
 }

@@ -87,16 +87,17 @@ public final class Amplify {
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
     public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        configure(new AmplifyConfiguration(context));
+        configure(new AmplifyConfiguration(context), context);
     }
 
     /**
      * Configure Amplify with AmplifyConfiguration object.
      * @param configuration AmplifyConfiguration object for configuration via code
+     * @param context An Android Context
      * @throws ConfigurationException thrown when already configured
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public static void configure(final AmplifyConfiguration configuration)
+    public static void configure(final AmplifyConfiguration configuration, Context context)
             throws ConfigurationException, PluginException {
 
         synchronized (LOCK) {
@@ -106,23 +107,23 @@ public final class Amplify {
             amplifyConfiguration = configuration;
 
             if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(amplifyConfiguration.forCategoryType(CategoryType.ANALYTICS));
+                Analytics.configure(amplifyConfiguration.forCategoryType(CategoryType.ANALYTICS), context);
             }
 
             if (API.getPlugins().size() > 0) {
-                API.configure(amplifyConfiguration.forCategoryType(CategoryType.API));
+                API.configure(amplifyConfiguration.forCategoryType(CategoryType.API), context);
             }
 
             if (Hub.getPlugins().size() > 0) {
-                Hub.configure(amplifyConfiguration.forCategoryType(CategoryType.HUB));
+                Hub.configure(amplifyConfiguration.forCategoryType(CategoryType.HUB), context);
             }
 
             if (Logging.getPlugins().size() > 0) {
-                Logging.configure(amplifyConfiguration.forCategoryType(CategoryType.LOGGING));
+                Logging.configure(amplifyConfiguration.forCategoryType(CategoryType.LOGGING), context);
             }
 
             if (Storage.getPlugins().size() > 0) {
-                Storage.configure(amplifyConfiguration.forCategoryType(CategoryType.STORAGE));
+                Storage.configure(amplifyConfiguration.forCategoryType(CategoryType.STORAGE), context);
             }
 
             configured = true;
@@ -248,4 +249,3 @@ public final class Amplify {
         return amplifyConfiguration;
     }
 }
-
