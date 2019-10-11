@@ -78,7 +78,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     }
 
     @Override
-    public void configure(@NonNull Object pluginConfiguration) throws PluginException {
+    public void configure(@NonNull Object pluginConfiguration, Context context) throws PluginException {
 
     }
 

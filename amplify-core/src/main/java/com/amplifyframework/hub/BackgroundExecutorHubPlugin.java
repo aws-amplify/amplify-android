@@ -15,6 +15,7 @@
 
 package com.amplifyframework.hub;
 
+import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
@@ -174,7 +175,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      * @throws PluginException when configuration for a plugin was not found
      */
     @Override
-    public void configure(@NonNull Object pluginConfiguration) throws PluginException {
+    public void configure(@NonNull Object pluginConfiguration, Context context) throws PluginException {
 
     }
 

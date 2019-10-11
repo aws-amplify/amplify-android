@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
@@ -56,10 +58,12 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Configure category with provided AmplifyConfiguration object.
      * @param configuration Configuration for all plugins in the category
-     * @throws ConfigurationException
-     *         The category has already been configured
+     * @param context An Android Context
+     * @throws ConfigurationException thrown when already configured
+     * @throws PluginException thrown when there is no plugin found for a configuration
      */
-    public final void configure(CategoryConfiguration configuration) throws ConfigurationException {
+    public final void configure(CategoryConfiguration configuration, Context context)
+            throws ConfigurationException, PluginException {
         if (isConfigured) {
             throw new ConfigurationException.AmplifyAlreadyConfiguredException();
         }
@@ -69,7 +73,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             Object pluginConfig = configuration.getPluginConfig(pluginKey);
 
             if (pluginConfig != null) {
-                plugin.configure(pluginConfig);
+                plugin.configure(pluginConfig, context);
             } else {
                 // TODO
                 // The plugin does not have any configuration.
