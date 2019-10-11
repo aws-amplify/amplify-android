@@ -17,42 +17,45 @@ package com.amplifyframework.storage.s3.Request;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
+import java.util.Map;
+
 /**
- * Parameters to provide to S3 that describe a request to download a
+ * Parameters to provide to S3 that describe a request to upload a
  * file.
  */
-public final class AWSS3StorageDownloadFileRequest {
+public final class AWSS3StorageUploadFileRequest {
     private final String key;
     private final String local;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
+    private final String contentType;
+    private final Map<String, String> metadata;
+
 
     /**
-     * Constructs a new AWSS3StorageDownloadFileRequest.
-     * @param key key for item to download
-     * @param local Target path for the downloaded file to be saved to
+     * Constructs a new AWSS3StorageUploadFileRequest.
+     * @param key key for item to upload
+     * @param local Target path of file to upload
      * @param accessLevel Storage access level
-     * @param targetIdentityId The user id for the user this file should be downloaded for
+     * @param targetIdentityId The user id for the user this file should be uploaded for
      *                         (to override it from assuming the currently logged in user)
+     * @param contentType The standard MIME type describing the format of the object to store
+     * @param metadata Metadata for the object to store
      */
-    public AWSS3StorageDownloadFileRequest(
+    public AWSS3StorageUploadFileRequest(
             String key,
             String local,
             StorageAccessLevel accessLevel,
-            String targetIdentityId
+            String targetIdentityId,
+            String contentType,
+            Map<String, String> metadata
     ) {
         this.key = key;
         this.local = local;
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
-    }
-
-    /**
-     * Gets the access level.
-     * @return Access level
-     */
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
+        this.contentType = contentType;
+        this.metadata = metadata;
     }
 
     /**
@@ -64,6 +67,22 @@ public final class AWSS3StorageDownloadFileRequest {
     }
 
     /**
+     * Gets the local file path of the file to upload.
+     * @return local file path
+     */
+    public String getLocal() {
+        return local;
+    }
+
+    /**
+     * Gets the access level.
+     * @return Access level
+     */
+    public StorageAccessLevel getAccessLevel() {
+        return accessLevel;
+    }
+
+    /**
      * Gets the target identity id.
      * @return target identity id
      */
@@ -72,11 +91,19 @@ public final class AWSS3StorageDownloadFileRequest {
     }
 
     /**
-     * Gets the local file path where the object should be saved.
-     * @return local file path
+     * Gets the content type.
+     * @return content type
      */
-    public String getLocal() {
-        return local;
+    public String getContentType() {
+        return contentType;
+    }
+
+    /**
+     * Gets the metadata.
+     * @return metadata
+     */
+    public Map<String, String> getMetadata() {
+        return metadata;
     }
 }
 

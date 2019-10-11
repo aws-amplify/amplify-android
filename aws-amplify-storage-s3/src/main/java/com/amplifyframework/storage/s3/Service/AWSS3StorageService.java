@@ -77,6 +77,17 @@ public final class AWSS3StorageService {
     }
 
     /**
+     * Begin uploading a file.
+     * @param serviceKey S3 service key
+     * @param file Target file
+     * @return A transfer observer
+     */
+    public TransferObserver uploadFile(String serviceKey, File file) {
+        startServiceIfNotAlreadyStarted();
+        return transferUtility.upload(bucket, serviceKey, file);
+    }
+
+    /**
      * Pause a file transfer operation.
      * @param transfer an in-progress transfer
      */

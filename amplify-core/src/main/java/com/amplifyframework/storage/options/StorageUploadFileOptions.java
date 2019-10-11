@@ -27,11 +27,13 @@ import java.util.Map;
  */
 public final class StorageUploadFileOptions implements Options {
     private final StorageAccessLevel accessLevel;
+    private final String targetIdentityId;
     private final String contentType;
     private final Map<String, String> metadata;
 
     StorageUploadFileOptions(Builder builder) {
         this.accessLevel = builder.getAccessLevel();
+        this.targetIdentityId = builder.getTargetIdentityId();
         this.contentType = builder.getContentType();
         this.metadata = builder.getMetadata();
     }
@@ -45,7 +47,15 @@ public final class StorageUploadFileOptions implements Options {
     }
 
     /**
-     * Gets the content type.
+     * Target user to apply the action on.
+     * @return Target user's identity id
+     */
+    public String getTargetIdentityId() {
+        return targetIdentityId;
+    }
+
+    /**
+     * The standard MIME type describing the format of the object to store.
      * @return Content type
      */
     public String getContentType() {
@@ -53,7 +63,7 @@ public final class StorageUploadFileOptions implements Options {
     }
 
     /**
-     * Gets the metadata.
+     * Metadata for the object to store.
      * @return metadata
      */
     public Map<String, String> getMetadata() {
@@ -84,6 +94,7 @@ public final class StorageUploadFileOptions implements Options {
      */
     public static final class Builder {
         private StorageAccessLevel accessLevel;
+        private String targetIdentityId;
         private String contentType;
         private Map<String, String> metadata;
 
@@ -99,6 +110,16 @@ public final class StorageUploadFileOptions implements Options {
          */
         public Builder accessLevel(StorageAccessLevel accessLevel) {
             this.accessLevel = accessLevel;
+            return this;
+        }
+
+        /**
+         * Configures the target identity id for a new StorageUploadFileOptions instance.
+         * @param targetIdentityId Target user's identity id
+         * @return Current Builder instance for fluent chaining
+         */
+        public Builder targetIdentityId(String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
             return this;
         }
 
@@ -137,6 +158,10 @@ public final class StorageUploadFileOptions implements Options {
 
         StorageAccessLevel getAccessLevel() {
             return accessLevel;
+        }
+
+        String getTargetIdentityId() {
+            return targetIdentityId;
         }
 
         String getContentType() {
