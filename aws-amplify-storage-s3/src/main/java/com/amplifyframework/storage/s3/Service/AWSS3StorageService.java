@@ -25,8 +25,10 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.File;
+import java.util.Map;
 
 /**
  * A representation of an S3 backend service endpoint.
@@ -85,6 +87,20 @@ public final class AWSS3StorageService {
     public TransferObserver uploadFile(String serviceKey, File file) {
         startServiceIfNotAlreadyStarted();
         return transferUtility.upload(bucket, serviceKey, file);
+    }
+
+    /**
+     * Begin uploading a file.
+     * @param serviceKey S3 service key
+     * @param file Target file
+     * @param metadata Object metadata to associate with upload
+     * @return A transfer observer
+     */
+    public TransferObserver uploadFile(String serviceKey, File file, Map<String, String> metadata) {
+        startServiceIfNotAlreadyStarted();
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setUserMetadata(metadata);
+        return transferUtility.upload(bucket, serviceKey, file, objectMetadata);
     }
 
     /**
