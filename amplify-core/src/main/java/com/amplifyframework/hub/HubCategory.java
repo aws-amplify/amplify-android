@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.AmplifyOperation;
-import com.amplifyframework.core.async.AmplifyOperationRequest;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -106,12 +105,11 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
      * @param operation The operation to listen to events for
      * @param eventListener The Operation-specific listener callback to be invoked
      *                 when an AsyncEvent for that operation is received.
-     * @param <R> The type of the request bound to the provided amplify operation
      * @param <E> The type of the event that the event listener will receive
      * @return A subscription token
      */
-    public <R extends AmplifyOperationRequest<?>, E> SubscriptionToken subscribe(
-            @NonNull final AmplifyOperation<R> operation,
+    public <E> SubscriptionToken subscribe(
+            @NonNull final AmplifyOperation operation,
             @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);
