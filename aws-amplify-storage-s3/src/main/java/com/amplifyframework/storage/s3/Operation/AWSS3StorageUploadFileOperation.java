@@ -81,7 +81,12 @@ public final class AWSS3StorageUploadFileOperation extends StorageOperation {
             this.file = new File(request.getLocal()); //TODO: Add error handling if path is invalid
 
             try {
-                transferObserver = storageService.uploadFile(serviceKey, file);
+                if (request.getMetadata() == null || request.getMetadata().isEmpty()) {
+                    transferObserver = storageService.uploadFile(serviceKey, file);
+                } else {
+                    transferObserver = storageService.uploadFile(serviceKey, file, request.getMetadata());
+                }
+
             } catch (Exception exception) {
                 throw new StorageException("Issue uploading file - see included exception", exception);
             }
