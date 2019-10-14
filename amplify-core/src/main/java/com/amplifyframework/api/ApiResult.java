@@ -22,18 +22,18 @@ import com.amplifyframework.core.async.Result;
 /**
  * Result of REST-verb operation on the API category.
  */
-public final class ApiResult implements Result {
-    private int statusCode;
-    private String jsonPayload;
+public final class ApiResult<T> implements Result {
+    private final int statusCode;
+    private final T data;
 
     /**
      * Constructs an API result object containing server response.
      * @param statusCode HTTP status code
-     * @param jsonPayload response JSON data
+     * @param data response data
      */
-    public ApiResult(@NonNull int statusCode, String jsonPayload) {
+    public ApiResult(@NonNull int statusCode, T data) {
         this.statusCode = statusCode;
-        this.jsonPayload = jsonPayload;
+        this.data = data;
     }
 
     /**
@@ -46,9 +46,9 @@ public final class ApiResult implements Result {
 
     /**
      * Gets the response data.
-     * @return response JSON data
+     * @return response data
      */
-    public String getJsonPayload() {
-        return jsonPayload;
+    public T getData() {
+        return data;
     }
 }

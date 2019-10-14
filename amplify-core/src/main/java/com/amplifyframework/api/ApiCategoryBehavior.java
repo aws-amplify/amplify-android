@@ -16,6 +16,7 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.operation.ApiOperation;
 import com.amplifyframework.core.async.Listener;
@@ -28,7 +29,8 @@ import com.amplifyframework.core.async.Listener;
 public interface ApiCategoryBehavior {
 
     /**
-     * Make a GET request
+     * Make an asynchronous GET request.
+     * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -37,11 +39,14 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to obtain the requested resource from API.
      */
-    ApiOperation get(@NonNull String apiName,
-                     @NonNull String path, String json) throws ApiException;
+    <T> ApiOperation get(@NonNull String apiName,
+                     @NonNull String path,
+                     @Nullable String json) throws ApiException;
 
     /**
-     * Make a GET request with a callback
+     * Make an asynchronous GET request with
+     * local callback.
+     * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -51,12 +56,13 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to obtain the requested resource from API.
      */
-    ApiOperation get(@NonNull String apiName,
-                     @NonNull String path,
-                     String json, Listener<ApiResult> listener) throws ApiException;
+    <T> ApiOperation get(@NonNull String apiName,
+                         @NonNull String path,
+                         @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
-     * Make a POST request
+     * Make an asynchronous POST request.
+     * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -65,11 +71,14 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to post the requested resource to API.
      */
-    ApiOperation post(@NonNull String apiName,
-                      @NonNull String path, String json) throws ApiException;
+    <T> ApiOperation post(@NonNull String apiName,
+                          @NonNull String path,
+                          @Nullable String json) throws ApiException;
 
     /**
-     * Make a POST request with a callback
+     * Make an asynchronous POST request with
+     * local callback.
+     * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -79,12 +88,13 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to post the requested resource to API.
      */
-    ApiOperation post(@NonNull String apiName,
-                      @NonNull String path,
-                      String json, Listener<ApiResult> listener) throws ApiException;
+    <T> ApiOperation post(@NonNull String apiName,
+                          @NonNull String path,
+                          @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
-     * Make a PUT request
+     * Make an asynchronous PUT request.
+     * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -93,11 +103,14 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to put the requested resource to API.
      */
-    ApiOperation put(@NonNull String apiName,
-                      @NonNull String path, String json) throws ApiException;
+    <T> ApiOperation put(@NonNull String apiName,
+                         @NonNull String path,
+                         @Nullable String json) throws ApiException;
 
     /**
-     * Make a PUT request with a callback
+     * Make an asynchronous PUT request with
+     * local callback.
+     * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -107,12 +120,13 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to put the requested resource to API.
      */
-    ApiOperation put(@NonNull String apiName,
-                     @NonNull String path,
-                     String json, Listener<ApiResult> listener) throws ApiException;
+    <T> ApiOperation put(@NonNull String apiName,
+                         @NonNull String path,
+                         @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
-     * Make a PATCH request
+     * Make an asynchronous PATCH request.
+     * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -121,11 +135,14 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to patch the requested resource in API.
      */
-    ApiOperation patch(@NonNull String apiName,
-                      @NonNull String path, String json) throws ApiException;
+    <T> ApiOperation patch(@NonNull String apiName,
+                           @NonNull String path,
+                           @Nullable String json) throws ApiException;
 
     /**
-     * Make a PATCH request with a callback
+     * Make an asynchronous PATCH request with
+     * local callback.
+     * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -135,12 +152,13 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to patch the requested resource in API.
      */
-    ApiOperation patch(@NonNull String apiName,
-                       @NonNull String path,
-                       String json, Listener<ApiResult> listener) throws ApiException;
+    <T> ApiOperation patch(@NonNull String apiName,
+                           @NonNull String path,
+                           @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
-     * Make a DELETE request
+     * Make an asynchronous DELETE request.
+     * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -149,11 +167,14 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to delete the requested resource in API.
      */
-    ApiOperation delete(@NonNull String apiName,
-                      @NonNull String path, String json) throws ApiException;
+    <T> ApiOperation delete(@NonNull String apiName,
+                            @NonNull String path,
+                            @Nullable String json) throws ApiException;
 
     /**
-     * Make a DELETE request with a callback
+     * Make an asynchronous DELETE request with
+     * local callback.
+     * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -163,12 +184,13 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to patch the requested resource in API.
      */
-    ApiOperation delete(@NonNull String apiName,
-                       @NonNull String path,
-                       String json, Listener<ApiResult> listener) throws ApiException;
+    <T> ApiOperation delete(@NonNull String apiName,
+                            @NonNull String path,
+                            @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
-     * Make a HEAD request
+     * Make an asynchronous HEAD request.
+     * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -177,11 +199,14 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to obtain the requested header from API.
      */
-    ApiOperation head(@NonNull String apiName,
-                      @NonNull String path, String json) throws ApiException;
+    <T> ApiOperation head(@NonNull String apiName,
+                          @NonNull String path,
+                          @Nullable String json) throws ApiException;
 
     /**
-     * Make a HEAD request wit ha callback
+     * Make an asynchronous HEAD request with
+     * local callback.
+     * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
      * @param json request extra parameters
@@ -191,12 +216,12 @@ public interface ApiCategoryBehavior {
      * @throws ApiException
      *         On failure to obtain the requested header from API.
      */
-    ApiOperation head(@NonNull String apiName,
-                      @NonNull String path,
-                      String json, Listener<ApiResult> listener) throws ApiException;
+    <T> ApiOperation head(@NonNull String apiName,
+                          @NonNull String path,
+                          @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
-     * Get endpoint for API
+     * Get endpoint for API.
      * @param apiName the name of the API
      * @return the endpoint of the API
      * @throws ApiException when there is no API associated with the name.

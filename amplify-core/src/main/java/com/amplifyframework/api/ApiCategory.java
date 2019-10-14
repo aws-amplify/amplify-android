@@ -40,7 +40,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation get(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+    public <T> ApiOperation get(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
         return getSelectedPlugin().get(apiName, path, json, listener);
     }
 
@@ -50,7 +50,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation post(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+    public <T> ApiOperation post(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
         return getSelectedPlugin().post(apiName, path, json, listener);
     }
 
@@ -60,7 +60,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation put(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+    public <T> ApiOperation put(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
         return getSelectedPlugin().put(apiName, path, json, listener);
     }
 
@@ -70,7 +70,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation patch(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+    public <T> ApiOperation patch(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
         return getSelectedPlugin().patch(apiName, path, json, listener);
     }
 
@@ -80,7 +80,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation delete(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+    public <T> ApiOperation delete(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
         return getSelectedPlugin().delete(apiName, path, json, listener);
     }
 
@@ -90,7 +90,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation head(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+    public <T> ApiOperation head(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
         return getSelectedPlugin().head(apiName, path, json, listener);
     }
 

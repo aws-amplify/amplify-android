@@ -23,7 +23,7 @@ import com.amplifyframework.core.category.CategoryType;
 /**
  * Base operation type for all behaviors on the API category.
  */
-public abstract class ApiOperation extends AmplifyOperation implements Resumable, Cancelable {
+public abstract class ApiOperation extends AmplifyOperation {
     /**
      * Constructs a new instance of a ApiOperation.
      */
