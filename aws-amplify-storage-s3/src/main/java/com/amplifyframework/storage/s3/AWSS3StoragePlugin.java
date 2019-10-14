@@ -130,7 +130,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             @NonNull String local,
             Listener<StorageDownloadFileResult> callback
     ) throws StorageException {
-        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), null);
+        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), callback);
     }
 
     @Override
