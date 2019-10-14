@@ -21,6 +21,8 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.operation.ApiOperation;
 import com.amplifyframework.core.async.Listener;
 
+import org.json.JSONObject;
+
 /**
  * API category behaviors include REST and GraphQL operations. These
  * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
@@ -33,15 +35,15 @@ public interface ApiCategoryBehavior {
      * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @return an operation object that provides notifications and
      *         actions related to API invocation
      * @throws ApiException
      *         On failure to obtain the requested resource from API.
      */
     <T> ApiOperation get(@NonNull String apiName,
-                     @NonNull String path,
-                     @Nullable String json) throws ApiException;
+                         @NonNull String path,
+                         @Nullable JSONObject init) throws ApiException;
 
     /**
      * Make an asynchronous GET request with
@@ -49,7 +51,7 @@ public interface ApiCategoryBehavior {
      * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @param listener API callback listener
      * @return an operation object that provides notifications and
      *         actions related to API invocation
@@ -58,14 +60,14 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation get(@NonNull String apiName,
                          @NonNull String path,
-                         @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
+                         @Nullable JSONObject init, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
      * Make an asynchronous POST request.
      * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @return an operation object that provides notifications and
      *         actions related to API invocation
      * @throws ApiException
@@ -73,7 +75,7 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation post(@NonNull String apiName,
                           @NonNull String path,
-                          @Nullable String json) throws ApiException;
+                          @Nullable JSONObject init) throws ApiException;
 
     /**
      * Make an asynchronous POST request with
@@ -81,7 +83,7 @@ public interface ApiCategoryBehavior {
      * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @param listener API callback listener
      * @return an operation object that provides notifications and
      *         actions related to API invocation
@@ -90,14 +92,14 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation post(@NonNull String apiName,
                           @NonNull String path,
-                          @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
+                          @Nullable JSONObject init, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
      * Make an asynchronous PUT request.
      * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @return an operation object that provides notifications and
      *         actions related to API invocation
      * @throws ApiException
@@ -105,7 +107,7 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation put(@NonNull String apiName,
                          @NonNull String path,
-                         @Nullable String json) throws ApiException;
+                         @Nullable JSONObject init) throws ApiException;
 
     /**
      * Make an asynchronous PUT request with
@@ -113,7 +115,7 @@ public interface ApiCategoryBehavior {
      * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @param listener API callback listener
      * @return an operation object that provides notifications and
      *         actions related to API invocation
@@ -122,14 +124,14 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation put(@NonNull String apiName,
                          @NonNull String path,
-                         @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
+                         @Nullable JSONObject init, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
      * Make an asynchronous PATCH request.
      * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @return an operation object that provides notifications and
      *         actions related to API invocation
      * @throws ApiException
@@ -137,7 +139,7 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation patch(@NonNull String apiName,
                            @NonNull String path,
-                           @Nullable String json) throws ApiException;
+                           @Nullable JSONObject init) throws ApiException;
 
     /**
      * Make an asynchronous PATCH request with
@@ -145,7 +147,7 @@ public interface ApiCategoryBehavior {
      * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @param listener API callback listener
      * @return an operation object that provides notifications and
      *         actions related to API invocation
@@ -154,14 +156,14 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation patch(@NonNull String apiName,
                            @NonNull String path,
-                           @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
+                           @Nullable JSONObject init, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
      * Make an asynchronous DELETE request.
      * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @return an operation object that provides notifications and
      *         actions related to API invocation
      * @throws ApiException
@@ -169,7 +171,7 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation delete(@NonNull String apiName,
                             @NonNull String path,
-                            @Nullable String json) throws ApiException;
+                            @Nullable JSONObject init) throws ApiException;
 
     /**
      * Make an asynchronous DELETE request with
@@ -177,7 +179,7 @@ public interface ApiCategoryBehavior {
      * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @param listener API callback listener
      * @return an operation object that provides notifications and
      *         actions related to API invocation
@@ -186,14 +188,14 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation delete(@NonNull String apiName,
                             @NonNull String path,
-                            @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
+                            @Nullable JSONObject init, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
      * Make an asynchronous HEAD request.
      * Messages will be delivered via Hub.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @return an operation object that provides notifications and
      *         actions related to API invocation
      * @throws ApiException
@@ -201,7 +203,7 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation head(@NonNull String apiName,
                           @NonNull String path,
-                          @Nullable String json) throws ApiException;
+                          @Nullable JSONObject init) throws ApiException;
 
     /**
      * Make an asynchronous HEAD request with
@@ -209,7 +211,7 @@ public interface ApiCategoryBehavior {
      * Messages will still be delivered via Hub also.
      * @param apiName the API name of the request
      * @param path the path of the request
-     * @param json request extra parameters
+     * @param init request extra parameters
      * @param listener API callback listener
      * @return an operation object that provides notifications and
      *         actions related to API invocation
@@ -218,7 +220,7 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation head(@NonNull String apiName,
                           @NonNull String path,
-                          @Nullable String json, Listener<ApiResult<T>> listener) throws ApiException;
+                          @Nullable JSONObject init, Listener<ApiResult<T>> listener) throws ApiException;
 
     /**
      * Get endpoint for API.

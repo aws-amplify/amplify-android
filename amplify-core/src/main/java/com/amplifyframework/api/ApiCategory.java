@@ -16,11 +16,14 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.operation.ApiOperation;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+
+import org.json.JSONObject;
 
 /**
  * The API category provides methods for interacting with remote systems
@@ -35,63 +38,93 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation get(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
-        return getSelectedPlugin().get(apiName, path, json);
+    public ApiOperation get(@NonNull String apiName,
+                            @NonNull String path,
+                            @Nullable JSONObject init) throws ApiException {
+        return getSelectedPlugin().get(apiName, path, init);
     }
 
     @Override
-    public <T> ApiOperation get(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
-        return getSelectedPlugin().get(apiName, path, json, listener);
+    public <T> ApiOperation get(@NonNull String apiName,
+                                @NonNull String path,
+                                @Nullable JSONObject init,
+                                Listener<ApiResult<T>> listener) throws ApiException {
+        return getSelectedPlugin().get(apiName, path, init, listener);
     }
 
     @Override
-    public ApiOperation post(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
-        return getSelectedPlugin().post(apiName, path, json);
+    public ApiOperation post(@NonNull String apiName,
+                             @NonNull String path,
+                             @Nullable JSONObject init) throws ApiException {
+        return getSelectedPlugin().post(apiName, path, init);
     }
 
     @Override
-    public <T> ApiOperation post(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
-        return getSelectedPlugin().post(apiName, path, json, listener);
+    public <T> ApiOperation post(@NonNull String apiName,
+                                 @NonNull String path,
+                                 @Nullable JSONObject init,
+                                 Listener<ApiResult<T>> listener) throws ApiException {
+        return getSelectedPlugin().post(apiName, path, init, listener);
     }
 
     @Override
-    public ApiOperation put(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
-        return getSelectedPlugin().put(apiName, path, json);
+    public ApiOperation put(@NonNull String apiName,
+                            @NonNull String path,
+                            @Nullable JSONObject init) throws ApiException {
+        return getSelectedPlugin().put(apiName, path, init);
     }
 
     @Override
-    public <T> ApiOperation put(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
-        return getSelectedPlugin().put(apiName, path, json, listener);
+    public <T> ApiOperation put(@NonNull String apiName,
+                                @NonNull String path,
+                                @Nullable JSONObject init,
+                                Listener<ApiResult<T>> listener) throws ApiException {
+        return getSelectedPlugin().put(apiName, path, init, listener);
     }
 
     @Override
-    public ApiOperation patch(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
-        return getSelectedPlugin().patch(apiName, path, json);
+    public ApiOperation patch(@NonNull String apiName,
+                              @NonNull String path,
+                              @Nullable JSONObject init) throws ApiException {
+        return getSelectedPlugin().patch(apiName, path, init);
     }
 
     @Override
-    public <T> ApiOperation patch(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
-        return getSelectedPlugin().patch(apiName, path, json, listener);
+    public <T> ApiOperation patch(@NonNull String apiName,
+                                  @NonNull String path,
+                                  @Nullable JSONObject init,
+                                  Listener<ApiResult<T>> listener) throws ApiException {
+        return getSelectedPlugin().patch(apiName, path, init, listener);
     }
 
     @Override
-    public ApiOperation delete(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
-        return getSelectedPlugin().delete(apiName, path, json);
+    public ApiOperation delete(@NonNull String apiName,
+                               @NonNull String path,
+                               @Nullable JSONObject init) throws ApiException {
+        return getSelectedPlugin().delete(apiName, path, init);
     }
 
     @Override
-    public <T> ApiOperation delete(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
-        return getSelectedPlugin().delete(apiName, path, json, listener);
+    public <T> ApiOperation delete(@NonNull String apiName,
+                                   @NonNull String path,
+                                   @Nullable JSONObject init,
+                                   Listener<ApiResult<T>> listener) throws ApiException {
+        return getSelectedPlugin().delete(apiName, path, init, listener);
     }
 
     @Override
-    public ApiOperation head(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
-        return getSelectedPlugin().head(apiName, path, json);
+    public ApiOperation head(@NonNull String apiName,
+                             @NonNull String path,
+                             @Nullable JSONObject init) throws ApiException {
+        return getSelectedPlugin().head(apiName, path, init);
     }
 
     @Override
-    public <T> ApiOperation head(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult<T>> listener) throws ApiException {
-        return getSelectedPlugin().head(apiName, path, json, listener);
+    public <T> ApiOperation head(@NonNull String apiName,
+                                 @NonNull String path,
+                                 @Nullable JSONObject init,
+                                 Listener<ApiResult<T>> listener) throws ApiException {
+        return getSelectedPlugin().head(apiName, path, init, listener);
     }
 
     @Override
