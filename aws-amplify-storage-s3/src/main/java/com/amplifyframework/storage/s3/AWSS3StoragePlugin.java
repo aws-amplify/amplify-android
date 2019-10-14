@@ -34,7 +34,9 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.Operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.Operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.Request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
@@ -128,7 +130,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             @NonNull String local,
             Listener<StorageDownloadFileResult> callback
     ) throws StorageException {
-        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), null);
+        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), callback);
     }
 
     @Override
@@ -139,10 +141,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             Listener<StorageDownloadFileResult> callback
     ) throws StorageException {
         AWSS3StorageDownloadFileRequest request = new AWSS3StorageDownloadFileRequest(
-                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
                 key,
-                options.getTargetIdentityId(),
-                local
+                local,
+                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
+                options.getTargetIdentityId()
         );
 
         AWSS3StorageDownloadFileOperation operation =
@@ -157,7 +159,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             @NonNull String key,
             @NonNull String local
     ) throws StorageException {
-        return null;
+        return uploadFile(key, local, StorageUploadFileOptions.defaultInstance());
     }
 
     @Override
@@ -166,7 +168,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             @NonNull String local,
             StorageUploadFileOptions options
     ) throws StorageException {
-        return null;
+        return uploadFile(key, local, options, null);
     }
 
     @Override
@@ -175,7 +177,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             @NonNull String local,
             Listener<StorageUploadFileResult> callback
     ) throws StorageException {
-        return null;
+        return uploadFile(key, local, StorageUploadFileOptions.defaultInstance(), callback);
     }
 
     @Override
@@ -185,7 +187,21 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             StorageUploadFileOptions options,
             Listener<StorageUploadFileResult> callback
     ) throws StorageException {
-        return null;
+        AWSS3StorageUploadFileRequest request = new AWSS3StorageUploadFileRequest(
+                key,
+                local,
+                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
+                options.getTargetIdentityId(),
+                options.getContentType(),
+                options.getMetadata()
+        );
+
+        AWSS3StorageUploadFileOperation operation =
+                new AWSS3StorageUploadFileOperation(storageService, request, callback);
+
+        operation.start();
+
+        return operation;
     }
 
     @Override
