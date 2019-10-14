@@ -16,6 +16,7 @@
 package com.amplifyframework.core.async;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.category.CategoryType;
 
@@ -42,13 +43,25 @@ public abstract class AmplifyOperation implements AsyncOperation {
     // CategoryType.
     private final CategoryType categoryType;
 
+    // Reference to the request object of the operation. The
+    // request object encapsulates the input parameters to an
+    // operation.
+    private final AmplifyOperationRequest<?> amplifyOperationRequest;
+
     /**
      * Constructs a new AmplifyOperation.
-     * @param categoryType The category in which this operation is fulfilling a request
+     * @param categoryType The category in which this operation is
+     *                     fulfilling a request
+     * @param amplifyOperationRequest The request object of the operation
+     * @param <R> the parameter type of the request. The implementation
+      *           can define the type of the request object.
      */
-    public AmplifyOperation(@NonNull final CategoryType categoryType) {
+    public <R extends AmplifyOperationRequest<?>> AmplifyOperation(
+            @NonNull final CategoryType categoryType,
+            @Nullable final AmplifyOperationRequest<R> amplifyOperationRequest) {
         this.categoryType = categoryType;
         this.operationId = UUID.randomUUID();
+        this.amplifyOperationRequest = amplifyOperationRequest;
     }
 
     @Override

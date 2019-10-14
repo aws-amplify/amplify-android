@@ -28,7 +28,7 @@ public abstract class StorageOperation extends AmplifyOperation implements Resum
      * Constructs a new instance of a StorageOperation.
      */
     public StorageOperation() {
-        super(CategoryType.STORAGE);
+        super(CategoryType.STORAGE, null);
     }
 }
 
