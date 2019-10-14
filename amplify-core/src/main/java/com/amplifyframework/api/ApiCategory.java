@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api;
 
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.api.operation.ApiOperation;
+import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -28,6 +32,71 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.API;
+    }
+
+    @Override
+    public ApiOperation get(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
+        return getSelectedPlugin().get(apiName, path, json);
+    }
+
+    @Override
+    public ApiOperation get(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+        return getSelectedPlugin().get(apiName, path, json, listener);
+    }
+
+    @Override
+    public ApiOperation post(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
+        return getSelectedPlugin().post(apiName, path, json);
+    }
+
+    @Override
+    public ApiOperation post(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+        return getSelectedPlugin().post(apiName, path, json, listener);
+    }
+
+    @Override
+    public ApiOperation put(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
+        return getSelectedPlugin().put(apiName, path, json);
+    }
+
+    @Override
+    public ApiOperation put(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+        return getSelectedPlugin().put(apiName, path, json, listener);
+    }
+
+    @Override
+    public ApiOperation patch(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
+        return getSelectedPlugin().patch(apiName, path, json);
+    }
+
+    @Override
+    public ApiOperation patch(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+        return getSelectedPlugin().patch(apiName, path, json, listener);
+    }
+
+    @Override
+    public ApiOperation delete(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
+        return getSelectedPlugin().delete(apiName, path, json);
+    }
+
+    @Override
+    public ApiOperation delete(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+        return getSelectedPlugin().delete(apiName, path, json, listener);
+    }
+
+    @Override
+    public ApiOperation head(@NonNull String apiName, @NonNull String path, String json) throws ApiException {
+        return getSelectedPlugin().head(apiName, path, json);
+    }
+
+    @Override
+    public ApiOperation head(@NonNull String apiName, @NonNull String path, String json, Listener<ApiResult> listener) throws ApiException {
+        return getSelectedPlugin().head(apiName, path, json, listener);
+    }
+
+    @Override
+    public String endpoint(@NonNull String apiName) throws ApiException {
+        return getSelectedPlugin().endpoint(apiName);
     }
 }
 
