@@ -201,6 +201,22 @@ public interface StorageCategoryBehavior {
 
     /**
      * Delete object from storage.
+     * @param key the unique identifier of the object in storage
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     * @throws StorageException
+     *         On failure to remove an object from storage. This could
+     *         occur for a variety of reasons, including if {@see key}
+     *         does not refer to an object in storage, or if the
+     *         provided {@see options} are invalid.
+     *
+     */
+    StorageOperation remove(@NonNull String key,
+                            Listener<StorageRemoveResult> callback) throws StorageException;
+
+    /**
+     * Delete object from storage.
      * Register a callback to observe progress.
      * @param key the unique identifier of the object in storage
      * @param options parameters specific to plugin behavior

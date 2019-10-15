@@ -34,8 +34,10 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.Operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.Operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.Operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.Request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
 
@@ -205,13 +207,26 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation remove(@NonNull String key) throws StorageException {
-        return null;
+    public StorageOperation remove(
+            @NonNull String key
+    ) throws StorageException {
+        return remove(key, StorageRemoveOptions.defaultInstance());
     }
 
     @Override
-    public StorageOperation remove(@NonNull String key, StorageRemoveOptions options) throws StorageException {
-        return null;
+    public StorageOperation remove(
+            @NonNull String key,
+            StorageRemoveOptions options
+    ) throws StorageException {
+        return remove(key, options, null);
+    }
+
+    @Override
+    public StorageOperation remove(
+            @NonNull String key,
+            Listener<StorageRemoveResult> callback
+    ) throws StorageException {
+        return remove(key, StorageRemoveOptions.defaultInstance(), callback);
     }
 
     @Override
@@ -220,7 +235,18 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             StorageRemoveOptions options,
             Listener<StorageRemoveResult> callback
     ) throws StorageException {
-        return null;
+        AWSS3StorageRemoveRequest request = new AWSS3StorageRemoveRequest(
+                key,
+                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
+                options.getTargetIdentityId()
+        );
+
+        AWSS3StorageRemoveOperation operation =
+                new AWSS3StorageRemoveOperation(storageService, request, callback);
+
+        operation.start();
+
+        return operation;
     }
 
     @Override
