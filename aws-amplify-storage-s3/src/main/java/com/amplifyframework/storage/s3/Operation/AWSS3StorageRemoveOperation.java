@@ -17,7 +17,7 @@ package com.amplifyframework.storage.s3.Operation;
 
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageOperation;
+import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
@@ -28,7 +28,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 /**
  * An operation to remove a file from AWS S3.
  */
-public final class AWSS3StorageRemoveOperation extends StorageOperation {
+public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation {
     private final AWSS3StorageService storageService;
     private final AWSS3StorageRemoveRequest request;
     private final Listener<StorageRemoveResult> callback;
@@ -79,20 +79,5 @@ public final class AWSS3StorageRemoveOperation extends StorageOperation {
             callback.onError(error);
             throw error;
         }
-    }
-
-    @Override
-    public void cancel() throws StorageException {
-        // TODO: This is a NO-OP for remove - discuss what to do for this case
-    }
-
-    @Override
-    public void pause() throws StorageException {
-        // TODO: This is a NO-OP for remove - discuss what to do for this case
-    }
-
-    @Override
-    public void resume() throws StorageException {
-        // TODO: This is a NO-OP for remove - discuss what to do for this case
     }
 }

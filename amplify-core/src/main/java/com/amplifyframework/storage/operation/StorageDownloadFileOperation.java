@@ -21,13 +21,13 @@ import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.core.category.CategoryType;
 
 /**
- * Base operation type for all behaviors on the Storage category.
+ * Base operation type for download file behavior on the Storage category.
  */
-public abstract class StorageOperation extends AmplifyOperation implements Resumable, Cancelable {
+public abstract class StorageDownloadFileOperation extends AmplifyOperation implements Resumable, Cancelable {
     /**
-     * Constructs a new instance of a StorageOperation.
+     * Constructs a new instance of a StorageDownloadFileOperation.
      */
-    public StorageOperation() {
+    public StorageDownloadFileOperation() {
         super(CategoryType.STORAGE);
     }
 }
