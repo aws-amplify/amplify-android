@@ -106,13 +106,26 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     }
 
     @Override
-    public StorageOperation remove(@NonNull String key) throws StorageException {
+    public StorageOperation remove(
+            @NonNull String key
+    ) throws StorageException {
         return remove(key, StorageRemoveOptions.defaultInstance());
     }
 
     @Override
-    public StorageOperation remove(@NonNull String key, StorageRemoveOptions options) throws StorageException {
+    public StorageOperation remove(
+            @NonNull String key,
+            StorageRemoveOptions options
+    ) throws StorageException {
         return remove(key, options, null);
+    }
+
+    @Override
+    public StorageOperation remove(
+            @NonNull String key,
+            Listener<StorageRemoveResult> callback
+    ) throws StorageException {
+        return remove(key, StorageRemoveOptions.defaultInstance(), callback);
     }
 
     @Override

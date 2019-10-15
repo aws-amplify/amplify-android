@@ -104,6 +104,14 @@ public final class AWSS3StorageService {
     }
 
     /**
+     * Synchronous operation to delete a file in s3.
+     * @param serviceKey Fully specified path to file to delete (including public/private/protected folder)
+     */
+    public void deleteObject(String serviceKey) {
+        this.client.deleteObject(this.bucket, serviceKey);
+    }
+
+    /**
      * Pause a file transfer operation.
      * @param transfer an in-progress transfer
      */
