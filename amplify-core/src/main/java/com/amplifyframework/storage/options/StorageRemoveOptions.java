@@ -19,7 +19,7 @@ import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Options to specify attributes of get API invocation.
+ * Options to specify attributes of remove API invocation.
  */
 public final class StorageRemoveOptions implements Options {
     private final StorageAccessLevel accessLevel;

@@ -24,7 +24,10 @@ import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageOperation;
+import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
+import com.amplifyframework.storage.operation.StorageListOperation;
+import com.amplifyframework.storage.operation.StorageRemoveOperation;
+import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
@@ -110,7 +113,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation downloadFile(
+    public StorageDownloadFileOperation downloadFile(
             @NonNull String key,
             @NonNull String local
     ) throws StorageException {
@@ -118,7 +121,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation downloadFile(
+    public StorageDownloadFileOperation downloadFile(
             @NonNull String key,
             @NonNull String local,
             StorageDownloadFileOptions options
@@ -127,7 +130,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation downloadFile(
+    public StorageDownloadFileOperation downloadFile(
             @NonNull String key,
             @NonNull String local,
             Listener<StorageDownloadFileResult> callback
@@ -136,7 +139,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation downloadFile(
+    public StorageDownloadFileOperation downloadFile(
             @NonNull String key,
             @NonNull String local,
             StorageDownloadFileOptions options,
@@ -157,7 +160,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation uploadFile(
+    public StorageUploadFileOperation uploadFile(
             @NonNull String key,
             @NonNull String local
     ) throws StorageException {
@@ -165,7 +168,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation uploadFile(
+    public StorageUploadFileOperation uploadFile(
             @NonNull String key,
             @NonNull String local,
             StorageUploadFileOptions options
@@ -174,7 +177,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation uploadFile(
+    public StorageUploadFileOperation uploadFile(
             @NonNull String key,
             @NonNull String local,
             Listener<StorageUploadFileResult> callback
@@ -183,7 +186,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation uploadFile(
+    public StorageUploadFileOperation uploadFile(
             @NonNull String key,
             @NonNull String local,
             StorageUploadFileOptions options,
@@ -207,14 +210,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation remove(
+    public StorageRemoveOperation remove(
             @NonNull String key
     ) throws StorageException {
         return remove(key, StorageRemoveOptions.defaultInstance());
     }
 
     @Override
-    public StorageOperation remove(
+    public StorageRemoveOperation remove(
             @NonNull String key,
             StorageRemoveOptions options
     ) throws StorageException {
@@ -222,7 +225,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation remove(
+    public StorageRemoveOperation remove(
             @NonNull String key,
             Listener<StorageRemoveResult> callback
     ) throws StorageException {
@@ -230,7 +233,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation remove(
+    public StorageRemoveOperation remove(
             @NonNull String key,
             StorageRemoveOptions options,
             Listener<StorageRemoveResult> callback
@@ -250,17 +253,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageOperation list() throws StorageException {
+    public StorageListOperation list() throws StorageException {
         return null;
     }
 
     @Override
-    public StorageOperation list(StorageListOptions options) throws StorageException {
+    public StorageListOperation list(StorageListOptions options) throws StorageException {
         return null;
     }
 
     @Override
-    public StorageOperation list(
+    public StorageListOperation list(
             StorageListOptions options,
             Listener<StorageListResult> callback
     ) throws StorageException {
