@@ -238,6 +238,7 @@ public interface StorageCategoryBehavior {
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
+     * @param path The path in storage to list items from
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageException
@@ -245,11 +246,12 @@ public interface StorageCategoryBehavior {
      *         a variety or reasons, such as if the storage system is not
      *         currently accessible.
      */
-    StorageListOperation list() throws StorageException;
+    StorageListOperation list(@NonNull String path) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
+     * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
@@ -258,12 +260,27 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
-    StorageListOperation list(StorageListOptions options) throws StorageException;
+    StorageListOperation list(@NonNull String path, StorageListOptions options) throws StorageException;
+
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage.
+     * @param path The path in storage to list items from
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageException
+     *         On failure to list items in storage. This can happen
+     *         for a variety of reasons, such as if the provided {@see options}
+     *         are invalid.
+     */
+    StorageListOperation list(@NonNull String path, Listener<StorageListResult> callback) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
      * Register a callback to observe progress.
+     * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @param callback triggered when event occurs
      * @return an operation object that provides notifications and
@@ -273,7 +290,8 @@ public interface StorageCategoryBehavior {
      *         asynchronous operation begins. Otherwise, failures will
      *         be reported via the {@see callback}.
      */
-    StorageListOperation list(StorageListOptions options,
-                          Listener<StorageListResult> callback) throws StorageException;
+    StorageListOperation list(@NonNull String path,
+                            StorageListOptions options,
+                            Listener<StorageListResult> callback) throws StorageException;
 }
 

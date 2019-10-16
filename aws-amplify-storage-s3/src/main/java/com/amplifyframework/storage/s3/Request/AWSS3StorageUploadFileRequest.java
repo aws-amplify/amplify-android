@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3.Request;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -55,7 +56,11 @@ public final class AWSS3StorageUploadFileRequest {
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
         this.contentType = contentType;
-        this.metadata = metadata;
+
+        this.metadata = new HashMap<>();
+        if (metadata != null) {
+            this.metadata.putAll(metadata);
+        }
     }
 
     /**
