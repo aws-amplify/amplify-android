@@ -17,7 +17,7 @@ package com.amplifyframework.storage.s3.Operation;
 
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageOperation;
+import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
@@ -33,7 +33,7 @@ import java.io.File;
 /**
  * An operation to download a file from AWS S3.
  */
-public final class AWSS3StorageDownloadFileOperation extends StorageOperation {
+public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFileOperation {
     private final AWSS3StorageService storageService;
     private final AWSS3StorageDownloadFileRequest request;
     private final Listener<StorageDownloadFileResult> callback;

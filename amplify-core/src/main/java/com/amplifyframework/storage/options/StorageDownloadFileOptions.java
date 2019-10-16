@@ -51,7 +51,7 @@ public final class StorageDownloadFileOptions implements Options {
      * {@link StorageDownloadFileOptions.Builder}.  The builder can be
      * used to configure properties and then construct a new immutable
      * instance of the StorageDownloadFileOptions.
-     * @return An instance of the {@link StorageGetOptions.Builder}
+     * @return An instance of the {@link StorageDownloadFileOptions.Builder}
      */
     public static Builder builder() {
         return new Builder();
