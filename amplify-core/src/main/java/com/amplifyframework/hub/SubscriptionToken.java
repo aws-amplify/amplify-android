@@ -15,15 +15,11 @@
 
 package com.amplifyframework.hub;
 
-import androidx.annotation.NonNull;
-
-import java.util.Objects;
 import java.util.UUID;
 
 /**
- * SubscriptionToken can be used to unsubscribe a Hub listener. Although SubscriptionToken
- * conforms to Hashable, only the `id` property is considered for equality and hash value;
- * `channel` is used only for routing an unsubscribe request to the correct HubChannel.
+ * A SubscriptionToken is returned by the Hub when creating a new subscription
+ * for a {@link HubListener}. The token can be used to unsubscribe that listener.
  */
 public final class SubscriptionToken {
     /**
@@ -32,37 +28,16 @@ public final class SubscriptionToken {
      */
     private final UUID uuid;
 
-    /**
-     * The HubChannel is stored here in order to optimally
-     * locate the channel of the subscriber. This is used to
-     * optimally remove listeners in unsubscribe.
-     */
-    private final HubChannel hubChannel;
-
-    /**
-     * Construct the subscription token object.
-     * @param uuid uniquely identifies the subscriber.
-     * @param hubChannel the channel of the subscriber.
-     */
-    public SubscriptionToken(@NonNull final UUID uuid, @NonNull final HubChannel hubChannel) {
-        this.uuid = Objects.requireNonNull(uuid);
-        this.hubChannel = Objects.requireNonNull(hubChannel);
+    private SubscriptionToken(final UUID uuid) {
+        this.uuid = uuid;
     }
 
     /**
-     * Gets the UUID of the subscription.
-     * @return the unique identifier of the subscriber.
+     * Creates a new SubscriptionToken.
+     * @return A new subscription token
      */
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    /**
-     * Gets the hub channel to which the subscriber is bound.
-     * @return the hub channel of the subscriber.
-     */
-    public HubChannel getHubChannel() {
-        return hubChannel;
+    public static SubscriptionToken create() {
+        return new SubscriptionToken(UUID.randomUUID());
     }
 
     @Override
@@ -74,7 +49,7 @@ public final class SubscriptionToken {
             return false;
         }
         final SubscriptionToken that = (SubscriptionToken) thatObject;
-        return uuid.equals(that.getUuid());
+        return uuid.equals(that.uuid);
     }
 
     @Override
