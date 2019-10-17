@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.Utils;
+package com.amplifyframework.storage.s3.utils;
 
 import android.annotation.SuppressLint;
 

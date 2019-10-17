@@ -35,15 +35,15 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
-import com.amplifyframework.storage.s3.Operation.AWSS3StorageDownloadFileOperation;
-import com.amplifyframework.storage.s3.Operation.AWSS3StorageListOperation;
-import com.amplifyframework.storage.s3.Operation.AWSS3StorageRemoveOperation;
-import com.amplifyframework.storage.s3.Operation.AWSS3StorageUploadFileOperation;
-import com.amplifyframework.storage.s3.Request.AWSS3StorageDownloadFileRequest;
-import com.amplifyframework.storage.s3.Request.AWSS3StorageListRequest;
-import com.amplifyframework.storage.s3.Request.AWSS3StorageRemoveRequest;
-import com.amplifyframework.storage.s3.Request.AWSS3StorageUploadFileRequest;
-import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
+import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
+import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
@@ -254,23 +254,24 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageListOperation list(String path) throws StorageException {
+    public StorageListOperation list(@NonNull String path) throws StorageException {
         return list(path, StorageListOptions.defaultInstance());
     }
 
     @Override
-    public StorageListOperation list(String path, StorageListOptions options) throws StorageException {
+    public StorageListOperation list(@NonNull String path, StorageListOptions options) throws StorageException {
         return list(path, options, null);
     }
 
     @Override
-    public StorageListOperation list(String path, Listener<StorageListResult> callback) throws StorageException {
+    public StorageListOperation list(@NonNull String path, Listener<StorageListResult> callback)
+            throws StorageException {
         return list(path, StorageListOptions.defaultInstance(), callback);
     }
 
     @Override
     public StorageListOperation list(
-            String path,
+            @NonNull String path,
             StorageListOptions options,
             Listener<StorageListResult> callback
     ) throws StorageException {

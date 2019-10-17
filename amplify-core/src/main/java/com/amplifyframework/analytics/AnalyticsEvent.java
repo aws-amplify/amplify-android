@@ -92,10 +92,10 @@ public final class AnalyticsEvent {
      */
     public static final class Builder {
         private String eventName;
-        private Map<String, String> attributes;
+        private final Map<String, String> attributes;
         private String eventType;
-        private Map<String, Double> metrics;
-        private Map<String, String> data;
+        private final Map<String, Double> metrics;
+        private final Map<String, String> data;
 
         Builder() {
             this.attributes = new HashMap<>();

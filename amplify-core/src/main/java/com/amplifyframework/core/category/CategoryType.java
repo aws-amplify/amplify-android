@@ -54,6 +54,6 @@ public enum CategoryType {
      * retrieve instances of domain models. AWS provides several backend
      * systems that are suitable for storage of your data.
      */
-    STORAGE;
+    STORAGE
 }
 
