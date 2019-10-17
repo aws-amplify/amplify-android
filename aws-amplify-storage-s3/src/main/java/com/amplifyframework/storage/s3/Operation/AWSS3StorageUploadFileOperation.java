@@ -96,7 +96,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 public void onStateChanged(int transferId, TransferState state) {
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
-                        callback.onResult(StorageUploadFileResult.fromKey(request.getKey()));
+                        if (callback != null) {
+                            callback.onResult(StorageUploadFileResult.fromKey(request.getKey()));
+                        }
                     }
                 }
 
@@ -110,7 +112,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 @Override
                 public void onError(int transferId, Exception exception) {
                     // TODO: dispatch event to hub
-                    callback.onError(exception);
+                    if (callback != null) {
+                        callback.onError(exception);
+                    }
                 }
             });
         }

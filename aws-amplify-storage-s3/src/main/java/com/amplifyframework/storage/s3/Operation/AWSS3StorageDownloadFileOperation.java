@@ -91,7 +91,9 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
                 public void onStateChanged(int transferId, TransferState state) {
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
-                        callback.onResult(StorageDownloadFileResult.fromFile(file));
+                        if (callback != null) {
+                            callback.onResult(StorageDownloadFileResult.fromFile(file));
+                        }
                     }
                 }
 
@@ -105,7 +107,9 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
                 @Override
                 public void onError(int transferId, Exception exception) {
                     // TODO: dispatch event to hub
-                    callback.onError(exception);
+                    if (callback != null) {
+                        callback.onError(exception);
+                    }
                 }
             });
         }

@@ -37,9 +37,11 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.Operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.Operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.Operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.Operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.Request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
@@ -253,20 +255,37 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageListOperation list() throws StorageException {
-        return null;
+    public StorageListOperation list(String path) throws StorageException {
+        return list(path, StorageListOptions.defaultInstance());
     }
 
     @Override
-    public StorageListOperation list(StorageListOptions options) throws StorageException {
-        return null;
+    public StorageListOperation list(String path, StorageListOptions options) throws StorageException {
+        return list(path, options, null);
+    }
+
+    @Override
+    public StorageListOperation list(String path, Listener<StorageListResult> callback) throws StorageException {
+        return list(path, StorageListOptions.defaultInstance(), callback);
     }
 
     @Override
     public StorageListOperation list(
+            String path,
             StorageListOptions options,
             Listener<StorageListResult> callback
     ) throws StorageException {
-        return null;
+        AWSS3StorageListRequest request = new AWSS3StorageListRequest(
+                path,
+                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
+                options.getTargetIdentityId()
+        );
+
+        AWSS3StorageListOperation operation =
+                new AWSS3StorageListOperation(storageService, request, callback);
+
+        operation.start();
+
+        return operation;
     }
 }

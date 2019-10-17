@@ -18,6 +18,8 @@ package com.amplifyframework.storage.s3.Service;
 import android.content.Context;
 import android.content.Intent;
 
+import com.amplifyframework.storage.result.StorageListResult;
+
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
@@ -25,9 +27,13 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3Client;
 import com.amazonaws.services.s3.S3ClientOptions;
+import com.amazonaws.services.s3.model.ListObjectsV2Request;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Map;
 
 /**
@@ -101,6 +107,39 @@ public final class AWSS3StorageService {
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setUserMetadata(metadata);
         return transferUtility.upload(bucket, serviceKey, file, objectMetadata);
+    }
+
+    /**
+     * List items inside an S3 path.
+     * @param path The path to list items from
+     * @return An object containing the parsed items
+     */
+    public StorageListResult listFiles(String path) {
+        startServiceIfNotAlreadyStarted();
+        ArrayList<StorageListResult.Item> itemList = new ArrayList<>();
+        ListObjectsV2Request request =
+                new ListObjectsV2Request().withBucketName(this.bucket).withPrefix(path);
+        ListObjectsV2Result result;
+
+        do {
+            result = client.listObjectsV2(request);
+
+            for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                itemList.add(new StorageListResult.Item(
+                        objectSummary.getKey(),
+                        objectSummary.getSize(),
+                        objectSummary.getLastModified(),
+                        objectSummary.getETag(),
+                        null
+                ));
+            }
+            // If there are more than maxKeys keys in the bucket, get a continuation token
+            // and fetch the next batch of objects.
+            String token = result.getNextContinuationToken();
+            request.setContinuationToken(token);
+        } while (result.isTruncated());
+
+        return StorageListResult.fromItems(itemList);
     }
 
     /**
