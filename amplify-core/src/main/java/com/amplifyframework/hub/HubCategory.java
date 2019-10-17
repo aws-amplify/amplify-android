@@ -35,13 +35,13 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
     /**
      * Publish a Hub payload on the specified channel.
      * @param hubChannel The channel on which to send the payload
-     * @param hubpayload The payload to send
+     * @param hubPayload The payload to send
      * @throws HubException on publication failure
      */
     @Override
-    public void publish(@NonNull HubChannel hubChannel, @NonNull HubPayload hubpayload)
+    public void publish(@NonNull HubChannel hubChannel, @NonNull HubPayload hubPayload)
             throws HubException {
-        getSelectedPlugin().publish(hubChannel, hubpayload);
+        getSelectedPlugin().publish(hubChannel, hubPayload);
     }
 
     /**
@@ -56,7 +56,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
      */
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @Nullable HubListener listener) throws HubException {
+                                       @NonNull HubListener listener) throws HubException {
         return getSelectedPlugin().subscribe(hubChannel, listener);
     }
 
@@ -75,7 +75,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubPayloadFilter hubPayloadFilter,
-                                       @Nullable HubListener listener) throws HubException {
+                                       @NonNull HubListener listener) throws HubException {
         return getSelectedPlugin().subscribe(hubChannel, hubPayloadFilter, listener);
     }
 
