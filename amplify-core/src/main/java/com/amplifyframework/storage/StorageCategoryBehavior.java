@@ -19,7 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageOperation;
+import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
+import com.amplifyframework.storage.operation.StorageListOperation;
+import com.amplifyframework.storage.operation.StorageRemoveOperation;
+import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
@@ -45,8 +48,8 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including if
      *         {@see key} is not known in storage.
      */
-    StorageOperation downloadFile(@NonNull String key,
-                                  @NonNull String local) throws StorageException;
+    StorageDownloadFileOperation downloadFile(@NonNull String key,
+                                              @NonNull String local) throws StorageException;
 
     /**
      * Download object to file from storage.
@@ -63,7 +66,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variet of reasons, including if {@see key}
      *         is now known in storage, or if bad {@see options} are provided.
      */
-    StorageOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   StorageDownloadFileOptions options) throws StorageException;
 
@@ -80,7 +83,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including if
      *         {@see key} is not known in storage.
      */
-    StorageOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   Listener<StorageDownloadFileResult> callback) throws StorageException;
 
@@ -100,7 +103,7 @@ public interface StorageCategoryBehavior {
      *         If a failure occurs before asynchronous operation begins.
      *         After that time, errors are communicated via the {@see callback}.
      */
-    StorageOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   StorageDownloadFileOptions options,
                                   Listener<StorageDownloadFileResult> callback) throws StorageException;
@@ -116,8 +119,8 @@ public interface StorageCategoryBehavior {
      *         occur for a variety of reasons, including a bad
      *         {@see key}, a bad {@see local} file path, or other reasons.
      */
-    StorageOperation uploadFile(@NonNull String key,
-                                @NonNull String local) throws StorageException;
+    StorageUploadFileOperation uploadFile(@NonNull String key,
+                                          @NonNull String local) throws StorageException;
 
     /**
      * Upload local file on given path to storage.
@@ -132,7 +135,7 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, including a bad {@see key},
      *         a bad {@see local} file path, or bad {@see options}.
      */
-    StorageOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 StorageUploadFileOptions options) throws StorageException;
 
@@ -148,7 +151,7 @@ public interface StorageCategoryBehavior {
      *         If a failure to upload a file occurs before asynchronous operation
      *         is attempted; otherwise, errors are reported via the callback.
      */
-    StorageOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 Listener<StorageUploadFileResult> callback) throws StorageException;
 
@@ -166,7 +169,7 @@ public interface StorageCategoryBehavior {
      *         If an error occurs before asynchronous operation begins.
      *         After that, errors are communicated via the {@see callback}.
      */
-    StorageOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 StorageUploadFileOptions options,
                                 Listener<StorageUploadFileResult> callback) throws StorageException;
@@ -181,7 +184,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including
      *         if the {@see key} does not refer to an object currently in storage.
      */
-    StorageOperation remove(@NonNull String key) throws StorageException;
+    StorageRemoveOperation remove(@NonNull String key) throws StorageException;
 
     /**
      * Delete object from storage.
@@ -196,8 +199,24 @@ public interface StorageCategoryBehavior {
      *         provided {@see options} are invalid.
      *
      */
-    StorageOperation remove(@NonNull String key,
+    StorageRemoveOperation remove(@NonNull String key,
                             StorageRemoveOptions options) throws StorageException;
+
+    /**
+     * Delete object from storage.
+     * @param key the unique identifier of the object in storage
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *        actions related to the execution of the work
+     * @throws StorageException
+     *         On failure to remove an object from storage. This could
+     *         occur for a variety of reasons, including if {@see key}
+     *         does not refer to an object in storage, or if the
+     *         provided {@see options} are invalid.
+     *
+     */
+    StorageRemoveOperation remove(@NonNull String key,
+                            Listener<StorageRemoveResult> callback) throws StorageException;
 
     /**
      * Delete object from storage.
@@ -212,13 +231,14 @@ public interface StorageCategoryBehavior {
      *         asynchronous operation begins. Otherwise, failures
      *         will be reported via the {@see callback}.
      */
-    StorageOperation remove(@NonNull String key,
+    StorageRemoveOperation remove(@NonNull String key,
                             StorageRemoveOptions options,
                             Listener<StorageRemoveResult> callback) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
+     * @param path The path in storage to list items from
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageException
@@ -226,11 +246,12 @@ public interface StorageCategoryBehavior {
      *         a variety or reasons, such as if the storage system is not
      *         currently accessible.
      */
-    StorageOperation list() throws StorageException;
+    StorageListOperation list(@NonNull String path) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
+     * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
@@ -239,12 +260,27 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
-    StorageOperation list(StorageListOptions options) throws StorageException;
+    StorageListOperation list(@NonNull String path, StorageListOptions options) throws StorageException;
+
+    /**
+     * List the object identifiers under the hierarchy specified
+     * by the path, relative to access level, from storage.
+     * @param path The path in storage to list items from
+     * @param callback triggered when event occurs
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     * @throws StorageException
+     *         On failure to list items in storage. This can happen
+     *         for a variety of reasons, such as if the provided {@see options}
+     *         are invalid.
+     */
+    StorageListOperation list(@NonNull String path, Listener<StorageListResult> callback) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
      * Register a callback to observe progress.
+     * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @param callback triggered when event occurs
      * @return an operation object that provides notifications and
@@ -254,7 +290,8 @@ public interface StorageCategoryBehavior {
      *         asynchronous operation begins. Otherwise, failures will
      *         be reported via the {@see callback}.
      */
-    StorageOperation list(StorageListOptions options,
-                          Listener<StorageListResult> callback) throws StorageException;
+    StorageListOperation list(@NonNull String path,
+                            StorageListOptions options,
+                            Listener<StorageListResult> callback) throws StorageException;
 }
 

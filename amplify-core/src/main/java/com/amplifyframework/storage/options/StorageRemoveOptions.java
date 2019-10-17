@@ -23,11 +23,11 @@ import com.amplifyframework.storage.StorageAccessLevel;
  */
 public final class StorageRemoveOptions implements Options {
     private final StorageAccessLevel accessLevel;
-    private final Options options;
+    private final String targetIdentityId;
 
-    StorageRemoveOptions(Builder builder) {
+    StorageRemoveOptions(final Builder builder) {
         this.accessLevel = builder.getAccessLevel();
-        this.options = builder.getOptions();
+        this.targetIdentityId = builder.getTargetIdentityId();
     }
 
     /**
@@ -39,46 +39,64 @@ public final class StorageRemoveOptions implements Options {
     }
 
     /**
-     * Gets the storage options.
-     * @return Storage options
+     * Gets the target identity ID.
+     * @return target identity ID
      */
-    public Options getOptions() {
-        return options;
+    public String getTargetIdentityId() {
+        return targetIdentityId;
     }
 
     /**
-     * Gets a new instance of {@link StorageRemoveOptions.Builder}, which can be used
-     * to configure and construct new immutable instances of {@link StorageRemoveOptions}.
-     * @return a new instance of the {@link StorageRemoveOptions.Builder}.
+     * Factory method to create a new instance of the
+     * {@link StorageRemoveOptions.Builder}.  The builder can be
+     * used to configure properties and then construct a new immutable
+     * instance of the StorageRemoveOptions.
+     * @return An instance of the {@link StorageRemoveOptions.Builder}
      */
     public static Builder builder() {
         return new Builder();
     }
 
     /**
-     * Creates a default instance of the {@link StorageRemoveOptions}, which has
-     * no special/unique configurations.
-     * @return Default instance of StorageRemoveOptions
+     * Factory method to create builder which is configured to prepare
+     * object instances with the same field values as the provided
+     * options. This can be used as a starting ground to create a
+     * new clone of the provided options, which shares some common
+     * configuration.
+     * @param options Options to populate into a new builder configuration
+     * @return A Builder instance that has been configured using the
+     *         values in the provided options
+     */
+    public static Builder from(StorageRemoveOptions options) {
+        return builder()
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId());
+    }
+
+    /**
+     * Constructs a default instance of the {@link StorageRemoveOptions}.
+     * @return default instance of StorageRemoveOptions
      */
     public static StorageRemoveOptions defaultInstance() {
         return builder().build();
     }
 
     /**
-     * Provides a mechanism to prepare and construct immutable instances
-     * of {@link StorageRemoveOptions}, using fluent method configuration API
-     * via chained method invocations.
+     * A utility that can be used to configure and construct immutable
+     * instances of the {@link StorageRemoveOptions}, by chaining
+     * fluent configuration method calls.
      */
     public static final class Builder {
         private StorageAccessLevel accessLevel;
-        private Options options;
+        private String targetIdentityId;
 
         Builder() {
         }
 
         /**
-         * Configures the storage access level to use on newly built StorageRemoveOptions instances.
-         * @param accessLevel Storage access level
+         * Configures the storage access level to set on new
+         * StorageRemoveOptions instances.
+         * @param accessLevel Storage access level for new StorageRemoveOptions instances
          * @return Current Builder instance, for fluent method chaining
          */
         public Builder accessLevel(StorageAccessLevel accessLevel) {
@@ -87,30 +105,32 @@ public final class StorageRemoveOptions implements Options {
         }
 
         /**
-         * Configures the options to use on newly built StorageRemoveOptions instances.
-         * @param options Options bundle
+         * Configures the target identity ID that will be used on newly
+         * built StorageRemoveOptions.
+         * @param targetIdentityId Target identity ID for new StorageRemoveOptions instances
          * @return Current Builder instance, for fluent method chaining
          */
-        public Builder options(Options options) {
-            this.options = options;
+        public Builder targetIdentityId(String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
             return this;
+        }
+
+        /**
+         * Constructs and returns a new immutable instance of the
+         * StorageRemoveOptions, using the configurations that
+         * have been provided the current instance of the Builder.
+         * @return A new immutable instance of StorageRemoveOptions
+         */
+        public StorageRemoveOptions build() {
+            return new StorageRemoveOptions(this);
         }
 
         StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
-        Options getOptions() {
-            return options;
-        }
-
-        /**
-         * Constructs and returns a new immutable {@link StorageRemoveOptions} instance, using the
-         * values that had been configured on the current builder instance.
-         * @return A new immutable instance of the {@link StorageRemoveOptions}.
-         */
-        public StorageRemoveOptions build() {
-            return new StorageRemoveOptions(this);
+        String getTargetIdentityId() {
+            return targetIdentityId;
         }
     }
 }

@@ -17,7 +17,7 @@ package com.amplifyframework.storage.s3.Operation;
 
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageOperation;
+import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.Request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
@@ -33,7 +33,7 @@ import java.io.File;
 /**
  * An operation to upload a file from AWS S3.
  */
-public final class AWSS3StorageUploadFileOperation extends StorageOperation {
+public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation {
     private final AWSS3StorageService storageService;
     private final AWSS3StorageUploadFileRequest request;
     private final Listener<StorageUploadFileResult> callback;
@@ -96,7 +96,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageOperation {
                 public void onStateChanged(int transferId, TransferState state) {
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
-                        callback.onResult(StorageUploadFileResult.fromKey(request.getKey()));
+                        if (callback != null) {
+                            callback.onResult(StorageUploadFileResult.fromKey(request.getKey()));
+                        }
                     }
                 }
 
@@ -110,7 +112,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageOperation {
                 @Override
                 public void onError(int transferId, Exception exception) {
                     // TODO: dispatch event to hub
-                    callback.onError(exception);
+                    if (callback != null) {
+                        callback.onError(exception);
+                    }
                 }
             });
         }

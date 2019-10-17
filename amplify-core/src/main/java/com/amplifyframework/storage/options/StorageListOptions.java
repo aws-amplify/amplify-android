@@ -24,14 +24,10 @@ import com.amplifyframework.storage.StorageAccessLevel;
 public final class StorageListOptions implements Options {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
-    private final String path;
-    private final Options options;
 
     StorageListOptions(final Builder builder) {
         this.accessLevel = builder.getAccessLevel();
         this.targetIdentityId = builder.getTargetIdentityId();
-        this.path = builder.getPath();
-        this.options = builder.getOptions();
     }
 
     /**
@@ -48,22 +44,6 @@ public final class StorageListOptions implements Options {
      */
     public String getTargetIdentityId() {
         return targetIdentityId;
-    }
-
-    /**
-     * Gets the storage path.
-     * @return storage path
-     */
-    public String getPath() {
-        return path;
-    }
-
-    /**
-     * Gets the options.
-     * @return options
-     */
-    public Options getOptions() {
-        return options;
     }
 
     /**
@@ -92,8 +72,6 @@ public final class StorageListOptions implements Options {
 
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
-        private String path;
-        private Options options;
 
         Builder() {
         }
@@ -113,28 +91,8 @@ public final class StorageListOptions implements Options {
          * @param targetIdentityId target identity ID
          * @return current Builder instance, for fluent chaining
          */
-        public Builder trgetIdentityId(String targetIdentityId) {
+        public Builder targetIdentityId(String targetIdentityId) {
             this.targetIdentityId = targetIdentityId;
-            return this;
-        }
-
-        /**
-         * Configures the path.
-         * @param path Storage path
-         * @return Current builder instance, for fluent chaining
-         */
-        public Builder path(String path) {
-            this.path = path;
-            return this;
-        }
-
-        /**
-         * Configures the options.
-         * @param options Options
-         * @return Current builder instance, for fluent chaining
-         */
-        public Builder options(Options options) {
-            this.options = options;
             return this;
         }
 
@@ -144,14 +102,6 @@ public final class StorageListOptions implements Options {
 
         String getTargetIdentityId() {
             return targetIdentityId;
-        }
-
-        String getPath() {
-            return path;
-        }
-
-        Options getOptions() {
-            return options;
         }
 
         /**
