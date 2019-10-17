@@ -37,6 +37,6 @@ public interface HubPayloadFilter {
      * @return true if the payload meets your criteria,
      *         false otherwise.
      */
-    boolean filter(@NonNull final HubPayload payload);
+    boolean filter(@NonNull HubPayload payload);
 }
 

@@ -34,5 +34,6 @@ public interface HubListener {
      * @param hubPayload payload of the Hub subscription.
      *                   See {@link HubPayload} for details.
      */
-    void onEvent(@NonNull final HubPayload hubPayload);
+    void onEvent(@NonNull HubPayload hubPayload);
 }
+

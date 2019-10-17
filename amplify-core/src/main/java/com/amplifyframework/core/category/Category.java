@@ -16,7 +16,6 @@
 package com.amplifyframework.core.category;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;

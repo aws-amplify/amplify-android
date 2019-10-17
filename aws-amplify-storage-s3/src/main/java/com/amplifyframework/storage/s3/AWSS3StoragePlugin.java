@@ -16,7 +16,6 @@
 package com.amplifyframework.storage.s3;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.async.Listener;
