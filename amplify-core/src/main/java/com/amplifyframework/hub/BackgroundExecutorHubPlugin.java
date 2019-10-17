@@ -18,19 +18,16 @@ package com.amplifyframework.hub;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.hub.internal.FilteredHubListener;
 
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -42,20 +39,17 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
 
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // TODO: use this for O(1) subscribe/unsubscribe.
-    private final Map<UUID, FilteredHubListener> listenersByUUID;
-    private final Map<HubChannel, Set<FilteredHubListener>> listenersByHubChannel;
+    private final Map<SubscriptionToken, HubSubscription> subscriptionsByToken;
+    private final Map<HubChannel, Set<HubSubscription>> subscriptionsByChannel;
+    private final Object subscriptionsLock;
+
     private final ExecutorService executorService;
     private final Handler mainHandler;
 
-    /**
-     * Constructs a new BackgroundExecutorHubPlugin. The plugin will dispatch work onto a
-     * newly instantiated cached thread pool. The threads immediately post work back onto the
-     * main thread. TODO: does this make any sense?
-     */
-    public BackgroundExecutorHubPlugin() {
-        this.listenersByUUID = new ConcurrentHashMap<>();
-        this.listenersByHubChannel = new ConcurrentHashMap<>();
+    BackgroundExecutorHubPlugin() {
+        this.subscriptionsByToken = new HashMap<>();
+        this.subscriptionsByChannel = new HashMap<>();
+        this.subscriptionsLock = new Object();
         this.executorService = Executors.newCachedThreadPool();
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
@@ -63,24 +57,27 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     /**
      * Dispatch a Hub message on the specified channel.
      * @param hubChannel The channel to send the message on
-     * @param hubpayload The payload to send
+     * @param hubPayload The payload to send
      */
     @Override
-    public void publish(@NonNull final HubChannel hubChannel, @NonNull final HubPayload hubpayload) {
+    public void publish(@NonNull final HubChannel hubChannel, @NonNull final HubPayload hubPayload) {
         executorService.submit(() -> {
-            mainHandler.post(() -> {
-                if (!listenersByHubChannel.containsKey(hubChannel)) {
-                    return;
+            final Set<HubSubscription> safeSubscriptions = new HashSet<>();
+            synchronized (subscriptionsLock) {
+                if (subscriptionsByChannel.containsKey(hubChannel)) {
+                    //noinspection ConstantConditions contains is true & our impl never puts() a null value.
+                    safeSubscriptions.addAll(subscriptionsByChannel.get(hubChannel));
+                }
+            }
+
+            for (HubSubscription subscription : safeSubscriptions) {
+                if (subscription.getHubPayloadFilter() != null &&
+                        !subscription.getHubPayloadFilter().filter(hubPayload)) {
+                    continue;
                 }
 
-                //noinspection ConstantConditions TODO: listeners maps will be refactored
-                for (FilteredHubListener filteredHubListener : listenersByHubChannel.get(hubChannel)) {
-                    if (filteredHubListener.getHubPayloadFilter() == null ||
-                            filteredHubListener.getHubPayloadFilter().filter(hubpayload)) {
-                        filteredHubListener.getHubListener().onEvent(hubpayload);
-                    }
-                }
-            });
+                mainHandler.post(() -> subscription.getHubListener().onEvent(hubPayload));
+            }
         });
     }
 
@@ -95,7 +92,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      */
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @Nullable HubListener listener) {
+                                       @NonNull HubListener listener) {
         return subscribe(hubChannel, null, listener);
     }
 
@@ -113,21 +110,25 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubPayloadFilter hubPayloadFilter,
-                                       @Nullable HubListener listener) {
-        final UUID listenerId = UUID.randomUUID();
-        final FilteredHubListener filteredHubListener = new FilteredHubListener(hubChannel,
-                listenerId, hubPayloadFilter, listener);
+                                       @NonNull HubListener listener) {
+        Objects.requireNonNull(hubChannel);
+        Objects.requireNonNull(listener);
 
-        listenersByUUID.put(listenerId, filteredHubListener);
-        Set<FilteredHubListener> filteredHubListeners = new HashSet<>();
-        if (listenersByHubChannel.containsKey(hubChannel)) {
-            //noinspection ConstantConditions TODO: listeners maps will be refatored
-            filteredHubListeners.addAll(listenersByHubChannel.get(hubChannel));
+        final SubscriptionToken token = SubscriptionToken.create();
+        final HubSubscription hubSubscription =
+            new HubSubscription(hubChannel, hubPayloadFilter, listener);
+
+        synchronized (subscriptionsLock) {
+            subscriptionsByToken.put(token, hubSubscription);
+
+            if (!subscriptionsByChannel.containsKey(hubChannel)) {
+                subscriptionsByChannel.put(hubChannel, new HashSet<>());
+            }
+            //noinspection ConstantConditions syncrhonized, and just ensured non-null via put(..., non-null).
+            subscriptionsByChannel.get(hubChannel).add(hubSubscription);
         }
-        filteredHubListeners.add(filteredHubListener);
-        listenersByHubChannel.put(hubChannel, filteredHubListeners);
 
-        return new SubscriptionToken(listenerId, hubChannel);
+        return token;
     }
 
     /**
@@ -139,25 +140,18 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      */
     @Override
     public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
-        final UUID listenerId = subscriptionToken.getUuid();
-        final HubChannel hubChannel = subscriptionToken.getHubChannel();
-        listenersByUUID.remove(subscriptionToken.getUuid());
+        synchronized (subscriptionsLock) {
+            // First, find the listener while trying to remove its subscription from the token map.
+            HubSubscription subscriptionBeingEnded = subscriptionsByToken.remove(subscriptionToken);
+            if (subscriptionBeingEnded == null) {
+                throw new HubException("Invalid subscription token. Listener invalid, or already unsubscribed?");
+            }
 
-        Set<FilteredHubListener> filteredHubListeners = listenersByHubChannel.get(
-                subscriptionToken.getHubChannel());
-        if (filteredHubListeners == null) {
-            Log.e(TAG, "Cannot find the listener for listenerId: " +
-                    listenerId + " by channel: " + hubChannel);
-            return;
-        }
-
-        Iterator<FilteredHubListener> filteredHubListenersIterator = filteredHubListeners.iterator();
-        //noinspection WhileLoopReplaceableByForEach Retained intentionally for remove() collection safety
-        while (filteredHubListenersIterator.hasNext()) {
-            FilteredHubListener filteredHubListener = filteredHubListenersIterator.next();
-            if (listenerId.equals(filteredHubListener.getListenerId())) {
-                filteredHubListeners.remove(filteredHubListener);
-                return;
+            // Now that we have a handle to the subscription, figure out which channel
+            final HubChannel channelToUpdate = subscriptionBeingEnded.getHubChannel();
+            if (subscriptionsByChannel.containsKey(channelToUpdate)) {
+                //noinspection ConstantConditions syncrhonized, key is valid, and we never put null values in map
+                subscriptionsByChannel.get(channelToUpdate).remove(subscriptionBeingEnded);
             }
         }
     }
@@ -188,5 +182,39 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
+    }
+
+    /**
+     * Encapsulates information about a subscription.
+     * This is needed so that we can have O(1) lookup with a subscriptions map
+     * for subscribe and unsubscribe(), but still be able to lookup the set of
+     * listeners for a channel in O(1), as well. Lastly, this subscription
+     * object provides a reference to the optional payload filter which is evaluated
+     * when payloads are published.
+     */
+    static final class HubSubscription {
+        private final HubChannel channel;
+        private final HubPayloadFilter hubPayloadFilter;
+        private final HubListener hubListener;
+
+        HubSubscription(@NonNull final HubChannel channel,
+                        @Nullable final HubPayloadFilter hubPayloadFilter,
+                        @Nullable final HubListener hubListener) {
+            this.channel = channel;
+            this.hubPayloadFilter = hubPayloadFilter;
+            this.hubListener = hubListener;
+        }
+
+        HubChannel getHubChannel() {
+            return channel;
+        }
+
+        HubPayloadFilter getHubPayloadFilter() {
+            return hubPayloadFilter;
+        }
+
+        HubListener getHubListener() {
+            return hubListener;
+        }
     }
 }

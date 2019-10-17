@@ -65,7 +65,6 @@ public final class HubInstrumentedTest {
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
             payload -> waitUntilSubscriptionIsReceived.countDown());
         assertNotNull(token);
-        assertNotNull(token.getUuid());
 
         Amplify.Hub.unsubscribe(token);
 
