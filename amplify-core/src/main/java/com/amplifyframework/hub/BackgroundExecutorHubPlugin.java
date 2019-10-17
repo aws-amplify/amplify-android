@@ -42,6 +42,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
 
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // TODO: use this for O(1) subscribe/unsubscribe.
     private final Map<UUID, FilteredHubListener> listenersByUUID;
     private final Map<HubChannel, Set<FilteredHubListener>> listenersByHubChannel;
     private final ExecutorService executorService;
@@ -53,8 +54,8 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      * main thread. TODO: does this make any sense?
      */
     public BackgroundExecutorHubPlugin() {
-        this.listenersByUUID = new ConcurrentHashMap<UUID, FilteredHubListener>();
-        this.listenersByHubChannel = new ConcurrentHashMap<HubChannel, Set<FilteredHubListener>>();
+        this.listenersByUUID = new ConcurrentHashMap<>();
+        this.listenersByHubChannel = new ConcurrentHashMap<>();
         this.executorService = Executors.newCachedThreadPool();
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
@@ -72,6 +73,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
                     return;
                 }
 
+                //noinspection ConstantConditions TODO: listeners maps will be refactored
                 for (FilteredHubListener filteredHubListener : listenersByHubChannel.get(hubChannel)) {
                     if (filteredHubListener.getHubPayloadFilter() == null ||
                             filteredHubListener.getHubPayloadFilter().filter(hubpayload)) {
@@ -117,11 +119,10 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
                 listenerId, hubPayloadFilter, listener);
 
         listenersByUUID.put(listenerId, filteredHubListener);
-        Set<FilteredHubListener> filteredHubListeners;
+        Set<FilteredHubListener> filteredHubListeners = new HashSet<>();
         if (listenersByHubChannel.containsKey(hubChannel)) {
-            filteredHubListeners = listenersByHubChannel.get(hubChannel);
-        } else {
-            filteredHubListeners = new HashSet<FilteredHubListener>();
+            //noinspection ConstantConditions TODO: listeners maps will be refatored
+            filteredHubListeners.addAll(listenersByHubChannel.get(hubChannel));
         }
         filteredHubListeners.add(filteredHubListener);
         listenersByHubChannel.put(hubChannel, filteredHubListeners);
@@ -151,6 +152,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
         }
 
         Iterator<FilteredHubListener> filteredHubListenersIterator = filteredHubListeners.iterator();
+        //noinspection WhileLoopReplaceableByForEach Retained intentionally for remove() collection safety
         while (filteredHubListenersIterator.hasNext()) {
             FilteredHubListener filteredHubListener = filteredHubListenersIterator.next();
             if (listenerId.equals(filteredHubListener.getListenerId())) {

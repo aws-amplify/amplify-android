@@ -59,11 +59,11 @@ public final class StorageListResult implements Result {
      * Used to store the data on each item in a storage path.
      */
     public static final class Item {
-        private String key;
-        private long size;
-        private Date lastModified;
-        private String eTag;
-        private Object pluginResults;
+        private final String key;
+        private final long size;
+        private final Date lastModified;
+        private final String eTag;
+        private final Object pluginResults;
 
         /**
          * Object to represent an item listing in Storage.

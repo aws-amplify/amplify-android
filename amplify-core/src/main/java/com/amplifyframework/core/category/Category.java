@@ -38,7 +38,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Map of the { pluginKey => plugin } object.
      */
-    private Map<String, P> plugins;
+    private final Map<String, P> plugins;
 
     /**
      * Flag to remember that the category is already configured by Amplify
@@ -50,7 +50,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Constructs a new, not-yet-configured, Category.
      */
     public Category() {
-        this.plugins = new ConcurrentHashMap<String, P>();
+        this.plugins = new ConcurrentHashMap<>();
         this.isConfigured = false;
     }
 
@@ -73,10 +73,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
             if (pluginConfig != null) {
                 plugin.configure(pluginConfig, context);
-            } else {
-                // TODO
-                // The plugin does not have any configuration.
-            }
+            } // TODO: Else, the plugin does not have any configuration.
         }
 
         isConfigured = true;
@@ -129,7 +126,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @return The set of plugins associated to the Category
      */
     public final Set<P> getPlugins() {
-        return new HashSet<P>(plugins.values());
+        return new HashSet<>(plugins.values());
     }
 
     /**

@@ -13,15 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.Operation;
+package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
-import com.amplifyframework.storage.result.StorageDownloadFileResult;
-import com.amplifyframework.storage.s3.Request.AWSS3StorageDownloadFileRequest;
-import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
-import com.amplifyframework.storage.s3.Utils.S3RequestUtils;
+import com.amplifyframework.storage.operation.StorageUploadFileOperation;
+import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
+import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
@@ -31,24 +31,24 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import java.io.File;
 
 /**
- * An operation to download a file from AWS S3.
+ * An operation to upload a file from AWS S3.
  */
-public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFileOperation {
+public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageDownloadFileRequest request;
-    private final Listener<StorageDownloadFileResult> callback;
+    private final AWSS3StorageUploadFileRequest request;
+    private final Listener<StorageUploadFileResult> callback;
     private TransferObserver transferObserver;
     private File file;
 
     /**
-     * Constructs a new AWSS3StorageDownloadFileOperation.
+     * Constructs a new AWSS3StorageUploadFileOperation.
      * @param storageService S3 client wrapper
-     * @param request download request parameters
+     * @param request upload request parameters
      * @param callback Listener to invoke when results are available
      */
-    public AWSS3StorageDownloadFileOperation(AWSS3StorageService storageService,
-                                             AWSS3StorageDownloadFileRequest request,
-                                             Listener<StorageDownloadFileResult> callback) {
+    public AWSS3StorageUploadFileOperation(AWSS3StorageService storageService,
+                                           AWSS3StorageUploadFileRequest request,
+                                           Listener<StorageUploadFileResult> callback) {
         this.request = request;
         this.storageService = storageService;
         this.callback = callback;
@@ -81,9 +81,14 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
             this.file = new File(request.getLocal()); //TODO: Add error handling if path is invalid
 
             try {
-                transferObserver = storageService.downloadToFile(serviceKey, file);
+                if (request.getMetadata() == null || request.getMetadata().isEmpty()) {
+                    transferObserver = storageService.uploadFile(serviceKey, file);
+                } else {
+                    transferObserver = storageService.uploadFile(serviceKey, file, request.getMetadata());
+                }
+
             } catch (Exception exception) {
-                throw new StorageException("Issue downloading file - see included exception", exception);
+                throw new StorageException("Issue uploading file - see included exception", exception);
             }
 
             transferObserver.setTransferListener(new TransferListener() {
@@ -92,13 +97,13 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
                         if (callback != null) {
-                            callback.onResult(StorageDownloadFileResult.fromFile(file));
+                            callback.onResult(StorageUploadFileResult.fromKey(request.getKey()));
                         }
                     }
                 }
 
-                @Override
                 @SuppressWarnings("MagicNumber")
+                @Override
                 public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
                     int percentage = (int) (bytesCurrent / bytesTotal * 100);
                     // TODO: dispatch event to hub
@@ -121,7 +126,7 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
             try {
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
-                throw new StorageException("Issue cancelling file download - see included exception", exception);
+                throw new StorageException("Issue cancelling file upload - see included exception", exception);
             }
         }
     }
@@ -132,7 +137,7 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
             try {
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
-                throw new StorageException("Issue pausing file download - see included exception", exception);
+                throw new StorageException("Issue pausing file upload - see included exception", exception);
             }
         }
     }
@@ -143,7 +148,7 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
             try {
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
-                throw new StorageException("Issue resuming file download - see included exception", exception);
+                throw new StorageException("Issue resuming file upload - see included exception", exception);
             }
         }
     }
