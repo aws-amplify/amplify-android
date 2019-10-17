@@ -13,31 +13,31 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.Request;
+package com.amplifyframework.storage.s3.request;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Parameters to provide to S3 that describe a request to remove a file.
+ * Parameters to provide to S3 that describe a request to list files.
  */
-public final class AWSS3StorageRemoveRequest {
-    private final String key;
+public final class AWSS3StorageListRequest {
+    private final String path;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
     /**
-     * Constructs a new AWSS3StorageRemoveRequest.
-     * @param key key for item to download
+     * Constructs a new AWSS3StorageListRequest.
+     * @param path the path in S3 to list items from
      * @param accessLevel Storage access level
-     * @param targetIdentityId The user id for the user this file should be downloaded for
+     * @param targetIdentityId The user id for the user to list S3 storage items for
      *                         (to override it from assuming the currently logged in user)
      */
-    public AWSS3StorageRemoveRequest(
-            String key,
+    public AWSS3StorageListRequest(
+            String path,
             StorageAccessLevel accessLevel,
             String targetIdentityId
     ) {
-        this.key = key;
+        this.path = path;
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
     }
@@ -51,11 +51,11 @@ public final class AWSS3StorageRemoveRequest {
     }
 
     /**
-     * Gets the storage key.
-     * @return key
+     * Gets the path.
+     * @return path
      */
-    public String getKey() {
-        return key;
+    public String getPath() {
+        return path;
     }
 
     /**

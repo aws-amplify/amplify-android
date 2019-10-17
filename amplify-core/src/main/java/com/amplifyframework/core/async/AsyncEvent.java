@@ -51,7 +51,7 @@ public final class AsyncEvent<T> {
          * Asynchronous work is not in process, because it ended with
          * a failure state.
          */
-        FAILED;
+        FAILED
     }
 
     private final String eventName;

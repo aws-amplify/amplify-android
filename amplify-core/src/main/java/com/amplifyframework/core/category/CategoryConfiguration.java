@@ -23,13 +23,14 @@ import java.util.concurrent.ConcurrentHashMap;
  * various data required for successful configuration.
  */
 public abstract class CategoryConfiguration {
-    private Map<String, Object> pluginConfigs;
+    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Configs will be populated by future work
+    private final Map<String, Object> pluginConfigs;
 
     /**
      * Constructs a new CategoryConfiguration.
      */
     public CategoryConfiguration() {
-        pluginConfigs = new ConcurrentHashMap<String, Object>();
+        pluginConfigs = new ConcurrentHashMap<>();
     }
 
     /**
