@@ -63,7 +63,7 @@ public interface StorageCategoryBehavior {
      *         actions related to the execution of the work
      * @throws StorageException
      *         On failure to obtain the requested object from storage.
-     *         This could occur for a variet of reasons, including if {@see key}
+     *         This could occur for a variety of reasons, including if {@see key}
      *         is now known in storage, or if bad {@see options} are provided.
      */
     StorageDownloadFileOperation downloadFile(@NonNull String key,

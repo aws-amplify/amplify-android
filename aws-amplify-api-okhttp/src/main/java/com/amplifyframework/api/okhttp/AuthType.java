@@ -13,9 +13,30 @@
  * permissions and limitations under the License.
  */
 
-include ':amplify-core'
+package com.amplifyframework.api.okhttp;
 
-// Plugin Modules
-include ':aws-amplify-analytics-pinpoint'
-include ':aws-amplify-api-okhttp'
-include ':aws-amplify-storage-s3'
+/**
+ * The enum of available authentication types
+ * for the Amplify API category.
+ */
+public enum AuthType {
+    /**
+     * Authentication via API key.
+     */
+    API_KEY,
+
+    /**
+     * Authentication via AWS IAM.
+     */
+    AWS_IAM,
+
+    /**
+     * Authentication via Amazon Cognito User Pools.
+     */
+    AMAZON_COGNITO_USER_POOLS,
+
+    /**
+     * Authentication via OpenID Connect.
+     */
+    OPENID_CONNECT
+}
