@@ -11,7 +11,7 @@ commands:
             wget https://services.gradle.org/distributions/gradle-5.6.2-bin.zip
             unzip gradle-5.6.2-bin.zip
       - run:
-          name: Generate wrapper
+          name: Generate gradle wrapper
           command: |
             cd ~/amplify-android-home
             yes | sdkmanager --licenses && yes | sdkmanager --update
