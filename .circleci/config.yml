@@ -1,0 +1,32 @@
+version: 2.1
+
+commands:
+  generate_gradle_wrapper:
+    description: Download and install gradle wrapper
+    steps:
+      - run:
+          name: Download gradle
+          command: |
+            cd ~
+            wget https://services.gradle.org/distributions/gradle-5.6.2-bin.zip
+            unzip gradle-5.6.2-bin.zip
+      - run:
+          name: Generate gradle wrapper
+          command: |
+            cd ~/amplify-android-home
+            yes | sdkmanager --licenses && yes | sdkmanager --update
+            ~/gradle-5.6.2/bin/gradle wrapper
+jobs:
+  build:
+    working_directory: ~/amplify-android-home
+    docker:
+      - image: circleci/android:api-29
+    environment:
+      JVM_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - generate_gradle_wrapper
+      - run:
+          name: Build the project
+          command: bash gradlew build
+
