@@ -23,6 +23,8 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.plugin.PluginException;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -171,7 +173,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
      * @throws PluginException when configuration for a plugin was not found
      */
     @Override
-    public void configure(@NonNull Object pluginConfiguration, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
 
     }
 
