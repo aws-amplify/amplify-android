@@ -19,7 +19,7 @@ package com.amplifyframework.api.graphql;
  * An extension of general Query class customized for GraphQL functionality.
  * @param <T> type of object being queried
  */
-public class GraphQLQuery<T> extends Query<T> {
+public final class GraphQLQuery<T> extends Query<T> {
     /**
      * Default constructor for GraphQLQuery.
      * Type of API call defaults to "query".
@@ -38,6 +38,6 @@ public class GraphQLQuery<T> extends Query<T> {
      * @param classToCast class to be cast to
      */
     public GraphQLQuery(OperationType operationType, String document, Class<T> classToCast) {
-        super(operationType.value(), document, classToCast);
+        super(operationType.getQueryPrefix(), document, classToCast);
     }
 }
