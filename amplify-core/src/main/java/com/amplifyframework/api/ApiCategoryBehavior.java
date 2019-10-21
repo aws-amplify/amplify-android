@@ -15,11 +15,78 @@
 
 package com.amplifyframework.api;
 
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.api.graphql.GraphQLCallback;
+import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.OperationType;
+
 /**
  * API category behaviors include REST and GraphQL operations. These
  * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
  * query/subscribe/mutate operations.
  */
 public interface ApiCategoryBehavior {
+
+    /**
+     * Send a GraphQL document to endpoint as POST.
+     * Casts the queried result to json string.
+     *
+     * @param apiName name of API being invoked
+     * @param operationType graphQL operation type
+     * @param document valid GraphQL string
+     * @return GraphQLQuery query object being enqueued
+     */
+    GraphQLOperation graphql(@NonNull String apiName,
+                                @NonNull OperationType operationType,
+                                @NonNull String document);
+
+    /**
+     * Send a GraphQL document to endpoint as POST.
+     * Casts the queried result to json string.
+     *
+     * @param <T> type of object being queried for
+     * @param apiName name of API being invoked
+     * @param operationType graphQL operation type
+     * @param document valid GraphQL string
+     * @param callback callback to attach
+     * @return GraphQLQuery query object being enqueued
+     */
+    <T> GraphQLOperation graphql(@NonNull String apiName,
+                                @NonNull OperationType operationType,
+                                @NonNull String document,
+                                GraphQLCallback<T> callback);
+
+    /**
+     * Send a GraphQL document to endpoint as POST.
+     *
+     * @param <T> type of object being queried for
+     * @param apiName name of API being invoked
+     * @param operationType graphQL operation type
+     * @param document valid GraphQL string
+     * @param classToCast class to be cast to
+     * @return GraphQLQuery query object being enqueued
+     */
+    <T> GraphQLOperation graphql(@NonNull String apiName,
+                                 @NonNull OperationType operationType,
+                                 @NonNull String document,
+                                 Class<T> classToCast);
+
+    /**
+     * Send a GraphQL document to endpoint as POST.
+     *
+     * @param <T> type of object being queried for
+     * @param apiName name of API being invoked
+     * @param operationType graphQL operation type
+     * @param document valid GraphQL string
+     * @param classToCast class to be cast to
+     * @param callback callback to attach
+     * @return GraphQLQuery query object being enqueued
+     */
+    <T> GraphQLOperation graphql(@NonNull String apiName,
+                                @NonNull OperationType operationType,
+                                @NonNull String document,
+                                Class<T> classToCast,
+                                GraphQLCallback<T> callback);
 }
 

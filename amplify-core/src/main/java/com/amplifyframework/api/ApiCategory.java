@@ -15,6 +15,11 @@
 
 package com.amplifyframework.api;
 
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.api.graphql.GraphQLCallback;
+import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -28,6 +33,38 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.API;
+    }
+
+    @Override
+    public GraphQLOperation graphql(@NonNull String apiName,
+                                    @NonNull OperationType operationType,
+                                    @NonNull String document) {
+        return getSelectedPlugin().graphql(apiName, operationType, document);
+    }
+
+    @Override
+    public <T> GraphQLOperation graphql(@NonNull String apiName,
+                                        @NonNull OperationType operationType,
+                                        @NonNull String document,
+                                        GraphQLCallback<T> callback) {
+        return getSelectedPlugin().graphql(apiName, operationType, document, callback);
+    }
+
+    @Override
+    public <T> GraphQLOperation graphql(@NonNull String apiName,
+                                        @NonNull OperationType operationType,
+                                        @NonNull String document,
+                                        Class<T> classToCast) {
+        return getSelectedPlugin().graphql(apiName, operationType, document, classToCast);
+    }
+
+    @Override
+    public <T> GraphQLOperation graphql(@NonNull String apiName,
+                                        @NonNull OperationType operationType,
+                                        @NonNull String document,
+                                        Class<T> classToCast,
+                                        GraphQLCallback<T> callback) {
+        return getSelectedPlugin().graphql(apiName, operationType, document, classToCast, callback);
     }
 }
 

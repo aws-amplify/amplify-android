@@ -13,8 +13,19 @@
  * permissions and limitations under the License.
  */
 
-include ':amplify-core'
+package com.amplifyframework.api.graphql;
 
-// Plugin Modules
-include ':aws-amplify-analytics-pinpoint'
-include ':aws-amplify-storage-s3'
+import com.amplifyframework.core.async.AmplifyOperation;
+import com.amplifyframework.core.category.CategoryType;
+
+/**
+ * Base operation type for graphql behavior on the API category.
+ */
+public abstract class GraphQLOperation extends AmplifyOperation {
+    /**
+     * Constructs a new instance of a ApiGraphQLOperation.
+     */
+    public GraphQLOperation() {
+        super(CategoryType.API);
+    }
+}
