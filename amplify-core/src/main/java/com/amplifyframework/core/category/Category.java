@@ -22,6 +22,8 @@ import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 
+import org.json.JSONObject;
+
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -59,7 +61,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param configuration Configuration for all plugins in the category
      * @param context An Android Context
      * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no plugin found for a configuration
+     * @throws PluginException thrown when there is no configuration found for a plugin
      */
     public final void configure(CategoryConfiguration configuration, Context context)
             throws ConfigurationException, PluginException {
@@ -69,11 +71,15 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
         for (P plugin : getPlugins()) {
             String pluginKey = plugin.getPluginKey();
-            Object pluginConfig = configuration.getPluginConfig(pluginKey);
+            JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
 
             if (pluginConfig != null) {
                 plugin.configure(pluginConfig, context);
-            } // TODO: Else, the plugin does not have any configuration.
+            } else {
+                throw new PluginException("No configuration data was provided for " + pluginKey +
+                        ". Check the amplifyconfiguration.json file or, if you are configuring manually, " +
+                        "the config object you provided for the " + plugin.getCategoryType() + " category");
+            }
         }
 
         isConfigured = true;

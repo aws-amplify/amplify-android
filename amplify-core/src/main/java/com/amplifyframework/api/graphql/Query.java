@@ -22,10 +22,6 @@ import android.util.Log;
 import java.util.ArrayList;
 import java.util.List;
 
-//import io.reactivex.Single;
-//import io.reactivex.SingleEmitter;
-//import io.reactivex.SingleOnSubscribe;
-
 /**
  * Generic query using which API calls will be made.
  * @param <T> The object type to invoke API calls on
@@ -290,25 +286,4 @@ public class Query<T> {
             return value;
         }
     }
-
-    /*
-    public Single<T> toSingle() {
-        return Single.create(new SingleOnSubscribe<T>() {
-            @Override
-            public void subscribe(final @NonNull SingleEmitter<T> e) throws Exception {
-                enqueue(new Callback<T>() {
-                    @Override
-                    public void onResponse(@NonNull T data) {
-                        e.onSuccess(data);
-                    }
-
-                    @Override
-                    public void onError(Throwable error){
-                        e.onError(error);
-                    }
-                });
-            }
-        });
-    }
-    */
 }

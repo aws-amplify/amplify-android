@@ -13,31 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.api.graphql;
 
-import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
 /**
- * Configurations for all plugins of the API category.
+ * Base operation type for graphql behavior on the API category.
  */
-public final class ApiCategoryConfiguration extends CategoryConfiguration {
-    //TODO: Place global (category-wise) configuration options here
-
+public abstract class GraphQLOperation extends AmplifyOperation {
     /**
-     * Constructs a new ApiCategoryConfiguration.
+     * Constructs a new instance of a ApiGraphQLOperation.
      */
-    public ApiCategoryConfiguration() {
-        super();
-    }
-
-    /**
-     * Gets the category type associated with the current object.
-     *
-     * @return The category type to which the current object is affiliated
-     */
-    @Override
-    public CategoryType getCategoryType() {
-        return CategoryType.API;
+    public GraphQLOperation() {
+        super(CategoryType.API);
     }
 }

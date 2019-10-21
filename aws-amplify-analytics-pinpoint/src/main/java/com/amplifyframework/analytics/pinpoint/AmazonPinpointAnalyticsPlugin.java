@@ -26,6 +26,8 @@ import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.core.plugin.PluginException;
 
+import org.json.JSONObject;
+
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
@@ -75,7 +77,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     }
 
     @Override
-    public void configure(@NonNull Object pluginConfiguration, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
 
     }
 

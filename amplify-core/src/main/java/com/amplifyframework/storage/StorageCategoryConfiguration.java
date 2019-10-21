@@ -16,18 +16,30 @@
 package com.amplifyframework.storage;
 
 import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Strongly-typed configuration for Storage category that also
  * contains configuration for individual plugins.
  */
 public final class StorageCategoryConfiguration extends CategoryConfiguration {
-    //TODO: Place global (category-wise) configuration options here
+    // Any category level properties would be defined here and populateFromJson would be overridden
+    // below to fill in these values from the JSON data.
 
     /**
      * Constructs a new StorageCategoryConfiguration.
      */
     public StorageCategoryConfiguration() {
         super();
+    }
+
+    /**
+     * Gets the category type associated with the current object.
+     *
+     * @return The category type to which the current object is affiliated
+     */
+    @Override
+    public CategoryType getCategoryType() {
+        return CategoryType.STORAGE;
     }
 }

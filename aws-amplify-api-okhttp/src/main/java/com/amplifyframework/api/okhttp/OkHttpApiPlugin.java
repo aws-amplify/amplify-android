@@ -22,11 +22,14 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLCallback;
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLQuery;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.api.graphql.Query;
 import com.amplifyframework.api.graphql.ResponseFactory;
 import com.amplifyframework.core.plugin.PluginException;
+
+import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -65,11 +68,16 @@ public final class OkHttpApiPlugin extends ApiPlugin<OkHttpClient> {
 
     @Override
     public String getPluginKey() {
-        return "okAPI";
+        return "OkHttpAPIPlugin";
     }
 
     @Override
-    public void configure(@NonNull Object pluginConfiguration,
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
+        //TODO: Implement this
+    }
+
+    //TODO: Migrate to JSONObject configuration
+    private void configure(@NonNull Object pluginConfiguration,
                           Context context) throws PluginException {
         OkHttpApiPluginConfiguration configuration =
                 (OkHttpApiPluginConfiguration) pluginConfiguration;
@@ -111,25 +119,43 @@ public final class OkHttpApiPlugin extends ApiPlugin<OkHttpClient> {
     }
 
     @Override
-    public <T> GraphQLQuery<T> graphql(@NonNull String apiName,
-                                       @NonNull OperationType operationType,
-                                       @NonNull String document,
-                                       @NonNull Class<T> classToCast) {
+    public GraphQLOperation graphql(@NonNull String apiName,
+                                    @NonNull OperationType operationType,
+                                    @NonNull String document) {
+        return graphql(apiName, operationType, document, String.class, null);
+    }
+
+    @Override
+    public GraphQLOperation graphql(@NonNull String apiName,
+                                    @NonNull OperationType operationType,
+                                    @NonNull String document,
+                                    GraphQLCallback<String> callback) {
+        return graphql(apiName, operationType, document, String.class, callback);
+    }
+
+    @Override
+    public <T> GraphQLOperation graphql(@NonNull String apiName,
+                                        @NonNull OperationType operationType,
+                                        @NonNull String document,
+                                        Class<T> classToCast) {
         return graphql(apiName, operationType, document, classToCast, null);
     }
 
     @Override
-    public <T> GraphQLQuery<T> graphql(@NonNull String apiName,
-                                       @NonNull OperationType operationType,
-                                       @NonNull String document,
-                                       @NonNull Class<T> classToCast,
-                                       GraphQLCallback<T> callback) {
+    public <T> GraphQLOperation graphql(@NonNull String apiName,
+                                        @NonNull OperationType operationType,
+                                        @NonNull String document,
+                                        Class<T> classToCast,
+                                        GraphQLCallback<T> callback) {
         Log.i(TAG, "Invoking query from plugin: " + document);
         GraphQLQuery<T> gqlQuery =
-            new GraphQLQuery<>(operationType, document, classToCast) .withCallback(callback);
+            new GraphQLQuery<>(operationType, document, classToCast)
+                    .withCallback(callback);
+
+        OkHttpGraphQLOperation<T> operation = new OkHttpGraphQLOperation<>(callback);
         enqueue(apiName, gqlQuery);
 
-        return gqlQuery;
+        return operation;
     }
 
     //Helper method to construct a POST request for given query
