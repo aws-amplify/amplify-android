@@ -87,7 +87,9 @@ public final class Amplify {
      * @throws PluginException thrown when there is no plugin found for a configuration
      */
     public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
-        configure(new AmplifyConfiguration(context), context);
+        AmplifyConfiguration config = new AmplifyConfiguration();
+        config.populateFromConfigFile(context);
+        configure(config, context);
     }
 
     /**
@@ -95,7 +97,7 @@ public final class Amplify {
      * @param configuration AmplifyConfiguration object for configuration via code
      * @param context An Android Context
      * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no plugin found for a configuration
+     * @throws PluginException thrown when there is no configuration found for a plugin
      */
     public static void configure(final AmplifyConfiguration configuration, Context context)
             throws ConfigurationException, PluginException {

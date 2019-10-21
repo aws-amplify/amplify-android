@@ -16,6 +16,7 @@
 package com.amplifyframework.hub;
 
 import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Configuration for the Hub category, that also
@@ -29,5 +30,15 @@ public final class HubCategoryConfiguration extends CategoryConfiguration {
      */
     public HubCategoryConfiguration() {
         super();
+    }
+
+    /**
+     * Gets the category type associated with the current object.
+     *
+     * @return The category type to which the current object is affiliated
+     */
+    @Override
+    public CategoryType getCategoryType() {
+        return CategoryType.HUB;
     }
 }
