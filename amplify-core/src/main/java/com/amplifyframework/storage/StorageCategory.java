@@ -143,23 +143,24 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     }
 
     @Override
-    public StorageListOperation list(String path) throws StorageException {
+    public StorageListOperation list(@NonNull String path) throws StorageException {
         return getSelectedPlugin().list(path);
     }
 
     @Override
-    public StorageListOperation list(String path, StorageListOptions options) throws StorageException {
+    public StorageListOperation list(@NonNull String path, StorageListOptions options) throws StorageException {
         return getSelectedPlugin().list(path, options);
     }
 
     @Override
-    public StorageListOperation list(String path, Listener<StorageListResult> callback) throws StorageException {
+    public StorageListOperation list(@NonNull String path, Listener<StorageListResult> callback)
+            throws StorageException {
         return getSelectedPlugin().list(path, callback);
     }
 
     @Override
     public StorageListOperation list(
-            String path,
+            @NonNull String path,
             StorageListOptions options,
             Listener<StorageListResult> callback) throws StorageException {
         return getSelectedPlugin().list(path, options, callback);

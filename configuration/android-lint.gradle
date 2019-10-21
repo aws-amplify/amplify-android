@@ -17,6 +17,7 @@ android {
     lintOptions {
         warningsAsErrors true
         abortOnError true
+        enable 'UnusedResources'
     }
 }
 

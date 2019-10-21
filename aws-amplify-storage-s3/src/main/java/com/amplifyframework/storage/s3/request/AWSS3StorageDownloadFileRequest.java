@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.Request;
+package com.amplifyframework.storage.s3.request;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 

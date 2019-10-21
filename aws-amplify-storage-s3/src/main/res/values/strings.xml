@@ -14,6 +14,4 @@
    permissions and limitations under the License.
 -->
 
-<resources>
-    <string name="app_name">Amplify Storage Plugin for Amazon S3</string>
-</resources>
+<resources />

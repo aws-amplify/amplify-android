@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.Service;
+package com.amplifyframework.storage.s3.service;
 
 import android.content.Context;
 import android.content.Intent;
@@ -41,7 +41,6 @@ import java.util.Map;
  */
 public final class AWSS3StorageService {
 
-    private final Region region;
     private final Context context;
     private final String bucket;
     private final TransferUtility transferUtility;
@@ -59,9 +58,8 @@ public final class AWSS3StorageService {
      */
     public AWSS3StorageService(Region region, Context context, String bucket, boolean transferAcceleration) {
         this.context = context;
-        this.region = region;
         this.bucket = bucket;
-        this.client = new AmazonS3Client(AWSMobileClient.getInstance(), this.region);
+        this.client = new AmazonS3Client(AWSMobileClient.getInstance(), region);
 
         if (transferAcceleration) {
             client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(true).build());

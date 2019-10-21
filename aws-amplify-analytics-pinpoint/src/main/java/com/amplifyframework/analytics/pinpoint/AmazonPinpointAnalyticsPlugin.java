@@ -33,14 +33,11 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
 
-    private final Context context;
-
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
      * @param context An Android Context
      */
     public AmazonPinpointAnalyticsPlugin(@NonNull Context context) {
-        this.context = context;
         Log.d(TAG, "Amazon Pinpoint Analytics Plugin is initialized.");
     }
 

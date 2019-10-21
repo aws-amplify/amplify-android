@@ -13,42 +13,41 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3.Operation;
+package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.storage.exception.StorageException;
-import com.amplifyframework.storage.operation.StorageListOperation;
-import com.amplifyframework.storage.result.StorageListResult;
-import com.amplifyframework.storage.s3.Request.AWSS3StorageListRequest;
-import com.amplifyframework.storage.s3.Service.AWSS3StorageService;
-import com.amplifyframework.storage.s3.Utils.S3RequestUtils;
+import com.amplifyframework.storage.operation.StorageRemoveOperation;
+import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
+import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 
 /**
- * An operation to list items from AWS S3.
+ * An operation to remove a file from AWS S3.
  */
-
-public final class AWSS3StorageListOperation extends StorageListOperation {
+public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageListRequest request;
-    private final Listener<StorageListResult> callback;
+    private final AWSS3StorageRemoveRequest request;
+    private final Listener<StorageRemoveResult> callback;
 
     /**
-     * Constructs a new AWSS3StorageListOperation.
+     * Constructs a new AWSS3StorageRemoveOperation.
      * @param storageService S3 client wrapper
-     * @param request list request parameters
+     * @param request remove request parameters
      * @param callback Listener to invoke when results are available
      */
-    public AWSS3StorageListOperation(AWSS3StorageService storageService,
-                                     AWSS3StorageListRequest request,
-                                     Listener<StorageListResult> callback) {
+    public AWSS3StorageRemoveOperation(AWSS3StorageService storageService,
+                                       AWSS3StorageRemoveRequest request,
+                                       Listener<StorageRemoveResult> callback) {
         this.request = request;
         this.storageService = storageService;
         this.callback = callback;
     }
 
-    // TODO: This is currently a blocking method since listFiles is blocking, consistent with the S3 SDK.
+    // TODO: This is currently a blocking method since deleteObject is blocking, consistent with the S3 SDK.
     //          This should be discussed for refactoring as an async method or if not, documented clearly as blocking.
     @Override
     public void start() throws StorageException {
@@ -70,17 +69,17 @@ public final class AWSS3StorageListOperation extends StorageListOperation {
         }
 
         try {
-            StorageListResult result = storageService.listFiles(
+            storageService.deleteObject(
                     S3RequestUtils.getServiceKey(
                             request.getAccessLevel(),
                             identityId,
-                            request.getPath(),
+                            request.getKey(),
                             request.getTargetIdentityId()
                     )
             );
 
             if (callback != null) {
-                callback.onResult(result);
+                callback.onResult(StorageRemoveResult.fromKey(request.getKey()));
             }
         } catch (Exception error) {
             if (callback != null) {
