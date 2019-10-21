@@ -29,8 +29,10 @@ import com.amplifyframework.api.graphql.OperationType;
 public interface ApiCategoryBehavior {
 
     /**
-     * Send a GraphQL document to endpoint as POST.
-     * Casts the queried result to json string.
+     * Perform a GraphQL operation against a previously
+     * configured API. It casts the queried result to json string.
+     * This operation will still be asynchronous,
+     * but the callback will only be accessible via hub.
      *
      * @param apiName name of API being invoked
      * @param operationType graphQL operation type
@@ -42,8 +44,10 @@ public interface ApiCategoryBehavior {
                                 @NonNull String document);
 
     /**
-     * Send a GraphQL document to endpoint as POST.
-     * Casts the queried result to json string.
+     * Perform a GraphQL operation against a previously
+     * configured API. It casts the queried result to json string.
+     * This operation will be asynchronous, with the
+     * callback accessible both locally and via hub.
      *
      * @param <T> type of object being queried for
      * @param apiName name of API being invoked
@@ -58,7 +62,10 @@ public interface ApiCategoryBehavior {
                                 GraphQLCallback<T> callback);
 
     /**
-     * Send a GraphQL document to endpoint as POST.
+     * Perform a GraphQL operation against a previously
+     * configured API.
+     * This operation will still be asynchronous,
+     * but the callback will only be accessible via hub.
      *
      * @param <T> type of object being queried for
      * @param apiName name of API being invoked
@@ -73,7 +80,10 @@ public interface ApiCategoryBehavior {
                                  Class<T> classToCast);
 
     /**
-     * Send a GraphQL document to endpoint as POST.
+     * Perform a GraphQL operation against a previously
+     * configured API.
+     * This operation will be asynchronous, with the
+     * callback accessible both locally and via hub.
      *
      * @param <T> type of object being queried for
      * @param apiName name of API being invoked

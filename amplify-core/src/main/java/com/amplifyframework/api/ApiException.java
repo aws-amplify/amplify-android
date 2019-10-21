@@ -28,7 +28,7 @@ public class ApiException extends AmplifyRuntimeException {
     /**
      * API exception raised while serializing and deserializing an object.
      */
-    public static class ObjectSerializationException extends ApiException {
+    public static final class ObjectSerializationException extends ApiException {
 
         private static final long serialVersionUID = 1L;
 
