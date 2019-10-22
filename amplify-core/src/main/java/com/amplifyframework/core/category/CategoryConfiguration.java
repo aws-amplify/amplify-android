@@ -29,7 +29,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public abstract class CategoryConfiguration implements CategoryTypeable {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Configs will be populated by future work
     private static final String PLUGINS_KEY = "plugins";
-    private Map<String, JSONObject> pluginConfigs;
+    private final Map<String, JSONObject> pluginConfigs;
 
     /**
      * Constructs a new CategoryConfiguration.

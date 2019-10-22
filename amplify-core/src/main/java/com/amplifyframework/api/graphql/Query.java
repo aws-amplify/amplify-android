@@ -166,7 +166,6 @@ public class Query<T> {
                 response = responseFactory.buildResponse(responseJson, classToCast);
             }
         } catch (Exception exception) {
-            exception.printStackTrace();
             callback.onError(exception);
             return;
         }

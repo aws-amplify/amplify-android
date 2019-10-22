@@ -78,5 +78,10 @@ public enum CategoryType {
     public String getConfigurationKey() {
         return configurationKey;
     }
+
+    @Override
+    public String toString() {
+        return configurationKey;
+    }
 }
 

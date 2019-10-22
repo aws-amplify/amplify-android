@@ -118,7 +118,7 @@ public final class Response<T> {
             return message;
         }
 
-        @SuppressWarnings("NeedBraces")
+        @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
         @Override
         public boolean equals(Object thatObject) {
             if (this == thatObject) return true;

@@ -16,6 +16,7 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
+import androidx.annotation.RawRes;
 
 import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
@@ -39,26 +40,21 @@ import java.util.Scanner;
  * amplifyconfiguration.json file and stores in the in-memory objects
  * for the different Amplify plugins to use.
  */
-final class AmplifyConfiguration {
+public final class AmplifyConfiguration {
 
     private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
-    private final AnalyticsCategoryConfiguration analytics;
-    private final ApiCategoryConfiguration api;
-    private final HubCategoryConfiguration hub;
-    private final LoggingCategoryConfiguration logging;
-    private final StorageCategoryConfiguration storage;
     private final HashMap<String, CategoryConfiguration> categoryConfigurations;
 
     /**
      * Constructs a new AmplifyConfiguration object.
      */
-    AmplifyConfiguration() {
-        this.analytics = new AnalyticsCategoryConfiguration();
-        this.api = new ApiCategoryConfiguration();
-        this.hub = new HubCategoryConfiguration();
-        this.logging = new LoggingCategoryConfiguration();
-        this.storage = new StorageCategoryConfiguration();
+    public AmplifyConfiguration() {
+        AnalyticsCategoryConfiguration analytics = new AnalyticsCategoryConfiguration();
+        ApiCategoryConfiguration api = new ApiCategoryConfiguration();
+        HubCategoryConfiguration hub = new HubCategoryConfiguration();
+        LoggingCategoryConfiguration logging = new LoggingCategoryConfiguration();
+        StorageCategoryConfiguration storage = new StorageCategoryConfiguration();
 
         categoryConfigurations = new HashMap<>();
         categoryConfigurations.put(analytics.getCategoryType().getConfigurationKey(), analytics);
@@ -73,7 +69,18 @@ final class AmplifyConfiguration {
      * @param context Context needed for reading JSON file
      */
     public void populateFromConfigFile(Context context) {
-        JSONObject json = readInputJson(context, getConfigResourceId(context));
+        populateFromConfigFile(context, getConfigResourceId(context));
+    }
+
+    /**
+     * Populate the the configuration from a particular configuration file.
+     * @param context Android Context
+     * @param configFileResourceId
+     *        The Android resource ID of a raw resource which contains
+     *        an amplify configuration as JSON
+     */
+    public void populateFromConfigFile(Context context, @RawRes int configFileResourceId) {
+        JSONObject json = readInputJson(context, configFileResourceId);
 
         try {
             for (HashMap.Entry<String, CategoryConfiguration> entry : categoryConfigurations.entrySet()) {
