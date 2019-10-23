@@ -24,9 +24,9 @@ import java.util.List;
  * An extension of general Query class customized for GraphQL functionality.
  */
 public final class GraphQLQuery extends Query {
-    private final List<FieldValue> fieldValues = new ArrayList<>();
-    private final List<VariableValues> variableValues = new ArrayList<>();
-    private final List<String> fragments = new ArrayList<>();
+    private final List<FieldValue> fieldValues;
+    private final List<VariableValues> variableValues;
+    private final List<String> fragments;
 
     /**
      * Constructor for GraphQLQuery with
@@ -36,6 +36,9 @@ public final class GraphQLQuery extends Query {
      */
     public GraphQLQuery(OperationType operationType, String document) {
         super(operationType.getQueryPrefix(), document);
+        this.fieldValues = new ArrayList<>();
+        this.variableValues = new ArrayList<>();
+        this.fragments = new ArrayList<>();
     }
 
     /**
@@ -49,10 +52,6 @@ public final class GraphQLQuery extends Query {
 
         completeQuery.append("{\"query\":")
                 .append("\"");
-
-        if (getPrefix() != null) {
-            completeQuery.append(getPrefix()).append(" ");
-        }
 
         realQuery.append(getDocument()
                 .replace("\"", "\\\"")

@@ -49,7 +49,7 @@ public interface ApiCategoryBehavior {
                                                   @Nullable Listener<GraphQLResponse<T>> callback);
 
     /**
-     * Perform a GraphQL mutate against a configured GraphQL
+     * Perform a GraphQL mutation against a configured GraphQL
      * endpoint.  This operation is asynchronous and may be canceled by
      * calling cancel on the returned operation. The response will be
      * provided to the callback, and via Hub.  If there is data present

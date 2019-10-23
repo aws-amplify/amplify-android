@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.Resources;
+import com.amplifyframework.api.ResponseFactory;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import org.junit.Before;
@@ -32,7 +33,7 @@ import static org.junit.Assert.assertNotNull;
  */
 public final class GsonResponseFactoryTest {
 
-    private GsonResponseFactory responseFactory;
+    private ResponseFactory responseFactory;
 
     /**
      * Set up the object under test, a GsonResponseFactory.
@@ -54,7 +55,7 @@ public final class GsonResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
-        final GraphQLResponse<ListTodosResult> response =
+        final GraphQLResponse<ListTodosResult> response = (GraphQLResponse<ListTodosResult>)
             responseFactory.buildResponse(partialResponseJson, ListTodosResult.class);
 
         // Assert that the model contained things...

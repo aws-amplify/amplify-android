@@ -81,7 +81,7 @@ public final class GraphQLInstrumentationTest {
                 "mygraphql",
                 document,
                 Todo.class,
-                new TestGraphQLCallback<>());
+                new TestGraphQLListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -97,7 +97,7 @@ public final class GraphQLInstrumentationTest {
                 "mygraphql",
                 document,
                 Todo.class,
-                new TestGraphQLCallback<>());
+                new TestGraphQLListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -125,7 +125,7 @@ public final class GraphQLInstrumentationTest {
         }
     }
 
-    class TestGraphQLCallback<T> implements Listener<GraphQLResponse<T>> {
+    class TestGraphQLListener<T> implements Listener<GraphQLResponse<T>> {
         @Override
         public void onResult(GraphQLResponse<T> response) {
             assertNotNull(response);
