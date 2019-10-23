@@ -29,36 +29,6 @@ import com.amplifyframework.core.async.Listener;
 public interface ApiCategoryBehavior {
 
     /**
-     * Perform a GraphQL query against a configured GraphQL API.
-     * This operation is asynchronous and may be canceled by calling
-     * cancel on the returned operation. The response will be rendered
-     * as a String and will be published inside a Hub payload.
-     * @param apiName The name of a configured API
-     * @param operationGql A GraphQL operation, as a String
-     * @return A GraphQLOperation to track progress and provide
-     *         a means to cancel the asynchronous operation
-     */
-    ApiOperation<String, GraphQLResponse<String>> query(@NonNull String apiName,
-                                                        @NonNull String operationGql);
-
-    /**
-     * Perform a GraphQL query against a configured GraphQL API.
-     * This operation is asynchronous and may be canceled by calling
-     * cancel on the returned operation. The response will be provided
-     * in a payload over Hub. If response data is present, it will be
-     * cast to an object of the requested class type.
-     * @param apiName The name of a configured API
-     * @param operationGql A GraphQL operation, as a String
-     * @param classToCast The type to which response data will be cast
-     * @param <T> The type of data in the response, if available
-     * @return A GraphQLOperation to track progress and provide
-     *         a means to cancel the asynchronous operation
-     */
-    <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                  @NonNull String operationGql,
-                                                  @NonNull Class<T> classToCast);
-
-    /**
      * Perform a GraphQL query against a configured GraphQL
      * endpoint.  This operation is asynchronous and may be canceled by
      * calling cancel on the returned operation. The response will be
@@ -77,36 +47,6 @@ public interface ApiCategoryBehavior {
                                                   @NonNull String operationGql,
                                                   @NonNull Class<T> classToCast,
                                                   @Nullable Listener<GraphQLResponse<T>> callback);
-
-    /**
-     * Perform a GraphQL mutate against a configured GraphQL API.
-     * This operation is asynchronous and may be canceled by calling
-     * cancel on the returned operation. The response will be rendered
-     * as a String and will be published inside a Hub payload.
-     * @param apiName The name of a configured API
-     * @param operationGql A GraphQL operation, as a String
-     * @return A GraphQLOperation to track progress and provide
-     *         a means to cancel the asynchronous operation
-     */
-    ApiOperation<String, GraphQLResponse<String>> mutate(@NonNull String apiName,
-                                                         @NonNull String operationGql);
-
-    /**
-     * Perform a GraphQL mutate against a configured GraphQL API.
-     * This operation is asynchronous and may be canceled by calling
-     * cancel on the returned operation. The response will be provided
-     * in a payload over Hub. If response data is present, it will be
-     * cast to an object of the requested class type.
-     * @param apiName The name of a configured API
-     * @param operationGql A GraphQL operation, as a String
-     * @param classToCast The type to which response data will be cast
-     * @param <T> The type of data in the response, if available
-     * @return A GraphQLOperation to track progress and provide
-     *         a means to cancel the asynchronous operation
-     */
-    <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                   @NonNull String operationGql,
-                                                   @NonNull Class<T> classToCast);
 
     /**
      * Perform a GraphQL mutate against a configured GraphQL

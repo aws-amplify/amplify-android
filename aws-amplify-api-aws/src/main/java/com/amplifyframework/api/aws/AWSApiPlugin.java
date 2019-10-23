@@ -119,19 +119,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public ApiOperation<String, GraphQLResponse<String>> query(@NonNull String apiName,
-                                                               @NonNull String document) {
-        return query(apiName, document, String.class, null);
-    }
-
-    @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                         @NonNull String document,
-                                                         @NonNull Class<T> classToCast) {
-        return query(apiName, document, classToCast, null);
-    }
-
-    @Override
     public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
                                                          @NonNull String document,
                                                          @NonNull Class<T> classToCast,
@@ -151,19 +138,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         operation.start();
         return operation;
-    }
-
-    @Override
-    public ApiOperation<String, GraphQLResponse<String>> mutate(@NonNull String apiName,
-                                                                @NonNull String document) {
-        return mutate(apiName, document, String.class, null);
-    }
-
-    @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                          @NonNull String document,
-                                                          @NonNull Class<T> classToCast) {
-        return mutate(apiName, document, classToCast, null);
     }
 
     @Override

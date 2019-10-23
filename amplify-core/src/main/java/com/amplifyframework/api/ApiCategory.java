@@ -36,37 +36,11 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public ApiOperation<String, GraphQLResponse<String>> query(@NonNull String apiName,
-                                                               @NonNull String document) {
-        return getSelectedPlugin().query(apiName, document);
-    }
-
-    @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                         @NonNull String document,
-                                                         @NonNull Class<T> classToCast) {
-        return getSelectedPlugin().query(apiName, document, classToCast);
-    }
-
-    @Override
     public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
                                                          @NonNull String document,
                                                          @NonNull Class<T> classToCast,
                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
         return getSelectedPlugin().query(apiName, document, classToCast, callback);
-    }
-
-    @Override
-    public ApiOperation<String, GraphQLResponse<String>> mutate(@NonNull String apiName,
-                                                                @NonNull String document) {
-        return getSelectedPlugin().mutate(apiName, document);
-    }
-
-    @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                          @NonNull String document,
-                                                          @NonNull Class<T> classToCast) {
-        return getSelectedPlugin().mutate(apiName, document, classToCast);
     }
 
     @Override
