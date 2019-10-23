@@ -36,7 +36,7 @@ public abstract class Response<T> implements Result {
      * Gets the data sent back by API.
      * @return API response body
      */
-    protected T getData() {
+    public T getData() {
         return data;
     }
 
@@ -44,7 +44,7 @@ public abstract class Response<T> implements Result {
      * Checks that data was returned.
      * @return true if data exists, false otherwise
      */
-    protected boolean hasData() {
+    public boolean hasData() {
         return data != null;
     }
 }

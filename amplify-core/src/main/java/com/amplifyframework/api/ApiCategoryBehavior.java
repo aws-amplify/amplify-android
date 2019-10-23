@@ -16,6 +16,7 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.async.Listener;
@@ -28,131 +29,104 @@ import com.amplifyframework.core.async.Listener;
 public interface ApiCategoryBehavior {
 
     /**
-     * Perform an asynchronous GraphQL query operation
-     * against a previously configured API.
-     * It casts the queried result to json string.
-     * Events will only be dispatched to Amplify Hub.
-     *
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL query against a configured GraphQL API.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be rendered
+     * as a String and will be published inside a Hub payload.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
     ApiOperation<String, GraphQLResponse<String>> query(@NonNull String apiName,
-                                                        @NonNull String document);
+                                                        @NonNull String operationGql);
 
     /**
-     * Perform an asynchronous GraphQL query operation
-     * against a previously configured API.
-     * It casts the queried result to json string.
-     * Events will be dispatched both locally and
-     * to Amplify Hub.
-     *
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @param callback callback to attach
-     * @return GraphQLQuery query object being enqueued
-     */
-    ApiOperation<String, GraphQLResponse<String>> query(@NonNull String apiName,
-                                                        @NonNull String document,
-                                                        Listener<GraphQLResponse<String>> callback);
-
-    /**
-     * Perform an asynchronous GraphQL query operation
-     * against a previously configured API.
-     * It casts the queried result to specified data type.
-     * Events will only be dispatched to Amplify Hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @param classToCast class to be cast to
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL query against a configured GraphQL API.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * in a payload over Hub. If response data is present, it will be
+     * cast to an object of the requested class type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                  @NonNull String document,
-                                                  Class<T> classToCast);
+                                                  @NonNull String operationGql,
+                                                  @NonNull Class<T> classToCast);
 
     /**
-     * Perform an asynchronous GraphQL query operation
-     * against a previously configured API.
-     * It casts the queried result to specified data type.
-     * Events will be dispatched both locally and
-     * to Amplify Hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @param classToCast class to be cast to
-     * @param callback callback to attach
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL query against a configured GraphQL
+     * endpoint.  This operation is asynchronous and may be canceled by
+     * calling cancel on the returned operation. The response will be
+     * provided to the callback, and via Hub.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param callback Invoked when response data/errors are available.
+     *                 If null, response can still be obtained via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                  @NonNull String document,
-                                                  Class<T> classToCast,
-                                                  Listener<GraphQLResponse<T>> callback);
+                                                  @NonNull String operationGql,
+                                                  @NonNull Class<T> classToCast,
+                                                  @Nullable Listener<GraphQLResponse<T>> callback);
 
     /**
-     * Perform an asynchronous GraphQL mutation operation
-     * against a previously configured API.
-     * It casts the queried result to json string.
-     * Events will only be dispatched to Amplify Hub.
-     *
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL mutate against a configured GraphQL API.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be rendered
+     * as a String and will be published inside a Hub payload.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
     ApiOperation<String, GraphQLResponse<String>> mutate(@NonNull String apiName,
-                                                         @NonNull String document);
+                                                         @NonNull String operationGql);
 
     /**
-     * Perform an asynchronous GraphQL mutation operation
-     * against a previously configured API.
-     * It casts the queried result to json string.
-     * Events will be dispatched both locally and
-     * to Amplify Hub.
-     *
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @param callback callback to attach
-     * @return GraphQLQuery query object being enqueued
-     */
-    ApiOperation<String, GraphQLResponse<String>> mutate(@NonNull String apiName,
-                                                         @NonNull String document,
-                                                         Listener<GraphQLResponse<String>> callback);
-
-    /**
-     * Perform an asynchronous GraphQL mutation operation
-     * against a previously configured API.
-     * It casts the queried result to specified data type.
-     * Events will only be dispatched to Amplify Hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @param classToCast class to be cast to
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL mutate against a configured GraphQL API.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * in a payload over Hub. If response data is present, it will be
+     * cast to an object of the requested class type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                   @NonNull String document,
-                                                   Class<T> classToCast);
+                                                   @NonNull String operationGql,
+                                                   @NonNull Class<T> classToCast);
 
     /**
-     * Perform an asynchronous GraphQL mutation operation
-     * against a previously configured API.
-     * It casts the queried result to specified data type.
-     * Events will be dispatched both locally and
-     * to Amplify Hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param document valid GraphQL string
-     * @param classToCast class to be cast to
-     * @param callback callback to attach
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL mutate against a configured GraphQL
+     * endpoint.  This operation is asynchronous and may be canceled by
+     * calling cancel on the returned operation. The response will be
+     * provided to the callback, and via Hub.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param callback Invoked when response data/errors are available.
+     *                 If null, response can still be obtained via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                   @NonNull String document,
-                                                   Class<T> classToCast,
-                                                   Listener<GraphQLResponse<T>> callback);
+                                                   @NonNull String operationGql,
+                                                   @NonNull Class<T> classToCast,
+                                                   @Nullable Listener<GraphQLResponse<T>> callback);
+
 }
 

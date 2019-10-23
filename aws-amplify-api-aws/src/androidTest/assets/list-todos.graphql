@@ -1,0 +1,10 @@
+list {
+    listTodos {
+        items {
+            id
+            name
+            description
+        }
+    }
+}
+

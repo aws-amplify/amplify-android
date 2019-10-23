@@ -54,7 +54,10 @@ public final class GraphQLQuery extends Query {
             completeQuery.append(getPrefix()).append(" ");
         }
 
-        realQuery.append(getDocument().replace("\"", "\\\""));
+        realQuery.append(getDocument()
+                .replace("\"", "\\\"")
+                .replace("\n", "\\n")
+        );
 
         for (String fragment : fragments) {
             realQuery
