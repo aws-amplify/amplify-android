@@ -18,6 +18,8 @@ package com.amplifyframework.hub;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.stream.SubscriptionToken;
+
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics

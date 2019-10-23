@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.core.stream.SubscriptionToken;
 
 import org.json.JSONObject;
 

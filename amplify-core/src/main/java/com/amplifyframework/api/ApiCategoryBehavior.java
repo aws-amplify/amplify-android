@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.stream.IObserver;
 
 /**
  * API category behaviors include REST and GraphQL operations. These
@@ -68,5 +69,25 @@ public interface ApiCategoryBehavior {
                                                    @NonNull Class<T> classToCast,
                                                    @Nullable Listener<GraphQLResponse<T>> callback);
 
+    /**
+     * Perform a GraphQL subscription against a configured GraphQL
+     * endpoint. This operation is pubsub-based and may be unsubscribed
+     * by calling unsubscribe on the returned observable. The events
+     * will be provided to the observer, and via Hub. If there is data
+     * present in the response, it will be cast as the requested class
+     * type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param observer Invoked when an event is published or when the
+     *                 subscription is terminated
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiObservable} to track published items and
+     *         and provide a means to unsubscribe.
+     */
+    <T> ApiObservable<T> subscribe(@NonNull String apiName,
+                                   @NonNull String operationGql,
+                                   @NonNull Class<T> classToCast,
+                                   @Nullable IObserver<T> observer);
 }
 

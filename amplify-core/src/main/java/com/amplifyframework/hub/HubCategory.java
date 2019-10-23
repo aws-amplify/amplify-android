@@ -22,6 +22,7 @@ import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.stream.SubscriptionToken;
 
 /**
  * Amplify has a local eventing system called Hub. It is a lightweight implementation of

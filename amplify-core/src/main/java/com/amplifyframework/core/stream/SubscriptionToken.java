@@ -13,18 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.hub;
+package com.amplifyframework.core.stream;
 
 import java.util.UUID;
 
 /**
- * A SubscriptionToken is returned by the Hub when creating a new subscription
- * for a {@link HubListener}. The token can be used to unsubscribe that listener.
+ * A SubscriptionToken is returned upon creating a new subscription.
+ * The token can be used to unsubscribe that listener or observer.
  */
 public final class SubscriptionToken {
     /**
-     * This is used to identify an instance of the
-     * subscriber {@link HubListener} subscribed with Hub.
+     * This is used to identify the subscription instance.
      */
     private final UUID uuid;
 

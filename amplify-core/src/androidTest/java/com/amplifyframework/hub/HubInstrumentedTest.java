@@ -21,6 +21,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.stream.SubscriptionToken;
 
 import com.amazonaws.amplify.core.test.R;
 import org.junit.BeforeClass;

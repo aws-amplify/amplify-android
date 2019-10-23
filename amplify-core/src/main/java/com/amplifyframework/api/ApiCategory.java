@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.stream.IObserver;
 
 /**
  * The API category provides methods for interacting with remote systems
@@ -50,5 +51,14 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
                                                           @Nullable Listener<GraphQLResponse<T>> callback) {
         return getSelectedPlugin().mutate(apiName, operationGql, classToCast, callback);
     }
+
+    @Override
+    public <T> ApiObservable<T> subscribe(@NonNull String apiName,
+                                          @NonNull String operationGql,
+                                          @NonNull Class<T> classToCast,
+                                          @Nullable IObserver<T> observer) {
+        return getSelectedPlugin().subscribe(apiName, operationGql, classToCast, observer);
+    }
+
 }
 
