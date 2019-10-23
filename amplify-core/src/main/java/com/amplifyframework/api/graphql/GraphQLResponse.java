@@ -17,6 +17,8 @@ package com.amplifyframework.api.graphql;
 
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.Response;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,8 +27,7 @@ import java.util.List;
  * response data and error information.
  * @param <T> queried data type
  */
-public final class Response<T> {
-    private final T data;
+public final class GraphQLResponse<T> extends Response<T> {
     private final List<Error> errors;
 
     /**
@@ -35,20 +36,12 @@ public final class Response<T> {
      * @param errors list of error responses as defined
      *               by graphql doc
      */
-    public Response(@Nullable T data, @Nullable List<Error> errors) {
-        this.data = data;
+    public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {
+        super(data);
         this.errors = new ArrayList<>();
         if (errors != null) {
             this.errors.addAll(errors);
         }
-    }
-
-    /**
-     * Gets the response data.
-     * @return data returned from query
-     */
-    public T getData() {
-        return data;
     }
 
     /**
@@ -57,14 +50,6 @@ public final class Response<T> {
      */
     public List<Error> getErrors() {
         return errors;
-    }
-
-    /**
-     * Checks that data was returned.
-     * @return true if data exists, false otherwise
-     */
-    public boolean hasData() {
-        return data != null;
     }
 
     /**
@@ -81,16 +66,16 @@ public final class Response<T> {
         if (this == thatObject) return true;
         if (thatObject == null || getClass() != thatObject.getClass()) return false;
 
-        Response<?> response = (Response<?>) thatObject;
+        GraphQLResponse<?> response = (GraphQLResponse<?>) thatObject;
 
-        if (data != null ? !data.equals(response.data) : response.data != null) return false;
+        if (getData() != null ? !getData().equals(response.getData()) : response.getData() != null) return false;
         return errors != null ? errors.equals(response.errors) : response.errors == null;
     }
 
     @SuppressWarnings({"NeedBraces", "MagicNumber"})
     @Override
     public int hashCode() {
-        int result = data != null ? data.hashCode() : 0;
+        int result = getData() != null ? getData().hashCode() : 0;
         result = 31 * result + (errors != null ? errors.hashCode() : 0);
         return result;
     }
