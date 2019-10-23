@@ -40,7 +40,7 @@ public interface ApiCategoryBehavior {
      * @param callback Invoked when response data/errors are available.
      *                 If null, response can still be obtained via Hub.
      * @param <T> The type of data in the response, if available
-     * @return A GraphQLOperation to track progress and provide
+     * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
@@ -60,7 +60,7 @@ public interface ApiCategoryBehavior {
      * @param callback Invoked when response data/errors are available.
      *                 If null, response can still be obtained via Hub.
      * @param <T> The type of data in the response, if available
-     * @return A GraphQLOperation to track progress and provide
+     * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
