@@ -16,8 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.Resources;
-import com.amplifyframework.api.graphql.Response;
-import com.amplifyframework.api.graphql.ResponseFactory;
+import com.amplifyframework.api.ResponseFactory;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -55,7 +55,7 @@ public final class GsonResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
-        final Response<ListTodosResult> response =
+        final GraphQLResponse<ListTodosResult> response = (GraphQLResponse<ListTodosResult>)
             responseFactory.buildResponse(partialResponseJson, ListTodosResult.class);
 
         // Assert that the model contained things...
@@ -91,13 +91,13 @@ public final class GsonResponseFactoryTest {
         // Assert that we parsed the errors successfully.
         assertNotNull(response.getErrors());
 
-        final List<Response.Error> expectedErrors = Arrays.asList(
-            new Response.Error("failed"),
-            new Response.Error("failed"),
-            new Response.Error("failed")
+        final List<GraphQLResponse.Error> expectedErrors = Arrays.asList(
+            new GraphQLResponse.Error("failed"),
+            new GraphQLResponse.Error("failed"),
+            new GraphQLResponse.Error("failed")
         );
 
-        final List<Response.Error> actualErrors = response.getErrors();
+        final List<GraphQLResponse.Error> actualErrors = response.getErrors();
 
         assertEquals(expectedErrors, actualErrors);
     }

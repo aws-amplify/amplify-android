@@ -18,9 +18,8 @@ package com.amplifyframework.api;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.api.graphql.GraphQLCallback;
-import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.OperationType;
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -37,54 +36,19 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public GraphQLOperation graphql(
-            @NonNull OperationType operationType,
-            @NonNull String operationGql) throws ApiException {
-        return getSelectedPlugin().graphql(operationType, operationGql);
+    public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
+                                                         @NonNull String document,
+                                                         @NonNull Class<T> classToCast,
+                                                         @Nullable Listener<GraphQLResponse<T>> callback) {
+        return getSelectedPlugin().query(apiName, document, classToCast, callback);
     }
 
     @Override
-    public GraphQLOperation graphql(
-            @NonNull OperationType operationType,
-            @NonNull String operationGql,
-            @NonNull String apiName) {
-        return getSelectedPlugin().graphql(operationType, operationGql, apiName);
-    }
-
-    @Override
-    public <T> GraphQLOperation graphql(
-            @NonNull OperationType operationType,
-            @NonNull String operationGql,
-            @NonNull Class<T> classToCast) throws ApiException {
-        return getSelectedPlugin().graphql(operationType, operationGql, classToCast);
-    }
-
-    @Override
-    public <T> GraphQLOperation graphql(
-            @NonNull OperationType operationType,
-            @NonNull String operationGql,
-            @NonNull Class<T> classToCast,
-            @NonNull String apiName) {
-        return getSelectedPlugin().graphql(operationType, operationGql, classToCast, apiName);
-    }
-
-    @Override
-    public <T> GraphQLOperation graphql(
-            @NonNull OperationType operationType,
-            @NonNull String operationGql,
-            @NonNull Class<T> classToCast,
-            @Nullable GraphQLCallback<T> callback) throws ApiException {
-        return getSelectedPlugin().graphql(operationType, operationGql, classToCast, callback);
-    }
-
-    @Override
-    public <T> GraphQLOperation graphql(
-            @NonNull OperationType operationType,
-            @NonNull String operationGql,
-            @NonNull Class<T> classToCast,
-            @Nullable GraphQLCallback<T> callback,
-            @NonNull String apiName) {
-        return getSelectedPlugin().graphql(operationType, operationGql, classToCast, callback, apiName);
+    public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
+                                                          @NonNull String document,
+                                                          @NonNull Class<T> classToCast,
+                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
+        return getSelectedPlugin().mutate(apiName, document, classToCast, callback);
     }
 }
 

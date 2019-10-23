@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.graphql;
+package com.amplifyframework.api;
 
 /**
  * A response factory is able to generate strongly-typed response
@@ -21,9 +21,9 @@ package com.amplifyframework.api.graphql;
  */
 public interface ResponseFactory {
     /**
-     * Builds a response object from a string response from a GraphQL API.
+     * Builds a response object from a string response from a API.
      * @param apiResponseJson
-     *        Response from a GraphQL endpoint, containing a string response
+     *        Response from the endpoint, containing a string response
      * @param classToCast
      *        The class type to which the JSON string should be
      *        interpreted
