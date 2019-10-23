@@ -1,0 +1,82 @@
+{
+  "data": {
+    "listTodos": {
+      "items": [
+        {
+          "id": "fa1c21cc-0458-4bca-bcb1-101579fb85c7",
+          "name": null,
+          "description": "Test"
+        },
+        {
+          "id": "68bad242-dec5-415b-acb3-daee3b069ce5",
+          "name": null,
+          "description": "Test"
+        },
+        {
+          "id": "f64e2e9a-42ad-4455-b8ee-d1cfae7e9f01",
+          "name": null,
+          "description": "Test"
+        }
+      ]
+    }
+  },
+  "errors": [
+    {
+      "path": [
+        "listTodos",
+        "items",
+        0,
+        "name"
+      ],
+      "data": null,
+      "errorType": null,
+      "errorInfo": null,
+      "locations": [
+        {
+          "line": 5,
+          "column": 7,
+          "sourceName": null
+        }
+      ],
+      "message": "failed"
+    },
+    {
+      "path": [
+        "listTodos",
+        "items",
+        1,
+        "name"
+      ],
+      "data": null,
+      "errorType": null,
+      "errorInfo": null,
+      "locations": [
+        {
+          "line": 5,
+          "column": 7,
+          "sourceName": null
+        }
+      ],
+      "message": "failed"
+    },
+    {
+      "path": [
+        "listTodos",
+        "items",
+        2,
+        "name"
+      ],
+      "data": null,
+      "errorType": null,
+      "errorInfo": null,
+      "locations": [
+        {
+          "line": 5,
+          "column": 7,
+          "sourceName": null
+        }
+      ],
+      "message": "failed"
+    }
+  ]
+}
