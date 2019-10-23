@@ -16,6 +16,7 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLCallback;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -29,74 +30,124 @@ import com.amplifyframework.api.graphql.OperationType;
 public interface ApiCategoryBehavior {
 
     /**
-     * Perform a GraphQL operation against a previously
-     * configured API. It casts the queried result to json string.
-     * This operation will still be asynchronous,
-     * but the callback will only be accessible via hub.
-     *
-     * @param apiName name of API being invoked
-     * @param operationType graphQL operation type
-     * @param document valid GraphQL string
-     * @return GraphQLQuery query object being enqueued
+     * In the case that there is only one configured GraphQL endpoint,
+     * perform a GraphQL operation against it. This operation is
+     * asynchronous and may be canceled by calling cancel on the
+     * returned operation.  The response will be rendered as a String
+     * inside of a Hub payload.
+     * @param operationType Type of GraphQL operation (Query, etc.)
+     * @param operationGql A GraphQL operation, as a String
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
+     * @throws ApiException If more than one API is configured and it is
+     *                      ambiguous which API is meant for this call
      */
-    GraphQLOperation graphql(@NonNull String apiName,
-                                @NonNull OperationType operationType,
-                                @NonNull String document);
+    GraphQLOperation graphql(
+            @NonNull OperationType operationType,
+            @NonNull String operationGql) throws ApiException;
 
     /**
-     * Perform a GraphQL operation against a previously
-     * configured API. It casts the queried result to json string.
-     * This operation will be asynchronous, with the
-     * callback accessible both locally and via hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param operationType graphQL operation type
-     * @param document valid GraphQL string
-     * @param callback callback to attach
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL operation against a configured GraphQL API.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be rendered
+     * as a String and will be published inside a Hub payload.
+     * @param operationType Type of GraphQL operation (Query, etc.)
+     * @param operationGql A GraphQL operation, as a String
+     * @param apiName The name of a configured API
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
-    <T> GraphQLOperation graphql(@NonNull String apiName,
-                                @NonNull OperationType operationType,
-                                @NonNull String document,
-                                GraphQLCallback<T> callback);
+    GraphQLOperation graphql(
+            @NonNull OperationType operationType,
+            @NonNull String operationGql,
+            @NonNull String apiName);
 
     /**
-     * Perform a GraphQL operation against a previously
-     * configured API.
-     * This operation will still be asynchronous,
-     * but the callback will only be accessible via hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param operationType graphQL operation type
-     * @param document valid GraphQL string
-     * @param classToCast class to be cast to
-     * @return GraphQLQuery query object being enqueued
+     * In the case that there is only a single GraphQL API, perform an
+     * operation against it. This operation is asynchronous and may be
+     * canceled by calling cancel on the returned operation. The
+     * response of the call will be provided as a payload on the Hub. If
+     * response data is present, it will be cast as the provided class
+     * type.
+     * @param operationType Type of GraphQL operation (Query, etc.)
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
+     * @throws ApiException If more than one API is configured and it is
+     *                      ambiguous which API should be invoked
      */
-    <T> GraphQLOperation graphql(@NonNull String apiName,
-                                 @NonNull OperationType operationType,
-                                 @NonNull String document,
-                                 Class<T> classToCast);
+    <T> GraphQLOperation graphql(
+            @NonNull OperationType operationType,
+            @NonNull String operationGql,
+            @NonNull Class<T> classToCast) throws ApiException;
 
     /**
-     * Perform a GraphQL operation against a previously
-     * configured API.
-     * This operation will be asynchronous, with the
-     * callback accessible both locally and via hub.
-     *
-     * @param <T> type of object being queried for
-     * @param apiName name of API being invoked
-     * @param operationType graphQL operation type
-     * @param document valid GraphQL string
-     * @param classToCast class to be cast to
-     * @param callback callback to attach
-     * @return GraphQLQuery query object being enqueued
+     * Perform a GraphQL operation against a configured GraphQL API.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * in a payload over Hub. If response data is present, it will be
+     * cast to an object of the requested class type.
+     * @param operationType Type of GraphQL operation (Query, etc.)
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param apiName The name of a configured API
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
      */
-    <T> GraphQLOperation graphql(@NonNull String apiName,
-                                @NonNull OperationType operationType,
-                                @NonNull String document,
-                                Class<T> classToCast,
-                                GraphQLCallback<T> callback);
+    <T> GraphQLOperation graphql(
+            @NonNull OperationType operationType,
+            @NonNull String operationGql,
+            @NonNull Class<T> classToCast,
+            @NonNull String apiName);
+
+    /**
+     * In the case that there is only one GraphQL API, perform an
+     * operation against it.  This operation is asynchronous and may be
+     * canceled by calling cancel on the returned operation. The
+     * response will be provided to the callback, and via Hub. If the
+     * response contains data, it will be cast as the provided class
+     * type.
+     * @param operationType Type of GraphQL operation (Query, etc.)
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param callback Invoked when response data/errors are available.
+     *                 If null, the response is still available via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
+     * @throws ApiException If more than one API is configured and it is
+     *                      ambiguous which API should be invoked
+     */
+    <T> GraphQLOperation graphql(
+            @NonNull OperationType operationType,
+            @NonNull String operationGql,
+            @NonNull Class<T> classToCast,
+            @Nullable GraphQLCallback<T> callback) throws ApiException;
+
+    /**
+     * Perform a GraphQL operation against a configured GraphQL
+     * endpoint.  This operation is asynchronous and may be canceled by
+     * calling cancel on the returned operation. The response will be
+     * provided to the callback, and via Hub.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param operationType Type of GraphQL operation (Query, etc.)
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param callback Invoked when response data/errors are available.
+     *                 If null, response can still be obtained via Hub.
+     * @param apiName The name of a configured API
+     * @param <T> The type of data in the response, if available
+     * @return A GraphQLOperation to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    <T> GraphQLOperation graphql(
+            @NonNull OperationType operationType,
+            @NonNull String operationGql,
+            @NonNull Class<T> classToCast,
+            @Nullable GraphQLCallback<T> callback,
+            @NonNull String apiName);
 }
 
