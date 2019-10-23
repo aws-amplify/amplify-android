@@ -16,8 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.graphql.Response;
-import com.amplifyframework.api.graphql.ResponseFactory;
+import com.amplifyframework.api.ResponseFactory;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -52,12 +52,12 @@ final class GsonResponseFactory implements ResponseFactory {
     }
 
     @Override
-    public <T> Response<T> buildResponse(String responseJson, Class<T> classToCast) throws ApiException {
+    public <T> GraphQLResponse<T> buildResponse(String responseJson, Class<T> classToCast) throws ApiException {
         JsonObject jsonData = null;
         JsonArray jsonErrors = null;
 
         T data;
-        List<Response.Error> errors;
+        List<GraphQLResponse.Error> errors;
 
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
@@ -74,7 +74,7 @@ final class GsonResponseFactory implements ResponseFactory {
             throw new ApiException.ObjectSerializationException(jsonParseException);
         }
 
-        return new Response<>(data, errors);
+        return new GraphQLResponse<>(data, errors);
     }
 
     private <T> T parseData(JsonObject data, Class<T> classToCast) throws ApiException {
@@ -97,9 +97,9 @@ final class GsonResponseFactory implements ResponseFactory {
         }
     }
 
-    private List<Response.Error> parseErrors(JsonArray errors) throws ApiException {
+    private List<GraphQLResponse.Error> parseErrors(JsonArray errors) throws ApiException {
         @SuppressWarnings("WhitespaceAround") // {} looks better on same line, here.
-        final Type listType = new TypeToken<ArrayList<Response.Error>>() {}.getType();
+        final Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
 
         try {
             return gson.fromJson(errors, listType);

@@ -1,4 +1,4 @@
-list {
+query list {
     listTodos {
         items {
             id

@@ -19,11 +19,10 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.aws.test.R;
-import com.amplifyframework.api.graphql.GraphQLCallback;
-import com.amplifyframework.api.graphql.OperationType;
-import com.amplifyframework.api.graphql.Response;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.async.Listener;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -48,6 +47,7 @@ import static org.junit.Assert.fail;
  * amplify CLI and the standard models from the AppSync public docs
  * (TODO: which docs, which standard models?).
  */
+//TODO: Use CircleCI to automatically use configured amplifyconfiguration.json
 @Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json.")
 public final class GraphQLInstrumentationTest {
 
@@ -77,12 +77,11 @@ public final class GraphQLInstrumentationTest {
     public void testQuery() throws Exception {
         String document = TestAssets.readAsString("get-todo.graphql");
         latch = new CountDownLatch(1);
-        Amplify.API.graphql(
-                OperationType.QUERY,
+        Amplify.API.query(
+                "mygraphql",
                 document,
                 Todo.class,
-                new TestGraphQLCallback<>(),
-                "mygraphql");
+                new TestGraphQLListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -94,12 +93,11 @@ public final class GraphQLInstrumentationTest {
     public void testMutation() throws Exception {
         String document = TestAssets.readAsString("update-todo.graphql");
         latch = new CountDownLatch(1);
-        Amplify.API.graphql(
-                OperationType.MUTATION,
+        Amplify.API.mutate(
+                "mygraphql",
                 document,
-                String.class,
-                new TestGraphQLCallback<>(),
-                "mygraphql");
+                Todo.class,
+                new TestGraphQLListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -127,9 +125,9 @@ public final class GraphQLInstrumentationTest {
         }
     }
 
-    class TestGraphQLCallback<T> implements GraphQLCallback<T> {
+    class TestGraphQLListener<T> implements Listener<GraphQLResponse<T>> {
         @Override
-        public void onResponse(Response<T> response) {
+        public void onResult(GraphQLResponse<T> response) {
             assertNotNull(response);
             assertTrue(response.hasData());
             assertFalse(response.hasErrors());
