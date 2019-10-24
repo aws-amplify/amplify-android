@@ -20,7 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.async.Listener;
-import com.amplifyframework.core.stream.IObserver;
+import com.amplifyframework.core.stream.Observer;
 
 /**
  * API category behaviors include REST and GraphQL operations. These
@@ -88,6 +88,6 @@ public interface ApiCategoryBehavior {
     <T> ApiObservable<T> subscribe(@NonNull String apiName,
                                    @NonNull String operationGql,
                                    @NonNull Class<T> classToCast,
-                                   @Nullable IObserver<T> observer);
+                                   @Nullable Observer<T> observer);
 }
 

@@ -17,41 +17,21 @@ package com.amplifyframework.api;
 
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.stream.AmplifyObservable;
-import com.amplifyframework.core.stream.IObserver;
+import com.amplifyframework.core.stream.Observer;
 
 /**
  * Base observable type for the API category.
  * At the time of implementation, Amplify API category
  * only supports one type of operation that returns an
  * observable object.
- * See {@link ApiCategoryBehavior#subscribe(String, String, Class, IObserver)}.
+ * See {@link ApiCategoryBehavior#subscribe(String, String, Class, Observer)}.
  * @param <T> data type of emitted items or events
  */
 public abstract class ApiObservable<T> extends AmplifyObservable<T> {
-    private final IObserver<T> observer;
-
     /**
      * Constructs a new instance of API Observable for subscription.
-     * @param observer observer to subscribe to this observable
      */
-    public ApiObservable(IObserver<T> observer) {
+    public ApiObservable() {
         super(CategoryType.API);
-        this.observer = observer;
-    }
-
-    /**
-     * Gets the locally registered observer.
-     * @return the local observer
-     */
-    protected final IObserver<T> observer() {
-        return observer;
-    }
-
-    /**
-     * Check if an observer was registered.
-     * @return true if observer exists, false otherwise
-     */
-    protected final boolean hasObserver() {
-        return observer != null;
     }
 }

@@ -20,28 +20,22 @@ package com.amplifyframework.core.stream;
  * can be subscribed to by an observer.
  * @param <T> Data type of the item or event being observed
  */
-public interface IObserver<T> {
-    /**
-     * Invoked upon successful termination of connection
-     * to an observable without error.
-     */
-    void onComplete();
-
-    /**
-     * Invoked upon successful reception of an emitted
-     * event by an instance of {@link IObservable} that
-     * this object is subscribed to.
-     * @param event emitted event or item
-     */
-    void onNext(T event);
-
+public interface Observer<T> {
     /**
      * Invoked upon successful subscription of this
-     * object to an instance of {@link IObservable}.
+     * object to an instance of {@link Observable}.
      * @param token identification token of the
      *              subscription
      */
     void onSubscribe(SubscriptionToken token);
+
+    /**
+     * Invoked upon successful reception of an emitted
+     * event by an instance of {@link Observable} that
+     * this object is subscribed to.
+     * @param event emitted event or item
+     */
+    void onNext(T event);
 
     /**
      * Invoked upon error that terminates
@@ -52,4 +46,10 @@ public interface IObserver<T> {
      * @param throwable termination cause
      */
     void onError(Throwable throwable);
+
+    /**
+     * Invoked upon successful termination of connection
+     * to an observable without error.
+     */
+    void onComplete();
 }

@@ -25,7 +25,7 @@ import java.util.UUID;
  * An abstract representation of an Amplify pubsub observable.
  * @param <T> data type of the item or event being observed
  */
-public abstract class AmplifyObservable<T> implements IObservable<T> {
+public abstract class AmplifyObservable<T> implements Observable<T> {
 
     // The unique ID of the observable that can be used to identify
     // previously tracked observable.

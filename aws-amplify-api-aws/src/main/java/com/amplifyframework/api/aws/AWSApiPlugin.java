@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiObservable;
 import com.amplifyframework.api.ApiOperation;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLQuery;
@@ -27,6 +28,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.core.stream.Observer;
 
 import org.json.JSONObject;
 
@@ -151,7 +153,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         ApiOperation<T, GraphQLResponse<T>> operation =
-                new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
+                new AWSGraphQLOperation<>(
+                        clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         new GraphQLQuery(OperationType.MUTATION, document),
                         gqlResponseFactory,
@@ -160,6 +163,26 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         operation.start();
         return operation;
+    }
+
+    @Override
+    public <T> ApiObservable<T> subscribe(@NonNull String apiName,
+                                          @NonNull String document,
+                                          @NonNull Class<T> classToCast,
+                                          @Nullable Observer<T> observer) {
+        final ClientDetails clientDetails = httpClients.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException("No client information for API named " + apiName);
+        }
+
+        ApiObservable<T> observable =
+                new AWSGraphQLObservable<>(
+                        clientDetails.getEndpoint(),
+                        clientDetails.getClient(),
+                        new GraphQLQuery(OperationType.SUBSCRIPTION, document));
+
+        observable.subscribe(observer);
+        return observable;
     }
 
     /**

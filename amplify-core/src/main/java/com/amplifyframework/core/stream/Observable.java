@@ -20,13 +20,15 @@ package com.amplifyframework.core.stream;
  * can be subscribed to by an observer.
  * @param <T> data type of the observable item or event
  */
-public interface IObservable<T> {
+public interface Observable<T> {
     /**
      * Register an observer to be subscribed observable.
      * @param observer an instance of subscriber to
      *                 listen to this observable object
+     * @return a subscription token to identify this
+     *         subscription
      */
-    void subscribe(IObserver<T> observer);
+    SubscriptionToken subscribe(Observer<T> observer);
 
     /**
      * Dispose of the subscription associated with given

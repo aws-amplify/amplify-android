@@ -18,8 +18,7 @@ package com.amplifyframework.core.stream;
 import java.util.UUID;
 
 /**
- * A SubscriptionToken is returned upon creating a new subscription.
- * The token can be used to unsubscribe that listener or observer.
+ * The token can be used to cancel the subscription.
  */
 public final class SubscriptionToken {
     /**
