@@ -26,6 +26,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -41,6 +42,28 @@ public final class GsonResponseFactoryTest {
     @Before
     public void setup() {
         responseFactory = new GsonResponseFactory();
+    }
+
+    /**
+     * Validates that response with null content does not break
+     * the response object builder. Null data and/or error will
+     * return a non-null response object with null data and/or
+     * an empty list of errors.
+     */
+    @Test
+    public void nullOutputWithNullResponse() {
+        // Arrange some JSON string from a "server"
+        final String nullResponseJson =
+                Resources.readAsString("null-gql-response.json");
+
+        // Act! Parse it into a model.
+        final GraphQLResponse<ListTodosResult> response = (GraphQLResponse<ListTodosResult>)
+                responseFactory.buildResponse(nullResponseJson, ListTodosResult.class);
+
+        // Assert that the model is constructed without content
+        assertNotNull(response);
+        assertFalse(response.hasData());
+        assertFalse(response.hasErrors());
     }
 
     /**
