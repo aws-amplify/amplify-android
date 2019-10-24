@@ -23,6 +23,8 @@ import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+import java.util.Map;
+
 /**
  * The API category provides methods for interacting with remote systems
  * using REST and GraphQL constructs. The category is implemented by
@@ -37,18 +39,20 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Override
     public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                         @NonNull String operationGql,
+                                                         @NonNull String gqlDocument,
                                                          @NonNull Class<T> classToCast,
+                                                         @Nullable Map<String, Object> variables,
                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
-        return getSelectedPlugin().query(apiName, operationGql, classToCast, callback);
+        return getSelectedPlugin().query(apiName, gqlDocument, classToCast, variables, callback);
     }
 
     @Override
     public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                          @NonNull String operationGql,
+                                                          @NonNull String gqlDocument,
                                                           @NonNull Class<T> classToCast,
+                                                          @Nullable Map<String, Object> variables,
                                                           @Nullable Listener<GraphQLResponse<T>> callback) {
-        return getSelectedPlugin().mutate(apiName, operationGql, classToCast, callback);
+        return getSelectedPlugin().mutate(apiName, gqlDocument, classToCast, variables, callback);
     }
 }
 

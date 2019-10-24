@@ -75,15 +75,18 @@ public final class GraphQLQuery extends Query {
             final int size = variableValues.size();
             for (int i = 0; i < size; i++) {
                 final VariableValues variableValues = this.variableValues.get(i);
-                completeQuery.append("\"").append(variableValues.getName()).append("\":");
-
+                completeQuery.append("\"")
+                        .append(variableValues.getName())
+                        .append("\":");
                 final Object value = variableValues.getValue();
                 if (value == null) {
                     completeQuery.append("null");
                 } else if (value instanceof Number || value instanceof Boolean) {
                     completeQuery.append(value.toString());
                 } else {
-                    completeQuery.append("\"").append(value.toString()).append("\"");
+                    completeQuery.append("\"")
+                            .append(value.toString())
+                            .append("\"");
                 }
                 if (i != size - 1) {
                     completeQuery.append(",");

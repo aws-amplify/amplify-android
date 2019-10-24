@@ -68,15 +68,16 @@ public abstract class ApiOperation<T, R extends Response<T>> extends AmplifyOper
      * Converts the response json string to formatted
      * {@link Response} object to be used by callback.
      * @param jsonResponse json response from API to be converted
-     * @return wrapped response object
+     * @return wrapped response object. Null if jsonResponse is null
      */
     @SuppressWarnings("unchecked")
     protected final R wrapResponse(String jsonResponse) {
         try {
-            return (R) responseFactory.buildResponse(jsonResponse, classToCast);
+            Response<T> response = responseFactory.buildResponse(jsonResponse, classToCast);
+            return response != null ? (R) response : null;
         } catch (ClassCastException cce) {
-            throw new ApiException.ObjectSerializationException("The instance of ResponseFactory" +
-                    "does not override buildResponse method to return correct extension of Response object.");
+            throw new ApiException.ObjectSerializationException("The instance of ResponseFactory does not" +
+                    "override buildResponse method to return correct extension of Response object.", cce);
         }
     }
 }
