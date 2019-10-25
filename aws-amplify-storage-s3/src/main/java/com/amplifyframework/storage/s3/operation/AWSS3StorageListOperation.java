@@ -32,7 +32,6 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageListRequest request;
     private final Listener<StorageListResult> callback;
 
     /**
@@ -45,7 +44,6 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                                      AWSS3StorageListRequest request,
                                      Listener<StorageListResult> callback) {
         super(CategoryType.STORAGE, request);
-        this.request = request;
         this.storageService = storageService;
         this.callback = callback;
     }
@@ -74,10 +72,10 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
         try {
             StorageListResult result = storageService.listFiles(
                     S3RequestUtils.getServiceKey(
-                            request.getAccessLevel(),
+                            getRequest().getAccessLevel(),
                             identityId,
-                            request.getPath(),
-                            request.getTargetIdentityId()
+                            getRequest().getPath(),
+                            getRequest().getTargetIdentityId()
                     )
             );
 

@@ -31,7 +31,6 @@ import com.amazonaws.mobile.client.AWSMobileClient;
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageRemoveRequest request;
     private final Listener<StorageRemoveResult> callback;
 
     /**
@@ -44,7 +43,6 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
                                        AWSS3StorageRemoveRequest request,
                                        Listener<StorageRemoveResult> callback) {
         super(CategoryType.STORAGE, request);
-        this.request = request;
         this.storageService = storageService;
         this.callback = callback;
     }
@@ -73,15 +71,15 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         try {
             storageService.deleteObject(
                     S3RequestUtils.getServiceKey(
-                            request.getAccessLevel(),
+                            getRequest().getAccessLevel(),
                             identityId,
-                            request.getKey(),
-                            request.getTargetIdentityId()
+                            getRequest().getKey(),
+                            getRequest().getTargetIdentityId()
                     )
             );
 
             if (callback != null) {
-                callback.onResult(StorageRemoveResult.fromKey(request.getKey()));
+                callback.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
             }
         } catch (Exception error) {
             if (callback != null) {

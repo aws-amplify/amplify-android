@@ -37,7 +37,6 @@ import java.io.File;
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageDownloadFileRequest request;
     private final Listener<StorageDownloadFileResult> callback;
     private TransferObserver transferObserver;
     private File file;
@@ -52,7 +51,6 @@ public final class AWSS3StorageDownloadFileOperation
                                              AWSS3StorageDownloadFileRequest request,
                                              Listener<StorageDownloadFileResult> callback) {
         super(CategoryType.STORAGE, request);
-        this.request = request;
         this.storageService = storageService;
         this.callback = callback;
         this.transferObserver = null;
@@ -76,12 +74,12 @@ public final class AWSS3StorageDownloadFileOperation
             }
 
             String serviceKey = S3RequestUtils.getServiceKey(
-                    request.getAccessLevel(),
+                    getRequest().getAccessLevel(),
                     identityId,
-                    request.getKey(),
-                    request.getTargetIdentityId()
+                    getRequest().getKey(),
+                    getRequest().getTargetIdentityId()
             );
-            this.file = new File(request.getLocal()); //TODO: Add error handling if path is invalid
+            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
 
             try {
                 transferObserver = storageService.downloadToFile(serviceKey, file);

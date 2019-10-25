@@ -40,13 +40,14 @@ public interface ApiCategoryBehavior {
      * @param callback Invoked when response data/errors are available.
      *                 If null, response can still be obtained via Hub.
      * @param <T> The type of data in the response, if available
+     * @param <I> data type of request
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
-    <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                  @NonNull String operationGql,
-                                                  @NonNull Class<T> classToCast,
-                                                  @Nullable Listener<GraphQLResponse<T>> callback);
+    <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
+                                                        @NonNull String operationGql,
+                                                        @NonNull Class<T> classToCast,
+                                                        @Nullable Listener<GraphQLResponse<T>> callback);
 
     /**
      * Perform a GraphQL mutation against a configured GraphQL
@@ -60,13 +61,13 @@ public interface ApiCategoryBehavior {
      * @param callback Invoked when response data/errors are available.
      *                 If null, response can still be obtained via Hub.
      * @param <T> The type of data in the response, if available
+     * @param <I> data type of request
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
-    <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                   @NonNull String operationGql,
-                                                   @NonNull Class<T> classToCast,
-                                                   @Nullable Listener<GraphQLResponse<T>> callback);
+    <T, I> ApiOperation<T, I, GraphQLResponse<T>> mutate(@NonNull String apiName,
+                                                         @NonNull String operationGql,
+                                                         @NonNull Class<T> classToCast,
+                                                         @Nullable Listener<GraphQLResponse<T>> callback);
 
 }
-

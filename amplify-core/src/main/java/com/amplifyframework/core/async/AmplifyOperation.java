@@ -31,6 +31,8 @@ import java.util.UUID;
  * implementation of a `publish` method that sends a contextualized payload to the Hub.
  *
  * Pausable/resumable tasks that do not require Hub dispatching should use {@link AsyncOperation} instead.
+ *
+ * @param <R> type of the request object
  */
 public abstract class AmplifyOperation<R> implements AsyncOperation {
 
@@ -46,19 +48,19 @@ public abstract class AmplifyOperation<R> implements AsyncOperation {
     // Reference to the request object of the operation. The
     // request object encapsulates the input parameters to an
     // operation.
-    private final R amplifyOperationRequest;
+    private final R request;
 
     /**
      * Constructs a new AmplifyOperation.
      * @param categoryType The category in which this operation is
      *                     fulfilling a request
-     * @param amplifyOperationRequest The request object of the operation
+     * @param request The request object of the operation
      */
     public AmplifyOperation(@NonNull final CategoryType categoryType,
-                            @Nullable final R amplifyOperationRequest) {
+                            @Nullable final R request) {
         this.categoryType = categoryType;
         this.operationId = UUID.randomUUID();
-        this.amplifyOperationRequest = amplifyOperationRequest;
+        this.request = request;
     }
 
     /**
@@ -76,5 +78,12 @@ public abstract class AmplifyOperation<R> implements AsyncOperation {
     public final CategoryType getCategoryType() {
         return categoryType;
     }
-}
 
+    /**
+     * Gets the request object.
+     * @return the request object
+     */
+    public R getRequest() {
+        return request;
+    }
+}

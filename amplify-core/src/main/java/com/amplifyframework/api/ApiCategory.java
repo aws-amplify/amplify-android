@@ -36,7 +36,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
+    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> query(@NonNull String apiName,
                                                          @NonNull String operationGql,
                                                          @NonNull Class<T> classToCast,
                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
@@ -44,7 +44,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
+    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> mutate(@NonNull String apiName,
                                                           @NonNull String operationGql,
                                                           @NonNull Class<T> classToCast,
                                                           @Nullable Listener<GraphQLResponse<T>> callback) {

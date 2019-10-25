@@ -23,6 +23,8 @@ import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Base operation type for remove behavior on the Storage category.
+ *
+ * @param <R> type of the request object
  */
 public abstract class StorageRemoveOperation<R> extends AmplifyOperation<R> {
 

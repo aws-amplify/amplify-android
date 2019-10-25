@@ -119,7 +119,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
+    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> query(@NonNull String apiName,
                                                          @NonNull String document,
                                                          @NonNull Class<T> classToCast,
                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
@@ -128,7 +128,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        ApiOperation<T, GraphQLResponse<T>> operation =
+        ApiOperation<T, X, GraphQLResponse<T>> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         new GraphQLQuery(OperationType.QUERY, document),
@@ -141,7 +141,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
+    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> mutate(@NonNull String apiName,
                                                           @NonNull String document,
                                                           @NonNull Class<T> classToCast,
                                                           @Nullable Listener<GraphQLResponse<T>> callback) {
@@ -150,7 +150,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        ApiOperation<T, GraphQLResponse<T>> operation =
+        ApiOperation<T, X, GraphQLResponse<T>> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         new GraphQLQuery(OperationType.MUTATION, document),

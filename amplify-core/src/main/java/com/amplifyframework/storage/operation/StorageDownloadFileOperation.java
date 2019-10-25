@@ -25,6 +25,8 @@ import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Base operation type for download file behavior on the Storage category.
+ *
+ * @param <R> type of the request object
  */
 public abstract class StorageDownloadFileOperation<R> extends AmplifyOperation<R> implements Resumable, Cancelable {
 
