@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
+apply plugin: "com.android.library"
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
 
@@ -38,22 +38,28 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
         }
     }
 }
 
 dependencies {
-    api project(':amplify-core')
+    api project(":amplify-core")
 
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.2.2'
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation "androidx.appcompat:appcompat:1.1.0"
+    implementation "com.squareup.okhttp3:okhttp:4.2.2"
+    implementation "com.google.code.gson:gson:2.8.6"
 
-    testImplementation 'junit:junit:4.12'
+    //BEGIN AWS DEPENDENCIES
+    def aws_version = "2.16.1"
+    implementation "com.amazonaws:aws-android-sdk-auth-core:$aws_version"
+    implementation ("com.amazonaws:aws-android-sdk-mobile-client:$aws_version") { transitive = true }
+    //END AWS DEPENDENCIES
 
-    androidTestImplementation 'androidx.test:core:1.2.0' // Core Library
-    androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
+    testImplementation "junit:junit:4.12"
+
+    androidTestImplementation "androidx.test:core:1.2.0" // Core Library
+    androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
+    androidTestImplementation "androidx.test.ext:junit:1.1.1" // Assertions
 }
 

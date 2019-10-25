@@ -22,21 +22,32 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
+import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
+import com.amplifyframework.api.aws.sigv4.BasicApiKeyAuthProvider;
+import com.amplifyframework.api.aws.sigv4.BasicCognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLQuery;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.OperationType;
 import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.plugin.PluginException;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool;
 import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
-import okhttp3.Headers;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
 /**
  * Plugin implementation to be registered with Amplify API category.
@@ -45,17 +56,31 @@ import okhttp3.Request;
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private static final String TAG = AWSApiPlugin.class.getSimpleName();
-    private static final String API_KEY_HEADER = "x-api-key";
 
     private final Map<String, ClientDetails> httpClients;
     private final GsonResponseFactory gqlResponseFactory;
+    private final ApiAuthProvider authProvider;
 
     /**
-     * Default constructor for this plugin.
+     * Default constructor for this plugin without any override.
      */
     public AWSApiPlugin() {
+        this(ApiAuthProvider.defaultProvider());
+    }
+
+    /**
+     * Constructs an instance of AWSApiPlugin with
+     * configured auth providers to override default modes
+     * of authorization.
+     * If no Auth provider implementation is provided, then
+     * the plugin will assume default behavior for that specific
+     * mode of authorization.
+     * @param apiAuthProvider configured instance of {@link ApiAuthProvider}
+     */
+    public AWSApiPlugin(ApiAuthProvider apiAuthProvider) {
         this.httpClients = new HashMap<>();
         this.gqlResponseFactory = new GsonResponseFactory();
+        this.authProvider = apiAuthProvider;
     }
 
     @Override
@@ -72,29 +97,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
 
-            Headers.Builder headerBuilder = new Headers.Builder();
-            switch (apiConfiguration.getAuthorizationType()) {
-                case API_KEY:
-                    headerBuilder.add(API_KEY_HEADER, apiConfiguration.getApiKey());
-                    break;
-                case AWS_IAM:
-                case AMAZON_COGNITO_USER_POOLS:
-                case OPENID_CONNECT:
-                default:
-                    throw new PluginException.PluginConfigurationException(
-                            "Unsupported authentication mode.");
+            AppSyncSigV4SignerInterceptor signerInterceptor = null;
+
+            try {
+                signerInterceptor = getConfiguredInterceptor(context, apiConfiguration);
+            } catch (Exception error) {
+                throw new ApiException.AuthProviderNotConfiguredException();
             }
 
             OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    Request original = chain.request();
-                    Request request = original.newBuilder()
-                        .headers(headerBuilder.build())
-                        .method(original.method(), original.body())
-                        .build();
-
-                    return chain.proceed(request);
-                })
+                .addInterceptor(signerInterceptor)
                 .build();
 
             ClientDetails clientDetails =
@@ -176,6 +188,68 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         operation.start();
         return operation;
+    }
+
+    // Helper method to initialize AWS Mobile Client.
+    private AWSCredentialsProvider getCredProvider(Context context) {
+        final Semaphore semaphore = new Semaphore(0);
+        AWSMobileClient.getInstance().initialize(context, new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails result) {
+                semaphore.release();
+            }
+
+            @Override
+            public void onError(Exception error) {
+                throw new RuntimeException("Failed to initialize mobile client.", error);
+            }
+        });
+
+        try {
+            semaphore.acquire();
+        } catch (InterruptedException exception) {
+            throw new ApiException("Interrupted signing into mobile client.", exception);
+        } catch (Exception error) {
+            throw new ApiException(error.getLocalizedMessage(), error);
+        }
+        return AWSMobileClient.getInstance();
+    }
+
+    // Helper method to construct a correctly configured interceptor
+    private AppSyncSigV4SignerInterceptor getConfiguredInterceptor(Context context, ApiConfiguration config) {
+        switch (config.getAuthorizationType()) {
+            case API_KEY:
+                ApiKeyAuthProvider apiKeyProvider = authProvider.getApiKeyAuthProvider();
+                if (apiKeyProvider == null) {
+                    apiKeyProvider = new BasicApiKeyAuthProvider(config.getApiKey());
+                }
+                return new AppSyncSigV4SignerInterceptor(apiKeyProvider);
+
+            case AWS_IAM:
+                AWSCredentialsProvider credentialsProvider = authProvider.getAWSCredentialsProvider();
+                if (credentialsProvider == null) {
+                    credentialsProvider = getCredProvider(context);
+                }
+                return new AppSyncSigV4SignerInterceptor(credentialsProvider, config.getRegion());
+
+            case AMAZON_COGNITO_USER_POOLS:
+                CognitoUserPoolsAuthProvider cognitoProvider = authProvider.getCognitoUserPoolsAuthProvider();
+                if (cognitoProvider == null) {
+                    CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
+                    cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
+                }
+                return new AppSyncSigV4SignerInterceptor(cognitoProvider);
+
+            case OPENID_CONNECT:
+                OidcAuthProvider oidcProvider = authProvider.getOidcAuthProvider();
+                if (oidcProvider == null) {
+                    //TODO: default implementation for OIDC provider
+                }
+                return new AppSyncSigV4SignerInterceptor(oidcProvider);
+            default:
+                throw new PluginException.PluginConfigurationException(
+                        "Unsupported authorization mode.");
+        }
     }
 
     /**
