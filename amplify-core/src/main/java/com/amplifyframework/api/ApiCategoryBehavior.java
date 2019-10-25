@@ -15,11 +15,58 @@
 
 package com.amplifyframework.api;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.async.Listener;
+
 /**
  * API category behaviors include REST and GraphQL operations. These
  * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
  * query/subscribe/mutate operations.
  */
 public interface ApiCategoryBehavior {
+
+    /**
+     * Perform a GraphQL query against a configured GraphQL
+     * endpoint.  This operation is asynchronous and may be canceled by
+     * calling cancel on the returned operation. The response will be
+     * provided to the callback, and via Hub.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param callback Invoked when response data/errors are available.
+     *                 If null, response can still be obtained via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiOperation} to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
+                                                  @NonNull String operationGql,
+                                                  @NonNull Class<T> classToCast,
+                                                  @Nullable Listener<GraphQLResponse<T>> callback);
+
+    /**
+     * Perform a GraphQL mutation against a configured GraphQL
+     * endpoint.  This operation is asynchronous and may be canceled by
+     * calling cancel on the returned operation. The response will be
+     * provided to the callback, and via Hub.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param apiName The name of a configured API
+     * @param operationGql A GraphQL operation, as a String
+     * @param classToCast The type to which response data will be cast
+     * @param callback Invoked when response data/errors are available.
+     *                 If null, response can still be obtained via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiOperation} to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
+                                                   @NonNull String operationGql,
+                                                   @NonNull Class<T> classToCast,
+                                                   @Nullable Listener<GraphQLResponse<T>> callback);
+
 }
 

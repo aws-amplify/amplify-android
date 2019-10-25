@@ -15,6 +15,10 @@
 
 package com.amplifyframework.core.category;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -22,9 +26,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * Base class that a given category will extend in order to define the
  * various data required for successful configuration.
  */
-public abstract class CategoryConfiguration {
+public abstract class CategoryConfiguration implements CategoryTypeable {
     @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Configs will be populated by future work
-    private final Map<String, Object> pluginConfigs;
+    private static final String PLUGINS_KEY = "plugins";
+    private final Map<String, JSONObject> pluginConfigs;
 
     /**
      * Constructs a new CategoryConfiguration.
@@ -40,7 +45,25 @@ public abstract class CategoryConfiguration {
      * @return An object used by a plugin, for its configuration. This
      *         value is possibly null
      */
-    public final Object getPluginConfig(final String key) {
+    public final JSONObject getPluginConfig(final String key) {
         return pluginConfigs.get(key);
+    }
+
+    /**
+     * Populates pluginConfigs map from JSON - each category should implement parsing any category specific properties
+     * in their override of this method.
+     * @param json Configuration data for this category
+     * @throws JSONException if getJsonObject fails
+     */
+    public void populateFromJSON(JSONObject json) throws JSONException {
+        if (json.has(PLUGINS_KEY)) {
+            JSONObject plugins = json.getJSONObject(PLUGINS_KEY);
+            Iterator<String> keys = plugins.keys();
+
+            while (keys.hasNext()) {
+                String key = keys.next();
+                pluginConfigs.put(key, plugins.getJSONObject(key));
+            }
+        }
     }
 }

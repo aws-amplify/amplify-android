@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics;
 
 import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Configuration for Analytics category that also
@@ -29,5 +30,15 @@ public final class AnalyticsCategoryConfiguration extends CategoryConfiguration 
      */
     public AnalyticsCategoryConfiguration() {
         super();
+    }
+
+    /**
+     * Gets the category type associated with the current object.
+     *
+     * @return The category type to which the current object is affiliated
+     */
+    @Override
+    public CategoryType getCategoryType() {
+        return CategoryType.ANALYTICS;
     }
 }

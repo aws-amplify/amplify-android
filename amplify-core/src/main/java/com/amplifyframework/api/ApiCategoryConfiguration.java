@@ -16,6 +16,7 @@
 package com.amplifyframework.api;
 
 import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Configurations for all plugins of the API category.
@@ -28,5 +29,15 @@ public final class ApiCategoryConfiguration extends CategoryConfiguration {
      */
     public ApiCategoryConfiguration() {
         super();
+    }
+
+    /**
+     * Gets the category type associated with the current object.
+     *
+     * @return The category type to which the current object is affiliated
+     */
+    @Override
+    public CategoryType getCategoryType() {
+        return CategoryType.API;
     }
 }

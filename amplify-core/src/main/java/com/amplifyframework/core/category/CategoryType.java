@@ -16,8 +16,10 @@
 package com.amplifyframework.core.category;
 
 /**
- * Enum that declares the various categories
- * of APIs supported by Amplify System.
+ * Enum that declares the various categories of APIs supported by Amplify
+ * System + their config keys. We don't expect the config keys to be
+ * very different from the value of enum's name(), but they are logically
+ * different since they are mandated by the config spec, not Java.
  */
 public enum CategoryType {
 
@@ -25,13 +27,13 @@ public enum CategoryType {
      * Analytics track your app's operational status and customer
      * engagement, recording to an AWS backend service.
      */
-    ANALYTICS,
+    ANALYTICS("Analytics"),
 
     /**
      * API simplifies interactions with a remove AWS backend via REST
      * And GraphQL operations.
      */
-    API,
+    API("API"),
 
     /**
      * Hub is an event bus style pub/sub system that is used to
@@ -39,7 +41,7 @@ public enum CategoryType {
      * This category is expected to operate locally to the device,
      * without talking to AWS backend services, directly.
      */
-    HUB,
+    HUB("Hub"),
 
     /**
      * Logging for troubleshooting of component behaviors during
@@ -47,13 +49,39 @@ public enum CategoryType {
      * expected to operate locally to the device, without talking to AWS
      * backend services, directly.
      */
-    LOGGING,
+    LOGGING("Logging"),
 
     /**
      * Storage is an interface to a remote repository to store and
      * retrieve instances of domain models. AWS provides several backend
      * systems that are suitable for storage of your data.
      */
-    STORAGE
+    STORAGE("Storage");
+
+    /**
+     * The key this category is listed under in the config JSON.
+     */
+    private final String configurationKey;
+
+    /**
+     * Construct the enum with the config key.
+     * @param configurationKey The key this category is listed under in the config JSON.
+     */
+    CategoryType(final String configurationKey) {
+        this.configurationKey = configurationKey;
+    }
+
+    /**
+     * Returns the key this category is listed under in the config JSON.
+     * @return The key as a string
+     */
+    public String getConfigurationKey() {
+        return configurationKey;
+    }
+
+    @Override
+    public String toString() {
+        return configurationKey;
+    }
 }
 

@@ -47,7 +47,8 @@ import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
-import com.amazonaws.regions.Regions;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * A plugin for the storage category which uses S3 as a storage
@@ -55,7 +56,6 @@ import com.amazonaws.regions.Regions;
  */
 public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "AWSS3StoragePlugin";
-    private static final Regions DEFAULT_REGION = Regions.US_EAST_1;
     private AWSS3StorageService storageService;
     private StorageAccessLevel defaultAccessLevel;
 
@@ -65,35 +65,40 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public void configure(@NonNull Object pluginConfiguration, Context context) throws PluginException {
-        AWSS3StoragePluginConfiguration config;
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
+        String regionStr;
+        String bucket;
 
         try {
-            config = (AWSS3StoragePluginConfiguration) pluginConfiguration;
-        } catch (Exception exception) {
-            throw new PluginException(
-                    "AWSS3StoragePlugin must be given an AWSS3StoragePluginConfiguration" +
-                    "type object for configuration",
-                    exception
+            regionStr = pluginConfiguration.getString(JsonKeys.REGION.getConfigurationKey());
+        } catch (JSONException error) {
+            throw new PluginException.PluginConfigurationException(
+                    "Missing or malformed value for Region in " + AWS_S3_STORAGE_PLUGIN_KEY + "configuration.",
+                    error
             );
         }
 
-        Region region = Region.getRegion(DEFAULT_REGION);
+        Region region = Region.getRegion(regionStr);
 
-        if (config.getRegion() != null && !config.getRegion().isEmpty()) {
-            region = Region.getRegion(config.getRegion());
+        if (region == null) {
+            throw new PluginException.PluginConfigurationException("Invalid region provided");
+        }
 
-            if (region == null) {
-                throw new PluginException("Invalid region provided");
-            }
+        try {
+            bucket = pluginConfiguration.getString(JsonKeys.BUCKET.getConfigurationKey());
+        } catch (JSONException error) {
+            throw new PluginException.PluginConfigurationException(
+                    "Missing or malformed value for Bucket in " + AWS_S3_STORAGE_PLUGIN_KEY + "configuration.",
+                    error
+            );
         }
 
         try {
             this.storageService = new AWSS3StorageService(
                     region,
                     context,
-                    config.getBucket(),
-                    config.isTransferAcceleration()
+                    bucket,
+                    /* transferAcceleration = */false // This will come from the config in the future
             );
         } catch (Exception exception) {
             throw new PluginException(
@@ -103,9 +108,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
             );
         }
 
-        this.defaultAccessLevel = config.getDefaultAccessLevel() != null ?
-                config.getDefaultAccessLevel() :
-                StorageAccessLevel.PUBLIC;
+        this.defaultAccessLevel = StorageAccessLevel.PUBLIC; // This will be passed in the config in the future
     }
 
     @Override
@@ -287,5 +290,41 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
         operation.start();
 
         return operation;
+    }
+
+    /**
+     * Holds the keys for the various configuration properties for this plugin.
+     */
+    public enum JsonKeys {
+        /**
+         * The S3 bucket this plugin will work with.
+         */
+        BUCKET("Bucket"),
+
+        /**
+         * The AWS region this plugin will work with.
+         */
+        REGION("Region");
+
+        /**
+         * The key this property is listed under in the config JSON.
+         */
+        private final String configurationKey;
+
+        /**
+         * Construct the enum with the config key.
+         * @param configurationKey The key this property is listed under in the config JSON.
+         */
+        JsonKeys(final String configurationKey) {
+            this.configurationKey = configurationKey;
+        }
+
+        /**
+         * Returns the key this property is listed under in the config JSON.
+         * @return The key as a string
+         */
+        public String getConfigurationKey() {
+            return configurationKey;
+        }
     }
 }

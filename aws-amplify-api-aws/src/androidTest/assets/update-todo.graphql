@@ -1,0 +1,12 @@
+mutation update {
+    updateTodo(input: {
+        id: "1"
+        name: "my todo"
+        description: "test gql"
+    }) {
+        id
+        name
+        description
+    }
+}
+

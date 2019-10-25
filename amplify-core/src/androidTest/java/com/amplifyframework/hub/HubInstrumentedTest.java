@@ -15,11 +15,14 @@
 
 package com.amplifyframework.hub;
 
+import android.content.Context;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
 
+import com.amazonaws.amplify.core.test.R;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -49,8 +52,11 @@ public final class HubInstrumentedTest {
      */
     @BeforeClass
     public static void setUpBeforeClass() {
+        Context context = ApplicationProvider.getApplicationContext();
+        AmplifyConfiguration configuration = new AmplifyConfiguration();
+        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new BackgroundExecutorHubPlugin());
-        Amplify.configure(ApplicationProvider.getApplicationContext());
+        Amplify.configure(configuration, context);
     }
 
     /**
