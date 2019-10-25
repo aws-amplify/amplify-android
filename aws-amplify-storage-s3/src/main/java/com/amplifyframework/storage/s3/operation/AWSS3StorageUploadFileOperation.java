@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -33,7 +34,7 @@ import java.io.File;
 /**
  * An operation to upload a file from AWS S3.
  */
-public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation {
+public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
     private final AWSS3StorageService storageService;
     private final AWSS3StorageUploadFileRequest request;
     private final Listener<StorageUploadFileResult> callback;
@@ -49,6 +50,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
     public AWSS3StorageUploadFileOperation(AWSS3StorageService storageService,
                                            AWSS3StorageUploadFileRequest request,
                                            Listener<StorageUploadFileResult> callback) {
+        super(CategoryType.STORAGE, request);
         this.request = request;
         this.storageService = storageService;
         this.callback = callback;

@@ -32,7 +32,7 @@ import java.util.UUID;
  *
  * Pausable/resumable tasks that do not require Hub dispatching should use {@link AsyncOperation} instead.
  */
-public abstract class AmplifyOperation implements AsyncOperation {
+public abstract class AmplifyOperation<R> implements AsyncOperation {
 
     // The unique ID of the operation. In categories where operations are persisted for future
     // processing, this id can be used to identify previously-scheduled work for progress tracking
@@ -46,26 +46,19 @@ public abstract class AmplifyOperation implements AsyncOperation {
     // Reference to the request object of the operation. The
     // request object encapsulates the input parameters to an
     // operation.
-    private final AmplifyOperationRequest<?> amplifyOperationRequest;
+    private final R amplifyOperationRequest;
 
     /**
      * Constructs a new AmplifyOperation.
      * @param categoryType The category in which this operation is
      *                     fulfilling a request
      * @param amplifyOperationRequest The request object of the operation
-     * @param <R> the parameter type of the request. The implementation
-      *           can define the type of the request object.
      */
-    public <R extends AmplifyOperationRequest<?>> AmplifyOperation(
-            @NonNull final CategoryType categoryType,
-            @Nullable final AmplifyOperationRequest<R> amplifyOperationRequest) {
+    public AmplifyOperation(@NonNull final CategoryType categoryType,
+                            @Nullable final R amplifyOperationRequest) {
         this.categoryType = categoryType;
         this.operationId = UUID.randomUUID();
         this.amplifyOperationRequest = amplifyOperationRequest;
-    }
-
-    @Override
-    public void start() {
     }
 
     /**

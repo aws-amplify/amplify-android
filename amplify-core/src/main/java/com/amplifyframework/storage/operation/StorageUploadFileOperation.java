@@ -15,6 +15,9 @@
 
 package com.amplifyframework.storage.operation;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -23,12 +26,17 @@ import com.amplifyframework.core.category.CategoryType;
 /**
  * Base operation type for upload file behavior on the Storage category.
  */
-public abstract class StorageUploadFileOperation extends AmplifyOperation implements Resumable, Cancelable {
+public abstract class StorageUploadFileOperation<R> extends AmplifyOperation<R> implements Resumable, Cancelable {
+
     /**
-     * Constructs a new instance of a StorageUploadFileOperation.
+     * Constructs a new AmplifyOperation.
+     *
+     * @param categoryType            The category in which this operation is
+     *                                fulfilling a request
+     * @param amplifyOperationRequest The request object of the operation
      */
-    public StorageUploadFileOperation() {
-        super(CategoryType.STORAGE, null);
+    public StorageUploadFileOperation(@NonNull CategoryType categoryType, @Nullable R amplifyOperationRequest) {
+        super(categoryType, amplifyOperationRequest);
     }
 }
 

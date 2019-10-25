@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -29,7 +30,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
  * An operation to list items from AWS S3.
  */
 
-public final class AWSS3StorageListOperation extends StorageListOperation {
+public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final AWSS3StorageService storageService;
     private final AWSS3StorageListRequest request;
     private final Listener<StorageListResult> callback;
@@ -43,6 +44,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation {
     public AWSS3StorageListOperation(AWSS3StorageService storageService,
                                      AWSS3StorageListRequest request,
                                      Listener<StorageListResult> callback) {
+        super(CategoryType.STORAGE, request);
         this.request = request;
         this.storageService = storageService;
         this.callback = callback;

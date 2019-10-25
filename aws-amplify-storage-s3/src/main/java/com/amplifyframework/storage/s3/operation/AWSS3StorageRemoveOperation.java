@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
@@ -28,7 +29,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 /**
  * An operation to remove a file from AWS S3.
  */
-public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation {
+public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final AWSS3StorageService storageService;
     private final AWSS3StorageRemoveRequest request;
     private final Listener<StorageRemoveResult> callback;
@@ -42,6 +43,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation {
     public AWSS3StorageRemoveOperation(AWSS3StorageService storageService,
                                        AWSS3StorageRemoveRequest request,
                                        Listener<StorageRemoveResult> callback) {
+        super(CategoryType.STORAGE, request);
         this.request = request;
         this.storageService = storageService;
         this.callback = callback;

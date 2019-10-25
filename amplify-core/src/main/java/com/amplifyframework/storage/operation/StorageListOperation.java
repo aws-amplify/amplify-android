@@ -15,18 +15,26 @@
 
 package com.amplifyframework.storage.operation;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Base operation type for list behavior on the Storage category.
  */
-public abstract class StorageListOperation extends AmplifyOperation {
+public abstract class StorageListOperation<R> extends AmplifyOperation<R> {
+
     /**
-     * Constructs a new instance of a StorageListOperation.
+     * Constructs a new AmplifyOperation.
+     *
+     * @param categoryType            The category in which this operation is
+     *                                fulfilling a request
+     * @param amplifyOperationRequest The request object of the operation
      */
-    public StorageListOperation() {
-        super(CategoryType.STORAGE);
+    public StorageListOperation(@NonNull CategoryType categoryType, @Nullable R amplifyOperationRequest) {
+        super(categoryType, amplifyOperationRequest);
     }
 }
 
