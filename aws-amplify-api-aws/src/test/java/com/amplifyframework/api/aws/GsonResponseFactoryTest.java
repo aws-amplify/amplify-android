@@ -51,7 +51,7 @@ public final class GsonResponseFactoryTest {
      * an empty list of errors.
      */
     @Test
-    public void nullOutputWithNullResponse() {
+    public void nullDataNullErrorsReturnsEmptyResponseObject() {
         // Arrange some JSON string from a "server"
         final String nullResponseJson =
                 Resources.readAsString("null-gql-response.json");

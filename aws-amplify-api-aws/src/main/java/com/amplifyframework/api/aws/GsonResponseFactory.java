@@ -29,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -103,7 +104,7 @@ final class GsonResponseFactory implements ResponseFactory {
 
     private List<GraphQLResponse.Error> parseErrors(JsonElement jsonErrors) throws ApiException {
         if (jsonErrors == null || jsonErrors.isJsonNull()) {
-            return null;
+            return Collections.emptyList();
         }
 
         JsonArray errors = jsonErrors.getAsJsonArray();
