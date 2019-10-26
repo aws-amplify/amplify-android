@@ -125,7 +125,7 @@ public final class GraphQLQuery extends Query {
      * @param value variable value
      * @return this query object for chaining
      */
-    public GraphQLQuery variable(String key, Object value) {
+    public GraphQLQuery variable(String key, String value) {
         variableValues.add(new VariableValues(key, value));
         return this;
     }
@@ -179,14 +179,14 @@ public final class GraphQLQuery extends Query {
      */
     final class VariableValues {
         private final String name;
-        private final Object value;
+        private final String value;
 
         /**
          * Constructor for variable key-value pair.
          * @param name name of variable
          * @param value variable value
          */
-        VariableValues(String name, Object value) {
+        VariableValues(String name, String value) {
             this.name = name;
             this.value = value;
         }

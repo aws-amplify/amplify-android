@@ -48,12 +48,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private static final String API_KEY_HEADER = "x-api-key";
 
     private final Map<String, ClientDetails> httpClients;
+    private final GsonResponseFactory gqlResponseFactory;
 
     /**
      * Default constructor for this plugin.
      */
     public AWSApiPlugin() {
         this.httpClients = new HashMap<>();
+        this.gqlResponseFactory = new GsonResponseFactory();
     }
 
     @Override
@@ -119,8 +121,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
                                                          @NonNull String gqlDocument,
+                                                         @Nullable Map<String, String> variables,
                                                          @NonNull Class<T> classToCast,
-                                                         @Nullable Map<String, Object> variables,
                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
@@ -128,7 +130,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.QUERY, gqlDocument);
-        if (variables != null) {
+        if (variables != null && !variables.isEmpty()) {
             for (String key : variables.keySet()) {
                 gqlQuery.variable(key, variables.get(key));
             }
@@ -138,7 +140,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         gqlQuery,
-                        new GsonResponseFactory(),
+                        gqlResponseFactory,
                         classToCast,
                         callback);
 
@@ -149,8 +151,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
                                                           @NonNull String gqlDocument,
+                                                          @Nullable Map<String, String> variables,
                                                           @NonNull Class<T> classToCast,
-                                                          @Nullable Map<String, Object> variables,
                                                           @Nullable Listener<GraphQLResponse<T>> callback) {
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
@@ -158,7 +160,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.MUTATION, gqlDocument);
-        if (variables != null) {
+        if (variables != null && !variables.isEmpty()) {
             for (String key : variables.keySet()) {
                 gqlQuery.variable(key, variables.get(key));
             }
@@ -168,7 +170,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         gqlQuery,
-                        new GsonResponseFactory(),
+                        gqlResponseFactory,
                         classToCast,
                         callback);
 

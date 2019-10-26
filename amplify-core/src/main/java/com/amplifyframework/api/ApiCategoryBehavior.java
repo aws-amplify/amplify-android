@@ -48,8 +48,8 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
                                                   @NonNull String gqlDocument,
+                                                  @Nullable Map<String, String> variables,
                                                   @NonNull Class<T> classToCast,
-                                                  @Nullable Map<String, Object> variables,
                                                   @Nullable Listener<GraphQLResponse<T>> callback);
 
     /**
@@ -70,8 +70,8 @@ public interface ApiCategoryBehavior {
      */
     <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
                                                    @NonNull String gqlDocument,
+                                                   @Nullable Map<String, String> variables,
                                                    @NonNull Class<T> classToCast,
-                                                   @Nullable Map<String, Object> variables,
                                                    @Nullable Listener<GraphQLResponse<T>> callback);
 
 }
