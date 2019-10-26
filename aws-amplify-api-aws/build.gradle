@@ -50,14 +50,15 @@ dependencies {
     implementation "com.squareup.okhttp3:okhttp:4.2.2"
     implementation "com.google.code.gson:gson:2.8.6"
 
-    //BEGIN AWS DEPENDENCIES
+    // AWS dependencies
     def aws_version = "2.16.1"
     implementation "com.amazonaws:aws-android-sdk-auth-core:$aws_version"
     implementation ("com.amazonaws:aws-android-sdk-mobile-client:$aws_version") { transitive = true }
-    //END AWS DEPENDENCIES
 
+    // Unit test dependencies
     testImplementation "junit:junit:4.12"
 
+    // Instrumentation test dependencies
     androidTestImplementation "androidx.test:core:1.2.0" // Core Library
     androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
     androidTestImplementation "androidx.test.ext:junit:1.1.1" // Assertions
