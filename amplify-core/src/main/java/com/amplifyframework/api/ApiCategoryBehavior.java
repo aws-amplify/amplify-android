@@ -21,6 +21,8 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.async.Listener;
 
+import java.util.Map;
+
 /**
  * API category behaviors include REST and GraphQL operations. These
  * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
@@ -35,8 +37,9 @@ public interface ApiCategoryBehavior {
      * provided to the callback, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * @param apiName The name of a configured API
-     * @param operationGql A GraphQL operation, as a String
+     * @param gqlDocument A GraphQL operation document, as a String
      * @param classToCast The type to which response data will be cast
+     * @param variables GraphQL query variables if needed
      * @param callback Invoked when response data/errors are available.
      *                 If null, response can still be obtained via Hub.
      * @param <T> The type of data in the response, if available
@@ -44,7 +47,8 @@ public interface ApiCategoryBehavior {
      *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                  @NonNull String operationGql,
+                                                  @NonNull String gqlDocument,
+                                                  @Nullable Map<String, String> variables,
                                                   @NonNull Class<T> classToCast,
                                                   @Nullable Listener<GraphQLResponse<T>> callback);
 
@@ -55,8 +59,9 @@ public interface ApiCategoryBehavior {
      * provided to the callback, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * @param apiName The name of a configured API
-     * @param operationGql A GraphQL operation, as a String
+     * @param gqlDocument A GraphQL operation document, as a String
      * @param classToCast The type to which response data will be cast
+     * @param variables GraphQL query variables if needed
      * @param callback Invoked when response data/errors are available.
      *                 If null, response can still be obtained via Hub.
      * @param <T> The type of data in the response, if available
@@ -64,7 +69,8 @@ public interface ApiCategoryBehavior {
      *         a means to cancel the asynchronous operation
      */
     <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                   @NonNull String operationGql,
+                                                   @NonNull String gqlDocument,
+                                                   @Nullable Map<String, String> variables,
                                                    @NonNull Class<T> classToCast,
                                                    @Nullable Listener<GraphQLResponse<T>> callback);
 
