@@ -130,7 +130,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.QUERY, gqlDocument);
-        if (variables != null && !variables.isEmpty()) {
+        if (variables != null) {
             for (String key : variables.keySet()) {
                 gqlQuery.variable(key, variables.get(key));
             }
@@ -160,7 +160,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.MUTATION, gqlDocument);
-        if (variables != null && !variables.isEmpty()) {
+        if (variables != null) {
             for (String key : variables.keySet()) {
                 gqlQuery.variable(key, variables.get(key));
             }
