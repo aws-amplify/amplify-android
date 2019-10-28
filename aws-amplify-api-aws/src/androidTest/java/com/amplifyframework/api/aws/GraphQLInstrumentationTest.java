@@ -50,7 +50,8 @@ import static org.junit.Assert.fail;
  * (TODO: which docs, which standard models?).
  */
 //TODO: Use CircleCI to automatically use configured amplifyconfiguration.json and awsconfiguration.json
-@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json.")
+@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json and " +
+        "mobile-client in androidTest/res/raw/awsconfiguration.json.")
 public final class GraphQLInstrumentationTest {
 
     private static final String TAG = GraphQLInstrumentationTest.class.getSimpleName();

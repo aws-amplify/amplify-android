@@ -102,7 +102,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             try {
                 signerInterceptor = getConfiguredInterceptor(context, apiConfiguration);
             } catch (Exception error) {
-                throw new ApiException.AuthProviderNotConfiguredException();
+                throw new ApiException.AuthorizationTypeNotConfiguredException();
             }
 
             OkHttpClient httpClient = new OkHttpClient.Builder()
