@@ -28,6 +28,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -80,6 +82,7 @@ public final class GraphQLInstrumentationTest {
         Amplify.API.query(
                 "mygraphql",
                 document,
+                Collections.emptyMap(),
                 Todo.class,
                 new TestGraphQLListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
@@ -96,6 +99,27 @@ public final class GraphQLInstrumentationTest {
         Amplify.API.mutate(
                 "mygraphql",
                 document,
+                Collections.emptyMap(),
+                Todo.class,
+                new TestGraphQLListener<>());
+        latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+    }
+
+    /**
+     * Tests API graphql query with non-null variable.
+     * @throws Exception when interrupted
+     */
+    @Test
+    public void testQueryWithVariable() throws Exception {
+        HashMap<String, String> variables = new HashMap<>();
+        variables.put("myId", "1");
+
+        String document = TestAssets.readAsString("get-todo-with-variable.graphql");
+        latch = new CountDownLatch(1);
+        Amplify.API.query(
+                "mygraphql",
+                document,
+                variables,
                 Todo.class,
                 new TestGraphQLListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
