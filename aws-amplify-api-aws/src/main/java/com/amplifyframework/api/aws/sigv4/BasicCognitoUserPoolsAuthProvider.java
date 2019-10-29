@@ -31,7 +31,10 @@ import java.util.concurrent.Semaphore;
  */
 public final class BasicCognitoUserPoolsAuthProvider implements CognitoUserPoolsAuthProvider {
 
-    private CognitoUserPool userPool;
+    private static final String TAG = BasicCognitoUserPoolsAuthProvider.class.getSimpleName();
+
+    private final CognitoUserPool userPool;
+
     private String token;
     private String lastTokenRetrievalFailureMessage;
 

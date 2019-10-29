@@ -24,7 +24,6 @@ import com.amplifyframework.api.ApiOperation;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
-import com.amplifyframework.api.aws.sigv4.BasicApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.BasicCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
@@ -221,7 +220,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case API_KEY:
                 ApiKeyAuthProvider apiKeyProvider = authProvider.getApiKeyAuthProvider();
                 if (apiKeyProvider == null) {
-                    apiKeyProvider = new BasicApiKeyAuthProvider(config.getApiKey());
+                    apiKeyProvider = () -> config.getApiKey();
                 }
                 return new AppSyncSigV4SignerInterceptor(apiKeyProvider);
 
