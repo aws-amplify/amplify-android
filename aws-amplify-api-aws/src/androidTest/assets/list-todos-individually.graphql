@@ -1,0 +1,8 @@
+query listIndividually {
+    list {
+        id
+        name
+        description
+    }
+}
+

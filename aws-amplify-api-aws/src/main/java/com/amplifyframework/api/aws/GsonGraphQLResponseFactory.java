@@ -29,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -60,7 +61,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
             if (toJson.has("data")) {
-                jsonData = toJson.get("data");
+                jsonData = skipQueryLevel(toJson.get("data"));
             }
             if (toJson.has("errors")) {
                 jsonErrors = toJson.get("errors");
@@ -69,13 +70,23 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             throw new ApiException.ObjectSerializationException(jsonParseException);
         }
 
-        T data = parseData(jsonData, classToCast);
         List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
 
-        return new GraphQLResponse<>(data, errors);
+        if (jsonData == null || jsonData.isJsonNull()) {
+            return new GraphQLResponse<>(null, errors);
+        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || classToCast.equals(JsonElement.class)) {
+            T data = parseData(jsonData, classToCast);
+            return new GraphQLResponse<>(data, errors);
+        } else if (jsonData.isJsonArray()) {
+            List<T> data = parseDataAsList(jsonData, classToCast);
+            return new GraphQLResponse<>(data, errors);
+        } else {
+            throw new ApiException("Unsupported data cast-type.");
+        }
     }
 
-    private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+    // Skips a JSON level to get content of query, not query itself
+    private JsonElement skipQueryLevel(JsonElement jsonData) throws ApiException {
         if (jsonData == null || jsonData.isJsonNull()) {
             return null;
         }
@@ -87,17 +98,32 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             throw new ApiException("Please reduce your query to a single top level field.");
         }
 
-        final JsonElement elementOfFirstKey = data.get(data.keySet().iterator().next());
-        if (elementOfFirstKey == null || elementOfFirstKey.isJsonNull()) {
-            return null;
-        }
-        JsonObject objectValueOfFirstKey = elementOfFirstKey.getAsJsonObject();
+        return data.get(data.keySet().iterator().next());
+    }
 
+    private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
         try {
-            return gson.fromJson(objectValueOfFirstKey, classToCast);
+            return gson.fromJson(jsonData, classToCast);
         } catch (ClassCastException classCastException) {
             throw new ApiException.ObjectSerializationException(
-                "Failed to parse GraphQL data portion.", classCastException);
+                    "Failed to parse GraphQL data portion.", classCastException);
+        }
+    }
+
+    // Cannot use the same TypeToken trick used in parseErrors due to type erasure
+    private <T> List<T> parseDataAsList(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+        try {
+            ArrayList<T> dataAsList = new ArrayList<>();
+            Iterator<JsonElement> iterator = jsonData.getAsJsonArray().iterator();
+
+            while (iterator.hasNext()) {
+                T data = gson.fromJson(iterator.next(), classToCast);
+                dataAsList.add(data);
+            }
+            return dataAsList;
+        } catch (ClassCastException classCastException) {
+            throw new ApiException.ObjectSerializationException(
+                    "Failed to parse GraphQL data portion.", classCastException);
         }
     }
 

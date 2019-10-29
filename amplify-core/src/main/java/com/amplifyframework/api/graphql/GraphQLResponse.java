@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -29,6 +30,7 @@ import java.util.Objects;
  */
 public final class GraphQLResponse<T> {
     private final T data;
+    private final List<T> dataAsList;
     private final List<Error> errors;
 
     /**
@@ -39,6 +41,26 @@ public final class GraphQLResponse<T> {
      */
     public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {
         this.data = data;
+        this.dataAsList = Collections.emptyList();
+        this.errors = new ArrayList<>();
+        if (errors != null) {
+            this.errors.addAll(errors);
+        }
+    }
+
+    /**
+     * Constructs a wrapper for graphql response containing
+     * a list of data objects.
+     * @param data response data list with user-defined cast type
+     * @param errors list of error responses as defined
+     *               by graphql doc
+     */
+    public GraphQLResponse(@Nullable List<T> data, @Nullable List<Error> errors) {
+        this.data = null;
+        this.dataAsList = new ArrayList<>();
+        if (data != null) {
+            this.dataAsList.addAll(data);
+        }
         this.errors = new ArrayList<>();
         if (errors != null) {
             this.errors.addAll(errors);
@@ -70,11 +92,20 @@ public final class GraphQLResponse<T> {
     }
 
     /**
+     * Gets the data sent back by API in the
+     * form of a list.
+     * @return API response body
+     */
+    public List<T> getDataAsList() {
+        return dataAsList;
+    }
+
+    /**
      * Checks that data was returned.
      * @return true if data exists, false otherwise
      */
     public boolean hasData() {
-        return data != null;
+        return data != null || !dataAsList.isEmpty();
     }
 
     @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
