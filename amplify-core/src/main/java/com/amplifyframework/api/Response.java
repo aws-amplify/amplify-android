@@ -17,19 +17,40 @@ package com.amplifyframework.api;
 
 import com.amplifyframework.core.async.Result;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Generic response to wrap API query result.
  * @param <T> data type of response
  */
 public abstract class Response<T> implements Result {
     private final T data;
+    private final List<T> dataAsList;
 
     /**
-     * Constructs a response object.
-     * @param data response body
+     * Constructs a response object with
+     * singular data object.
+     * @param data response body with singular
+     *             object
      */
     public Response(T data) {
         this.data = data;
+        this.dataAsList = new ArrayList<>();
+    }
+
+    /**
+     * Constructs a response object with
+     * a list of data objects.
+     * @param data response body with list of
+     *             objects
+     */
+    public Response(List<T> data) {
+        this.data = null;
+        this.dataAsList = new ArrayList<>();
+        if (data != null) {
+            this.dataAsList.addAll(data);
+        }
     }
 
     /**
@@ -41,10 +62,18 @@ public abstract class Response<T> implements Result {
     }
 
     /**
+     * Gets the list of data sent back by API.
+     * @return API response body as list
+     */
+    public List<T> getDataAsList() {
+        return dataAsList;
+    }
+
+    /**
      * Checks that data was returned.
      * @return true if data exists, false otherwise
      */
     public boolean hasData() {
-        return data != null;
+        return data != null || !dataAsList.isEmpty();
     }
 }

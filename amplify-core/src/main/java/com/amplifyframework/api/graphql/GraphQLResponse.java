@@ -44,6 +44,14 @@ public final class GraphQLResponse<T> extends Response<T> {
         }
     }
 
+    public GraphQLResponse(@Nullable List<T> data, @Nullable List<Error> errors) {
+        super(data);
+        this.errors = new ArrayList<>();
+        if (errors != null) {
+            this.errors.addAll(errors);
+        }
+    }
+
     /**
      * Gets the error response.
      * @return wrapper containing error details

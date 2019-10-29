@@ -61,7 +61,7 @@ final class GsonResponseFactory implements ResponseFactory {
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
             if (toJson.has("data")) {
-                jsonData = toJson.get("data");
+                jsonData = skipQueryLevel(toJson.get("data"));
             }
             if (toJson.has("errors")) {
                 jsonErrors = toJson.get("errors");
@@ -70,13 +70,23 @@ final class GsonResponseFactory implements ResponseFactory {
             throw new ApiException.ObjectSerializationException(jsonParseException);
         }
 
-        T data = parseData(jsonData, classToCast);
         List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
 
-        return new GraphQLResponse<>(data, errors);
+        if (jsonData == null || jsonData.isJsonNull()) {
+            return new GraphQLResponse<>(null, errors);
+        } else if (jsonData.isJsonObject()) {
+            T data = parseData(jsonData, classToCast);
+            return new GraphQLResponse<>(data, errors);
+        } else if (jsonData.isJsonArray()) {
+            List<T> data = parseDataAsList(jsonData);
+            return new GraphQLResponse<>(data, errors);
+        } else {
+            throw new ApiException("Unsupported data cast-type.");
+        }
     }
 
-    private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+    // Skips a JSON level to get content of query, not query itself
+    private JsonElement skipQueryLevel(JsonElement jsonData) throws ApiException {
         if (jsonData == null || jsonData.isJsonNull()) {
             return null;
         }
@@ -88,17 +98,30 @@ final class GsonResponseFactory implements ResponseFactory {
             throw new ApiException("Please reduce your query to a single top level field.");
         }
 
-        final JsonElement elementOfFirstKey = data.get(data.keySet().iterator().next());
-        if (elementOfFirstKey == null || elementOfFirstKey.isJsonNull()) {
-            return null;
-        }
-        JsonObject objectValueOfFirstKey = elementOfFirstKey.getAsJsonObject();
+        return data.get(data.keySet().iterator().next());
+    }
 
+
+    private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+        JsonObject jsonObject = jsonData.getAsJsonObject();
         try {
-            return gson.fromJson(objectValueOfFirstKey, classToCast);
+            return gson.fromJson(jsonObject, classToCast);
         } catch (ClassCastException classCastException) {
             throw new ApiException.ObjectSerializationException(
-                "Failed to parse GraphQL data portion.", classCastException);
+                    "Failed to parse GraphQL data portion.", classCastException);
+        }
+    }
+
+    private <T> List<T> parseDataAsList(JsonElement jsonData) throws ApiException {
+        JsonArray jsonArray = jsonData.getAsJsonArray();
+        @SuppressWarnings("WhitespaceAround") // {} looks better on same line, here.
+        final Type listType = new TypeToken<ArrayList<T>>() {}.getType();
+
+        try {
+            return gson.fromJson(jsonArray, listType);
+        } catch (ClassCastException classCastException) {
+            throw new ApiException.ObjectSerializationException(
+                    "Failed to parse GraphQL data portion.", classCastException);
         }
     }
 

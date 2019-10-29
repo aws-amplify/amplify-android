@@ -30,6 +30,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -70,6 +71,19 @@ public final class GraphQLInstrumentationTest {
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.configure(configuration, context);
+    }
+
+    @Test
+    public void testList() throws Exception {
+        String document = TestAssets.readAsString("list-todos-individually.graphql");
+        latch = new CountDownLatch(1);
+        Amplify.API.query(
+                "mygraphql",
+                document,
+                Collections.emptyMap(),
+                Todo.class,
+                new TestGraphQLListener<>());
+        latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
     /**
@@ -147,6 +161,18 @@ public final class GraphQLInstrumentationTest {
 
         public String getDescription() {
             return description;
+        }
+    }
+
+    class Todos {
+        private final List<Todo> items;
+
+        Todos(List<Todo> items) {
+            this.items = items;
+        }
+
+        public List<Todo> getItems() {
+            return items;
         }
     }
 
