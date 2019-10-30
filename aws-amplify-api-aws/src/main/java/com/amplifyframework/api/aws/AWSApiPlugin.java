@@ -118,6 +118,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return Collections.unmodifiableMap(apiClientsByName);
     }
 
+    @Override
     public <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
                                                                @NonNull String gqlDocument,
                                                                @Nullable Map<String, String> variables,
