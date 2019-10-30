@@ -23,6 +23,8 @@ import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+import java.util.Map;
+
 /**
  * The API category provides methods for interacting with remote systems
  * using REST and GraphQL constructs. The category is implemented by
@@ -36,19 +38,20 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                         @NonNull String operationGql,
-                                                         @NonNull Class<T> classToCast,
-                                                         @Nullable Listener<GraphQLResponse<T>> callback) {
-        return getSelectedPlugin().query(apiName, operationGql, classToCast, callback);
+    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
+                                                               @NonNull String gqlDocument,
+                                                               @Nullable Map<String, String> variables,
+                                                               @NonNull Class<T> classToCast,
+                                                               @Nullable Listener<GraphQLResponse<T>> callback) {
+        return getSelectedPlugin().query(apiName, gqlDocument, variables, classToCast, callback);
     }
 
     @Override
-    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                          @NonNull String operationGql,
-                                                          @NonNull Class<T> classToCast,
-                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
-        return getSelectedPlugin().mutate(apiName, operationGql, classToCast, callback);
+    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> mutate(@NonNull String apiName,
+                                                                @NonNull String gqlDocument,
+                                                                @Nullable Map<String, String> variables,
+                                                                @NonNull Class<T> classToCast,
+                                                                @Nullable Listener<GraphQLResponse<T>> callback) {
+        return getSelectedPlugin().mutate(apiName, gqlDocument, variables, classToCast, callback);
     }
 }
-

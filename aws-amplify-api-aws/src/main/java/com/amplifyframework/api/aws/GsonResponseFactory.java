@@ -21,6 +21,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
@@ -28,6 +29,7 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -53,41 +55,44 @@ final class GsonResponseFactory implements ResponseFactory {
 
     @Override
     public <T> GraphQLResponse<T> buildResponse(String responseJson, Class<T> classToCast) throws ApiException {
-        JsonObject jsonData = null;
-        JsonArray jsonErrors = null;
-
-        T data;
-        List<GraphQLResponse.Error> errors;
+        JsonElement jsonData = null;
+        JsonElement jsonErrors = null;
 
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
             if (toJson.has("data")) {
-                jsonData = toJson.get("data").getAsJsonObject();
+                jsonData = toJson.get("data");
             }
             if (toJson.has("errors")) {
-                jsonErrors = toJson.get("errors").getAsJsonArray();
+                jsonErrors = toJson.get("errors");
             }
-
-            data = parseData(jsonData, classToCast);
-            errors = parseErrors(jsonErrors);
         } catch (JsonParseException jsonParseException) {
             throw new ApiException.ObjectSerializationException(jsonParseException);
         }
 
+        T data = parseData(jsonData, classToCast);
+        List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
+
         return new GraphQLResponse<>(data, errors);
     }
 
-    private <T> T parseData(JsonObject data, Class<T> classToCast) throws ApiException {
-        if (data == null) {
+    private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+        if (jsonData == null || jsonData.isJsonNull()) {
             return null;
-        } else if (data.size() == 0) {
+        }
+
+        JsonObject data = jsonData.getAsJsonObject();
+        if (data.size() == 0) {
             throw new ApiException("Please add a single top level field in your query.");
         } else if (data.size() > 1) {
             throw new ApiException("Please reduce your query to a single top level field.");
         }
 
-        final JsonObject objectValueOfFirstKey =
-            data.getAsJsonObject(data.keySet().iterator().next());
+        final JsonElement elementOfFirstKey = data.get(data.keySet().iterator().next());
+        if (elementOfFirstKey == null || elementOfFirstKey.isJsonNull()) {
+            return null;
+        }
+        JsonObject objectValueOfFirstKey = elementOfFirstKey.getAsJsonObject();
 
         try {
             return gson.fromJson(objectValueOfFirstKey, classToCast);
@@ -97,7 +102,12 @@ final class GsonResponseFactory implements ResponseFactory {
         }
     }
 
-    private List<GraphQLResponse.Error> parseErrors(JsonArray errors) throws ApiException {
+    private List<GraphQLResponse.Error> parseErrors(JsonElement jsonErrors) throws ApiException {
+        if (jsonErrors == null || jsonErrors.isJsonNull()) {
+            return Collections.emptyList();
+        }
+
+        JsonArray errors = jsonErrors.getAsJsonArray();
         @SuppressWarnings("WhitespaceAround") // {} looks better on same line, here.
         final Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
 

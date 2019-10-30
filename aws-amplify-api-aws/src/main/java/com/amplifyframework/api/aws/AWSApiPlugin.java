@@ -118,20 +118,27 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return Collections.unmodifiableMap(apiClientsByName);
     }
 
-    @Override
-    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                         @NonNull String document,
-                                                         @NonNull Class<T> classToCast,
-                                                         @Nullable Listener<GraphQLResponse<T>> callback) {
+    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
+                                                               @NonNull String gqlDocument,
+                                                               @Nullable Map<String, String> variables,
+                                                               @NonNull Class<T> classToCast,
+                                                               @Nullable Listener<GraphQLResponse<T>> callback) {
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        ApiOperation<T, X, GraphQLResponse<T>> operation =
+        GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.QUERY, gqlDocument);
+        if (variables != null) {
+            for (String key : variables.keySet()) {
+                gqlQuery.variable(key, variables.get(key));
+            }
+        }
+
+        ApiOperation<T, I, GraphQLResponse<T>> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
-                        new GraphQLQuery(OperationType.QUERY, document),
+                        gqlQuery,
                         gqlResponseFactory,
                         classToCast,
                         callback);
@@ -141,19 +148,27 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T, X> ApiOperation<T, X, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                          @NonNull String document,
-                                                          @NonNull Class<T> classToCast,
-                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
+    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> mutate(@NonNull String apiName,
+                                                                @NonNull String gqlDocument,
+                                                                @Nullable Map<String, String> variables,
+                                                                @NonNull Class<T> classToCast,
+                                                                @Nullable Listener<GraphQLResponse<T>> callback) {
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        ApiOperation<T, X, GraphQLResponse<T>> operation =
+        GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.MUTATION, gqlDocument);
+        if (variables != null) {
+            for (String key : variables.keySet()) {
+                gqlQuery.variable(key, variables.get(key));
+            }
+        }
+
+        ApiOperation<T, I, GraphQLResponse<T>> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
-                        new GraphQLQuery(OperationType.MUTATION, document),
+                        gqlQuery,
                         gqlResponseFactory,
                         classToCast,
                         callback);
@@ -195,4 +210,3 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
     }
 }
-

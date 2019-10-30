@@ -78,8 +78,7 @@ public abstract class ApiOperation<T, I, O extends Response<T>> extends AmplifyO
         try {
             return (O) responseFactory.buildResponse(jsonResponse, classToCast);
         } catch (ClassCastException cce) {
-            throw new ApiException.ObjectSerializationException("The instance of ResponseFactory" +
-                    "does not override buildResponse method to return correct extension of Response object.");
+            throw new ApiException.ObjectSerializationException();
         }
     }
 }
