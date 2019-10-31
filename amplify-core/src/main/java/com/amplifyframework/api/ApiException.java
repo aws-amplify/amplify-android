@@ -71,6 +71,52 @@ public class ApiException extends AmplifyRuntimeException {
     }
 
     /**
+     * API exception raised if auth provider for corresponding AuthorizationType
+     * is not configured.
+     */
+    public static final class AuthorizationTypeNotConfiguredException extends ApiException {
+
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Constructs a new AuthorizationTypeNotConfiguredException using a
+         * default message.
+         */
+        public AuthorizationTypeNotConfiguredException() {
+            super("ApiAuthProvider did not contain required authorization provider.");
+        }
+
+        /**
+         * Constructs a new AuthorizationTypeNotConfiguredException using a
+         * user-provided message.
+         * @param message Explains in more detail why the exception was thrown
+         */
+        public AuthorizationTypeNotConfiguredException(String message) {
+            super(message);
+        }
+
+        /**
+         * Constructs a new AuthorizationTypeNotConfiguredException that has been
+         * caused by another error.
+         * @param throwable The error that caused storage to not be configured
+         */
+        public AuthorizationTypeNotConfiguredException(Throwable throwable) {
+            super(throwable);
+        }
+
+        /**
+         * Constructs a new AuthorizationTypeNotConfiguredException, providing a
+         * custom message and an underlying error that caused this
+         * state.
+         * @param message Explanation of why the exception has been raised
+         * @param throwable An underlying error that caused this * exception
+         */
+        public AuthorizationTypeNotConfiguredException(String message, Throwable throwable) {
+            super(message, throwable);
+        }
+    }
+
+    /**
      * Creates a new AmplifyRuntimeException with the specified message, and root
      * cause.
      * @param message An error message describing why this exception was thrown.
