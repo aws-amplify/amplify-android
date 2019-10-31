@@ -86,6 +86,19 @@ public final class GraphQLInstrumentationTest {
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
+    @Test
+    public void testNested() throws Exception {
+        String document = TestAssets.readAsString("list-todos.graphql");
+        latch = new CountDownLatch(1);
+        Amplify.API.query(
+                "mygraphql",
+                document,
+                Collections.emptyMap(),
+                Todos.class,
+                new TestGraphQLListener<>());
+        latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+    }
+
     /**
      * Tests API graphql query.
      * @throws Exception when interrupted
