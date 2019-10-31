@@ -34,9 +34,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-import okhttp3.Headers;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 
 /**
  * Plugin implementation to be registered with Amplify API category.
@@ -45,17 +43,31 @@ import okhttp3.Request;
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private static final String TAG = AWSApiPlugin.class.getSimpleName();
-    private static final String API_KEY_HEADER = "x-api-key";
 
     private final Map<String, ClientDetails> httpClients;
     private final GsonResponseFactory gqlResponseFactory;
+    private final ApiAuthProviders authProvider;
 
     /**
-     * Default constructor for this plugin.
+     * Default constructor for this plugin without any override.
      */
     public AWSApiPlugin() {
+        this(ApiAuthProviders.noProviderOverrides());
+    }
+
+    /**
+     * Constructs an instance of AWSApiPlugin with
+     * configured auth providers to override default modes
+     * of authorization.
+     * If no Auth provider implementation is provided, then
+     * the plugin will assume default behavior for that specific
+     * mode of authorization.
+     * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
+     */
+    public AWSApiPlugin(ApiAuthProviders apiAuthProvider) {
         this.httpClients = new HashMap<>();
         this.gqlResponseFactory = new GsonResponseFactory();
+        this.authProvider = apiAuthProvider;
     }
 
     @Override
@@ -68,33 +80,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSApiPluginConfiguration pluginConfig =
             AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
+        InterceptorFactory interceptorFactory = new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
+
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
 
-            Headers.Builder headerBuilder = new Headers.Builder();
-            switch (apiConfiguration.getAuthorizationType()) {
-                case API_KEY:
-                    headerBuilder.add(API_KEY_HEADER, apiConfiguration.getApiKey());
-                    break;
-                case AWS_IAM:
-                case AMAZON_COGNITO_USER_POOLS:
-                case OPENID_CONNECT:
-                default:
-                    throw new PluginException.PluginConfigurationException(
-                            "Unsupported authentication mode.");
-            }
-
             OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor(chain -> {
-                    Request original = chain.request();
-                    Request request = original.newBuilder()
-                        .headers(headerBuilder.build())
-                        .method(original.method(), original.body())
-                        .build();
-
-                    return chain.proceed(request);
-                })
+                .addInterceptor(interceptorFactory.create(apiConfiguration))
                 .build();
 
             ClientDetails clientDetails =
