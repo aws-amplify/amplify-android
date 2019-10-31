@@ -13,10 +13,17 @@
  * permissions and limitations under the License.
  */
 
-include ':amplify-core'
+package com.amplifyframework.datastore.storage;
 
-// Plugin Modules
-include ':aws-amplify-analytics-pinpoint'
-include ':aws-amplify-api-aws'
-include ':aws-amplify-storage-s3'
-include ':aws-amplify-datastore'
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.datastore.model.Model;
+
+import java.util.List;
+
+public interface LocalStorageAdapter {
+    void setUp(@NonNull List<Class<? extends Model>> models);
+
+    void save(@NonNull Model model, Listener<Model> listener);
+}

@@ -13,10 +13,18 @@
  * permissions and limitations under the License.
  */
 
-include ':amplify-core'
+package com.amplifyframework.datastore.model;
 
-// Plugin Modules
-include ':aws-amplify-analytics-pinpoint'
-include ':aws-amplify-api-aws'
-include ':aws-amplify-storage-s3'
-include ':aws-amplify-datastore'
+/**
+ * All models should conform to the Model
+ * interface.
+ */
+public interface Model {
+    /**
+     * Return the ID that is the primary key
+     * of a Model.
+     *
+     * @return the ID that is the primary key of a Model.
+     */
+    String getId();
+}
