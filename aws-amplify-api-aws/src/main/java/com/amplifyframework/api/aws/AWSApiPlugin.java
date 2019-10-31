@@ -52,7 +52,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * Default constructor for this plugin without any override.
      */
     public AWSApiPlugin() {
-        this(ApiAuthProviders.defaultProviders());
+        this(ApiAuthProviders.noProviderOverrides());
     }
 
     /**

@@ -88,7 +88,7 @@ public final class ApiAuthProviders {
      * of {@link ApiAuthProviders} that is not configured.
      * @return default instance of {@link ApiAuthProviders}
      */
-    public static ApiAuthProviders defaultProviders() {
+    public static ApiAuthProviders noProviderOverrides() {
         return builder().build();
     }
 
