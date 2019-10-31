@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.AuthorizationType;
@@ -119,8 +118,6 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
     @Override
     public Response intercept(Chain chain) throws IOException {
-        Log.d(TAG, "Signer Interceptor called");
-
         Request req = chain.request();
 
         //Clone the request into a new DefaultRequest object and populate it with credentials

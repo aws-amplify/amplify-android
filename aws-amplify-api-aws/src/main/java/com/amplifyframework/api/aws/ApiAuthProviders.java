@@ -29,13 +29,13 @@ import java.util.Objects;
  * Wrapper class to contain Auth providers for
  * API multi-auth support.
  */
-public final class ApiAuthProvider {
+public final class ApiAuthProviders {
     private final ApiKeyAuthProvider apiKeyAuthProvider;
     private final AWSCredentialsProvider awsCredentialsProvider;
     private final CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider;
     private final OidcAuthProvider oidcAuthProvider;
 
-    private ApiAuthProvider(Builder builder) {
+    private ApiAuthProviders(Builder builder) {
         this.apiKeyAuthProvider = builder.getApiKeyAuthProvider();
         this.awsCredentialsProvider = builder.getAWSCredentialsProvider();
         this.oidcAuthProvider = builder.getOidcAuthProvider();
@@ -76,25 +76,25 @@ public final class ApiAuthProvider {
 
     /**
      * Statically gets the builder for conveniently
-     * configuring an immutable instance of {@link ApiAuthProvider}.
-     * @return the builder object for {@link ApiAuthProvider}
+     * configuring an immutable instance of {@link ApiAuthProviders}.
+     * @return the builder object for {@link ApiAuthProviders}
      */
-    public static ApiAuthProvider.Builder builder() {
-        return new ApiAuthProvider.Builder();
+    public static ApiAuthProviders.Builder builder() {
+        return new ApiAuthProviders.Builder();
     }
 
     /**
      * Statically gets the default builder for an instance
-     * of {@link ApiAuthProvider} that is not configured.
-     * @return default instance of {@link ApiAuthProvider}
+     * of {@link ApiAuthProviders} that is not configured.
+     * @return default instance of {@link ApiAuthProviders}
      */
-    public static ApiAuthProvider defaultProvider() {
+    public static ApiAuthProviders defaultProviders() {
         return builder().build();
     }
 
     /**
      * Static Builder class for conveniently constructing an
-     * immutable instance of {@link ApiAuthProvider}.
+     * immutable instance of {@link ApiAuthProviders}.
      */
     public static final class Builder {
         private ApiKeyAuthProvider apiKeyAuthProvider;
@@ -107,9 +107,9 @@ public final class ApiAuthProvider {
          * @param provider an instance of {@link ApiKeyAuthProvider}
          * @return this builder object for chaining
          */
-        public ApiAuthProvider.Builder apiKeyAuthProvider(@NonNull ApiKeyAuthProvider provider) {
-            ApiAuthProvider.Builder.this.apiKeyAuthProvider = Objects.requireNonNull(provider);
-            return ApiAuthProvider.Builder.this;
+        public ApiAuthProviders.Builder apiKeyAuthProvider(@NonNull ApiKeyAuthProvider provider) {
+            ApiAuthProviders.Builder.this.apiKeyAuthProvider = Objects.requireNonNull(provider);
+            return ApiAuthProviders.Builder.this;
         }
 
         /**
@@ -117,9 +117,9 @@ public final class ApiAuthProvider {
          * @param provider an instance of {@link AWSCredentialsProvider}
          * @return this builder object for chaining
          */
-        public ApiAuthProvider.Builder awsCredentialsProvider(@NonNull AWSCredentialsProvider provider) {
-            ApiAuthProvider.Builder.this.awsCredentialsProvider = Objects.requireNonNull(provider);
-            return ApiAuthProvider.Builder.this;
+        public ApiAuthProviders.Builder awsCredentialsProvider(@NonNull AWSCredentialsProvider provider) {
+            ApiAuthProviders.Builder.this.awsCredentialsProvider = Objects.requireNonNull(provider);
+            return ApiAuthProviders.Builder.this;
         }
 
         /**
@@ -127,9 +127,9 @@ public final class ApiAuthProvider {
          * @param provider an instance of {@link CognitoUserPoolsAuthProvider}
          * @return this builder object for chaining
          */
-        public ApiAuthProvider.Builder cognitoUserPoolsAuthProvider(@NonNull CognitoUserPoolsAuthProvider provider) {
-            ApiAuthProvider.Builder.this.cognitoUserPoolsAuthProvider = Objects.requireNonNull(provider);
-            return ApiAuthProvider.Builder.this;
+        public ApiAuthProviders.Builder cognitoUserPoolsAuthProvider(@NonNull CognitoUserPoolsAuthProvider provider) {
+            ApiAuthProviders.Builder.this.cognitoUserPoolsAuthProvider = Objects.requireNonNull(provider);
+            return ApiAuthProviders.Builder.this;
         }
 
         /**
@@ -137,34 +137,34 @@ public final class ApiAuthProvider {
          * @param provider an instance of {@link OidcAuthProvider}
          * @return this builder object for chaining
          */
-        public ApiAuthProvider.Builder oidcAuthProvider(@NonNull OidcAuthProvider provider) {
-            ApiAuthProvider.Builder.this.oidcAuthProvider = Objects.requireNonNull(provider);
-            return ApiAuthProvider.Builder.this;
+        public ApiAuthProviders.Builder oidcAuthProvider(@NonNull OidcAuthProvider provider) {
+            ApiAuthProviders.Builder.this.oidcAuthProvider = Objects.requireNonNull(provider);
+            return ApiAuthProviders.Builder.this;
         }
 
         /**
-         * Creates an immutable instance of {@link ApiAuthProvider}
+         * Creates an immutable instance of {@link ApiAuthProviders}
          * configured to this builder instance.
-         * @return The configured {@link ApiAuthProvider} instance
+         * @return The configured {@link ApiAuthProviders} instance
          */
-        public ApiAuthProvider build() {
-            return new ApiAuthProvider(ApiAuthProvider.Builder.this);
+        public ApiAuthProviders build() {
+            return new ApiAuthProviders(ApiAuthProviders.Builder.this);
         }
 
         ApiKeyAuthProvider getApiKeyAuthProvider() {
-            return ApiAuthProvider.Builder.this.apiKeyAuthProvider;
+            return ApiAuthProviders.Builder.this.apiKeyAuthProvider;
         }
 
         AWSCredentialsProvider getAWSCredentialsProvider() {
-            return ApiAuthProvider.Builder.this.awsCredentialsProvider;
+            return ApiAuthProviders.Builder.this.awsCredentialsProvider;
         }
 
         CognitoUserPoolsAuthProvider getCognitoUserPoolsAuthProvider() {
-            return ApiAuthProvider.Builder.this.cognitoUserPoolsAuthProvider;
+            return ApiAuthProviders.Builder.this.cognitoUserPoolsAuthProvider;
         }
 
         OidcAuthProvider getOidcAuthProvider() {
-            return ApiAuthProvider.Builder.this.oidcAuthProvider;
+            return ApiAuthProviders.Builder.this.oidcAuthProvider;
         }
     }
 }
