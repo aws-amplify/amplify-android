@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
@@ -35,9 +36,11 @@ public interface LocalStorageAdapter {
      * This setUp is a pre-requisite for all other operations
      * of a LocalStorageAdapter.
      *
+     * @param context Android application context required to
+     *                interact with a storage mechanism in Android.
      * @param models list of Model classes
      */
-    void setUp(@NonNull List<Class<? extends Model>> models);
+    void setUp(@NonNull Context context, @NonNull List<Class<? extends Model>> models);
 
     /**
      * Save a {@link Model} to the local storage engine.
