@@ -25,28 +25,25 @@ import java.util.Map;
  * A utility that creates ModelSchema from Model classes.
  */
 public class ModelRegistry {
-    private static final String TAG = ModelRegistry.class.getSimpleName();
-
     // ClassName => ModelSchema map
-    private static Map<String, ModelSchema> modelSchemaMap;
+    private Map<String, ModelSchema> modelSchemaMap;
 
-    private static final Object LOCK = new Object();
+    // Singleton instance
+    private static ModelRegistry modelRegistryInstance;
 
-    static {
-        modelSchemaMap = new HashMap<String, ModelSchema>();
+    private ModelRegistry() {
+        modelSchemaMap = new HashMap<>();
     }
 
     /**
      * Create the ModelSchema objects for all Model classes.
      * @param models the list that contains all the Model classes.
      */
-    public static void createModelSchemaForModels(@NonNull List<Class<? extends Model>> models) {
-        synchronized (LOCK) {
-            for (Class<? extends Model> modelClass : models) {
-                final String modelClassName = modelClass.getName();
-                final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
-                modelSchemaMap.put(modelClassName, modelSchema);
-            }
+    public synchronized void createModelSchemaForModels(@NonNull List<Class<? extends Model>> models) {
+        for (Class<? extends Model> modelClass : models) {
+            final String modelClassName = modelClass.getName();
+            final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
+            modelSchemaMap.put(modelClassName, modelSchema);
         }
     }
 
@@ -55,9 +52,14 @@ public class ModelRegistry {
      * @param className name of the Model class.
      * @return the ModelSchema object for the given Model class.
      */
-    public static ModelSchema getModelSchemaForModelClass(@NonNull String className) {
-        synchronized (LOCK) {
-            return modelSchemaMap.get(className);
+    public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String className) {
+        return modelSchemaMap.get(className);
+    }
+
+    public static synchronized ModelRegistry getInstance() {
+        if (modelRegistryInstance == null) {
+            modelRegistryInstance = new ModelRegistry();
         }
+        return modelRegistryInstance;
     }
 }

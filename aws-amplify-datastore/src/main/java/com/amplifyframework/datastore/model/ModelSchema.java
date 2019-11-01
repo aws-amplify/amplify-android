@@ -28,12 +28,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * Schema of a Model that implements the {@link Model} interface.
  * The schema encapsulates the metadata information of a Model.
  */
-public class ModelSchema {
+public final class ModelSchema {
     // Name of the Java Class of the Model.
     private final String name;
 
@@ -47,25 +49,29 @@ public class ModelSchema {
     private final Map<String, ModelField> fields;
 
     // Maintain a sorted copy of all the fields of a Model
+    // This is useful so code that uses the sortedFields to generate queries and other
+    // persistence-related operations guarantee that the results are always consistent.
     private final List<Map.Entry<String, ModelField>> sortedFields;
 
     static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
-        final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.Field.class);
-        final Map<String, ModelField> fields = new HashMap<String, ModelField>();
+        final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.ModelField.class);
+        final TreeMap<String, ModelField> fields = new TreeMap<>();
         for (Field field: classFields) {
-            com.amplifyframework.datastore.annotations.Field annotation = null;
-            if (field.getAnnotation(com.amplifyframework.datastore.annotations.Field.class) != null) {
-                annotation = field.getAnnotation(com.amplifyframework.datastore.annotations.Field.class);
+            com.amplifyframework.datastore.annotations.ModelField annotation = null;
+            if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
+                annotation = field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class);
             }
-            ModelField modelField = new ModelField(
-                    field.getName(),
-                    annotation.targetName(),
-                    field.getType().getName(),
-                    annotation.isRequired(),
-                    Collection.class.isAssignableFrom(field.getType()),
-                    "id".equals(field.getName()),
-                    Model.class.isAssignableFrom(field.getType()) ? field.getType().getName() : null
-            );
+            final ModelField modelField = ModelField.builder()
+                    .name(field.getName())
+                    .targetName(annotation.targetName())
+                    .type(field.getType().getName())
+                    .isRequired(annotation.isRequired())
+                    .isArray(Collection.class.isAssignableFrom(field.getType()))
+                    .isPrimaryKey(PrimaryKey.getInstance().equals(field.getName()))
+                    .connectionTarget(Model.class.isAssignableFrom(field.getType())
+                            ? field.getType().getName()
+                            : null)
+                    .build();
             fields.put(field.getName(), modelField);
         }
         return new ModelSchema(clazz.getSimpleName(), clazz.getSimpleName(), fields);
@@ -82,7 +88,7 @@ public class ModelSchema {
      */
     public ModelSchema(@NonNull String name,
                        @NonNull String targetName,
-                       @NonNull Map<String, ModelField> fields) {
+                       @NonNull SortedMap<String, ModelField> fields) {
         this.name = name;
         this.targetName = targetName;
         this.fields = fields;
@@ -129,8 +135,7 @@ public class ModelSchema {
         }
 
         // Create a list from elements of sortedFields
-        List<Map.Entry<String, ModelField> > modelFieldEntries =
-                new LinkedList<Map.Entry<String, ModelField> >(fields.entrySet());
+        final List<Map.Entry<String, ModelField> > modelFieldEntries = new LinkedList<>(fields.entrySet());
 
         // Returns an array of the values sorted by some pre-defined rules:
         //

@@ -22,8 +22,32 @@ import com.amplifyframework.datastore.model.Model;
 
 import java.util.List;
 
+/**
+ * The interface that defines the contract for local storage
+ * engine implementation.
+ */
 public interface LocalStorageAdapter {
+    /**
+     * Setup the storage engine with the models.
+     * For each {@link Model}, construct a
+     * {@link com.amplifyframework.datastore.model.ModelSchema}
+     * and setup the necessities for persisting a {@link Model}.
+     * This setUp is a pre-requisite for all other operations
+     * of a LocalStorageAdapter.
+     *
+     * @param models list of Model classes
+     */
     void setUp(@NonNull List<Class<? extends Model>> models);
 
-    void save(@NonNull Model model, Listener<Model> listener);
+    /**
+     * Save a {@link Model} to the local storage engine.
+     * The {@link Listener<Model>} will be invoked when the
+     * save operation is completed to notify the success and
+     * failure.
+     *
+     * @param model the Model object
+     * @param listener the listener to be invoked when the
+     *                 save operation is completed.
+     */
+    void save(@NonNull Model model, @NonNull Listener<Model> listener);
 }

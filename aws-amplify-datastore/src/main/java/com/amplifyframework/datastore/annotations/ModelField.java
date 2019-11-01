@@ -21,20 +21,20 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used to annotate the field of a
- * {@link com.amplifyframework.datastore.model.Model} to
- * indicate that it is a field.
+ * This annotation is used to indicate that a member of a class which extends
+ * {@link com.amplifyframework.datastore.model.Model} should be serialized or
+ * deserialized into the Datastore.
  *
  * {@link @Retention(RetentionPolicy.RUNTIME)} annotation is added to
- * retain {@link Field} at runtime for the reflection capabilities to work
+ * retain {@link ModelField} at runtime for the reflection capabilities to work
  * in order to check if this annotation is present for a field of a Model.
  *
  * {@link @Target(ElementType.FIELD)} annotation is added to indicate
- * {@link Field} annotation can be used only on Fields (Data members of a class).
+ * {@link ModelField} annotation can be used only on Fields (Data members of a class).
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Field {
+public @interface ModelField {
     /**
      * @return if the field is required or optional.
      *          True if required, False if optional.
