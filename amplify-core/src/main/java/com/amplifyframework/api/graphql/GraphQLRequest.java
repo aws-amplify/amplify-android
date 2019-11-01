@@ -15,27 +15,25 @@
 
 package com.amplifyframework.api.graphql;
 
-import com.amplifyframework.api.Query;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * An extension of general Query class customized for GraphQL functionality.
+ * A request against a GraphQL endpoint.
  */
-public final class GraphQLQuery extends Query {
+public final class GraphQLRequest {
+    private final String document;
     private final List<FieldValue> fieldValues;
     private final List<VariableValues> variableValues;
     private final List<String> fragments;
 
     /**
-     * Constructor for GraphQLQuery with
+     * Constructor for GraphQLRequest with
      * specification for type of API call.
-     * @param operationType type of API operation being made
      * @param document query document to process
      */
-    public GraphQLQuery(OperationType operationType, String document) {
-        super(operationType.getQueryPrefix(), document);
+    public GraphQLRequest(String document) {
+        this.document = document;
         this.fieldValues = new ArrayList<>();
         this.variableValues = new ArrayList<>();
         this.fragments = new ArrayList<>();
@@ -45,7 +43,6 @@ public final class GraphQLQuery extends Query {
      * Processes query parameters into a query string.
      * @return processed query string
      */
-    @Override
     public String getContent() {
         final StringBuilder completeQuery = new StringBuilder();
         final StringBuilder realQuery = new StringBuilder();
@@ -53,7 +50,7 @@ public final class GraphQLQuery extends Query {
         completeQuery.append("{\"query\":")
                 .append("\"");
 
-        realQuery.append(getDocument()
+        realQuery.append(document
                 .replace("\"", "\\\"")
                 .replace("\n", "\\n")
         );
@@ -114,7 +111,7 @@ public final class GraphQLQuery extends Query {
      * @param value field value
      * @return this query object containing new field value
      */
-    public GraphQLQuery field(String name, String value) {
+    public GraphQLRequest field(String name, String value) {
         fieldValues.add(new FieldValue(name, value));
         return this;
     }
@@ -125,7 +122,7 @@ public final class GraphQLQuery extends Query {
      * @param value variable value
      * @return this query object for chaining
      */
-    public GraphQLQuery variable(String key, String value) {
+    public GraphQLRequest variable(String key, String value) {
         variableValues.add(new VariableValues(key, value));
         return this;
     }
@@ -135,7 +132,7 @@ public final class GraphQLQuery extends Query {
      * @param fragment fragment to be attached
      * @return this query object for chaining
      */
-    public GraphQLQuery fragment(String fragment) {
+    public GraphQLRequest fragment(String fragment) {
         fragments.add(fragment);
         return this;
     }

@@ -18,13 +18,14 @@ package com.amplifyframework.hub;
 import java.util.UUID;
 
 /**
- * A SubscriptionToken is returned by the Hub when creating a new subscription
- * for a {@link HubListener}. The token can be used to unsubscribe that listener.
+ * A SubscriptionToken is returned by the Hub when creating a new
+ * subscription for a {@link HubSubscriber}. This token can be used to
+ * cancel a subscriber's subscription.
  */
 public final class SubscriptionToken {
     /**
      * This is used to identify an instance of the
-     * subscriber {@link HubListener} subscribed with Hub.
+     * subscriber {@link HubSubscriber} subscribed with Hub.
      */
     private final UUID uuid;
 

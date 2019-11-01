@@ -13,22 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.async;
+package com.amplifyframework.api.aws;
+
+import okhttp3.Interceptor;
 
 /**
- * A callback that received notifications of events surrounding async
- * operations. This can be used in cases where an event will be
- * generated.
- * @param <T> the parameter type of the event object.
+ * Factory interface to create a configured interceptor
+ * to be used in {@link AWSApiPlugin}.
  */
-public interface EventListener<T> {
-
-    /**
-     * The event object will be passed through the
-     * onEvent method.
-     *
-     * @param event the event object
-     */
-    void onEvent(T event);
+interface InterceptorFactory {
+    Interceptor create(ApiConfiguration config);
 }
-

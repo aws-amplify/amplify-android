@@ -32,61 +32,25 @@ import com.amplifyframework.core.category.CategoryType;
  */
 public final class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBehavior {
 
-    /**
-     * Publish a Hub payload on the specified channel.
-     * @param hubChannel The channel on which to send the payload
-     * @param hubPayload The payload to send
-     * @throws HubException on publication failure
-     */
     @Override
-    public void publish(@NonNull HubChannel hubChannel, @NonNull HubPayload hubPayload)
+    public void publish(@NonNull HubChannel hubChannel, @NonNull HubEvent hubEvent)
             throws HubException {
-        getSelectedPlugin().publish(hubChannel, hubPayload);
+        getSelectedPlugin().publish(hubChannel, hubEvent);
     }
 
-    /**
-     * Subscribe to Hub payloads on a particular channel.
-     * @param hubChannel The channel on which to listen for payloads
-     * @param listener   The callback to invoke with the received payload
-     * @return the token which serves as an identifier for the listener
-     * registered. The token can be used with
-     * {@link #unsubscribe(SubscriptionToken)}
-     * to de-register the listener.
-     * @throws HubException on failure to subscribe
-     */
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @NonNull HubListener listener) throws HubException {
-        return getSelectedPlugin().subscribe(hubChannel, listener);
+                                       @NonNull HubSubscriber hubSubscriber) throws HubException {
+        return getSelectedPlugin().subscribe(hubChannel, hubSubscriber);
     }
 
-    /**
-     * Subscribe to Hub payloads on a particular channel; payloads will be received
-     * only if the provided payload filter matches a given payload.
-     * @param hubChannel The channel to listen for payloads on
-     * @param hubPayloadFilter candidate payload will be passed to this closure prior to dispatching to
-     *                   the {@link HubListener}. Only payloads for which the closure returns
-     *                   `true` will be dispatched.
-     * @param listener   The callback to invoke with the received payload
-     * @return the token which serves as an identifier for the listener
-     * registered. The token can be used with #unsubscribe(SubscriptionToken)
-     * to de-register the listener.
-     */
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @Nullable HubPayloadFilter hubPayloadFilter,
-                                       @NonNull HubListener listener) throws HubException {
-        return getSelectedPlugin().subscribe(hubChannel, hubPayloadFilter, listener);
+                                       @Nullable HubEventFilter hubEventFilter,
+                                       @NonNull HubSubscriber hubSubscriber) throws HubException {
+        return getSelectedPlugin().subscribe(hubChannel, hubEventFilter, hubSubscriber);
     }
 
-    /**
-     * The registered listener can be removed from the Hub system by passing the
-     * token received from {@link #subscribe(HubChannel, HubListener)} or
-     * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
-     *
-     * @param subscriptionToken the token which serves as an identifier for the listener
-     *                          {@link HubListener} registered
-     */
     @Override
     public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException {
         getSelectedPlugin().unsubscribe(subscriptionToken);
@@ -98,27 +62,30 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
     }
 
     /**
-     * Convenience method to allow callers to listen to Hub events for a particular operation.
-     * Internally, the listener transforms the HubPayload into the Operation's expected AsyncEvent
-     * type, so callers may re-use their `listener`s.
+     * Convenience method to allow callers to subscribe to Hub events
+     * for a particular operation.  Internally, the subscription
+     * transforms the HubEvent into the Operation's expected AsyncEvent
+     * type, so callers may re-use their `subscriber`s.
      *
-     * @param operation The operation to listen to events for
-     * @param eventListener The Operation-specific listener callback to be invoked
+     * @param operation The operation to subscribe to events for
+     * @param eventListener The Operation-specific listener to be invoked
      *                 when an AsyncEvent for that operation is received.
      * @param <E> The type of the event that the event listener will receive
+     * @param <R> The type of the request object of the {@link AmplifyOperation}
      * @return A subscription token
      */
-    public <E> SubscriptionToken subscribe(
-            @NonNull final AmplifyOperation operation,
+    public <E, R> SubscriptionToken subscribe(
+            @NonNull final AmplifyOperation<R> operation,
             @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
-        HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);
-        HubListener transformingListener = payload -> {
+        HubEventFilter filter = HubEventFilters.hubEventFilter(operation);
+        HubSubscriber transformingListener = event -> {
             // TODO: check for casting of Object to E and
             // see if it can be prevented.
-            // eventListener.onEvent(payload.getEventData());
+            // eventListener.onEvent(event.getData());
         };
 
         return subscribe(channel, filter, transformingListener);
     }
 }
+

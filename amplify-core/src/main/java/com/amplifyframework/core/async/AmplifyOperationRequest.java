@@ -16,26 +16,22 @@
 package com.amplifyframework.core.async;
 
 /**
- * Listener for async operations. This listener can be
- * used in cases where a result (for success) and error
- * (for failure) need to be reported for an asynchronous
- * operation.
+ * Every implementation of an {@link AmplifyOperation}
+ * should be associated with a request object that
+ * encapsulates the input to an operation.
  *
- * @param <R> the parameter type of the result object.
+ * The implementation of an {@link AmplifyOperation} can
+ * decide the type of the request object.
+ * @param <R> the parameter type of the request. The implementation
+ *           can define the type of the request object.
  */
-public interface Listener<R> {
-
+public interface AmplifyOperationRequest<R> {
     /**
-     * Listener method for reporting success
-     * of an operation.
-     * @param result represents the object for success
+     * Return the request object.
+     * 
+     * @return the request object associated with
+     *         the implementation of an
+     *         {@link AmplifyOperation}.
      */
-    void onResult(R result);
-
-    /**
-     * Listener method for reporting failure
-     * of an operation.
-     * @param error The error that occurred
-     */
-    void onError(Exception error);
+    R getRequest();
 }

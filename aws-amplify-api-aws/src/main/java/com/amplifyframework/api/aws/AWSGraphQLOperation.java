@@ -19,10 +19,10 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiOperation;
-import com.amplifyframework.api.graphql.GraphQLQuery;
+import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 
 import java.io.IOException;
 
@@ -36,13 +36,14 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * An operation to enqueue a GraphQL query to OkHttp client.
- * @param <T> Casted type of GraphQL query result
+ * An operation to enqueue a GraphQL request to OkHttp client.
+ * @param <T> Casted type of GraphQL result data
  */
-public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLResponse<T>> {
+public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
+    private static final String CONTENT_TYPE = "application/json";
+
     private final String endpoint;
     private final OkHttpClient client;
-    private final GraphQLQuery query;
 
     private Call ongoingCall;
 
@@ -50,21 +51,22 @@ public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLRespons
      * Constructs a new AWSGraphQLOperation.
      * @param endpoint API endpoint being hit
      * @param client OkHttp client being used to hit the endpoint
-     * @param query GraphQL query being queried
-     * @param responseFactory an implementation of GsonResponseFactory
+     * @param request GraphQL request being enacted
+     * @param responseFactory an implementation of GsonGraphQLResponseFactory
      * @param classToCast class to cast the response to
-     * @param callback local callback listener to be invoked
+     * @param responseListener
+     *        listener to be invoked when response is available, or if
+     *        errors are encountered while obtaining a response
      */
     AWSGraphQLOperation(String endpoint,
                         OkHttpClient client,
-                        GraphQLQuery query,
-                        GsonResponseFactory responseFactory,
+                        GraphQLRequest request,
+                        GraphQLResponse.Factory responseFactory,
                         Class<T> classToCast,
-                        Listener<GraphQLResponse<T>> callback) {
-        super(responseFactory, classToCast, callback);
+                        ResultListener<GraphQLResponse<T>> responseListener) {
+        super(request, responseFactory, classToCast, responseListener);
         this.endpoint = endpoint;
         this.client = client;
-        this.query = query;
     }
 
     @Override
@@ -75,24 +77,27 @@ public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLRespons
         }
 
         try {
-            Log.d("graphql", query.getContent());
+            Log.d("graphql", getRequest().getContent());
             ongoingCall = client.newCall(new Request.Builder()
                     .url(endpoint)
-                    .addHeader("accept", "application/json")
-                    .addHeader("content-type", "application/json")
-                    .post(RequestBody.create(query.getContent(), MediaType.parse("application/json")))
+                    .addHeader("accept", CONTENT_TYPE)
+                    .addHeader("content-type", CONTENT_TYPE)
+                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
                     .build());
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
-            ongoingCall.cancel();
+            if (ongoingCall != null) {
+                ongoingCall.cancel();
+            }
 
-            // Let locally registered callback deal with this error
-            // and throw runtime exception otherwise.
+            // If a response listener was provided, then dispatch the
+            // errors to it. Otherwise, throw the error synchronously to
+            // the caller.
             ApiException wrappedError =
                     new ApiException("OkHttp client failed to make a successful request.", error);
-            if (hasCallback()) {
-                callback().onError(wrappedError);
+            if (hasResponseListener()) {
+                responseListener().onError(wrappedError);
             } else {
                 throw wrappedError;
             }
@@ -116,10 +121,8 @@ public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLRespons
 
             GraphQLResponse<T> wrappedResponse = wrapResponse(jsonResponse);
 
-            Log.d("graphql", jsonResponse);
-
-            if (hasCallback()) {
-                callback().onResult(wrappedResponse);
+            if (hasResponseListener()) {
+                responseListener().onResult(wrappedResponse);
             }
             //TODO: Dispatch to hub
         }
@@ -127,10 +130,11 @@ public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLRespons
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException ioe) {
-            if (hasCallback()) {
-                callback().onError(ioe);
+            if (hasResponseListener()) {
+                responseListener().onError(ioe);
             }
             //TODO: Dispatch to hub
         }
     }
 }
+

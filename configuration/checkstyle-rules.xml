@@ -80,7 +80,7 @@
         <module name="WhitespaceAfter" />
         <module name="WhitespaceAround" />
 
-        <!-- Disallow methods from having too many paramaters. -->
+        <!-- Disallow methods from having too many parameters. -->
         <module name="ParameterNumber" />
 
         <!--
@@ -148,7 +148,7 @@
         <!-- Standard indentation on all sources. -->
         <module name="Indentation" />
 
-        <!-- Store @SuppressWarnings annotations for later evalutation -->
+        <!-- Store @SuppressWarnings annotations for later evaluation -->
         <module name="SuppressWarningsHolder"  />
 
         <!-- Use a standard ordering of Java language modifiers. -->

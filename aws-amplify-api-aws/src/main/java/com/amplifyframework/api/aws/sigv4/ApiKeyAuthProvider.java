@@ -13,22 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.async;
+package com.amplifyframework.api.aws.sigv4;
 
 /**
- * A callback that received notifications of events surrounding async
- * operations. This can be used in cases where an event will be
- * generated.
- * @param <T> the parameter type of the event object.
+ * Interface to provide API key to signer.
  */
-public interface EventListener<T> {
-
+public interface ApiKeyAuthProvider {
     /**
-     * The event object will be passed through the
-     * onEvent method.
-     *
-     * @param event the event object
+     * Gets the API key.
+     * @return API key
      */
-    void onEvent(T event);
+    String getAPIKey();
 }
-

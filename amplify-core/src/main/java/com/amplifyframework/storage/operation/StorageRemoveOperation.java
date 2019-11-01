@@ -15,18 +15,24 @@
 
 package com.amplifyframework.storage.operation;
 
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Base operation type for remove behavior on the Storage category.
+ *
+ * @param <R> type of the request object
  */
-public abstract class StorageRemoveOperation extends AmplifyOperation {
+public abstract class StorageRemoveOperation<R> extends AmplifyOperation<R> {
+
     /**
-     * Constructs a new instance of a StorageRemoveOperation.
+     * Constructs a new AmplifyOperation.
+     * @param amplifyOperationRequest The request object of the operation
      */
-    public StorageRemoveOperation() {
-        super(CategoryType.STORAGE);
+    public StorageRemoveOperation(@Nullable R amplifyOperationRequest) {
+        super(CategoryType.STORAGE, amplifyOperationRequest);
     }
 }
 

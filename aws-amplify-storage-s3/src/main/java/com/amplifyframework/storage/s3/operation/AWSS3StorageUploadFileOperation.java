@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -33,10 +33,9 @@ import java.io.File;
 /**
  * An operation to upload a file from AWS S3.
  */
-public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation {
+public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageUploadFileRequest request;
-    private final Listener<StorageUploadFileResult> callback;
+    private final ResultListener<StorageUploadFileResult> resultListener;
     private TransferObserver transferObserver;
     private File file;
 
@@ -44,14 +43,14 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * Constructs a new AWSS3StorageUploadFileOperation.
      * @param storageService S3 client wrapper
      * @param request upload request parameters
-     * @param callback Listener to invoke when results are available
+     * @param resultListener Will be notified when results of upload are available
      */
     public AWSS3StorageUploadFileOperation(AWSS3StorageService storageService,
                                            AWSS3StorageUploadFileRequest request,
-                                           Listener<StorageUploadFileResult> callback) {
-        this.request = request;
+                                           ResultListener<StorageUploadFileResult> resultListener) {
+        super(request);
         this.storageService = storageService;
-        this.callback = callback;
+        this.resultListener = resultListener;
         this.transferObserver = null;
         this.file = null;
     }
@@ -73,18 +72,18 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             }
 
             String serviceKey = S3RequestUtils.getServiceKey(
-                    request.getAccessLevel(),
+                    getRequest().getAccessLevel(),
                     identityId,
-                    request.getKey(),
-                    request.getTargetIdentityId()
+                    getRequest().getKey(),
+                    getRequest().getTargetIdentityId()
             );
-            this.file = new File(request.getLocal()); //TODO: Add error handling if path is invalid
+            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
 
             try {
-                if (request.getMetadata() == null || request.getMetadata().isEmpty()) {
+                if (getRequest().getMetadata() == null || getRequest().getMetadata().isEmpty()) {
                     transferObserver = storageService.uploadFile(serviceKey, file);
                 } else {
-                    transferObserver = storageService.uploadFile(serviceKey, file, request.getMetadata());
+                    transferObserver = storageService.uploadFile(serviceKey, file, getRequest().getMetadata());
                 }
 
             } catch (Exception exception) {
@@ -96,8 +95,8 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 public void onStateChanged(int transferId, TransferState state) {
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
-                        if (callback != null) {
-                            callback.onResult(StorageUploadFileResult.fromKey(request.getKey()));
+                        if (resultListener != null) {
+                            resultListener.onResult(StorageUploadFileResult.fromKey(getRequest().getKey()));
                         }
                     }
                 }
@@ -112,8 +111,8 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 @Override
                 public void onError(int transferId, Exception exception) {
                     // TODO: dispatch event to hub
-                    if (callback != null) {
-                        callback.onError(exception);
+                    if (resultListener != null) {
+                        resultListener.onError(exception);
                     }
                 }
             });

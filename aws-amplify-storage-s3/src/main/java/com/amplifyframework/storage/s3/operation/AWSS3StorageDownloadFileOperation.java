@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
@@ -33,10 +33,10 @@ import java.io.File;
 /**
  * An operation to download a file from AWS S3.
  */
-public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFileOperation {
+public final class AWSS3StorageDownloadFileOperation
+        extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageDownloadFileRequest request;
-    private final Listener<StorageDownloadFileResult> callback;
+    private final ResultListener<StorageDownloadFileResult> resultListener;
     private TransferObserver transferObserver;
     private File file;
 
@@ -44,14 +44,14 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
      * Constructs a new AWSS3StorageDownloadFileOperation.
      * @param storageService S3 client wrapper
      * @param request download request parameters
-     * @param callback Listener to invoke when results are available
+     * @param resultListener Notified when download results are available
      */
     public AWSS3StorageDownloadFileOperation(AWSS3StorageService storageService,
                                              AWSS3StorageDownloadFileRequest request,
-                                             Listener<StorageDownloadFileResult> callback) {
-        this.request = request;
+                                             ResultListener<StorageDownloadFileResult> resultListener) {
+        super(request);
         this.storageService = storageService;
-        this.callback = callback;
+        this.resultListener = resultListener;
         this.transferObserver = null;
         this.file = null;
     }
@@ -73,12 +73,12 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
             }
 
             String serviceKey = S3RequestUtils.getServiceKey(
-                    request.getAccessLevel(),
+                    getRequest().getAccessLevel(),
                     identityId,
-                    request.getKey(),
-                    request.getTargetIdentityId()
+                    getRequest().getKey(),
+                    getRequest().getTargetIdentityId()
             );
-            this.file = new File(request.getLocal()); //TODO: Add error handling if path is invalid
+            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
 
             try {
                 transferObserver = storageService.downloadToFile(serviceKey, file);
@@ -91,8 +91,8 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
                 public void onStateChanged(int transferId, TransferState state) {
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
-                        if (callback != null) {
-                            callback.onResult(StorageDownloadFileResult.fromFile(file));
+                        if (resultListener != null) {
+                            resultListener.onResult(StorageDownloadFileResult.fromFile(file));
                         }
                     }
                 }
@@ -107,8 +107,8 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
                 @Override
                 public void onError(int transferId, Exception exception) {
                     // TODO: dispatch event to hub
-                    if (callback != null) {
-                        callback.onError(exception);
+                    if (resultListener != null) {
+                        resultListener.onError(exception);
                     }
                 }
             });

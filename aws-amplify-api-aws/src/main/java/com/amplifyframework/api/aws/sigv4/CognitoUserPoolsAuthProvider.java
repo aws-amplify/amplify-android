@@ -13,22 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.async;
+package com.amplifyframework.api.aws.sigv4;
 
 /**
- * A callback that received notifications of events surrounding async
- * operations. This can be used in cases where an event will be
- * generated.
- * @param <T> the parameter type of the event object.
+ * Interface to provide authentication token
+ * from Cognito User Pools to signer.
  */
-public interface EventListener<T> {
-
+public interface CognitoUserPoolsAuthProvider {
     /**
-     * The event object will be passed through the
-     * onEvent method.
-     *
-     * @param event the event object
+     * Vends the latest valid authentication token
+     * from Cognito User Pool session.
+     * @return the latest auth token
      */
-    void onEvent(T event);
+    String getLatestAuthToken();
 }
-

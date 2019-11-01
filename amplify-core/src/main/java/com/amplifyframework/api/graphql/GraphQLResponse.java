@@ -15,19 +15,20 @@
 
 package com.amplifyframework.api.graphql;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
-import com.amplifyframework.api.Response;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Wrapper for GraphQL response containing both
  * response data and error information.
  * @param <T> queried data type
  */
-public final class GraphQLResponse<T> extends Response<T> {
+public final class GraphQLResponse<T> {
+    private final T data;
     private final List<Error> errors;
 
     /**
@@ -37,7 +38,7 @@ public final class GraphQLResponse<T> extends Response<T> {
      *               by graphql doc
      */
     public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {
-        super(data);
+        this.data = data;
         this.errors = new ArrayList<>();
         if (errors != null) {
             this.errors.addAll(errors);
@@ -60,22 +61,38 @@ public final class GraphQLResponse<T> extends Response<T> {
         return errors.size() > 0;
     }
 
+    /**
+     * Gets the data sent back by API.
+     * @return API response body
+     */
+    public T getData() {
+        return data;
+    }
+
+    /**
+     * Checks that data was returned.
+     * @return true if data exists, false otherwise
+     */
+    public boolean hasData() {
+        return data != null;
+    }
+
     @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) return true;
         if (thatObject == null || getClass() != thatObject.getClass()) return false;
 
-        GraphQLResponse<?> response = (GraphQLResponse<?>) thatObject;
+        GraphQLResponse<?> that = (GraphQLResponse<?>) thatObject;
 
-        if (getData() != null ? !getData().equals(response.getData()) : response.getData() != null) return false;
-        return errors != null ? errors.equals(response.errors) : response.errors == null;
+        if (data != null ? !data.equals(that.data) : that.data != null) return false;
+        return errors != null ? errors.equals(that.errors) : that.errors == null;
     }
 
-    @SuppressWarnings({"NeedBraces", "MagicNumber"})
+    @SuppressWarnings("MagicNumber")
     @Override
     public int hashCode() {
-        int result = getData() != null ? getData().hashCode() : 0;
+        int result = data != null ? data.hashCode() : 0;
         result = 31 * result + (errors != null ? errors.hashCode() : 0);
         return result;
     }
@@ -91,8 +108,8 @@ public final class GraphQLResponse<T> extends Response<T> {
          * Constructs error response in accordance with GraphQL specs.
          * @param message error message
          */
-        public Error(String message) {
-            this.message = message;
+        public Error(@NonNull String message) {
+            this.message = Objects.requireNonNull(message);
         }
 
         /**
@@ -103,22 +120,40 @@ public final class GraphQLResponse<T> extends Response<T> {
             return message;
         }
 
-        @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
+        @SuppressWarnings("NeedBraces")
         @Override
         public boolean equals(Object thatObject) {
             if (this == thatObject) return true;
             if (thatObject == null || getClass() != thatObject.getClass()) return false;
 
-            Error error = (Error) thatObject;
+            Error that = (Error) thatObject;
 
-            return message != null ? message.equals(error.message) : error.message == null;
+            return message.equals(that.message);
         }
 
-        @SuppressWarnings("NeedBraces")
         @Override
         public int hashCode() {
-            return message != null ? message.hashCode() : 0;
+            return message.hashCode();
         }
+    }
+
+    /**
+     * A factory generate strongly-typed response
+     * objects from a string that was returned from a GraphQL API.
+     */
+    public interface Factory {
+        /**
+         * Builds a response object from a string response from a API.
+         * @param apiResponseJson
+         *        Response from the endpoint, containing a string response
+         * @param classToCast
+         *        The class type to which the JSON string should be
+         *        interpreted
+         * @param <T> The type of the data field in the response object
+         * @return An instance of the casting class which models the data
+         *         provided in the response JSON string
+         */
+        <T> GraphQLResponse<T> buildResponse(String apiResponseJson, Class<T> classToCast);
     }
 }
 

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.operation;
 
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -22,13 +24,17 @@ import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Base operation type for download file behavior on the Storage category.
+ *
+ * @param <R> type of the request object
  */
-public abstract class StorageDownloadFileOperation extends AmplifyOperation implements Resumable, Cancelable {
+public abstract class StorageDownloadFileOperation<R> extends AmplifyOperation<R> implements Resumable, Cancelable {
+
     /**
-     * Constructs a new instance of a StorageDownloadFileOperation.
+     * Constructs a new AmplifyOperation.
+     * @param amplifyOperationRequest The request object of the operation
      */
-    public StorageDownloadFileOperation() {
-        super(CategoryType.STORAGE);
+    public StorageDownloadFileOperation(@Nullable R amplifyOperationRequest) {
+        super(CategoryType.STORAGE, amplifyOperationRequest);
     }
 }
 

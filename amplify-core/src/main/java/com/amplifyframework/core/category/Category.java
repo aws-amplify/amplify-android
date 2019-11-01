@@ -115,7 +115,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Retrieve a plugin by its key.
      * @param pluginKey A key that identifies a plugin implementation
-     * @return The plugin object assocaited to pluginKey, if registered
+     * @return The plugin object associated to pluginKey, if registered
      * @throws PluginException
      *         If there is no plugin associated to the requested key
      */

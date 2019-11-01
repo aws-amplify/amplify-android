@@ -22,7 +22,7 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -49,8 +49,9 @@ import static org.junit.Assert.fail;
  * amplify CLI and the standard models from the AppSync public docs
  * (TODO: which docs, which standard models?).
  */
-//TODO: Use CircleCI to automatically use configured amplifyconfiguration.json
-@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json.")
+//TODO: Use CircleCI to automatically use configured amplifyconfiguration.json and awsconfiguration.json
+@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json and " +
+        "mobile-client in androidTest/res/raw/awsconfiguration.json.")
 public final class GraphQLInstrumentationTest {
 
     private static final String TAG = GraphQLInstrumentationTest.class.getSimpleName();
@@ -84,7 +85,7 @@ public final class GraphQLInstrumentationTest {
                 document,
                 Collections.emptyMap(),
                 Todo.class,
-                new TestGraphQLListener<>());
+                new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -101,7 +102,7 @@ public final class GraphQLInstrumentationTest {
                 document,
                 Collections.emptyMap(),
                 Todo.class,
-                new TestGraphQLListener<>());
+                new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -121,11 +122,11 @@ public final class GraphQLInstrumentationTest {
                 document,
                 variables,
                 Todo.class,
-                new TestGraphQLListener<>());
+                new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
-    class Todo {
+    final class Todo {
         private final String id;
         private final String name;
         private final String description;
@@ -149,7 +150,7 @@ public final class GraphQLInstrumentationTest {
         }
     }
 
-    class TestGraphQLListener<T> implements Listener<GraphQLResponse<T>> {
+    final class TestGraphQLResultListener<T> implements ResultListener<GraphQLResponse<T>> {
         @Override
         public void onResult(GraphQLResponse<T> response) {
             assertNotNull(response);
@@ -159,7 +160,7 @@ public final class GraphQLInstrumentationTest {
         }
 
         @Override
-        public void onError(Exception error) {
+        public void onError(Throwable error) {
             fail(error.getLocalizedMessage());
         }
     }
