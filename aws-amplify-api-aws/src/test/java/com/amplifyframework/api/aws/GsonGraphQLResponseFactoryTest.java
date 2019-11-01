@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.Resources;
-import com.amplifyframework.api.ResponseFactory;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import org.junit.Before;
@@ -32,16 +31,16 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Unit test for implementation of ResponseFactory.
  */
-public final class GsonResponseFactoryTest {
+public final class GsonGraphQLResponseFactoryTest {
 
-    private ResponseFactory responseFactory;
+    private GraphQLResponse.Factory responseFactory;
 
     /**
-     * Set up the object under test, a GsonResponseFactory.
+     * Set up the object under test, a GsonGraphQLResponseFactory.
      */
     @Before
     public void setup() {
-        responseFactory = new GsonResponseFactory();
+        responseFactory = new GsonGraphQLResponseFactory();
     }
 
     /**
@@ -57,8 +56,8 @@ public final class GsonResponseFactoryTest {
                 Resources.readAsString("null-gql-response.json");
 
         // Act! Parse it into a model.
-        final GraphQLResponse<ListTodosResult> response = (GraphQLResponse<ListTodosResult>)
-                responseFactory.buildResponse(nullResponseJson, ListTodosResult.class);
+        final GraphQLResponse<ListTodosResult> response =
+            responseFactory.buildResponse(nullResponseJson, ListTodosResult.class);
 
         // Assert that the model is constructed without content
         assertNotNull(response);
@@ -78,7 +77,7 @@ public final class GsonResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
-        final GraphQLResponse<ListTodosResult> response = (GraphQLResponse<ListTodosResult>)
+        final GraphQLResponse<ListTodosResult> response =
             responseFactory.buildResponse(partialResponseJson, ListTodosResult.class);
 
         // Assert that the model contained things...

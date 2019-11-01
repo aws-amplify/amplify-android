@@ -63,7 +63,7 @@ public class PluginException extends AmplifyRuntimeException {
          * user-provided exception message and with reference to an
          * underlying error.
          * @param message Explains why the exception was caused
-         * @param throwable An underyling error associated with this exception
+         * @param throwable An underlying error associated with this exception
          */
         public PluginConfigurationException(String message, Throwable throwable) {
             super(message, throwable);

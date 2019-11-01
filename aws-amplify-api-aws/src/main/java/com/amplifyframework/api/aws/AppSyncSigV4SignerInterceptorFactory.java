@@ -109,6 +109,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
             case API_KEY:
                 ApiKeyAuthProvider keyProvider = apiKeyProvider;
                 if (keyProvider == null) {
+                    //noinspection Convert2MethodRef This is legacy code.
                     keyProvider = () -> config.getApiKey();
                 }
                 return new AppSyncSigV4SignerInterceptor(keyProvider);

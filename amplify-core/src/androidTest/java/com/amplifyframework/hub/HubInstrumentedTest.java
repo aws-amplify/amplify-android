@@ -48,7 +48,7 @@ public final class HubInstrumentedTest {
 
     /**
      * Before any test is run, configure Amplify to use an
-     * {@link BackgroundExecutorHubPlugin} to satify the Hub category.
+     * {@link BackgroundExecutorHubPlugin} to satisfy the Hub category.
      */
     @BeforeClass
     public static void setUpBeforeClass() {
@@ -69,7 +69,7 @@ public final class HubInstrumentedTest {
     public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-            payload -> waitUntilSubscriptionIsReceived.countDown());
+            event -> waitUntilSubscriptionIsReceived.countDown());
         assertNotNull(token);
 
         Amplify.Hub.unsubscribe(token);
@@ -81,8 +81,7 @@ public final class HubInstrumentedTest {
 
 
     /**
-     * Validates that a subscribed listener will receive a published
-     * event.
+     * Validates that a subscriber will receive a published event.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
@@ -90,15 +89,15 @@ public final class HubInstrumentedTest {
     public void isSubscriptionReceived() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
-            if (payload.getEventData() instanceof String) {
-                Log.d(TAG, "String: => " + payload.getEventName() + ":" + payload.getEventData());
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
+            if (event.getData() instanceof String) {
+                Log.d(TAG, "String: => " + event.getName() + ":" + event.getData());
                 waitUntilSubscriptionIsReceived.countDown();
             }
         });
 
         Amplify.Hub.publish(HubChannel.STORAGE,
-                new HubPayload("weatherString", "Too Cold in Seattle."));
+                new HubEvent("weatherString", "Too Cold in Seattle."));
 
         assertTrue("Subscription not received within the expected time.",
                 waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
@@ -108,7 +107,7 @@ public final class HubInstrumentedTest {
     }
 
     /**
-     * Validates that a listener will not continue to receive events
+     * Validates that a subscriber will not continue to receive events
      * from the hub, once it has unsubscribed.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
@@ -117,7 +116,7 @@ public final class HubInstrumentedTest {
     public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException {
         final CountDownLatch subscriptionReceived = new CountDownLatch(1);
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
             Log.e(TAG, "Not expecting a subscription to be received after unsubscribe.");
             subscriptionReceived.countDown();
         });
@@ -125,7 +124,7 @@ public final class HubInstrumentedTest {
         Amplify.Hub.unsubscribe(token);
 
         Amplify.Hub.publish(HubChannel.STORAGE,
-                new HubPayload("weatherString", "Too Cold in Seattle"));
+                new HubEvent("weatherString", "Too Cold in Seattle"));
 
         assertFalse("Expecting no subscription to be received within the given time.",
                     subscriptionReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
@@ -133,7 +132,7 @@ public final class HubInstrumentedTest {
     }
 
     /**
-     * Validates that a hub listener will receive all of a series of
+     * Validates that a hub subscriber will receive all of a series of
      * multiple publications.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
@@ -144,17 +143,17 @@ public final class HubInstrumentedTest {
         final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
         final List<Integer> subscriptionsReceived = new ArrayList<>();
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
-            if (payload.getEventData() instanceof Integer) {
-                Log.d(TAG, "Integer: => " + payload.getEventName() + ":" + payload.getEventData());
-                subscriptionsReceived.add((Integer) payload.getEventData());
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
+            if (event.getData() instanceof Integer) {
+                Log.d(TAG, "Integer: => " + event.getName() + ":" + event.getData());
+                subscriptionsReceived.add((Integer) event.getData());
                 allSubscriptionsReceived.countDown();
             }
         });
 
         for (int i = 0; i < numPublications; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    new HubPayload("weatherInteger:" + i, i));
+                    new HubEvent("weatherInteger:" + i, i));
         }
 
         assertTrue("Expecting to receive all " + numPublications + " subscriptions.",
@@ -172,7 +171,7 @@ public final class HubInstrumentedTest {
     }
 
     /**
-     * Validates that a hub listener will receive publications of
+     * Validates that a hub subscriber will receive publications of
      * multiple events of different types.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
@@ -186,23 +185,23 @@ public final class HubInstrumentedTest {
         final List<String> stringSubscriptionsReceived = new ArrayList<>();
         final String stringSubscriptionValue = "weatherAlwaysRemainsTheSame";
 
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, payload -> {
-            if (payload.getEventData() instanceof Integer) {
-                Log.d(TAG, "Integer: => " + payload.getEventName() + ":" + payload.getEventData());
-                integerSubscriptionsReceived.add((Integer) payload.getEventData());
+        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
+            if (event.getData() instanceof Integer) {
+                Log.d(TAG, "Integer: => " + event.getName() + ":" + event.getData());
+                integerSubscriptionsReceived.add((Integer) event.getData());
                 allSubscriptionsReceived.countDown();
-            } else if (payload.getEventData() instanceof String) {
-                Log.d(TAG, "String: => " + payload.getEventName() + ":" + payload.getEventData());
-                stringSubscriptionsReceived.add((String) payload.getEventData());
+            } else if (event.getData() instanceof String) {
+                Log.d(TAG, "String: => " + event.getName() + ":" + event.getData());
+                stringSubscriptionsReceived.add((String) event.getData());
                 allSubscriptionsReceived.countDown();
             }
         });
 
         for (int i = 0; i < numPublications / numDataTypes; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    new HubPayload("weatherInteger:" + i, i));
+                    new HubEvent("weatherInteger:" + i, i));
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    new HubPayload("weatherString:" + i, stringSubscriptionValue));
+                    new HubEvent("weatherString:" + i, stringSubscriptionValue));
         }
 
         assertTrue("Expecting to receive all " + numPublications + " subscriptions.",

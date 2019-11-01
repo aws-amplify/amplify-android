@@ -16,12 +16,13 @@
 package com.amplifyframework.core.async;
 
 /**
- * Listener for async operations. This listener can be
- * used in cases where an event will be generated.
- *
+ * A callback that received notifications of events surrounding async
+ * operations. This can be used in cases where an event will be
+ * generated.
  * @param <T> the parameter type of the event object.
  */
 public interface EventListener<T> {
+
     /**
      * The event object will be passed through the
      * onEvent method.
@@ -30,3 +31,4 @@ public interface EventListener<T> {
      */
     void onEvent(T event);
 }
+

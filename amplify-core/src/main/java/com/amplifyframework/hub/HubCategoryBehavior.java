@@ -26,52 +26,52 @@ import androidx.annotation.Nullable;
 public interface HubCategoryBehavior {
 
     /**
-     * Publish a payload on the specified channel.
-     * @param hubChannel The channel to send the message on
-     * @param hubPayload The payload to send
+     * Publish an event to the specified channel.
+     * @param hubChannel The channel on which to dispatch the event
+     * @param hubEvent The event to send
      * @throws HubException if the publication fails
      */
     void publish(@NonNull HubChannel hubChannel,
-                 @NonNull HubPayload hubPayload) throws HubException;
+                 @NonNull HubEvent hubEvent) throws HubException;
 
     /**
-     * Subscribe to Hub payloads that arrive on a particular channel.
-     * @param hubChannel The channel to listen for messages on
-     * @param listener The callback to invoke with the received message
-     * @return the token which serves as an identifier for the listener
-     *          registered. The token can be used with
-     *          {@link #unsubscribe(SubscriptionToken)}
-     *          to de-register the listener.
+     * Subscribe to Hub events that arrive on a particular channel.
+     * @param hubChannel A channel on which to subscribe to events
+     * @param hubSubscriber A subscriber who will receive hub events
+     * @return A token which serves as an identifier for the subscription.
+     *         The token can be used with {@link #unsubscribe(SubscriptionToken)}
+     *         to cancel the subscription.
      * @throws HubException if the subscription fails
      */
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                @NonNull HubListener listener) throws HubException;
+                                @NonNull HubSubscriber hubSubscriber) throws HubException;
 
     /**
-     * Subscribe to Hub payloads on a particular channel, and considering the result of applying
-     * a provided {@link HubPayloadFilter}, to further constraint the received payloads.
-     *
-     * @param hubChannel The channel to listen for messages on
-     * @param hubPayloadFilter candidate messages will be passed to this closure prior to dispatching to
-     *                  the {@link HubListener}. Only messages for which the closure returns
-     *                  `true` will be dispatched.
-     * @param listener The callback to invoke with the received message
-     * @return the token which serves as an identifier for the listener
-     *          registered. The token can be used with #unsubscribe(SubscriptionToken)
-     *          to de-register the listener.
+     * Subscribe to Hub events on a particular channel, and considering
+     * the result of applying a provided {@link HubEventFilter}, to
+     * further constrain the received events.
+     * @param hubChannel A channel on which a subscriber will receive events
+     * @param hubEventFilter
+     *        Candidate messages will be passed to this closure prior to
+     *        dispatching to the {@link HubSubscriber}. Only messages
+     *        for which the closure returns `true` will be dispatched.
+     * @param hubSubscriber A subscriber who will receive hub events
+     * @return A token which serves as an identifier for the
+     *         subscription. The token can be used with
+     *         {@link #unsubscribe(SubscriptionToken)} to cancel the
+     *         subscription.
      * @throws HubException if the subscription fails
      */
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                @Nullable HubPayloadFilter hubPayloadFilter,
-                                @NonNull HubListener listener) throws HubException;
+                                @Nullable HubEventFilter hubEventFilter,
+                                @NonNull HubSubscriber hubSubscriber) throws HubException;
 
     /**
-     * Unsubscribe a registered listener from the Hub system by passing the
-     * token received from {@link #subscribe(HubChannel, HubListener)} or
-     * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
-     * @param subscriptionToken the token which serves as an identifier for the listener
-     *                 {@link HubListener} registered
-     * @throws HubException on failure to unsubscribe, perhaps if the token is
+     * Unsubscribe a subscriber from the Hub system by passing the
+     * token received from {@link #subscribe(HubChannel, HubSubscriber)} or
+     * {@link #subscribe(HubChannel, HubEventFilter, HubSubscriber)}.
+     * @param subscriptionToken A token which serves as an identifier for a subscription
+     * @throws HubException on failure to unsubscribe, perhaps if a token is
      *                      invalid or does not refer to a known subscription
      */
     void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException;
