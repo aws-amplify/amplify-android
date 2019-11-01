@@ -51,7 +51,7 @@ dependencies {
     implementation "com.google.code.gson:gson:2.8.6"
 
     // AWS dependencies
-    def aws_version = "2.16.1"
+    def aws_version = '2.16.2'
     implementation "com.amazonaws:aws-android-sdk-auth-core:$aws_version"
     implementation ("com.amazonaws:aws-android-sdk-mobile-client:$aws_version") { transitive = true }
 

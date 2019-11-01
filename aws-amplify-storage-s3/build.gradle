@@ -42,9 +42,11 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation project(':amplify-core')
-    implementation 'com.amazonaws:aws-android-sdk-s3:2.16.1'
-    implementation ('com.amazonaws:aws-android-sdk-mobile-client:2.16.1') { transitive = true }
+
+    def aws_version = '2.16.2'
+    implementation "com.amazonaws:aws-android-sdk-s3:$aws_version"
+    implementation ("com.amazonaws:aws-android-sdk-mobile-client:$aws_version") { transitive = true }
 }
+
