@@ -60,7 +60,7 @@ public final class AsyncEvent<T> {
     private final AmplifyOperation<?> generatedByAmplifyOperation;
 
     /**
-     * Construcst a new AsyncEvent.
+     * Constructs a new AsyncEvent.
      * @param eventName The name of the event
      * @param eventState The state of the event
      * @param eventData Data associated with the event

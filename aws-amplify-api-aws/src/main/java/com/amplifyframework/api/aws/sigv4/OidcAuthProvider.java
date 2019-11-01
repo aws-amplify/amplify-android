@@ -22,7 +22,7 @@ package com.amplifyframework.api.aws.sigv4;
 public interface OidcAuthProvider {
     /**
      * Vends the latest valid authentication token
-     * from OpenID Connect token vender.
+     * from OpenID Connect token vendor.
      * @return the latest auth token
      */
     String getLatestAuthToken();

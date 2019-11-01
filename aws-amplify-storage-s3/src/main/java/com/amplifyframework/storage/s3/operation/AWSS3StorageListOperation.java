@@ -15,8 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
-import com.amplifyframework.core.async.Listener;
-import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -32,20 +31,20 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final AWSS3StorageService storageService;
-    private final Listener<StorageListResult> callback;
+    private final ResultListener<StorageListResult> resultListener;
 
     /**
      * Constructs a new AWSS3StorageListOperation.
      * @param storageService S3 client wrapper
      * @param request list request parameters
-     * @param callback Listener to invoke when results are available
+     * @param resultListener notified when list operation results are available
      */
     public AWSS3StorageListOperation(AWSS3StorageService storageService,
                                      AWSS3StorageListRequest request,
-                                     Listener<StorageListResult> callback) {
-        super(CategoryType.STORAGE, request);
+                                     ResultListener<StorageListResult> resultListener) {
+        super(request);
         this.storageService = storageService;
-        this.callback = callback;
+        this.resultListener = resultListener;
     }
 
     // TODO: This is currently a blocking method since listFiles is blocking, consistent with the S3 SDK.
@@ -63,8 +62,8 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                     exception
             );
 
-            if (callback != null) {
-                callback.onError(storageException);
+            if (resultListener != null) {
+                resultListener.onError(storageException);
             }
             throw storageException;
         }
@@ -79,12 +78,12 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                     )
             );
 
-            if (callback != null) {
-                callback.onResult(result);
+            if (resultListener != null) {
+                resultListener.onResult(result);
             }
         } catch (Exception error) {
-            if (callback != null) {
-                callback.onError(error);
+            if (resultListener != null) {
+                resultListener.onError(error);
             }
             throw error;
         }

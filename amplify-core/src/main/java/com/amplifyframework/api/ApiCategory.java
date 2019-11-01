@@ -18,8 +18,10 @@ package com.amplifyframework.api;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -38,20 +40,33 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                               @NonNull String gqlDocument,
-                                                               @Nullable Map<String, String> variables,
-                                                               @NonNull Class<T> classToCast,
-                                                               @Nullable Listener<GraphQLResponse<T>> callback) {
-        return getSelectedPlugin().query(apiName, gqlDocument, variables, classToCast, callback);
+    public <T> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+        return getSelectedPlugin().query(apiName, gqlDocument, variables, classToCast, responseListener);
     }
 
     @Override
-    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                                @NonNull String gqlDocument,
-                                                                @Nullable Map<String, String> variables,
-                                                                @NonNull Class<T> classToCast,
-                                                                @Nullable Listener<GraphQLResponse<T>> callback) {
-        return getSelectedPlugin().mutate(apiName, gqlDocument, variables, classToCast, callback);
+    public <T> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+        return getSelectedPlugin().mutate(apiName, gqlDocument, variables, classToCast, responseListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
+        return getSelectedPlugin().subscribe(apiName, gqlDocument, variables, classToCast, subscriptionListener);
     }
 }
+

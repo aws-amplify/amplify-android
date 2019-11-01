@@ -22,7 +22,7 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -85,7 +85,7 @@ public final class GraphQLInstrumentationTest {
                 document,
                 Collections.emptyMap(),
                 Todo.class,
-                new TestGraphQLListener<>());
+                new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -102,7 +102,7 @@ public final class GraphQLInstrumentationTest {
                 document,
                 Collections.emptyMap(),
                 Todo.class,
-                new TestGraphQLListener<>());
+                new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -122,11 +122,11 @@ public final class GraphQLInstrumentationTest {
                 document,
                 variables,
                 Todo.class,
-                new TestGraphQLListener<>());
+                new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
-    class Todo {
+    final class Todo {
         private final String id;
         private final String name;
         private final String description;
@@ -150,7 +150,7 @@ public final class GraphQLInstrumentationTest {
         }
     }
 
-    class TestGraphQLListener<T> implements Listener<GraphQLResponse<T>> {
+    final class TestGraphQLResultListener<T> implements ResultListener<GraphQLResponse<T>> {
         @Override
         public void onResult(GraphQLResponse<T> response) {
             assertNotNull(response);
@@ -160,7 +160,7 @@ public final class GraphQLInstrumentationTest {
         }
 
         @Override
-        public void onError(Exception error) {
+        public void onError(Throwable error) {
             fail(error.getLocalizedMessage());
         }
     }

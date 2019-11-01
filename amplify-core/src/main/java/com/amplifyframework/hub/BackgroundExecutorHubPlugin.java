@@ -56,13 +56,8 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
         this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
-    /**
-     * Dispatch a Hub message on the specified channel.
-     * @param hubChannel The channel to send the message on
-     * @param hubPayload The payload to send
-     */
     @Override
-    public void publish(@NonNull final HubChannel hubChannel, @NonNull final HubPayload hubPayload) {
+    public void publish(@NonNull final HubChannel hubChannel, @NonNull final HubEvent hubEvent) {
         executorService.submit(() -> {
             final Set<HubSubscription> safeSubscriptions = new HashSet<>();
             synchronized (subscriptionsLock) {
@@ -73,52 +68,32 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
             }
 
             for (HubSubscription subscription : safeSubscriptions) {
-                if (subscription.getHubPayloadFilter() != null &&
-                        !subscription.getHubPayloadFilter().filter(hubPayload)) {
+                if (subscription.getHubEventFilter() != null &&
+                        !subscription.getHubEventFilter().filter(hubEvent)) {
                     continue;
                 }
 
-                mainHandler.post(() -> subscription.getHubListener().onEvent(hubPayload));
+                mainHandler.post(() -> subscription.getHubSubscriber().onEvent(hubEvent));
             }
         });
     }
 
-    /**
-     * Listen to Hub messages on a particular channel.
-     * @param hubChannel The channel to listen for messages on
-     * @param listener   The callback to invoke with the received message
-     * @return the token which serves as an identifier for the listener
-     * registered. The token can be used with
-     * {@link #unsubscribe(SubscriptionToken)}
-     * to de-register the listener.
-     */
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @NonNull HubListener listener) {
-        return subscribe(hubChannel, null, listener);
+                                       @NonNull HubSubscriber hubSubscriber) {
+        return subscribe(hubChannel, null, hubSubscriber);
     }
 
-    /**
-     * Listen to Hub messages on a particular channel.
-     * @param hubChannel The channel to listen for messages on
-     * @param hubPayloadFilter  candidate messages will be passed to this closure prior to dispatching to
-     *                   the {@link HubListener}. Only messages for which the closure returns
-     *                   `true` will be dispatched.
-     * @param listener   The callback to invoke with the received message
-     * @return the token which serves as an identifier for the listener
-     * registered. The token can be used with #unsubscribe(SubscriptionToken)
-     * to de-register the listener.
-     */
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @Nullable HubPayloadFilter hubPayloadFilter,
-                                       @NonNull HubListener listener) {
+                                       @Nullable HubEventFilter hubEventFilter,
+                                       @NonNull HubSubscriber hubSubscriber) {
         Objects.requireNonNull(hubChannel);
-        Objects.requireNonNull(listener);
+        Objects.requireNonNull(hubSubscriber);
 
         final SubscriptionToken token = SubscriptionToken.create();
         final HubSubscription hubSubscription =
-            new HubSubscription(hubChannel, hubPayloadFilter, listener);
+            new HubSubscription(hubChannel, hubEventFilter, hubSubscriber);
 
         synchronized (subscriptionsLock) {
             subscriptionsByToken.put(token, hubSubscription);
@@ -133,20 +108,13 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
         return token;
     }
 
-    /**
-     * A subscribed listener can be removed from the Hub system by passing the
-     * token received from {@link #subscribe(HubChannel, HubListener)} or
-     * {@link #subscribe(HubChannel, HubPayloadFilter, HubListener)}.
-     * @param subscriptionToken the token which serves as an identifier for the listener
-     *                         {@link HubListener} registered
-     */
     @Override
     public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
         synchronized (subscriptionsLock) {
-            // First, find the listener while trying to remove its subscription from the token map.
+            // First, find the subscription while trying to remove its subscription from the token map.
             HubSubscription subscriptionBeingEnded = subscriptionsByToken.remove(subscriptionToken);
             if (subscriptionBeingEnded == null) {
-                throw new HubException("Invalid subscription token. Listener invalid, or already unsubscribed?");
+                throw new HubException("Invalid subscription token. Subscriber invalid, or already unsubscribed?");
             }
 
             // Now that we have a handle to the subscription, figure out which channel
@@ -158,65 +126,52 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
         }
     }
 
-    /**
-     * Gets the key for this plugin.
-     * @return An identifier that uniquely identifies this plugin implementation
-     */
     @Override
     public String getPluginKey() {
         return BackgroundExecutorHubPlugin.class.getSimpleName();
     }
 
-    /**
-     * Configure the plugin with customized configuration object.
-     * @param pluginConfiguration plugin-specific configuration
-     * @throws PluginException when configuration for a plugin was not found
-     */
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
 
     }
 
-    /**
-     * Returns escape hatch for plugin to enable lower-level client use-cases.
-     * @return the client used by category plugin
-     */
     @Override
     public Void getEscapeHatch() {
         return null;
     }
 
     /**
-     * Encapsulates information about a subscription.
-     * This is needed so that we can have O(1) lookup with a subscriptions map
-     * for subscribe and unsubscribe(), but still be able to lookup the set of
-     * listeners for a channel in O(1), as well. Lastly, this subscription
-     * object provides a reference to the optional payload filter which is evaluated
-     * when payloads are published.
+     * Encapsulates information about a subscription.  This is needed so
+     * that we can have O(1) lookup with a subscriptions map for
+     * subscribe and unsubscribe(), but still be able to lookup the set
+     * of subscribers for a channel in O(1), as well. Lastly, this
+     * subscription object provides a reference to the optional event
+     * filter which is evaluated when events are published.
      */
     static final class HubSubscription {
         private final HubChannel channel;
-        private final HubPayloadFilter hubPayloadFilter;
-        private final HubListener hubListener;
+        private final HubEventFilter hubEventFilter;
+        private final HubSubscriber hubSubscriber;
 
         HubSubscription(@NonNull final HubChannel channel,
-                        @Nullable final HubPayloadFilter hubPayloadFilter,
-                        @Nullable final HubListener hubListener) {
+                        @Nullable final HubEventFilter hubEventFilter,
+                        @Nullable final HubSubscriber hubSubscriber) {
             this.channel = channel;
-            this.hubPayloadFilter = hubPayloadFilter;
-            this.hubListener = hubListener;
+            this.hubEventFilter = hubEventFilter;
+            this.hubSubscriber = hubSubscriber;
         }
 
         HubChannel getHubChannel() {
             return channel;
         }
 
-        HubPayloadFilter getHubPayloadFilter() {
-            return hubPayloadFilter;
+        HubEventFilter getHubEventFilter() {
+            return hubEventFilter;
         }
 
-        HubListener getHubListener() {
-            return hubListener;
+        HubSubscriber getHubSubscriber() {
+            return hubSubscriber;
         }
     }
 }

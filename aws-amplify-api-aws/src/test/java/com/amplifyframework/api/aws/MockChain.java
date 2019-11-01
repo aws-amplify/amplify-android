@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -36,7 +35,8 @@ import okhttp3.Response;
  * {@link com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor#intercept(Interceptor.Chain)}
  * were implemented in this mock class.
  */
-@SuppressWarnings("ParameterName") //To keep the parameter names consistent with official Chain API
+@SuppressWarnings({"ParameterName", "ConstantConditions"})
+//To keep the parameter names consistent with official Chain API
 final class MockChain implements Interceptor.Chain {
     private static final int MOCK_STATUS_CODE = 200;
 
@@ -59,7 +59,7 @@ final class MockChain implements Interceptor.Chain {
 
     @NotNull
     @Override
-    public Response proceed(@NotNull Request request) throws IOException {
+    public Response proceed(@NotNull Request request) {
         return new Response.Builder()
                 .code(MOCK_STATUS_CODE)
                 .message("response message")

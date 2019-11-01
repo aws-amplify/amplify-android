@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * various data required for successful configuration.
  */
 public abstract class CategoryConfiguration implements CategoryTypeable {
-    @SuppressWarnings("MismatchedQueryAndUpdateOfCollection") // Configs will be populated by future work
+    // Configs will be populated by future work
     private static final String PLUGINS_KEY = "plugins";
     private final Map<String, JSONObject> pluginConfigs;
 

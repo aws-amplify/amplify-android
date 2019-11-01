@@ -28,7 +28,7 @@ import java.util.UUID;
  * uploading an image to cloud storage, processing it via a Predictions engine, and translating the results.
  *
  * AmplifyOperations are used by plugin developers to perform tasks on behalf of the calling app. They have a default
- * implementation of a `publish` method that sends a contextualized payload to the Hub.
+ * implementation of a `publish` method that sends a contextualized event to the Hub.
  *
  * Pausable/resumable tasks that do not require Hub dispatching should use {@link AsyncOperation} instead.
  *

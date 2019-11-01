@@ -15,8 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
-import com.amplifyframework.core.async.Listener;
-import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
@@ -31,20 +30,20 @@ import com.amazonaws.mobile.client.AWSMobileClient;
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final AWSS3StorageService storageService;
-    private final Listener<StorageRemoveResult> callback;
+    private final ResultListener<StorageRemoveResult> resultListener;
 
     /**
      * Constructs a new AWSS3StorageRemoveOperation.
      * @param storageService S3 client wrapper
      * @param request remove request parameters
-     * @param callback Listener to invoke when results are available
+     * @param resultListener notified when remove operation results available
      */
     public AWSS3StorageRemoveOperation(AWSS3StorageService storageService,
                                        AWSS3StorageRemoveRequest request,
-                                       Listener<StorageRemoveResult> callback) {
-        super(CategoryType.STORAGE, request);
+                                       ResultListener<StorageRemoveResult> resultListener) {
+        super(request);
         this.storageService = storageService;
-        this.callback = callback;
+        this.resultListener = resultListener;
     }
 
     // TODO: This is currently a blocking method since deleteObject is blocking, consistent with the S3 SDK.
@@ -62,8 +61,8 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
                     exception
             );
 
-            if (callback != null) {
-                callback.onError(storageException);
+            if (resultListener != null) {
+                resultListener.onError(storageException);
             }
             throw storageException;
         }
@@ -78,12 +77,12 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
                     )
             );
 
-            if (callback != null) {
-                callback.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
+            if (resultListener != null) {
+                resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
             }
         } catch (Exception error) {
-            if (callback != null) {
-                callback.onError(error);
+            if (resultListener != null) {
+                resultListener.onError(error);
             }
             throw error;
         }
