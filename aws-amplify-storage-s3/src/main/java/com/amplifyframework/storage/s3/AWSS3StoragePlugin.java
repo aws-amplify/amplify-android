@@ -117,7 +117,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageDownloadFileOperation downloadFile(
+    public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local
     ) throws StorageException {
@@ -125,7 +125,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageDownloadFileOperation downloadFile(
+    public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
             StorageDownloadFileOptions options
@@ -134,7 +134,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageDownloadFileOperation downloadFile(
+    public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
             Listener<StorageDownloadFileResult> callback
@@ -143,7 +143,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageDownloadFileOperation downloadFile(
+    public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
             StorageDownloadFileOptions options,
@@ -164,7 +164,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageUploadFileOperation uploadFile(
+    public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local
     ) throws StorageException {
@@ -172,7 +172,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageUploadFileOperation uploadFile(
+    public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
             StorageUploadFileOptions options
@@ -181,7 +181,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageUploadFileOperation uploadFile(
+    public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
             Listener<StorageUploadFileResult> callback
@@ -190,7 +190,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageUploadFileOperation uploadFile(
+    public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
             StorageUploadFileOptions options,
@@ -214,14 +214,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageRemoveOperation remove(
+    public StorageRemoveOperation<?> remove(
             @NonNull String key
     ) throws StorageException {
         return remove(key, StorageRemoveOptions.defaultInstance());
     }
 
     @Override
-    public StorageRemoveOperation remove(
+    public StorageRemoveOperation<?> remove(
             @NonNull String key,
             StorageRemoveOptions options
     ) throws StorageException {
@@ -229,7 +229,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageRemoveOperation remove(
+    public StorageRemoveOperation<?> remove(
             @NonNull String key,
             Listener<StorageRemoveResult> callback
     ) throws StorageException {
@@ -237,7 +237,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageRemoveOperation remove(
+    public StorageRemoveOperation<?> remove(
             @NonNull String key,
             StorageRemoveOptions options,
             Listener<StorageRemoveResult> callback
@@ -257,23 +257,23 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public StorageListOperation list(@NonNull String path) throws StorageException {
+    public StorageListOperation<?> list(@NonNull String path) throws StorageException {
         return list(path, StorageListOptions.defaultInstance());
     }
 
     @Override
-    public StorageListOperation list(@NonNull String path, StorageListOptions options) throws StorageException {
+    public StorageListOperation<?> list(@NonNull String path, StorageListOptions options) throws StorageException {
         return list(path, options, null);
     }
 
     @Override
-    public StorageListOperation list(@NonNull String path, Listener<StorageListResult> callback)
+    public StorageListOperation<?> list(@NonNull String path, Listener<StorageListResult> callback)
             throws StorageException {
         return list(path, StorageListOptions.defaultInstance(), callback);
     }
 
     @Override
-    public StorageListOperation list(
+    public StorageListOperation<?> list(
             @NonNull String path,
             StorageListOptions options,
             Listener<StorageListResult> callback

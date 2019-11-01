@@ -16,6 +16,7 @@
 package com.amplifyframework.core.async;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.category.CategoryType;
 
@@ -30,8 +31,10 @@ import java.util.UUID;
  * implementation of a `publish` method that sends a contextualized payload to the Hub.
  *
  * Pausable/resumable tasks that do not require Hub dispatching should use {@link AsyncOperation} instead.
+ *
+ * @param <R> type of the request object
  */
-public abstract class AmplifyOperation implements AsyncOperation {
+public abstract class AmplifyOperation<R> implements AsyncOperation {
 
     // The unique ID of the operation. In categories where operations are persisted for future
     // processing, this id can be used to identify previously-scheduled work for progress tracking
@@ -42,17 +45,22 @@ public abstract class AmplifyOperation implements AsyncOperation {
     // CategoryType.
     private final CategoryType categoryType;
 
+    // Reference to the request object of the operation. The
+    // request object encapsulates the input parameters to an
+    // operation.
+    private final R request;
+
     /**
      * Constructs a new AmplifyOperation.
-     * @param categoryType The category in which this operation is fulfilling a request
+     * @param categoryType The category in which this operation is
+     *                     fulfilling a request
+     * @param request The request object of the operation
      */
-    public AmplifyOperation(@NonNull final CategoryType categoryType) {
+    public AmplifyOperation(@NonNull final CategoryType categoryType,
+                            @Nullable final R request) {
         this.categoryType = categoryType;
         this.operationId = UUID.randomUUID();
-    }
-
-    @Override
-    public void start() {
+        this.request = request;
     }
 
     /**
@@ -70,5 +78,12 @@ public abstract class AmplifyOperation implements AsyncOperation {
     public final CategoryType getCategoryType() {
         return categoryType;
     }
-}
 
+    /**
+     * Gets the request object.
+     * @return the request object
+     */
+    public R getRequest() {
+        return request;
+    }
+}

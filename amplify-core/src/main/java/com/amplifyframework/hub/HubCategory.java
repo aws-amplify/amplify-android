@@ -106,10 +106,11 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
      * @param eventListener The Operation-specific listener callback to be invoked
      *                 when an AsyncEvent for that operation is received.
      * @param <E> The type of the event that the event listener will receive
+     * @param <R> The type of the request object of the {@link AmplifyOperation}
      * @return A subscription token
      */
-    public <E> SubscriptionToken subscribe(
-            @NonNull final AmplifyOperation operation,
+    public <E, R> SubscriptionToken subscribe(
+            @NonNull final AmplifyOperation<R> operation,
             @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubPayloadFilter filter = HubFilters.hubPayloadFilter(operation);

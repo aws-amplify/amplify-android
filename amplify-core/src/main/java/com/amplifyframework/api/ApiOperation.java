@@ -25,24 +25,27 @@ import com.amplifyframework.core.category.CategoryType;
 /**
  * Base operation type for the API category.
  * @param <T> data type of response
- * @param <R> an instance of {@link Response} object
+ * @param <I> data type of input request
+ * @param <O> an instance of output {@link Response} object
  *           that wraps around API response
  */
-public abstract class ApiOperation<T, R extends Response<T>> extends AmplifyOperation implements Cancelable {
+public abstract class ApiOperation<T, I, O extends Response<T>> extends AmplifyOperation<I> implements Cancelable {
     private final ResponseFactory responseFactory;
     private final Class<T> classToCast;
-    private final Listener<R> callback;
+    private final Listener<O> callback;
 
     /**
      * Constructs a new instance of a ApiOperation.
      * @param responseFactory an implementation of ResponseFactory
+     * @param request the request object of the operation
      * @param classToCast class to cast the response to
      * @param callback local callback listener being registered
      */
     public ApiOperation(ResponseFactory responseFactory,
+                        I request,
                         Class<T> classToCast,
-                        @Nullable Listener<R> callback) {
-        super(CategoryType.API);
+                        @Nullable Listener<O> callback) {
+        super(CategoryType.API, request);
         this.responseFactory = responseFactory;
         this.classToCast = classToCast;
         this.callback = callback;
@@ -52,7 +55,7 @@ public abstract class ApiOperation<T, R extends Response<T>> extends AmplifyOper
      * Gets the locally registered callback.
      * @return the local callback
      */
-    protected final Listener<R> callback() {
+    protected final Listener<O> callback() {
         return callback;
     }
 
@@ -71,9 +74,9 @@ public abstract class ApiOperation<T, R extends Response<T>> extends AmplifyOper
      * @return wrapped response object
      */
     @SuppressWarnings("unchecked")
-    protected final R wrapResponse(String jsonResponse) {
+    protected final O wrapResponse(String jsonResponse) {
         try {
-            return (R) responseFactory.buildResponse(jsonResponse, classToCast);
+            return (O) responseFactory.buildResponse(jsonResponse, classToCast);
         } catch (ClassCastException cce) {
             throw new ApiException.ObjectSerializationException();
         }
