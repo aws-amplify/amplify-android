@@ -46,3 +46,7 @@ task clean(type: Delete) {
     delete rootProject.buildDir
 }
 
+ext {
+    awsSdkVersion = '2.16.2'
+}
+
