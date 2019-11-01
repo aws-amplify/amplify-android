@@ -17,7 +17,7 @@ package com.amplifyframework.datastore.storage;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.model.Model;
 
 import java.util.List;
@@ -41,7 +41,7 @@ public interface LocalStorageAdapter {
 
     /**
      * Save a {@link Model} to the local storage engine.
-     * The {@link Listener<Model>} will be invoked when the
+     * The {@link ResultListener<Model>} will be invoked when the
      * save operation is completed to notify the success and
      * failure.
      *
@@ -49,5 +49,5 @@ public interface LocalStorageAdapter {
      * @param listener the listener to be invoked when the
      *                 save operation is completed.
      */
-    void save(@NonNull Model model, @NonNull Listener<Model> listener);
+    void save(@NonNull Model model, @NonNull ResultListener<Model> listener);
 }
