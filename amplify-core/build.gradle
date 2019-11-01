@@ -44,7 +44,6 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
@@ -56,3 +55,4 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
     androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
 }
+
