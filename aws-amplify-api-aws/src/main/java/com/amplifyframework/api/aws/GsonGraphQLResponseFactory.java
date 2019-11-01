@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ResponseFactory;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import com.google.gson.Gson;
@@ -33,15 +32,15 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- * Converts JSON strings into models of a given type, using GSON.
+ * Converts JSON strings into models of a given type, using Gson.
  */
-final class GsonResponseFactory implements ResponseFactory {
+final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private final Gson gson;
 
     /**
      * Default constructor using default Gson object.
      */
-    GsonResponseFactory() {
+    GsonGraphQLResponseFactory() {
         this(new Gson());
     }
 
@@ -49,7 +48,7 @@ final class GsonResponseFactory implements ResponseFactory {
      * Constructor using customized Gson object.
      * @param gson custom Gson object
      */
-    GsonResponseFactory(Gson gson) {
+    GsonGraphQLResponseFactory(Gson gson) {
         this.gson = gson;
     }
 

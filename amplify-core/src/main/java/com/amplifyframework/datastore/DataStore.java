@@ -15,7 +15,7 @@
 
 package com.amplifyframework.datastore;
 
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.async.Result;
 
 /**
@@ -29,7 +29,7 @@ public interface DataStore<T> {
      * @param resultListener A listener which will be invoked when the save
      *                       is complete or if the save fails
      */
-    void save(T object, Listener<Result> resultListener);
+    void save(T object, ResultListener<Result> resultListener);
 
     /**
      * Deletes an object from the data store.
@@ -37,7 +37,7 @@ public interface DataStore<T> {
      * @param resultListener A listener which will be invoked when the delete is
      *                       complete or if the delete fails
      */
-    void delete(T object, Listener<Result> resultListener);
+    void delete(T object, ResultListener<Result> resultListener);
 
     /**
      * Query the data store to find objects of the provided type.
@@ -45,7 +45,7 @@ public interface DataStore<T> {
      * @param resultListener A listener which will be invoked when the query
      *                       returns results, or if there is a failure to query
      */
-    void query(Class<T> objectType, Listener<Result> resultListener);
+    void query(Class<T> objectType, ResultListener<Result> resultListener);
 
     /**
      * Observe changes to an object, in the data store.
@@ -54,5 +54,5 @@ public interface DataStore<T> {
      *                       made to the object or on failure to observe
      *                       the data store
      */
-    void observe(T object, Listener<Result> resultListener);
+    void observe(T object, ResultListener<Result> resultListener);
 }

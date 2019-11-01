@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import androidx.annotation.NonNull;
+
 /**
  * Enum that declares the various categories of APIs supported by Amplify
  * System + their config keys. We don't expect the config keys to be
@@ -79,6 +81,7 @@ public enum CategoryType {
         return configurationKey;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return configurationKey;

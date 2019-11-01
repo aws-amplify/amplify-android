@@ -40,6 +40,7 @@ import okio.Buffer;
  * Interceptor to sign requests for AppSync from AppSync Android SDK.
  * See https://github.com/awslabs/aws-mobile-appsync-sdk-android
  */
+@SuppressWarnings({"UnnecessaryLocalVariable", "ConstantConditions"}) // This is legacy code.
 public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
     private static final String TAG = AppSyncSigV4SignerInterceptor.class.getSimpleName();

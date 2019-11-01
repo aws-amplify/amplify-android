@@ -15,70 +15,22 @@
 
 package com.amplifyframework.api;
 
-import androidx.annotation.Nullable;
-
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.async.Listener;
 import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Base operation type for the API category.
- * @param <T> data type of response
- * @param <I> data type of input request
- * @param <O> an instance of output {@link Response} object
- *           that wraps around API response
+ * @param <R> Type of request being made
  */
-public abstract class ApiOperation<T, I, O extends Response<T>> extends AmplifyOperation<I> implements Cancelable {
-    private final ResponseFactory responseFactory;
-    private final Class<T> classToCast;
-    private final Listener<O> callback;
+public abstract class ApiOperation<R> extends AmplifyOperation<R> implements Cancelable {
 
     /**
-     * Constructs a new instance of a ApiOperation.
-     * @param responseFactory an implementation of ResponseFactory
-     * @param request the request object of the operation
-     * @param classToCast class to cast the response to
-     * @param callback local callback listener being registered
+     * Constructs a new ApiOperation.
+     * @param request An operation request
      */
-    public ApiOperation(ResponseFactory responseFactory,
-                        I request,
-                        Class<T> classToCast,
-                        @Nullable Listener<O> callback) {
+    public ApiOperation(final R request) {
         super(CategoryType.API, request);
-        this.responseFactory = responseFactory;
-        this.classToCast = classToCast;
-        this.callback = callback;
-    }
-
-    /**
-     * Gets the locally registered callback.
-     * @return the local callback
-     */
-    protected final Listener<O> callback() {
-        return callback;
-    }
-
-    /**
-     * Check if callback was registered.
-     * @return true if callback exists, false otherwise
-     */
-    protected final boolean hasCallback() {
-        return callback != null;
-    }
-
-    /**
-     * Converts the response json string to formatted
-     * {@link Response} object to be used by callback.
-     * @param jsonResponse json response from API to be converted
-     * @return wrapped response object
-     */
-    @SuppressWarnings("unchecked")
-    protected final O wrapResponse(String jsonResponse) {
-        try {
-            return (O) responseFactory.buildResponse(jsonResponse, classToCast);
-        } catch (ClassCastException cce) {
-            throw new ApiException.ObjectSerializationException();
-        }
     }
 }
+

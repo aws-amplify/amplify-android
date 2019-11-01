@@ -20,12 +20,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.ApiOperation;
 import com.amplifyframework.api.ApiPlugin;
-import com.amplifyframework.api.graphql.GraphQLQuery;
+import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.OperationType;
-import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
@@ -38,14 +38,14 @@ import okhttp3.OkHttpClient;
 
 /**
  * Plugin implementation to be registered with Amplify API category.
- * It uses OkHttp client to execute POST on graphql commands.
+ * It uses OkHttp client to execute POST on GraphQL commands.
  */
 public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private static final String TAG = AWSApiPlugin.class.getSimpleName();
 
     private final Map<String, ClientDetails> httpClients;
-    private final GsonResponseFactory gqlResponseFactory;
+    private final GsonGraphQLResponseFactory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
 
     /**
@@ -66,7 +66,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      */
     public AWSApiPlugin(ApiAuthProviders apiAuthProvider) {
         this.httpClients = new HashMap<>();
-        this.gqlResponseFactory = new GsonResponseFactory();
+        this.gqlResponseFactory = new GsonGraphQLResponseFactory();
         this.authProvider = apiAuthProvider;
     }
 
@@ -97,11 +97,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
     }
 
-    /**
-     * {@inheritDoc}.
-     * @return Map from API name to OkHttpClient, each configured for
-     *         the particular API
-     */
     @Override
     public Map<String, OkHttpClient> getEscapeHatch() {
         final Map<String, OkHttpClient> apiClientsByName = new HashMap<>();
@@ -112,63 +107,77 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                               @NonNull String gqlDocument,
-                                                               @Nullable Map<String, String> variables,
-                                                               @NonNull Class<T> classToCast,
-                                                               @Nullable Listener<GraphQLResponse<T>> callback) {
+    public <T> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.QUERY, gqlDocument);
+        GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
         if (variables != null) {
             for (String key : variables.keySet()) {
-                gqlQuery.variable(key, variables.get(key));
+                qraphQlRequest.variable(key, variables.get(key));
             }
         }
 
-        ApiOperation<T, I, GraphQLResponse<T>> operation =
-                new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
-                        clientDetails.getClient(),
-                        gqlQuery,
-                        gqlResponseFactory,
-                        classToCast,
-                        callback);
+        GraphQLOperation<T> operation =
+            new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
+                clientDetails.getClient(),
+                qraphQlRequest,
+                gqlResponseFactory,
+                classToCast,
+                responseListener);
 
         operation.start();
         return operation;
     }
 
     @Override
-    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                                @NonNull String gqlDocument,
-                                                                @Nullable Map<String, String> variables,
-                                                                @NonNull Class<T> classToCast,
-                                                                @Nullable Listener<GraphQLResponse<T>> callback) {
+    public <T> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        GraphQLQuery gqlQuery = new GraphQLQuery(OperationType.MUTATION, gqlDocument);
+        GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
         if (variables != null) {
             for (String key : variables.keySet()) {
-                gqlQuery.variable(key, variables.get(key));
+                qraphQlRequest.variable(key, variables.get(key));
             }
         }
 
-        ApiOperation<T, I, GraphQLResponse<T>> operation =
+        GraphQLOperation<T> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
-                        gqlQuery,
+                        qraphQlRequest,
                         gqlResponseFactory,
                         classToCast,
-                        callback);
+                        responseListener);
 
         operation.start();
         return operation;
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
+        throw new UnsupportedOperationException("This has not been implemented, yet.");
     }
 
     /**
@@ -204,3 +213,4 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
     }
 }
+

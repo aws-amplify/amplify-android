@@ -18,25 +18,24 @@ package com.amplifyframework.hub;
 import androidx.annotation.NonNull;
 
 /**
- * A filter which can be used to control which {@link HubPayload}s a
- * subscribed {@link HubListener} will receive from the Hub. The
- * {@link HubFilters} utility constants factories for some commonly used
- * types of {@link HubPayloadFilter}s. Alternately, you are free to
+ * A filter which can be used to control which {@link HubEvent}s a
+ * subscribed {@link HubSubscriber} will receive from the Hub. The
+ * {@link HubEventFilters} utility contains factories for some commonly used
+ * types of {@link HubEventFilter}s. Alternately, you are free to
  * implement your own custom, more complex, logic.
  */
-public interface HubPayloadFilter {
+public interface HubEventFilter {
 
     /**
-     * Filter the HubPayload based on your criteria.
-     * An implementation of a HubPayloadFilter can be passed to
-     * the {@link HubCategory#subscribe(HubChannel, HubListener)}
-     * filter listening to events from HubChannel.
+     * Filter the HubEvent based on your criteria.  An implementation of
+     * a HubEventFilter can be passed to the {@link
+     * HubCategory#subscribe(HubChannel, HubSubscriber)} to further
+     * filter events on a given HubChannel.
      *
-     * @param payload the payload that is part of the event
-     *                that is transported by the Hub.
-     * @return true if the payload meets your criteria,
+     * @param hubEvent An event as received on a hub channel
+     * @return true if the event meets your criteria,
      *         false otherwise.
      */
-    boolean filter(@NonNull HubPayload payload);
+    boolean filter(@NonNull HubEvent hubEvent);
 }
 

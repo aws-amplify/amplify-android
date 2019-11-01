@@ -49,7 +49,7 @@ public final class AWSApiPluginConfiguration {
         return apiDetails;
     }
 
-    @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
+    @SuppressWarnings({"NeedBraces"})
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) return true;

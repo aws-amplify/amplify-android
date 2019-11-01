@@ -141,7 +141,7 @@ public class ConfigurationException extends AmplifyRuntimeException {
         /**
          * Constructs a new UnableToDecodeException using a custom error
          * message.
-         * @param message Explains why/how/that the configuration coul not be decoded
+         * @param message Explains why/how/that the configuration could not be decoded
          */
         public UnableToDecodeException(String message) {
             super(message);

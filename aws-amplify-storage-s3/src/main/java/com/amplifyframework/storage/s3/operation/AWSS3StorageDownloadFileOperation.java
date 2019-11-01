@@ -15,8 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
-import com.amplifyframework.core.async.Listener;
-import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
@@ -37,7 +36,7 @@ import java.io.File;
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final Listener<StorageDownloadFileResult> callback;
+    private final ResultListener<StorageDownloadFileResult> resultListener;
     private TransferObserver transferObserver;
     private File file;
 
@@ -45,14 +44,14 @@ public final class AWSS3StorageDownloadFileOperation
      * Constructs a new AWSS3StorageDownloadFileOperation.
      * @param storageService S3 client wrapper
      * @param request download request parameters
-     * @param callback Listener to invoke when results are available
+     * @param resultListener Notified when download results are available
      */
     public AWSS3StorageDownloadFileOperation(AWSS3StorageService storageService,
                                              AWSS3StorageDownloadFileRequest request,
-                                             Listener<StorageDownloadFileResult> callback) {
-        super(CategoryType.STORAGE, request);
+                                             ResultListener<StorageDownloadFileResult> resultListener) {
+        super(request);
         this.storageService = storageService;
-        this.callback = callback;
+        this.resultListener = resultListener;
         this.transferObserver = null;
         this.file = null;
     }
@@ -92,8 +91,8 @@ public final class AWSS3StorageDownloadFileOperation
                 public void onStateChanged(int transferId, TransferState state) {
                     // TODO: dispatch event to hub
                     if (TransferState.COMPLETED == state) {
-                        if (callback != null) {
-                            callback.onResult(StorageDownloadFileResult.fromFile(file));
+                        if (resultListener != null) {
+                            resultListener.onResult(StorageDownloadFileResult.fromFile(file));
                         }
                     }
                 }
@@ -108,8 +107,8 @@ public final class AWSS3StorageDownloadFileOperation
                 @Override
                 public void onError(int transferId, Exception exception) {
                     // TODO: dispatch event to hub
-                    if (callback != null) {
-                        callback.onError(exception);
+                    if (resultListener != null) {
+                        resultListener.onError(exception);
                     }
                 }
             });

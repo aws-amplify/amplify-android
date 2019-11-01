@@ -15,7 +15,6 @@
 
 package com.amplifyframework.storage.operation;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.AmplifyOperation;
@@ -32,13 +31,10 @@ public abstract class StorageDownloadFileOperation<R> extends AmplifyOperation<R
 
     /**
      * Constructs a new AmplifyOperation.
-     *
-     * @param categoryType            The category in which this operation is
-     *                                fulfilling a request
      * @param amplifyOperationRequest The request object of the operation
      */
-    public StorageDownloadFileOperation(@NonNull CategoryType categoryType, @Nullable R amplifyOperationRequest) {
-        super(categoryType, amplifyOperationRequest);
+    public StorageDownloadFileOperation(@Nullable R amplifyOperationRequest) {
+        super(CategoryType.STORAGE, amplifyOperationRequest);
     }
 }
 

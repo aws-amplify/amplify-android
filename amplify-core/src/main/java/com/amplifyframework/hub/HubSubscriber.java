@@ -18,22 +18,16 @@ package com.amplifyframework.hub;
 import androidx.annotation.NonNull;
 
 /**
- * Listener for {@link HubCategory} subscriptions. This listener can be
- * used to notify the subscribers of the subscriptions.
- *
- * An instance of the {@link HubListener} is passed to the
- * {@link HubCategory#subscribe(HubChannel, HubListener)} or the
- * {@link HubCategory#subscribe(HubChannel, HubPayloadFilter, HubListener)}
- * method to get notified of subscriptions.
+ * An instance of the {@link HubSubscriber} may be passed to the
+ * {@link HubCategory#subscribe(HubChannel, HubSubscriber)} or the
+ * {@link HubCategory#subscribe(HubChannel, HubEventFilter, HubSubscriber)}
+ * methods to subscribe to various types of Hub events.
  */
-public interface HubListener {
-    /**
-     * The onEvent method is triggered with the payload of
-     * the event.
-     *
-     * @param hubPayload payload of the Hub subscription.
-     *                   See {@link HubPayload} for details.
-     */
-    void onEvent(@NonNull HubPayload hubPayload);
-}
+public interface HubSubscriber {
 
+    /**
+     * Called to notify that there is a new event available in the Hub.
+     * @param hubEvent A hub event
+     */
+    void onEvent(@NonNull HubEvent hubEvent);
+}
