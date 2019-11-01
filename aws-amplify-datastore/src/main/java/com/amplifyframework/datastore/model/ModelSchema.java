@@ -22,7 +22,6 @@ import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +52,75 @@ public final class ModelSchema {
     // persistence-related operations guarantee that the results are always consistent.
     private final List<Map.Entry<String, ModelField>> sortedFields;
 
+    /**
+     * Construct the ModelSchema object.
+     *
+     * @param name name of the Model class.
+     * @param targetName
+     *                   that the Model is targeting against.
+     * @param fields map of fieldName and the fieldObject
+     *               of all the fields of the model.
+     */
+    public ModelSchema(@NonNull String name,
+                       @NonNull String targetName,
+                       @NonNull SortedMap<String, ModelField> fields) {
+        this.name = name;
+        this.targetName = targetName;
+        this.fields = fields;
+        this.sortedFields = sortModelFields();
+    }
+
+    /**
+     * Returns the name of the Model class.
+     *
+     * @return the name of the Model class.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Returns the map of fieldName and the fieldObject
+     * of all the fields of the model.
+     *
+     * @return map of fieldName and the fieldObject
+     *         of all the fields of the model.
+     */
+    public Map<String, ModelField> getFields() {
+        return fields;
+    }
+
+    /**
+     * Returns the name of the target.
+     *
+     * @return the name of the target.
+     */
+    public String getTargetName() {
+        return targetName;
+    }
+
+    /**
+     * Returns the primary key of the Model.
+     *
+     * @return the primary key of the Model.
+     */
+    public ModelField getPrimaryKey() {
+        for (Map.Entry<String, ModelField> field: sortedFields) {
+            if (field.getValue().isPrimaryKey()) {
+                return field.getValue();
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Construct the ModelSchema from the {@link Model} class.
+     *
+     * @param clazz the instance of a model class
+     * @param <T> parameter type of a data model that conforms
+     *           to the {@link Model} interface.
+     * @return the ModelSchema object.
+     */
     static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.ModelField.class);
         final TreeMap<String, ModelField> fields = new TreeMap<>();
@@ -77,65 +145,13 @@ public final class ModelSchema {
         return new ModelSchema(clazz.getSimpleName(), clazz.getSimpleName(), fields);
     }
 
-    /**
-     * Construct the ModelSchema object.
-     *
-     * @param name name of the Model class.
-     * @param targetName
-     *                   that the Model is targeting against.
-     * @param fields map of fieldName and the fieldObject
-     *               of all the fields of the model.
-     */
-    public ModelSchema(@NonNull String name,
-                       @NonNull String targetName,
-                       @NonNull SortedMap<String, ModelField> fields) {
-        this.name = name;
-        this.targetName = targetName;
-        this.fields = fields;
-        this.sortedFields = sortModelFields();
-    }
-
-    /**
-     * @return the name of the Model class.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * @return map of fieldName and the fieldObject
-     *         of all the fields of the model.
-     */
-    public Map<String, ModelField> getFields() {
-        return fields;
-    }
-
-    /**
-     * @return the name of the target.
-     */
-    public String getTargetName() {
-        return targetName;
-    }
-
-    /**
-     * @return the primary key of the Model.
-     */
-    public ModelField getPrimaryKey() {
-        for (Map.Entry<String, ModelField> field: sortedFields) {
-            if (field.getValue().isPrimaryKey()) {
-                return field.getValue();
-            }
-        }
-        return null;
-    }
-
     private List<Map.Entry<String, ModelField>> sortModelFields() {
         if (fields == null) {
             return null;
         }
 
         // Create a list from elements of sortedFields
-        final List<Map.Entry<String, ModelField> > modelFieldEntries = new LinkedList<>(fields.entrySet());
+        final List<Map.Entry<String, ModelField>> modelFieldEntries = new LinkedList<>(fields.entrySet());
 
         // Returns an array of the values sorted by some pre-defined rules:
         //

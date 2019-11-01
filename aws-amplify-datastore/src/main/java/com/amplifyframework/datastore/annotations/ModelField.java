@@ -25,17 +25,18 @@ import java.lang.annotation.Target;
  * {@link com.amplifyframework.datastore.model.Model} should be serialized or
  * deserialized into the Datastore.
  *
- * {@link @Retention(RetentionPolicy.RUNTIME)} annotation is added to
+ * The {@link RetentionPolicy#RUNTIME} annotation is added to
  * retain {@link ModelField} at runtime for the reflection capabilities to work
  * in order to check if this annotation is present for a field of a Model.
  *
- * {@link @Target(ElementType.FIELD)} annotation is added to indicate
+ * {@link ElementType#FIELD} annotation is added to indicate
  * {@link ModelField} annotation can be used only on Fields (Data members of a class).
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface ModelField {
     /**
+     * Returns flag indicating if the field is required or optional.
      * @return if the field is required or optional.
      *          True if required, False if optional.
      *          Default is optional (False).
@@ -43,6 +44,7 @@ public @interface ModelField {
     boolean isRequired() default false;
 
     /**
+     * Returns the target name of the field.
      * @return the name of the field in the target.
      *          For example: the name of the field
      *          in the GraphQL schema.

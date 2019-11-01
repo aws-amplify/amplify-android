@@ -41,7 +41,7 @@ public interface LocalStorageAdapter {
 
     /**
      * Save a {@link Model} to the local storage engine.
-     * The {@link ResultListener<Model>} will be invoked when the
+     * The {@link ResultListener} will be invoked when the
      * save operation is completed to notify the success and
      * failure.
      *

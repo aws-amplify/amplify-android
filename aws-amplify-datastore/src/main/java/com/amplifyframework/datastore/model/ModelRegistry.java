@@ -24,12 +24,12 @@ import java.util.Map;
 /**
  * A utility that creates ModelSchema from Model classes.
  */
-public class ModelRegistry {
-    // ClassName => ModelSchema map
-    private Map<String, ModelSchema> modelSchemaMap;
-
+public final class ModelRegistry {
     // Singleton instance
     private static ModelRegistry modelRegistryInstance;
+
+    // ClassName => ModelSchema map
+    private Map<String, ModelSchema> modelSchemaMap;
 
     private ModelRegistry() {
         modelSchemaMap = new HashMap<>();
@@ -56,6 +56,10 @@ public class ModelRegistry {
         return modelSchemaMap.get(className);
     }
 
+    /**
+     * Returns the singleton instance.
+     * @return the singleton instance of the ModelRegistry.
+     */
     public static synchronized ModelRegistry getInstance() {
         if (modelRegistryInstance == null) {
             modelRegistryInstance = new ModelRegistry();

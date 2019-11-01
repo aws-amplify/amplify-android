@@ -60,6 +60,7 @@ public final class ModelField {
     }
 
     /**
+     * Return the builder object.
      * @return the builder object.
      */
     public static ModelFieldBuilder builder() {
@@ -67,6 +68,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns the name of the field is the name of the instance variable of the Model class.
      * @return Name of the field is the name of the instance variable of the Model class.
      */
     public String getName() {
@@ -74,6 +76,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns the name of the field in the target. For example: name of the field in the GraphQL type.
      * @return Name of the field in the target. For example: name of the field in the GraphQL type.
      */
     public String getTargetName() {
@@ -81,6 +84,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns the data type of the field.
      * @return The data type of the field.
      */
     public String getType() {
@@ -88,6 +92,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns if the field is a required or an optional field.
      * @return If the field is a required or an optional field.
      */
     public boolean isRequired() {
@@ -95,6 +100,9 @@ public final class ModelField {
     }
 
     /**
+     * Returns if the field is an array type. False if it is a primitive type and True if it
+     * is an array type.
+     *
      * @return If the field is an array type. False if it is a primitive type and True if it
      *         is an array type.
      */
@@ -103,6 +111,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field is a primary key in the Model.
      * @return True if the field is a primary key in the Model.
      */
     public boolean isPrimaryKey() {
@@ -110,6 +119,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns the name of the Model that this field is connecting to.
      * @return  Name of the Model that this field is connecting to.
      */
     public String getConnectionTarget() {
@@ -117,6 +127,7 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if this ModelField is connected to an other Model.
      * @return True if this ModelField is connected to an other Model.
      */
     public boolean isConnected() {
@@ -225,7 +236,7 @@ public final class ModelField {
         }
 
         /**
-         * Build the ModelField object and return
+         * Build the ModelField object and return.
          * @return the {@link ModelField} object.
          */
         public ModelField build() {
