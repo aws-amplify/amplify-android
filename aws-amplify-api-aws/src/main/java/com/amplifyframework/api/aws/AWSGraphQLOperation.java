@@ -38,8 +38,9 @@ import okhttp3.ResponseBody;
 /**
  * An operation to enqueue a GraphQL query to OkHttp client.
  * @param <T> Casted type of GraphQL query result
+ * @param <I> Data type of the request object
  */
-public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLResponse<T>> {
+public final class AWSGraphQLOperation<T, I> extends ApiOperation<T, I, GraphQLResponse<T>> {
 
     private static final String CONTENT_TYPE = "application/json";
 
@@ -64,7 +65,9 @@ public final class AWSGraphQLOperation<T> extends ApiOperation<T, GraphQLRespons
                         GsonResponseFactory responseFactory,
                         Class<T> classToCast,
                         Listener<GraphQLResponse<T>> callback) {
-        super(responseFactory, classToCast, callback);
+        // TODO: decide what should be request object for this operation
+        // and add them appropriately
+        super(responseFactory, null, classToCast, callback);
         this.endpoint = endpoint;
         this.client = client;
         this.query = query;

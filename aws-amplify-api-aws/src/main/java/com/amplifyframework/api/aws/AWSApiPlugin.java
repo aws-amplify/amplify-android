@@ -112,11 +112,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> query(@NonNull String apiName,
-                                                         @NonNull String gqlDocument,
-                                                         @Nullable Map<String, String> variables,
-                                                         @NonNull Class<T> classToCast,
-                                                         @Nullable Listener<GraphQLResponse<T>> callback) {
+    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> query(@NonNull String apiName,
+                                                               @NonNull String gqlDocument,
+                                                               @Nullable Map<String, String> variables,
+                                                               @NonNull Class<T> classToCast,
+                                                               @Nullable Listener<GraphQLResponse<T>> callback) {
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
             throw new ApiException("No client information for API named " + apiName);
@@ -129,7 +129,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
         }
 
-        ApiOperation<T, GraphQLResponse<T>> operation =
+        ApiOperation<T, I, GraphQLResponse<T>> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         gqlQuery,
@@ -142,11 +142,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T> ApiOperation<T, GraphQLResponse<T>> mutate(@NonNull String apiName,
-                                                          @NonNull String gqlDocument,
-                                                          @Nullable Map<String, String> variables,
-                                                          @NonNull Class<T> classToCast,
-                                                          @Nullable Listener<GraphQLResponse<T>> callback) {
+    public <T, I> ApiOperation<T, I, GraphQLResponse<T>> mutate(@NonNull String apiName,
+                                                                @NonNull String gqlDocument,
+                                                                @Nullable Map<String, String> variables,
+                                                                @NonNull Class<T> classToCast,
+                                                                @Nullable Listener<GraphQLResponse<T>> callback) {
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
             throw new ApiException("No client information for API named " + apiName);
@@ -159,7 +159,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
         }
 
-        ApiOperation<T, GraphQLResponse<T>> operation =
+        ApiOperation<T, I, GraphQLResponse<T>> operation =
                 new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
                         clientDetails.getClient(),
                         gqlQuery,
@@ -204,4 +204,3 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
     }
 }
-

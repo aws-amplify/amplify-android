@@ -48,7 +48,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including if
      *         {@see key} is not known in storage.
      */
-    StorageDownloadFileOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                               @NonNull String local) throws StorageException;
 
     /**
@@ -66,7 +66,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variet of reasons, including if {@see key}
      *         is now known in storage, or if bad {@see options} are provided.
      */
-    StorageDownloadFileOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   StorageDownloadFileOptions options) throws StorageException;
 
@@ -83,7 +83,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including if
      *         {@see key} is not known in storage.
      */
-    StorageDownloadFileOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   Listener<StorageDownloadFileResult> callback) throws StorageException;
 
@@ -103,7 +103,7 @@ public interface StorageCategoryBehavior {
      *         If a failure occurs before asynchronous operation begins.
      *         After that time, errors are communicated via the {@see callback}.
      */
-    StorageDownloadFileOperation downloadFile(@NonNull String key,
+    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   StorageDownloadFileOptions options,
                                   Listener<StorageDownloadFileResult> callback) throws StorageException;
@@ -119,7 +119,7 @@ public interface StorageCategoryBehavior {
      *         occur for a variety of reasons, including a bad
      *         {@see key}, a bad {@see local} file path, or other reasons.
      */
-    StorageUploadFileOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                           @NonNull String local) throws StorageException;
 
     /**
@@ -135,7 +135,7 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, including a bad {@see key},
      *         a bad {@see local} file path, or bad {@see options}.
      */
-    StorageUploadFileOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 StorageUploadFileOptions options) throws StorageException;
 
@@ -151,7 +151,7 @@ public interface StorageCategoryBehavior {
      *         If a failure to upload a file occurs before asynchronous operation
      *         is attempted; otherwise, errors are reported via the callback.
      */
-    StorageUploadFileOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 Listener<StorageUploadFileResult> callback) throws StorageException;
 
@@ -169,7 +169,7 @@ public interface StorageCategoryBehavior {
      *         If an error occurs before asynchronous operation begins.
      *         After that, errors are communicated via the {@see callback}.
      */
-    StorageUploadFileOperation uploadFile(@NonNull String key,
+    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 StorageUploadFileOptions options,
                                 Listener<StorageUploadFileResult> callback) throws StorageException;
@@ -184,7 +184,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including
      *         if the {@see key} does not refer to an object currently in storage.
      */
-    StorageRemoveOperation remove(@NonNull String key) throws StorageException;
+    StorageRemoveOperation<?> remove(@NonNull String key) throws StorageException;
 
     /**
      * Delete object from storage.
@@ -199,7 +199,7 @@ public interface StorageCategoryBehavior {
      *         provided {@see options} are invalid.
      *
      */
-    StorageRemoveOperation remove(@NonNull String key,
+    StorageRemoveOperation<?> remove(@NonNull String key,
                             StorageRemoveOptions options) throws StorageException;
 
     /**
@@ -215,7 +215,7 @@ public interface StorageCategoryBehavior {
      *         provided {@see options} are invalid.
      *
      */
-    StorageRemoveOperation remove(@NonNull String key,
+    StorageRemoveOperation<?> remove(@NonNull String key,
                             Listener<StorageRemoveResult> callback) throws StorageException;
 
     /**
@@ -231,7 +231,7 @@ public interface StorageCategoryBehavior {
      *         asynchronous operation begins. Otherwise, failures
      *         will be reported via the {@see callback}.
      */
-    StorageRemoveOperation remove(@NonNull String key,
+    StorageRemoveOperation<?> remove(@NonNull String key,
                             StorageRemoveOptions options,
                             Listener<StorageRemoveResult> callback) throws StorageException;
 
@@ -246,7 +246,7 @@ public interface StorageCategoryBehavior {
      *         a variety or reasons, such as if the storage system is not
      *         currently accessible.
      */
-    StorageListOperation list(@NonNull String path) throws StorageException;
+    StorageListOperation<?> list(@NonNull String path) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -260,7 +260,7 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
-    StorageListOperation list(@NonNull String path, StorageListOptions options) throws StorageException;
+    StorageListOperation<?> list(@NonNull String path, StorageListOptions options) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -274,7 +274,7 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
-    StorageListOperation list(@NonNull String path, Listener<StorageListResult> callback) throws StorageException;
+    StorageListOperation<?> list(@NonNull String path, Listener<StorageListResult> callback) throws StorageException;
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -290,8 +290,7 @@ public interface StorageCategoryBehavior {
      *         asynchronous operation begins. Otherwise, failures will
      *         be reported via the {@see callback}.
      */
-    StorageListOperation list(@NonNull String path,
+    StorageListOperation<?> list(@NonNull String path,
                             StorageListOptions options,
                             Listener<StorageListResult> callback) throws StorageException;
 }
-

@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.async.Listener;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
@@ -33,9 +34,9 @@ import java.io.File;
 /**
  * An operation to download a file from AWS S3.
  */
-public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFileOperation {
+public final class AWSS3StorageDownloadFileOperation
+        extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final AWSS3StorageDownloadFileRequest request;
     private final Listener<StorageDownloadFileResult> callback;
     private TransferObserver transferObserver;
     private File file;
@@ -49,7 +50,7 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
     public AWSS3StorageDownloadFileOperation(AWSS3StorageService storageService,
                                              AWSS3StorageDownloadFileRequest request,
                                              Listener<StorageDownloadFileResult> callback) {
-        this.request = request;
+        super(CategoryType.STORAGE, request);
         this.storageService = storageService;
         this.callback = callback;
         this.transferObserver = null;
@@ -73,12 +74,12 @@ public final class AWSS3StorageDownloadFileOperation extends StorageDownloadFile
             }
 
             String serviceKey = S3RequestUtils.getServiceKey(
-                    request.getAccessLevel(),
+                    getRequest().getAccessLevel(),
                     identityId,
-                    request.getKey(),
-                    request.getTargetIdentityId()
+                    getRequest().getKey(),
+                    getRequest().getTargetIdentityId()
             );
-            this.file = new File(request.getLocal()); //TODO: Add error handling if path is invalid
+            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
 
             try {
                 transferObserver = storageService.downloadToFile(serviceKey, file);

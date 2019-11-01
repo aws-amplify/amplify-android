@@ -39,8 +39,7 @@ public final class AWSS3StorageDownloadFileRequest {
             String key,
             String local,
             StorageAccessLevel accessLevel,
-            String targetIdentityId
-    ) {
+            String targetIdentityId) {
         this.key = key;
         this.local = local;
         this.accessLevel = accessLevel;
