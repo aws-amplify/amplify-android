@@ -24,6 +24,10 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserState;
+import com.amazonaws.mobile.client.UserStateDetails;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -58,6 +62,7 @@ public final class GraphQLInstrumentationTest {
 
     private static final int THREAD_WAIT_DURATION = 300;
     private static CountDownLatch latch;
+    private static Context context;
 
     /**
      * Before any test is run, configure Amplify to use an
@@ -65,11 +70,48 @@ public final class GraphQLInstrumentationTest {
      */
     @BeforeClass
     public static void setUpBeforeClass() {
-        Context context = ApplicationProvider.getApplicationContext();
+        initializeMobileClient();
+
         AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
+        configuration.populateFromConfigFile(getContext(), R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
-        Amplify.configure(configuration, context);
+        Amplify.configure(configuration, getContext());
+    }
+
+    /**
+     * Protected context getter for the extensions of this test base.
+     * @return the test application context
+     */
+    protected static Context getContext() {
+        if (context == null) {
+            context = ApplicationProvider.getApplicationContext();
+        }
+        return context;
+    }
+
+    private static void initializeMobileClient() {
+        latch = new CountDownLatch(1);
+        AWSMobileClient.getInstance().initialize(getContext(), new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails result) {
+                UserState userState = result.getUserState();
+                if (userState != null && !userState.equals(UserState.SIGNED_OUT)) {
+                    AWSMobileClient.getInstance().signOut();
+                }
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(Exception error) {
+                fail(error.getLocalizedMessage());
+            }
+        });
+
+        try {
+            latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+        } catch (Exception error) {
+            fail(error.getLocalizedMessage());
+        }
     }
 
     /**

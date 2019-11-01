@@ -20,19 +20,13 @@ import android.content.Context;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
-import com.amplifyframework.api.aws.sigv4.BasicCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.core.plugin.PluginException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobile.client.Callback;
-import com.amazonaws.mobile.client.UserStateDetails;
-import com.amazonaws.mobile.config.AWSConfiguration;
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool;
-
-import java.util.concurrent.Semaphore;
 
 /**
  * Implementation of {@link InterceptorFactory} that creates
@@ -57,7 +51,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
         // This instance is reused by this factory.
         AWSCredentialsProvider credentialsProvider = apiAuthProvider.getAWSCredentialsProvider();
         if (credentialsProvider == null) {
-            credentialsProvider = getCredProvider(context);
+            credentialsProvider = AWSMobileClient.getInstance();
         }
         this.credentialsProvider = credentialsProvider;
 
@@ -65,8 +59,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
         // provider instance. This instance is reused by this factory.
         CognitoUserPoolsAuthProvider cognitoProvider = apiAuthProvider.getCognitoUserPoolsAuthProvider();
         if (cognitoProvider == null) {
-            CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
-            cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
+            cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
         }
         this.cognitoTokenProvider = cognitoProvider;
 
@@ -123,30 +116,5 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 throw new PluginException.PluginConfigurationException(
                         "Unsupported authorization mode.");
         }
-    }
-
-    // Helper method to initialize AWS Mobile Client.
-    private AWSCredentialsProvider getCredProvider(Context context) {
-        final Semaphore semaphore = new Semaphore(0);
-        AWSMobileClient.getInstance().initialize(context, new Callback<UserStateDetails>() {
-            @Override
-            public void onResult(UserStateDetails result) {
-                semaphore.release();
-            }
-
-            @Override
-            public void onError(Exception error) {
-                throw new RuntimeException("Failed to initialize mobile client.", error);
-            }
-        });
-
-        try {
-            semaphore.acquire();
-        } catch (InterruptedException exception) {
-            throw new ApiException("Interrupted signing into mobile client.", exception);
-        } catch (Exception error) {
-            throw new ApiException(error.getLocalizedMessage(), error);
-        }
-        return AWSMobileClient.getInstance();
     }
 }
