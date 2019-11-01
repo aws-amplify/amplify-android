@@ -41,6 +41,9 @@ import okhttp3.ResponseBody;
  * @param <I> Data type of the request object
  */
 public final class AWSGraphQLOperation<T, I> extends ApiOperation<T, I, GraphQLResponse<T>> {
+
+    private static final String CONTENT_TYPE = "application/json";
+
     private final String endpoint;
     private final OkHttpClient client;
     private final GraphQLQuery query;
@@ -81,9 +84,9 @@ public final class AWSGraphQLOperation<T, I> extends ApiOperation<T, I, GraphQLR
             Log.d("graphql", query.getContent());
             ongoingCall = client.newCall(new Request.Builder()
                     .url(endpoint)
-                    .addHeader("accept", "application/json")
-                    .addHeader("content-type", "application/json")
-                    .post(RequestBody.create(query.getContent(), MediaType.parse("application/json")))
+                    .addHeader("accept", CONTENT_TYPE)
+                    .addHeader("content-type", CONTENT_TYPE)
+                    .post(RequestBody.create(query.getContent(), MediaType.parse(CONTENT_TYPE)))
                     .build());
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {

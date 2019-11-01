@@ -49,8 +49,9 @@ import static org.junit.Assert.fail;
  * amplify CLI and the standard models from the AppSync public docs
  * (TODO: which docs, which standard models?).
  */
-//TODO: Use CircleCI to automatically use configured amplifyconfiguration.json
-@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json.")
+//TODO: Use CircleCI to automatically use configured amplifyconfiguration.json and awsconfiguration.json
+@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json and " +
+        "mobile-client in androidTest/res/raw/awsconfiguration.json.")
 public final class GraphQLInstrumentationTest {
 
     private static final String TAG = GraphQLInstrumentationTest.class.getSimpleName();
