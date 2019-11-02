@@ -17,6 +17,8 @@ package com.amplifyframework.datastore.model;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Immutable;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +30,7 @@ public final class ModelRegistry {
     // Singleton instance
     private static ModelRegistry modelRegistryInstance;
 
-    // ClassName => ModelSchema map
+    // Model ClassName => ModelSchema map
     private Map<String, ModelSchema> modelSchemaMap;
 
     private ModelRegistry() {
@@ -54,6 +56,14 @@ public final class ModelRegistry {
      */
     public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String className) {
         return modelSchemaMap.get(className);
+    }
+
+    /**
+     * Retrieve the map of Model ClassName => ModelSchema.
+     * @return an immutable map of Model ClassName => ModelSchema
+     */
+    public Map<String, ModelSchema> getModelSchemaMap() {
+        return Immutable.of(modelSchemaMap);
     }
 
     /**
