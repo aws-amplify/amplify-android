@@ -51,7 +51,6 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
     AppSyncSigV4SignerInterceptorFactory(Context context,
                                          ApiAuthProviders apiAuthProvider, ApiConfiguration config) {
 
-
         switch (config.getAuthorizationType()) {
 
             case API_KEY:
