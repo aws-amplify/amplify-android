@@ -80,14 +80,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSApiPluginConfiguration pluginConfig =
             AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
-        InterceptorFactory interceptorFactory = new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
-
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
 
             OkHttpClient httpClient = new OkHttpClient.Builder()
-                .addInterceptor(interceptorFactory.create(apiConfiguration))
+                .addInterceptor(new AppSyncSigV4SignerInterceptorFactory(context, authProvider, apiConfiguration)
+                        .create(apiConfiguration))
                 .build();
 
             ClientDetails clientDetails =

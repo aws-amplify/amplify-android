@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
+import android.util.Log;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
@@ -40,47 +41,65 @@ import java.util.concurrent.Semaphore;
  * This factory should be constructed once in a plugin.
  */
 final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
-    private final ApiKeyAuthProvider apiKeyProvider;
-    private final AWSCredentialsProvider credentialsProvider;
-    private final CognitoUserPoolsAuthProvider cognitoTokenProvider;
-    private final OidcAuthProvider oidcTokenProvider;
+
+    private static final String TAG = AppSyncSigV4SignerInterceptorFactory.class.getSimpleName();
+    private ApiKeyAuthProvider apiKeyProvider;
+    private AWSCredentialsProvider credentialsProvider;
+    private CognitoUserPoolsAuthProvider cognitoTokenProvider;
+    private OidcAuthProvider oidcTokenProvider;
 
     AppSyncSigV4SignerInterceptorFactory(Context context,
-                                         ApiAuthProviders apiAuthProvider) {
-        // API key provider is configured per API, not per plugin.
-        // If a custom instance of API key provider was provided, the
-        // factory will remember and reuse it.
-        // Otherwise, a new lambda is made per interceptor generation.
-        this.apiKeyProvider = apiAuthProvider.getApiKeyAuthProvider();
+                                         ApiAuthProviders apiAuthProvider, ApiConfiguration config) {
 
-        // Initializes mobile client once and remembers the instance.
-        // This instance is reused by this factory.
-        AWSCredentialsProvider credentialsProvider = apiAuthProvider.getAWSCredentialsProvider();
-        if (credentialsProvider == null) {
-            credentialsProvider = getCredProvider(context);
-        }
-        this.credentialsProvider = credentialsProvider;
 
-        // Initializes cognito user pool once and remembers the token
-        // provider instance. This instance is reused by this factory.
-        CognitoUserPoolsAuthProvider cognitoProvider = apiAuthProvider.getCognitoUserPoolsAuthProvider();
-        if (cognitoProvider == null) {
-            CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
-            cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
-        }
-        this.cognitoTokenProvider = cognitoProvider;
+        switch (config.getAuthorizationType()) {
 
-        // This factory does not have a default implementation for
-        // OpenID Connect token provider. User-provided implementation
-        // is remembered and reused by this factory.
-        OidcAuthProvider oidcProvider = apiAuthProvider.getOidcAuthProvider();
-        if (oidcProvider == null) {
-            oidcProvider = () -> {
-                throw new ApiException.AuthorizationTypeNotConfiguredException(
-                        "OidcAuthProvider interface is not implemented.");
-            };
+            case API_KEY:
+                // API key provider is configured per API, not per plugin.
+                // If a custom instance of API key provider was provided, the
+                // factory will remember and reuse it.
+                // Otherwise, a new lambda is made per interceptor generation.
+                this.apiKeyProvider = apiAuthProvider.getApiKeyAuthProvider();
+                break;
+
+            case OPENID_CONNECT:
+                // This factory does not have a default implementation for
+                // OpenID Connect token provider. User-provided implementation
+                // is remembered and reused by this factory.
+                OidcAuthProvider oidcProvider = apiAuthProvider.getOidcAuthProvider();
+                if (oidcProvider == null) {
+                    oidcProvider = () -> {
+                        throw new ApiException.AuthorizationTypeNotConfiguredException(
+                                "OidcAuthProvider interface is not implemented.");
+                    };
+                }
+                this.oidcTokenProvider = oidcProvider;
+                break;
+
+            case AWS_IAM :
+                // Initializes mobile client once and remembers the instance.
+                // This instance is reused by this factory.
+                AWSCredentialsProvider credentialsProvider = apiAuthProvider.getAWSCredentialsProvider();
+                if (credentialsProvider == null) {
+                    credentialsProvider = getCredProvider(context);
+                }
+                this.credentialsProvider = credentialsProvider;
+                break;
+
+            case AMAZON_COGNITO_USER_POOLS :
+                // Initializes cognito user pool once and remembers the token
+                // provider instance. This instance is reused by this factory.
+                CognitoUserPoolsAuthProvider cognitoProvider = apiAuthProvider.getCognitoUserPoolsAuthProvider();
+                if (cognitoProvider == null) {
+                    CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
+                    cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
+                }
+                this.cognitoTokenProvider = cognitoProvider;
+                break;
+
+            default :
+                Log.e(TAG, "Invalid authorization type detected in the amplifyconfiguration.json");
         }
-        this.oidcTokenProvider = oidcProvider;
     }
 
     /**
