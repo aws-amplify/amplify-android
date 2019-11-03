@@ -15,8 +15,6 @@
 
 package com.amplifyframework.datastore.model;
 
-import androidx.annotation.NonNull;
-
 /**
  * The PrimaryKey of a data model is the field
  * with the name "id". This class is used to
@@ -27,35 +25,23 @@ public final class PrimaryKey {
     // of any {@link Model}.
     private static final String ID = "id";
 
-    // Singleton instance.
-    private static PrimaryKey primaryKeyInstance;
+    @SuppressWarnings({"AnnotationLocation", "WhitespaceAround"}) private PrimaryKey() {}
 
-    private PrimaryKey() {
+    /**
+     * Checks if the provided object is a primary key.
+     * @param anything Any instance of any object
+     * @return true when the provided object is a String whose value
+     *         matches the value of {@link #fieldName()}.
+     */
+    public static boolean matches(Object anything) {
+        return (anything instanceof String) && fieldName().equals((String) anything);
     }
 
     /**
-     * Returns the singleton instance.
-     * @return the singleton instance.
+     * Gets the field name for a primary key.
+     * @return Field name for primary key
      */
-    public static synchronized PrimaryKey getInstance() {
-        if (primaryKeyInstance == null) {
-            primaryKeyInstance = new PrimaryKey();
-        }
-        return primaryKeyInstance;
-    }
-
-    @Override
-    public boolean equals(Object anything) {
-        return ((anything instanceof String) && ID.equals((String) anything));
-    }
-
-    @Override
-    public int hashCode() {
-        return ID.hashCode();
-    }
-
-    @Override
-    public @NonNull String toString() {
+    public static String fieldName() {
         return ID;
     }
 }
