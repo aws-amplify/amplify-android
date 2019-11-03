@@ -20,6 +20,7 @@ import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
 import com.amplifyframework.datastore.model.ModelRegistry;
 import com.amplifyframework.datastore.model.ModelSchema;
@@ -28,6 +29,8 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import io.reactivex.Observable;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -103,5 +106,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public void save(@NonNull Model model, @NonNull ResultListener<Model> listener) {
         /* TODO */
+    }
+    
+    @Override
+    public Observable<MutationEvent<? extends Model>> observe() {
+        return Observable.error(new UnsupportedOperationException(
+            "This has not been implemented, yet."
+        ));
     }
 }
