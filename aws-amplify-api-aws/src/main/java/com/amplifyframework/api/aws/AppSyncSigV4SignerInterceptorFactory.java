@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
@@ -97,7 +96,8 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
 
             default :
                 this.authProvider = null;
-                Log.e(TAG, "Invalid authorization type detected in the amplifyconfiguration.json");
+                throw new PluginException.PluginConfigurationException(
+                        "Unsupported authorization mode.");
         }
     }
 
@@ -128,7 +128,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 AuthProvider keyProvider = authProvider;
                 if (keyProvider == null) {
                     //noinspection Convert2MethodRef This is legacy code.
-                    keyProvider = (ApiKeyAuthProvider)() -> config.getApiKey();
+                    keyProvider = (ApiKeyAuthProvider) () -> config.getApiKey();
                 }
                 return new AppSyncSigV4SignerInterceptor((ApiKeyAuthProvider) keyProvider);
             case AWS_IAM:
@@ -136,7 +136,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
             case AMAZON_COGNITO_USER_POOLS:
                 return new AppSyncSigV4SignerInterceptor((CognitoUserPoolsAuthProvider) authProvider);
             case OPENID_CONNECT:
-                return new AppSyncSigV4SignerInterceptor((CognitoUserPoolsAuthProvider) authProvider);
+                return new AppSyncSigV4SignerInterceptor((OidcAuthProvider) authProvider);
             default:
                 throw new PluginException.PluginConfigurationException(
                         "Unsupported authorization mode.");

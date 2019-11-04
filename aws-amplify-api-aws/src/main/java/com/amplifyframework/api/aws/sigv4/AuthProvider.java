@@ -16,8 +16,7 @@
 package com.amplifyframework.api.aws.sigv4;
 
 /**
- * Interface for all the authentication
- * providers
+ * Interface for all the authentication providers.
  */
 public interface AuthProvider {
 }

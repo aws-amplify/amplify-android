@@ -79,7 +79,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .authorizationType(AuthorizationType.API_KEY)
                     .apiKey(apiKey2)
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             assertEquals(apiKey2, res.request().header(X_API_KEY));
         } catch (Exception error) {
             fail("Factory-created interceptor should successfully intercept.");
@@ -107,7 +109,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .region("")
                     .authorizationType(AuthorizationType.API_KEY)
                     .build();
-            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers,config)
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
                     .create(config)
                     .intercept(new MockChain());
             fail("Factory-created interceptor should successfully intercept.");
