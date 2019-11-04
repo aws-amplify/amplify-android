@@ -54,7 +54,6 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // Uses API key from one of the APIs
         try {
@@ -64,7 +63,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .authorizationType(AuthorizationType.API_KEY)
                     .apiKey(apiKey1)
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             assertEquals(apiKey1, res.request().header(X_API_KEY));
         } catch (Exception error) {
             fail("Factory-created interceptor should successfully intercept.");
@@ -96,7 +97,6 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // If API key is not mentioned in API configuration AND
         // auth mode is API_KEY AND no custom API key provider
@@ -107,7 +107,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .region("")
                     .authorizationType(AuthorizationType.API_KEY)
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers,config)
+                    .create(config)
+                    .intercept(new MockChain());
             fail("Factory-created interceptor should successfully intercept.");
         } catch (Exception error) {
             assertTrue(error instanceof IllegalArgumentException);
@@ -119,7 +121,6 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // If API key is not mentioned in API configuration AND
         // auth mode is API_KEY BUT a valid custom API key provider
@@ -130,7 +131,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .region("")
                     .authorizationType(AuthorizationType.API_KEY)
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
         } catch (Exception error) {
             fail("Factory-created interceptor should successfully intercept.");
@@ -151,7 +154,6 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // Even if API key is written in the ApiConfiguration, the interceptor
         // obtains its API key from custom provider and ignores the config
@@ -162,7 +164,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .authorizationType(AuthorizationType.API_KEY)
                     .apiKey("API_KEY_INSIDE_CONFIG")
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
         } catch (Exception error) {
             fail("Factory-created interceptor should successfully intercept.");
@@ -177,7 +181,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .authorizationType(AuthorizationType.API_KEY)
                     .apiKey("ANOTHER_API_KEY_INSIDE_CONFIG")
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
         } catch (Exception error) {
             fail("Factory-created interceptor should successfully intercept.");
@@ -197,7 +203,6 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         try {
             ApiConfiguration config = ApiConfiguration.builder()
@@ -205,7 +210,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .region("")
                     .authorizationType(AuthorizationType.OPENID_CONNECT)
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             fail("Factory-created interceptor should fail to intercept.");
         } catch (Exception error) {
             assertTrue(error.getCause() instanceof ApiException.AuthorizationTypeNotConfiguredException);
@@ -225,7 +232,6 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         try {
             ApiConfiguration config = ApiConfiguration.builder()
@@ -233,7 +239,9 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                     .region("")
                     .authorizationType(AuthorizationType.OPENID_CONNECT)
                     .build();
-            Response res = factory.create(config).intercept(new MockChain());
+            Response res = new AppSyncSigV4SignerInterceptorFactory(null, providers, config)
+                    .create(config)
+                    .intercept(new MockChain());
             assertEquals("OIDC_JWT_TOKEN", res.request().header(AUTHORIZATION));
         } catch (Exception error) {
             fail("Factory-created interceptor should successfully intercept.");
