@@ -39,7 +39,6 @@ import java.util.concurrent.Semaphore;
 /**
  * Implementation of {@link InterceptorFactory} that creates
  * {@link AppSyncSigV4SignerInterceptor} from provided configuration.
- * This factory should be constructed once in a plugin.
  */
 final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
 
