@@ -16,14 +16,8 @@
 package com.amplifyframework.api.aws.sigv4;
 
 /**
- * Interface to provide authentication token
- * from Cognito User Pools to signer.
+ * Interface for all the authentication
+ * providers
  */
-public interface CognitoUserPoolsAuthProvider extends AuthProvider {
-    /**
-     * Vends the latest valid authentication token
-     * from Cognito User Pool session.
-     * @return the latest auth token
-     */
-    String getLatestAuthToken();
+public interface AuthProvider {
 }

@@ -19,7 +19,7 @@ package com.amplifyframework.api.aws.sigv4;
  * Interface to provide authentication token
  * from OpenID Connect to signer.
  */
-public interface OidcAuthProvider {
+public interface OidcAuthProvider extends AuthProvider {
     /**
      * Vends the latest valid authentication token
      * from OpenID Connect token vendor.

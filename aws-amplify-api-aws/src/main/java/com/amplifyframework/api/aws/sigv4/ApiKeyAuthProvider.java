@@ -18,7 +18,7 @@ package com.amplifyframework.api.aws.sigv4;
 /**
  * Interface to provide API key to signer.
  */
-public interface ApiKeyAuthProvider {
+public interface ApiKeyAuthProvider extends AuthProvider {
     /**
      * Gets the API key.
      * @return API key

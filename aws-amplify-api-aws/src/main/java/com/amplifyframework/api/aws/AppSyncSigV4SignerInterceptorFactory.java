@@ -21,8 +21,10 @@ import android.util.Log;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
+import com.amplifyframework.api.aws.sigv4.AuthProvider;
 import com.amplifyframework.api.aws.sigv4.BasicCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.IamAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.core.plugin.PluginException;
 
@@ -43,10 +45,7 @@ import java.util.concurrent.Semaphore;
 final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
 
     private static final String TAG = AppSyncSigV4SignerInterceptorFactory.class.getSimpleName();
-    private ApiKeyAuthProvider apiKeyProvider;
-    private AWSCredentialsProvider credentialsProvider;
-    private CognitoUserPoolsAuthProvider cognitoTokenProvider;
-    private OidcAuthProvider oidcTokenProvider;
+    private final AuthProvider authProvider;
 
     AppSyncSigV4SignerInterceptorFactory(Context context,
                                          ApiAuthProviders apiAuthProvider, ApiConfiguration config) {
@@ -58,7 +57,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 // If a custom instance of API key provider was provided, the
                 // factory will remember and reuse it.
                 // Otherwise, a new lambda is made per interceptor generation.
-                this.apiKeyProvider = apiAuthProvider.getApiKeyAuthProvider();
+                this.authProvider = apiAuthProvider.getApiKeyAuthProvider();
                 break;
 
             case OPENID_CONNECT:
@@ -72,7 +71,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                                 "OidcAuthProvider interface is not implemented.");
                     };
                 }
-                this.oidcTokenProvider = oidcProvider;
+                this.authProvider = oidcProvider;
                 break;
 
             case AWS_IAM :
@@ -82,7 +81,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 if (credentialsProvider == null) {
                     credentialsProvider = getCredProvider(context);
                 }
-                this.credentialsProvider = credentialsProvider;
+                this.authProvider = (IamAuthProvider) credentialsProvider;
                 break;
 
             case AMAZON_COGNITO_USER_POOLS :
@@ -93,10 +92,11 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                     CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
                     cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
                 }
-                this.cognitoTokenProvider = cognitoProvider;
+                this.authProvider = cognitoProvider;
                 break;
 
             default :
+                this.authProvider = null;
                 Log.e(TAG, "Invalid authorization type detected in the amplifyconfiguration.json");
         }
     }
@@ -125,18 +125,18 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
     public AppSyncSigV4SignerInterceptor create(ApiConfiguration config) {
         switch (config.getAuthorizationType()) {
             case API_KEY:
-                ApiKeyAuthProvider keyProvider = apiKeyProvider;
+                AuthProvider keyProvider = authProvider;
                 if (keyProvider == null) {
                     //noinspection Convert2MethodRef This is legacy code.
-                    keyProvider = () -> config.getApiKey();
+                    keyProvider = (ApiKeyAuthProvider)() -> config.getApiKey();
                 }
-                return new AppSyncSigV4SignerInterceptor(keyProvider);
+                return new AppSyncSigV4SignerInterceptor((ApiKeyAuthProvider) keyProvider);
             case AWS_IAM:
-                return new AppSyncSigV4SignerInterceptor(credentialsProvider, config.getRegion());
+                return new AppSyncSigV4SignerInterceptor((IamAuthProvider) authProvider, config.getRegion());
             case AMAZON_COGNITO_USER_POOLS:
-                return new AppSyncSigV4SignerInterceptor(cognitoTokenProvider);
+                return new AppSyncSigV4SignerInterceptor((CognitoUserPoolsAuthProvider) authProvider);
             case OPENID_CONNECT:
-                return new AppSyncSigV4SignerInterceptor(oidcTokenProvider);
+                return new AppSyncSigV4SignerInterceptor((CognitoUserPoolsAuthProvider) authProvider);
             default:
                 throw new PluginException.PluginConfigurationException(
                         "Unsupported authorization mode.");
