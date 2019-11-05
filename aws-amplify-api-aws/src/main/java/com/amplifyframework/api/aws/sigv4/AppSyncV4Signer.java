@@ -15,19 +15,14 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
-import com.amazonaws.Request;
-import com.amazonaws.auth.AWS4Signer;
-import com.amazonaws.util.BinaryUtils;
+        import com.amazonaws.Request;
+        import com.amazonaws.auth.AWS4Signer;
+        import com.amazonaws.util.BinaryUtils;
 
-import java.io.InputStream;
-import java.net.URI;
+        import java.io.InputStream;
+        import java.net.URI;
 
-/**
- * Signer that signs the request with AppSync-specific
- * service name and region.
- */
-@SuppressWarnings("UnnecessaryLocalVariable") // This is legacy code.
-final class AppSyncV4Signer extends AWS4Signer {
+public class AppSyncV4Signer extends AWS4Signer {
 
     private static final String TAG = AppSyncV4Signer.class.getSimpleName();
 
@@ -35,10 +30,29 @@ final class AppSyncV4Signer extends AWS4Signer {
 
     private static final String RESOURCE_PATH = "/graphql";
 
-    AppSyncV4Signer(String region) {
+    private ResourcePath resourcePath;
+
+    /**
+     * url in the canonical request for connecting to gogi via AWS_IAM requires "/connect"
+     * appended to it.
+     *
+     */
+    public enum ResourcePath {
+        IAM_CONNECTION_RESOURCE_PATH,
+        DEFAULT_RESOURCE_PATH;
+    }
+
+    public AppSyncV4Signer(String region) {
         super(true);
         setRegionName(region);
     }
+
+    public AppSyncV4Signer(String region, ResourcePath resourcePath) {
+        super(true);
+        this.resourcePath = resourcePath;
+        setRegionName(region);
+    }
+
 
     @Override
     protected String extractServiceName(URI endpoint) {
@@ -47,12 +61,14 @@ final class AppSyncV4Signer extends AWS4Signer {
 
     @Override
     protected String getCanonicalizedResourcePath(String resourcePath) {
-        return RESOURCE_PATH;
+        return (this.resourcePath != null && this.resourcePath.equals(ResourcePath.IAM_CONNECTION_RESOURCE_PATH)) ?
+                RESOURCE_PATH + "/connect" : RESOURCE_PATH;
     }
 
     @Override
     protected String getCanonicalizedResourcePath(String resourcePath, boolean urlEncode) {
-        return RESOURCE_PATH;
+        return (this.resourcePath != null && this.resourcePath.equals(ResourcePath.IAM_CONNECTION_RESOURCE_PATH)) ?
+                RESOURCE_PATH + "/connect" : RESOURCE_PATH;
     }
 
     @Override
@@ -64,3 +80,4 @@ final class AppSyncV4Signer extends AWS4Signer {
         return contentSha256;
     }
 }
+
