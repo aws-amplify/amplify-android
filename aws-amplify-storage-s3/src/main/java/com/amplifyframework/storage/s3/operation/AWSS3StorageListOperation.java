@@ -25,67 +25,73 @@ import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * An operation to list items from AWS S3.
  */
 
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final AWSS3StorageService storageService;
+    private final ExecutorService executorService;
     private final ResultListener<StorageListResult> resultListener;
 
     /**
      * Constructs a new AWSS3StorageListOperation.
      * @param storageService S3 client wrapper
+     * @param executorService Executor service used for running blocking operations on a separate thread
      * @param request list request parameters
      * @param resultListener notified when list operation results are available
      */
     public AWSS3StorageListOperation(AWSS3StorageService storageService,
+                                     ExecutorService executorService,
                                      AWSS3StorageListRequest request,
                                      ResultListener<StorageListResult> resultListener) {
         super(request);
         this.storageService = storageService;
+        this.executorService = executorService;
         this.resultListener = resultListener;
     }
 
-    // TODO: This is currently a blocking method since listFiles is blocking, consistent with the S3 SDK.
-    //          This should be discussed for refactoring as an async method or if not, documented clearly as blocking.
     @Override
     public void start() throws StorageException {
-        String identityId;
+        executorService.submit(() -> {
+            String identityId;
 
-        try {
-            identityId = AWSMobileClient.getInstance().getIdentityId();
-        } catch (Exception exception) {
-            StorageException storageException = new StorageException(
-                    "AWSMobileClient could not get user id." +
-                            "Check whether you configured it properly before calling this method.",
-                    exception
-            );
+            try {
+                identityId = AWSMobileClient.getInstance().getIdentityId();
+            } catch (Exception exception) {
+                StorageException storageException = new StorageException(
+                        "AWSMobileClient could not get user id." +
+                                "Check whether you configured it properly before calling this method.",
+                        exception
+                );
 
-            if (resultListener != null) {
-                resultListener.onError(storageException);
+                if (resultListener != null) {
+                    resultListener.onError(storageException);
+                }
+                throw storageException;
             }
-            throw storageException;
-        }
 
-        try {
-            StorageListResult result = storageService.listFiles(
-                    S3RequestUtils.getServiceKey(
-                            getRequest().getAccessLevel(),
-                            identityId,
-                            getRequest().getPath(),
-                            getRequest().getTargetIdentityId()
-                    )
-            );
+            try {
+                StorageListResult result = storageService.listFiles(
+                        S3RequestUtils.getServiceKey(
+                                getRequest().getAccessLevel(),
+                                identityId,
+                                getRequest().getPath(),
+                                getRequest().getTargetIdentityId()
+                        )
+                );
 
-            if (resultListener != null) {
-                resultListener.onResult(result);
+                if (resultListener != null) {
+                    resultListener.onResult(result);
+                }
+            } catch (Exception error) {
+                if (resultListener != null) {
+                    resultListener.onError(error);
+                }
+                throw error;
             }
-        } catch (Exception error) {
-            if (resultListener != null) {
-                resultListener.onError(error);
-            }
-            throw error;
-        }
+        });
     }
 }
