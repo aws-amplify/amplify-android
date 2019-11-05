@@ -132,7 +132,7 @@ public final class ModelSchema {
             final ModelField modelField = ModelField.builder()
                     .name(field.getName())
                     .targetName(annotation.targetName())
-                    .type(field.getType().getName())
+                    .targetType(annotation.targetType())
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isPrimaryKey(PrimaryKey.matches(field.getName()))

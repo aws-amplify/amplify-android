@@ -107,7 +107,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public void save(@NonNull Model model, @NonNull ResultListener<Model> listener) {
         /* TODO */
     }
-    
+
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
         return Observable.error(new UnsupportedOperationException(
