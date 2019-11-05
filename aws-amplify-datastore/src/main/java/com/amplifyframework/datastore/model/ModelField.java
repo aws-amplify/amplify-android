@@ -27,17 +27,17 @@ public final class ModelField {
     private final String name;
 
     // Name of the field in the target. For example: name of the
-    // field in the GraphQL type.
+    // field in the GraphQL targetType.
     private final String targetName;
 
-    // The data type of the field.
-    private final String type;
+    // The data targetType of the field.
+    private final String targetType;
 
     // If the field is a required or an optional field
     private final boolean isRequired;
 
-    // If the field is an array type. False if it is a primitive
-    // type and True if it is an array type.
+    // If the field is an array targetType. False if it is a primitive
+    // targetType and True if it is an array targetType.
     private final boolean isArray;
 
     // True if the field is a primary key in the Model.
@@ -52,7 +52,7 @@ public final class ModelField {
     private ModelField(@NonNull ModelFieldBuilder builder) {
         this.name = builder.name;
         this.targetName = builder.targetName;
-        this.type = builder.type;
+        this.targetType = builder.targetType;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isPrimaryKey = builder.isPrimaryKey;
@@ -76,19 +76,19 @@ public final class ModelField {
     }
 
     /**
-     * Returns the name of the field in the target. For example: name of the field in the GraphQL type.
-     * @return Name of the field in the target. For example: name of the field in the GraphQL type.
+     * Returns the name of the field in the target. For example: name of the field in the GraphQL targetType.
+     * @return Name of the field in the target. For example: name of the field in the GraphQL targetType.
      */
     public String getTargetName() {
         return targetName;
     }
 
     /**
-     * Returns the data type of the field.
-     * @return The data type of the field.
+     * Returns the data targetType of the field.
+     * @return The data targetType of the field.
      */
-    public String getType() {
-        return type;
+    public String getTargetType() {
+        return targetType;
     }
 
     /**
@@ -100,11 +100,11 @@ public final class ModelField {
     }
 
     /**
-     * Returns if the field is an array type. False if it is a primitive type and True if it
-     * is an array type.
+     * Returns if the field is an array targetType. False if it is a primitive targetType and True if it
+     * is an array targetType.
      *
-     * @return If the field is an array type. False if it is a primitive type and True if it
-     *         is an array type.
+     * @return If the field is an array targetType. False if it is a primitive targetType and True if it
+     *         is an array targetType.
      */
     public boolean isArray() {
         return isArray;
@@ -143,24 +143,24 @@ public final class ModelField {
         private String name;
 
         // Name of the field in the target. For example: name of the
-        // field in the GraphQL type.
+        // field in the GraphQL targetType.
         private String targetName;
 
-        // The data type of the field.
-        private String type;
+        // The data targetType of the field.
+        private String targetType;
 
         // If the field is a required or an optional field
-        private boolean isRequired;
+        private boolean isRequired = false;
 
-        // If the field is an array type. False if it is a primitive
-        // type and True if it is an array type.
-        private boolean isArray;
+        // If the field is an array targetType. False if it is a primitive
+        // targetType and True if it is an array targetType.
+        private boolean isArray = false;
 
         // True if the field is a primary key in the Model.
-        private boolean isPrimaryKey;
+        private boolean isPrimaryKey = false;
 
         // Name of the Model that this field is connecting to.
-        private String connectionTarget;
+        private String connectionTarget = null;
 
         /**
          * Set the name of the field.
@@ -174,7 +174,7 @@ public final class ModelField {
 
         /**
          * Set the name of the field in the target. For example: name of the
-         * field in the GraphQL type.
+         * field in the GraphQL targetType.
          * @param targetName the name of the field in the target
          * @return the builder object
          */
@@ -184,12 +184,12 @@ public final class ModelField {
         }
 
         /**
-         * Set the data type of the field.
-         * @param type The data type of the field.
+         * Set the data targetType of the field.
+         * @param targetType The data targetType of the field.
          * @return the builder object
          */
-        public ModelFieldBuilder type(String type) {
-            this.type = type;
+        public ModelFieldBuilder targetType(String targetType) {
+            this.targetType = targetType;
             return this;
         }
 
@@ -204,10 +204,10 @@ public final class ModelField {
         }
 
         /**
-         * Set the flag indicating if the field is an array type.
-         * False if it is a primitive type and True if it
-         * is an array type.
-         * @param isArray flag indicating if the field is an array type
+         * Set the flag indicating if the field is an array targetType.
+         * False if it is a primitive targetType and True if it
+         * is an array targetType.
+         * @param isArray flag indicating if the field is an array targetType
          * @return the builder object
          */
         public ModelFieldBuilder isArray(boolean isArray) {

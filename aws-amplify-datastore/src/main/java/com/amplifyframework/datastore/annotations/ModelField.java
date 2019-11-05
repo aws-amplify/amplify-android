@@ -50,4 +50,12 @@ public @interface ModelField {
      *          in the GraphQL schema.
      */
     String targetName() default "";
+
+    /**
+     * Returns the target type of the field.
+     * @return the data type of the field in the target.
+     *         For example: the data type of the field
+     *         in the GraphQL schema.
+     */
+    String targetType() default "";
 }
