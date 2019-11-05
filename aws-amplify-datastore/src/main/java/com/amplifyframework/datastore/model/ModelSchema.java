@@ -135,7 +135,7 @@ public final class ModelSchema {
                     .targetType(annotation.targetType())
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
-                    .isPrimaryKey(PrimaryKey.getInstance().equals(field.getName()))
+                    .isPrimaryKey(PrimaryKey.matches(field.getName()))
                     .connectionTarget(Model.class.isAssignableFrom(field.getType())
                             ? field.getType().getName()
                             : null)

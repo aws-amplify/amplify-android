@@ -19,9 +19,12 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
 
 import java.util.List;
+
+import io.reactivex.Observable;
 
 /**
  * The interface that defines the contract for local storage
@@ -53,4 +56,11 @@ public interface LocalStorageAdapter {
      *                 save operation is completed.
      */
     void save(@NonNull Model model, @NonNull ResultListener<Model> listener);
+
+    /**
+     * Observe all mutations that occur on objects in the storage layer.
+     * @return An observable which emits a {@link MutationEvent} every time
+     *         any object managed by the storage adapter is mutated.
+     */
+    Observable<MutationEvent<? extends Model>> observe();
 }

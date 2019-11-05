@@ -44,7 +44,19 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    // Rx is part of our API signature for the DataStore category.  If a
+    // consumer of Amplify will use the Rx-based DataStore APIs, RxJava2
+    // must be available at runtime.
+    //
+    // As a corollary, a plugin should declare an `implementation`
+    // dependency on Rx, so that it can implement the needed API:
+    //
+    //   implementation 'io.reactivex.rxjava2:rxjava:2.2.13'
+    //
+    // Without this, any use of Observable will raise a runtime
+    // exception.
+    compileOnly "io.reactivex.rxjava2:rxjava:$rxJava2Version"
+
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.annotation:annotation:1.1.0'
 
@@ -56,3 +68,4 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
     androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
 }
+
