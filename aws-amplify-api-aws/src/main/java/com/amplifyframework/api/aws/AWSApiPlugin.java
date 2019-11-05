@@ -24,16 +24,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amazonaws.DefaultRequest;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.CognitoCachingCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobileconnectors.cognitoidentityprovider.CognitoUserPool;
-import com.amazonaws.regions.Regions;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
-import com.amplifyframework.api.aws.sigv4.BasicCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
