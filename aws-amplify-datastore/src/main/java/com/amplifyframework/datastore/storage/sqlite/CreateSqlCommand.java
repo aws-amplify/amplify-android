@@ -51,14 +51,7 @@ final class CreateSqlCommand {
      * @return the CREATE TABLE SQL command
      */
     static CreateSqlCommand fromModelSchema(@NonNull ModelSchema modelSchema) {
-        final String tableName = modelSchema.getName();
-        final String sqlCreateStatement = getCreateSqlCommandForModelSchema(modelSchema);
-        return new CreateSqlCommand(tableName, sqlCreateStatement);
-    }
-
-    private static String getCreateSqlCommandForModelSchema(ModelSchema modelSchema) {
-        /* TODO */
-        return null;
+        return SQLiteCommandFactory.getInstance().createTableFor(modelSchema);
     }
 
     /**
