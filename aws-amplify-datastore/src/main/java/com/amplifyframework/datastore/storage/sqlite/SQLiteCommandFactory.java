@@ -25,10 +25,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-final class AndroidSQLiteCommandFactory implements SQLCommandFactory {
+final class SQLiteCommandFactory implements SQLCommandFactory {
 
     // the singleton instance.
-    private static AndroidSQLiteCommandFactory singletonInstance;
+    private static SQLiteCommandFactory singletonInstance;
+
+    // Delimiter used in the SQLite commands.
+    private static final String SQLITE_COMMAND_DELIMITER = " ";
 
     private static final Map<String, String> GRAPHQL_TYPES_TO_JAVA_TYPES = new HashMap<>();
     private static final Map<String, String> JAVA_TYPES_TO_SQL_TYPES = new HashMap<>();
@@ -60,16 +63,16 @@ final class AndroidSQLiteCommandFactory implements SQLCommandFactory {
         JAVA_TYPES_TO_SQL_TYPES.put(java.sql.Time.class.getSimpleName(), "TEXT");
     }
 
-    private AndroidSQLiteCommandFactory() {
+    private SQLiteCommandFactory() {
     }
 
     /**
-     * Retrieves the singleton instance of the AndroidSQLiteCommandFactory.
-     * @return the singleton instance of the AndroidSQLiteCommandFactory.
+     * Retrieves the singleton instance of the SQLiteCommandFactory.
+     * @return the singleton instance of the SQLiteCommandFactory.
      */
-    public static synchronized AndroidSQLiteCommandFactory getInstance() {
+    public static synchronized SQLiteCommandFactory getInstance() {
         if (singletonInstance == null) {
-            singletonInstance = new AndroidSQLiteCommandFactory();
+            singletonInstance = new SQLiteCommandFactory();
         }
         return singletonInstance;
     }
@@ -97,18 +100,20 @@ final class AndroidSQLiteCommandFactory implements SQLCommandFactory {
             final String modelFieldName = entry.getKey();
             final ModelField modelField = entry.getValue();
             stringBuilder.append(modelFieldName +
-                    " " +
+                    SQLITE_COMMAND_DELIMITER +
                     getSqlDataTypeForGraphQLType(modelField) +
-                    " ");
+                    SQLITE_COMMAND_DELIMITER);
 
             if (modelField.isPrimaryKey()) {
-                stringBuilder.append("PRIMARY KEY");
-            } else if (modelField.isRequired()) {
+                stringBuilder.append("PRIMARY KEY" + SQLITE_COMMAND_DELIMITER);
+            }
+
+            if (modelField.isRequired()) {
                 stringBuilder.append("NOT NULL");
             }
 
             if (modelFieldMapIterator.hasNext()) {
-                stringBuilder.append(", ");
+                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
             }
         }
         stringBuilder.append(");");

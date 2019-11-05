@@ -87,9 +87,8 @@ public class CreateSqlCommandTest {
         assertEquals("CREATE TABLE IF NOT EXISTS Person " +
                 "(age INTEGER , " +
                 "firstName TEXT NOT NULL, " +
-                "id TEXT PRIMARY KEY, " +
+                "id TEXT PRIMARY KEY NOT NULL, " +
                 "lastName TEXT NOT NULL);", createSqlCommand.sqlStatement());
-
     }
 
     /**

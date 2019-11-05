@@ -51,7 +51,7 @@ final class CreateSqlCommand {
      * @return the CREATE TABLE SQL command
      */
     static CreateSqlCommand fromModelSchema(@NonNull ModelSchema modelSchema) {
-        return AndroidSQLiteCommandFactory.getInstance().createTableFor(modelSchema);
+        return SQLiteCommandFactory.getInstance().createTableFor(modelSchema);
     }
 
     /**

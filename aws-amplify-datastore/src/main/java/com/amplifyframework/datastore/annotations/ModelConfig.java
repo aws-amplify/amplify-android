@@ -15,11 +15,25 @@
 
 package com.amplifyframework.datastore.annotations;
 
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
 /**
  * {@link ModelConfig} annotates any {@link com.amplifyframework.datastore.model.Model}
  * with the configuration information that is applicable to a
  * {@link com.amplifyframework.datastore.model.Model}.
+ *
+ * The {@link RetentionPolicy#RUNTIME} annotation is added to
+ * retain {@link ModelField} at runtime for the reflection capabilities to work
+ * in order to check if this annotation is present for a field of a Model.
+ *
+ * {@link ElementType#FIELD} annotation is added to indicate
+ * {@link ModelField} annotation can be used only on Fields (Data members of a class).
  */
+@Retention(RetentionPolicy.RUNTIME)
+@Target(ElementType.FIELD)
 public @interface ModelConfig {
     /**
      * Specifies the name of the Model in the target.
