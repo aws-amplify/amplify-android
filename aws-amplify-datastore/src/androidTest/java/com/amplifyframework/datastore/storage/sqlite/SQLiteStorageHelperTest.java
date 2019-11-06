@@ -38,7 +38,7 @@ public class SQLiteStorageHelperTest {
 
     private SQLiteStorageHelper sqLiteStorageHelper;
 
-    private Set<CreateSqlCommand> createTableCommands;
+    private Set<SqlCommand> createTableCommands;
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
@@ -46,9 +46,9 @@ public class SQLiteStorageHelperTest {
     @Before
     public void setUp() {
         createTableCommands = new HashSet<>();
-        createTableCommands.add(new CreateSqlCommand("PERSON",
+        createTableCommands.add(new SqlCommand("PERSON",
                 "CREATE TABLE IF NOT EXISTS PERSON (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
-        createTableCommands.add(new CreateSqlCommand("CAR",
+        createTableCommands.add(new SqlCommand("CAR",
                 "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
@@ -95,8 +95,8 @@ public class SQLiteStorageHelperTest {
         // invokes onCreate on the SQLiteStorageHelper.
         final SQLiteDatabase sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
         final List<String> tableNamesFromDatabase = getTableNames(sqLiteDatabase);
-        for (CreateSqlCommand createSqlCommand: createTableCommands) {
-            assertTrue(tableNamesFromDatabase.contains(createSqlCommand.tableName()));
+        for (SqlCommand sqlCommand : createTableCommands) {
+            assertTrue(tableNamesFromDatabase.contains(sqlCommand.tableName()));
         }
     }
 

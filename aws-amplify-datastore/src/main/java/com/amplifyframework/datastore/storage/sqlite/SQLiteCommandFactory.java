@@ -15,16 +15,22 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.datastore.model.Model;
 import com.amplifyframework.datastore.model.ModelField;
+import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelSchema;
 
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * A factory that produces the SQLite commands for a given
+ * {@link Model} and {@link ModelSchema}.
+ */
 final class SQLiteCommandFactory implements SQLCommandFactory {
 
     // the singleton instance.
@@ -85,11 +91,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * @return the CREATE TABLE SQL command
      */
     @Override
-    public CreateSqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
+    public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("CREATE TABLE IF NOT EXISTS " + modelSchema.getName() + " ");
+        stringBuilder.append("CREATE TABLE IF NOT EXISTS " +
+                modelSchema.getName() +
+                SQLITE_COMMAND_DELIMITER);
         if (modelSchema.getFields() == null || modelSchema.getFields().isEmpty()) {
-            return new CreateSqlCommand(modelSchema.getName(), stringBuilder.toString());
+            return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
         }
 
         final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
@@ -119,7 +127,44 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(");");
 
         final String createSqlStatement = stringBuilder.toString();
-        return new CreateSqlCommand(modelSchema.getName(), createSqlStatement);
+        return new SqlCommand(modelSchema.getName(), createSqlStatement);
+    }
+
+    /**
+     * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
+     *
+     * @param modelSchema the schema of a {@link Model}
+     *                    for which a CREATE INDEX SQL command needs to be generated.
+     * @return the CREATE INDEX SQL command
+     */
+    @Override
+    public SqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
+        final ModelIndex modelIndex = modelSchema.getModelIndex();
+        if (modelIndex == null ||
+            TextUtils.isEmpty(modelIndex.getIndexName()) ||
+            modelIndex.getIndexFieldNames() == null ||
+            modelIndex.getIndexFieldNames().isEmpty()) {
+            return null;
+        }
+
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("CREATE INDEX IF NOT EXISTS " +
+                modelIndex.getIndexName() +
+                " ON " +
+                modelSchema.getName() +
+                SQLITE_COMMAND_DELIMITER);
+
+        stringBuilder.append("(");
+        Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
+        while (iterator.hasNext()) {
+            final String indexColumnName = iterator.next();
+            stringBuilder.append(indexColumnName);
+            if (iterator.hasNext()) {
+                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            }
+        }
+        stringBuilder.append(");");
+        return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
     }
 
     private static String getSqlDataTypeForGraphQLType(@NonNull final ModelField modelField) {

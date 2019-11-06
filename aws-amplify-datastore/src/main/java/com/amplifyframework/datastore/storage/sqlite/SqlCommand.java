@@ -17,41 +17,28 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.model.ModelSchema;
-
 /**
  * An encapsulation of the information required to
  * create a SQL table.
  */
-final class CreateSqlCommand {
+final class SqlCommand {
 
     // name of the SQL table
     private final String tableName;
 
-    // create table command in string representation
+    // CREATE SQL command in string representation
     private final String sqlStatement;
 
     /**
-     * Construct a CreateSqlCommand object.
+     * Construct a SqlCommand object.
      *
      * @param tableName name of the SQL table
      * @param sqlStatement create table command in string representation
      */
-    CreateSqlCommand(@NonNull String tableName,
-                     @NonNull String sqlStatement) {
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement) {
         this.tableName = tableName;
         this.sqlStatement = sqlStatement;
-    }
-
-    /**
-     * Create the CREATE TABLE SQL command for the corresponding
-     * ModelSchema.
-     *
-     * @param modelSchema the schema of the model
-     * @return the CREATE TABLE SQL command
-     */
-    static CreateSqlCommand fromModelSchema(@NonNull ModelSchema modelSchema) {
-        return SQLiteCommandFactory.getInstance().createTableFor(modelSchema);
     }
 
     /**

@@ -21,25 +21,31 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link ModelConfig} annotates any {@link com.amplifyframework.datastore.model.Model}
- * with the configuration information that is applicable to a
- * {@link com.amplifyframework.datastore.model.Model}.
+ * {@link Index} annotates any {@link com.amplifyframework.datastore.model.Model}
+ * with the index that will be configured in the persistence layer. For example,
+ * this will dictate the indexes that will be created when a {@link com.amplifyframework.datastore.model.Model}
+ * is stored in the Android {@link android.database.sqlite.SQLiteDatabase}.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
- * retain {@link ModelConfig} at runtime for the reflection capabilities to work
+ * retain {@link Index} at runtime for the reflection capabilities to work
  * in order to check if this annotation is present for a field of a Model.
  *
  * {@link ElementType#TYPE} annotation is added to indicate
- * {@link ModelConfig} annotation can be used only on types (class, interface, enum).
+ * {@link Index} annotation can be used only on types (class, interface, enum).
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface ModelConfig {
+public @interface Index {
     /**
-     * Specifies the name of the Model in the target.
-     * @return the name of the Model in the target.
-     *         For example: the name of the Model in
-     *         the GraphQL schema.
+     * Specify the array of fields of a {@link com.amplifyframework.datastore.model.Model}
+     * for which indexes need to be created in the persistent store.
+     * @return array of fields
      */
-    String targetName() default "";
+    String[] fields();
+
+    /**
+     * Return the name of the index.
+     * @return the name of the index.
+     */
+    String name();
 }
