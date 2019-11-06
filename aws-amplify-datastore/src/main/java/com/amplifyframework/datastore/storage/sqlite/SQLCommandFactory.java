@@ -30,7 +30,7 @@ interface SQLCommandFactory {
      *                    for which a CREATE TABLE SQL command needs to be generated.
      * @return the CREATE TABLE SQL command
      */
-    CreateSqlCommand createTableFor(@NonNull ModelSchema modelSchema);
+    SqlCommand createTableFor(@NonNull ModelSchema modelSchema);
 
     /**
      * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
@@ -38,5 +38,5 @@ interface SQLCommandFactory {
      *                    for which a CREATE INDEX SQL command needs to be generated.
      * @return the CREATE INDEX SQL command
      */
-    CreateSqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
+    SqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
 }

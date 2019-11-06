@@ -23,7 +23,7 @@ import com.amplifyframework.datastore.model.ModelSchema;
  * An encapsulation of the information required to
  * create a SQL table.
  */
-final class CreateSqlCommand {
+final class SqlCommand {
 
     // name of the SQL table
     private final String tableName;
@@ -32,34 +32,15 @@ final class CreateSqlCommand {
     private final String sqlStatement;
 
     /**
-     * Construct a CreateSqlCommand object.
+     * Construct a SqlCommand object.
      *
      * @param tableName name of the SQL table
      * @param sqlStatement create table command in string representation
      */
-    CreateSqlCommand(@NonNull String tableName,
-                     @NonNull String sqlStatement) {
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement) {
         this.tableName = tableName;
         this.sqlStatement = sqlStatement;
-    }
-
-    /**
-     * Create the CREATE TABLE SQL command for the corresponding {@link ModelSchema}.
-     *
-     * @param modelSchema the schema of the model
-     * @return the CREATE TABLE SQL command
-     */
-    static CreateSqlCommand createTableFromModelSchema(@NonNull ModelSchema modelSchema) {
-        return SQLiteCommandFactory.getInstance().createTableFor(modelSchema);
-    }
-
-    /**
-     * Create the CREATE INDEX SQL command for the corresponding {@link ModelSchema}.
-     * @param modelSchema the schema of the model
-     * @return the CREATE INDEX SQL command
-     */
-    static CreateSqlCommand createIndexFromModelSchema(@NonNull ModelSchema modelSchema) {
-        return SQLiteCommandFactory.getInstance().createIndexFor(modelSchema);
     }
 
     /**

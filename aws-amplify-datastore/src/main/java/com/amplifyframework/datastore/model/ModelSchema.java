@@ -15,10 +15,9 @@
 
 package com.amplifyframework.datastore.model;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.annotations.Index;
 import com.amplifyframework.datastore.annotations.ModelConfig;
 
@@ -33,7 +32,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
@@ -48,6 +46,10 @@ public final class ModelSchema {
     // Name of the Java Class of the Model.
     private final String name;
 
+    // the name of the Model in the target. For example: the name of the
+    // model in the GraphQL Schema.
+    private String targetModelName;
+
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
     // The value is the ModelField object that encapsulates all the information about the instance variable.
@@ -58,24 +60,73 @@ public final class ModelSchema {
     // persistence-related operations guarantee that the results are always consistent.
     private final List<Map.Entry<String, ModelField>> sortedFields;
 
-    // Encapsulates the attributes of a Model.
-    private final ModelAttribute modelAttribute;
+    // Specifies the index of a Model.
+    private final ModelIndex modelIndex;
+
+    private ModelSchema(String name,
+                        String targetModelName,
+                        Map<String, ModelField> fields,
+                        ModelIndex modelIndex) {
+        this.name = name;
+        this.targetModelName = targetModelName;
+        this.fields = fields;
+        this.modelIndex = modelIndex;
+        this.sortedFields = sortModelFields();
+    }
 
     /**
-     * Construct the ModelSchema object.
-     *
-     * @param name name of the Model class.
-     * @param modelAttribute attributes of the Model class.
-     * @param fields map of fieldName and the fieldObject
-     *               of all the fields of the model.
+     * Return the builder object.
+     * @return the builder object.
      */
-    public ModelSchema(@NonNull String name,
-                       @Nullable ModelAttribute modelAttribute,
-                       @Nullable SortedMap<String, ModelField> fields) {
-        this.name = name;
-        this.modelAttribute = modelAttribute;
-        this.fields = fields;
-        this.sortedFields = sortModelFields();
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Construct the ModelSchema from the {@link Model} class.
+     *
+     * @param clazz the instance of a model class
+     * @param <T> parameter type of a data model that conforms
+     *           to the {@link Model} interface.
+     * @return the ModelSchema object.
+     */
+    static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
+        try {
+            final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.ModelField.class);
+            final TreeMap<String, ModelField> fields = new TreeMap<>();
+            final ModelIndex modelIndex = getModelIndex(clazz);
+            String targetModelName = null;
+            if (clazz.isAnnotationPresent(ModelConfig.class)) {
+                targetModelName = clazz.getAnnotation(ModelConfig.class).targetName();
+            }
+
+            for (Field field : classFields) {
+                com.amplifyframework.datastore.annotations.ModelField annotation = null;
+                if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
+                    annotation = field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class);
+                }
+                final ModelField modelField = ModelField.builder()
+                        .name(field.getName())
+                        .targetName(annotation.targetName())
+                        .targetType(annotation.targetType())
+                        .isRequired(annotation.isRequired())
+                        .isArray(Collection.class.isAssignableFrom(field.getType()))
+                        .isPrimaryKey(PrimaryKey.matches(field.getName()))
+                        .connectionTarget(Model.class.isAssignableFrom(field.getType())
+                                ? field.getType().getName()
+                                : null)
+                        .build();
+                fields.put(field.getName(), modelField);
+            }
+            return ModelSchema.builder()
+                    .name(clazz.getSimpleName())
+                    .targetModelName(targetModelName)
+                    .fields(fields)
+                    .modelIndex(modelIndex)
+                    .build();
+        } catch (Exception ex) {
+            throw new DataStoreException("Error in constructing a ModelSchema.", ex);
+        }
     }
 
     /**
@@ -85,6 +136,16 @@ public final class ModelSchema {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the name of the Model in the target. For example: the name of the
+     * model in the GraphQL Schema.
+     * @return the name of the Model in the target. For example: the name of the
+     *         model in the GraphQL Schema.
+     */
+    public String getTargetModelName() {
+        return targetModelName;
     }
 
     /**
@@ -103,8 +164,8 @@ public final class ModelSchema {
      *
      * @return the attributes of a {@link Model}.
      */
-    public ModelAttribute getModelAttribute() {
-        return modelAttribute;
+    public ModelIndex getModelIndex() {
+        return modelIndex;
     }
 
     /**
@@ -121,64 +182,63 @@ public final class ModelSchema {
         return null;
     }
 
-    /**
-     * Construct the ModelSchema from the {@link Model} class.
-     *
-     * @param clazz the instance of a model class
-     * @param <T> parameter type of a data model that conforms
-     *           to the {@link Model} interface.
-     * @return the ModelSchema object.
-     */
-    static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
-        final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.ModelField.class);
-        final TreeMap<String, ModelField> fields = new TreeMap<>();
-        final ModelAttribute modelAttribute = getModelAttribute(clazz);
-        for (Field field: classFields) {
-            com.amplifyframework.datastore.annotations.ModelField annotation = null;
-            if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
-                annotation = field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class);
-            }
-            final ModelField modelField = ModelField.builder()
-                    .name(field.getName())
-                    .targetName(annotation.targetName())
-                    .targetType(annotation.targetType())
-                    .isRequired(annotation.isRequired())
-                    .isArray(Collection.class.isAssignableFrom(field.getType()))
-                    .isPrimaryKey(PrimaryKey.matches(field.getName()))
-                    .connectionTarget(Model.class.isAssignableFrom(field.getType())
-                            ? field.getType().getName()
-                            : null)
-                    .build();
-            fields.put(field.getName(), modelField);
+    public static class Builder {
+        private String name;
+        private String targetModelName;
+        private Map<String, ModelField> fields;
+        private ModelIndex modelIndex;
+
+        public Builder name(String name) {
+            this.name = name;
+            return this;
         }
-        return new ModelSchema(clazz.getSimpleName(), modelAttribute, fields);
+
+        public Builder targetModelName(String targetModelName) {
+            this.targetModelName = targetModelName;
+            return this;
+        }
+
+        public Builder fields(Map<String, ModelField> fields) {
+            this.fields = fields;
+            return this;
+        }
+
+        public Builder modelIndex(ModelIndex modelIndex) {
+            this.modelIndex = modelIndex;
+            return this;
+        }
+
+        public ModelSchema build() {
+            return new ModelSchema(name, targetModelName, fields, modelIndex);
+        }
     }
 
-    private static ModelAttribute getModelAttribute(@NonNull Class<? extends Model> clazz) {
-        final ModelAttribute.ModelAttributeBuilder modelAttributeBuilder = ModelAttribute.builder();
-        if (clazz.isAnnotationPresent(ModelConfig.class)) {
-            try {
-                ModelConfig modelConfigAnnotation = clazz.getAnnotation(ModelConfig.class);
-                if (modelConfigAnnotation != null) {
-                    modelAttributeBuilder.targetModelName(modelConfigAnnotation.targetName());
-                }
-            } catch (Exception exception) {
-                Log.w(TAG, "Cannot extract ModelConfig#targetName() from the model class: " + clazz.getSimpleName());
-            }
-        }
+    private static ModelIndex getModelIndex(@NonNull Class<? extends Model> clazz) {
+        final ModelIndex.Builder builder = ModelIndex.builder();
 
         if (clazz.isAnnotationPresent(Index.class)) {
-            try {
-                Index indexAnnotation = clazz.getAnnotation(Index.class);
-                if (indexAnnotation != null) {
-                    modelAttributeBuilder.indexName(indexAnnotation.name());
-                    modelAttributeBuilder.indexFieldNames(Arrays.asList(indexAnnotation.fields()));
-                }
-            } catch (Exception exception) {
-                Log.w(TAG, "Cannot extract ModelConfig#targetName() from the model class: " + clazz.getSimpleName());
+            Index indexAnnotation = clazz.getAnnotation(Index.class);
+            if (indexAnnotation != null) {
+                builder.indexName(indexAnnotation.name());
+                builder.indexFieldNames(Arrays.asList(indexAnnotation.fields()));
             }
         }
-        return modelAttributeBuilder.build();
+        return builder.build();
+    }
+
+    private static Set<Field> findFields(@NonNull Class<?> clazz,
+                                         @NonNull Class<? extends Annotation> annotation) {
+        Set<Field> set = new HashSet<>();
+        Class<?> c = clazz;
+        while (c != null) {
+            for (Field field : c.getDeclaredFields()) {
+                if (field.isAnnotationPresent(annotation)) {
+                    set.add(field);
+                }
+            }
+            c = c.getSuperclass();
+        }
+        return set;
     }
 
     private List<Map.Entry<String, ModelField>> sortModelFields() {
@@ -220,20 +280,5 @@ public final class ModelSchema {
         });
 
         return modelFieldEntries;
-    }
-
-    private static Set<Field> findFields(@NonNull Class<?> clazz,
-                                         @NonNull Class<? extends Annotation> annotation) {
-        Set<Field> set = new HashSet<>();
-        Class<?> c = clazz;
-        while (c != null) {
-            for (Field field : c.getDeclaredFields()) {
-                if (field.isAnnotationPresent(annotation)) {
-                    set.add(field);
-                }
-            }
-            c = c.getSuperclass();
-        }
-        return set;
     }
 }

@@ -20,11 +20,7 @@ import java.util.List;
 /**
  * Attributes of a {@link Model}.
  */
-public final class ModelAttribute {
-    // name of the Model in the target. For example: the name of the
-    // model in the GraphQL Schema.
-    private final String targetModelName;
-
+public final class ModelIndex {
     // name of the Index that will be used to create indexes
     // in the persistence layer. For example: the Android SQLite
     // tables when created will have an index identified by this
@@ -35,32 +31,20 @@ public final class ModelAttribute {
     // constructed.
     private final List<String> indexFieldNames;
 
-    private ModelAttribute(String targetModelName,
-                           String indexName,
-                           List<String> indexFieldNames) {
-        this.targetModelName = targetModelName;
+    private ModelIndex(String indexName,
+                       List<String> indexFieldNames) {
         this.indexName = indexName;
         this.indexFieldNames = indexFieldNames;
     }
 
     /**
-     * Returns the builder object of ModelAttributeBuilder to
-     * build an object of {@link ModelAttribute}.
-     * @return the builder object of ModelAttributeBuilder to
-     *         build an object of {@link ModelAttribute}.
+     * Returns the builder object of Builder to
+     * build an object of {@link ModelIndex}.
+     * @return the builder object of Builder to
+     *         build an object of {@link ModelIndex}.
      */
-    public static ModelAttributeBuilder builder() {
-        return new ModelAttributeBuilder();
-    }
-
-    /**
-     * Returns the name of the Model in the target. For example: the name of the
-     * model in the GraphQL Schema.
-     * @return the name of the Model in the target. For example: the name of the
-     *         model in the GraphQL Schema.
-     */
-    public String getTargetModelName() {
-        return targetModelName;
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -88,24 +72,11 @@ public final class ModelAttribute {
     }
 
     /**
-     * The builder class for {@link ModelAttributeBuilder}.
+     * The builder class for {@link Builder}.
      */
-    public static final class ModelAttributeBuilder {
-        private String targetModelName;
+    public static final class Builder {
         private String indexName;
         private List<String> indexFieldNames;
-
-        /**
-         * Returns the name of the Model in the target. For example: the name of the
-         * model in the GraphQL Schema.
-         * @param targetModelName the name of the Model in the target.
-         *                        For example: the name of the model in the GraphQL Schema.
-         * @return the builder object.
-         */
-        public ModelAttributeBuilder targetModelName(String targetModelName) {
-            this.targetModelName = targetModelName;
-            return this;
-        }
 
         /**
          * Returns the name of the Index that will be used to create indexes
@@ -118,7 +89,7 @@ public final class ModelAttribute {
          *                  name.
          * @return the builder object.
          */
-        public ModelAttributeBuilder indexName(String indexName) {
+        public Builder indexName(String indexName) {
             this.indexName = indexName;
             return this;
         }
@@ -130,7 +101,7 @@ public final class ModelAttribute {
          *                        will be constructed.
          * @return the builder object.
          */
-        public ModelAttributeBuilder indexFieldNames(List<String> indexFieldNames) {
+        public Builder indexFieldNames(List<String> indexFieldNames) {
             this.indexFieldNames = indexFieldNames;
             return this;
         }
@@ -139,8 +110,8 @@ public final class ModelAttribute {
          * Returns the model attribute object.
          * @return the model attribute object.
          */
-        public ModelAttribute build() {
-            return new ModelAttribute(targetModelName, indexName, indexFieldNames);
+        public ModelIndex build() {
+            return new ModelIndex(indexName, indexFieldNames);
         }
     }
 }

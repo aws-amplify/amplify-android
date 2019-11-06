@@ -44,14 +44,14 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
     private static SQLiteStorageHelper sQLiteStorageHelperInstance;
 
     // Contains all table name string list.
-    private final Set<CreateSqlCommand> createSqlCommands;
+    private final Set<SqlCommand> sqlCommands;
 
     private SQLiteStorageHelper(@NonNull Context context,
-                                @NonNull Set<CreateSqlCommand> createSqlCommands) {
+                                @NonNull Set<SqlCommand> sqlCommands) {
         // Passing null to CursorFactory which is used to create cursor objects
         // as there is no need for a CursorFactory so far.
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        this.createSqlCommands = createSqlCommands;
+        this.sqlCommands = sqlCommands;
     }
 
     /**
@@ -62,7 +62,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * @return the singleton instance
      */
     public static synchronized SQLiteStorageHelper getInstance(@NonNull Context context,
-                                                               @NonNull Set<CreateSqlCommand> createTableCommands) {
+                                                               @NonNull Set<SqlCommand> createTableCommands) {
         if (sQLiteStorageHelperInstance == null) {
             sQLiteStorageHelperInstance = new SQLiteStorageHelper(context, createTableCommands);
         }
@@ -87,9 +87,9 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
             // TODO: Set PRAGMAS default encoding to UTF8.
             // TODO: Enable foreign keys
             // TODO: AutoVaccuum: caching
-            for (final CreateSqlCommand createSqlCommand: createSqlCommands) {
-                Log.i(TAG, "Creating table: " + createSqlCommand.tableName());
-                sqLiteDatabase.execSQL(createSqlCommand.sqlStatement());
+            for (final SqlCommand sqlCommand : sqlCommands) {
+                Log.i(TAG, "Creating table: " + sqlCommand.tableName());
+                sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
             }
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
@@ -111,9 +111,9 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
         // and re-create all the tables.
         sqLiteDatabase.beginTransaction();
         try {
-            for (final CreateSqlCommand createSqlCommand: createSqlCommands) {
-                if (!TextUtils.isEmpty(createSqlCommand.tableName())) {
-                    sqLiteDatabase.execSQL("drop table if exists " + createSqlCommand.tableName());
+            for (final SqlCommand sqlCommand : sqlCommands) {
+                if (!TextUtils.isEmpty(sqlCommand.tableName())) {
+                    sqLiteDatabase.execSQL("drop table if exists " + sqlCommand.tableName());
                 }
             }
             sqLiteDatabase.setTransactionSuccessful();

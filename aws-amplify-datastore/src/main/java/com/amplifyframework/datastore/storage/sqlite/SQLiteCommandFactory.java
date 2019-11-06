@@ -15,10 +15,12 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelAttribute;
+import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelField;
 import com.amplifyframework.datastore.model.ModelSchema;
 
@@ -90,13 +92,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * @return the CREATE TABLE SQL command
      */
     @Override
-    public CreateSqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
+    public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("CREATE TABLE IF NOT EXISTS " +
                 modelSchema.getName() +
                 SQLITE_COMMAND_DELIMITER);
         if (modelSchema.getFields() == null || modelSchema.getFields().isEmpty()) {
-            return new CreateSqlCommand(modelSchema.getName(), stringBuilder.toString());
+            return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
         }
 
         final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
@@ -126,7 +128,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(");");
 
         final String createSqlStatement = stringBuilder.toString();
-        return new CreateSqlCommand(modelSchema.getName(), createSqlStatement);
+        return new SqlCommand(modelSchema.getName(), createSqlStatement);
     }
 
     /**
@@ -137,25 +139,24 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * @return the CREATE INDEX SQL command
      */
     @Override
-    public CreateSqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
-        final ModelAttribute modelAttribute = modelSchema.getModelAttribute();
-        if (modelAttribute == null ||
-                modelAttribute.getIndexName() == null ||
-                modelAttribute.getIndexName().isEmpty() ||
-                modelAttribute.getIndexFieldNames() == null ||
-                modelAttribute.getIndexFieldNames().isEmpty()) {
+    public SqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
+        final ModelIndex modelIndex = modelSchema.getModelIndex();
+        if (modelIndex == null ||
+            TextUtils.isEmpty(modelIndex.getIndexName()) ||
+            modelIndex.getIndexFieldNames() == null ||
+            modelIndex.getIndexFieldNames().isEmpty()) {
             return null;
         }
 
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("CREATE INDEX IF NOT EXISTS " +
-                modelAttribute.getIndexName() +
+                modelIndex.getIndexName() +
                 " ON " +
                 modelSchema.getName() +
                 SQLITE_COMMAND_DELIMITER);
 
         stringBuilder.append("(");
-        Iterator<String> iterator = modelAttribute.getIndexFieldNames().iterator();
+        Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
         while (iterator.hasNext()) {
             final String indexColumnName = iterator.next();
             stringBuilder.append(indexColumnName);
@@ -164,7 +165,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
         }
         stringBuilder.append(");");
-        return new CreateSqlCommand(modelSchema.getName(), stringBuilder.toString());
+        return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
     }
 
     private static String getSqlDataTypeForGraphQLType(@NonNull final ModelField modelField) {

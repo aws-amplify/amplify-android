@@ -15,7 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.datastore.model.ModelAttribute;
+import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelField;
 import com.amplifyframework.datastore.model.ModelSchema;
 
@@ -35,11 +35,11 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests {@link CreateSqlCommand#createTableFromModelSchema(ModelSchema)}
- * and {@link CreateSqlCommand#createIndexFromModelSchema(ModelSchema)}.
+ * Tests {@link SQLiteCommandFactory#createTableFor(ModelSchema)}
+ * and {@link SQLiteCommandFactory#createIndexFor(ModelSchema)}.
  */
 @RunWith(MockitoJUnitRunner.class)
-public class CreateSqlCommandTest {
+public class SqlCommandTest {
 
     @Mock
     private ModelSchema mockModelSchema;
@@ -59,15 +59,20 @@ public class CreateSqlCommandTest {
     @Test
     public void validModelSchemaReturnsExpectedSqlCommand() {
         final SortedMap<String, ModelField> fields = getFieldsMap();
-        final ModelSchema personSchema = new ModelSchema("Person", null, fields);
+        final ModelSchema personSchema = ModelSchema.builder()
+                .name("Person")
+                .targetModelName(null)
+                .fields(fields)
+                .build();
 
-        final CreateSqlCommand createSqlCommand = CreateSqlCommand.createTableFromModelSchema(personSchema);
-        assertEquals("Person", createSqlCommand.tableName());
+        final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
+                .createTableFor(personSchema);
+        assertEquals("Person", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS Person " +
                 "(age INTEGER , " +
                 "firstName TEXT NOT NULL, " +
                 "id TEXT PRIMARY KEY NOT NULL, " +
-                "lastName TEXT NOT NULL);", createSqlCommand.sqlStatement());
+                "lastName TEXT NOT NULL);", sqlCommand.sqlStatement());
     }
 
     /**
@@ -80,9 +85,10 @@ public class CreateSqlCommandTest {
                 .thenReturn(Collections.emptyMap());
         when(mockModelSchema.getName())
                 .thenReturn("Guitar");
-        final CreateSqlCommand createSqlCommand = CreateSqlCommand.createTableFromModelSchema(mockModelSchema);
-        assertEquals("Guitar", createSqlCommand.tableName());
-        assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", createSqlCommand.sqlStatement());
+        final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
+                .createTableFor(mockModelSchema);
+        assertEquals("Guitar", sqlCommand.tableName());
+        assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", sqlCommand.sqlStatement());
     }
 
     /**
@@ -93,17 +99,19 @@ public class CreateSqlCommandTest {
     public void modelWithIndexReturnsExpectedCreateIndexCommand() {
         when(mockModelSchema.getName())
                 .thenReturn("Person");
-        when(mockModelSchema.getModelAttribute())
-                .thenReturn(ModelAttribute.builder()
+        when(mockModelSchema.getModelIndex())
+                .thenReturn(ModelIndex.builder()
                         .indexName("idBasedIndex")
                         .indexFieldNames(Arrays.asList("id"))
                         .build());
-        final CreateSqlCommand createIndexSqlCommand = CreateSqlCommand.createIndexFromModelSchema(mockModelSchema);
+        final SqlCommand createIndexSqlCommand = SQLiteCommandFactory.getInstance()
+                .createIndexFor(mockModelSchema);
         assertEquals("Person", createIndexSqlCommand.tableName());
-        assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);", createIndexSqlCommand.sqlStatement());
+        assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);",
+                createIndexSqlCommand.sqlStatement());
     }
 
-    private SortedMap<String, ModelField> getFieldsMap() {
+    private static SortedMap<String, ModelField> getFieldsMap() {
         final SortedMap<String, ModelField> fields = new TreeMap<>();
         fields.put("id", ModelField.builder()
                 .name("id")
