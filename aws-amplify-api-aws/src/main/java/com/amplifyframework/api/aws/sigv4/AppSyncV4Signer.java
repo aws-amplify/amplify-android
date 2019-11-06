@@ -32,7 +32,6 @@ final class AppSyncV4Signer extends AWS4Signer {
     private static final String TAG = AppSyncV4Signer.class.getSimpleName();
 
     private static final String SERVICE_NAME_SCOPE = "appsync";
-
     private static final String RESOURCE_PATH = "/graphql";
 
     AppSyncV4Signer(String region) {

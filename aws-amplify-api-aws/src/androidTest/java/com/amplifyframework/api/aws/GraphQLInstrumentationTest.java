@@ -57,14 +57,13 @@ public final class GraphQLInstrumentationTest {
     private static final String TAG = GraphQLInstrumentationTest.class.getSimpleName();
 
     private static final int THREAD_WAIT_DURATION = 300;
-    private static CountDownLatch latch;
 
     /**
      * Before any test is run, configure Amplify to use an
      * {@link AWSApiPlugin} to satisfy the Api category.
      */
     @BeforeClass
-    public static void setUpBeforeClass() {
+    public static void configureAmplify() {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
@@ -79,13 +78,13 @@ public final class GraphQLInstrumentationTest {
     @Test
     public void testQuery() throws Exception {
         String document = TestAssets.readAsString("get-todo.graphql");
-        latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
         Amplify.API.query(
                 "mygraphql",
                 document,
                 Collections.emptyMap(),
                 Todo.class,
-                new TestGraphQLResultListener<>());
+                new TestGraphQLResultListener<>(latch));
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -96,13 +95,13 @@ public final class GraphQLInstrumentationTest {
     @Test
     public void testMutation() throws Exception {
         String document = TestAssets.readAsString("update-todo.graphql");
-        latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
         Amplify.API.mutate(
                 "mygraphql",
                 document,
                 Collections.emptyMap(),
                 Todo.class,
-                new TestGraphQLResultListener<>());
+                new TestGraphQLResultListener<>(latch));
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
@@ -116,17 +115,17 @@ public final class GraphQLInstrumentationTest {
         variables.put("myId", "1");
 
         String document = TestAssets.readAsString("get-todo-with-variable.graphql");
-        latch = new CountDownLatch(1);
+        CountDownLatch latch = new CountDownLatch(1);
         Amplify.API.query(
                 "mygraphql",
                 document,
                 variables,
                 Todo.class,
-                new TestGraphQLResultListener<>());
+                new TestGraphQLResultListener<>(latch));
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
-    final class Todo {
+    static final class Todo {
         private final String id;
         private final String name;
         private final String description;
@@ -150,7 +149,13 @@ public final class GraphQLInstrumentationTest {
         }
     }
 
-    final class TestGraphQLResultListener<T> implements ResultListener<GraphQLResponse<T>> {
+    static final class TestGraphQLResultListener<T> implements ResultListener<GraphQLResponse<T>> {
+        private final CountDownLatch latch;
+
+        TestGraphQLResultListener(CountDownLatch latch) {
+            this.latch = latch;
+        }
+
         @Override
         public void onResult(GraphQLResponse<T> response) {
             assertNotNull(response);
