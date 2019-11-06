@@ -34,7 +34,7 @@ public final class PrimaryKey {
      *         matches the value of {@link #fieldName()}.
      */
     public static boolean matches(Object anything) {
-        return (anything instanceof String) && fieldName().equals((String) anything);
+        return (anything instanceof String) && fieldName().equals(anything);
     }
 
     /**
