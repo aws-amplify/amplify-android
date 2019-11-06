@@ -76,10 +76,17 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      */
     @Override
     public synchronized void onCreate(SQLiteDatabase sqLiteDatabase) {
+        createTablesAndIndexes(sqLiteDatabase);
+    }
+
+    private void createTablesAndIndexes(SQLiteDatabase sqLiteDatabase) {
         // Loop all the create table sql command string in the list.
         // each sql will create a table in SQLite database.
         sqLiteDatabase.beginTransaction();
         try {
+            // TODO: Set PRAGMAS default encoding to UTF8.
+            // TODO: Enable foreign keys
+            // TODO: AutoVaccuum: caching
             for (final CreateSqlCommand createSqlCommand: createSqlCommands) {
                 Log.i(TAG, "Creating table: " + createSqlCommand.tableName());
                 sqLiteDatabase.execSQL(createSqlCommand.sqlStatement());

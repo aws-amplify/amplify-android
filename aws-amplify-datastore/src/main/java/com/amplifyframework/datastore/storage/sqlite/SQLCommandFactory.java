@@ -31,4 +31,12 @@ interface SQLCommandFactory {
      * @return the CREATE TABLE SQL command
      */
     CreateSqlCommand createTableFor(@NonNull ModelSchema modelSchema);
+
+    /**
+     * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
+     * @param modelSchema the schema of a {@link com.amplifyframework.datastore.model.Model}
+     *                    for which a CREATE INDEX SQL command needs to be generated.
+     * @return the CREATE INDEX SQL command
+     */
+    CreateSqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
 }

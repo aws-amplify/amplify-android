@@ -28,7 +28,7 @@ final class CreateSqlCommand {
     // name of the SQL table
     private final String tableName;
 
-    // create table command in string representation
+    // CREATE SQL command in string representation
     private final String sqlStatement;
 
     /**
@@ -44,14 +44,22 @@ final class CreateSqlCommand {
     }
 
     /**
-     * Create the CREATE TABLE SQL command for the corresponding
-     * ModelSchema.
+     * Create the CREATE TABLE SQL command for the corresponding {@link ModelSchema}.
      *
      * @param modelSchema the schema of the model
      * @return the CREATE TABLE SQL command
      */
-    static CreateSqlCommand fromModelSchema(@NonNull ModelSchema modelSchema) {
+    static CreateSqlCommand createTableFromModelSchema(@NonNull ModelSchema modelSchema) {
         return SQLiteCommandFactory.getInstance().createTableFor(modelSchema);
+    }
+
+    /**
+     * Create the CREATE INDEX SQL command for the corresponding {@link ModelSchema}.
+     * @param modelSchema the schema of the model
+     * @return the CREATE INDEX SQL command
+     */
+    static CreateSqlCommand createIndexFromModelSchema(@NonNull ModelSchema modelSchema) {
+        return SQLiteCommandFactory.getInstance().createIndexFor(modelSchema);
     }
 
     /**

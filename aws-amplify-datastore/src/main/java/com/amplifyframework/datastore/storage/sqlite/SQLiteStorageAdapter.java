@@ -84,8 +84,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         for (Class<? extends Model> model: models) {
             final ModelSchema modelSchema = ModelRegistry.getInstance()
                     .getModelSchemaForModelClass(model.getSimpleName());
-            final CreateSqlCommand createSqlCommand = CreateSqlCommand.fromModelSchema(modelSchema);
-            createTableCommands.add(createSqlCommand);
+            final CreateSqlCommand createTableSqlCommand = CreateSqlCommand.createTableFromModelSchema(modelSchema);
+            createTableCommands.add(createTableSqlCommand);
+            final CreateSqlCommand createIndexSqlCommand = CreateSqlCommand.createIndexFromModelSchema(modelSchema);
+            createTableCommands.add(createIndexSqlCommand);
         }
 
         final SQLiteStorageHelper dbHelper = SQLiteStorageHelper.getInstance(

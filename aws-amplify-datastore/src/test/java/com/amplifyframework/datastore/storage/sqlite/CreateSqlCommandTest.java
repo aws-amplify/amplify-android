@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.datastore.model.ModelAttribute;
 import com.amplifyframework.datastore.model.ModelField;
 import com.amplifyframework.datastore.model.ModelSchema;
 
@@ -25,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.MockitoJUnitRunner;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -33,7 +35,8 @@ import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 
 /**
- * Tests {@link CreateSqlCommand#fromModelSchema(ModelSchema)}.
+ * Tests {@link CreateSqlCommand#createTableFromModelSchema(ModelSchema)}
+ * and {@link CreateSqlCommand#createIndexFromModelSchema(ModelSchema)}.
  */
 @RunWith(MockitoJUnitRunner.class)
 public class CreateSqlCommandTest {
@@ -55,6 +58,52 @@ public class CreateSqlCommandTest {
      */
     @Test
     public void validModelSchemaReturnsExpectedSqlCommand() {
+        final SortedMap<String, ModelField> fields = getFieldsMap();
+        final ModelSchema personSchema = new ModelSchema("Person", null, fields);
+
+        final CreateSqlCommand createSqlCommand = CreateSqlCommand.createTableFromModelSchema(personSchema);
+        assertEquals("Person", createSqlCommand.tableName());
+        assertEquals("CREATE TABLE IF NOT EXISTS Person " +
+                "(age INTEGER , " +
+                "firstName TEXT NOT NULL, " +
+                "id TEXT PRIMARY KEY NOT NULL, " +
+                "lastName TEXT NOT NULL);", createSqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if {@link ModelSchema} with no fields return an expected
+     * CREATE TABLE SQL command with no columns.
+     */
+    @Test
+    public void noFieldsModelSchemaReturnsNoColumnsSqlCommand() {
+        when(mockModelSchema.getFields())
+                .thenReturn(Collections.emptyMap());
+        when(mockModelSchema.getName())
+                .thenReturn("Guitar");
+        final CreateSqlCommand createSqlCommand = CreateSqlCommand.createTableFromModelSchema(mockModelSchema);
+        assertEquals("Guitar", createSqlCommand.tableName());
+        assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", createSqlCommand.sqlStatement());
+    }
+
+    /**
+     * Test if {@link ModelSchema} with index returns an expected
+     * CREATE INDEX SQL command.
+     */
+    @Test
+    public void modelWithIndexReturnsExpectedCreateIndexCommand() {
+        when(mockModelSchema.getName())
+                .thenReturn("Person");
+        when(mockModelSchema.getModelAttribute())
+                .thenReturn(ModelAttribute.builder()
+                        .indexName("idBasedIndex")
+                        .indexFieldNames(Arrays.asList("id"))
+                        .build());
+        final CreateSqlCommand createIndexSqlCommand = CreateSqlCommand.createIndexFromModelSchema(mockModelSchema);
+        assertEquals("Person", createIndexSqlCommand.tableName());
+        assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);", createIndexSqlCommand.sqlStatement());
+    }
+
+    private SortedMap<String, ModelField> getFieldsMap() {
         final SortedMap<String, ModelField> fields = new TreeMap<>();
         fields.put("id", ModelField.builder()
                 .name("id")
@@ -80,29 +129,6 @@ public class CreateSqlCommandTest {
                 .targetName("age")
                 .targetType("Int")
                 .build());
-        final ModelSchema personSchema = new ModelSchema("Person", "Person", fields);
-
-        final CreateSqlCommand createSqlCommand = CreateSqlCommand.fromModelSchema(personSchema);
-        assertEquals("Person", createSqlCommand.tableName());
-        assertEquals("CREATE TABLE IF NOT EXISTS Person " +
-                "(age INTEGER , " +
-                "firstName TEXT NOT NULL, " +
-                "id TEXT PRIMARY KEY NOT NULL, " +
-                "lastName TEXT NOT NULL);", createSqlCommand.sqlStatement());
-    }
-
-    /**
-     * Test if {@link ModelSchema} with no fields return an expected
-     * CREATE TABLE SQL command with no columns.
-     */
-    @Test
-    public void noFieldsModelSchemaReturnsNoColumnsSqlCommand() {
-        when(mockModelSchema.getFields())
-                .thenReturn(Collections.emptyMap());
-        when(mockModelSchema.getName())
-                .thenReturn("Guitar");
-        final CreateSqlCommand createSqlCommand = CreateSqlCommand.fromModelSchema(mockModelSchema);
-        assertEquals("Guitar", createSqlCommand.tableName());
-        assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", createSqlCommand.sqlStatement());
+        return fields;
     }
 }

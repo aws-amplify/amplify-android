@@ -15,10 +15,16 @@
 
 package com.amplifyframework.datastore.model;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import com.amplifyframework.datastore.annotations.Index;
+import com.amplifyframework.datastore.annotations.ModelConfig;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -35,12 +41,12 @@ import java.util.TreeMap;
  * The schema encapsulates the metadata information of a Model.
  */
 public final class ModelSchema {
+
+    // Logcat Tag.
+    private static final String TAG = ModelSchema.class.getSimpleName();
+
     // Name of the Java Class of the Model.
     private final String name;
-
-    // Name of the target type. For example: name of
-    // the graphQL type in the cloud.
-    private final String targetName;
 
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
@@ -52,20 +58,22 @@ public final class ModelSchema {
     // persistence-related operations guarantee that the results are always consistent.
     private final List<Map.Entry<String, ModelField>> sortedFields;
 
+    // Encapsulates the attributes of a Model.
+    private final ModelAttribute modelAttribute;
+
     /**
      * Construct the ModelSchema object.
      *
      * @param name name of the Model class.
-     * @param targetName
-     *                   that the Model is targeting against.
+     * @param modelAttribute attributes of the Model class.
      * @param fields map of fieldName and the fieldObject
      *               of all the fields of the model.
      */
     public ModelSchema(@NonNull String name,
-                       @NonNull String targetName,
-                       @NonNull SortedMap<String, ModelField> fields) {
+                       @Nullable ModelAttribute modelAttribute,
+                       @Nullable SortedMap<String, ModelField> fields) {
         this.name = name;
-        this.targetName = targetName;
+        this.modelAttribute = modelAttribute;
         this.fields = fields;
         this.sortedFields = sortModelFields();
     }
@@ -91,12 +99,12 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the name of the target.
+     * Returns the attributes of a {@link Model}.
      *
-     * @return the name of the target.
+     * @return the attributes of a {@link Model}.
      */
-    public String getTargetName() {
-        return targetName;
+    public ModelAttribute getModelAttribute() {
+        return modelAttribute;
     }
 
     /**
@@ -124,6 +132,7 @@ public final class ModelSchema {
     static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.ModelField.class);
         final TreeMap<String, ModelField> fields = new TreeMap<>();
+        final ModelAttribute modelAttribute = getModelAttribute(clazz);
         for (Field field: classFields) {
             com.amplifyframework.datastore.annotations.ModelField annotation = null;
             if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
@@ -142,7 +151,34 @@ public final class ModelSchema {
                     .build();
             fields.put(field.getName(), modelField);
         }
-        return new ModelSchema(clazz.getSimpleName(), clazz.getSimpleName(), fields);
+        return new ModelSchema(clazz.getSimpleName(), modelAttribute, fields);
+    }
+
+    private static ModelAttribute getModelAttribute(@NonNull Class<? extends Model> clazz) {
+        final ModelAttribute.ModelAttributeBuilder modelAttributeBuilder = ModelAttribute.builder();
+        if (clazz.isAnnotationPresent(ModelConfig.class)) {
+            try {
+                ModelConfig modelConfigAnnotation = clazz.getAnnotation(ModelConfig.class);
+                if (modelConfigAnnotation != null) {
+                    modelAttributeBuilder.targetModelName(modelConfigAnnotation.targetName());
+                }
+            } catch (Exception exception) {
+                Log.w(TAG, "Cannot extract ModelConfig#targetName() from the model class: " + clazz.getSimpleName());
+            }
+        }
+
+        if (clazz.isAnnotationPresent(Index.class)) {
+            try {
+                Index indexAnnotation = clazz.getAnnotation(Index.class);
+                if (indexAnnotation != null) {
+                    modelAttributeBuilder.indexName(indexAnnotation.name());
+                    modelAttributeBuilder.indexFieldNames(Arrays.asList(indexAnnotation.fields()));
+                }
+            } catch (Exception exception) {
+                Log.w(TAG, "Cannot extract ModelConfig#targetName() from the model class: " + clazz.getSimpleName());
+            }
+        }
+        return modelAttributeBuilder.build();
     }
 
     private List<Map.Entry<String, ModelField>> sortModelFields() {
