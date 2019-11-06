@@ -51,7 +51,7 @@ public final class HubInstrumentedTest {
      * {@link BackgroundExecutorHubPlugin} to satisfy the Hub category.
      */
     @BeforeClass
-    public static void setUpBeforeClass() {
+    public static void configureAmplify() {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);

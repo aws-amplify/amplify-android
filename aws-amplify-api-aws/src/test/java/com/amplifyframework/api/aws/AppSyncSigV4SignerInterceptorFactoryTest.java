@@ -15,16 +15,14 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.api.ApiException;
-
 import com.amazonaws.internal.StaticCredentialsProvider;
 import org.junit.Test;
+
+import java.io.IOException;
 
 import okhttp3.Response;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Tests the behavior of {@link InterceptorFactory} for different
@@ -35,106 +33,98 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
     private static final String X_API_KEY = "x-api-key";
     private static final String AUTHORIZATION = "authorization";
 
-    private static ApiAuthProviders providers;
-    private static InterceptorFactory factory;
-
     /**
      * Test cases for when no custom provider is given
      * for {@link com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider}.
      * This is the recommended path, and a customer should
      * never have to provide a custom provider.
+     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     *                     Not expected in this test.
      */
     @Test
-    public void testApiKeyOverrideNotProvided() {
+    public void testApiKeyOverrideNotProvided() throws IOException {
         final String apiKey1 = "API_KEY_1";
         final String apiKey2 = "API_KEY_2";
 
-        providers = ApiAuthProviders.builder()
+        ApiAuthProviders providers = ApiAuthProviders.builder()
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // Uses API key from one of the APIs
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.API_KEY)
-                    .apiKey(apiKey1)
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            assertEquals(apiKey1, res.request().header(X_API_KEY));
-        } catch (Exception error) {
-            fail("Factory-created interceptor should successfully intercept.");
-        }
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.API_KEY)
+                .apiKey(apiKey1)
+                .build();
+        Response res = factory.create(config).intercept(new MockChain());
+        assertEquals(apiKey1, res.request().header(X_API_KEY));
 
         // Uses another API key from one of the APIs while reusing factory
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.API_KEY)
-                    .apiKey(apiKey2)
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            assertEquals(apiKey2, res.request().header(X_API_KEY));
-        } catch (Exception error) {
-            fail("Factory-created interceptor should successfully intercept.");
-        }
+        config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.API_KEY)
+                .apiKey(apiKey2)
+                .build();
+        res = factory.create(config).intercept(new MockChain());
+        assertEquals(apiKey2, res.request().header(X_API_KEY));
     }
 
     /**
      * Test cases for when no API key is provided inside
      * {@link ApiConfiguration} object.
+     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     *                     Not expected in this test.
      */
-    @Test
-    public void testApiKeyNotProvidedInConfiguration() {
-        providers = ApiAuthProviders.builder()
+    @Test(expected = IllegalArgumentException.class)
+    public void testApiKeyNotProvidedInConfiguration() throws IOException {
+        ApiAuthProviders providers = ApiAuthProviders.builder()
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // If API key is not mentioned in API configuration AND
         // auth mode is API_KEY AND no custom API key provider
         // is provided via ApiAuthProvider, then intercept fails.
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.API_KEY)
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            fail("Factory-created interceptor should successfully intercept.");
-        } catch (Exception error) {
-            assertTrue(error instanceof IllegalArgumentException);
-        }
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.API_KEY)
+                .build();
+        factory.create(config).intercept(new MockChain());
+    }
 
-        providers = ApiAuthProviders.builder()
+
+    /**
+     * If API key is not mentioned in API configuration AND auth mode is
+     * API_KEY BUT a valid custom API key provider is provided via
+     * ApiAuthProvider, then intercept succeeds.
+     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     *                     Not expected in this test.
+     */
+    @Test
+    public void testApiKeyProvidedInterceptSucceeds() throws IOException {
+        ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "CUSTOM_API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
-        // If API key is not mentioned in API configuration AND
-        // auth mode is API_KEY BUT a valid custom API key provider
-        // is provided via ApiAuthProvider, then intercept succeeds.
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.API_KEY)
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
-        } catch (Exception error) {
-            fail("Factory-created interceptor should successfully intercept.");
-        }
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.API_KEY)
+                .build();
+        Response res = factory.create(config).intercept(new MockChain());
+        assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
     }
 
     /**
@@ -142,46 +132,40 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * {@link com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider}
      * is provided to the plugin to override the default method
      * of obtaining API key directly from configuration.
+     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     *                     Not expected in this test.
      */
     @Test
-    public void testApiKeyOverrideProvided() {
-        providers = ApiAuthProviders.builder()
+    public void testApiKeyOverrideProvided() throws IOException {
+        ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "CUSTOM_API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
         // Even if API key is written in the ApiConfiguration, the interceptor
         // obtains its API key from custom provider and ignores the config
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.API_KEY)
-                    .apiKey("API_KEY_INSIDE_CONFIG")
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
-        } catch (Exception error) {
-            fail("Factory-created interceptor should successfully intercept.");
-        }
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.API_KEY)
+                .apiKey("API_KEY_INSIDE_CONFIG")
+                .build();
+        Response res = factory.create(config).intercept(new MockChain());
+        assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
 
         // Even if API key isn't written in the ApiConfiguration, the interceptor
         // obtains its API key from custom provider without crashing
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.API_KEY)
-                    .apiKey("ANOTHER_API_KEY_INSIDE_CONFIG")
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
-        } catch (Exception error) {
-            fail("Factory-created interceptor should successfully intercept.");
-        }
+        config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.API_KEY)
+                .apiKey("ANOTHER_API_KEY_INSIDE_CONFIG")
+                .build();
+        res = factory.create(config).intercept(new MockChain());
+        assertEquals("CUSTOM_API_KEY", res.request().header(X_API_KEY));
     }
 
     /**
@@ -189,54 +173,50 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * an API that uses {@link AuthorizationType#OPENID_CONNECT}
      * as its auth mechanism, then the process will fail at runtime
      * while sending a request with that API.
+     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     *                     Expected since OIDC config was not provided
      */
-    @Test
-    public void testOidcOverrideNotProvided() {
-        providers = ApiAuthProviders.builder()
+    @Test(expected = IOException.class)
+    public void testOidcOverrideNotProvided() throws IOException {
+        ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.OPENID_CONNECT)
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            fail("Factory-created interceptor should fail to intercept.");
-        } catch (Exception error) {
-            assertTrue(error.getCause() instanceof ApiException.AuthorizationTypeNotConfiguredException);
-        }
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.OPENID_CONNECT)
+                .build();
+        Response res = factory.create(config).intercept(new MockChain());
     }
 
     /**
      * Test to confirm that passing any custom implementation of
      * {@link com.amplifyframework.api.aws.sigv4.OidcAuthProvider}
      * prevents crashes while intercepting requests.
+     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     *                     Not expected in this test.
      */
     @Test
-    public void testOidcOverrideProvided() {
-        providers = ApiAuthProviders.builder()
+    public void testOidcOverrideProvided() throws IOException {
+        ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
 
-        try {
-            ApiConfiguration config = ApiConfiguration.builder()
-                    .endpoint("")
-                    .region("")
-                    .authorizationType(AuthorizationType.OPENID_CONNECT)
-                    .build();
-            Response res = factory.create(config).intercept(new MockChain());
-            assertEquals("OIDC_JWT_TOKEN", res.request().header(AUTHORIZATION));
-        } catch (Exception error) {
-            fail("Factory-created interceptor should successfully intercept.");
-        }
+        ApiConfiguration config = ApiConfiguration.builder()
+                .endpoint("")
+                .region("")
+                .authorizationType(AuthorizationType.OPENID_CONNECT)
+                .build();
+        Response res = factory.create(config).intercept(new MockChain());
+        assertEquals("OIDC_JWT_TOKEN", res.request().header(AUTHORIZATION));
     }
 }
+

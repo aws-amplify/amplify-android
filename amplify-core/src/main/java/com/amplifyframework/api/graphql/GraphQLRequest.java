@@ -140,7 +140,7 @@ public final class GraphQLRequest {
     /**
      * Wrapper to contain field value and its name.
      */
-    final class FieldValue {
+    static final class FieldValue {
         private final String name;
         private final String value;
 
@@ -174,7 +174,7 @@ public final class GraphQLRequest {
     /**
      * Wrapper to contain variable value and its name.
      */
-    final class VariableValues {
+    static final class VariableValues {
         private final String name;
         private final String value;
 

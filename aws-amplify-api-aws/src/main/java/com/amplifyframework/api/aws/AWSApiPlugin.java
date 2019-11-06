@@ -183,7 +183,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     /**
      * Wrapper class to pair http client with dedicated endpoint.
      */
-    class ClientDetails {
+    static class ClientDetails {
         private final String endpoint;
         private final OkHttpClient client;
 
