@@ -16,22 +16,24 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
+import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsCategory;
-import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.api.ApiCategory;
-import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.core.category.Category;
+import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.hub.HubCategory;
-import com.amplifyframework.hub.HubPlugin;
 import com.amplifyframework.logging.LoggingCategory;
-import com.amplifyframework.logging.LoggingPlugin;
 import com.amplifyframework.storage.StorageCategory;
-import com.amplifyframework.storage.StoragePlugin;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * This is the top-level customer-facing interface to the Amplify
@@ -52,26 +54,38 @@ import com.amplifyframework.storage.StoragePlugin;
  */
 public final class Amplify {
 
+    private static final String TAG = Amplify.class.getSimpleName();
+
     @SuppressWarnings("all") public static final AnalyticsCategory Analytics;
     @SuppressWarnings("all") public static final ApiCategory API;
     @SuppressWarnings("all") public static final LoggingCategory Logging;
     @SuppressWarnings("all") public static final StorageCategory Storage;
     @SuppressWarnings("all") public static final HubCategory Hub;
 
-    private static final String TAG = Amplify.class.getSimpleName();
+    private static final Object LOCK;
+    private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES;
 
     private static AmplifyConfiguration amplifyConfiguration;
-    private static boolean configured = false;
+    private static boolean configured;
 
     static {
+        LOCK = new Object();
+        configured = false;
+
         Analytics = new AnalyticsCategory();
         API = new ApiCategory();
         Logging = new LoggingCategory();
         Storage = new StorageCategory();
         Hub = new HubCategory();
-    }
 
-    private static final Object LOCK = new Object();
+        final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new HashMap<>();
+        modifiableCategories.put(CategoryType.ANALYTICS, Analytics);
+        modifiableCategories.put(CategoryType.API, API);
+        modifiableCategories.put(CategoryType.LOGGING, Logging);
+        modifiableCategories.put(CategoryType.STORAGE, Storage);
+        modifiableCategories.put(CategoryType.HUB, Hub);
+        CATEGORIES = Collections.unmodifiableMap(modifiableCategories);
+    }
 
     /**
      * Dis-allows instantiation of this utility class.
@@ -108,24 +122,12 @@ public final class Amplify {
             }
             amplifyConfiguration = configuration;
 
-            if (Analytics.getPlugins().size() > 0) {
-                Analytics.configure(amplifyConfiguration.forCategoryType(CategoryType.ANALYTICS), context);
-            }
-
-            if (API.getPlugins().size() > 0) {
-                API.configure(amplifyConfiguration.forCategoryType(CategoryType.API), context);
-            }
-
-            if (Hub.getPlugins().size() > 0) {
-                Hub.configure(amplifyConfiguration.forCategoryType(CategoryType.HUB), context);
-            }
-
-            if (Logging.getPlugins().size() > 0) {
-                Logging.configure(amplifyConfiguration.forCategoryType(CategoryType.LOGGING), context);
-            }
-
-            if (Storage.getPlugins().size() > 0) {
-                Storage.configure(amplifyConfiguration.forCategoryType(CategoryType.STORAGE), context);
+            for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
+                if (category.getPlugins().size() > 0) {
+                    CategoryConfiguration categoryConfiguration =
+                        amplifyConfiguration.forCategoryType(category.getCategoryType());
+                    category.configure(categoryConfiguration, context);
+                }
             }
 
             configured = true;
@@ -141,52 +143,7 @@ public final class Amplify {
      *                         or when when the plugin's category type is not supported by Amplify.
      */
     public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin) throws PluginException {
-        synchronized (LOCK) {
-            if (plugin.getPluginKey() == null || plugin.getPluginKey().isEmpty()) {
-                throw new PluginException.EmptyKeyException();
-            }
-
-            switch (plugin.getCategoryType()) {
-                case API:
-                    if (plugin instanceof ApiPlugin) {
-                        API.addPlugin((ApiPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case ANALYTICS:
-                    if (plugin instanceof AnalyticsPlugin) {
-                        Analytics.addPlugin((AnalyticsPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case HUB:
-                    if (plugin instanceof HubPlugin) {
-                        Hub.addPlugin((HubPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case LOGGING:
-                    if (plugin instanceof LoggingPlugin) {
-                        Logging.addPlugin((LoggingPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case STORAGE:
-                    if (plugin instanceof StoragePlugin) {
-                        Storage.addPlugin((StoragePlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                default:
-                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
-                            "Verify that the library version is correct and supports the plugin's category.");
-            }
-        }
+        updatePluginRegistry(plugin, RegistryUpdateType.ADD);
     }
 
     /**
@@ -196,46 +153,36 @@ public final class Amplify {
      * @throws PluginException On failure to remove a plugin
      */
     public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws PluginException {
+        updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
+    }
+
+    @SuppressWarnings("unchecked") // Intentionally; it's caught in a try/catch.
+    private static <P extends Plugin<?>> void updatePluginRegistry(
+            final P plugin, final RegistryUpdateType registryUpdateType) throws PluginException {
+
         synchronized (LOCK) {
-            switch (plugin.getCategoryType()) {
-                case API:
-                    if (plugin instanceof ApiPlugin) {
-                        API.removePlugin((ApiPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case ANALYTICS:
-                    if (plugin instanceof AnalyticsPlugin) {
-                        Analytics.removePlugin((AnalyticsPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case HUB:
-                    if (plugin instanceof HubPlugin) {
-                        Hub.removePlugin((HubPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case LOGGING:
-                    if (plugin instanceof LoggingPlugin) {
-                        Logging.removePlugin((LoggingPlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                case STORAGE:
-                    if (plugin instanceof StoragePlugin) {
-                        Storage.removePlugin((StoragePlugin) plugin);
-                    } else {
-                        throw new PluginException.MismatchedPluginException();
-                    }
-                    break;
-                default:
-                    throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
-                            "Verify that the library version is correct and supports the plugin's category.");
+            if (TextUtils.isEmpty(plugin.getPluginKey())) {
+                throw new PluginException.EmptyKeyException();
+            } else if (!CATEGORIES.containsKey(plugin.getCategoryType())) {
+                throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
+                    "Verify that the library version is correct and supports the plugin's category.");
+            }
+
+            Category<P> category;
+            try {
+                category = (Category<P>) CATEGORIES.get(plugin.getCategoryType());
+            } catch (ClassCastException classCastException) {
+                // will throw in a moment...
+                category = null;
+            }
+            if (category == null) {
+                throw new PluginException.MismatchedPluginException();
+            }
+
+            if (RegistryUpdateType.REMOVE.equals(registryUpdateType)) {
+                category.removePlugin(plugin);
+            } else {
+                category.addPlugin(plugin);
             }
         }
     }
@@ -250,4 +197,10 @@ public final class Amplify {
     static AmplifyConfiguration getAmplifyConfiguration() {
         return amplifyConfiguration;
     }
+
+    private enum RegistryUpdateType {
+        ADD,
+        REMOVE
+    }
 }
+
