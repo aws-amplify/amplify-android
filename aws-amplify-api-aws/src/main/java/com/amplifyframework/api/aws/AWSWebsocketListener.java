@@ -74,7 +74,6 @@ final class AWSWebsocketListener<T> extends WebSocketListener {
             webSocket.send(reg);
             Log.e("Connected", text);
         } else if(text.contains("start_ack")) {
-            // callback.onResponse(new Response<T>(new Response.Builder<T>(subscription).data((T)"Subscription successful")));
             Log.e(TAG, "Subscribed successfully");
         } else if (text.contains("\"complete\"")) {
             callback = null;
@@ -83,14 +82,6 @@ final class AWSWebsocketListener<T> extends WebSocketListener {
         }
         else {
             Log.e(TAG, "Message received successfully " + text);
-            // Extract the payload which can be either data or error.
-            String data = null;
-            try {
-                JSONObject response = new JSONObject(text);
-                data = response.getString("payload");
-            } catch (JSONException e) {
-                Log.e(TAG, "Error constructing JSON Object from the ", e);
-            }
 
             // Parse the response
             callback.onNext((new GsonGraphQLResponseFactory().buildResponse(text, classToCast)));
@@ -101,6 +92,7 @@ final class AWSWebsocketListener<T> extends WebSocketListener {
     @Override
     public void onClosing(WebSocket webSocket, int code, String reason) {
         webSocket.close(NORMAL_CLOSURE_STATUS, null);
+        Log.w(TAG, "Webscoket connection was closed. " + reason);
     }
 
     @Override

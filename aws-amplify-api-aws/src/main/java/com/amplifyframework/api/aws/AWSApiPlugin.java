@@ -16,22 +16,12 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
-import android.net.Uri;
-import android.util.Base64;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amazonaws.DefaultRequest;
-import com.amazonaws.http.HttpMethodName;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
-import com.amplifyframework.api.aws.sigv4.AppSyncV4Signer;
-import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
-import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolAuthProvider;
-import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -39,24 +29,13 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.plugin.PluginException;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.ByteArrayInputStream;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
 
 /**
  * Plugin implementation to be registered with Amplify API category.
@@ -216,7 +195,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         GraphQLOperation<T> operation =
-                new AWSGraphQLSubscriptionOperation<>(clientDetails.getEndpoint(),
+                new GraphQLSubscriptionOperation<>(clientDetails.getEndpoint(),
                         subscriptionClient,
                         qraphQlRequest,
                         gqlResponseFactory,
