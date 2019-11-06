@@ -49,6 +49,10 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest> {
         this.responseListener = responseListener;
     }
 
+    protected Class<T> getClassToCast() {
+        return classToCast;
+    }
+
     /**
      * Gets the listener that was specified when the operation was requested.
      * @return The listener who will receive outputs of the operation

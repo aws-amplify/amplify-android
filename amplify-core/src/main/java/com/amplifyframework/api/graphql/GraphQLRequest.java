@@ -16,7 +16,9 @@
 package com.amplifyframework.api.graphql;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A request against a GraphQL endpoint.
@@ -37,6 +39,19 @@ public final class GraphQLRequest {
         this.fieldValues = new ArrayList<>();
         this.variableValues = new ArrayList<>();
         this.fragments = new ArrayList<>();
+    }
+
+
+    public String getDocument() {
+        return document;
+    }
+
+    public Map<String, String> getVariables() {
+        Map<String, String> variables = new HashMap<>();
+        for(VariableValues variableValues : this.variableValues) {
+            variables.put(variableValues.getName(), variableValues.getValue().toString());
+        }
+        return variables;
     }
 
     /**

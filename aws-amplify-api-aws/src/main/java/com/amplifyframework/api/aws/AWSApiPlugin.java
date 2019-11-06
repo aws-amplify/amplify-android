@@ -53,10 +53,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import okhttp3.ResponseBody;
 import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 
@@ -71,6 +69,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> httpClients;
     private final GsonGraphQLResponseFactory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
+    private final OkHttpClient subscriptionClient;
 
     /**
      * Default constructor for this plugin without any override.
@@ -92,6 +91,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.httpClients = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
         this.authProvider = apiAuthProvider;
+        subscriptionClient = new OkHttpClient.Builder()
+                .retryOnConnectionFailure(true)
+                .build();
     }
 
     @Override
@@ -144,8 +146,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
         if (variables != null) {
-            for (String key : variables.keySet()) {
-                qraphQlRequest.variable(key, variables.get(key));
+            for (Map.Entry<String, String> variable : variables.entrySet()) {
+                qraphQlRequest.variable(variable.getKey(), variable.getValue());
             }
         }
 
@@ -176,8 +178,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
         if (variables != null) {
-            for (String key : variables.keySet()) {
-                qraphQlRequest.variable(key, variables.get(key));
+            for (Map.Entry<String, String> variable : variables.entrySet()) {
+                qraphQlRequest.variable(variable.getKey(), variable.getValue());
             }
         }
 
@@ -200,7 +202,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @Nullable Map<String, String> variables,
             @NonNull Class<T> classToCast,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
-        // throw new UnsupportedOperationException("This has not been implemented, yet.");
         // Get the required OkHttp client
         final ClientDetails clientDetails = httpClients.get(apiName);
         if (clientDetails == null) {
@@ -209,345 +210,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
         if (variables != null) {
-            for (String key : variables.keySet()) {
-                qraphQlRequest.variable(key, variables.get(key));
+            for (Map.Entry<String, String> variable : variables.entrySet()) {
+                qraphQlRequest.variable(variable.getKey(), variable.getValue());
             }
         }
-        // make the call
-        OkHttpClient client = clientDetails.getClient();
-        Request request = null;
-        try {
-            request = new Request.Builder()
-                    .url(getConnectionRequestUrl(clientDetails.getEndpoint(), clientDetails.getApiConfiguration(), gqlDocument, variables))
-                    .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
-                    .build();
-        } catch (JSONException e) {
-            subscriptionListener.onError(new RuntimeException("Failed to get connection url. Please check awsconfiguration.json", e));
-        }
-        AppSyncWebSocketListener<T> listener = new AppSyncWebSocketListener(gqlDocument, variables,
-                subscriptionListener, clientDetails.getApiConfiguration());
-        WebSocket websocket = client.newWebSocket(request, listener);
 
-        // setup the listener
-        return null;
-    }
+        GraphQLOperation<T> operation =
+                new AWSGraphQLSubscriptionOperation<>(clientDetails.getEndpoint(),
+                        subscriptionClient,
+                        qraphQlRequest,
+                        gqlResponseFactory,
+                        classToCast,
+                        subscriptionListener,
+                        clientDetails.getApiConfiguration());
 
-    /**
-     * Listener for events on the websocket connection established for subscription
-     */
-    private final class AppSyncWebSocketListener<T> extends WebSocketListener {
-
-        private static final int NORMAL_CLOSURE_STATUS = 1000;
-        private StreamListener<GraphQLResponse<T>> callback;
-        private String gqlDocument;
-        private Map<String, String> variables;
-        private ApiConfiguration apiConfiguration;
-
-
-        public AppSyncWebSocketListener(String gqlDocument, Map<String, String> variables, StreamListener<GraphQLResponse<T>> subscriptionListener, ApiConfiguration apiConfiguration) {
-            this.callback = subscriptionListener;
-            this.gqlDocument = gqlDocument;
-            this.variables = variables;
-            this.apiConfiguration = apiConfiguration;
-        }
-
-        @Override
-        public void onOpen(WebSocket webSocket, okhttp3.Response response) {
-            // Connection was successfully opened, send a connection_init message
-            JSONObject connectionInitMessage = new JSONObject();
-            try {
-                connectionInitMessage.put("type", "connection_init");
-            } catch (JSONException e) {
-                Log.e(TAG, "Error constructing JSON object", e);
-            }
-            webSocket.send(connectionInitMessage.toString());
-        }
-
-        @Override
-        public void onMessage(WebSocket webSocket, String text) {
-
-            // Message received on the websocket connection, process based on the message type
-            if (text.contains("connection_ack")) {
-                // connection_ack message received, register a subscription
-
-                JSONObject subscriptionRegistrationMessage = new JSONObject();
-                try {
-                    subscriptionRegistrationMessage.put("id", "1");
-                    subscriptionRegistrationMessage.put("type", "start");
-                    subscriptionRegistrationMessage.put("payload", getSubscriptionRegistrationPayload());
-                } catch (JSONException e) {
-                    Log.e(TAG, "Error constructing JSON object", e);
-                }
-
-                String reg = subscriptionRegistrationMessage.toString();
-                webSocket.send(reg);
-                Log.e("Connected", text);
-            } else if(text.contains("start_ack")) {
-                // callback.onResponse(new Response<T>(new Response.Builder<T>(subscription).data((T)"Subscription successful")));
-                Log.e(TAG, "Subscribed successfully");
-            } else if (text.contains("\"complete\"")) {
-                callback = null;
-            } else if (text.contains("ka")){
-                Log.e(TAG, "Keep Alive message received");
-            }
-            else {
-                Log.e(TAG, "Message received successfully " + text);
-                // Extract the payload which can be either data or error.
-                String data = null;
-                try {
-                    JSONObject response = new JSONObject(text);
-                    data = response.getString("payload");
-                } catch (JSONException e) {
-                    Log.e(TAG, "Error constructing JSON Object from the ", e);
-                }
-
-                // Parse the response using OperationResponseParser
-                ResponseBody messageBody = ResponseBody.create(MediaType.parse("text/plain"), data);
-            }
-
-        }
-
-        @Override
-        public void onClosing(WebSocket webSocket, int code, String reason) {
-            webSocket.close(NORMAL_CLOSURE_STATUS, null);
-        }
-
-        @Override
-        public void onFailure(WebSocket webSocket, Throwable t, okhttp3.Response response) {
-            Log.e(TAG, "Subscription failure encountered", t);
-            callback.onError(new RuntimeException("Error in Subscription", t));
-            // Some retry logic here
-        }
-
-        private JSONObject getSubscriptionRegistrationPayload() {
-            JSONObject payload = new JSONObject();
-
-            try {
-                payload.put("data", getDataJson());
-                payload.put("extensions", getExtension());
-            } catch (JSONException e) {
-                Log.e(TAG, "Error constructing JSON object", e);
-            }
-            return payload;
-        }
-
-        private JSONObject getExtension() {
-            JSONObject extension = new JSONObject();
-            try {
-                extension.put("authorization", getAuthorizationDetails(false, apiConfiguration, gqlDocument, variables));
-            } catch (JSONException e) {
-                Log.e(TAG, "Error constructing JSON object", e);
-            }
-
-            return extension;
-        }
-
-        private String getDataJson() {
-            String query = gqlDocument;
-            JSONObject dataJson = new JSONObject();
-            try {
-                dataJson.put("query", query);
-                JSONObject variableJson = new JSONObject();
-                for (Map.Entry<String, String> e : variables.entrySet()){
-                    variableJson.put(e.getKey(), e.getValue());
-                }
-                dataJson.put("variables", variableJson);
-            } catch (JSONException e) {
-                Log.e(TAG, "Error constructing JSON object", e);
-            }
-
-            return dataJson.toString();
-        }
-    }
-
-    private String getConnectionRequestUrl(String endpoint, ApiConfiguration apiConfiguration, String document, Map<String, String> variable) throws JSONException {
-        // Construct the authorization header for connection request
-        String encodedHeader = Base64.encodeToString(
-                getAuthorizationDetails(true, apiConfiguration, document, variable)
-                        .toString()
-                        .getBytes(),
-                Base64.DEFAULT);
-
-        /**
-         * Discover gogi endpoint from the appsync endpoint.
-         * AppSync endpoint : https://xxxxxxxxxxxx.appsync-api.ap-southeast-2.amazonaws.com/graphql
-         * Discovered gogi endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
-         *
-         */
-        URL appSyncEndpoint = null;
-        try {
-            appSyncEndpoint = new URL(endpoint);
-        } catch (MalformedURLException e) {
-            Log.e(TAG, "Error getting appsync api url ", e);
-        }
-
-        Uri.Builder connectionUriBuilder = new Uri.Builder();
-        connectionUriBuilder.scheme("wss")
-                .authority(appSyncEndpoint.getHost()
-                        .replace("appsync-api", "appsync-realtime-api")).appendPath(appSyncEndpoint.getPath())
-                .appendQueryParameter("header", encodedHeader)
-                .appendQueryParameter("payload", "e30=");
-        return connectionUriBuilder.build().toString();
-    }
-
-    /**
-     * Return authorization json to be used for connection and subscription registration.
-     *
-     * @return
-     */
-    private JSONObject getAuthorizationDetails(boolean connectionFlag, ApiConfiguration apiConfiguration, String gqlDocument, Map<String, String> variable) throws JSONException {
-        JSONObject authorizationMessage = new JSONObject();
-        // Get the Auth Mode from configuration json
-        String authMode = null;
-            authMode = apiConfiguration.getAuthorizationType().toString();
-
-        // Construct the Json based on the Auth Mode
-        switch (authMode) {
-            case "API_KEY" :
-                authorizationMessage = getAuthorizationDetailsForApiKey(apiConfiguration);
-                break;
-            case "AWS_IAM" :
-                authorizationMessage = getAuthorizationDetailsForIAM(connectionFlag, apiConfiguration, gqlDocument, variable);
-                break;
-            case "AMAZON_COGNITO_USER_POOLS" :
-                authorizationMessage = getAuthorizationDetailsForUserpools(apiConfiguration);
-                break;
-            case "OPENID_CONNECT" :
-                authorizationMessage = getAuthorizationDetailsForOidc(apiConfiguration);
-                break;
-            default :
-                Log.e(TAG, "Unsupported Auth type detected");
-                break;
-        }
-
-        return authorizationMessage;
-    }
-
-    private JSONObject getAuthorizationDetailsForApiKey(ApiConfiguration apiConfiguration) {
-        JSONObject authorizationMessage = new JSONObject();
-        try {
-            authorizationMessage.put("host",
-                    getHost(apiConfiguration.getEndpoint()));
-            authorizationMessage.put("x-amz-date",
-                    ISO8601Timestamp.now());
-            authorizationMessage.put("x-api-key",
-                    apiConfiguration.getApiKey());
-        } catch (JSONException | MalformedURLException e) {
-            Log.e(TAG, "Error constructing the authorization json", e);
-        }
-        return authorizationMessage;
-    }
-
-    private JSONObject getAuthorizationDetailsForIAM(boolean connectionFlag,
-                                                     ApiConfiguration apiConfiguration,
-                                                     String queryDocument,
-                                                     Map<String, String> variable) throws JSONException {
-        JSONObject authorizationMessage = new JSONObject();
-        JSONObject identityPoolJSON;
-
-        String identityPoolId = null;
-        String regionStr = null;
-
-        DefaultRequest canonicalRequest = new DefaultRequest("appsync");
-        try {
-            if (connectionFlag) {
-                canonicalRequest.setEndpoint(new URI(apiConfiguration.getEndpoint() + "/connect"));
-            } else {
-                canonicalRequest.setEndpoint(new URI(apiConfiguration.getEndpoint()));
-            }
-        } catch (URISyntaxException e) {
-            Log.e(TAG, "Error constructing canonical URI for IAM request signature", e);
-        }
-        canonicalRequest.addHeader("accept", "application/json, text/javascript");
-        canonicalRequest.addHeader("content-encoding", "amz-1.0");
-        canonicalRequest.addHeader("content-type", "application/json; charset=UTF-8");
-
-        canonicalRequest.setHttpMethod(HttpMethodName.valueOf("POST"));
-        if (connectionFlag) {
-            canonicalRequest.setContent(new ByteArrayInputStream("{}".getBytes()));
-        } else {
-            canonicalRequest.setContent(new ByteArrayInputStream(getDataJson(queryDocument, variable).getBytes()));
-        }
-        if (connectionFlag){
-            new AppSyncV4Signer(regionStr, AppSyncV4Signer.ResourcePath.IAM_CONNECTION_RESOURCE_PATH)
-                    .sign(canonicalRequest, AWSMobileClient.getInstance().getCredentials());
-        } else {
-            new AppSyncV4Signer(regionStr).sign(canonicalRequest,
-                    AWSMobileClient.getInstance().getCredentials());
-        }
-
-        Map<String, String> signedHeaders = canonicalRequest.getHeaders();
-        try {
-            for(Map.Entry headerEntry : signedHeaders.entrySet()) {
-                if (! headerEntry.getKey().equals("host")) {
-                    authorizationMessage.put((String) headerEntry.getKey(), headerEntry.getValue());
-                } else {
-                    authorizationMessage.put("host", getHost(apiConfiguration.getEndpoint()));
-                }
-            }
-        } catch (JSONException | MalformedURLException e) {
-            Log.e(TAG, "Error constructing authorization message json", e);
-        }
-        return authorizationMessage;
-    }
-
-    private JSONObject getAuthorizationDetailsForUserpools(ApiConfiguration apiConfiguration) {
-        JSONObject authorizationMessage = new JSONObject();
-
-        CognitoUserPoolsAuthProvider authProvider = new DefaultCognitoUserPoolAuthProvider();
-        String token = authProvider.getLatestAuthToken();
-        try {
-            authorizationMessage.put("host", getHost(apiConfiguration.getEndpoint()));
-            authorizationMessage.put("Authorization", token);
-        } catch (JSONException | MalformedURLException e) {
-            Log.e(TAG, "Error constructing authorization message json", e);
-        }
-
-        return authorizationMessage;
-    }
-
-    private JSONObject getAuthorizationDetailsForOidc(ApiConfiguration apiConfiguration) {
-        JSONObject authorizationMessage = new JSONObject();
-        try {
-            OidcAuthProvider oidcAuthProvider = ApiAuthProviders.noProviderOverrides().getOidcAuthProvider();
-            String token = oidcAuthProvider.getLatestAuthToken();
-            authorizationMessage.put("host", getHost(apiConfiguration.getEndpoint()));
-            authorizationMessage.put("Authorization", token);
-        } catch (JSONException | MalformedURLException e) {
-            Log.e(TAG, "Error constructing authorization message json", e);
-        }
-        return authorizationMessage;
-    }
-
-    private String getHost(String apiUrl) throws MalformedURLException {
-        return new URL(apiUrl).getHost();
-    }
-
-    private String getDataJson(String queryDcoument, Map<String, String> variables) {
-        String query = queryDcoument;
-        JSONObject dataJson = new JSONObject();
-        try {
-            dataJson.put("query", query);
-            JSONObject variableJson = new JSONObject();
-            for (Map.Entry<String, String> e : variables.entrySet()){
-                variableJson.put(e.getKey(), e.getValue());
-            }
-            dataJson.put("variables", variableJson);
-        } catch (JSONException e) {
-            Log.e(TAG, "Error constructing JSON object", e);
-        }
-
-        return dataJson.toString();
-    }
-
-    /**
-     * Utility to create a ISO 8601 compliant timestamps
-     */
-    public static final class ISO8601Timestamp {
-        public static String now() {
-            SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
-            return formatter.format(new Date());
-        }
+        operation.start();
+        return operation;
     }
 
     /**

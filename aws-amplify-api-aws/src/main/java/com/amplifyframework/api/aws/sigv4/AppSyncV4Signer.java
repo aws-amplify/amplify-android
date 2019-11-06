@@ -15,14 +15,19 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
-        import com.amazonaws.Request;
-        import com.amazonaws.auth.AWS4Signer;
-        import com.amazonaws.util.BinaryUtils;
+import com.amazonaws.Request;
+import com.amazonaws.auth.AWS4Signer;
+import com.amazonaws.util.BinaryUtils;
 
-        import java.io.InputStream;
-        import java.net.URI;
+import java.io.InputStream;
+import java.net.URI;
 
-public class AppSyncV4Signer extends AWS4Signer {
+/**
+ * Signer that signs the request with AppSync-specific
+ * service name and region.
+ */
+@SuppressWarnings("UnnecessaryLocalVariable") // This is legacy code.
+public final class AppSyncV4Signer extends AWS4Signer {
 
     private static final String TAG = AppSyncV4Signer.class.getSimpleName();
 
@@ -53,7 +58,6 @@ public class AppSyncV4Signer extends AWS4Signer {
         setRegionName(region);
     }
 
-
     @Override
     protected String extractServiceName(URI endpoint) {
         return SERVICE_NAME_SCOPE;
@@ -80,4 +84,3 @@ public class AppSyncV4Signer extends AWS4Signer {
         return contentSha256;
     }
 }
-

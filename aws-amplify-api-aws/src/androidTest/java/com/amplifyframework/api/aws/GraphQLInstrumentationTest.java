@@ -16,6 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.aws.test.R;
@@ -23,6 +25,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -104,6 +107,55 @@ public final class GraphQLInstrumentationTest {
                 Todo.class,
                 new TestGraphQLResultListener<>());
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+    }
+
+    @Test
+    public void testSubscribe() throws Exception {
+        HashMap<String, String> variables = new HashMap<>();
+        variables.put("myId", "1");
+        String document = "subscription updateTodoSubscription{\n" +
+                "  onUpdateTodo{\n" +
+                "   id\n" +
+                "    name\n" +
+                "    description\n" +
+                "  }\n" +
+                "}";
+        CountDownLatch subscribeLatch = new CountDownLatch(1);
+        Amplify.API.subscribe("mygraphql1", document, Collections.emptyMap(),
+                Todo.class,
+                new StreamListener<GraphQLResponse<Todo>>() {
+                    @Override
+                    public void onNext(GraphQLResponse<Todo> item) {
+                        Log.e(TAG, "OnNext of the listener called");
+                        subscribeLatch.countDown();
+                    }
+
+                    @Override
+                    public void onComplete() {
+                        Log.e(TAG, "onComplete of listener called");
+                        subscribeLatch.countDown();
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        Log.e(TAG, "OnError of the listener called");
+                        subscribeLatch.countDown();
+                    }
+                }
+        );
+
+        // Execute a mutation
+        String mutationDocument = TestAssets.readAsString("update-todo.graphql");
+        latch = new CountDownLatch(1);
+        Amplify.API.mutate(
+                "mygraphql1",
+                mutationDocument,
+                Collections.emptyMap(),
+                Todo.class,
+                new TestGraphQLResultListener<>());
+
+        latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+        subscribeLatch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
 
     /**
