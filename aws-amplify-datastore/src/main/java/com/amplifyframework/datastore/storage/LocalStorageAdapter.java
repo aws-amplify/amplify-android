@@ -22,6 +22,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
 
+import java.util.Iterator;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -54,8 +55,31 @@ public interface LocalStorageAdapter {
      * @param model the Model object
      * @param listener the listener to be invoked when the
      *                 save operation is completed.
+     * @param <T> The class type of the item being stored
      */
-    void save(@NonNull Model model, @NonNull ResultListener<Model> listener);
+    <T extends Model> void save(
+            @NonNull T model,
+            @NonNull ResultListener<MutationEvent<T>> listener);
+
+    /**
+     * Query the storage adapter for models of a given type.
+     * @param modelClass The class type of models for which to query
+     * @param listener A listener who will be notified of the result of the query
+     * @param <T> The type object for which the query is being performed
+     */
+    <T extends Model> void query(
+            @NonNull Class<T> modelClass,
+            @NonNull ResultListener<Iterator<T>> listener);
+
+    /**
+     * Delets and item from storage.
+     * @param item Item to delete
+     * @param listener Listener to callback with result
+     * @param <T> The class type of the item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull ResultListener<MutationEvent<T>> listener);
 
     /**
      * Observe all mutations that occur on objects in the storage layer.

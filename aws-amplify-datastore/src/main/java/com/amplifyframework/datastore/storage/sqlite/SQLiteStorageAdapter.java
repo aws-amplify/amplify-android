@@ -27,6 +27,7 @@ import com.amplifyframework.datastore.model.ModelSchema;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -94,24 +95,27 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         sqLiteDatabase = dbHelper.getWritableDatabase();
     }
 
-    /**
-     * Save a {@link Model} to the local storage engine.
-     * The {@link ResultListener} will be invoked when the
-     * save operation is completed to notify the success and
-     * failure.
-     *
-     * @param model    the Model object
-     * @param listener the listener to be invoked when the
-     */
     @Override
-    public void save(@NonNull Model model, @NonNull ResultListener<Model> listener) {
-        /* TODO */
+    public <T extends Model> void save(
+            @NonNull final T model,
+            @NonNull final ResultListener<MutationEvent<T>> listener) {
+    }
+
+    @Override
+    public <T extends Model> void query(
+            @NonNull final Class<T> modelClass,
+            @NonNull final ResultListener<Iterator<T>> listener) {
+    }
+
+    @Override
+    public <T extends Model> void delete(
+            @NonNull final T item,
+            @NonNull final ResultListener<MutationEvent<T>> listener) {
     }
 
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
-        return Observable.error(new UnsupportedOperationException(
-            "This has not been implemented, yet."
-        ));
+        return null;
     }
 }
+
