@@ -37,7 +37,9 @@ public final class DataStoreException extends AmplifyRuntimeException {
      * @param isRetryable        A boolean indicating whether or not a consumer
      *                           should retry the operation which raised this exception,
      */
-    public DataStoreException(String message, Throwable throwable, @Nullable String recoverySuggestion, boolean isRetryable) {
+    public DataStoreException(String message, Throwable throwable,
+                              @Nullable String recoverySuggestion,
+                              boolean isRetryable) {
         super(message, throwable, recoverySuggestion, isRetryable);
     }
 

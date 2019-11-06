@@ -15,8 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelField;
+import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelSchema;
 
 import org.junit.Before;

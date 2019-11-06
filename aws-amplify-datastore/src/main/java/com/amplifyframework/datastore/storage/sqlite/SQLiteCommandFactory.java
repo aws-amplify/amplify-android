@@ -16,12 +16,11 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelField;
+import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelSchema;
 
 import java.util.HashMap;

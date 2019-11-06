@@ -92,7 +92,9 @@ public final class ModelSchema {
      */
     static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         try {
-            final Set<Field> classFields = findFields(clazz, com.amplifyframework.datastore.annotations.ModelField.class);
+            final Set<Field> classFields = findFields(
+                    clazz,
+                    com.amplifyframework.datastore.annotations.ModelField.class);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
@@ -103,7 +105,8 @@ public final class ModelSchema {
             for (Field field : classFields) {
                 com.amplifyframework.datastore.annotations.ModelField annotation = null;
                 if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
-                    annotation = field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class);
+                    annotation = field.getAnnotation(
+                            com.amplifyframework.datastore.annotations.ModelField.class);
                 }
                 final ModelField modelField = ModelField.builder()
                         .name(field.getName())
@@ -124,8 +127,8 @@ public final class ModelSchema {
                     .fields(fields)
                     .modelIndex(modelIndex)
                     .build();
-        } catch (Exception ex) {
-            throw new DataStoreException("Error in constructing a ModelSchema.", ex);
+        } catch (Exception exception) {
+            throw new DataStoreException("Error in constructing a ModelSchema.", exception);
         }
     }
 
@@ -180,37 +183,6 @@ public final class ModelSchema {
             }
         }
         return null;
-    }
-
-    public static class Builder {
-        private String name;
-        private String targetModelName;
-        private Map<String, ModelField> fields;
-        private ModelIndex modelIndex;
-
-        public Builder name(String name) {
-            this.name = name;
-            return this;
-        }
-
-        public Builder targetModelName(String targetModelName) {
-            this.targetModelName = targetModelName;
-            return this;
-        }
-
-        public Builder fields(Map<String, ModelField> fields) {
-            this.fields = fields;
-            return this;
-        }
-
-        public Builder modelIndex(ModelIndex modelIndex) {
-            this.modelIndex = modelIndex;
-            return this;
-        }
-
-        public ModelSchema build() {
-            return new ModelSchema(name, targetModelName, fields, modelIndex);
-        }
     }
 
     private static ModelIndex getModelIndex(@NonNull Class<? extends Model> clazz) {
@@ -280,5 +252,69 @@ public final class ModelSchema {
         });
 
         return modelFieldEntries;
+    }
+
+    /**
+     * The Builder to build the {@link ModelSchema} object.
+     */
+    public static final class Builder {
+        // the name of the Model class.
+        private String name;
+
+        // the name of the Model in the target. For example: the name of the
+        // model in the GraphQL Schema.
+        private String targetModelName;
+        private Map<String, ModelField> fields;
+        private ModelIndex modelIndex;
+
+        /**
+         * Set the the name of the Model class.
+         * @param name the name of the Model class.
+         * @return the builder object
+         */
+        public Builder name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        /**
+         * the name of the Model in the target. For example: the name of the
+         * model in the GraphQL Schema.
+         * @param targetModelName the name of the Model in the target. For example: the name of the
+         *                        model in the GraphQL Schema.
+         * @return the builder object
+         */
+        public Builder targetModelName(String targetModelName) {
+            this.targetModelName = targetModelName;
+            return this;
+        }
+
+        /**
+         * Set the map of fieldName and the fieldObject of all the fields of the model.
+         * @param fields the map of fieldName and the fieldObject of all the fields of the model.
+         * @return the builder object.
+         */
+        public Builder fields(Map<String, ModelField> fields) {
+            this.fields = fields;
+            return this;
+        }
+
+        /**
+         * Set the index of a model.
+         * @param modelIndex the index of the model.
+         * @return the builder object.
+         */
+        public Builder modelIndex(ModelIndex modelIndex) {
+            this.modelIndex = modelIndex;
+            return this;
+        }
+
+        /**
+         * Return the ModelSchema object.
+         * @return the ModelSchema object.
+         */
+        public ModelSchema build() {
+            return new ModelSchema(name, targetModelName, fields, modelIndex);
+        }
     }
 }

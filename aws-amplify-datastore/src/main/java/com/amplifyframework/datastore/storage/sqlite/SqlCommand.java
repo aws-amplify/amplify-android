@@ -17,8 +17,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.model.ModelSchema;
-
 /**
  * An encapsulation of the information required to
  * create a SQL table.
