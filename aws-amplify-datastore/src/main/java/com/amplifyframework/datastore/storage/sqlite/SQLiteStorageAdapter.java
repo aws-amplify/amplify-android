@@ -20,6 +20,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
@@ -305,11 +306,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 preCompiledInsertStatement.bindString(columnIndex, (String) field.get(object));
             }
         }
+
+        if (cursor != null) {
+            cursor.close();
+        }
     }
 
-    private Cursor getQueryAllCursor(@NonNull String tableName) {
+    @VisibleForTesting
+    Cursor getQueryAllCursor(@NonNull String tableName) {
         // Query all rows in table.
-        Cursor cursor = writableDatabaseConnectionHandle.query(tableName,
+        Cursor cursor = this.writableDatabaseConnectionHandle.query(tableName,
                 null,
                 null,
                 null,

@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
+import android.database.Cursor;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
@@ -28,9 +29,9 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -50,6 +51,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     public void setUp() throws InterruptedException {
         context = ApplicationProvider.getApplicationContext();
         sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
+
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         sqLiteStorageAdapter.setUp(context,
                 Collections.singletonList(Person.class),
@@ -73,7 +75,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @After
     public void tearDown() {
         String databaseName = SQLiteStorageHelper
-                .getInstance(context, null)
+                .getInstance(context, Collections.emptySet())
                 .getDatabaseName();
         context.deleteDatabase(databaseName);
     }
@@ -85,7 +87,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @SuppressWarnings("magicnumber")
     @Test
     public void saveModelInsertsData() throws InterruptedException {
-        Person person = Person.builder()
+        final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
                 .age(41)
@@ -104,6 +106,18 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 waitForSave.countDown();
             }
         });
-        waitForSave.await(5, TimeUnit.SECONDS);
+        waitForSave.await();
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        assertNotNull(cursor);
+        if (cursor.moveToFirst()) {
+            assertEquals("Alan",
+                    cursor.getString(cursor.getColumnIndexOrThrow("firstName")));
+            assertEquals("Turing",
+                    cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
+            assertEquals(41,
+                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
+        }
+        cursor.close();
     }
 }
