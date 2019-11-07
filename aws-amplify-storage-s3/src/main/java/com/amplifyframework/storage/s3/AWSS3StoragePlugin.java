@@ -45,19 +45,31 @@ import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amazonaws.regions.Region;
+import com.amazonaws.services.s3.AmazonS3Client;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * A plugin for the storage category which uses S3 as a storage
  * repository.
  */
-public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
+public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "AWSS3StoragePlugin";
     private AWSS3StorageService storageService;
+    private final ExecutorService executorService;
     private StorageAccessLevel defaultAccessLevel;
+
+    /**
+     * Constructs the AWS S3 Storage Plugin initializing the executor service.
+     */
+    public AWSS3StoragePlugin() {
+        super();
+        this.executorService = Executors.newCachedThreadPool();
+    }
 
     @Override
     public String getPluginKey() {
@@ -112,8 +124,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
     }
 
     @Override
-    public TransferUtility getEscapeHatch() {
-        return null;
+    public AmazonS3Client getEscapeHatch() {
+        return storageService.getClient();
     }
 
     @Override
@@ -249,7 +261,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
         );
 
         AWSS3StorageRemoveOperation operation =
-                new AWSS3StorageRemoveOperation(storageService, request, resultListener);
+                new AWSS3StorageRemoveOperation(storageService, executorService, request, resultListener);
 
         operation.start();
 
@@ -285,7 +297,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<TransferUtility> {
         );
 
         AWSS3StorageListOperation operation =
-                new AWSS3StorageListOperation(storageService, request, resultListener);
+                new AWSS3StorageListOperation(storageService, executorService, request, resultListener);
 
         operation.start();
 

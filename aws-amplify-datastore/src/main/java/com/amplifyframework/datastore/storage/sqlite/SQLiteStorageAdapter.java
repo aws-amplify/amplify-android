@@ -191,9 +191,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
-        return Observable.error(new UnsupportedOperationException(
-            "This has not been implemented, yet."
-        ));
+        return null;
     }
 
     private Set<SqlCommand> getCreateSqlCommands(@NonNull List<Class<? extends Model>> models) {
@@ -312,3 +310,4 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return set;
     }
 }
+

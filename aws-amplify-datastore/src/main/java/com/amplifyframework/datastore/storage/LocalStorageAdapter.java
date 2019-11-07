@@ -22,6 +22,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
 
+import java.util.Iterator;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -58,6 +59,7 @@ public interface LocalStorageAdapter {
      * @param model the Model object
      * @param listener the listener to be invoked when the
      *                 save operation is completed.
+     * @param <T> The class type of the item being stored
      */
     void save(@NonNull Model model,
               @NonNull ResultListener<Model> listener);

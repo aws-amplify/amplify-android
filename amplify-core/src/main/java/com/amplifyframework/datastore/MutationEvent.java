@@ -15,24 +15,28 @@
 
 package com.amplifyframework.datastore;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.datastore.model.Model;
 
-import java.util.Objects;
+import java.util.UUID;
 
 /**
  * A MutationEvent is emitted whenever there is a mutation
  * to an object in the DataStore.
  * @param <T> The type of the object has been mutated
  */
-public final class MutationEvent<T extends Model> {
+public final class MutationEvent<T extends Model> implements Model {
+    private final UUID mutationId;
     private final MutationType mutationType;
     private final T data;
+    private final Class<T> dataClass;
+    private final Source source;
 
-    private MutationEvent(MutationType mutationType, T data) {
-        this.mutationType = mutationType;
-        this.data = data;
+    MutationEvent(Builder<T> builder) {
+        this.mutationId = builder.mutationId();
+        this.mutationType = builder.mutationType();
+        this.data = builder.data();
+        this.dataClass = builder.dataClass();
+        this.source = builder.source();
     }
 
     /**
@@ -56,35 +60,120 @@ public final class MutationEvent<T extends Model> {
     }
 
     /**
-     * Static factory method to aid in creation a deletion-type mutation.
-     * @param data The data that was deleted from the DataStore.
-     * @param <T> The type of the data that was deleted
-     * @return A MutationEvent representing the deletion.
+     * Gets the class type of the data.
+     * @return Class type of data
      */
-    public static <T extends Model> MutationEvent<T> deleted(@NonNull T data) {
-        return new MutationEvent<>(MutationType.DELETE, Objects.requireNonNull(data));
+    public Class<T> dataClass() {
+        return dataClass;
     }
 
     /**
-     * Static factory method to aid in creation of an update-type mutation.
-     * @param data The data that was updated
-     * @param <T> The type of the updated data
-     * @return A MutationEvent representing the update
+     * Gets the source of this mutation event.
+     * @return The source which caused this mutation to occur.
      */
-    public static <T extends Model> MutationEvent<T> updated(@NonNull T data) {
-        return new MutationEvent<>(MutationType.UPDATE, Objects.requireNonNull(data));
+    public Source source() {
+        return source;
+    }
+
+    @Override
+    public String getId() {
+        return mutationId.toString();
     }
 
     /**
-     * Static factory method to aid in the creation of an insert-type mutation.
-     * @param data The data that was inserted to the DataStore
-     * @param <T> The type of the {@see data} that was inserted
-     * @return A MutationEvent modeling the mutation
+     * Gets an instance of the Builder.
+     * @param <T> class type of model that has mutated
+     * @return Builder instance
      */
-    public static <T extends Model> MutationEvent<T> inserted(@NonNull T data) {
-        return new MutationEvent<>(MutationType.INSERT, Objects.requireNonNull(data));
+    public static <T extends Model> Builder<T> builder() {
+        return new Builder<T>();
     }
 
+    /**
+     * A utility to construct instances of MutationEvent.
+     * @param <T> Class type of model that has mutated
+     */
+    public static final class Builder<T extends Model> {
+        private UUID mutationId;
+        private MutationType mutationType;
+        private T data;
+        private Class<T> dataClass;
+        private Source source;
+
+        Builder() {
+            mutationId = UUID.randomUUID();
+        }
+
+        /**
+         * Configures the mutation type that will be set in the built MutationEvent.
+         * @param mutationType Mutation type to set in MutationEvent
+         * @return Current builder instance for fluent chaining
+         */
+        public Builder<T> mutationType(final MutationType mutationType) {
+            this.mutationType = mutationType;
+            return this;
+        }
+
+        /**
+         * Configures the data that will be placed into the built MutationEvent.
+         * @param data Data to put into MutationEvent
+         * @return Current builder instance for fluent chaining
+         */
+        public Builder<T> data(final T data) {
+            this.data = data;
+            return this;
+        }
+
+        /**
+         * Configures the class type of the data field that will be stored into
+         * any new MutationEvent from this builder.
+         * @param dataClass The class type of the data
+         * @return Current builder instance for fluent chaining
+         */
+        public Builder<T> dataClass(final Class<T> dataClass) {
+            this.dataClass = dataClass;
+            return this;
+        }
+
+        /**
+         * Configures the source of mutation that will be put into the built MutationEvent.
+         * @param source Source of mutation
+         * @return Current builder instance for fluent chaining
+         */
+        public Builder<T> source(final Source source) {
+            this.source = source;
+            return this;
+        }
+
+        /**
+         * Builds an instance of a MutationEvent using the provided
+         * configuration operations currently stored in the the builder.
+         * @return A new MutationEvent instance
+         */
+        public MutationEvent<T> build() {
+            return new MutationEvent<T>(Builder.this);
+        }
+
+        UUID mutationId() {
+            return mutationId;
+        }
+
+        MutationType mutationType() {
+            return mutationType;
+        }
+
+        T data() {
+            return data;
+        }
+
+        Class<T> dataClass() {
+            return dataClass;
+        }
+
+        Source source() {
+            return source;
+        }
+    }
 
     /**
      * A mutation is either an insertion, an update, or a deletion.
@@ -109,5 +198,21 @@ public final class MutationEvent<T extends Model> {
          * An existing item has been removed from the DataStore.
          */
         DELETE
+    }
+
+    /**
+     * The source of the event.
+     */
+    public enum Source {
+
+        /**
+         * This event was initiated by the DataStore API.
+         */
+        DATA_STORE,
+
+        /**
+         * This event was initiated by the Sync Engine.
+         */
+        SYNC_ENGINE;
     }
 }

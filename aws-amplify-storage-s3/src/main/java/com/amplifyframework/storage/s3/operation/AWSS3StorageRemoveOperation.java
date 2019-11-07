@@ -25,66 +25,72 @@ import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 
+import java.util.concurrent.ExecutorService;
+
 /**
  * An operation to remove a file from AWS S3.
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final AWSS3StorageService storageService;
     private final ResultListener<StorageRemoveResult> resultListener;
+    private final ExecutorService executorService;
 
     /**
      * Constructs a new AWSS3StorageRemoveOperation.
      * @param storageService S3 client wrapper
+     * @param executorService Executor service used for running blocking operations on a separate thread
      * @param request remove request parameters
      * @param resultListener notified when remove operation results available
      */
     public AWSS3StorageRemoveOperation(AWSS3StorageService storageService,
+                                       ExecutorService executorService,
                                        AWSS3StorageRemoveRequest request,
                                        ResultListener<StorageRemoveResult> resultListener) {
         super(request);
         this.storageService = storageService;
+        this.executorService = executorService;
         this.resultListener = resultListener;
     }
 
-    // TODO: This is currently a blocking method since deleteObject is blocking, consistent with the S3 SDK.
-    //          This should be discussed for refactoring as an async method or if not, documented clearly as blocking.
     @Override
     public void start() throws StorageException {
-        String identityId;
+        executorService.submit(() -> {
+            String identityId;
 
-        try {
-            identityId = AWSMobileClient.getInstance().getIdentityId();
-        } catch (Exception exception) {
-            StorageException storageException = new StorageException(
-                    "AWSMobileClient could not get user id." +
-                            "Check whether you configured it properly before calling this method.",
-                    exception
-            );
+            try {
+                identityId = AWSMobileClient.getInstance().getIdentityId();
+            } catch (Exception exception) {
+                StorageException storageException = new StorageException(
+                        "AWSMobileClient could not get user id." +
+                                "Check whether you configured it properly before calling this method.",
+                        exception
+                );
 
-            if (resultListener != null) {
-                resultListener.onError(storageException);
+                if (resultListener != null) {
+                    resultListener.onError(storageException);
+                }
+                throw storageException;
             }
-            throw storageException;
-        }
 
-        try {
-            storageService.deleteObject(
-                    S3RequestUtils.getServiceKey(
-                            getRequest().getAccessLevel(),
-                            identityId,
-                            getRequest().getKey(),
-                            getRequest().getTargetIdentityId()
-                    )
-            );
+            try {
+                storageService.deleteObject(
+                        S3RequestUtils.getServiceKey(
+                                getRequest().getAccessLevel(),
+                                identityId,
+                                getRequest().getKey(),
+                                getRequest().getTargetIdentityId()
+                        )
+                );
 
-            if (resultListener != null) {
-                resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
+                if (resultListener != null) {
+                    resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
+                }
+            } catch (Exception error) {
+                if (resultListener != null) {
+                    resultListener.onError(error);
+                }
+                throw error;
             }
-        } catch (Exception error) {
-            if (resultListener != null) {
-                resultListener.onError(error);
-            }
-            throw error;
-        }
+        });
     }
 }
