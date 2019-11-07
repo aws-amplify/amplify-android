@@ -131,7 +131,15 @@ public final class Person implements Model {
         Person build();
     }
 
-    private static final class Builder implements FirstNameStep, LastNameStep, AgeStep, FinalStep {
+    /**
+     * Returns an instance of the builder.
+     * @return an instance of the builder.
+     */
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder implements FirstNameStep, LastNameStep, AgeStep, FinalStep {
         private String firstName;
         private String lastName;
         private int age;

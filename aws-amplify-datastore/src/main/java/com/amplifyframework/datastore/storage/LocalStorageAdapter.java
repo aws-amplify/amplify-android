@@ -42,8 +42,12 @@ public interface LocalStorageAdapter {
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
      * @param models list of Model classes
+     * @param listener the listener to be invoked to notify completion
+     *                 of the setUp.
      */
-    void setUp(@NonNull Context context, @NonNull List<Class<? extends Model>> models);
+    void setUp(@NonNull Context context,
+               @NonNull List<Class<? extends Model>> models,
+               @NonNull ResultListener<Void> listener);
 
     /**
      * Save a {@link Model} to the local storage engine.
@@ -55,7 +59,8 @@ public interface LocalStorageAdapter {
      * @param listener the listener to be invoked when the
      *                 save operation is completed.
      */
-    void save(@NonNull Model model, @NonNull ResultListener<Model> listener);
+    void save(@NonNull Model model,
+              @NonNull ResultListener<Model> listener);
 
     /**
      * Observe all mutations that occur on objects in the storage layer.

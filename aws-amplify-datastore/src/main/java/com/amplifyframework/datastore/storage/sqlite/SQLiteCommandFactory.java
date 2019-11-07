@@ -97,7 +97,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 modelSchema.getName() +
                 SQLITE_COMMAND_DELIMITER);
         if (modelSchema.getFields() == null || modelSchema.getFields().isEmpty()) {
-            return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
+            return new SqlCommand(modelSchema.getName(), stringBuilder.toString(), null);
         }
 
         final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
@@ -127,7 +127,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(");");
 
         final String createSqlStatement = stringBuilder.toString();
-        return new SqlCommand(modelSchema.getName(), createSqlStatement);
+        return new SqlCommand(modelSchema.getName(), createSqlStatement, null);
     }
 
     /**
@@ -164,7 +164,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             }
         }
         stringBuilder.append(");");
-        return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
+        return new SqlCommand(modelSchema.getName(), stringBuilder.toString(), null);
     }
 
     private static String getSqlDataTypeForGraphQLType(@NonNull final ModelField modelField) {

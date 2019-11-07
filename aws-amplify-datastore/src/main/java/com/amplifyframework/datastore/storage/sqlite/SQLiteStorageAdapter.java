@@ -16,19 +16,31 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.datastore.model.ModelField;
 import com.amplifyframework.datastore.model.ModelRegistry;
 import com.amplifyframework.datastore.model.ModelSchema;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import io.reactivex.Observable;
 
@@ -44,7 +56,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Represents a connection to the SQLite database. This database reference
     // can be used to do all SQL operations against the underlying database
     // that this handle represents.
-    private SQLiteDatabase sqLiteDatabase;
+    private SQLiteDatabase writableDatabaseConnectionHandle;
+
+    // ThreadPool for SQLite operations.
+    private ExecutorService threadPool;
+
+    // Factory that produces SQL commands.
+    private SQLCommandFactory sqlCommandFactory;
+
+    // Map of tableName => Insert Prepared statement.
+    private Map<String, SqlCommand> insertSqlPreparedStatements;
 
     /**
      * Construct the SQLiteStorageAdapter object.
@@ -52,6 +73,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      */
     public SQLiteStorageAdapter(@NonNull ModelRegistry modelRegistry) {
         this.modelRegistry = modelRegistry;
+        this.threadPool = Executors.newCachedThreadPool();
+        this.insertSqlPreparedStatements = Collections.emptyMap();
+        this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
     }
 
     /**
@@ -77,37 +101,92 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      */
     @Override
     public void setUp(@NonNull Context context,
-                      @NonNull List<Class<? extends Model>> models) {
-        final Set<SqlCommand> createCommands = new HashSet<>();
+                      @NonNull List<Class<? extends Model>> models,
+                      @NonNull final ResultListener<Void> listener) {
+        threadPool.submit(() -> {
+            try {
+                /**
+                 * Create {@link ModelSchema} objects for the corresponding {@link Model}.
+                 * Any exception raised during this when inspecting the Model classes
+                 * through reflection will be notified via the
+                 * {@link ResultListener#onError(Throwable)} method.
+                 */
+                modelRegistry.createModelSchemaForModels(models);
 
-        modelRegistry.createModelSchemaForModels(models);
-        for (Class<? extends Model> model: models) {
-            final ModelSchema modelSchema = ModelRegistry.getInstance()
-                    .getModelSchemaForModelClass(model.getSimpleName());
-            SQLCommandFactory sqlCommandFactory = SQLiteCommandFactory.getInstance();
-            sqlCommandFactory.createTableFor(modelSchema);
-            createCommands.add(sqlCommandFactory.createTableFor(modelSchema));
-            createCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
-        }
+                /**
+                 * Create the CREATE TABLE and CREATE INDEX commands for each of the
+                 * Models. Instantiate {@link SQLiteStorageHelper} to execute those
+                 * create commands.
+                 */
+                final Set<SqlCommand> createCommands = getCreateSqlCommands(models);
+                final SQLiteStorageHelper dbHelper = SQLiteStorageHelper.getInstance(
+                        context,
+                        createCommands);
 
-        final SQLiteStorageHelper dbHelper = SQLiteStorageHelper.getInstance(
-                context,
-                createCommands);
-        sqLiteDatabase = dbHelper.getWritableDatabase();
+                /**
+                 * Create and/or open a database. This also invokes
+                 * {@link SQLiteStorageHelper#onCreate(SQLiteDatabase)} which executes the tasks
+                 * to create tables and indexes. When the function returns without any exception
+                 * being thrown, invoke the {@link ResultListener#onResult(Object)}.
+                 *
+                 * Errors are thrown when there is no write permission to the database, no space
+                 * left in the database for any write operation and other errors thrown while
+                 * creating and opening a database. All errors are passed through the
+                 * {@link ResultListener#onError(Throwable)}.
+                 *
+                 * writableDatabaseConnectionHandle represents a connection handle to the database. All
+                 * database operations will happen through this handle.
+                 */
+                writableDatabaseConnectionHandle = dbHelper.getWritableDatabase();
+
+                /**
+                 * Create INSERT INTO TABLE_NAME statements for all SQL tables
+                 * and compile them and store in an in-memory map. Later, when a
+                 * {@link #save(Model, ResultListener)} operation needs to insert
+                 * an object (sql rows) into the database, it can bind the input
+                 * values with the prepared insert statement.
+                 *
+                 * This is done to improve performance of database write operations.
+                 */
+                this.insertSqlPreparedStatements = getInsertSqlPreparedStatements();
+
+                listener.onResult(null);
+            } catch (Exception exception) {
+                listener.onError(new DataStoreException("Error in creating and opening a " +
+                        "connection to the database." + exception));
+            }
+        });
     }
 
     /**
-     * Save a {@link Model} to the local storage engine.
-     * The {@link ResultListener} will be invoked when the
-     * save operation is completed to notify the success and
-     * failure.
+     * Save a {@link Model} to the local storage engine. The {@link ResultListener} will be invoked when the
+     * save operation is completed to notify the success and failure.
      *
      * @param model    the Model object
      * @param listener the listener to be invoked when the
      */
     @Override
     public void save(@NonNull Model model, @NonNull ResultListener<Model> listener) {
-        /* TODO */
+        threadPool.submit(() -> {
+            try {
+                final ModelSchema modelSchema = modelRegistry
+                        .getModelSchemaForModelClass(model.getClass().getSimpleName());
+                final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
+                if (sqlCommand != null) {
+                    final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
+                    preCompiledInsertStatement.clearBindings();
+                    bindPreparedInsertSQLStatementWithValues(model, sqlCommand, modelSchema);
+                    preCompiledInsertStatement.executeInsert();
+                    preCompiledInsertStatement.clearBindings();
+                } else {
+                    listener.onError(new DataStoreException("Error in saving the model. No insert statement " +
+                            "found for the Model: " + modelSchema.getName()));
+                }
+                listener.onResult(model);
+            } catch (Exception exception) {
+                listener.onError(new DataStoreException("Error in saving the model.", exception));
+            }
+        });
     }
 
     @Override
@@ -115,5 +194,121 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return Observable.error(new UnsupportedOperationException(
             "This has not been implemented, yet."
         ));
+    }
+
+    private Set<SqlCommand> getCreateSqlCommands(@NonNull List<Class<? extends Model>> models) {
+        final Set<SqlCommand> createCommands = new HashSet<>();
+        for (Class<? extends Model> model: models) {
+            final ModelSchema modelSchema = ModelRegistry.getInstance()
+                    .getModelSchemaForModelClass(model.getSimpleName());
+            sqlCommandFactory.createTableFor(modelSchema);
+            createCommands.add(sqlCommandFactory.createTableFor(modelSchema));
+            createCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
+        }
+        return createCommands;
+    }
+
+    private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
+        final Map<String, SqlCommand> modifiableMap = new HashMap<>();
+        final Set<Map.Entry<String, ModelSchema>> modelSchemaEntrySet =
+                ModelRegistry.getInstance().getModelSchemaMap().entrySet();
+        for (final Map.Entry<String, ModelSchema> entry: modelSchemaEntrySet) {
+            final String tableName = entry.getKey();
+            final ModelSchema modelSchema = entry.getValue();
+            modifiableMap.put(tableName, getPreparedInsertSQLStatement(tableName, modelSchema));
+        }
+        return Immutable.of(modifiableMap);
+    }
+
+    private SqlCommand getPreparedInsertSQLStatement(@NonNull String tableName,
+                                                     @NonNull ModelSchema modelSchema) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("INSERT INTO ");
+        stringBuilder.append(tableName);
+        stringBuilder.append(" (");
+        final Map<String, ModelField> fields = modelSchema.getFields();
+        final Iterator<String> fieldsIterator = fields.keySet().iterator();
+        while (fieldsIterator.hasNext()) {
+            final String fieldName = fieldsIterator.next();
+            stringBuilder.append(fieldName);
+            if (fieldsIterator.hasNext()) {
+                stringBuilder.append(", ");
+            } else {
+                stringBuilder.append(")");
+            }
+        }
+        stringBuilder.append(" VALUES ");
+        stringBuilder.append("(");
+        for (int i = 0; i < fields.size(); i++) {
+            if (i == fields.size() - 1) {
+                stringBuilder.append("?");
+            } else {
+                stringBuilder.append("?, ");
+            }
+        }
+        stringBuilder.append(")");
+        final String preparedInsertStatement = stringBuilder.toString();
+        final SQLiteStatement compiledInsertStatement =
+                writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
+        return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
+    }
+
+    private <T> void bindPreparedInsertSQLStatementWithValues(@NonNull final T object,
+                                                              @NonNull final SqlCommand sqlCommand,
+                                                              @NonNull ModelSchema modelSchema)
+            throws IllegalAccessException {
+        Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
+        SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
+        Set<Field> classFields = findFields(object.getClass());
+        Iterator<Field> fields = classFields.iterator();
+
+        while (fields.hasNext()) {
+            final Field field = fields.next();
+            field.setAccessible(true);
+            final String fieldName = field.getName();
+            final int columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
+            if (field.getType().equals(float.class) || field.getType().equals(Float.class)) {
+                preCompiledInsertStatement.bindDouble(columnIndex, (Float) field.get(object));
+            } else if (field.getType().equals(int.class) || field.getType().equals(Integer.class)) {
+                preCompiledInsertStatement.bindLong(columnIndex, (Integer) field.get(object));
+            } else if (field.getType().equals(long.class) || field.getType().equals(Long.class)) {
+                preCompiledInsertStatement.bindLong(columnIndex, (Long) field.get(object));
+            } else if (field.getType().equals(double.class) || field.getType().equals(Double.class)) {
+                preCompiledInsertStatement.bindDouble(columnIndex, (Double) field.get(object));
+            } else if (field.getType().equals(String.class)) {
+                preCompiledInsertStatement.bindString(columnIndex, (String) field.get(object));
+            }
+        }
+    }
+
+    private Cursor getQueryAllCursor(@NonNull String tableName) {
+        // Query all rows in table.
+        Cursor cursor = writableDatabaseConnectionHandle.query(tableName,
+                null,
+                null,
+                null,
+                null,
+                null,
+                null);
+        if (cursor != null) {
+            // Move to first cursor.
+            cursor.moveToFirst();
+        }
+        return cursor;
+    }
+
+    private static Set<Field> findFields(@NonNull Class<?> clazz) {
+        Set<Field> set = new HashSet<>();
+        Class<?> c = clazz;
+        while (c != null) {
+            for (Field field : c.getDeclaredFields()) {
+                if (field.isAnnotationPresent(
+                        com.amplifyframework.datastore.annotations.ModelField.class)) {
+                    set.add(field);
+                }
+            }
+            c = c.getSuperclass();
+        }
+        return set;
     }
 }

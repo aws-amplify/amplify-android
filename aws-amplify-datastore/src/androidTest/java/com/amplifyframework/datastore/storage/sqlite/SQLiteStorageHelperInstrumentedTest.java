@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the functions of {@link SQLiteStorageHelper}.
  */
-public class SQLiteStorageHelperTest {
+public class SQLiteStorageHelperInstrumentedTest {
 
     private SQLiteStorageHelper sqLiteStorageHelper;
 
@@ -46,10 +46,14 @@ public class SQLiteStorageHelperTest {
     @Before
     public void setUp() {
         createTableCommands = new HashSet<>();
-        createTableCommands.add(new SqlCommand("PERSON",
-                "CREATE TABLE IF NOT EXISTS PERSON (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
-        createTableCommands.add(new SqlCommand("CAR",
-                "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
+        createTableCommands.add(
+                new SqlCommand("PERSON",
+                        "CREATE TABLE IF NOT EXISTS PERSON (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);",
+                                null));
+        createTableCommands.add(
+                new SqlCommand("CAR",
+                        "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);",
+                        null));
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
                 createTableCommands);
