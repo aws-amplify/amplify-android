@@ -15,16 +15,16 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.os.Build;
+
 import com.amplifyframework.datastore.model.ModelField;
 import com.amplifyframework.datastore.model.ModelIndex;
 import com.amplifyframework.datastore.model.ModelSchema;
 
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.mockito.junit.MockitoJUnitRunner;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -32,25 +32,14 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Mockito.when;
 
 /**
  * Tests {@link SQLiteCommandFactory#createTableFor(ModelSchema)}
  * and {@link SQLiteCommandFactory#createIndexFor(ModelSchema)}.
  */
-@RunWith(MockitoJUnitRunner.class)
+@Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
+@RunWith(RobolectricTestRunner.class)
 public class SqlCommandTest {
-
-    @Mock
-    private ModelSchema mockModelSchema;
-
-    /**
-     * Initialize MockitoAnnotations.
-     */
-    @Before
-    public void setUp() {
-        MockitoAnnotations.initMocks(this);
-    }
 
     /**
      * Test if a valid {@link ModelSchema} returns an expected
@@ -81,12 +70,14 @@ public class SqlCommandTest {
      */
     @Test
     public void noFieldsModelSchemaReturnsNoColumnsSqlCommand() {
-        when(mockModelSchema.getFields())
-                .thenReturn(Collections.emptyMap());
-        when(mockModelSchema.getName())
-                .thenReturn("Guitar");
+        final ModelSchema modelSchema = ModelSchema.builder()
+                .fields(Collections.emptyMap())
+                .name("Guitar")
+                .build();
+
         final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
-                .createTableFor(mockModelSchema);
+                .createTableFor(modelSchema);
+
         assertEquals("Guitar", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", sqlCommand.sqlStatement());
     }
@@ -97,15 +88,17 @@ public class SqlCommandTest {
      */
     @Test
     public void modelWithIndexReturnsExpectedCreateIndexCommand() {
-        when(mockModelSchema.getName())
-                .thenReturn("Person");
-        when(mockModelSchema.getModelIndex())
-                .thenReturn(ModelIndex.builder()
+        final ModelSchema modelSchema = ModelSchema.builder()
+                .name("Person")
+                .modelIndex(ModelIndex.builder()
                         .indexName("idBasedIndex")
                         .indexFieldNames(Arrays.asList("id"))
-                        .build());
+                        .build())
+                .build();
+
         final SqlCommand createIndexSqlCommand = SQLiteCommandFactory.getInstance()
-                .createIndexFor(mockModelSchema);
+                .createIndexFor(modelSchema);
+
         assertEquals("Person", createIndexSqlCommand.tableName());
         assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);",
                 createIndexSqlCommand.sqlStatement());
