@@ -16,26 +16,21 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.function.IntToDoubleFunction;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
 /**
@@ -49,6 +44,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
+     * @throws InterruptedException when the waiting for setUp is interrupted.
      */
     @Before
     public void setUp() throws InterruptedException {
@@ -84,7 +80,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert the construction of the SQLiteStorageHelper.
+     * @throws InterruptedException when the waiting for save is interrupted.
      */
+    @SuppressWarnings("magicnumber")
     @Test
     public void saveModelInsertsData() throws InterruptedException {
         Person person = Person.builder()
@@ -93,10 +91,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .age(41)
                 .build();
         final CountDownLatch waitForSave = new CountDownLatch(1);
-        sqLiteStorageAdapter.save(person, new ResultListener<Model>() {
+        sqLiteStorageAdapter.save(person, new ResultListener<MutationEvent<Person>>() {
             @Override
-            public void onResult(Model result) {
-                assertEquals(person, result);
+            public void onResult(MutationEvent<Person> result) {
+                assertEquals(person, result.data());
                 waitForSave.countDown();
             }
 
@@ -106,6 +104,6 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 waitForSave.countDown();
             }
         });
-        waitForSave.await(5000, TimeUnit.SECONDS);
+        waitForSave.await(5, TimeUnit.SECONDS);
     }
 }

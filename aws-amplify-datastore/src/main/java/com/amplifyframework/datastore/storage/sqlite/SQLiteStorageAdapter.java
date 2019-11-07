@@ -142,7 +142,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 /**
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
                  * and compile them and store in an in-memory map. Later, when a
-                 * {@link #save(Model, ResultListener)} operation needs to insert
+                 * {@link #save(T, ResultListener)} operation needs to insert
                  * an object (sql rows) into the database, it can bind the input
                  * values with the prepared insert statement.
                  *
@@ -161,12 +161,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * Save a {@link Model} to the local storage engine. The {@link ResultListener} will be invoked when the
      * save operation is completed to notify the success and failure.
-     *
      * @param model    the Model object
-     * @param listener the listener to be invoked when the
+     * @param listener the listener to be invoked when the save operation completes
+     * @param <T> parameter type of the Model
      */
-    @Override
-    public void save(@NonNull Model model, @NonNull ResultListener<Model> listener) {
+    public <T extends Model> void save(@NonNull T model,
+                                       @NonNull ResultListener<MutationEvent<T>> listener) {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema = modelRegistry
@@ -182,11 +182,39 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     listener.onError(new DataStoreException("Error in saving the model. No insert statement " +
                             "found for the Model: " + modelSchema.getName()));
                 }
-                listener.onResult(model);
+                listener.onResult(MutationEvent.<T>builder()
+                        .data(model)
+                        .mutationType(MutationEvent.MutationType.INSERT)
+                        .source(MutationEvent.Source.DATA_STORE)
+                        .build());
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in saving the model.", exception));
             }
         });
+    }
+
+    /**
+     * Query the storage adapter for models of a given type.
+     *
+     * @param modelClass The class type of models for which to query
+     * @param listener   A listener who will be notified of the result of the query
+     */
+    @Override
+    public <T extends Model> void query(@NonNull Class<T> modelClass,
+                                        @NonNull ResultListener<Iterator<T>> listener) {
+        /* TODO */
+    }
+
+    /**
+     * Delets and item from storage.
+     *
+     * @param item     Item to delete
+     * @param listener Listener to callback with result
+     */
+    @Override
+    public <T extends Model> void delete(@NonNull T item,
+                                         @NonNull ResultListener<MutationEvent<T>> listener) {
+        /* TODO */
     }
 
     @Override
