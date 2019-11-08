@@ -20,6 +20,7 @@ import com.amplifyframework.datastore.annotations.ModelConfig;
 import com.amplifyframework.datastore.annotations.ModelField;
 import com.amplifyframework.datastore.model.Model;
 
+import java.util.Date;
 import java.util.UUID;
 
 /**
@@ -42,14 +43,27 @@ public final class Person implements Model {
     @ModelField(targetName = "age", targetType = "Int")
     private final int age;
 
+    @ModelField(targetName = "dob", targetType = "AWSDate")
+    private Date dob;
+
     private Person(String uniqueId,
                    String firstName,
                    String lastName,
-                   int age) {
+                   int age,
+                   Date dob) {
         this.id = uniqueId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
+        this.dob = dob;
+    }
+
+    /**
+     * Returns an instance of the builder.
+     * @return an instance of the builder.
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -85,6 +99,14 @@ public final class Person implements Model {
     }
 
     /**
+     * Return the date of birth.
+     * @return the date of birth.
+     */
+    public Date getDob() {
+        return dob;
+    }
+
+    /**
      * Interface for first name step.
      */
     public interface FirstNameStep {
@@ -117,7 +139,19 @@ public final class Person implements Model {
          * @param age age.
          * @return next step.
          */
-        FinalStep age(int age);
+        DOBStep age(int age);
+    }
+
+    /**
+     * Interface for date of birth step.
+     */
+    public interface DOBStep {
+        /**
+         * Set the date of birth.
+         * @param dob date of birth.
+         * @return next step.
+         */
+        FinalStep dob(Date dob);
     }
 
     /**
@@ -131,10 +165,15 @@ public final class Person implements Model {
         Person build();
     }
 
-    private static final class Builder implements FirstNameStep, LastNameStep, AgeStep, FinalStep {
+    /**
+     * Builder to build the Person object.
+     */
+    public static final class Builder implements
+            FirstNameStep, LastNameStep, AgeStep, DOBStep, FinalStep {
         private String firstName;
         private String lastName;
         private int age;
+        private Date dob;
 
         /**
          * Set the first name and proceed to LastNameStep.
@@ -161,8 +200,20 @@ public final class Person implements Model {
          * @param age age
          * @return next step
          */
-        public FinalStep age(int age) {
+        public DOBStep age(int age) {
             this.age = age;
+            return this;
+        }
+
+        /**
+         * Set the date of birth.
+         *
+         * @param dob date of birth.
+         * @return next step.
+         */
+        @Override
+        public FinalStep dob(Date dob) {
+            this.dob = new Date(dob.toString());
             return this;
         }
 
@@ -171,10 +222,12 @@ public final class Person implements Model {
          * @return the builder object.
          */
         public Person build() {
-            return new Person(UUID.randomUUID().toString(),
+            return new Person(
+                    UUID.randomUUID().toString(),
                     firstName,
                     lastName,
-                    age);
+                    age,
+                    dob);
         }
     }
 }

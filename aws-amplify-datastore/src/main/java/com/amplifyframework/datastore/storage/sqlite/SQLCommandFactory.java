@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.datastore.model.ModelSchema;
@@ -39,4 +40,17 @@ interface SQLCommandFactory {
      * @return the CREATE INDEX SQL command
      */
     SqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
+
+    /**
+     * Generates the INSERT INTO command in a raw string representation and a compiled
+     * prepared statement that can be bound later with inputs.
+     *
+     * @param tableName name of the table
+     * @param modelSchema schema of the model
+     * @param writableDatabaseConnectionHandle connection handle to writable database
+     * @return the SQL command that encapsulates the INSERT INTO command
+     */
+    SqlCommand insertFor(@NonNull String tableName,
+                         @NonNull ModelSchema modelSchema,
+                         @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
 }

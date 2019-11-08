@@ -41,9 +41,9 @@ public final class ModelRegistry {
      * Create the ModelSchema objects for all Model classes.
      * @param models the list that contains all the Model classes.
      */
-    public synchronized void createModelSchemaForModels(@NonNull List<Class<? extends Model>> models) {
+    public synchronized void load(@NonNull List<Class<? extends Model>> models) {
         for (Class<? extends Model> modelClass : models) {
-            final String modelClassName = modelClass.getName();
+            final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);
             modelSchemaMap.put(modelClassName, modelSchema);
         }
@@ -51,11 +51,12 @@ public final class ModelRegistry {
 
     /**
      * Retrieve the ModelSchema object for the given Model class.
-     * @param className name of the Model class.
+     * @param classSimpleName name of the Model class retrieved through
+     *                        {@link Class#getSimpleName()} method.
      * @return the ModelSchema object for the given Model class.
      */
-    public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String className) {
-        return modelSchemaMap.get(className);
+    public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String classSimpleName) {
+        return modelSchemaMap.get(classSimpleName);
     }
 
     /**
