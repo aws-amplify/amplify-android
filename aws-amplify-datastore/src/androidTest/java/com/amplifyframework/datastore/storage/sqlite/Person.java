@@ -213,7 +213,7 @@ public final class Person implements Model {
          */
         @Override
         public FinalStep dob(Date dob) {
-            this.dob = dob;
+            this.dob = new Date(dob.toString());
             return this;
         }
 

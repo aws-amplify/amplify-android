@@ -22,6 +22,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.datastore.model.ModelSchema;
 
 import org.junit.After;
 import org.junit.Before;
@@ -31,6 +32,7 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
@@ -52,15 +54,19 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @Before
     public void setUp() throws InterruptedException {
+        deleteDatabase();
+
         context = ApplicationProvider.getApplicationContext();
         sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
 
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         sqLiteStorageAdapter.setUp(context,
                 Collections.singletonList(Person.class),
-                new ResultListener<Void>() {
+                new ResultListener<List<ModelSchema>>() {
                     @Override
-                    public void onResult(Void result) {
+                    public void onResult(List<ModelSchema> result) {
+                        assertNotNull(result);
+                        assert !result.isEmpty();
                         waitForSetUp.countDown();
                     }
 
@@ -77,10 +83,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @After
     public void tearDown() {
-        String databaseName = SQLiteStorageHelper
-                .getInstance(context, Collections.emptySet())
-                .getDatabaseName();
-        context.deleteDatabase(databaseName);
+        deleteDatabase();
     }
 
     /**
@@ -126,5 +129,12 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     cursor.getString(cursor.getColumnIndexOrThrow("dob")));
         }
         cursor.close();
+    }
+
+    private void deleteDatabase() {
+        String databaseName = SQLiteStorageHelper
+                .getInstance(context, Collections.emptySet())
+                .getDatabaseName();
+        context.deleteDatabase(databaseName);
     }
 }

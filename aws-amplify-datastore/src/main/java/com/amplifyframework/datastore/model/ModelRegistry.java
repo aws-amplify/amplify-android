@@ -41,7 +41,7 @@ public final class ModelRegistry {
      * Create the ModelSchema objects for all Model classes.
      * @param models the list that contains all the Model classes.
      */
-    public synchronized void createModelSchemaForModels(@NonNull List<Class<? extends Model>> models) {
+    public synchronized void load(@NonNull List<Class<? extends Model>> models) {
         for (Class<? extends Model> modelClass : models) {
             final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);

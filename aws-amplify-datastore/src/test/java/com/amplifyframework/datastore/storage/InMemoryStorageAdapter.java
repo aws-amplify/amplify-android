@@ -68,7 +68,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     @Override
     public void setUp(@NonNull Context context,
                       @NonNull List<Class<? extends Model>> models,
-                      @NonNull ResultListener<Void> listener) {
+                      @NonNull ResultListener<List<ModelSchema>> listener) {
 
     }
 

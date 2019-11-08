@@ -48,12 +48,10 @@ public class SQLiteStorageHelperInstrumentedTest {
         createTableCommands = new HashSet<>();
         createTableCommands.add(
                 new SqlCommand("PERSON",
-                        "CREATE TABLE IF NOT EXISTS PERSON (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);",
-                                null));
+                        "CREATE TABLE IF NOT EXISTS PERSON (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         createTableCommands.add(
                 new SqlCommand("CAR",
-                        "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);",
-                        null));
+                        "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
                 createTableCommands);

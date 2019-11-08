@@ -27,14 +27,15 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelField;
 import com.amplifyframework.datastore.model.ModelRegistry;
 import com.amplifyframework.datastore.model.ModelSchema;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.datastore.util.FieldFinder;
 
 import java.lang.reflect.Field;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -63,7 +64,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private SQLiteDatabase writableDatabaseConnectionHandle;
 
     // ThreadPool for SQLite operations.
-    private ExecutorService threadPool;
+    private final ExecutorService threadPool;
 
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
@@ -106,7 +107,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public void setUp(@NonNull Context context,
                       @NonNull List<Class<? extends Model>> models,
-                      @NonNull final ResultListener<Void> listener) {
+                      @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
                 /**
@@ -115,7 +116,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * through reflection will be notified via the
                  * {@link ResultListener#onError(Throwable)} method.
                  */
-                modelRegistry.createModelSchemaForModels(models);
+                modelRegistry.load(models);
 
                 /**
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
@@ -154,7 +155,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.insertSqlPreparedStatements = getInsertSqlPreparedStatements();
 
-                listener.onResult(null);
+                listener.onResult(
+                        new ArrayList<>(modelRegistry.getModelSchemaMap().values())
+                );
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in creating and opening a " +
                         "connection to the database." + exception));
@@ -176,7 +179,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = modelRegistry
                         .getModelSchemaForModelClass(model.getClass().getSimpleName());
                 final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
-                if (sqlCommand == null) {
+                if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
                     listener.onError(new DataStoreException("Error in saving the model. No insert statement " +
                             "found for the Model: " + modelSchema.getName()));
                     return;
@@ -247,42 +250,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         for (final Map.Entry<String, ModelSchema> entry: modelSchemaEntrySet) {
             final String tableName = entry.getKey();
             final ModelSchema modelSchema = entry.getValue();
-            modifiableMap.put(tableName, getPreparedInsertSQLStatement(tableName, modelSchema));
+            modifiableMap.put(
+                    tableName,
+                    sqlCommandFactory.insertFor(tableName, modelSchema, writableDatabaseConnectionHandle)
+            );
         }
         return Immutable.of(modifiableMap);
-    }
-
-    private SqlCommand getPreparedInsertSQLStatement(@NonNull String tableName,
-                                                     @NonNull ModelSchema modelSchema) {
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("INSERT INTO ");
-        stringBuilder.append(tableName);
-        stringBuilder.append(" (");
-        final Map<String, ModelField> fields = modelSchema.getFields();
-        final Iterator<String> fieldsIterator = fields.keySet().iterator();
-        while (fieldsIterator.hasNext()) {
-            final String fieldName = fieldsIterator.next();
-            stringBuilder.append(fieldName);
-            if (fieldsIterator.hasNext()) {
-                stringBuilder.append(", ");
-            } else {
-                stringBuilder.append(")");
-            }
-        }
-        stringBuilder.append(" VALUES ");
-        stringBuilder.append("(");
-        for (int i = 0; i < fields.size(); i++) {
-            if (i == fields.size() - 1) {
-                stringBuilder.append("?");
-            } else {
-                stringBuilder.append("?, ");
-            }
-        }
-        stringBuilder.append(")");
-        final String preparedInsertStatement = stringBuilder.toString();
-        final SQLiteStatement compiledInsertStatement =
-                writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
-        return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
     }
 
     private <T> void bindPreparedInsertSQLStatementWithValues(@NonNull final T object,
@@ -290,7 +263,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             throws IllegalAccessException {
         final Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        final Set<Field> classFields = findFields(object.getClass());
+        final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
         final Iterator<Field> fieldIterator = classFields.iterator();
 
         while (fieldIterator.hasNext()) {
@@ -349,21 +322,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             cursor.moveToFirst();
         }
         return cursor;
-    }
-
-    private static Set<Field> findFields(@NonNull Class<?> clazz) {
-        Set<Field> set = new HashSet<>();
-        Class<?> c = clazz;
-        while (c != null) {
-            for (Field field : c.getDeclaredFields()) {
-                if (field.isAnnotationPresent(
-                        com.amplifyframework.datastore.annotations.ModelField.class)) {
-                    set.add(field);
-                }
-            }
-            c = c.getSuperclass();
-        }
-        return set;
     }
 }
 

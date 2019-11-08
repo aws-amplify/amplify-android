@@ -20,14 +20,13 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.annotations.Index;
 import com.amplifyframework.datastore.annotations.ModelConfig;
+import com.amplifyframework.datastore.util.FieldFinder;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -92,9 +91,7 @@ public final class ModelSchema {
      */
     static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         try {
-            final Set<Field> classFields = findFields(
-                    clazz,
-                    com.amplifyframework.datastore.annotations.ModelField.class);
+            final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
@@ -196,21 +193,6 @@ public final class ModelSchema {
             }
         }
         return builder.build();
-    }
-
-    private static Set<Field> findFields(@NonNull Class<?> clazz,
-                                         @NonNull Class<? extends Annotation> annotation) {
-        Set<Field> set = new HashSet<>();
-        Class<?> c = clazz;
-        while (c != null) {
-            for (Field field : c.getDeclaredFields()) {
-                if (field.isAnnotationPresent(annotation)) {
-                    set.add(field);
-                }
-            }
-            c = c.getSuperclass();
-        }
-        return set;
     }
 
     private List<Map.Entry<String, ModelField>> sortModelFields() {

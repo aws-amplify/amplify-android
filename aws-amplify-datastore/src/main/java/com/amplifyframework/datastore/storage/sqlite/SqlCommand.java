@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * An encapsulation of the information required to
@@ -41,12 +40,25 @@ final class SqlCommand {
      *
      * @param tableName name of the SQL table
      * @param sqlStatement create table command in string representation
+     */
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement) {
+        this.tableName = tableName;
+        this.sqlStatement = sqlStatement;
+        this.compiledSqlStatement = null;
+    }
+
+    /**
+     * Construct a SqlCommand object.
+     *
+     * @param tableName name of the SQL table
+     * @param sqlStatement create table command in string representation
      * @param compiledSqlStatement a compiled Sql statement that can be bound with
      *                             inputs later and executed.
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
-               @Nullable SQLiteStatement compiledSqlStatement) {
+               @NonNull SQLiteStatement compiledSqlStatement) {
         this.tableName = tableName;
         this.sqlStatement = sqlStatement;
         this.compiledSqlStatement = compiledSqlStatement;
@@ -76,5 +88,15 @@ final class SqlCommand {
      */
     SQLiteStatement getCompiledSqlStatement() {
         return compiledSqlStatement;
+    }
+
+    /**
+     * Return true if compiledSqlStatement is not null
+     * and false otherwise.
+     * @return true if compiledSqlStatement is not null,
+     *         false otherwise.
+     */
+    boolean hasCompiledSqlStatement() {
+        return compiledSqlStatement != null;
     }
 }
