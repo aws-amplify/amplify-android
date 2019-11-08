@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
 
 /**
@@ -23,11 +24,16 @@ import androidx.annotation.NonNull;
  */
 final class SqlCommand {
 
-    // name of the SQL table
+    // The name of the SQL table
     private final String tableName;
 
-    // CREATE SQL command in string representation
+    // A SQL command in string representation
     private final String sqlStatement;
+
+    // A pre-compiled Sql statement that can be bound with
+    // inputs later and executed. This object is not thread-safe. No two
+    // threads can operate on the same SQLiteStatement object.
+    private final SQLiteStatement compiledSqlStatement;
 
     /**
      * Construct a SqlCommand object.
@@ -39,6 +45,23 @@ final class SqlCommand {
                @NonNull String sqlStatement) {
         this.tableName = tableName;
         this.sqlStatement = sqlStatement;
+        this.compiledSqlStatement = null;
+    }
+
+    /**
+     * Construct a SqlCommand object.
+     *
+     * @param tableName name of the SQL table
+     * @param sqlStatement create table command in string representation
+     * @param compiledSqlStatement a compiled Sql statement that can be bound with
+     *                             inputs later and executed.
+     */
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement,
+               @NonNull SQLiteStatement compiledSqlStatement) {
+        this.tableName = tableName;
+        this.sqlStatement = sqlStatement;
+        this.compiledSqlStatement = compiledSqlStatement;
     }
 
     /**
@@ -55,5 +78,25 @@ final class SqlCommand {
      */
     String sqlStatement() {
         return sqlStatement;
+    }
+
+    /**
+     * Return the compiled SQLite statement that can bound with inputs
+     * and executed later.
+     * @return the compiled SQLite statement that can bound with inputs
+     *         and executed later.
+     */
+    SQLiteStatement getCompiledSqlStatement() {
+        return compiledSqlStatement;
+    }
+
+    /**
+     * Return true if compiledSqlStatement is not null
+     * and false otherwise.
+     * @return true if compiledSqlStatement is not null,
+     *         false otherwise.
+     */
+    boolean hasCompiledSqlStatement() {
+        return compiledSqlStatement != null;
     }
 }

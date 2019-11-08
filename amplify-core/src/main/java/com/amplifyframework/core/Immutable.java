@@ -19,7 +19,9 @@ import androidx.annotation.Nullable;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Contains methods for immutability.
@@ -44,5 +46,22 @@ public final class Immutable {
 
         final Map<K, V> copy = new HashMap<>(mutableMap);
         return Collections.unmodifiableMap(copy);
+    }
+
+    /**
+     * Create an immutable copy of the set passed in.
+     *
+     * @param mutableSet the input set for which an immutable set
+     *                   is created and returned.
+     * @param <E> the element type of the mutableSet.
+     * @return the immutable copy of the mutableSet.
+     */
+    public static <E> Set<E> of(@Nullable final Set<E> mutableSet) {
+        if (mutableSet == null) {
+            return null;
+        }
+
+        final Set<E> copy = new HashSet<>(mutableSet);
+        return Collections.unmodifiableSet(copy);
     }
 }

@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.datastore.model.ModelSchema;
 
 import java.util.Iterator;
 import java.util.List;
@@ -43,8 +44,12 @@ public interface LocalStorageAdapter {
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
      * @param models list of Model classes
+     * @param listener the listener to be invoked to notify completion
+     *                 of the setUp.
      */
-    void setUp(@NonNull Context context, @NonNull List<Class<? extends Model>> models);
+    void setUp(@NonNull Context context,
+               @NonNull List<Class<? extends Model>> models,
+               @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
      * Save a {@link Model} to the local storage engine.
