@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.fail;
 
@@ -66,7 +67,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     @Override
                     public void onResult(List<ModelSchema> result) {
                         assertNotNull(result);
-                        assert !result.isEmpty();
+                        assertFalse(result.isEmpty());
                         waitForSetUp.countDown();
                     }
 
