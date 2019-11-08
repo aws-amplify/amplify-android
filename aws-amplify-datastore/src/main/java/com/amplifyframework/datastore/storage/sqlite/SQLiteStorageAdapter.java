@@ -33,7 +33,10 @@ import com.amplifyframework.datastore.model.ModelSchema;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
 import java.lang.reflect.Field;
+import java.sql.Time;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -173,16 +176,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = modelRegistry
                         .getModelSchemaForModelClass(model.getClass().getSimpleName());
                 final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
-                if (sqlCommand != null) {
-                    final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-                    preCompiledInsertStatement.clearBindings();
-                    bindPreparedInsertSQLStatementWithValues(model, sqlCommand, modelSchema);
-                    preCompiledInsertStatement.executeInsert();
-                    preCompiledInsertStatement.clearBindings();
-                } else {
+                if (sqlCommand == null) {
                     listener.onError(new DataStoreException("Error in saving the model. No insert statement " +
                             "found for the Model: " + modelSchema.getName()));
+                    return;
                 }
+
+                final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
+                preCompiledInsertStatement.clearBindings();
+                bindPreparedInsertSQLStatementWithValues(model, sqlCommand);
+                preCompiledInsertStatement.executeInsert();
+                preCompiledInsertStatement.clearBindings();
+
                 listener.onResult(MutationEvent.<T>builder()
                         .data(model)
                         .mutationType(MutationEvent.MutationType.INSERT)
@@ -281,29 +286,46 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     private <T> void bindPreparedInsertSQLStatementWithValues(@NonNull final T object,
-                                                              @NonNull final SqlCommand sqlCommand,
-                                                              @NonNull ModelSchema modelSchema)
+                                                              @NonNull final SqlCommand sqlCommand)
             throws IllegalAccessException {
-        Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
-        SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        Set<Field> classFields = findFields(object.getClass());
-        Iterator<Field> fields = classFields.iterator();
+        final Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
+        final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
+        final Set<Field> classFields = findFields(object.getClass());
+        final Iterator<Field> fieldIterator = classFields.iterator();
 
-        while (fields.hasNext()) {
-            final Field field = fields.next();
+        while (fieldIterator.hasNext()) {
+            final Field field = fieldIterator.next();
             field.setAccessible(true);
             final String fieldName = field.getName();
+            final Object fieldValue = field.get(object);
+
+            // Move the columns index to 1-based index.
             final int columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
+            if (fieldValue == null) {
+                preCompiledInsertStatement.bindNull(columnIndex);
+                return;
+            }
+
             if (field.getType().equals(float.class) || field.getType().equals(Float.class)) {
-                preCompiledInsertStatement.bindDouble(columnIndex, (Float) field.get(object));
+                preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
             } else if (field.getType().equals(int.class) || field.getType().equals(Integer.class)) {
-                preCompiledInsertStatement.bindLong(columnIndex, (Integer) field.get(object));
+                preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
             } else if (field.getType().equals(long.class) || field.getType().equals(Long.class)) {
-                preCompiledInsertStatement.bindLong(columnIndex, (Long) field.get(object));
+                preCompiledInsertStatement.bindLong(columnIndex, (Long) fieldValue);
             } else if (field.getType().equals(double.class) || field.getType().equals(Double.class)) {
-                preCompiledInsertStatement.bindDouble(columnIndex, (Double) field.get(object));
-            } else if (field.getType().equals(String.class)) {
-                preCompiledInsertStatement.bindString(columnIndex, (String) field.get(object));
+                preCompiledInsertStatement.bindDouble(columnIndex, (Double) fieldValue);
+            } else if (field.getType().equals(String.class) || field.getType().equals(Enum.class)) {
+                preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
+            } else if (field.getType().equals(boolean.class)) {
+                boolean booleanValue = (boolean) fieldValue;
+                preCompiledInsertStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
+            } else if (field.getType().equals(Date.class)) {
+                Date dateValue = (Date) fieldValue;
+                String dateString = SimpleDateFormat.getDateInstance().format(dateValue);
+                preCompiledInsertStatement.bindString(columnIndex, dateString);
+            } else if (field.getType().equals(Time.class)) {
+                Time timeValue = (Time) fieldValue;
+                preCompiledInsertStatement.bindString(columnIndex, timeValue.toString());
             }
         }
 

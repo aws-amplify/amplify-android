@@ -27,7 +27,11 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.Date;
 import java.util.concurrent.CountDownLatch;
 
 import static org.junit.Assert.assertEquals;
@@ -82,15 +86,17 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert the construction of the SQLiteStorageHelper.
+     * @throws ParseException when the date cannot be parsed.
      * @throws InterruptedException when the waiting for save is interrupted.
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void saveModelInsertsData() throws InterruptedException {
+    public void saveModelInsertsData() throws ParseException, InterruptedException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
                 .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
                 .build();
         final CountDownLatch waitForSave = new CountDownLatch(1);
         sqLiteStorageAdapter.save(person, new ResultListener<MutationEvent<Person>>() {
@@ -117,6 +123,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
             assertEquals(41,
                     cursor.getInt(cursor.getColumnIndexOrThrow("age")));
+            assertEquals("06-23-1912",
+                    cursor.getString(cursor.getColumnIndexOrThrow("dob")));
         }
         cursor.close();
     }
