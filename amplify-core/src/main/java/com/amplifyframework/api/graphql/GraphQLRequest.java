@@ -16,31 +16,48 @@
 package com.amplifyframework.api.graphql;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * A request against a GraphQL endpoint.
  */
-public final class GraphQLRequest {
+public final class GraphQLRequest<T> {
     private final String document;
-    private final List<FieldValue> fieldValues;
-    private final List<VariableValues> variableValues;
+    private final Map<String, Object> variables;
     private final List<String> fragments;
+    private final Class<T> modelClass;
 
     /**
      * Constructor for GraphQLRequest with
      * specification for type of API call.
      * @param document query document to process
+     * @param modelClass class instance of model
+     *                   to operate on
      */
-    public GraphQLRequest(String document) {
-        this.document = document;
-        this.fieldValues = new ArrayList<>();
-        this.variableValues = new ArrayList<>();
-        this.fragments = new ArrayList<>();
+    public GraphQLRequest(String document, Class<T> modelClass) {
+        this(document, new HashMap<>(), modelClass);
     }
 
     /**
-     * Processes query parameters into a query string.
+     * Constructor for GraphQLRequest with
+     * specification for type of API call.
+     * @param document query document to process
+     * @param variables variables to be added
+     * @param modelClass class instance of model
+     *                   to operate on
+     */
+    public GraphQLRequest(String document, Map<String, Object> variables, Class<T> modelClass) {
+        this.document = document;
+        this.variables = variables;
+        this.fragments = new ArrayList<>();
+        this.modelClass = modelClass;
+    }
+
+    /**
+     * Processes query parameters into a query string to
+     * be used as HTTP request body
      * @return processed query string
      */
     public String getContent() {
@@ -65,17 +82,17 @@ public final class GraphQLRequest {
                 .append("\"")
                 .append(",")
                 .append("\"variables\":");
-        if (variableValues.isEmpty()) {
+        if (variables.isEmpty()) {
             completeQuery.append("null");
         } else {
             completeQuery.append("{");
-            final int size = variableValues.size();
-            for (int i = 0; i < size; i++) {
-                final VariableValues variableValues = this.variableValues.get(i);
+            int i = 0;
+            final int size = variables.size();
+            for (Map.Entry<String, Object> entry : variables.entrySet()) {
                 completeQuery.append("\"")
-                        .append(variableValues.getName())
+                        .append(entry.getKey())
                         .append("\":");
-                final Object value = variableValues.getValue();
+                final Object value = entry.getValue();
                 if (value == null) {
                     completeQuery.append("null");
                 } else if (value instanceof Number || value instanceof Boolean) {
@@ -85,7 +102,8 @@ public final class GraphQLRequest {
                             .append(value.toString())
                             .append("\"");
                 }
-                if (i != size - 1) {
+
+                if (i++ != size) {
                     completeQuery.append(",");
                 }
             }
@@ -94,9 +112,6 @@ public final class GraphQLRequest {
         completeQuery.append("}");
 
         String contentString = completeQuery.toString();
-        for (FieldValue fieldValue : fieldValues) {
-            contentString = contentString.replace("@" + fieldValue.getName(), "\\\"" + fieldValue.getValue() + "\\\"");
-        }
 
         while (contentString.contains("\\\\")) {
             contentString = contentString.replace("\\\\", "\\");
@@ -106,102 +121,45 @@ public final class GraphQLRequest {
     }
 
     /**
-     * Sets field value.
-     * @param name name of field value
-     * @param value field value
-     * @return this query object containing new field value
-     */
-    public GraphQLRequest field(String name, String value) {
-        fieldValues.add(new FieldValue(name, value));
-        return this;
-    }
-
-    /**
      * Attaches variable key-value pair.
      * @param key variable name
      * @param value variable value
      * @return this query object for chaining
      */
-    public GraphQLRequest variable(String key, String value) {
-        variableValues.add(new VariableValues(key, value));
+    public GraphQLRequest<T> addVariable(String key, Object value) {
+        variables.put(key, value);
         return this;
     }
 
     /**
-     * Attaches fragment.
-     * @param fragment fragment to be attached
+     * Attaches a fragment.
+     * @param fragment fragment
      * @return this query object for chaining
      */
-    public GraphQLRequest fragment(String fragment) {
+    public GraphQLRequest<T> addFragment(String fragment) {
         fragments.add(fragment);
         return this;
     }
 
     /**
-     * Wrapper to contain field value and its name.
+     * Returns the class of model that this request
+     * is operating on.
+     * @return the class of entity
      */
-    static final class FieldValue {
-        private final String name;
-        private final String value;
-
-        /**
-         * Constructor for field key-value pair.
-         * @param name name of field value
-         * @param value field value
-         */
-        FieldValue(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
-
-        /**
-         * Gets field name.
-         * @return field name
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Gets field value.
-         * @return field value
-         */
-        public String getValue() {
-            return value;
-        }
+    public Class<T> getModelClass() {
+        return modelClass;
     }
 
-    /**
-     * Wrapper to contain variable value and its name.
-     */
-    static final class VariableValues {
-        private final String name;
-        private final String value;
-
-        /**
-         * Constructor for variable key-value pair.
-         * @param name name of variable
-         * @param value variable value
-         */
-        VariableValues(String name, String value) {
-            this.name = name;
-            this.value = value;
-        }
-
-        /**
-         * Gets variable name.
-         * @return variable name.
-         */
-        public String getName() {
-            return name;
-        }
-
-        /**
-         * Gets variable value.
-         * @return variable value
-         */
-        public Object getValue() {
-            return value;
-        }
+    public static <R> GraphQLRequest<R> buildQuery(Class<R> modelClass, QueryType type) {
+        return null;
     }
+
+    public static <R> GraphQLRequest<R> buildMutation(R model, MutationType type) {
+        return null;
+    }
+
+    public static <R> GraphQLRequest<R> buildSubscription(R model, SubscriptionType type) {
+        return null;
+    }
+
 }

@@ -53,18 +53,16 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
      * @param client OkHttp client being used to hit the endpoint
      * @param request GraphQL request being enacted
      * @param responseFactory an implementation of GsonGraphQLResponseFactory
-     * @param classToCast class to cast the response to
      * @param responseListener
      *        listener to be invoked when response is available, or if
      *        errors are encountered while obtaining a response
      */
     AWSGraphQLOperation(String endpoint,
                         OkHttpClient client,
-                        GraphQLRequest request,
+                        GraphQLRequest<T> request,
                         GraphQLResponse.Factory responseFactory,
-                        Class<T> classToCast,
                         ResultListener<GraphQLResponse<T>> responseListener) {
-        super(request, responseFactory, classToCast, responseListener);
+        super(request, responseFactory, responseListener);
         this.endpoint = endpoint;
         this.client = client;
     }

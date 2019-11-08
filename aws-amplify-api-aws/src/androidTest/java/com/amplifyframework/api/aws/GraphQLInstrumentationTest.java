@@ -111,7 +111,7 @@ public final class GraphQLInstrumentationTest {
      */
     @Test
     public void testQueryWithVariable() throws Exception {
-        HashMap<String, String> variables = new HashMap<>();
+        HashMap<String, Object> variables = new HashMap<>();
         variables.put("myId", "1");
 
         String document = TestAssets.readAsString("get-todo-with-variable.graphql");

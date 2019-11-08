@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
@@ -52,8 +53,28 @@ public interface ApiCategoryBehavior {
     <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
+            @Nullable Map<String, Object> variables,
             @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
+
+    /**
+     * Perform a GraphQL query against a configured GraphQL endpoint.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * to the response listener, and via Hub.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param apiName The name of a configured API
+     * @param graphQlRequest Wrapper for request details
+     * @param responseListener
+     *        Invoked when response data/errors are available.  If null,
+     *        response can still be obtained via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiOperation} to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    <T> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQlRequest,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener);
 
     /**
@@ -77,8 +98,29 @@ public interface ApiCategoryBehavior {
     <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
+            @Nullable Map<String, Object> variables,
             @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
+
+    /**
+     * Perform a GraphQL mutation against a configured GraphQL endpoint.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * to the response listener, and via Hub.  If there is data
+     * present in the response, it will be cast as the requested class
+     * type.
+     * @param apiName The name of a configured API
+     * @param graphQlRequest Wrapper for request details
+     * @param responseListener
+     *        Invoked when response data/errors are available.  If null,
+     *        response can still be obtained via Hub.
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiOperation} to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    <T> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQlRequest,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener);
 
     /**

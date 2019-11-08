@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
@@ -43,21 +44,36 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
+            @Nullable Map<String, Object> variables,
             @NonNull Class<T> classToCast,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
         return getSelectedPlugin().query(apiName, gqlDocument, variables, classToCast, responseListener);
     }
 
     @Override
+    public <T> GraphQLOperation<T> query(@NonNull String apiName,
+                                         @NonNull GraphQLRequest<T> graphQlRequest,
+                                         @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+        return getSelectedPlugin().query(apiName, graphQlRequest, responseListener);
+    }
+
+    @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
+            @Nullable Map<String, Object> variables,
             @NonNull Class<T> classToCast,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
         return getSelectedPlugin().mutate(apiName, gqlDocument, variables, classToCast, responseListener);
     }
+
+    @Override
+    public <T> GraphQLOperation<T> mutate(@NonNull String apiName,
+                                          @NonNull GraphQLRequest<T> graphQlRequest,
+                                          @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+        return getSelectedPlugin().mutate(apiName, graphQlRequest, responseListener);
+    }
+
 
     @Override
     public <T> GraphQLOperation<T> subscribe(
