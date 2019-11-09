@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.annotations;
+package com.amplifyframework.core.model.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,9 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link Index} annotates any {@link com.amplifyframework.datastore.model.Model}
+ * {@link Index} annotates any {@link com.amplifyframework.core.model.Model}
  * with the index that will be configured in the persistence layer. For example,
- * this will dictate the indexes that will be created when a {@link com.amplifyframework.datastore.model.Model}
+ * this will dictate the indexes that will be created when a {@link com.amplifyframework.core.model.Model}
  * is stored in the Android {@link android.database.sqlite.SQLiteDatabase}.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
@@ -37,7 +37,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface Index {
     /**
-     * Specify the array of fields of a {@link com.amplifyframework.datastore.model.Model}
+     * Specify the array of fields of a {@link com.amplifyframework.core.model.Model}
      * for which indexes need to be created in the persistent store.
      * @return array of fields
      */

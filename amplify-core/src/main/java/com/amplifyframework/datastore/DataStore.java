@@ -17,7 +17,8 @@ package com.amplifyframework.datastore;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.async.Result;
-import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 
 import io.reactivex.Observable;
 

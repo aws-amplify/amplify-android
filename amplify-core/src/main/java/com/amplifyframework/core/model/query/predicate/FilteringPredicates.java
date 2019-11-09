@@ -13,11 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.core.model.query.predicate;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.core.model.Model;
 
 /**
  * A utility class containing static factory methods that generate
