@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.model;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 

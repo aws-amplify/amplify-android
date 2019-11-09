@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.core.model.query.predicate;
 
 /**
  * A Filtering Predicate defines matching rules on a subject.
