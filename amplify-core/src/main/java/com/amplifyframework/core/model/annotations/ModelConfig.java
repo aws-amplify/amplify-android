@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.annotations;
+package com.amplifyframework.core.model.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,9 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link ModelConfig} annotates any {@link com.amplifyframework.datastore.model.Model}
+ * {@link ModelConfig} annotates any {@link com.amplifyframework.core.model.Model}
  * with the configuration information that is applicable to a
- * {@link com.amplifyframework.datastore.model.Model}.
+ * {@link com.amplifyframework.core.model.Model}.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
  * retain {@link ModelConfig} at runtime for the reflection capabilities to work

@@ -15,7 +15,7 @@
 
 package com.amplifyframework.datastore;
 
-import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.core.model.Model;
 
 import java.util.UUID;
 

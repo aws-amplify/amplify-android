@@ -19,8 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.model.Model;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
 import java.util.Iterator;

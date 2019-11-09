@@ -17,8 +17,8 @@ package com.amplifyframework.datastore.network;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.model.Model;
 
 /**
  * A utility to help construct a GraphQL operation document,

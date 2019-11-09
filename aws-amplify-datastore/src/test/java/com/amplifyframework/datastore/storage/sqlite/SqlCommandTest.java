@@ -17,9 +17,9 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.os.Build;
 
-import com.amplifyframework.datastore.model.ModelField;
-import com.amplifyframework.datastore.model.ModelIndex;
-import com.amplifyframework.datastore.model.ModelSchema;
+import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelIndex;
+import com.amplifyframework.core.model.ModelSchema;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

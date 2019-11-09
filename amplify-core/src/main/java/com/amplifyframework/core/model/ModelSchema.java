@@ -13,14 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.model;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.annotations.Index;
-import com.amplifyframework.datastore.annotations.ModelConfig;
-import com.amplifyframework.datastore.util.FieldFinder;
+import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.util.FieldFinder;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -100,10 +99,10 @@ public final class ModelSchema {
             }
 
             for (Field field : classFields) {
-                com.amplifyframework.datastore.annotations.ModelField annotation = null;
-                if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
+                com.amplifyframework.core.model.annotations.ModelField annotation = null;
+                if (field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class) != null) {
                     annotation = field.getAnnotation(
-                            com.amplifyframework.datastore.annotations.ModelField.class);
+                            com.amplifyframework.core.model.annotations.ModelField.class);
                 }
                 final ModelField modelField = ModelField.builder()
                         .name(field.getName())
@@ -125,7 +124,7 @@ public final class ModelSchema {
                     .modelIndex(modelIndex)
                     .build();
         } catch (Exception exception) {
-            throw new DataStoreException("Error in constructing a ModelSchema.", exception);
+            throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
         }
     }
 

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.annotations;
+package com.amplifyframework.core.model.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -22,7 +22,7 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation is used to indicate that a member of a class which extends
- * {@link com.amplifyframework.datastore.model.Model} should be serialized or
+ * {@link com.amplifyframework.core.model.Model} should be serialized or
  * deserialized into the Datastore.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to

@@ -13,12 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.util;
+package com.amplifyframework.util;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Immutable;
-import com.amplifyframework.datastore.annotations.ModelField;
+import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.lang.reflect.Field;
 import java.util.HashSet;
@@ -26,7 +26,7 @@ import java.util.Set;
 
 /**
  * Utility that operates on the fields of a
- * {@link com.amplifyframework.datastore.model.Model}.
+ * {@link com.amplifyframework.core.model.Model}.
  */
 public final class FieldFinder {
 
