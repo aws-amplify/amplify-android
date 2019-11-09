@@ -15,10 +15,10 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.datastore.annotations.Index;
-import com.amplifyframework.datastore.annotations.ModelConfig;
-import com.amplifyframework.datastore.annotations.ModelField;
-import com.amplifyframework.datastore.model.Model;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.util.Date;
 import java.util.UUID;

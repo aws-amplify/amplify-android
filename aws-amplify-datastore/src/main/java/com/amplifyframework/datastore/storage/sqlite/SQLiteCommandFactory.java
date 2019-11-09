@@ -20,10 +20,10 @@ import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelField;
-import com.amplifyframework.datastore.model.ModelIndex;
-import com.amplifyframework.datastore.model.ModelSchema;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelIndex;
+import com.amplifyframework.core.model.ModelSchema;
 
 import java.util.HashMap;
 import java.util.Iterator;

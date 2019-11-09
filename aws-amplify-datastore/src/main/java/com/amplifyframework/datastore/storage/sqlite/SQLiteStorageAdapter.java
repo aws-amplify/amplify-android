@@ -24,13 +24,13 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelRegistry;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelRegistry;
-import com.amplifyframework.datastore.model.ModelSchema;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-import com.amplifyframework.datastore.util.FieldFinder;
+import com.amplifyframework.util.FieldFinder;
 
 import java.lang.reflect.Field;
 import java.sql.Time;

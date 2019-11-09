@@ -20,9 +20,9 @@ import android.database.Cursor;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelSchema;
 
 import org.junit.After;
 import org.junit.Before;
