@@ -15,6 +15,9 @@
 
 package com.amplifyframework.api.graphql;
 
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.util.StringUtils;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -136,8 +139,31 @@ public final class GraphQLRequest<T> {
         return null;
     }
 
-    public static <R> GraphQLRequest<R> buildMutation(R model, MutationType type) {
-        return null;
+    public static <R extends Model> GraphQLRequest<R> buildMutation(Class<R> modelClass, R model, MutationType type) {
+        StringBuilder doc = new StringBuilder();
+        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+        String typeStr = type.toString();
+        String modelName = schema.getTargetModelName();
+
+        doc.append("mutation ");
+        doc.append(StringUtils.capitalize(typeStr) +
+                StringUtils.capitalize(modelName));
+        doc.append("($input: ");
+        doc.append(StringUtils.capitalize(typeStr) +
+                StringUtils.capitalize(modelName) +
+                "Input!");
+        doc.append(") { ");
+        doc.append(typeStr.toLowerCase() +
+                StringUtils.capitalize(modelName));
+        doc.append("(input: $input) { ");
+
+        // Insert model fields expanded here
+
+        doc.append("}}");
+
+        GraphQLRequest<R> result = new GraphQLRequest<R>(doc.toString(), modelClass);
+
+        return result;
     }
 
     public static <R> GraphQLRequest<R> buildSubscription(R model, SubscriptionType type) {

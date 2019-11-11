@@ -88,7 +88,7 @@ public final class ModelSchema {
      *           to the {@link Model} interface.
      * @return the ModelSchema object.
      */
-    static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
+    public static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
