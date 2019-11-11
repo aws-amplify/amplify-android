@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.graphql;
 
+import com.google.gson.Gson;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -82,35 +84,15 @@ public final class GraphQLRequest<T> {
                 .append("\"")
                 .append(",")
                 .append("\"variables\":");
+
         if (variables.isEmpty()) {
             completeQuery.append("null");
         } else {
-            completeQuery.append("{");
-            int i = 0;
-            final int size = variables.size();
-            for (Map.Entry<String, Object> entry : variables.entrySet()) {
-                completeQuery.append("\"")
-                        .append(entry.getKey())
-                        .append("\":");
-                final Object value = entry.getValue();
-                if (value == null) {
-                    completeQuery.append("null");
-                } else if (value instanceof Number || value instanceof Boolean) {
-                    completeQuery.append(value.toString());
-                } else {
-                    completeQuery.append("\"")
-                            .append(value.toString())
-                            .append("\"");
-                }
-
-                if (i++ != size) {
-                    completeQuery.append(",");
-                }
-            }
-            completeQuery.append("}");
+            Gson gson = new Gson();
+            completeQuery.append(gson.toJson(this.variables));
         }
-        completeQuery.append("}");
 
+        completeQuery.append("}");
         String contentString = completeQuery.toString();
 
         while (contentString.contains("\\\\")) {
