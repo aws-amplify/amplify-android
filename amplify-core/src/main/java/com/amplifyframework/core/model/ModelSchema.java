@@ -13,21 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.model;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.annotations.Index;
-import com.amplifyframework.datastore.annotations.ModelConfig;
+import com.amplifyframework.core.model.annotations.Index;
+import com.amplifyframework.core.model.annotations.ModelConfig;
+import com.amplifyframework.util.FieldFinder;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -92,9 +90,7 @@ public final class ModelSchema {
      */
     static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         try {
-            final Set<Field> classFields = findFields(
-                    clazz,
-                    com.amplifyframework.datastore.annotations.ModelField.class);
+            final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
@@ -103,10 +99,10 @@ public final class ModelSchema {
             }
 
             for (Field field : classFields) {
-                com.amplifyframework.datastore.annotations.ModelField annotation = null;
-                if (field.getAnnotation(com.amplifyframework.datastore.annotations.ModelField.class) != null) {
+                com.amplifyframework.core.model.annotations.ModelField annotation = null;
+                if (field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class) != null) {
                     annotation = field.getAnnotation(
-                            com.amplifyframework.datastore.annotations.ModelField.class);
+                            com.amplifyframework.core.model.annotations.ModelField.class);
                 }
                 final ModelField modelField = ModelField.builder()
                         .name(field.getName())
@@ -128,7 +124,7 @@ public final class ModelSchema {
                     .modelIndex(modelIndex)
                     .build();
         } catch (Exception exception) {
-            throw new DataStoreException("Error in constructing a ModelSchema.", exception);
+            throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
         }
     }
 
@@ -196,21 +192,6 @@ public final class ModelSchema {
             }
         }
         return builder.build();
-    }
-
-    private static Set<Field> findFields(@NonNull Class<?> clazz,
-                                         @NonNull Class<? extends Annotation> annotation) {
-        Set<Field> set = new HashSet<>();
-        Class<?> c = clazz;
-        while (c != null) {
-            for (Field field : c.getDeclaredFields()) {
-                if (field.isAnnotationPresent(annotation)) {
-                    set.add(field);
-                }
-            }
-            c = c.getSuperclass();
-        }
-        return set;
     }
 
     private List<Map.Entry<String, ModelField>> sortModelFields() {

@@ -29,4 +29,7 @@ jobs:
       - run:
           name: Build the project
           command: bash gradlew build
+      - store_test_results:
+          path: test-results
+
 

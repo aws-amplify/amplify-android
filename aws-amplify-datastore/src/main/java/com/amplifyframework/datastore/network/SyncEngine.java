@@ -21,8 +21,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.model.Model;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
 import java.util.Collections;

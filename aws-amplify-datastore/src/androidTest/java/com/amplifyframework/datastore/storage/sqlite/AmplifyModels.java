@@ -13,35 +13,35 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.storage.sqlite;
 
 import com.amplifyframework.core.model.Model;
 
-import java.util.Objects;
-import java.util.UUID;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Some little POJO we can use to test the queue.
+ * Contains the set of model classes that implement {@link Model}
+ * interface.
  */
-final class Person implements Model {
-    private final String name;
-    private final String uuid;
+public final class AmplifyModels {
 
-    private Person(String name) {
-        this.name = name;
-        this.uuid = UUID.randomUUID().toString();
+    /**
+     * Dis-allows instantiation of this utility.
+     */
+    private AmplifyModels() {
     }
 
-    static Person named(final String name) {
-        return new Person(Objects.requireNonNull(name));
-    }
-
-    String name() {
-        return name;
-    }
-
-    @Override
-    public String getId() {
-        return uuid;
+    /**
+     * Return the set of model classes.
+     * @return the set of model classes.
+     */
+    public static Set<Class<? extends Model>> get() {
+        return new HashSet<>(Arrays.asList(
+                Person.class,
+                Person.class,
+                Person.class
+        ));
     }
 }

@@ -15,13 +15,15 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.model.Model;
-import com.amplifyframework.datastore.model.ModelField;
-import com.amplifyframework.datastore.model.ModelIndex;
-import com.amplifyframework.datastore.model.ModelSchema;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.ModelIndex;
+import com.amplifyframework.core.model.ModelSchema;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -165,6 +167,49 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
         stringBuilder.append(");");
         return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
+    }
+
+    /**
+     * Generates the INSERT INTO command in a raw string representation and a compiled
+     * prepared statement that can be bound later with inputs.
+     *
+     * @param tableName   name of the table
+     * @param modelSchema schema of the model
+     * @return the SQL command that encapsulates the INSERT INTO command
+     */
+    @Override
+    public SqlCommand insertFor(@NonNull String tableName,
+                                @NonNull ModelSchema modelSchema,
+                                @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("INSERT INTO ");
+        stringBuilder.append(tableName);
+        stringBuilder.append(" (");
+        final Map<String, ModelField> fields = modelSchema.getFields();
+        final Iterator<String> fieldsIterator = fields.keySet().iterator();
+        while (fieldsIterator.hasNext()) {
+            final String fieldName = fieldsIterator.next();
+            stringBuilder.append(fieldName);
+            if (fieldsIterator.hasNext()) {
+                stringBuilder.append(", ");
+            } else {
+                stringBuilder.append(")");
+            }
+        }
+        stringBuilder.append(" VALUES ");
+        stringBuilder.append("(");
+        for (int i = 0; i < fields.size(); i++) {
+            if (i == fields.size() - 1) {
+                stringBuilder.append("?");
+            } else {
+                stringBuilder.append("?, ");
+            }
+        }
+        stringBuilder.append(")");
+        final String preparedInsertStatement = stringBuilder.toString();
+        final SQLiteStatement compiledInsertStatement =
+                writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
+        return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
     }
 
     private static String getSqlDataTypeForGraphQLType(@NonNull final ModelField modelField) {

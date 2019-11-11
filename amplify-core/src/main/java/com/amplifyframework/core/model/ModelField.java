@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.model;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
@@ -27,10 +27,11 @@ public final class ModelField {
     private final String name;
 
     // Name of the field in the target. For example: name of the
-    // field in the GraphQL targetType.
+    // field in the GraphQL target.
     private final String targetName;
 
-    // The data targetType of the field.
+    // The type of the field in the target. For example: type of the
+    // field in the GraphQL target.
     private final String targetType;
 
     // If the field is a required or an optional field
