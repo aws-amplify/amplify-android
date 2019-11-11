@@ -15,18 +15,19 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.datastore.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchema;
 
 /**
  * A factory that produces the SQLite commands from the
- * {@link ModelSchema} and the {@link com.amplifyframework.datastore.model.Model}.
+ * {@link ModelSchema} and the {@link com.amplifyframework.core.model.Model}.
  */
 interface SQLCommandFactory {
     /**
      * Generates the CREATE TABLE SQL command from the {@link ModelSchema}.
-     * @param modelSchema the schema of a {@link com.amplifyframework.datastore.model.Model}
+     * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
      *                    for which a CREATE TABLE SQL command needs to be generated.
      * @return the CREATE TABLE SQL command
      */
@@ -34,9 +35,22 @@ interface SQLCommandFactory {
 
     /**
      * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
-     * @param modelSchema the schema of a {@link com.amplifyframework.datastore.model.Model}
+     * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
      *                    for which a CREATE INDEX SQL command needs to be generated.
      * @return the CREATE INDEX SQL command
      */
     SqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
+
+    /**
+     * Generates the INSERT INTO command in a raw string representation and a compiled
+     * prepared statement that can be bound later with inputs.
+     *
+     * @param tableName name of the table
+     * @param modelSchema schema of the model
+     * @param writableDatabaseConnectionHandle connection handle to writable database
+     * @return the SQL command that encapsulates the INSERT INTO command
+     */
+    SqlCommand insertFor(@NonNull String tableName,
+                         @NonNull ModelSchema modelSchema,
+                         @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
 }
