@@ -54,7 +54,7 @@ import static org.junit.Assert.fail;
 public final class SQLiteStorageAdapterInstrumentedTest {
 
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 100000;
+    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
