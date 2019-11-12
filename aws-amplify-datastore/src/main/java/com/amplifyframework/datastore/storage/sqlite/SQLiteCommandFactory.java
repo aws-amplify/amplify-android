@@ -24,7 +24,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.types.TypeConverter;
+import com.amplifyframework.core.model.internal.types.TypeConverter;
 
 import java.util.Iterator;
 import java.util.Map;

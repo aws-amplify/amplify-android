@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.types;
+package com.amplifyframework.core.model.internal.types;
 
 import androidx.annotation.NonNull;
 

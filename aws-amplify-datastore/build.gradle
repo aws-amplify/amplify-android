@@ -55,12 +55,11 @@ dependencies {
     implementation project(':amplify-core')
 
     /**
-     * The following jackson dependencies are used for converting
+     * The following Gson dependencies are used for converting
      * raw data read from SQLite tables into strongly typed Java
      * objects by the DataStore.
      */
-    implementation 'com.fasterxml.jackson.core:jackson-core:2.9.8'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.9.8'
+    implementation "com.google.code.gson:gson:2.8.6"
 
     testImplementation 'junit:junit:4.12'
     testImplementation'org.mockito:mockito-core:3.1.0'

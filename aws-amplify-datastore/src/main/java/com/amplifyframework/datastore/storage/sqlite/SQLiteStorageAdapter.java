@@ -30,13 +30,13 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.types.TypeConverter;
+import com.amplifyframework.core.model.internal.types.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.util.FieldFinder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 
 import java.lang.reflect.Field;
 import java.sql.Time;
@@ -90,6 +90,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
 
+    // Using Gson for deserializing data read from SQLite
+    // into a strongly typed Java object.
+    private Gson gson;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param modelRegistry modelRegistry that hosts the models and their schema.
@@ -99,6 +103,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
+        this.gson = new Gson();
     }
 
     /**
@@ -242,78 +247,83 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 Log.d(TAG, "Querying data for: " + modelClass.getSimpleName());
 
-                final ObjectMapper objectMapper = new ObjectMapper();
                 final Set<T> models = new HashSet<>();
                 final ModelSchema modelSchema = modelRegistry
                         .getModelSchemaForModelClass(modelClass.getSimpleName());
 
                 final Cursor cursor = getQueryAllCursor(modelClass.getSimpleName());
                 while (cursor.moveToNext()) {
-                    final Map<String, Object> mapForModel = new HashMap<>();
-
-                    for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
-                        final String fieldName = entry.getKey();
-                        try {
-                            final String fieldGraphQLType = entry.getValue().getTargetType();
-                            final String fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
-
-                            switch (fieldJavaType) {
-                                case "String":
-                                case "Enum":
-                                    mapForModel.put(
-                                            fieldName,
-                                            cursor.getString(cursor.getColumnIndexOrThrow(fieldName)));
-                                    break;
-                                case "int":
-                                    mapForModel.put(
-                                            fieldName,
-                                            cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)));
-                                    break;
-                                case "boolean":
-                                    mapForModel.put(
-                                            fieldName,
-                                            cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)) != 0);
-                                    break;
-                                case "float":
-                                    mapForModel.put(
-                                            fieldName,
-                                            cursor.getFloat(cursor.getColumnIndexOrThrow(fieldName)));
-                                    break;
-                                case "long":
-                                    mapForModel.put(
-                                            fieldName,
-                                            cursor.getLong(cursor.getColumnIndexOrThrow(fieldName)));
-                                    break;
-                                case "Date":
-                                    final String dateInStringFormat =
-                                            cursor.getString(cursor.getColumnIndexOrThrow(fieldName));
-                                    final Date dateInDateFormat = SimpleDateFormat
-                                            .getDateInstance()
-                                            .parse(dateInStringFormat);
-                                    mapForModel.put(fieldName, dateInDateFormat);
-                                    break;
-                                case "Time":
-                                    final long timeInLongFormat =
-                                            cursor.getLong(cursor.getColumnIndexOrThrow(fieldName));
-                                    mapForModel.put(fieldName, new Time(timeInLongFormat));
-                                    break;
-                                default:
-                                    break;
-                            }
-                        } catch (Exception exception) {
-                            Log.e(TAG, "Error in reading data for field: " + fieldName);
-                            mapForModel.put(fieldName, null);
-                        }
-                    }
-                    models.add(objectMapper.convertValue(mapForModel, modelClass));
+                    final Map<String, Object> mapForModel = buildMapForModel(modelSchema, cursor);
+                    final String modelInJsonFormat = gson.toJson(mapForModel);
+                    models.add(gson.getAdapter(modelClass).fromJson(modelInJsonFormat));
                 }
                 cursor.close();
 
                 listener.onResult(models.iterator());
             } catch (Exception exception) {
-                listener.onError(new DataStoreException("Error in saving the model.", exception));
+                listener.onError(new DataStoreException("Error in querying the model.", exception));
             }
         });
+    }
+
+    private Map<String, Object> buildMapForModel(ModelSchema modelSchema, Cursor cursor) {
+        final Map<String, Object> mapForModel = new HashMap<>();
+
+        for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
+            final String fieldName = entry.getKey();
+            try {
+                final String fieldGraphQLType = entry.getValue().getTargetType();
+                final String fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+
+                switch (fieldJavaType) {
+                    case "String":
+                    case "Enum":
+                        mapForModel.put(
+                                fieldName,
+                                cursor.getString(cursor.getColumnIndexOrThrow(fieldName)));
+                        break;
+                    case "int":
+                        mapForModel.put(
+                                fieldName,
+                                cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)));
+                        break;
+                    case "boolean":
+                        mapForModel.put(
+                                fieldName,
+                                cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)) != 0);
+                        break;
+                    case "float":
+                        mapForModel.put(
+                                fieldName,
+                                cursor.getFloat(cursor.getColumnIndexOrThrow(fieldName)));
+                        break;
+                    case "long":
+                        mapForModel.put(
+                                fieldName,
+                                cursor.getLong(cursor.getColumnIndexOrThrow(fieldName)));
+                        break;
+                    case "Date":
+                        final String dateInStringFormat =
+                                cursor.getString(cursor.getColumnIndexOrThrow(fieldName));
+                        final Date dateInDateFormat = SimpleDateFormat
+                                .getDateInstance()
+                                .parse(dateInStringFormat);
+                        mapForModel.put(fieldName, dateInDateFormat);
+                        break;
+                    case "Time":
+                        final long timeInLongFormat =
+                                cursor.getLong(cursor.getColumnIndexOrThrow(fieldName));
+                        mapForModel.put(fieldName, new Time(timeInLongFormat));
+                        break;
+                    default:
+                        throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, "Error in reading data for field: " + fieldName);
+                mapForModel.put(fieldName, null);
+            }
+        }
+        return mapForModel;
     }
 
     /**

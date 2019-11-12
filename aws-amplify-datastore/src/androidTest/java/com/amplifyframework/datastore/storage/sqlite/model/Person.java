@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite.model;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -132,7 +134,12 @@ public final class Person implements Model {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getFirstName(), getLastName(), getAge(), getDob());
+        return ObjectsCompat.hash(
+                getId(),
+                getFirstName(),
+                getLastName(),
+                getAge(),
+                getDob());
     }
 
     @Override
