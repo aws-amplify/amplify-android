@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite;
+package com.amplifyframework.datastore.storage.sqlite.model;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
@@ -21,6 +21,7 @@ import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -31,20 +32,27 @@ import java.util.UUID;
 public final class Person implements Model {
 
     @ModelField(targetName = "id", targetType = "ID", isRequired = true)
-    private final String id;
+    private String id;
 
     @ModelField(targetName = "first_name", targetType = "String", isRequired = true)
-    private final String firstName;
+    private String firstName;
 
     @ModelField(targetName = "last_name", targetType = "String", isRequired = true)
-    private final String lastName;
+    private String lastName;
 
     // Default for isRequired is false
     @ModelField(targetName = "age", targetType = "Int")
-    private final int age;
+    private int age;
 
     @ModelField(targetName = "dob", targetType = "AWSDate")
     private Date dob;
+
+    /**
+     * Default constructor.
+     */
+    public Person() {
+        super();
+    }
 
     private Person(String uniqueId,
                    String firstName,
@@ -104,6 +112,38 @@ public final class Person implements Model {
      */
     public Date getDob() {
         return dob;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof Person)) {
+            return false;
+        }
+        Person person = (Person) obj;
+        return getAge() == person.getAge() &&
+                getId().equals(person.getId()) &&
+                Objects.equals(getFirstName(), person.getFirstName()) &&
+                Objects.equals(getLastName(), person.getLastName()) &&
+                Objects.equals(getDob(), person.getDob());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getFirstName(), getLastName(), getAge(), getDob());
+    }
+
+    @Override
+    public String toString() {
+        return "Person{" +
+                "id='" + id + '\'' +
+                ", firstName='" + firstName + '\'' +
+                ", lastName='" + lastName + '\'' +
+                ", age=" + age +
+                ", dob=" + dob +
+                '}';
     }
 
     /**
@@ -213,7 +253,7 @@ public final class Person implements Model {
          */
         @Override
         public FinalStep dob(Date dob) {
-            this.dob = new Date(dob.toString());
+            this.dob = dob;
             return this;
         }
 

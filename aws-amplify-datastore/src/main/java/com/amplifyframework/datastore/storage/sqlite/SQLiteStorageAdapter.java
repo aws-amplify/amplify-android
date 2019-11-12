@@ -18,19 +18,25 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.types.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.util.FieldFinder;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Field;
 import java.sql.Time;
@@ -54,14 +60,26 @@ import io.reactivex.Observable;
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
+    // LogCat Tag.
+    private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
+
     // ModelRegistry instance that gives the ModelSchema and Model objects
     // based on Model class name lookup mechanism.
     private final ModelRegistry modelRegistry;
 
-    // Represents a connection to the SQLite database. This database reference
-    // can be used to do all SQL operations against the underlying database
+    // Represents a connection to the writable SQLite database. This database reference
+    // can be used to do all SQL write operations against the underlying database
     // that this handle represents.
     private SQLiteDatabase writableDatabaseConnectionHandle;
+
+    // Represents a connection to the readable SQLite database. This database reference
+    // can be used to do all SQL read operations against the underlying database
+    // that this handle represents.
+    private SQLiteDatabase readableDatabaseConnectionHandle;
+
+    // The helper object controls the lifecycle of database creation, upgrade
+    // and opening connection to database.
+    private SQLiteOpenHelper sqLiteOpenHelper;
 
     // ThreadPool for SQLite operations.
     private final ExecutorService threadPool;
@@ -124,7 +142,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * create commands.
                  */
                 final Set<SqlCommand> createCommands = getCreateSqlCommands(models);
-                final SQLiteStorageHelper dbHelper = SQLiteStorageHelper.getInstance(
+                sqLiteOpenHelper = SQLiteStorageHelper.getInstance(
                         context,
                         createCommands);
 
@@ -139,10 +157,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * creating and opening a database. All errors are passed through the
                  * {@link ResultListener#onError(Throwable)}.
                  *
-                 * writableDatabaseConnectionHandle represents a connection handle to the database. All
-                 * database operations will happen through this handle.
+                 * writableDatabaseConnectionHandle represents a connection handle to the database.
+                 * All database operations will happen through this handle.
                  */
-                writableDatabaseConnectionHandle = dbHelper.getWritableDatabase();
+                writableDatabaseConnectionHandle = sqLiteOpenHelper.getWritableDatabase();
+
+                /**
+                 * Retrieve an instance to the readable database used for all SQL read operations.
+                 */
+                readableDatabaseConnectionHandle = sqLiteOpenHelper.getReadableDatabase();
 
                 /**
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
@@ -185,11 +208,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     return;
                 }
 
+                Log.d(TAG, "Writing data to table for: " + model.toString());
+
                 final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
                 preCompiledInsertStatement.clearBindings();
                 bindPreparedInsertSQLStatementWithValues(model, sqlCommand);
                 preCompiledInsertStatement.executeInsert();
                 preCompiledInsertStatement.clearBindings();
+
+                Log.d(TAG, "Successfully written data to table for: " + model.toString());
 
                 listener.onResult(MutationEvent.<T>builder()
                         .data(model)
@@ -211,11 +238,86 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public <T extends Model> void query(@NonNull Class<T> modelClass,
                                         @NonNull ResultListener<Iterator<T>> listener) {
-        /* TODO */
+        threadPool.submit(() -> {
+            try {
+                Log.d(TAG, "Querying data for: " + modelClass.getSimpleName());
+
+                final ObjectMapper objectMapper = new ObjectMapper();
+                final Set<T> models = new HashSet<>();
+                final ModelSchema modelSchema = modelRegistry
+                        .getModelSchemaForModelClass(modelClass.getSimpleName());
+
+                final Cursor cursor = getQueryAllCursor(modelClass.getSimpleName());
+                while (cursor.moveToNext()) {
+                    final Map<String, Object> mapForModel = new HashMap<>();
+
+                    for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
+                        final String fieldName = entry.getKey();
+                        try {
+                            final String fieldGraphQLType = entry.getValue().getTargetType();
+                            final String fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+
+                            switch (fieldJavaType) {
+                                case "String":
+                                case "Enum":
+                                    mapForModel.put(
+                                            fieldName,
+                                            cursor.getString(cursor.getColumnIndexOrThrow(fieldName)));
+                                    break;
+                                case "int":
+                                    mapForModel.put(
+                                            fieldName,
+                                            cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)));
+                                    break;
+                                case "boolean":
+                                    mapForModel.put(
+                                            fieldName,
+                                            cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)) != 0);
+                                    break;
+                                case "float":
+                                    mapForModel.put(
+                                            fieldName,
+                                            cursor.getFloat(cursor.getColumnIndexOrThrow(fieldName)));
+                                    break;
+                                case "long":
+                                    mapForModel.put(
+                                            fieldName,
+                                            cursor.getLong(cursor.getColumnIndexOrThrow(fieldName)));
+                                    break;
+                                case "Date":
+                                    final String dateInStringFormat =
+                                            cursor.getString(cursor.getColumnIndexOrThrow(fieldName));
+                                    final Date dateInDateFormat = SimpleDateFormat
+                                            .getDateInstance()
+                                            .parse(dateInStringFormat);
+                                    mapForModel.put(fieldName, dateInDateFormat);
+                                    break;
+                                case "Time":
+                                    final long timeInLongFormat =
+                                            cursor.getLong(cursor.getColumnIndexOrThrow(fieldName));
+                                    mapForModel.put(fieldName, new Time(timeInLongFormat));
+                                    break;
+                                default:
+                                    break;
+                            }
+                        } catch (Exception exception) {
+                            Log.e(TAG, "Error in reading data for field: " + fieldName);
+                            mapForModel.put(fieldName, null);
+                        }
+                    }
+                    models.add(objectMapper.convertValue(mapForModel, modelClass));
+                }
+                cursor.close();
+
+                listener.onResult(models.iterator());
+            } catch (Exception exception) {
+                listener.onError(new DataStoreException("Error in saving the model.", exception));
+            }
+        });
     }
 
     /**
-     * Delets and item from storage.
+     * Deletes an item from storage.
      *
      * @param item     Item to delete
      * @param listener Listener to callback with result
@@ -261,10 +363,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private <T> void bindPreparedInsertSQLStatementWithValues(@NonNull final T object,
                                                               @NonNull final SqlCommand sqlCommand)
             throws IllegalAccessException {
-        final Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
         final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
         final Iterator<Field> fieldIterator = classFields.iterator();
+
+        final Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
+        if (cursor != null) {
+            cursor.moveToFirst();
+        }
 
         while (fieldIterator.hasNext()) {
             final Field field = fieldIterator.next();
@@ -293,12 +399,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 boolean booleanValue = (boolean) fieldValue;
                 preCompiledInsertStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
             } else if (field.getType().equals(Date.class)) {
-                Date dateValue = (Date) fieldValue;
-                String dateString = SimpleDateFormat.getDateInstance().format(dateValue);
+                final Date dateValue = (Date) fieldValue;
+                final String dateString = SimpleDateFormat
+                        .getDateInstance()
+                        .format(dateValue);
                 preCompiledInsertStatement.bindString(columnIndex, dateString);
             } else if (field.getType().equals(Time.class)) {
                 Time timeValue = (Time) fieldValue;
-                preCompiledInsertStatement.bindString(columnIndex, timeValue.toString());
+                preCompiledInsertStatement.bindLong(columnIndex, timeValue.getTime());
             }
         }
 
@@ -310,18 +418,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) {
         // Query all rows in table.
-        Cursor cursor = this.writableDatabaseConnectionHandle.query(tableName,
+        return this.readableDatabaseConnectionHandle.query(tableName,
                 null,
                 null,
                 null,
                 null,
                 null,
                 null);
-        if (cursor != null) {
-            // Move to first cursor.
-            cursor.moveToFirst();
-        }
-        return cursor;
     }
 }
-
