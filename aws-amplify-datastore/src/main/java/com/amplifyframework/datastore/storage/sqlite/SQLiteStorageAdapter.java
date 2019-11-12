@@ -85,14 +85,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final ExecutorService threadPool;
 
     // Factory that produces SQL commands.
-    private SQLCommandFactory sqlCommandFactory;
+    private final SQLCommandFactory sqlCommandFactory;
 
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
 
     // Using Gson for deserializing data read from SQLite
     // into a strongly typed Java object.
-    private Gson gson;
+    private final Gson gson;
 
     /**
      * Construct the SQLiteStorageAdapter object.
@@ -275,44 +275,33 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final String fieldGraphQLType = entry.getValue().getTargetType();
                 final String fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
 
+                final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
                 switch (fieldJavaType) {
                     case "String":
                     case "Enum":
-                        mapForModel.put(
-                                fieldName,
-                                cursor.getString(cursor.getColumnIndexOrThrow(fieldName)));
+                        mapForModel.put(fieldName, cursor.getString(columnIndex));
                         break;
                     case "int":
-                        mapForModel.put(
-                                fieldName,
-                                cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)));
+                        mapForModel.put(fieldName, cursor.getInt(columnIndex));
                         break;
                     case "boolean":
-                        mapForModel.put(
-                                fieldName,
-                                cursor.getInt(cursor.getColumnIndexOrThrow(fieldName)) != 0);
+                        mapForModel.put(fieldName, cursor.getInt(columnIndex) != 0);
                         break;
                     case "float":
-                        mapForModel.put(
-                                fieldName,
-                                cursor.getFloat(cursor.getColumnIndexOrThrow(fieldName)));
+                        mapForModel.put(fieldName, cursor.getFloat(columnIndex));
                         break;
                     case "long":
-                        mapForModel.put(
-                                fieldName,
-                                cursor.getLong(cursor.getColumnIndexOrThrow(fieldName)));
+                        mapForModel.put(fieldName, cursor.getLong(columnIndex));
                         break;
                     case "Date":
-                        final String dateInStringFormat =
-                                cursor.getString(cursor.getColumnIndexOrThrow(fieldName));
+                        final String dateInStringFormat = cursor.getString(columnIndex);
                         final Date dateInDateFormat = SimpleDateFormat
                                 .getDateInstance()
                                 .parse(dateInStringFormat);
                         mapForModel.put(fieldName, dateInDateFormat);
                         break;
                     case "Time":
-                        final long timeInLongFormat =
-                                cursor.getLong(cursor.getColumnIndexOrThrow(fieldName));
+                        final long timeInLongFormat = cursor.getLong(columnIndex);
                         mapForModel.put(fieldName, new Time(timeInLongFormat));
                         break;
                     default:
