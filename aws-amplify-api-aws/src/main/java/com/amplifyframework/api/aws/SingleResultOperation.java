@@ -36,19 +36,22 @@ import okhttp3.Response;
 import okhttp3.ResponseBody;
 
 /**
- * An operation to enqueue a GraphQL request to OkHttp client.
+ * An operation to enqueue a GraphQL request to OkHttp client,
+ * with the goal of obtaining a single response. Games aside,
+ * this means a query or a mutation, and *NOT* a subscription.
  * @param <T> Casted type of GraphQL result data
  */
-public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
+public final class SingleResultOperation<T> extends GraphQLOperation<T> {
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
     private final OkHttpClient client;
+    private final ResultListener<GraphQLResponse<T>> responseListener;
 
     private Call ongoingCall;
 
     /**
-     * Constructs a new AWSGraphQLOperation.
+     * Constructs a new SingleResultOperation.
      * @param endpoint API endpoint being hit
      * @param client OkHttp client being used to hit the endpoint
      * @param request GraphQL request being enacted
@@ -56,17 +59,18 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
      * @param classToCast class to cast the response to
      * @param responseListener
      *        listener to be invoked when response is available, or if
-     *        errors are encountered while obtaining a response
      */
-    AWSGraphQLOperation(String endpoint,
-                        OkHttpClient client,
-                        GraphQLRequest request,
-                        GraphQLResponse.Factory responseFactory,
-                        Class<T> classToCast,
-                        ResultListener<GraphQLResponse<T>> responseListener) {
-        super(request, responseFactory, classToCast, responseListener);
+    private SingleResultOperation(
+            String endpoint,
+            OkHttpClient client,
+            GraphQLRequest request,
+            GraphQLResponse.Factory responseFactory,
+            Class<T> classToCast,
+            ResultListener<GraphQLResponse<T>> responseListener) {
+        super(request, responseFactory, classToCast);
         this.endpoint = endpoint;
         this.client = client;
+        this.responseListener = responseListener;
     }
 
     @Override
@@ -77,13 +81,13 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
         }
 
         try {
-            Log.d("graphql", getRequest().getContent());
+            Log.d("graphql", getRequest().content());
             ongoingCall = client.newCall(new Request.Builder()
-                    .url(endpoint)
-                    .addHeader("accept", CONTENT_TYPE)
-                    .addHeader("content-type", CONTENT_TYPE)
-                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
-                    .build());
+                .url(endpoint)
+                .addHeader("accept", CONTENT_TYPE)
+                .addHeader("content-type", CONTENT_TYPE)
+                .post(RequestBody.create(getRequest().content(), MediaType.parse(CONTENT_TYPE)))
+                .build());
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -96,8 +100,8 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
             // the caller.
             ApiException wrappedError =
                     new ApiException("OkHttp client failed to make a successful request.", error);
-            if (hasResponseListener()) {
-                responseListener().onError(wrappedError);
+            if (responseListener != null) {
+                responseListener.onError(wrappedError);
             } else {
                 throw wrappedError;
             }
@@ -107,6 +111,10 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
     @Override
     public void cancel() {
         ongoingCall.cancel();
+    }
+
+    static <T> Builder<T> builder() {
+        return new Builder<>();
     }
 
     class OkHttpCallback implements Callback {
@@ -121,8 +129,8 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
 
             GraphQLResponse<T> wrappedResponse = wrapResponse(jsonResponse);
 
-            if (hasResponseListener()) {
-                responseListener().onResult(wrappedResponse);
+            if (responseListener != null) {
+                responseListener.onResult(wrappedResponse);
             }
             //TODO: Dispatch to hub
         }
@@ -130,11 +138,59 @@ public final class AWSGraphQLOperation<T> extends GraphQLOperation<T> {
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException ioe) {
-            if (hasResponseListener()) {
-                responseListener().onError(ioe);
+            if (responseListener != null) {
+                responseListener.onError(ioe);
             }
             //TODO: Dispatch to hub
         }
     }
-}
 
+    static final class Builder<T> {
+        private String endpoint;
+        private OkHttpClient client;
+        private GraphQLRequest request;
+        private GraphQLResponse.Factory responseFactory;
+        private Class<T> classToCast;
+        private ResultListener<GraphQLResponse<T>> responseListener;
+
+        Builder<T> endpoint(final String endpoint) {
+            this.endpoint = endpoint;
+            return this;
+        }
+
+        Builder<T> client(final OkHttpClient client) {
+            this.client = client;
+            return this;
+        }
+
+        Builder<T> request(final GraphQLRequest request) {
+            this.request = request;
+            return this;
+        }
+
+        Builder<T> responseFactory(final GraphQLResponse.Factory responseFactory) {
+            this.responseFactory = responseFactory;
+            return this;
+        }
+
+        Builder<T> classToCast(final Class<T> classToCast) {
+            this.classToCast = classToCast;
+            return this;
+        }
+
+        Builder<T> responseListener(final ResultListener<GraphQLResponse<T>> responseListener) {
+            this.responseListener = responseListener;
+            return this;
+        }
+
+        SingleResultOperation<T> build() {
+            return new SingleResultOperation<>(
+                endpoint,
+                client,
+                request,
+                responseFactory,
+                classToCast,
+                responseListener);
+        }
+    }
+}
