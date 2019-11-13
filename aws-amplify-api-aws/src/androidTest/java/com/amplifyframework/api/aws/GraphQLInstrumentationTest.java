@@ -19,10 +19,13 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.aws.test.R;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.ModelSchema;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -30,6 +33,7 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -50,8 +54,6 @@ import static org.junit.Assert.fail;
  * (TODO: which docs, which standard models?).
  */
 //TODO: Use CircleCI to automatically use configured amplifyconfiguration.json and awsconfiguration.json
-@Ignore("First, config your dev endpoint in androidTest/res/raw/amplifyconfiguration.json and " +
-        "mobile-client in androidTest/res/raw/awsconfiguration.json.")
 public final class GraphQLInstrumentationTest {
 
     private static final String TAG = GraphQLInstrumentationTest.class.getSimpleName();
@@ -71,19 +73,59 @@ public final class GraphQLInstrumentationTest {
         Amplify.configure(configuration, context);
     }
 
+    @Test
+    public void testCreate() throws Exception {
+        CountDownLatch latch = new CountDownLatch(1);
+        Person person = Person.builder().firstName("David").lastName("Daudelin").relationship(MaritalStatus.MARRIED).id("05f0f371-13cc-4f40-86d5-bef056adc950").build();
+
+        Amplify.API.mutate(
+                "mygraphql",
+                person,
+                null,
+                MutationType.CREATE,
+                new TestGraphQLResultListener<>(latch)
+        );
+        latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+    }
+
+    @Ignore
+    @Test
+    public void testCreateGame() throws Exception {
+        HashMap<String, Object> outerMap = new HashMap<>();
+        HashMap<String, Object> innerMap = new HashMap<>();
+        innerMap.put("id", "test1");
+        innerMap.put("status", "OPEN");
+        outerMap.put("input", innerMap);
+
+        String document = TestAssets.readAsString("create-game.graphql");
+        CountDownLatch latch = new CountDownLatch(1);
+        Amplify.API.mutate(
+                "mygraphql",
+                new GraphQLRequest<>(
+                        document,
+                        outerMap,
+                        Todo.class
+                ),
+                new TestGraphQLResultListener<>(latch));
+        latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
+    }
+
     /**
      * Tests API graphql query.
      * @throws Exception when interrupted
      */
+    @Ignore
     @Test
     public void testQuery() throws Exception {
         String document = TestAssets.readAsString("get-todo.graphql");
         CountDownLatch latch = new CountDownLatch(1);
         Amplify.API.query(
                 "mygraphql",
-                document,
-                Collections.emptyMap(),
-                Todo.class,
+                new GraphQLRequest<>(
+                        document,
+                        Collections.emptyMap(),
+                        Todo.class
+                ),
                 new TestGraphQLResultListener<>(latch));
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
@@ -92,15 +134,18 @@ public final class GraphQLInstrumentationTest {
      * Tests API graphql mutation.
      * @throws Exception when interrupted
      */
+    @Ignore
     @Test
     public void testMutation() throws Exception {
         String document = TestAssets.readAsString("update-todo.graphql");
         CountDownLatch latch = new CountDownLatch(1);
         Amplify.API.mutate(
                 "mygraphql",
-                document,
-                Collections.emptyMap(),
-                Todo.class,
+                new GraphQLRequest<>(
+                        document,
+                        Collections.emptyMap(),
+                        Todo.class
+                ),
                 new TestGraphQLResultListener<>(latch));
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
@@ -109,6 +154,7 @@ public final class GraphQLInstrumentationTest {
      * Tests API graphql query with non-null variable.
      * @throws Exception when interrupted
      */
+    @Ignore
     @Test
     public void testQueryWithVariable() throws Exception {
         HashMap<String, Object> variables = new HashMap<>();
@@ -118,9 +164,11 @@ public final class GraphQLInstrumentationTest {
         CountDownLatch latch = new CountDownLatch(1);
         Amplify.API.query(
                 "mygraphql",
-                document,
-                variables,
-                Todo.class,
+                new GraphQLRequest<>(
+                        document,
+                        variables,
+                        Todo.class
+                ),
                 new TestGraphQLResultListener<>(latch));
         latch.await(THREAD_WAIT_DURATION, TimeUnit.SECONDS);
     }
