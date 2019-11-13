@@ -22,8 +22,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.NonNull;
 
-import java.util.Set;
-
 /**
  * A helper class to manage database creation and version management.
  */
@@ -57,10 +55,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * @param createSqlCommands set of create table and create index sql commands
      * @return the singleton instance
      */
-     static synchronized SQLiteStorageHelper getInstance(@NonNull Context context,
-                                                         @NonNull String databaseName,
-                                                         int databaseVersion,
-                                                         @NonNull CreateSqlCommands createSqlCommands) {
+     static synchronized SQLiteStorageHelper getInstance(
+             @NonNull Context context,
+             @NonNull String databaseName,
+             int databaseVersion,
+             @NonNull CreateSqlCommands createSqlCommands) {
         if (sQLiteStorageHelperInstance == null) {
             sQLiteStorageHelperInstance = new SQLiteStorageHelper(
                     context, databaseName, databaseVersion, createSqlCommands);
