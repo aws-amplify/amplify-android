@@ -16,16 +16,24 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
@@ -33,6 +41,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import okhttp3.OkHttpClient;
 
@@ -107,16 +116,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, Object> variables,
-            @NonNull Class<T> classToCast,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
-
-        GraphQLRequest<T> request = new GraphQLRequest<>(gqlDocument, variables, classToCast);
-
-        return query(apiName, request, responseListener);
+            @NonNull Class<T> modelClass,
+            @NonNull Predicate<T> predicate,
+            @NonNull QueryType queryType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        throw new UnsupportedOperationException("This has not been implemented, yet.");
     }
 
     @Override
@@ -142,16 +149,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public <T> GraphQLOperation<T> mutate(
+    public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, Object> variables,
-            @NonNull Class<T> classToCast,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
-
-        GraphQLRequest<T> request = new GraphQLRequest<>(gqlDocument, variables, classToCast);
-
-        return query(apiName, request, responseListener);
+            @NonNull T model,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull MutationType mutationType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        try {
+            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.<T>buildMutation(model, predicate, mutationType);
+            return mutate(apiName, request, responseListener);
+        } catch (AmplifyException e) {
+            responseListener.onError(e);
+            return null;
+        }
     }
 
     @Override
@@ -174,15 +185,25 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         operation.start();
         return operation;
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull Predicate<T> predicate,
+            @NonNull SubscriptionType subscriptionType,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        throw new UnsupportedOperationException("This has not been implemented, yet.");
     }
 
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
         throw new UnsupportedOperationException("This has not been implemented, yet.");
     }
 

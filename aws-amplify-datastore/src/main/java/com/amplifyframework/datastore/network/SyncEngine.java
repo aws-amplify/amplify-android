@@ -19,6 +19,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -120,11 +121,11 @@ public final class SyncEngine {
     private <T extends Model, M extends MutationEvent<T>> Single<M> publishToNetwork(final M mutationEvent) {
         return Single.defer(() -> Single.create(subscriber -> {
             //noinspection unchecked
+            GraphQLRequest<M> request = new GraphQLRequest<>(MutationDocument.from(mutationEvent), Collections.emptyMap(), (Class<M>) mutationEvent.getClass());
+
             api.mutate(
                 apiName,
-                MutationDocument.from(mutationEvent),
-                Collections.emptyMap(),
-                (Class<M>) mutationEvent.getClass(),
+                request,
                 new ResultListener<GraphQLResponse<M>>() {
                     @Override
                     public void onResult(final GraphQLResponse<M> result) {
