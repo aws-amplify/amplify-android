@@ -83,10 +83,12 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
                     @Override
                     public void onError(Throwable error) {
-                        waitForSetUp.countDown();
+                        fail(error.getMessage());
                     }
                 });
-        waitForSetUp.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        waitForSetUp.await(
+                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
+                TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -174,11 +176,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             @Override
             public void onError(Throwable error) {
                 fail(error.getMessage());
-                waitForQuery.countDown();
             }
         });
 
-        assertTrue(waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+        waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -212,7 +213,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 while (result.hasNext()) {
                     final Person person = result.next();
                     assertNotNull(person);
-                    assertTrue(savedModels.contains(person));
+                    assertTrue("Found a model from database which is not expected.",
+                            savedModels.contains(person));
                     waitForQuery.countDown();
                 }
             }
@@ -220,13 +222,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             @Override
             public void onError(Throwable error) {
                 fail(error.getMessage());
-                for (int counter = 0; counter < numModels; counter++) {
-                    waitForQuery.countDown();
-                }
             }
         });
 
-        assertTrue(waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+        waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
     private void saveModel(Person person) throws InterruptedException {
@@ -241,13 +240,12 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             @Override
             public void onError(Throwable error) {
                 fail(error.getMessage());
-                waitForSave.countDown();
             }
         });
-        assertTrue(waitForSave.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+        waitForSave.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
     private void deleteDatabase() {
-        context.deleteDatabase(SQLiteStorageHelper.DATABASE_NAME);
+        context.deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
     }
 }

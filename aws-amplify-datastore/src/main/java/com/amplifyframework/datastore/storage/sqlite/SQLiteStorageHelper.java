@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 
 import java.util.Set;
 
@@ -30,48 +29,69 @@ import java.util.Set;
  */
 final class SQLiteStorageHelper extends SQLiteOpenHelper {
 
-    // Database Version
-    @VisibleForTesting
-    static final int DATABASE_VERSION = 1;
-
-    // Name of the database
-    @VisibleForTesting
-    static final String DATABASE_NAME = "AmplifyDatastore.db";
-
     // Logcat tag
     private static final String TAG = SQLiteStorageHelper.class.getSimpleName();
 
     // The singleton instance.
     private static SQLiteStorageHelper sQLiteStorageHelperInstance;
 
-    // Contains all table name string list.
-    private final Set<SqlCommand> createCommands;
+    // Contains all create table and create index commands.
+    private final CreateSqlCommands createSqlCommands;
 
     private SQLiteStorageHelper(@NonNull Context context,
-                                @NonNull Set<SqlCommand> createCommands) {
+                                @NonNull String databaseName,
+                                int databaseVersion,
+                                @NonNull CreateSqlCommands createSqlCommands) {
         // Passing null to CursorFactory which is used to create cursor objects
         // as there is no need for a CursorFactory so far.
-        super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        this.createCommands = createCommands;
+        super(context, databaseName, null, databaseVersion);
+        this.createSqlCommands = createSqlCommands;
     }
 
     /**
      * Create / Retrieve the singleton instance of the SQLiteStorageHelper.
      *
      * @param context Android context
-     * @param createCommands set of table names and their create table sql commands
+     * @param databaseName name of the database
+     * @param databaseVersion version of the database
+     * @param createSqlCommands set of create table and create index sql commands
      * @return the singleton instance
      */
-    public static synchronized SQLiteStorageHelper getInstance(@NonNull Context context,
-                                                               @NonNull Set<SqlCommand> createCommands) {
+     static synchronized SQLiteStorageHelper getInstance(@NonNull Context context,
+                                                         @NonNull String databaseName,
+                                                         int databaseVersion,
+                                                         @NonNull CreateSqlCommands createSqlCommands) {
         if (sQLiteStorageHelperInstance == null) {
-            sQLiteStorageHelperInstance = new SQLiteStorageHelper(context, createCommands);
+            sQLiteStorageHelperInstance = new SQLiteStorageHelper(
+                    context, databaseName, databaseVersion, createSqlCommands);
         }
         return sQLiteStorageHelperInstance;
     }
 
     /**
-     * Create all the required SQL tables.
+     * Configure the {@link SQLiteDatabase} when being created.
+     * Called when the database connection is being configured, to enable features
+     * such as foreign key support.
+     *
+     * @param sqLiteDatabase the connection handle to the database.
+     */
+    @Override
+    public void onConfigure(SQLiteDatabase sqLiteDatabase) {
+        super.onConfigure(sqLiteDatabase);
+
+        sqLiteDatabase.beginTransaction();
+        try {
+            sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON");
+            sqLiteDatabase.setTransactionSuccessful();
+        } finally {
+            sqLiteDatabase.endTransaction();
+        }
+    }
+
+    /**
+     * Called when the database is created for the FIRST time.
+     * If a database already exists on disk with the same DATABASE_NAME,
+     * this method will NOT be called.
      *
      * @param sqLiteDatabase the connection handle to the database.
      */
@@ -80,49 +100,62 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
         createTablesAndIndexes(sqLiteDatabase);
     }
 
-    private void createTablesAndIndexes(SQLiteDatabase sqLiteDatabase) {
-        // Loop all the create table sql command string in the list.
-        // each sql will create a table in SQLite database.
-        sqLiteDatabase.beginTransaction();
-        try {
-            // TODO: Set PRAGMAS default encoding to UTF8.
-            // TODO: Enable foreign keys
-            // TODO: AutoVaccuum: caching
-            for (final SqlCommand sqlCommand : createCommands) {
-                Log.i(TAG, "Creating table: " + sqlCommand.tableName());
-                sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
-            }
-            sqLiteDatabase.setTransactionSuccessful();
-        } finally {
-            sqLiteDatabase.endTransaction();
-        }
-    }
-
     /**
-     * When the new db version is bigger than current exist db version, this method will be invoked.
-     * It always drop all tables and then call onCreate() method to create all table again.
+     * Called when the database needs to be upgraded.
+     * This method will only be called if a database already exists on disk with the
+     * same DATABASE_NAME, but the DATABASE_VERSION is different than the version of
+     * the database that exists on disk.
+     *
+     * When the new db version is bigger than current exist db version,
+     * this method will be invoked. It always drop all tables and then call
+     * onCreate() method to create all table again.
      *
      * @param sqLiteDatabase the connection handle to the database.
      * @param oldVersion older version number
      * @param newVersion newer version number
      */
     @Override
-    public synchronized void onUpgrade(SQLiteDatabase sqLiteDatabase, int oldVersion, int newVersion) {
-        // Loop all the tables in the list and drop them if they exist
-        // and re-create all the tables.
+    public synchronized void onUpgrade(SQLiteDatabase sqLiteDatabase,
+                                       int oldVersion,
+                                       int newVersion) {
+        if (oldVersion != newVersion) {
+            // Loop all the tables in the list and drop them if they exist
+            // and re-create all the tables.
+            sqLiteDatabase.beginTransaction();
+            try {
+                for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
+                    if (!TextUtils.isEmpty(sqlCommand.tableName())) {
+                        sqLiteDatabase.execSQL("drop table if exists " +
+                                sqlCommand.tableName());
+                    }
+                }
+                sqLiteDatabase.setTransactionSuccessful();
+            } finally {
+                sqLiteDatabase.endTransaction();
+            }
+
+            // After drop all exist tables, create all tables again.
+            onCreate(sqLiteDatabase);
+        }
+    }
+
+    private void createTablesAndIndexes(SQLiteDatabase sqLiteDatabase) {
+        // Loop all the create table sql command string in the list.
+        // each sql will create a table in SQLite database.
         sqLiteDatabase.beginTransaction();
         try {
-            for (final SqlCommand sqlCommand : createCommands) {
-                if (!TextUtils.isEmpty(sqlCommand.tableName())) {
-                    sqLiteDatabase.execSQL("drop table if exists " + sqlCommand.tableName());
-                }
+            for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
+                Log.i(TAG, "Creating table: " + sqlCommand.tableName());
+                sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
+            }
+
+            for (final SqlCommand sqlCommand : createSqlCommands.getCreateIndexCommands()) {
+                Log.i(TAG, "Creating index for table: " + sqlCommand.tableName());
+                sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
             }
             sqLiteDatabase.setTransactionSuccessful();
         } finally {
             sqLiteDatabase.endTransaction();
         }
-
-        // After drop all exist tables, create all tables again.
-        onCreate(sqLiteDatabase);
     }
 }
