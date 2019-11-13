@@ -222,7 +222,7 @@
             <property name="scope" value="protected" />
         </module>
 
-        <!-- disallow empty at-clasues. -->
+        <!-- disallow empty at-clauses. -->
         <module name="NonEmptyAtclauseDescription" />
         <!-- Javadocs contain a valid summary statement. -->
         <module name="SummaryJavadocCheck" />

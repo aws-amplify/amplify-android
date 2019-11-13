@@ -78,6 +78,6 @@ public final class Immutable {
             return null;
         }
 
-        return Collections.unmodifiableList(new ArrayList<T>(mutableList));
+        return Collections.unmodifiableList(new ArrayList<>(mutableList));
     }
 }

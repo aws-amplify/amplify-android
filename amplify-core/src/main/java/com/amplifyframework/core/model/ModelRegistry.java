@@ -31,7 +31,7 @@ public final class ModelRegistry {
     private static ModelRegistry modelRegistryInstance;
 
     // Model ClassName => ModelSchema map
-    private Map<String, ModelSchema> modelSchemaMap;
+    private final Map<String, ModelSchema> modelSchemaMap;
 
     private ModelRegistry() {
         modelSchemaMap = new HashMap<>();

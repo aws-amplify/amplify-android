@@ -26,7 +26,6 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -92,7 +91,7 @@ public class SqlCommandTest {
                 .name("Person")
                 .modelIndex(ModelIndex.builder()
                         .indexName("idBasedIndex")
-                        .indexFieldNames(Arrays.asList("id"))
+                        .indexFieldNames(Collections.singletonList("id"))
                         .build())
                 .build();
 

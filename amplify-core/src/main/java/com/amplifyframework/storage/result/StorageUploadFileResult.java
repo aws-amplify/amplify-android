@@ -16,7 +16,7 @@
 package com.amplifyframework.storage.result;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.async.Result;
 
@@ -52,17 +52,21 @@ public final class StorageUploadFileResult implements Result {
     }
 
     @Override
-    public int hashCode() {
-        return key.hashCode();
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
+
+        return ObjectsCompat.equals(key, that.key);
     }
 
     @Override
-    public boolean equals(@Nullable Object thatObject) {
-        if (!(thatObject instanceof StorageUploadFileResult)) {
-            return false;
-        }
-        final StorageUploadFileResult that = (StorageUploadFileResult) thatObject;
-        return this.key.equals(that.getKey());
+    public int hashCode() {
+        return key != null ? key.hashCode() : 0;
     }
 }
-

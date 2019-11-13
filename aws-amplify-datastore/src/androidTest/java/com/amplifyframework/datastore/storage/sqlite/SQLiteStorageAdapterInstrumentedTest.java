@@ -104,7 +104,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * @throws ParseException when the date cannot be parsed.
      * @throws InterruptedException when the waiting for save is interrupted.
      */
-    @SuppressWarnings("magicnumber")
+    @SuppressWarnings("MagicNumber")
     @Test
     public void saveModelInsertsData() throws ParseException, InterruptedException {
         final Person person = Person.builder()

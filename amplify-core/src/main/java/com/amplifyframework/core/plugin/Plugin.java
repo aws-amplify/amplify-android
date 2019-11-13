@@ -47,6 +47,5 @@ public interface Plugin<E> extends CategoryTypeable {
      * Returns escape hatch for plugin to enable lower-level client use-cases.
      * @return the client used by category plugin
      */
-    @SuppressWarnings("SameReturnValue")
     E getEscapeHatch();
 }

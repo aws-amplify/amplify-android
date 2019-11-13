@@ -50,7 +50,7 @@ public final class GraphQLRequest {
     }
 
     /**
-     * Gets a GraphQLRequest builder, that can be used to forumate a new request instance.
+     * Gets a GraphQLRequest builder, that can be used to formulate a new request instance.
      * @return GraphQLRequest builder instance
      */
     public static Builder builder() {
@@ -130,10 +130,10 @@ public final class GraphQLRequest {
      * methods.
      */
     public static final class Builder {
+        private final List<FieldValue> fieldValues;
+        private final List<VariableValues> variableValues;
+        private final List<String> fragments;
         private String document;
-        private List<FieldValue> fieldValues;
-        private List<VariableValues> variableValues;
-        private List<String> fragments;
 
         /**
          * Constructs a new GraphQLRequest Builder.
