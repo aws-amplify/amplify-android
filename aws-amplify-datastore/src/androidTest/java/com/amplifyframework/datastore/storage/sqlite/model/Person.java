@@ -23,6 +23,7 @@ import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
