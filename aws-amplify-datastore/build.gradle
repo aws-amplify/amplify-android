@@ -54,6 +54,13 @@ dependencies {
     implementation "io.reactivex.rxjava2:rxjava:$rxJava2Version"
     implementation project(':amplify-core')
 
+    /**
+     * The following Gson dependencies are used for converting
+     * raw data read from SQLite tables into strongly typed Java
+     * objects by the DataStore.
+     */
+    implementation "com.google.code.gson:gson:2.8.6"
+
     testImplementation 'junit:junit:4.12'
     testImplementation'org.mockito:mockito-core:3.1.0'
     testImplementation('org.robolectric:robolectric:4.3.1') {

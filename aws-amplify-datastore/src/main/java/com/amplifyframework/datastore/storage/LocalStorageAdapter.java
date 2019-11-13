@@ -77,7 +77,7 @@ public interface LocalStorageAdapter {
             @NonNull ResultListener<Iterator<T>> listener);
 
     /**
-     * Delets and item from storage.
+     * Deletes an item from storage.
      * @param item Item to delete
      * @param listener Listener to callback with result
      * @param <T> The class type of the item being deleted
