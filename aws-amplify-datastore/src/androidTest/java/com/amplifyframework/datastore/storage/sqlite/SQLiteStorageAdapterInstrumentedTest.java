@@ -17,12 +17,14 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.MutationEvent;
+import com.amplifyframework.datastore.storage.sqlite.model.Person;
 
 import org.junit.After;
 import org.junit.Before;
@@ -32,12 +34,17 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -45,6 +52,9 @@ import static org.junit.Assert.fail;
  * {@link com.amplifyframework.datastore.DataStore#save(Model, ResultListener)} operation.
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
+
+    private static final String TAG = "sqlite-instrumented-test";
+    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
@@ -55,9 +65,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @Before
     public void setUp() throws InterruptedException {
+        context = ApplicationProvider.getApplicationContext();
         deleteDatabase();
 
-        context = ApplicationProvider.getApplicationContext();
         sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
 
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
@@ -76,7 +86,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                         waitForSetUp.countDown();
                     }
                 });
-        waitForSetUp.await();
+        waitForSetUp.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -88,7 +98,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert the construction of the SQLiteStorageHelper.
+     * Assert that save stores data in the SQLite database correctly.
+     *
      * @throws ParseException when the date cannot be parsed.
      * @throws InterruptedException when the waiting for save is interrupted.
      */
@@ -101,6 +112,124 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
                 .build();
+        saveModel(person);
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("Alan",
+                    cursor.getString(cursor.getColumnIndexOrThrow("firstName")));
+            assertEquals("Turing",
+                    cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
+            assertEquals(41,
+                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
+            assertEquals("Jun 23, 1912",
+                    cursor.getString(cursor.getColumnIndexOrThrow("dob")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Test querying the saved data in the SQLite database.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     * @throws InterruptedException when the waiting for save is interrupted.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithSingleItem() throws ParseException, InterruptedException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                .build();
+        saveModel(person);
+
+        final CountDownLatch waitForQuery = new CountDownLatch(1);
+        sqLiteStorageAdapter.query(Person.class, new ResultListener<Iterator<Person>>() {
+            @Override
+            public void onResult(Iterator<Person> result) {
+                try {
+                    assertTrue(result.hasNext());
+                    if (result.hasNext()) {
+                        Person personQueried = result.next();
+                        assertNotNull(personQueried);
+                        Log.d(TAG, personQueried.toString());
+
+                        assertEquals("Alan", person.getFirstName());
+                        assertEquals("Turing", person.getLastName());
+                        assertEquals(41, person.getAge());
+                        assertEquals(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"),
+                                person.getDob());
+                        assertNotNull(person.getId());
+                    }
+                } catch (Exception exception) {
+                    fail(exception.getMessage());
+                }
+                waitForQuery.countDown();
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                fail(error.getMessage());
+                waitForQuery.countDown();
+            }
+        });
+
+        assertTrue(waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+    }
+
+    /**
+     * Test querying the saved data in the SQLite database.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     * @throws InterruptedException when the waiting for save is interrupted.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithMultipleItems() throws ParseException, InterruptedException {
+        final Set<Person> savedModels = new HashSet<>();
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Person person = Person.builder()
+                    .firstName("firstNamePrefix:" + counter)
+                    .lastName("lastNamePrefix:" + counter)
+                    .age(counter)
+                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .build();
+            saveModel(person);
+            savedModels.add(person);
+        }
+
+        final CountDownLatch waitForQuery = new CountDownLatch(numModels);
+        sqLiteStorageAdapter.query(Person.class, new ResultListener<Iterator<Person>>() {
+            @Override
+            public void onResult(Iterator<Person> result) {
+                assertNotNull(result);
+
+                while (result.hasNext()) {
+                    final Person person = result.next();
+                    assertNotNull(person);
+                    assertTrue(savedModels.contains(person));
+                    waitForQuery.countDown();
+                }
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                fail(error.getMessage());
+                for (int counter = 0; counter < numModels; counter++) {
+                    waitForQuery.countDown();
+                }
+            }
+        });
+
+        assertTrue(waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+    }
+
+    private void saveModel(Person person) throws InterruptedException {
         final CountDownLatch waitForSave = new CountDownLatch(1);
         sqLiteStorageAdapter.save(person, new ResultListener<MutationEvent<Person>>() {
             @Override
@@ -115,27 +244,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 waitForSave.countDown();
             }
         });
-        waitForSave.await();
-
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
-        assertNotNull(cursor);
-        if (cursor.moveToFirst()) {
-            assertEquals("Alan",
-                    cursor.getString(cursor.getColumnIndexOrThrow("firstName")));
-            assertEquals("Turing",
-                    cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
-            assertEquals(41,
-                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
-            assertEquals("06-23-1912",
-                    cursor.getString(cursor.getColumnIndexOrThrow("dob")));
-        }
-        cursor.close();
+        assertTrue(waitForSave.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
     }
 
     private void deleteDatabase() {
-        String databaseName = SQLiteStorageHelper
-                .getInstance(context, Collections.emptySet())
-                .getDatabaseName();
-        context.deleteDatabase(databaseName);
+        context.deleteDatabase(SQLiteStorageHelper.DATABASE_NAME);
     }
 }
