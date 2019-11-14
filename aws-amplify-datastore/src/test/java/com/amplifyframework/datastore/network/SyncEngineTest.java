@@ -34,7 +34,6 @@ import org.robolectric.annotation.Config;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
@@ -97,7 +96,7 @@ public class SyncEngineTest {
         listener.await(100);
 
         // Wait for the network callback to occur on the IO scheduler ...
-        assertTrue(responseLatch.await(100, TimeUnit.MILLISECONDS));
+        responseLatch.await(100, TimeUnit.MILLISECONDS);
 
         // Assert: API was invoked to write the thing to the network
         verify(api).mutate(eq(apiName), any(), any());
