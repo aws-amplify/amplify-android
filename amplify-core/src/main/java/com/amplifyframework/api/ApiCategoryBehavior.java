@@ -29,9 +29,6 @@ import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 
-import java.util.Map;
-import java.util.function.Predicate;
-
 /**
  * API category behaviors include REST and GraphQL operations. These
  * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
@@ -62,7 +59,7 @@ public interface ApiCategoryBehavior {
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull Predicate<T> predicate,
+            @NonNull FilteringPredicate<T> predicate,
             @NonNull QueryType queryType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener);
 
@@ -157,7 +154,7 @@ public interface ApiCategoryBehavior {
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull Predicate<T> predicate,
+            @NonNull FilteringPredicate<T> predicate,
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener);
 

@@ -36,7 +36,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.anyMap;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
@@ -101,7 +100,7 @@ public class SyncEngineTest {
         assertTrue(responseLatch.await(100, TimeUnit.MILLISECONDS));
 
         // Assert: API was invoked to write the thing to the network
-        verify(api).mutate(eq(apiName), anyString(), anyMap(), any(), any());
+        verify(api).mutate(eq(apiName), any(), any());
     }
 
     /**
@@ -129,8 +128,6 @@ public class SyncEngineTest {
             return null;
         }).when(api).mutate(
             anyString(),
-            anyString(),
-            anyMap(),
             any(),
             any()
         );

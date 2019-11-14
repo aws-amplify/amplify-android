@@ -28,6 +28,7 @@ import com.amplifyframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -37,7 +38,7 @@ import java.util.Map;
  */
 final class AppSyncGraphQLRequestFactory {
     // This class should not be instantiated
-    private AppSyncGraphQLRequestFactory(){}
+    private AppSyncGraphQLRequestFactory() { }
 
     public static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
@@ -69,7 +70,7 @@ final class AppSyncGraphQLRequestFactory {
                 StringUtils.capitalize(modelName) +
                 "Input!");
         doc.append(") { ");
-        doc.append(typeStr.toLowerCase() +
+        doc.append(typeStr.toLowerCase(Locale.getDefault()) +
                 StringUtils.capitalize(modelName));
         doc.append("(input: $input) { ");
 
@@ -101,10 +102,10 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder result = new StringBuilder();
         List<ModelField> sortedFields = schema.getSortedFields();
 
-        for(int i = 0; i < sortedFields.size(); i++) {
+        for (int i = 0; i < sortedFields.size(); i++) {
             result.append(sortedFields.get(i).getTargetName());
 
-            if (i < sortedFields.size()-1) {
+            if (i < sortedFields.size() - 1) {
                 result.append(" ");
             }
         }

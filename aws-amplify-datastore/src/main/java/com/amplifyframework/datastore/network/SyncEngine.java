@@ -121,7 +121,11 @@ public final class SyncEngine {
     private <T extends Model, M extends MutationEvent<T>> Single<M> publishToNetwork(final M mutationEvent) {
         return Single.defer(() -> Single.create(subscriber -> {
             //noinspection unchecked
-            GraphQLRequest<M> request = new GraphQLRequest<>(MutationDocument.from(mutationEvent), Collections.emptyMap(), (Class<M>) mutationEvent.getClass());
+            GraphQLRequest<M> request = new GraphQLRequest<>(
+                    MutationDocument.from(mutationEvent),
+                    Collections.emptyMap(),
+                    (Class<M>) mutationEvent.getClass()
+            );
 
             api.mutate(
                 apiName,

@@ -15,18 +15,20 @@
 
 package com.amplifyframework.util;
 
+import java.util.Locale;
+
 /**
- * Utility for common String operations which are not otherwise available
+ * Utility for common String operations which are not otherwise available.
  */
-public class StringUtils {
+public final class StringUtils {
 
     /**
-     * Dis-allows instantiation of this class
+     * Dis-allows instantiation of this class.
      */
     private StringUtils() { }
 
     /**
-     * Returns original string in all lower case except first character
+     * Returns original string in all lower case except first character.
      * @param original Original string to modify
      * @return Original string but in all lower case except for the first character which is now capitalized
      *          If original string is null or empty, it just returns the original.
@@ -35,6 +37,7 @@ public class StringUtils {
         if (original == null || original.length() == 0) {
             return original;
         }
-        return original.substring(0, 1).toUpperCase() + original.substring(1).toLowerCase();
+        return original.substring(0, 1).toUpperCase(Locale.getDefault()) +
+                original.substring(1).toLowerCase(Locale.getDefault());
     }
 }
