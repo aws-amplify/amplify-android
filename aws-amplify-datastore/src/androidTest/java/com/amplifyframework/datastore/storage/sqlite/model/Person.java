@@ -23,7 +23,6 @@ import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.util.Date;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -126,10 +125,10 @@ public final class Person implements Model {
         }
         Person person = (Person) obj;
         return getAge() == person.getAge() &&
-                getId().equals(person.getId()) &&
-                Objects.equals(getFirstName(), person.getFirstName()) &&
-                Objects.equals(getLastName(), person.getLastName()) &&
-                Objects.equals(getDob(), person.getDob());
+                ObjectsCompat.equals(getId(), person.getId()) &&
+                ObjectsCompat.equals(getFirstName(), person.getFirstName()) &&
+                ObjectsCompat.equals(getLastName(), person.getLastName()) &&
+                ObjectsCompat.equals(getDob(), person.getDob());
     }
 
     @Override

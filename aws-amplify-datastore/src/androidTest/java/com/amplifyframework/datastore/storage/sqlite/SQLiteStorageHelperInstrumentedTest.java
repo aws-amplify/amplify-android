@@ -24,6 +24,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -54,7 +55,9 @@ public class SQLiteStorageHelperInstrumentedTest {
                         "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
-                createTableCommands);
+                SQLiteStorageAdapter.DATABASE_NAME,
+                SQLiteStorageAdapter.DATABASE_VERSION,
+                new CreateSqlCommands(createTableCommands, Collections.emptySet()));
     }
 
     /**
@@ -66,7 +69,7 @@ public class SQLiteStorageHelperInstrumentedTest {
         dropAllTables(sqLiteDatabase);
         sqLiteDatabase.close();
         sqLiteStorageHelper.close();
-        ApplicationProvider.getApplicationContext().deleteDatabase(sqLiteStorageHelper.getDatabaseName());
+        ApplicationProvider.getApplicationContext().deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
         sqLiteDatabase = null;
         sqLiteStorageHelper = null;
     }
