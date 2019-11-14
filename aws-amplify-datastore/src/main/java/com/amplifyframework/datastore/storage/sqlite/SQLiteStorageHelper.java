@@ -34,37 +34,38 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
     @VisibleForTesting
     static final int DATABASE_VERSION = 1;
 
+    // Name of the database
+    @VisibleForTesting
+    static final String DATABASE_NAME = "AmplifyDatastore.db";
+
     // Logcat tag
     private static final String TAG = SQLiteStorageHelper.class.getSimpleName();
-
-    // Database Name
-    private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     // The singleton instance.
     private static SQLiteStorageHelper sQLiteStorageHelperInstance;
 
     // Contains all table name string list.
-    private final Set<SqlCommand> sqlCommands;
+    private final Set<SqlCommand> createCommands;
 
     private SQLiteStorageHelper(@NonNull Context context,
-                                @NonNull Set<SqlCommand> sqlCommands) {
+                                @NonNull Set<SqlCommand> createCommands) {
         // Passing null to CursorFactory which is used to create cursor objects
         // as there is no need for a CursorFactory so far.
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-        this.sqlCommands = sqlCommands;
+        this.createCommands = createCommands;
     }
 
     /**
      * Create / Retrieve the singleton instance of the SQLiteStorageHelper.
      *
      * @param context Android context
-     * @param createTableCommands set of table names and their create table sql commands
+     * @param createCommands set of table names and their create table sql commands
      * @return the singleton instance
      */
     public static synchronized SQLiteStorageHelper getInstance(@NonNull Context context,
-                                                               @NonNull Set<SqlCommand> createTableCommands) {
+                                                               @NonNull Set<SqlCommand> createCommands) {
         if (sQLiteStorageHelperInstance == null) {
-            sQLiteStorageHelperInstance = new SQLiteStorageHelper(context, createTableCommands);
+            sQLiteStorageHelperInstance = new SQLiteStorageHelper(context, createCommands);
         }
         return sQLiteStorageHelperInstance;
     }
@@ -87,7 +88,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
             // TODO: Set PRAGMAS default encoding to UTF8.
             // TODO: Enable foreign keys
             // TODO: AutoVaccuum: caching
-            for (final SqlCommand sqlCommand : sqlCommands) {
+            for (final SqlCommand sqlCommand : createCommands) {
                 Log.i(TAG, "Creating table: " + sqlCommand.tableName());
                 sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
             }
@@ -111,7 +112,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
         // and re-create all the tables.
         sqLiteDatabase.beginTransaction();
         try {
-            for (final SqlCommand sqlCommand : sqlCommands) {
+            for (final SqlCommand sqlCommand : createCommands) {
                 if (!TextUtils.isEmpty(sqlCommand.tableName())) {
                     sqLiteDatabase.execSQL("drop table if exists " + sqlCommand.tableName());
                 }

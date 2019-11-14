@@ -24,8 +24,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.internal.types.TypeConverter;
 
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
@@ -40,36 +40,6 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
     // Delimiter used in the SQLite commands.
     private static final String SQLITE_COMMAND_DELIMITER = " ";
-
-    private static final Map<String, String> GRAPHQL_TYPES_TO_JAVA_TYPES = new HashMap<>();
-    private static final Map<String, String> JAVA_TYPES_TO_SQL_TYPES = new HashMap<>();
-
-    static {
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("ID", String.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("String", String.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("Int", int.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("Float", float.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("Boolean", boolean.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("Enum", Enum.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSDate", java.util.Date.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSTime", java.sql.Time.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSDateTime", java.util.Date.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSTimestamp", long.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSEmail", String.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSJSON", String.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSURL", String.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSPhone", String.class.getSimpleName());
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSIPAddress", String.class.getSimpleName());
-
-        JAVA_TYPES_TO_SQL_TYPES.put(String.class.getSimpleName(), "TEXT");
-        JAVA_TYPES_TO_SQL_TYPES.put(int.class.getSimpleName(), "INTEGER");
-        JAVA_TYPES_TO_SQL_TYPES.put(float.class.getSimpleName(), "REAL");
-        JAVA_TYPES_TO_SQL_TYPES.put(long.class.getSimpleName(), "REAL");
-        JAVA_TYPES_TO_SQL_TYPES.put(boolean.class.getSimpleName(), "INTEGER");
-        JAVA_TYPES_TO_SQL_TYPES.put(Enum.class.getSimpleName(), "TEXT");
-        JAVA_TYPES_TO_SQL_TYPES.put(java.util.Date.class.getSimpleName(), "TEXT");
-        JAVA_TYPES_TO_SQL_TYPES.put(java.sql.Time.class.getSimpleName(), "TEXT");
-    }
 
     private SQLiteCommandFactory() {
     }
@@ -111,7 +81,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final ModelField modelField = entry.getValue();
             stringBuilder.append(modelFieldName +
                     SQLITE_COMMAND_DELIMITER +
-                    getSqlDataTypeForGraphQLType(modelField) +
+                    TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()) +
                     SQLITE_COMMAND_DELIMITER);
 
             if (modelField.isPrimaryKey()) {
@@ -210,9 +180,5 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final SQLiteStatement compiledInsertStatement =
                 writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
         return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
-    }
-
-    private static String getSqlDataTypeForGraphQLType(@NonNull final ModelField modelField) {
-        return JAVA_TYPES_TO_SQL_TYPES.get(GRAPHQL_TYPES_TO_JAVA_TYPES.get(modelField.getTargetType()));
     }
 }
