@@ -30,7 +30,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.internal.types.TypeConverter;
+import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -60,6 +61,14 @@ import io.reactivex.Observable;
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
+    // Database Version
+    @VisibleForTesting
+    static final int DATABASE_VERSION = 1;
+
+    // Name of the database
+    @VisibleForTesting
+    static final String DATABASE_NAME = "AmplifyDatastore.db";
+
     // LogCat Tag.
     private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
 
@@ -67,32 +76,27 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // based on Model class name lookup mechanism.
     private final ModelRegistry modelRegistry;
 
-    // Represents a connection to the writable SQLite database. This database reference
-    // can be used to do all SQL write operations against the underlying database
-    // that this handle represents.
-    private SQLiteDatabase writableDatabaseConnectionHandle;
-
-    // Represents a connection to the readable SQLite database. This database reference
-    // can be used to do all SQL read operations against the underlying database
-    // that this handle represents.
-    private SQLiteDatabase readableDatabaseConnectionHandle;
-
-    // The helper object controls the lifecycle of database creation, upgrade
-    // and opening connection to database.
-    private SQLiteOpenHelper sqLiteOpenHelper;
-
     // ThreadPool for SQLite operations.
     private final ExecutorService threadPool;
 
     // Factory that produces SQL commands.
     private final SQLCommandFactory sqlCommandFactory;
 
-    // Map of tableName => Insert Prepared statement.
-    private Map<String, SqlCommand> insertSqlPreparedStatements;
-
     // Using Gson for deserializing data read from SQLite
     // into a strongly typed Java object.
     private final Gson gson;
+
+    // Map of tableName => Insert Prepared statement.
+    private Map<String, SqlCommand> insertSqlPreparedStatements;
+
+    // Represents a connection to the SQLite database. This database reference
+    // can be used to do all SQL operations against the underlying database
+    // that this handle represents.
+    private SQLiteDatabase databaseConnectionHandle;
+
+    // The helper object controls the lifecycle of database creation, upgrade
+    // and opening connection to database.
+    private SQLiteOpenHelper sqLiteOpenHelper;
 
     /**
      * Construct the SQLiteStorageAdapter object.
@@ -146,10 +150,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
-                final Set<SqlCommand> createCommands = getCreateSqlCommands(models);
+                CreateSqlCommands createSqlCommands = getCreateCommands(models);
                 sqLiteOpenHelper = SQLiteStorageHelper.getInstance(
                         context,
-                        createCommands);
+                        DATABASE_NAME,
+                        DATABASE_VERSION,
+                        createSqlCommands);
 
                 /**
                  * Create and/or open a database. This also invokes
@@ -162,15 +168,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * creating and opening a database. All errors are passed through the
                  * {@link ResultListener#onError(Throwable)}.
                  *
-                 * writableDatabaseConnectionHandle represents a connection handle to the database.
+                 * databaseConnectionHandle represents a connection handle to the database.
                  * All database operations will happen through this handle.
                  */
-                writableDatabaseConnectionHandle = sqLiteOpenHelper.getWritableDatabase();
-
-                /**
-                 * Retrieve an instance to the readable database used for all SQL read operations.
-                 */
-                readableDatabaseConnectionHandle = sqLiteOpenHelper.getReadableDatabase();
+                databaseConnectionHandle = sqLiteOpenHelper.getWritableDatabase();
 
                 /**
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
@@ -252,67 +253,22 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         .getModelSchemaForModelClass(modelClass.getSimpleName());
 
                 final Cursor cursor = getQueryAllCursor(modelClass.getSimpleName());
-                while (cursor.moveToNext()) {
-                    final Map<String, Object> mapForModel = buildMapForModel(modelSchema, cursor);
-                    final String modelInJsonFormat = gson.toJson(mapForModel);
-                    models.add(gson.getAdapter(modelClass).fromJson(modelInJsonFormat));
+                if (cursor.moveToFirst()) {
+                    do {
+                        final Map<String, Object> mapForModel = buildMapForModel(modelSchema, cursor);
+                        final String modelInJsonFormat = gson.toJson(mapForModel);
+                        models.add(gson.getAdapter(modelClass).fromJson(modelInJsonFormat));
+                    } while (cursor.moveToNext());
                 }
-                cursor.close();
+                if (cursor != null && !cursor.isClosed()) {
+                    cursor.close();
+                }
 
                 listener.onResult(models.iterator());
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in querying the model.", exception));
             }
         });
-    }
-
-    private Map<String, Object> buildMapForModel(ModelSchema modelSchema, Cursor cursor) {
-        final Map<String, Object> mapForModel = new HashMap<>();
-
-        for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
-            final String fieldName = entry.getKey();
-            try {
-                final String fieldGraphQLType = entry.getValue().getTargetType();
-                final String fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
-
-                final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
-                switch (fieldJavaType) {
-                    case "String":
-                    case "Enum":
-                        mapForModel.put(fieldName, cursor.getString(columnIndex));
-                        break;
-                    case "int":
-                        mapForModel.put(fieldName, cursor.getInt(columnIndex));
-                        break;
-                    case "boolean":
-                        mapForModel.put(fieldName, cursor.getInt(columnIndex) != 0);
-                        break;
-                    case "float":
-                        mapForModel.put(fieldName, cursor.getFloat(columnIndex));
-                        break;
-                    case "long":
-                        mapForModel.put(fieldName, cursor.getLong(columnIndex));
-                        break;
-                    case "Date":
-                        final String dateInStringFormat = cursor.getString(columnIndex);
-                        final Date dateInDateFormat = SimpleDateFormat
-                                .getDateInstance()
-                                .parse(dateInStringFormat);
-                        mapForModel.put(fieldName, dateInDateFormat);
-                        break;
-                    case "Time":
-                        final long timeInLongFormat = cursor.getLong(columnIndex);
-                        mapForModel.put(fieldName, new Time(timeInLongFormat));
-                        break;
-                    default:
-                        throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
-                }
-            } catch (Exception exception) {
-                Log.e(TAG, "Error in reading data for field: " + fieldName);
-                mapForModel.put(fieldName, null);
-            }
-        }
-        return mapForModel;
     }
 
     /**
@@ -332,16 +288,17 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return null;
     }
 
-    private Set<SqlCommand> getCreateSqlCommands(@NonNull List<Class<? extends Model>> models) {
-        final Set<SqlCommand> createCommands = new HashSet<>();
+    private CreateSqlCommands getCreateCommands(@NonNull List<Class<? extends Model>> models) {
+        final Set<SqlCommand> createTableCommands = new HashSet<>();
+        final Set<SqlCommand> createIndexCommands = new HashSet<>();
         for (Class<? extends Model> model: models) {
-            final ModelSchema modelSchema = ModelRegistry.getInstance()
+            final ModelSchema modelSchema = modelRegistry
                     .getModelSchemaForModelClass(model.getSimpleName());
             sqlCommandFactory.createTableFor(modelSchema);
-            createCommands.add(sqlCommandFactory.createTableFor(modelSchema));
-            createCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
+            createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
+            createIndexCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
         }
-        return createCommands;
+        return new CreateSqlCommands(createTableCommands, createIndexCommands);
     }
 
     private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
@@ -353,7 +310,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final ModelSchema modelSchema = entry.getValue();
             modifiableMap.put(
                     tableName,
-                    sqlCommandFactory.insertFor(tableName, modelSchema, writableDatabaseConnectionHandle)
+                    sqlCommandFactory.insertFor(tableName, modelSchema, databaseConnectionHandle)
             );
         }
         return Immutable.of(modifiableMap);
@@ -384,40 +341,111 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 return;
             }
 
-            if (field.getType().equals(float.class) || field.getType().equals(Float.class)) {
-                preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
-            } else if (field.getType().equals(int.class) || field.getType().equals(Integer.class)) {
-                preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
-            } else if (field.getType().equals(long.class) || field.getType().equals(Long.class)) {
-                preCompiledInsertStatement.bindLong(columnIndex, (Long) fieldValue);
-            } else if (field.getType().equals(double.class) || field.getType().equals(Double.class)) {
-                preCompiledInsertStatement.bindDouble(columnIndex, (Double) fieldValue);
-            } else if (field.getType().equals(String.class) || field.getType().equals(Enum.class)) {
-                preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
-            } else if (field.getType().equals(boolean.class)) {
+            final JavaFieldType javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
+            bindPreCompiledInsertStatementWithJavaFields(
+                    preCompiledInsertStatement,
+                    fieldValue,
+                    columnIndex,
+                    javaFieldType);
+        }
+
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+    }
+
+    private void bindPreCompiledInsertStatementWithJavaFields(
+            SQLiteStatement preCompiledInsertStatement,
+            Object fieldValue,
+            int columnIndex,
+            JavaFieldType javaFieldType) {
+        switch (javaFieldType) {
+            case BOOLEAN:
                 boolean booleanValue = (boolean) fieldValue;
                 preCompiledInsertStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
-            } else if (field.getType().equals(Date.class)) {
+                break;
+            case INT:
+                preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
+                break;
+            case LONG:
+                preCompiledInsertStatement.bindLong(columnIndex, (Long) fieldValue);
+                break;
+            case FLOAT:
+                preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
+                break;
+            case STRING:
+            case ENUM:
+                preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
+                break;
+            case DATE:
                 final Date dateValue = (Date) fieldValue;
                 final String dateString = SimpleDateFormat
                         .getDateInstance()
                         .format(dateValue);
                 preCompiledInsertStatement.bindString(columnIndex, dateString);
-            } else if (field.getType().equals(Time.class)) {
+                break;
+            case TIME:
                 Time timeValue = (Time) fieldValue;
                 preCompiledInsertStatement.bindLong(columnIndex, timeValue.getTime());
+                break;
+            default:
+                throw new UnsupportedTypeException(javaFieldType + " is not supported.");
+        }
+    }
+
+    private Map<String, Object> buildMapForModel(ModelSchema modelSchema, Cursor cursor) {
+        final Map<String, Object> mapForModel = new HashMap<>();
+
+        for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
+            final String fieldName = entry.getKey();
+            try {
+                final String fieldGraphQLType = entry.getValue().getTargetType();
+                final JavaFieldType fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+
+                final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
+                switch (fieldJavaType) {
+                    case STRING:
+                    case ENUM:
+                        mapForModel.put(fieldName, cursor.getString(columnIndex));
+                        break;
+                    case INT:
+                        mapForModel.put(fieldName, cursor.getInt(columnIndex));
+                        break;
+                    case BOOLEAN:
+                        mapForModel.put(fieldName, cursor.getInt(columnIndex) != 0);
+                        break;
+                    case FLOAT:
+                        mapForModel.put(fieldName, cursor.getFloat(columnIndex));
+                        break;
+                    case LONG:
+                        mapForModel.put(fieldName, cursor.getLong(columnIndex));
+                        break;
+                    case DATE:
+                        final String dateInStringFormat = cursor.getString(columnIndex);
+                        final Date dateInDateFormat = SimpleDateFormat
+                                .getDateInstance()
+                                .parse(dateInStringFormat);
+                        mapForModel.put(fieldName, dateInDateFormat);
+                        break;
+                    case TIME:
+                        final long timeInLongFormat = cursor.getLong(columnIndex);
+                        mapForModel.put(fieldName, new Time(timeInLongFormat));
+                        break;
+                    default:
+                        throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
+                }
+            } catch (Exception exception) {
+                Log.e(TAG, "Error in reading data for field: " + fieldName);
+                mapForModel.put(fieldName, null);
             }
         }
-
-        if (cursor != null) {
-            cursor.close();
-        }
+        return mapForModel;
     }
 
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) {
         // Query all rows in table.
-        return this.readableDatabaseConnectionHandle.query(tableName,
+        return this.databaseConnectionHandle.query(tableName,
                 null,
                 null,
                 null,
