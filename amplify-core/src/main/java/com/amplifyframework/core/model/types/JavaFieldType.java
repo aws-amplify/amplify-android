@@ -25,22 +25,22 @@ public enum JavaFieldType {
     /**
      * Represents the boolean data type.
      */
-    BOOLEAN(boolean.class.getSimpleName()),
+    BOOLEAN(Boolean.class.getSimpleName()),
 
     /**
      * Represents the int data type.
      */
-    INT(int.class.getSimpleName()),
+    INT(Integer.class.getSimpleName()),
 
     /**
      * Represents the long data type.
      */
-    LONG(long.class.getSimpleName()),
+    LONG(Long.class.getSimpleName()),
 
     /**
      * Represents the float data type.
      */
-    FLOAT(float.class.getSimpleName()),
+    FLOAT(Float.class.getSimpleName()),
 
     /**
      * Represents the String data type.
