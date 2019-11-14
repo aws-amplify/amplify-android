@@ -85,7 +85,6 @@ public final class GraphQLInstrumentationTest {
                 .firstName("David")
                 .lastName("Daudelin")
                 .relationship(MaritalStatus.MARRIED)
-                .id("05f0f371-13cc-4f40-86d5-bef056adc950")
                 .build();
 
         Amplify.API.mutate(
