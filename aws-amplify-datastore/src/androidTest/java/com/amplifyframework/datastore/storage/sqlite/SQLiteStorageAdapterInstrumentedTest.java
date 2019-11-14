@@ -240,6 +240,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
             @Override
             public void onError(Throwable error) {
+                assertNotNull(error);
+                Log.e(TAG, error.toString());
+                Log.e(TAG, error.getCause().getMessage());
                 fail(error.getMessage());
             }
         });

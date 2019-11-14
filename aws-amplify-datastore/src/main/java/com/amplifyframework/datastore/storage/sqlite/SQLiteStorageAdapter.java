@@ -30,7 +30,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.internal.types.TypeConverter;
+import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -340,33 +341,55 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 return;
             }
 
-            if (field.getType().equals(float.class) || field.getType().equals(Float.class)) {
-                preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
-            } else if (field.getType().equals(int.class) || field.getType().equals(Integer.class)) {
-                preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
-            } else if (field.getType().equals(long.class) || field.getType().equals(Long.class)) {
-                preCompiledInsertStatement.bindLong(columnIndex, (Long) fieldValue);
-            } else if (field.getType().equals(double.class) || field.getType().equals(Double.class)) {
-                preCompiledInsertStatement.bindDouble(columnIndex, (Double) fieldValue);
-            } else if (field.getType().equals(String.class) || field.getType().equals(Enum.class)) {
-                preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
-            } else if (field.getType().equals(boolean.class)) {
+            final JavaFieldType javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
+            bindPreCompiledInsertStatementWithJavaFields(
+                    preCompiledInsertStatement,
+                    fieldValue,
+                    columnIndex,
+                    javaFieldType);
+        }
+
+        if (cursor != null && !cursor.isClosed()) {
+            cursor.close();
+        }
+    }
+
+    private void bindPreCompiledInsertStatementWithJavaFields(
+            SQLiteStatement preCompiledInsertStatement,
+            Object fieldValue,
+            int columnIndex,
+            JavaFieldType javaFieldType) {
+        switch (javaFieldType) {
+            case BOOLEAN:
                 boolean booleanValue = (boolean) fieldValue;
                 preCompiledInsertStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
-            } else if (field.getType().equals(Date.class)) {
+                break;
+            case INT:
+                preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
+                break;
+            case LONG:
+                preCompiledInsertStatement.bindLong(columnIndex, (Long) fieldValue);
+                break;
+            case FLOAT:
+                preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
+                break;
+            case STRING:
+            case ENUM:
+                preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
+                break;
+            case DATE:
                 final Date dateValue = (Date) fieldValue;
                 final String dateString = SimpleDateFormat
                         .getDateInstance()
                         .format(dateValue);
                 preCompiledInsertStatement.bindString(columnIndex, dateString);
-            } else if (field.getType().equals(Time.class)) {
+                break;
+            case TIME:
                 Time timeValue = (Time) fieldValue;
                 preCompiledInsertStatement.bindLong(columnIndex, timeValue.getTime());
-            }
-        }
-
-        if (cursor != null && !cursor.isClosed()) {
-            cursor.close();
+                break;
+            default:
+                throw new UnsupportedTypeException(javaFieldType + " is not supported.");
         }
     }
 
@@ -377,34 +400,34 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final String fieldName = entry.getKey();
             try {
                 final String fieldGraphQLType = entry.getValue().getTargetType();
-                final String fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+                final JavaFieldType fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
 
                 final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
                 switch (fieldJavaType) {
-                    case "String":
-                    case "Enum":
+                    case STRING:
+                    case ENUM:
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
                         break;
-                    case "int":
+                    case INT:
                         mapForModel.put(fieldName, cursor.getInt(columnIndex));
                         break;
-                    case "boolean":
+                    case BOOLEAN:
                         mapForModel.put(fieldName, cursor.getInt(columnIndex) != 0);
                         break;
-                    case "float":
+                    case FLOAT:
                         mapForModel.put(fieldName, cursor.getFloat(columnIndex));
                         break;
-                    case "long":
+                    case LONG:
                         mapForModel.put(fieldName, cursor.getLong(columnIndex));
                         break;
-                    case "Date":
+                    case DATE:
                         final String dateInStringFormat = cursor.getString(columnIndex);
                         final Date dateInDateFormat = SimpleDateFormat
                                 .getDateInstance()
                                 .parse(dateInStringFormat);
                         mapForModel.put(fieldName, dateInDateFormat);
                         break;
-                    case "Time":
+                    case TIME:
                         final long timeInLongFormat = cursor.getLong(columnIndex);
                         mapForModel.put(fieldName, new Time(timeInLongFormat));
                         break;
