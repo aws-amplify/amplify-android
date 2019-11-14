@@ -15,13 +15,6 @@
 
 package com.amplifyframework.api.graphql;
 
-import com.amazonaws.amplify.core.R;
-import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
-import com.amplifyframework.util.StringUtils;
 import com.google.gson.Gson;
 
 import java.util.ArrayList;
@@ -31,6 +24,7 @@ import java.util.Map;
 
 /**
  * A request against a GraphQL endpoint.
+ * @param <T> Class for the model in this operation
  */
 public final class GraphQLRequest<T> {
     private final String document;
@@ -66,7 +60,7 @@ public final class GraphQLRequest<T> {
 
     /**
      * Processes query parameters into a query string to
-     * be used as HTTP request body
+     * be used as HTTP request body.
      * @return processed query string
      */
     public String getContent() {

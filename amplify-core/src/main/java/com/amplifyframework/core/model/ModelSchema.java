@@ -26,7 +26,6 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -159,12 +158,14 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns a sorted copy of all the fields of a Model
+     * Returns a sorted copy of all the fields of a Model.
      *
      * @return list of fieldName and the fieldObject of all
      *          the fields of the model in sorted order.
      */
-    public List<ModelField> getSortedFields() { return sortedFields; }
+    public List<ModelField> getSortedFields() {
+        return sortedFields;
+    }
 
     /**
      * Returns the attributes of a {@link Model}.
@@ -189,10 +190,16 @@ public final class ModelSchema {
         return null;
     }
 
-    public Map<String, Object> getValuesFromInstance(Object o) throws AmplifyException {
+    /**
+     * Creates a map of the fields in this schema to the actual values in the provided object.
+     * @param instance An instance of this model populated with values to map
+     * @return a map of the fields in this schema to the actual values in the provided object
+     * @throws AmplifyException if the object does not match the fields in this schema
+     */
+    public Map<String, Object> getValuesFromInstance(Object instance) throws AmplifyException {
         HashMap<String, Object> result = new HashMap<>();
 
-        if (!o.getClass().getSimpleName().equals(this.getName())) {
+        if (!instance.getClass().getSimpleName().equals(this.getName())) {
             throw new AmplifyException(
                     "The object provided is not an instance of this Model." +
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
@@ -200,15 +207,15 @@ public final class ModelSchema {
 
         for (ModelField field : this.getSortedFields()) {
             try {
-                Field privateField = o.getClass().getDeclaredField(field.getName());
+                Field privateField = instance.getClass().getDeclaredField(field.getName());
                 privateField.setAccessible(true);
-                result.put(field.getTargetName(), privateField.get(o));
-            } catch (Exception e) {
+                result.put(field.getTargetName(), privateField.get(instance));
+            } catch (Exception exception) {
                 throw new AmplifyException("An invalid field was provided - " +
                         field.getName() +
                         " is not present in " +
-                        o.getClass().getSimpleName(),
-                        e,
+                        instance.getClass().getSimpleName(),
+                        exception,
                         "Check if this model schema is a correct representation of the fields in the provided Object",
                         false);
             }

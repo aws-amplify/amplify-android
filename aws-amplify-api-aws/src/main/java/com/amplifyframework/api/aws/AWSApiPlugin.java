@@ -16,8 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.content.Context;
-import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -41,7 +39,6 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import okhttp3.OkHttpClient;
 
@@ -119,7 +116,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull Predicate<T> predicate,
+            @NonNull FilteringPredicate<T> predicate,
             @NonNull QueryType queryType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
@@ -159,8 +156,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.<T>buildMutation(model, predicate, mutationType);
             return mutate(apiName, request, responseListener);
-        } catch (AmplifyException e) {
-            responseListener.onError(e);
+        } catch (AmplifyException exception) {
+            responseListener.onError(exception);
             return null;
         }
     }
@@ -191,7 +188,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull Predicate<T> predicate,
+            @NonNull FilteringPredicate<T> predicate,
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
     ) {

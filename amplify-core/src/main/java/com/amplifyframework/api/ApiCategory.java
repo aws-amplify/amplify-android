@@ -31,9 +31,6 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 
-import java.util.Map;
-import java.util.function.Predicate;
-
 /**
  * The API category provides methods for interacting with remote systems
  * using REST and GraphQL constructs. The category is implemented by
@@ -69,7 +66,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull Predicate<T> predicate,
+            @NonNull FilteringPredicate<T> predicate,
             @NonNull QueryType queryType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
@@ -176,7 +173,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull Predicate<T> predicate,
+            @NonNull FilteringPredicate<T> predicate,
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
     ) {
