@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite;
+package com.amplifyframework.datastore.storage.sqlite.model;
 
 import com.amplifyframework.core.model.Model;
 
