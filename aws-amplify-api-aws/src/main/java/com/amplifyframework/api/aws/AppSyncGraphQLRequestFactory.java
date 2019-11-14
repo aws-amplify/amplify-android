@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 import com.amplifyframework.util.StringUtils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -79,7 +80,12 @@ final class AppSyncGraphQLRequestFactory {
         doc.append("}}");
 
         Map<String, Object> input = new HashMap<>();
-        input.put("input", schema.getValuesFromInstance(model));
+
+        if (type.equals(MutationType.DELETE)) {
+            input.put("input", Collections.singletonMap("id", model.getId()));
+        } else {
+            input.put("input", schema.getValuesFromInstance(model));
+        }
 
         GraphQLRequest<T> result = new GraphQLRequest<T>(
                 doc.toString(),
