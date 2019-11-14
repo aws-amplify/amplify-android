@@ -86,9 +86,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                         fail(error.getMessage());
                     }
                 });
-        waitForSetUp.await(
-                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
-                TimeUnit.MILLISECONDS);
+        assertTrue(waitForSetUp.await(
+                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -179,7 +178,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             }
         });
 
-        waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        assertTrue(waitForQuery.await(
+                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
     }
 
     /**
@@ -213,7 +213,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 while (result.hasNext()) {
                     final Person person = result.next();
                     assertNotNull(person);
-                    assertTrue("Found a model from database which is not expected.",
+                    assertTrue("Unable to find expected item in the storage adapter.",
                             savedModels.contains(person));
                     waitForQuery.countDown();
                 }
@@ -225,7 +225,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             }
         });
 
-        waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        assertTrue(waitForQuery.await(
+                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
     }
 
     private void saveModel(Person person) throws InterruptedException {
@@ -242,7 +243,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 fail(error.getMessage());
             }
         });
-        waitForSave.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS);
+        assertTrue(waitForSave.await(
+                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
     }
 
     private void deleteDatabase() {

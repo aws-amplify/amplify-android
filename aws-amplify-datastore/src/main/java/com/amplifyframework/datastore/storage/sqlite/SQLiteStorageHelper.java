@@ -55,11 +55,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * @param createSqlCommands set of create table and create index sql commands
      * @return the singleton instance
      */
-     static synchronized SQLiteStorageHelper getInstance(
-             @NonNull Context context,
-             @NonNull String databaseName,
-             int databaseVersion,
-             @NonNull CreateSqlCommands createSqlCommands) {
+    static synchronized SQLiteStorageHelper getInstance(
+            @NonNull Context context,
+            @NonNull String databaseName,
+            int databaseVersion,
+            @NonNull CreateSqlCommands createSqlCommands) {
         if (sQLiteStorageHelperInstance == null) {
             sQLiteStorageHelperInstance = new SQLiteStorageHelper(
                     context, databaseName, databaseVersion, createSqlCommands);

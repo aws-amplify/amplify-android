@@ -125,10 +125,10 @@ public final class Person implements Model {
         }
         Person person = (Person) obj;
         return getAge() == person.getAge() &&
-                getId().equals(person.getId()) &&
-                getFirstName().equals(person.getFirstName()) &&
-                getLastName().equals(person.getLastName()) &&
-                getDob().equals(person.getDob());
+                ObjectsCompat.equals(getId(), person.getId()) &&
+                ObjectsCompat.equals(getFirstName(), person.getFirstName()) &&
+                ObjectsCompat.equals(getLastName(), person.getLastName()) &&
+                ObjectsCompat.equals(getDob(), person.getDob());
     }
 
     @Override
