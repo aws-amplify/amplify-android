@@ -27,6 +27,8 @@ import java.util.Set;
  */
 public final class AmplifyModels {
 
+    private static final long AMPLIFY_MODELS_VERSION = 1;
+
     /**
      * Dis-allows instantiation of this utility.
      */
@@ -43,5 +45,13 @@ public final class AmplifyModels {
                 Person.class,
                 Person.class
         ));
+    }
+
+    /**
+     * Return the version of the Amplify Models.
+     * @return the version of the Amplify Models.
+     */
+    public static long getAmplifyModelsVersion() {
+        return AMPLIFY_MODELS_VERSION;
     }
 }
