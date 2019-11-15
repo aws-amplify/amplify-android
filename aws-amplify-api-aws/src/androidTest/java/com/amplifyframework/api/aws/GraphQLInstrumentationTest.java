@@ -23,6 +23,7 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Immutable;
@@ -68,7 +69,6 @@ import static org.junit.Assert.assertTrue;
 public final class GraphQLInstrumentationTest {
     private static final String API_NAME = GraphQLInstrumentationTest.class.getSimpleName();
     private static final int DEFAULT_RESPONSE_TIMEOUT = 5 /* seconds */; // 5 is chosen arbitrarily
-    private static final int THREAD_WAIT_DURATION = 300;
 
     /**
      * Before any test is run, configure Amplify to use an
@@ -81,6 +81,34 @@ public final class GraphQLInstrumentationTest {
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.configure(configuration, context);
+    }
+
+    /**
+     * Testing autogeneration for creation mutation.
+     * @throws Throwable when interrupted
+     */
+    @Test
+    public void testCodegen() throws Throwable {
+        BlockingResultListener<Person> codegenListener = new BlockingResultListener<>();
+
+        Person person = Person
+                .builder()
+                .firstName("David")
+                .lastName("Daudelin")
+                .relationship(MaritalStatus.married)
+                .build();
+
+        Amplify.API.mutate(
+                API_NAME,
+                person,
+                null,
+                MutationType.CREATE,
+                codegenListener
+        );
+
+        GraphQLResponse<Person> response = codegenListener.awaitResult();
+        assertFalse(response.hasErrors());
+        assertTrue(response.hasData());
     }
 
     /**
@@ -195,7 +223,7 @@ public final class GraphQLInstrumentationTest {
         BlockingResultListener<Event> creationListener = new BlockingResultListener<>();
         Amplify.API.mutate(
                 API_NAME,
-                new GraphQLRequest<> (
+                new GraphQLRequest<>(
                     TestAssets.readAsString("create-event.graphql"),
                     variables,
                     Event.class

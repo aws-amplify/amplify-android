@@ -39,7 +39,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             final SubscriptionEndpoint subscriptionEndpoint,
             final String endpoint,
             final OkHttpClient client,
-            final GraphQLRequest graphQLRequest,
+            final GraphQLRequest<T> graphQLRequest,
             final GraphQLResponse.Factory responseFactory,
             final StreamListener<GraphQLResponse<T>> subscriptionListener) {
         super(graphQLRequest, responseFactory);
@@ -81,7 +81,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     @Override
     public void start() {
         subscriptionId = subscriptionEndpoint.requestSubscription(
-            getRequest(), subscriptionListener, getClassToCast());
+            getRequest(), subscriptionListener);
     }
 
     @Override
@@ -100,7 +100,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private SubscriptionEndpoint subscriptionEndpoint;
         private String endpoint;
         private OkHttpClient client;
-        private GraphQLRequest graphQLRequest;
+        private GraphQLRequest<T> graphQLRequest;
         private GraphQLResponse.Factory responseFactory;
         private StreamListener<GraphQLResponse<T>> streamListener;
 
@@ -127,7 +127,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
         @NonNull
         @Override
-        public ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest graphQLRequest) {
+        public ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest<T> graphQLRequest) {
             this.graphQLRequest = Objects.requireNonNull(graphQLRequest);
             return this;
         }
@@ -177,7 +177,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     interface GraphQlRequestStep<T> {
         @NonNull
-        ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest graphQlRequest);
+        ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest<T> graphQlRequest);
     }
 
     interface ResponseFactoryStep<T> {

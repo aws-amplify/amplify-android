@@ -34,7 +34,7 @@
   "API": {
     "plugins": {
       "AWSAPIPlugin": {
-        "mygraphql": {
+        "GraphQLInstrumentationTest": {
           "Endpoint": "https://bb2xm5ttqvbfdeu5oi5gw7cvma.appsync-api.us-east-1.amazonaws.com/graphql",
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",

@@ -69,9 +69,8 @@ final class SubscriptionEndpoint {
     }
 
     synchronized <T> String requestSubscription(
-            @NonNull GraphQLRequest request,
-            @NonNull StreamListener<GraphQLResponse<T>> responseListener,
-            @NonNull Class<T> classToCast) {
+            @NonNull GraphQLRequest<T> request,
+            @NonNull StreamListener<GraphQLResponse<T>> responseListener) {
 
         if (webSocket == null) {
             webSocket = createWebSocket();
@@ -88,7 +87,7 @@ final class SubscriptionEndpoint {
                 .put("id", subscriptionId)
                 .put("type", "start")
                 .put("payload", new JSONObject()
-                    .put("data", request.content())
+                    .put("data", request.getContent())
                     .put("extensions", new JSONObject()
                         .put("authorization", SubscriptionAuthorizationHeader.from(apiConfiguration))))
                 .toString()
@@ -97,7 +96,7 @@ final class SubscriptionEndpoint {
             throw new RuntimeException("Failed to construct subscription registration message.", jsonException);
         }
 
-        Subscription<T> subscription = new Subscription<>(responseListener, responseFactory, classToCast);
+        Subscription<T> subscription = new Subscription<>(responseListener, responseFactory, request.getModelClass());
         subscriptions.put(subscriptionId, subscription);
         subscription.awaitSubscriptionReady();
 
