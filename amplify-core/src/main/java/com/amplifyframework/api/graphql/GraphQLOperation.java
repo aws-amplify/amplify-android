@@ -16,7 +16,6 @@
 package com.amplifyframework.api.graphql;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;

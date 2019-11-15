@@ -62,7 +62,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
     private SingleResultOperation(
             String endpoint,
             OkHttpClient client,
-            GraphQLRequest request,
+            GraphQLRequest<T> request,
             GraphQLResponse.Factory responseFactory,
             ResultListener<GraphQLResponse<T>> responseListener) {
         super(request, responseFactory);
@@ -146,7 +146,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
     static final class Builder<T> {
         private String endpoint;
         private OkHttpClient client;
-        private GraphQLRequest request;
+        private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
         private ResultListener<GraphQLResponse<T>> responseListener;
 
@@ -160,7 +160,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        Builder<T> request(final GraphQLRequest request) {
+        Builder<T> request(final GraphQLRequest<T> request) {
             this.request = request;
             return this;
         }
