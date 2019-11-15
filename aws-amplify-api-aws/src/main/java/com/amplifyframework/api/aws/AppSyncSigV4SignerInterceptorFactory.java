@@ -40,47 +40,14 @@ import java.util.concurrent.Semaphore;
  * This factory should be constructed once in a plugin.
  */
 final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
-    private final ApiKeyAuthProvider apiKeyProvider;
-    private final AWSCredentialsProvider credentialsProvider;
-    private final CognitoUserPoolsAuthProvider cognitoTokenProvider;
-    private final OidcAuthProvider oidcTokenProvider;
+    private final Context context;
+    private final ApiAuthProviders apiAuthProviders;
 
-    AppSyncSigV4SignerInterceptorFactory(Context context,
-                                         ApiAuthProviders apiAuthProvider) {
-        // API key provider is configured per API, not per plugin.
-        // If a custom instance of API key provider was provided, the
-        // factory will remember and reuse it.
-        // Otherwise, a new lambda is made per interceptor generation.
-        this.apiKeyProvider = apiAuthProvider.getApiKeyAuthProvider();
-
-        // Initializes mobile client once and remembers the instance.
-        // This instance is reused by this factory.
-        AWSCredentialsProvider credentialsProvider = apiAuthProvider.getAWSCredentialsProvider();
-        if (credentialsProvider == null) {
-            credentialsProvider = getCredProvider(context);
-        }
-        this.credentialsProvider = credentialsProvider;
-
-        // Initializes cognito user pool once and remembers the token
-        // provider instance. This instance is reused by this factory.
-        CognitoUserPoolsAuthProvider cognitoProvider = apiAuthProvider.getCognitoUserPoolsAuthProvider();
-        if (cognitoProvider == null) {
-            CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
-            cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
-        }
-        this.cognitoTokenProvider = cognitoProvider;
-
-        // This factory does not have a default implementation for
-        // OpenID Connect token provider. User-provided implementation
-        // is remembered and reused by this factory.
-        OidcAuthProvider oidcProvider = apiAuthProvider.getOidcAuthProvider();
-        if (oidcProvider == null) {
-            oidcProvider = () -> {
-                throw new ApiException.AuthorizationTypeNotConfiguredException(
-                        "OidcAuthProvider interface is not implemented.");
-            };
-        }
-        this.oidcTokenProvider = oidcProvider;
+    AppSyncSigV4SignerInterceptorFactory(
+            final Context context,
+            ApiAuthProviders apiAuthProviders) {
+        this.context = context;
+        this.apiAuthProviders = apiAuthProviders;
     }
 
     /**
@@ -107,18 +74,46 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
     public AppSyncSigV4SignerInterceptor create(ApiConfiguration config) {
         switch (config.getAuthorizationType()) {
             case API_KEY:
-                ApiKeyAuthProvider keyProvider = apiKeyProvider;
+                // API key provider is configured per API, not per plugin.
+                // If a custom instance of API key provider was provided, the
+                // factory will remember and reuse it.
+                // Otherwise, a new lambda is made per interceptor generation.
+                ApiKeyAuthProvider keyProvider = apiAuthProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {
                     //noinspection Convert2MethodRef This is legacy code.
                     keyProvider = () -> config.getApiKey();
                 }
                 return new AppSyncSigV4SignerInterceptor(keyProvider);
             case AWS_IAM:
+                // Initializes mobile client once and remembers the instance.
+                // This instance is reused by this factory.
+                AWSCredentialsProvider credentialsProvider = apiAuthProviders.getAWSCredentialsProvider();
+                if (credentialsProvider == null) {
+                    credentialsProvider = getCredProvider(context);
+                }
                 return new AppSyncSigV4SignerInterceptor(credentialsProvider, config.getRegion());
             case AMAZON_COGNITO_USER_POOLS:
-                return new AppSyncSigV4SignerInterceptor(cognitoTokenProvider);
+
+                // Initializes cognito user pool once and remembers the token
+                // provider instance. This instance is reused by this factory.
+                CognitoUserPoolsAuthProvider cognitoProvider = apiAuthProviders.getCognitoUserPoolsAuthProvider();
+                if (cognitoProvider == null) {
+                    CognitoUserPool userPool = new CognitoUserPool(context, new AWSConfiguration(context));
+                    cognitoProvider = new BasicCognitoUserPoolsAuthProvider(userPool);
+                }
+                return new AppSyncSigV4SignerInterceptor(cognitoProvider);
             case OPENID_CONNECT:
-                return new AppSyncSigV4SignerInterceptor(oidcTokenProvider);
+                // This factory does not have a default implementation for
+                // OpenID Connect token provider. User-provided implementation
+                // is remembered and reused by this factory.
+                OidcAuthProvider oidcProvider = apiAuthProviders.getOidcAuthProvider();
+                if (oidcProvider == null) {
+                    oidcProvider = () -> {
+                        throw new ApiException.AuthorizationTypeNotConfiguredException(
+                            "OidcAuthProvider interface is not implemented.");
+                    };
+                }
+                return new AppSyncSigV4SignerInterceptor(oidcProvider);
             default:
                 throw new PluginException.PluginConfigurationException(
                         "Unsupported authorization mode.");
