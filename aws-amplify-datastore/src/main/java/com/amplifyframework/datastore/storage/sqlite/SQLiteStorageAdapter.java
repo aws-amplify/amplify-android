@@ -364,7 +364,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 boolean booleanValue = (boolean) fieldValue;
                 preCompiledInsertStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
                 break;
-            case INT:
+            case INTEGER:
                 preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
                 break;
             case LONG:
@@ -408,7 +408,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     case ENUM:
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
                         break;
-                    case INT:
+                    case INTEGER:
                         mapForModel.put(fieldName, cursor.getInt(columnIndex));
                         break;
                     case BOOLEAN:

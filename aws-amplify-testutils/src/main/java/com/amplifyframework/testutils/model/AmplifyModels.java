@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite.model;
+package com.amplifyframework.testutils.model;
 
 import com.amplifyframework.core.model.Model;
 
@@ -27,7 +27,7 @@ import java.util.Set;
  */
 public final class AmplifyModels {
 
-    private static final long AMPLIFY_MODELS_VERSION = 1;
+    private static final String AMPLIFY_MODELS_VERSION = "hash-code";
 
     /**
      * Dis-allows instantiation of this utility.
@@ -40,9 +40,7 @@ public final class AmplifyModels {
      * @return the set of model classes.
      */
     public static Set<Class<? extends Model>> get() {
-        return new HashSet<>(Arrays.asList(
-                Person.class,
-                Person.class,
+        return new HashSet<Class<? extends Model>>(Arrays.asList(
                 Person.class
         ));
     }
@@ -51,7 +49,7 @@ public final class AmplifyModels {
      * Return the version of the Amplify Models.
      * @return the version of the Amplify Models.
      */
-    public static long getAmplifyModelsVersion() {
+    public static String getAmplifyModelsVersion() {
         return AMPLIFY_MODELS_VERSION;
     }
 }
