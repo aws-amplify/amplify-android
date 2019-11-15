@@ -166,15 +166,15 @@ public interface ApiCategoryBehavior {
      * {@link GraphQLOperation#cancel()}.
      * @param apiName The name of a configured API
      * @param graphQlRequest Wrapper for request details
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param subscriptionListener
+     *        A listener to receive notifications when new items are
+     *        available via the subscription stream
      * @param <T> The type of data expected in the subscription stream
      * @return A GraphQLOperation representing this ongoing subscription
      */
     <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener);
 }
 

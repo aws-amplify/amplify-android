@@ -1,0 +1,16 @@
+{
+    "type": "data",
+    "id": "7bb8404c-fd21-42e7-a30d-0a5c38ff55b7",
+    "payload": {
+        "data": {
+            "subscribeToEventComments": {
+                "__typename": "Comment",
+                "commentId": "c398d748-8ce2-4331-acd6-93fe19eedad5",
+                "content": "Might be late though!",
+                "createdAt": "Mon Nov 11 16:08:15 PST 2019",
+                "eventId": "e9819958-e8da-4f68-84f0-65b2f775dbf7"
+            }
+        }
+    }
+}
+

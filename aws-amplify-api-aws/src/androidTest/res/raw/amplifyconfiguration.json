@@ -1,0 +1,46 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "Storage": {
+    "plugins": {
+      "AWSS3StoragePlugin": {
+        "Bucket": "my-s3-bucket",
+        "Region": "us-west-2",
+        "TransferAcceleration": true
+      }
+    }
+  },
+  "Analytics": {
+    "plugins": {
+      "AmazonPinpointAnalyticsPlugin": {
+        "AppId": "xx113344",
+        "Region": "us-east-1",
+        "optOut": "ALL",
+        "globalUserAttributes": {
+          "interests": [
+            "football",
+            "basketball",
+            "AWS"
+          ]
+        }
+      },
+      "AmazonKinesisAnalyticsPlugin": {
+        "Stream": "my-kinesis-stream",
+        "PartitionKey": "my-kinesis-partition-key",
+        "Region": "us-east-1"
+      }
+    }
+  },
+  "API": {
+    "plugins": {
+      "AWSAPIPlugin": {
+        "mygraphql": {
+          "Endpoint": "https://bb2xm5ttqvbfdeu5oi5gw7cvma.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-og4mnlou65dm5d6hs2itesgkzm"
+        }
+      }
+    }
+  }
+}
