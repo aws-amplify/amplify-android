@@ -35,12 +35,11 @@ import okhttp3.Response;
  * {@link com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor#intercept(Interceptor.Chain)}
  * were implemented in this mock class.
  */
-@SuppressWarnings({"ParameterName", "ConstantConditions"})
 //To keep the parameter names consistent with official Chain API
 final class MockChain implements Interceptor.Chain {
     private static final int MOCK_STATUS_CODE = 200;
 
-    @NonNull
+    @SuppressWarnings("NullableProblems") // It's supposed to be @NonNull, but it isn't. So.
     @Override
     public Call call() {
         return null;
@@ -85,20 +84,20 @@ final class MockChain implements Interceptor.Chain {
 
     @NonNull
     @Override
-    public Interceptor.Chain withConnectTimeout(int i, @NonNull TimeUnit timeUnit) {
-        return null;
+    public Interceptor.Chain withConnectTimeout(int timeout, @NonNull TimeUnit timeUnit) {
+        return this;
     }
 
     @NonNull
     @Override
-    public Interceptor.Chain withReadTimeout(int i, @NonNull TimeUnit timeUnit) {
-        return null;
+    public Interceptor.Chain withReadTimeout(int timeout, @NonNull TimeUnit timeUnit) {
+        return this;
     }
 
     @NonNull
     @Override
-    public Interceptor.Chain withWriteTimeout(int i, @NonNull TimeUnit timeUnit) {
-        return null;
+    public Interceptor.Chain withWriteTimeout(int timeout, @NonNull TimeUnit timeUnit) {
+        return this;
     }
 
     @Override

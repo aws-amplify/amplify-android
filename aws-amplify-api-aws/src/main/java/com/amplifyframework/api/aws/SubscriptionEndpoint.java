@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.net.Uri;
 import android.util.Base64;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -164,10 +165,8 @@ final class SubscriptionEndpoint {
 
         switch (subscriptionMessageType) {
             case CONNECTION_ACK:
-                //noinspection CodeBlock2Expr More readable as block
-                timeoutWatchdog.start(() -> {
-                    webSocket.close(NORMAL_CLOSURE_STATUS, "WebSocket closed due to timeout.");
-                }, Integer.parseInt(jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")));
+                timeoutWatchdog.start(() -> webSocket.close(NORMAL_CLOSURE_STATUS, "WebSocket closed due to timeout."),
+                    Integer.parseInt(jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")));
                 connectionAcknowledgement.countDown();
                 break;
             case SUBSCRIPTION_ACK:
@@ -224,7 +223,7 @@ final class SubscriptionEndpoint {
     private void notifySubscriptionData(String subscriptionId, String data) {
         final Subscription<?> dispatcher = subscriptions.get(subscriptionId);
         if (dispatcher == null) {
-            throw new ApiException("Got subscription data for uknown subscription ID: " + subscriptionId);
+            throw new ApiException("Got subscription data for unknown subscription ID: " + subscriptionId);
         }
         dispatcher.dispatchNextMessage(data);
     }
@@ -255,7 +254,7 @@ final class SubscriptionEndpoint {
     }
 
     /*
-     * Discover WebSocket endpoint from the appsync endpoint.
+     * Discover WebSocket endpoint from the AppSync endpoint.
      * AppSync endpoint : https://xxxxxxxxxxxx.appsync-api.ap-southeast-2.amazonaws.com/graphql
      * Discovered WebSocket endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
      */
@@ -292,7 +291,7 @@ final class SubscriptionEndpoint {
         private final StreamListener<GraphQLResponse<T>> responseListener;
         private final GraphQLResponse.Factory responseFactory;
         private final Class<T> classToCast;
-        private final CountDownLatch subscriptionReadyAcknowledgmeent;
+        private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
 
         Subscription(
@@ -302,17 +301,17 @@ final class SubscriptionEndpoint {
             this.responseListener = responseListener;
             this.responseFactory = responseFactory;
             this.classToCast = classToCast;
-            this.subscriptionReadyAcknowledgmeent = new CountDownLatch(1);
+            this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
         }
 
         void acknowledgeSubscriptionReady() {
-            subscriptionReadyAcknowledgmeent.countDown();
+            subscriptionReadyAcknowledgment.countDown();
         }
 
         void awaitSubscriptionReady() {
             try {
-                if (!subscriptionReadyAcknowledgmeent.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
+                if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
                     dispatchError(new ApiException("Subscription not acknowledged."));
                 }
             } catch (InterruptedException interruptedException) {
@@ -352,9 +351,9 @@ final class SubscriptionEndpoint {
             responseListener.onComplete();
         }
 
-        @SuppressWarnings("EqualsReplaceableByObjectsCall")
+        @SuppressWarnings("LineLength")
         @Override
-        public boolean equals(final Object thatObject) {
+        public boolean equals(Object thatObject) {
             if (this == thatObject) {
                 return true;
             }
@@ -362,25 +361,31 @@ final class SubscriptionEndpoint {
                 return false;
             }
 
-            final Subscription<?> that = (Subscription<?>) thatObject;
+            Subscription<?> that = (Subscription<?>) thatObject;
 
-            if (responseListener != null ? !responseListener.equals(that.responseListener) :
-                that.responseListener != null) {
+            if (!ObjectsCompat.equals(responseListener, that.responseListener)) {
                 return false;
             }
-            if (responseFactory != null ? !responseFactory.equals(that.responseFactory) :
-                that.responseFactory != null) {
+            if (!ObjectsCompat.equals(responseFactory, that.responseFactory)) {
                 return false;
             }
-            return classToCast != null ? classToCast.equals(that.classToCast) : that.classToCast == null;
+            if (!ObjectsCompat.equals(classToCast, that.classToCast)) {
+                return false;
+            }
+            if (!ObjectsCompat.equals(subscriptionReadyAcknowledgment, that.subscriptionReadyAcknowledgment)) {
+                return false;
+            }
+            return ObjectsCompat.equals(subscriptionCompletionAcknowledgement, that.subscriptionCompletionAcknowledgement);
         }
 
-        @SuppressWarnings("MagicNumber")
+        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = responseListener != null ? responseListener.hashCode() : 0;
             result = 31 * result + (responseFactory != null ? responseFactory.hashCode() : 0);
             result = 31 * result + (classToCast != null ? classToCast.hashCode() : 0);
+            result = 31 * result + subscriptionReadyAcknowledgment.hashCode();
+            result = 31 * result + subscriptionCompletionAcknowledgement.hashCode();
             return result;
         }
     }

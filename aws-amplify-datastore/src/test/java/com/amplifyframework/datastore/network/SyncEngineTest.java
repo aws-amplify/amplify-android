@@ -49,6 +49,8 @@ import static org.mockito.Mockito.verify;
 @Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
 public class SyncEngineTest {
+    // A "reasonable" amount of time our test(s) will wait for async operations to complete
+    private static final int OPERATIONS_TIMEOUT_MS = 100;
 
     private ApiCategoryBehavior api;
     private String apiName;
@@ -73,7 +75,6 @@ public class SyncEngineTest {
      * API category, with type {@link MutationEvent.MutationType#INSERT}.
      * @throws InterruptedException If our own mock API response doesn't get generated
      */
-    @SuppressWarnings({"unchecked", "MagicNumber"}) // Mockito anyMap() matcher, 100ms latch timeout value
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException {
         // Arrange: storage engine is running
@@ -95,10 +96,10 @@ public class SyncEngineTest {
         // Act: Put person into storage.
         AwaitResultListener<MutationEvent<Person>> listener = AwaitResultListener.create();
         localStorageAdapter.save(susan, listener);
-        listener.await(100);
+        listener.await(OPERATIONS_TIMEOUT_MS);
 
         // Wait for the network callback to occur on the IO scheduler ...
-        assertTrue(responseLatch.await(100, TimeUnit.MILLISECONDS));
+        assertTrue(responseLatch.await(OPERATIONS_TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Assert: API was invoked to write the thing to the network
         verify(api).mutate(eq(apiName), anyString(), anyMap(), any(), any());
@@ -112,7 +113,7 @@ public class SyncEngineTest {
      * @param <T> The type of data in the response
      * @return A latch to wait on, which signals that response is returned
      */
-    @SuppressWarnings({"unchecked"}) // anyMap() matcher
+    @SuppressWarnings("unchecked") // obtaining listener via invocation.getArgument() assumes template type
     private static <T> CountDownLatch awaitResponse(
             ApiCategoryBehavior api, GraphQLResponse<T> response) {
         CountDownLatch responseLatch = new CountDownLatch(1);
@@ -155,7 +156,7 @@ public class SyncEngineTest {
         }
 
         public void await(long waitTimeMillis) {
-            boolean didCountDown = false;
+            boolean didCountDown;
             try {
                 didCountDown = latch.await(waitTimeMillis, TimeUnit.MILLISECONDS);
             } catch (InterruptedException interruptedException) {

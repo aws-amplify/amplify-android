@@ -78,14 +78,12 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
             @NonNull final AmplifyOperation<R> operation,
             @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
-        HubEventFilter filter = HubEventFilters.hubEventFilter(operation);
         HubSubscriber transformingListener = event -> {
             // TODO: check for casting of Object to E and
             // see if it can be prevented.
             // eventListener.onEvent(event.getData());
         };
 
-        return subscribe(channel, filter, transformingListener);
+        return subscribe(channel, event -> true, transformingListener);
     }
 }
-

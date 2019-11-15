@@ -71,7 +71,6 @@ public final class SyncEngine {
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
      */
-    @SuppressWarnings("Convert2MethodRef") // Verbosity for better readability
     public void start() {
         // Start by observing the mutation queue for locally-initiated changes
         observationsToDispose.add(
@@ -116,10 +115,10 @@ public final class SyncEngine {
      * we have to keep the event in the queue, so that we can try to publish
      * it again later, when network conditions become favorable again.
      */
-    @SuppressWarnings("unchecked") // (Class<M>))
+    @SuppressWarnings("unchecked") // mutationEvent.getClass() yields Class<?>, not Class<M>.
     private <T extends Model, M extends MutationEvent<T>> Single<M> publishToNetwork(final M mutationEvent) {
+        //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            //noinspection unchecked
             api.mutate(
                 apiName,
                 MutationDocument.from(mutationEvent),

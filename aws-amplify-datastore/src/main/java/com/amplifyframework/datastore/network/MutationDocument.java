@@ -25,11 +25,10 @@ import com.amplifyframework.datastore.MutationEvent;
  * provided a MutationEvent.
  */
 final class MutationDocument {
-
-    @SuppressWarnings({"AnnotationLocation", "WhitespaceAround"}) private MutationDocument() {}
+    @SuppressWarnings("checkstyle:all") private MutationDocument() {}
 
     // TODO: Actually write this method, don't just return a String. 🙄
-    @SuppressWarnings({"LineLength", "SameReturnValue"})
+    @SuppressWarnings("LineLength")
     @NonNull
     static <T extends Model> String from(final MutationEvent<T> mutationEvent) {
         return "mutation CreateProduct($input: CreateProductInput!) { createProduct(input: $input) { id title content price rating } }";

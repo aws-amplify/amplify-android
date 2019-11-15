@@ -231,15 +231,15 @@ public final class GraphQLInstrumentationTest {
      * Model of an Event, which we create as part of this test, so that we can
      * associate comments to the event.
      */
-    @SuppressWarnings("ParameterName") // "id" used in GraphQL model
     static final class Event {
-        private String id;
-        private String name;
-        private String when;
-        private String where;
-        private String description;
+        private final String id;
+        private final String name;
+        private final String when;
+        private final String where;
+        private final String description;
 
         Event(
+                @SuppressWarnings("ParameterName")
                 final String id,
                 final String name,
                 final String when,
@@ -297,7 +297,7 @@ public final class GraphQLInstrumentationTest {
         BlockingStreamListener(int countOfItemsExpected) {
             this.allItemsLatch = new CountDownLatch(countOfItemsExpected);
             this.completedLatch = new CountDownLatch(1);
-            this.items = new ArrayList<GraphQLResponse<T>>();
+            this.items = new ArrayList<>();
             this.error = null;
         }
 

@@ -72,7 +72,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void save(@NonNull final T item,
                      @NonNull final ResultListener<MutationEvent<T>> listener) {
@@ -87,7 +87,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         listener.onResult(mutation);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // (T) item *is* checked, via isAssignableFrom().
     @Override
     public <T extends Model> void query(
             @NonNull final Class<T> queryClass,
@@ -102,7 +102,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         listener.onResult(result.iterator());
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void delete(
             @NonNull final T item,

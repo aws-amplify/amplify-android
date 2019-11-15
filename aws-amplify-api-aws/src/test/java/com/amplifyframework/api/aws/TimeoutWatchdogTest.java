@@ -31,10 +31,11 @@ import static org.mockito.Mockito.verifyNoInteractions;
 /**
  * Tests the {@link TimeoutWatchdog}.
  */
-@SuppressWarnings("MagicNumber") // Easier to read when timing info is localized to individual tests
 @RunWith(RobolectricTestRunner.class)
 @Config(manifest = Config.NONE)
 public class TimeoutWatchdogTest {
+    private static final int DEFAULT_TIMEOUT_MS = 100;
+
     private TimeoutWatchdog watchdog;
     private Runnable timeoutAction;
 
@@ -54,10 +55,10 @@ public class TimeoutWatchdogTest {
     @Test
     public void timeoutActionIsInvokedAfterTimeElapsesFromStart() {
         // When watchdog is started,
-        watchdog.start(timeoutAction, 100);
+        watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
 
         // Act: the timeout elapses,
-        ShadowLooper.idleMainLooper(101, TimeUnit.MILLISECONDS);
+        ShadowLooper.idleMainLooper(1 + DEFAULT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         // The timeout action fires.
         verify(timeoutAction).run();
@@ -69,10 +70,10 @@ public class TimeoutWatchdogTest {
     @Test
     public void timeoutActionNotRunWhenWatchdogNotStarted() {
         // Arrange: watchdog not started
-        // watchdog.start(timeoutAction, 100);
+        // watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
 
         // Act: Time elapses
-        ShadowLooper.idleMainLooper(101, TimeUnit.MILLISECONDS);
+        ShadowLooper.idleMainLooper(1 + DEFAULT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         // Timeout action is not invoked
         verifyNoInteractions(timeoutAction);
@@ -85,12 +86,12 @@ public class TimeoutWatchdogTest {
     @Test
     public void timeoutActionNotRunAfterResetBeforeNewTimeout() {
         // Arrange: timer is started and almost counted down.
-        watchdog.start(timeoutAction, 100);
-        ShadowLooper.idleMainLooper(99, TimeUnit.MILLISECONDS);
+        watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
+        ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
 
         // Act: Timer is reset, and time advances.
         watchdog.reset();
-        ShadowLooper.idleMainLooper(99, TimeUnit.MILLISECONDS);
+        ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
 
         // Assert: the timeout action still wasn't run, even though 198ms have elapsed.
         verifyNoInteractions(timeoutAction);
@@ -103,12 +104,12 @@ public class TimeoutWatchdogTest {
     @Test
     public void timeoutActionIsRunEvenAfterResetTimePeriod() {
         // Arrange: started watchdog, time has gone by.
-        watchdog.start(timeoutAction, 100);
-        ShadowLooper.idleMainLooper(99, TimeUnit.MILLISECONDS);
+        watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
+        ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
 
         // Act: reset, and then more than the new time goes by
         watchdog.reset();
-        ShadowLooper.idleMainLooper(101, TimeUnit.MILLISECONDS);
+        ShadowLooper.idleMainLooper(1 + DEFAULT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         // Assert: timeout action is run
         verify(timeoutAction).run();
@@ -121,12 +122,12 @@ public class TimeoutWatchdogTest {
     @Test
     public void timeoutActionIsRunIfWatchdogStoppedBeforeTimeout() {
         // Arrange: timer is started, and almost out of time
-        watchdog.start(timeoutAction, 100);
-        ShadowLooper.idleMainLooper(99, TimeUnit.MILLISECONDS);
+        watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
+        ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
 
         // Act: we stop it, and then much more time (past original quota) elapses
         watchdog.stop();
-        ShadowLooper.idleMainLooper(100, TimeUnit.MILLISECONDS);
+        ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         // Assert: timeout action has not been run.
         verifyNoInteractions(timeoutAction);
