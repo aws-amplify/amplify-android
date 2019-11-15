@@ -34,11 +34,11 @@
   "API": {
     "plugins": {
       "AWSAPIPlugin": {
-        "mygraphql": {
-          "Endpoint": "http://api-gw-endpoint-1",
-          "Region": "us-east-1",
+        "GraphQLInstrumentationTest": {
+          "Endpoint": "https://p6skfg4aijcqrc4amu4kx5yaw4.appsync-api.us-west-2.amazonaws.com/graphql",
+          "Region": "us-west-2",
           "AuthorizationType": "API_KEY",
-          "ApiKey": "magickey22"
+          "ApiKey": "da2-l4flwhz4jjf3hfjahcxi3hftrq"
         }
       },
       "FirebaseRESTfulAPI": {

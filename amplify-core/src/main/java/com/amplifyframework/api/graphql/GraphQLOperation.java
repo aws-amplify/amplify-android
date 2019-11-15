@@ -20,7 +20,6 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;
-import com.amplifyframework.core.ResultListener;
 
 /**
  * A GraphQLOperation is an API operation which returns a GraphQLResponse.
@@ -29,40 +28,20 @@ import com.amplifyframework.core.ResultListener;
 public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest> {
     private final GraphQLResponse.Factory responseFactory;
     private final Class<T> classToCast;
-    private final ResultListener<GraphQLResponse<T>> responseListener;
 
     /**
      * Constructs a new instance of a GraphQLOperation.
      * @param graphQlRequest A GraphQL request
      * @param responseFactory an implementation of ResponseFactory
      * @param classToCast class to cast the response to
-     * @param responseListener Listens to the outputs of the operation
      */
     public GraphQLOperation(
             @NonNull GraphQLRequest graphQlRequest,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @Nullable Class<T> classToCast,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+            @Nullable Class<T> classToCast) {
         super(graphQlRequest);
         this.responseFactory = responseFactory;
         this.classToCast = classToCast;
-        this.responseListener = responseListener;
-    }
-
-    /**
-     * Gets the listener that was specified when the operation was requested.
-     * @return The listener who will receive outputs of the operation
-     */
-    protected final ResultListener<GraphQLResponse<T>> responseListener() {
-        return responseListener;
-    }
-
-    /**
-     * Check if a response listener is registered.
-     * @return true if a response listener exists, false otherwise
-     */
-    protected final boolean hasResponseListener() {
-        return responseListener != null;
     }
 
     /**
@@ -77,5 +56,13 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest> {
         } catch (ClassCastException cce) {
             throw new ApiException.ObjectSerializationException();
         }
+    }
+
+    /**
+     * Gets the casting class.
+     * @return Class to cast.
+     */
+    protected final Class<T> getClassToCast() {
+        return classToCast;
     }
 }

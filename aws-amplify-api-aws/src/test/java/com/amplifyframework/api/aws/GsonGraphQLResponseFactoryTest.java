@@ -15,11 +15,18 @@
 
 package com.amplifyframework.api.aws;
 
+import android.os.Build;
+
 import com.amplifyframework.api.Resources;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.List;
@@ -31,6 +38,8 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Unit test for implementation of ResponseFactory.
  */
+@Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
+@RunWith(RobolectricTestRunner.class)
 public final class GsonGraphQLResponseFactoryTest {
 
     private GraphQLResponse.Factory responseFactory;
@@ -123,5 +132,23 @@ public final class GsonGraphQLResponseFactoryTest {
 
         assertEquals(expectedErrors, actualErrors);
     }
-}
 
+    /**
+     * It is possible to cast the response data as a string, instead of as the strongly
+     * modeled type, if you choose to do so.
+     * @throws JSONException Shouldn't, but might while arranging test input
+     */
+    @Test
+    public void partialResponseCanBeRenderedAsStringType() throws JSONException {
+        // Arrange some known JSON response
+        final JSONObject partialResponseJson =
+            new JSONObject(Resources.readAsString("partial-gql-response.json"));
+
+        // Act! Parse it into a String data type.
+        final GraphQLResponse<String> response =
+            responseFactory.buildResponse(partialResponseJson.toString(), String.class);
+
+        // Assert that the response data is just the data block as a JSON string
+        assertEquals(partialResponseJson.getJSONObject("data").toString(), response.getData());
+    }
+}

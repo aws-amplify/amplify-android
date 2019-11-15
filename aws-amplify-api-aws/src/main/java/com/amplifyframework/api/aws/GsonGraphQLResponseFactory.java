@@ -75,9 +75,12 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         return new GraphQLResponse<>(data, errors);
     }
 
+    @SuppressWarnings("unchecked") // It is, via String.class() check.
     private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
         if (jsonData == null || jsonData.isJsonNull()) {
             return null;
+        } else if (String.class.isAssignableFrom(classToCast)) {
+            return (T) jsonData.toString();
         }
 
         JsonObject data = jsonData.getAsJsonObject();
