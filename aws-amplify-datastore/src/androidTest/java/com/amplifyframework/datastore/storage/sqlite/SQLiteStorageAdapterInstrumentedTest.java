@@ -24,7 +24,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.storage.sqlite.model.Person;
+import com.amplifyframework.testutils.model.Person;
 
 import org.junit.After;
 import org.junit.Before;
@@ -161,7 +161,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
                         assertEquals("Alan", person.getFirstName());
                         assertEquals("Turing", person.getLastName());
-                        assertEquals(41, person.getAge());
+                        assertEquals(41, person.getAge().intValue());
                         assertEquals(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"),
                                 person.getDob());
                         assertNotNull(person.getId());

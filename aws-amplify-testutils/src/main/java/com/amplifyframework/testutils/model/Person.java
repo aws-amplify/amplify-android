@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite.model;
+package com.amplifyframework.testutils.model;
 
 import androidx.core.util.ObjectsCompat;
 

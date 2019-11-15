@@ -30,7 +30,7 @@ public enum JavaFieldType {
     /**
      * Represents the int data type.
      */
-    INTEGER(int.class.getSimpleName()),
+    INTEGER(Integer.class.getSimpleName()),
 
     /**
      * Represents the long data type.
