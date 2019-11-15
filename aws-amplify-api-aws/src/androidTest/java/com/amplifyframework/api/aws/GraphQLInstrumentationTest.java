@@ -84,7 +84,7 @@ public final class GraphQLInstrumentationTest {
                 .builder()
                 .firstName("David")
                 .lastName("Daudelin")
-                .relationship(MaritalStatus.MARRIED)
+                .relationship(MaritalStatus.married)
                 .build();
 
         Amplify.API.mutate(
