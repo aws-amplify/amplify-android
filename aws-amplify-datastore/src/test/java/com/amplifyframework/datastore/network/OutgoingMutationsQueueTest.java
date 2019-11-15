@@ -53,7 +53,7 @@ public class OutgoingMutationsQueueTest {
      * @throws InterruptedException If CountDownLatch used to await
      *         subscription results times out
      */
-    @SuppressWarnings("WhitespaceAround") // inline empty lambdas
+    @SuppressWarnings("WhitespaceAround")
     @Test
     public void enqueuePersistsMutationAndNotifiesObserver() throws InterruptedException {
         // Observe the queue
@@ -160,10 +160,9 @@ public class OutgoingMutationsQueueTest {
 
     /**
      * Tests {@link OutgoingMutationsQueue#remove(MutationEvent)}.
-     * @throws InterruptedException remove() never fires on its Single
      */
     @Test
-    public void removeRemovesMutationFromQueue() throws InterruptedException {
+    public void removeRemovesMutationFromQueue() {
         // Arrange: there is a mutation in the queue.
         MutationEvent<Person> deleteBillGates = MutationEvent.<Person>builder()
             .mutationType(MutationEvent.MutationType.DELETE)

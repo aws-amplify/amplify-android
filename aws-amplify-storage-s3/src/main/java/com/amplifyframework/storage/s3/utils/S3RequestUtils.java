@@ -15,9 +15,9 @@
 
 package com.amplifyframework.storage.s3.utils;
 
-import android.annotation.SuppressLint;
-
 import com.amplifyframework.storage.StorageAccessLevel;
+
+import java.util.Locale;
 
 /**
  * A utility to help form requests to S3.
@@ -25,7 +25,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 public final class S3RequestUtils {
     private S3RequestUtils() { }
 
-    @SuppressWarnings("JavadocMethod") // Not sure what all of these fields are for
+    @SuppressWarnings("JavadocMethod") // TODO: Add missing documentation
     public static String getServiceKey(
             StorageAccessLevel accessLevel,
             String identityId,
@@ -34,7 +34,6 @@ public final class S3RequestUtils {
         return getAccessLevelPrefix(accessLevel, identityId, targetIdentityId) + key;
     }
 
-    @SuppressLint({"DefaultLocale"})
     private static String getAccessLevelPrefix(
             StorageAccessLevel accessLevel,
             String identityId,
@@ -46,10 +45,9 @@ public final class S3RequestUtils {
         }
 
         if (accessLevel.equals(StorageAccessLevel.PRIVATE) || accessLevel.equals(StorageAccessLevel.PROTECTED)) {
-            return accessLevel.name().toLowerCase() + "/" + userId + "/";
+            return accessLevel.name().toLowerCase(Locale.US) + "/" + userId + "/";
         } else {
-            return accessLevel.name().toLowerCase() + "/";
+            return accessLevel.name().toLowerCase(Locale.US) + "/";
         }
     }
 }
-

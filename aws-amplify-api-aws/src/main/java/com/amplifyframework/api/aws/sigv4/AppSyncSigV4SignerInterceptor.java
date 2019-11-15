@@ -40,7 +40,6 @@ import okio.Buffer;
  * Interceptor to sign requests for AppSync from AppSync Android SDK.
  * See https://github.com/awslabs/aws-mobile-appsync-sdk-android
  */
-@SuppressWarnings({"UnnecessaryLocalVariable", "ConstantConditions"}) // This is legacy code.
 public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
     private static final String TAG = AppSyncSigV4SignerInterceptor.class.getSimpleName();
@@ -160,15 +159,13 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
             try {
                 dr.addHeader(AUTHORIZATION, cognitoUserPoolsAuthProvider.getLatestAuthToken());
             } catch (Exception error) {
-                IOException ioe = new IOException("Failed to retrieve Cognito User Pools token.", error);
-                throw ioe;
+                throw new IOException("Failed to retrieve Cognito User Pools token.", error);
             }
         } else if (AuthorizationType.OPENID_CONNECT.equals(authType)) {
             try {
                 dr.addHeader(AUTHORIZATION, oidcAuthProvider.getLatestAuthToken());
             } catch (Exception error) {
-                IOException ioe = new IOException("Failed to retrieve OIDC token.", error);
-                throw ioe;
+                throw new IOException("Failed to retrieve OIDC token.", error);
             }
         }
 
@@ -185,8 +182,7 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         okReqBuilder.method(req.method(), RequestBody.create(body.readByteArray(), JSON_MEDIA_TYPE));
 
         //continue with chain.
-        Response res = chain.proceed(okReqBuilder.build());
-        return res;
+        return chain.proceed(okReqBuilder.build());
     }
 
     // Utility method to convert string to human-readable format

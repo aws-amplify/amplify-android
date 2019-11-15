@@ -15,8 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
@@ -35,12 +35,11 @@ import okhttp3.Response;
  * {@link com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor#intercept(Interceptor.Chain)}
  * were implemented in this mock class.
  */
-@SuppressWarnings({"ParameterName", "ConstantConditions"})
 //To keep the parameter names consistent with official Chain API
 final class MockChain implements Interceptor.Chain {
     private static final int MOCK_STATUS_CODE = 200;
 
-    @NotNull
+    @SuppressWarnings("NullableProblems") // It's supposed to be @NonNull, but it isn't. So.
     @Override
     public Call call() {
         return null;
@@ -57,9 +56,9 @@ final class MockChain implements Interceptor.Chain {
         return null;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Response proceed(@NotNull Request request) {
+    public Response proceed(@NonNull Request request) {
         return new Response.Builder()
                 .code(MOCK_STATUS_CODE)
                 .message("response message")
@@ -73,7 +72,7 @@ final class MockChain implements Interceptor.Chain {
         return 0;
     }
 
-    @NotNull
+    @NonNull
     @Override
     public Request request() {
         return new Request.Builder()
@@ -83,22 +82,22 @@ final class MockChain implements Interceptor.Chain {
                 .build();
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Interceptor.Chain withConnectTimeout(int i, @NotNull TimeUnit timeUnit) {
-        return null;
+    public Interceptor.Chain withConnectTimeout(int timeout, @NonNull TimeUnit timeUnit) {
+        return this;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Interceptor.Chain withReadTimeout(int i, @NotNull TimeUnit timeUnit) {
-        return null;
+    public Interceptor.Chain withReadTimeout(int timeout, @NonNull TimeUnit timeUnit) {
+        return this;
     }
 
-    @NotNull
+    @NonNull
     @Override
-    public Interceptor.Chain withWriteTimeout(int i, @NotNull TimeUnit timeUnit) {
-        return null;
+    public Interceptor.Chain withWriteTimeout(int timeout, @NonNull TimeUnit timeUnit) {
+        return this;
     }
 
     @Override

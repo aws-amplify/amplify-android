@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.core.util.ObjectsCompat;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,18 +43,20 @@ final class ListTodosResult {
         return ListTodosResult.this.items;
     }
 
-    @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
     @Override
     public boolean equals(Object thatObject) {
-        if (this == thatObject) return true;
-        if (thatObject == null || getClass() != thatObject.getClass()) return false;
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
 
         ListTodosResult that = (ListTodosResult) thatObject;
 
-        return items != null ? items.equals(that.items) : that.items == null;
+        return ObjectsCompat.equals(items, that.items);
     }
 
-    @SuppressWarnings("NeedBraces")
     @Override
     public int hashCode() {
         return items != null ? items.hashCode() : 0;
@@ -91,20 +95,27 @@ final class ListTodosResult {
             return new Builder();
         }
 
-        @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
         @Override
         public boolean equals(Object thatObject) {
-            if (this == thatObject) return true;
-            if (thatObject == null || getClass() != thatObject.getClass()) return false;
+            if (this == thatObject) {
+                return true;
+            }
+            if (thatObject == null || getClass() != thatObject.getClass()) {
+                return false;
+            }
 
             Todo todo = (Todo) thatObject;
 
-            if (id != null ? !id.equals(todo.id) : todo.id != null) return false;
-            if (name != null ? !name.equals(todo.name) : todo.name != null) return false;
-            return description != null ? description.equals(todo.description) : todo.description == null;
+            if (!ObjectsCompat.equals(id, todo.id)) {
+                return false;
+            }
+            if (!ObjectsCompat.equals(name, todo.name)) {
+                return false;
+            }
+            return ObjectsCompat.equals(description, todo.description);
         }
 
-        @SuppressWarnings({"NeedBraces", "MagicNumber"})
+        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = id != null ? id.hashCode() : 0;

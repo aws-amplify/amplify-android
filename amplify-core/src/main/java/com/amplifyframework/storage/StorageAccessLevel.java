@@ -19,10 +19,20 @@ package com.amplifyframework.storage;
  * An enum of permission levels on storage operations.
  * This information should be passed in API options.
  */
-@SuppressWarnings("JavadocVariable") // TODO: Not clear what these access levels mean, exactly
 public enum StorageAccessLevel {
+
+    /**
+     * Storage items are accessible by all users of your app.
+     */
     PUBLIC,
+
+    /**
+     * Storage items are readable by all users, but writable only by the creating user.
+     */
     PROTECTED,
+
+    /**
+     * Storage items are accessible for the individual user who performs the write.
+     */
     PRIVATE
 }
-

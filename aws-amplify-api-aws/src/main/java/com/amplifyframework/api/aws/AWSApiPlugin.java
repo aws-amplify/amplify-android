@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
@@ -44,8 +45,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     private static final String TAG = AWSApiPlugin.class.getSimpleName();
 
-    private final Map<String, ClientDetails> httpClients;
-    private final GsonGraphQLResponseFactory gqlResponseFactory;
+    private final Map<String, ClientDetails> apiDetails;
+    private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
 
     /**
@@ -65,7 +66,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
      * @param apiAuthProvider configured instance of {@link ApiAuthProviders}
      */
     public AWSApiPlugin(ApiAuthProviders apiAuthProvider) {
-        this.httpClients = new HashMap<>();
+        this.apiDetails = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
         this.authProvider = apiAuthProvider;
     }
@@ -80,28 +81,26 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSApiPluginConfiguration pluginConfig =
             AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
-        InterceptorFactory interceptorFactory = new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
+        final InterceptorFactory interceptorFactory =
+            new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
 
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
-
-            OkHttpClient httpClient = new OkHttpClient.Builder()
+            final OkHttpClient okHttpClient = new OkHttpClient.Builder()
                 .addInterceptor(interceptorFactory.create(apiConfiguration))
                 .build();
-
-            ClientDetails clientDetails =
-                new ClientDetails(apiConfiguration.getEndpoint(), httpClient);
-
-            httpClients.put(apiName, clientDetails);
+            final SubscriptionEndpoint subscriptionEndpoint =
+                new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);
+            apiDetails.put(apiName, new ClientDetails(apiConfiguration, okHttpClient, subscriptionEndpoint));
         }
     }
 
     @Override
     public Map<String, OkHttpClient> getEscapeHatch() {
         final Map<String, OkHttpClient> apiClientsByName = new HashMap<>();
-        for (Map.Entry<String, ClientDetails> entry : httpClients.entrySet()) {
-            apiClientsByName.put(entry.getKey(), entry.getValue().getClient());
+        for (Map.Entry<String, ClientDetails> entry : apiDetails.entrySet()) {
+            apiClientsByName.put(entry.getKey(), entry.getValue().okHttpClient());
         }
         return Collections.unmodifiableMap(apiClientsByName);
     }
@@ -113,27 +112,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @Nullable Map<String, String> variables,
             @NonNull Class<T> classToCast,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
-
-        final ClientDetails clientDetails = httpClients.get(apiName);
-        if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
-        }
-
-        GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
-        if (variables != null) {
-            for (String key : variables.keySet()) {
-                qraphQlRequest.variable(key, variables.get(key));
-            }
-        }
-
-        GraphQLOperation<T> operation =
-            new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
-                clientDetails.getClient(),
-                qraphQlRequest,
-                gqlResponseFactory,
-                classToCast,
-                responseListener);
-
+        final GraphQLOperation<T> operation =
+            buildSingleResponseOperation(apiName, gqlDocument, variables, classToCast, responseListener);
         operation.start();
         return operation;
     }
@@ -145,27 +125,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @Nullable Map<String, String> variables,
             @NonNull Class<T> classToCast,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
-
-        final ClientDetails clientDetails = httpClients.get(apiName);
-        if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
-        }
-
-        GraphQLRequest qraphQlRequest = new GraphQLRequest(gqlDocument);
-        if (variables != null) {
-            for (String key : variables.keySet()) {
-                qraphQlRequest.variable(key, variables.get(key));
-            }
-        }
-
-        GraphQLOperation<T> operation =
-                new AWSGraphQLOperation<>(clientDetails.getEndpoint(),
-                        clientDetails.getClient(),
-                        qraphQlRequest,
-                        gqlResponseFactory,
-                        classToCast,
-                        responseListener);
-
+        final GraphQLOperation<T> operation =
+            buildSingleResponseOperation(apiName, gqlDocument, variables, classToCast, responseListener);
         operation.start();
         return operation;
     }
@@ -177,40 +138,121 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @Nullable Map<String, String> variables,
             @NonNull Class<T> classToCast,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
-        throw new UnsupportedOperationException("This has not been implemented, yet.");
+
+        final ClientDetails clientDetails = apiDetails.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException("No client information for API named " + apiName);
+        }
+
+        SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
+            .subscriptionManager(clientDetails.webSocketEndpoint())
+            .endpoint(clientDetails.apiConfiguration().getEndpoint())
+            .client(clientDetails.okHttpClient())
+            .graphQLRequest(GraphQLRequest.builder()
+                .addVariables(variables)
+                .document(gqlDocument)
+                .build())
+            .responseFactory(gqlResponseFactory)
+            .classToCast(classToCast)
+            .streamListener(subscriptionListener)
+            .build();
+        operation.start();
+        return operation;
+    }
+
+    private <T> SingleResultOperation<T> buildSingleResponseOperation(
+            @NonNull String apiName,
+            @NonNull String gqlDocument,
+            @Nullable Map<String, String> variables,
+            @NonNull Class<T> classToCast,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+
+        final ClientDetails clientDetails = apiDetails.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException("No client information for API named " + apiName);
+        }
+
+        return SingleResultOperation.<T>builder()
+            .endpoint(clientDetails.apiConfiguration().getEndpoint())
+            .client(clientDetails.okHttpClient())
+            .request(GraphQLRequest.builder()
+                .document(gqlDocument)
+                .addVariables(variables)
+                .build())
+            .responseFactory(gqlResponseFactory)
+            .classToCast(classToCast)
+            .responseListener(responseListener)
+            .build();
     }
 
     /**
      * Wrapper class to pair http client with dedicated endpoint.
      */
-    static class ClientDetails {
-        private final String endpoint;
-        private final OkHttpClient client;
+    static final class ClientDetails {
+        private final ApiConfiguration apiConfiguration;
+        private final OkHttpClient okHttpClient;
+        private final SubscriptionEndpoint subscriptionEndpoint;
 
         /**
          * Constructs a client detail object containing client and url.
          * It associates a http client with its dedicated endpoint.
          */
-        ClientDetails(String endpoint, OkHttpClient client) {
-            this.endpoint = endpoint;
-            this.client = client;
+        ClientDetails(
+                final ApiConfiguration apiConfiguration,
+                final OkHttpClient okHttpClient,
+                final SubscriptionEndpoint subscriptionEndpoint) {
+            this.apiConfiguration = apiConfiguration;
+            this.okHttpClient = okHttpClient;
+            this.subscriptionEndpoint = subscriptionEndpoint;
         }
 
         /**
-         * Gets the endpoint.
-         * @return endpoint
+         * Gets the API configuration.
+         * @return API configuration
          */
-        public String getEndpoint() {
-            return endpoint;
+        ApiConfiguration apiConfiguration() {
+            return apiConfiguration;
         }
 
         /**
          * Gets the HTTP client.
          * @return OkHttp client
          */
-        public OkHttpClient getClient() {
-            return client;
+        OkHttpClient okHttpClient() {
+            return okHttpClient;
+        }
+
+        SubscriptionEndpoint webSocketEndpoint() {
+            return subscriptionEndpoint;
+        }
+
+        @Override
+        public boolean equals(Object thatObject) {
+            if (this == thatObject) {
+                return true;
+            }
+            if (thatObject == null || getClass() != thatObject.getClass()) {
+                return false;
+            }
+
+            ClientDetails that = (ClientDetails) thatObject;
+
+            if (!ObjectsCompat.equals(apiConfiguration, that.apiConfiguration)) {
+                return false;
+            }
+            if (!ObjectsCompat.equals(okHttpClient, that.okHttpClient)) {
+                return false;
+            }
+            return ObjectsCompat.equals(subscriptionEndpoint, that.subscriptionEndpoint);
+        }
+
+        @SuppressWarnings("checkstyle:MagicNumber")
+        @Override
+        public int hashCode() {
+            int result = apiConfiguration != null ? apiConfiguration.hashCode() : 0;
+            result = 31 * result + (okHttpClient != null ? okHttpClient.hashCode() : 0);
+            result = 31 * result + (subscriptionEndpoint != null ? subscriptionEndpoint.hashCode() : 0);
+            return result;
         }
     }
 }
-

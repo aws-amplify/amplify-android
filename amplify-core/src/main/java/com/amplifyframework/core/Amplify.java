@@ -53,9 +53,10 @@ import java.util.Map;
  * </pre>
  */
 public final class Amplify {
-
     private static final String TAG = Amplify.class.getSimpleName();
 
+    // These static references provide an entry point to the different categories.
+    // For example, you can call storage operations through Amplify.Storage.list(String path).
     @SuppressWarnings("all") public static final AnalyticsCategory Analytics;
     @SuppressWarnings("all") public static final ApiCategory API;
     @SuppressWarnings("all") public static final LoggingCategory Logging;
@@ -156,7 +157,7 @@ public final class Amplify {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
     }
 
-    @SuppressWarnings("unchecked") // Intentionally; it's caught in a try/catch.
+    @SuppressWarnings("unchecked") // Wants Category<P> from CATEGORIES.get(...), but it has Category<?>
     private static <P extends Plugin<?>> void updatePluginRegistry(
             final P plugin, final RegistryUpdateType registryUpdateType) throws PluginException {
 

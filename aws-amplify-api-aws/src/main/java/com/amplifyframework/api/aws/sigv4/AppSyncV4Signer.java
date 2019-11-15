@@ -26,7 +26,6 @@ import java.net.URI;
  * Signer that signs the request with AppSync-specific
  * service name and region.
  */
-@SuppressWarnings("UnnecessaryLocalVariable") // This is legacy code.
 final class AppSyncV4Signer extends AWS4Signer {
 
     private static final String TAG = AppSyncV4Signer.class.getSimpleName();
@@ -58,8 +57,7 @@ final class AppSyncV4Signer extends AWS4Signer {
     protected String calculateContentHash(Request<?> request) {
         final InputStream payloadStream = request.getContent();
         payloadStream.mark(-1);
-        final String contentSha256 = BinaryUtils.toHex(hash(payloadStream));
         // We will not reset this as ok http does not allow reset of stream.
-        return contentSha256;
+        return BinaryUtils.toHex(hash(payloadStream));
     }
 }

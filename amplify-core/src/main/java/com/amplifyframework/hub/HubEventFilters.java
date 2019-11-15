@@ -17,8 +17,6 @@ package com.amplifyframework.hub;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.AmplifyOperation;
-
 import java.util.Objects;
 
 /**
@@ -117,11 +115,4 @@ public final class HubEventFilters {
         Objects.requireNonNull(rightFilter);
         return event -> leftFilter.filter(event) || rightFilter.filter(event);
     }
-
-    @SuppressWarnings("JavadocMethod") // Not clear how this will work until its implemented
-    @NonNull
-    public static <R> HubEventFilter hubEventFilter(@NonNull final AmplifyOperation<R> operation) {
-        return event -> /* TODO */ true;
-    }
 }
-

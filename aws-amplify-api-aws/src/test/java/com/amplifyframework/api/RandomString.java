@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.api;
 
 import java.util.UUID;
 

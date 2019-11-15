@@ -75,9 +75,12 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         return new GraphQLResponse<>(data, errors);
     }
 
+    @SuppressWarnings("unchecked") // (T) jsonData.toString() *is* checked via isAssignableFrom().
     private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
         if (jsonData == null || jsonData.isJsonNull()) {
             return null;
+        } else if (String.class.isAssignableFrom(classToCast)) {
+            return (T) jsonData.toString();
         }
 
         JsonObject data = jsonData.getAsJsonObject();
@@ -107,7 +110,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
 
         JsonArray errors = jsonErrors.getAsJsonArray();
-        @SuppressWarnings("WhitespaceAround") // {} looks better on same line, here.
+        @SuppressWarnings("WhitespaceAround") 
         final Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
 
         try {

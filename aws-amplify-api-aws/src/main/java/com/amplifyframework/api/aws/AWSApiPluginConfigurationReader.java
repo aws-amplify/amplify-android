@@ -33,8 +33,6 @@ import java.util.Set;
  * associated key.
  */
 final class AWSApiPluginConfigurationReader {
-
-    @SuppressWarnings("CurlyBraces") /* Looks better on one line */
     private AWSApiPluginConfigurationReader() { /* no instances */ }
 
     /**
