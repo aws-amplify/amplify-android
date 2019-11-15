@@ -17,6 +17,9 @@ package com.amplifyframework.core.model.types;
 
 import androidx.annotation.NonNull;
 
+/**
+ * Enumerate the types of data supported by SQLite.
+ */
 public enum SqliteDataType {
     /**
      * The value is a NULL value.
