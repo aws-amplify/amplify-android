@@ -18,6 +18,7 @@ package com.amplifyframework.core.model.types.internal;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.core.model.types.SqliteDataType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,7 +30,7 @@ import java.util.Map;
 public final class TypeConverter {
 
     private static final Map<String, JavaFieldType> GRAPHQL_TYPES_TO_JAVA_TYPES = new HashMap<>();
-    private static final Map<JavaFieldType, String> JAVA_TYPES_TO_SQL_TYPES = new HashMap<>();
+    private static final Map<JavaFieldType, SqliteDataType> JAVA_TYPES_TO_SQL_TYPES = new HashMap<>();
 
     /**
      * Dis-allows instantiation of the static utility.
@@ -40,7 +41,7 @@ public final class TypeConverter {
     static {
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("ID", JavaFieldType.STRING);
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("String", JavaFieldType.STRING);
-        GRAPHQL_TYPES_TO_JAVA_TYPES.put("Int", JavaFieldType.INT);
+        GRAPHQL_TYPES_TO_JAVA_TYPES.put("Int", JavaFieldType.INTEGER);
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("Float", JavaFieldType.FLOAT);
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("Boolean", JavaFieldType.BOOLEAN);
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("Enum", JavaFieldType.ENUM);
@@ -54,14 +55,14 @@ public final class TypeConverter {
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSPhone", JavaFieldType.STRING);
         GRAPHQL_TYPES_TO_JAVA_TYPES.put("AWSIPAddress", JavaFieldType.STRING);
 
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.BOOLEAN, "INTEGER");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.LONG, "REAL");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.INT, "INTEGER");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.FLOAT, "REAL");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.STRING, "TEXT");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.ENUM, "TEXT");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.DATE, "TEXT");
-        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.TIME, "TEXT");
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.BOOLEAN, SqliteDataType.INTEGER);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.LONG, SqliteDataType.INTEGER);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.INTEGER, SqliteDataType.INTEGER);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.FLOAT, SqliteDataType.REAL);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.STRING, SqliteDataType.TEXT);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.ENUM, SqliteDataType.TEXT);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.DATE, SqliteDataType.TEXT);
+        JAVA_TYPES_TO_SQL_TYPES.put(JavaFieldType.TIME, SqliteDataType.TEXT);
     }
 
     /**
@@ -78,7 +79,7 @@ public final class TypeConverter {
      * @param javaFieldType the Java type
      * @return the Sql type
      */
-    public static String getSqlTypeForJavaType(@NonNull JavaFieldType javaFieldType) {
+    public static SqliteDataType getSqlTypeForJavaType(@NonNull JavaFieldType javaFieldType) {
         return JAVA_TYPES_TO_SQL_TYPES.get(javaFieldType);
     }
 
@@ -87,7 +88,7 @@ public final class TypeConverter {
      * @param graphQLType the graphQL type
      * @return the Sql type
      */
-    public static String getSqlTypeForGraphQLType(@NonNull String graphQLType) {
+    public static SqliteDataType getSqlTypeForGraphQLType(@NonNull String graphQLType) {
         return getSqlTypeForJavaType(getJavaTypeForGraphQLType(graphQLType));
     }
 }
