@@ -101,7 +101,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     }
                 }
 
-                @SuppressWarnings("MagicNumber")
+                @SuppressWarnings("checkstyle:MagicNumber")
                 @Override
                 public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
                     int percentage = (int) (bytesCurrent / bytesTotal * 100);

@@ -58,7 +58,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
      * which it determines the type of authorization provider to use.
      *
      * If the authorization mode is {@link AuthorizationType#API_KEY} and the
-     * {@link ApiAuthProviders} was not overriden with a custom
+     * {@link ApiAuthProviders} was not overridden with a custom
      * {@link ApiKeyAuthProvider}, then the API key is read from
      * {@link ApiConfiguration} each time this method is called.
      *
@@ -80,8 +80,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 // Otherwise, a new lambda is made per interceptor generation.
                 ApiKeyAuthProvider keyProvider = apiAuthProviders.getApiKeyAuthProvider();
                 if (keyProvider == null) {
-                    //noinspection Convert2MethodRef This is legacy code.
-                    keyProvider = () -> config.getApiKey();
+                    keyProvider = config::getApiKey;
                 }
                 return new AppSyncSigV4SignerInterceptor(keyProvider);
             case AWS_IAM:

@@ -70,7 +70,6 @@ public class SQLiteStorageHelperInstrumentedTest {
         sqLiteDatabase.close();
         sqLiteStorageHelper.close();
         ApplicationProvider.getApplicationContext().deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
-        sqLiteDatabase = null;
         sqLiteStorageHelper = null;
     }
 

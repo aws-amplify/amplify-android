@@ -25,7 +25,6 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +45,7 @@ public final class ModelSchema {
 
     // the name of the Model in the target. For example: the name of the
     // model in the GraphQL Schema.
-    private String targetModelName;
+    private final String targetModelName;
 
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
@@ -210,26 +209,23 @@ public final class ModelSchema {
         //
         // This is useful so code that uses the sortedFields to generate queries and other
         // persistence-related operations guarantee that the results are always consistent.
-        Collections.sort(modelFieldEntries, new Comparator<Map.Entry<String, ModelField>>() {
-            public int compare(Map.Entry<String, ModelField> fieldEntryOne,
-                               Map.Entry<String, ModelField> fieldEntryOther) {
-                ModelField fieldOne = fieldEntryOne.getValue();
-                ModelField fieldOther = fieldEntryOther.getValue();
+        Collections.sort(modelFieldEntries, (fieldEntryOne, fieldEntryOther) -> {
+            ModelField fieldOne = fieldEntryOne.getValue();
+            ModelField fieldOther = fieldEntryOther.getValue();
 
-                if (fieldOne.isPrimaryKey()) {
-                    return 1;
-                }
-                if (fieldOther.isPrimaryKey()) {
-                    return -1;
-                }
-                if (fieldOne.isConnected() && !fieldOther.isConnected()) {
-                    return -1;
-                }
-                if (fieldOne.isConnected() && !fieldOther.isConnected()) {
-                    return 1;
-                }
-                return fieldOne.getName().compareTo(fieldOther.getName());
+            if (fieldOne.isPrimaryKey()) {
+                return 1;
             }
+            if (fieldOther.isPrimaryKey()) {
+                return -1;
+            }
+            if (fieldOne.isConnected() && !fieldOther.isConnected()) {
+                return -1;
+            }
+            if (!fieldOne.isConnected() && fieldOther.isConnected()) {
+                return 1;
+            }
+            return fieldOne.getName().compareTo(fieldOther.getName());
         });
 
         return modelFieldEntries;

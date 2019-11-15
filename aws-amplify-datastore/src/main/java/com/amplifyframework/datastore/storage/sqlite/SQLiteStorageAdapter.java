@@ -137,7 +137,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                       @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
-                /**
+                /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes
                  * through reflection will be notified via the
@@ -145,7 +145,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 modelRegistry.load(models);
 
-                /**
+                /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
@@ -157,7 +157,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         DATABASE_VERSION,
                         createSqlCommands);
 
-                /**
+                /*
                  * Create and/or open a database. This also invokes
                  * {@link SQLiteStorageHelper#onCreate(SQLiteDatabase)} which executes the tasks
                  * to create tables and indexes. When the function returns without any exception
@@ -173,7 +173,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 databaseConnectionHandle = sqLiteOpenHelper.getWritableDatabase();
 
-                /**
+                /*
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
                  * and compile them and store in an in-memory map. Later, when a
                  * {@link #save(T, ResultListener)} operation needs to insert

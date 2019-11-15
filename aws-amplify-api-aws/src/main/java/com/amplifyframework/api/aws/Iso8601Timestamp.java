@@ -27,7 +27,7 @@ import java.util.Locale;
  * users in a UI, as it is not localized.
  */
 final class Iso8601Timestamp {
-    @SuppressWarnings({"AnnotationLocation", "WhitespaceAround"}) private Iso8601Timestamp() {}
+    @SuppressWarnings("checkstyle:all") private Iso8601Timestamp() {}
 
     static String now() {
         SimpleDateFormat formatter = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.US);

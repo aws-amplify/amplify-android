@@ -18,6 +18,7 @@ package com.amplifyframework.core;
 import android.content.Context;
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
@@ -72,7 +73,7 @@ public class AmplifyTest {
         }
 
         @Override
-        public boolean equals(final Object thatObject) {
+        public boolean equals(Object thatObject) {
             if (this == thatObject) {
                 return true;
             }
@@ -80,14 +81,14 @@ public class AmplifyTest {
                 return false;
             }
 
-            final SimpleLoggingPlugin that = (SimpleLoggingPlugin) thatObject;
+            SimpleLoggingPlugin that = (SimpleLoggingPlugin) thatObject;
 
-            return uuid.equals(that.uuid);
+            return ObjectsCompat.equals(uuid, that.uuid);
         }
 
         @Override
         public int hashCode() {
-            return uuid.hashCode();
+            return uuid != null ? uuid.hashCode() : 0;
         }
 
         @Override

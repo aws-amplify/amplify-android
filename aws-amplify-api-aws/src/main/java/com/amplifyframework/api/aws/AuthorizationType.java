@@ -20,7 +20,7 @@ package com.amplifyframework.api.aws;
  * AppSync GraphQL backend.
  * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/security.html">AppSync Security</a>
  */
-@SuppressWarnings("LineLength") // For long URLs in Javadocs
+@SuppressWarnings("LineLength") // Web links
 public enum AuthorizationType {
 
     /**

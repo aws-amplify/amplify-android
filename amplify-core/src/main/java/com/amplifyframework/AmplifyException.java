@@ -91,4 +91,3 @@ public class AmplifyException extends Exception {
         return isRetryable;
     }
 }
-

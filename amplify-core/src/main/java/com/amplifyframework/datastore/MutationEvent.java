@@ -86,7 +86,7 @@ public final class MutationEvent<T extends Model> implements Model {
      * @return Builder instance
      */
     public static <T extends Model> Builder<T> builder() {
-        return new Builder<T>();
+        return new Builder<>();
     }
 
     /**
@@ -94,7 +94,7 @@ public final class MutationEvent<T extends Model> implements Model {
      * @param <T> Class type of model that has mutated
      */
     public static final class Builder<T extends Model> {
-        private UUID mutationId;
+        private final UUID mutationId;
         private MutationType mutationType;
         private T data;
         private Class<T> dataClass;
@@ -151,7 +151,7 @@ public final class MutationEvent<T extends Model> implements Model {
          * @return A new MutationEvent instance
          */
         public MutationEvent<T> build() {
-            return new MutationEvent<T>(Builder.this);
+            return new MutationEvent<>(Builder.this);
         }
 
         UUID mutationId() {
@@ -213,6 +213,6 @@ public final class MutationEvent<T extends Model> implements Model {
         /**
          * This event was initiated by the Sync Engine.
          */
-        SYNC_ENGINE;
+        SYNC_ENGINE
     }
 }

@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 
+import okhttp3.Interceptor;
 import okhttp3.Response;
 
 import static org.junit.Assert.assertEquals;
@@ -38,7 +39,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * for {@link com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider}.
      * This is the recommended path, and a customer should
      * never have to provide a custom provider.
-     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
      */
     @Test
@@ -77,7 +78,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
     /**
      * Test cases for when no API key is provided inside
      * {@link ApiConfiguration} object.
-     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
      */
     @Test(expected = IllegalArgumentException.class)
@@ -105,7 +106,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * If API key is not mentioned in API configuration AND auth mode is
      * API_KEY BUT a valid custom API key provider is provided via
      * ApiAuthProvider, then intercept succeeds.
-     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
      */
     @Test
@@ -132,7 +133,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * {@link com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider}
      * is provided to the plugin to override the default method
      * of obtaining API key directly from configuration.
-     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
      */
     @Test
@@ -173,7 +174,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * an API that uses {@link AuthorizationType#OPENID_CONNECT}
      * as its auth mechanism, then the process will fail at runtime
      * while sending a request with that API.
-     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Expected since OIDC config was not provided
      */
     @Test(expected = IOException.class)
@@ -197,7 +198,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * Test to confirm that passing any custom implementation of
      * {@link com.amplifyframework.api.aws.sigv4.OidcAuthProvider}
      * prevents crashes while intercepting requests.
-     * @throws IOException From {@link okhttp.Interceptor#intercept(Chain )};
+     * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
      */
     @Test
@@ -219,4 +220,3 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
         assertEquals("OIDC_JWT_TOKEN", res.request().header(AUTHORIZATION));
     }
 }
-

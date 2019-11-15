@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
@@ -225,9 +226,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return subscriptionEndpoint;
         }
 
-        @SuppressWarnings("EqualsReplaceableByObjectsCall")
         @Override
-        public boolean equals(final Object thatObject) {
+        public boolean equals(Object thatObject) {
             if (this == thatObject) {
                 return true;
             }
@@ -235,21 +235,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 return false;
             }
 
-            final ClientDetails that = (ClientDetails) thatObject;
+            ClientDetails that = (ClientDetails) thatObject;
 
-            if (apiConfiguration != null ? !apiConfiguration.equals(that.apiConfiguration) :
-                that.apiConfiguration != null) {
+            if (!ObjectsCompat.equals(apiConfiguration, that.apiConfiguration)) {
                 return false;
             }
-            if (okHttpClient != null ? !okHttpClient.equals(that.okHttpClient) :
-                that.okHttpClient != null) {
+            if (!ObjectsCompat.equals(okHttpClient, that.okHttpClient)) {
                 return false;
             }
-            return subscriptionEndpoint != null ? subscriptionEndpoint.equals(that.subscriptionEndpoint) :
-                that.subscriptionEndpoint == null;
+            return ObjectsCompat.equals(subscriptionEndpoint, that.subscriptionEndpoint);
         }
 
-        @SuppressWarnings("MagicNumber")
+        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = apiConfiguration != null ? apiConfiguration.hashCode() : 0;

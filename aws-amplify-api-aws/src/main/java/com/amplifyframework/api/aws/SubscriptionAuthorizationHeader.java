@@ -23,7 +23,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 final class SubscriptionAuthorizationHeader {
-    @SuppressWarnings({"AnnotationLocation", "WhitespaceAround"}) private SubscriptionAuthorizationHeader() {}
+    @SuppressWarnings("checkstyle:all") private SubscriptionAuthorizationHeader() {}
 
     /**
      * Return authorization json to be used for connection and subscription registration.
