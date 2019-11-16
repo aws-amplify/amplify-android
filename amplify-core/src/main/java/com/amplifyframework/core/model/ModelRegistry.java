@@ -20,8 +20,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Immutable;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * A utility that creates ModelSchema from Model classes.
@@ -41,7 +41,7 @@ public final class ModelRegistry {
      * Create the ModelSchema objects for all Model classes.
      * @param models the list that contains all the Model classes.
      */
-    public synchronized void load(@NonNull List<Class<? extends Model>> models) {
+    public synchronized void load(@NonNull Set<Class<? extends Model>> models) {
         for (Class<? extends Model> modelClass : models) {
             final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);

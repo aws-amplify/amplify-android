@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.AmplifyModels;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.MutationEvent;
@@ -64,11 +65,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
      *                 interact with a storage mechanism in Android.
      * @param models   list of Model classes
      * @param listener the listener to be invoked to notify completion
+     *                 of the setUp.
      */
     @Override
-    public void setUp(@NonNull Context context,
-                      @NonNull List<Class<? extends Model>> models,
-                      @NonNull ResultListener<List<ModelSchema>> listener) {
+    public <T extends AmplifyModels> void setUp(@NonNull Context context,
+                                                @NonNull T models,
+                                                @NonNull ResultListener<List<ModelSchema>> listener) {
 
     }
 

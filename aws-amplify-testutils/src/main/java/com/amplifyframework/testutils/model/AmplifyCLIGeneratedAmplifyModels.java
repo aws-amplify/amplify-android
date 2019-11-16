@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils.model;
 
+import com.amplifyframework.core.model.AmplifyModels;
 import com.amplifyframework.core.model.Model;
 
 import java.util.Arrays;
@@ -25,31 +26,40 @@ import java.util.Set;
  * Contains the set of model classes that implement {@link Model}
  * interface.
  */
-public final class AmplifyModels {
+public final class AmplifyCLIGeneratedAmplifyModels implements AmplifyModels {
 
     private static final String AMPLIFY_MODELS_VERSION = "hash-code";
+    private static AmplifyCLIGeneratedAmplifyModels amplifyCLIGeneratedAmplifyModelsInstance;
 
-    /**
-     * Dis-allows instantiation of this utility.
-     */
-    private AmplifyModels() {
+    private AmplifyCLIGeneratedAmplifyModels() {
+    }
+
+    public static synchronized AmplifyCLIGeneratedAmplifyModels getInstance() {
+        if (amplifyCLIGeneratedAmplifyModelsInstance == null) {
+            amplifyCLIGeneratedAmplifyModelsInstance = new AmplifyCLIGeneratedAmplifyModels();
+        }
+        return amplifyCLIGeneratedAmplifyModelsInstance;
     }
 
     /**
-     * Return the set of model classes.
-     * @return the set of model classes.
+     * Get a set of the model classes.
+     *
+     * @return a set of the model classes.
      */
-    public static Set<Class<? extends Model>> get() {
+    @Override
+    public Set<Class<? extends Model>> list() {
         return new HashSet<Class<? extends Model>>(Arrays.asList(
                 Person.class
         ));
     }
 
     /**
-     * Return the version of the Amplify Models.
-     * @return the version of the Amplify Models.
+     * Get the version of the models.
+     *
+     * @return the version string of the models.
      */
-    public static String getAmplifyModelsVersion() {
+    @Override
+    public String getVersion() {
         return AMPLIFY_MODELS_VERSION;
     }
 }

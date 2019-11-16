@@ -26,6 +26,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.AmplifyModels;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelRegistry;
@@ -130,27 +131,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
      * @param models  list of data {@link Model} classes
+     * @param listener the listener to be invoked to notify completion
+     *                 of the setUp.
+     * @param <T> implementation of AmplifyModels
      */
     @Override
-    public void setUp(@NonNull Context context,
-                      @NonNull List<Class<? extends Model>> models,
-                      @NonNull final ResultListener<List<ModelSchema>> listener) {
+    public <T extends AmplifyModels> void setUp(@NonNull Context context,
+                                                @NonNull T models,
+                                                @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
+                final Set<Class<? extends Model>> modelSet = models.list();
                 /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes
                  * through reflection will be notified via the
                  * {@link ResultListener#onError(Throwable)} method.
                  */
-                modelRegistry.load(models);
+                modelRegistry.load(modelSet);
 
                 /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
-                CreateSqlCommands createSqlCommands = getCreateCommands(models);
+                CreateSqlCommands createSqlCommands = getCreateCommands(modelSet);
                 sqLiteOpenHelper = SQLiteStorageHelper.getInstance(
                         context,
                         DATABASE_NAME,
@@ -288,7 +293,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return null;
     }
 
-    private CreateSqlCommands getCreateCommands(@NonNull List<Class<? extends Model>> models) {
+    private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
         for (Class<? extends Model> model: models) {
