@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
+import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 
@@ -96,8 +97,34 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
             }
         }
-        stringBuilder.append(");");
 
+        final Iterator<ModelField> foreignKeyIterator = modelSchema.getForeignKeys().iterator();
+        if (foreignKeyIterator.hasNext()) {
+            stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+        }
+
+        while (foreignKeyIterator.hasNext()) {
+            ModelField foreignKey = foreignKeyIterator.next();
+            String connectionTarget = foreignKey.getConnection().getConnectionTarget();
+            String connectionId = ModelRegistry.getInstance().getModelSchemaForModelClass(connectionTarget)
+                    .getPrimaryKey()
+                    .getName();
+
+            stringBuilder.append("FOREIGN KEY (\"")
+                    .append(foreignKey.getName())
+                    .append("\")" + SQLITE_COMMAND_DELIMITER)
+                    .append("REFERENCES")
+                    .append(connectionTarget)
+                    .append("(\"")
+                    .append(connectionId)
+                    .append("\")");
+
+            if (foreignKeyIterator.hasNext()) {
+                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            }
+        }
+
+        stringBuilder.append(");");
         final String createSqlStatement = stringBuilder.toString();
         return new SqlCommand(modelSchema.getName(), createSqlStatement);
     }
