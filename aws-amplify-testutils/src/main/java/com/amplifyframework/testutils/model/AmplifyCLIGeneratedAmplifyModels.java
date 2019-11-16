@@ -59,7 +59,7 @@ public final class AmplifyCLIGeneratedAmplifyModels implements AmplifyModels {
      * @return the version string of the models.
      */
     @Override
-    public String getVersion() {
+    public String version() {
         return AMPLIFY_MODELS_VERSION;
     }
 }

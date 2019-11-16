@@ -32,5 +32,5 @@ public interface AmplifyModels {
      * Get the version of the models.
      * @return the version string of the models.
      */
-    String getVersion();
+    String version();
 }
