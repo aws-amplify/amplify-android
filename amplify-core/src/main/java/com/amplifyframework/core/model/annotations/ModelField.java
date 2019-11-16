@@ -44,6 +44,13 @@ public @interface ModelField {
     boolean isRequired() default false;
 
     /**
+     * Returns flag indicating if the field is a foreign key.
+     * @return if the field is a foreign key.
+     *          Default is not a foreign key (False).
+     */
+    boolean isForeignKey() default false;
+
+    /**
      * Returns the target name of the field.
      * @return the name of the field in the target.
      *          For example: the name of the field

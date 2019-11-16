@@ -17,6 +17,7 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.annotations.Connection;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
@@ -91,6 +92,7 @@ public final class ModelSchema {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
+            final TreeMap<String, ModelConnection> connections = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
@@ -98,10 +100,25 @@ public final class ModelSchema {
             }
 
             for (Field field : classFields) {
-                com.amplifyframework.core.model.annotations.ModelField annotation = null;
-                if (field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class) != null) {
-                    annotation = field.getAnnotation(
-                            com.amplifyframework.core.model.annotations.ModelField.class);
+                Connection connection = field.getAnnotation(Connection.class);
+                final ModelConnection modelConnection = connection != null
+                        && Model.class.isAssignableFrom(field.getType())
+                        ? ModelConnection.builder()
+                                .name(connection.name())
+                                .keyField(connection.keyField())
+                                .sortField(connection.sortField())
+                                .limit(connection.limit())
+                                .keyName(connection.keyName())
+                                .fields(Arrays.asList(connection.fields()))
+                                .relationship(Relationship.valueOf(connection.relationship()))
+                                .connectionTarget(field.getType().getName())
+                                .build()
+                        : null;
+
+                com.amplifyframework.core.model.annotations.ModelField annotation =
+                        field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
+                if (annotation == null) {
+                    continue;
                 }
                 final ModelField modelField = ModelField.builder()
                         .name(field.getName())
@@ -110,11 +127,10 @@ public final class ModelSchema {
                         .isRequired(annotation.isRequired())
                         .isArray(Collection.class.isAssignableFrom(field.getType()))
                         .isPrimaryKey(PrimaryKey.matches(field.getName()))
-                        .connectionTarget(Model.class.isAssignableFrom(field.getType())
-                                ? field.getType().getName()
-                                : null)
+                        .isForeignKey(annotation.isForeignKey())
+                        .connection(modelConnection)
                         .build();
-                fields.put(field.getName(), modelField);
+                fields.put(modelField.getName(), modelField);
             }
             return ModelSchema.builder()
                     .name(clazz.getSimpleName())
@@ -178,6 +194,37 @@ public final class ModelSchema {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the list of foreign keys of the Model.
+     *
+     * @return the list of foreign keys of the Model.
+     */
+    public List<ModelField> getForeignKeys() {
+        List<ModelField> foreignKeys = new LinkedList<>();
+        for (Map.Entry<String, ModelField> field: sortedFields) {
+            if (field.getValue().isForeignKey()) {
+                foreignKeys.add(field.getValue());
+            }
+        }
+        return foreignKeys;
+    }
+
+    /**
+     * Returns a map of field to connection of the model.
+     *
+     * @return a map of field to connection of the model.
+     */
+    public Map<ModelField, ModelConnection> getConnections() {
+        Map<ModelField, ModelConnection> connections = new TreeMap<>();
+        for (Map.Entry<String, ModelField> field: sortedFields) {
+            ModelField modelField = field.getValue();
+            if (modelField.isConnected()) {
+                connections.put(modelField, modelField.getConnection());
+            }
+        }
+        return connections;
     }
 
     private static ModelIndex getModelIndex(@NonNull Class<? extends Model> clazz) {
@@ -291,7 +338,10 @@ public final class ModelSchema {
          * @return the ModelSchema object.
          */
         public ModelSchema build() {
-            return new ModelSchema(name, targetModelName, fields, modelIndex);
+            return new ModelSchema(name,
+                    targetModelName,
+                    fields,
+                    modelIndex);
         }
     }
 }
