@@ -21,7 +21,7 @@ import java.util.Set;
  * Defines the contract for retrieving information about the
  * models generated for DataStore.
  */
-public interface AmplifyModels {
+public interface ModelStore {
     /**
      * Get a set of the model classes.
      * @return a set of the model classes.

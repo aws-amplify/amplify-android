@@ -19,9 +19,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.model.AmplifyModels;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelStore;
 import com.amplifyframework.datastore.MutationEvent;
 
 import java.util.Iterator;
@@ -47,11 +47,11 @@ public interface LocalStorageAdapter {
      * @param models list of Model classes
      * @param listener the listener to be invoked to notify completion
      *                 of the setUp.
-     * @param <T> implementation of AmplifyModels
+     * @param <T> implementation of ModelStore
      */
-    <T extends AmplifyModels> void setUp(@NonNull Context context,
-                                         @NonNull T models,
-                                         @NonNull ResultListener<List<ModelSchema>> listener);
+    <T extends ModelStore> void setUp(@NonNull Context context,
+                                      @NonNull T models,
+                                      @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
      * Save a {@link Model} to the local storage engine.

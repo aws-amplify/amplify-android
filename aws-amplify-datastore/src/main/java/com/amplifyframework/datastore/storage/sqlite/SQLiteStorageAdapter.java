@@ -26,11 +26,11 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.model.AmplifyModels;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelStore;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
@@ -133,12 +133,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @param models  list of data {@link Model} classes
      * @param listener the listener to be invoked to notify completion
      *                 of the setUp.
-     * @param <T> implementation of AmplifyModels
+     * @param <T> implementation of ModelStore
      */
     @Override
-    public <T extends AmplifyModels> void setUp(@NonNull Context context,
-                                                @NonNull T models,
-                                                @NonNull final ResultListener<List<ModelSchema>> listener) {
+    public <T extends ModelStore> void setUp(@NonNull Context context,
+                                             @NonNull T models,
+                                             @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
                 final Set<Class<? extends Model>> modelSet = models.list();

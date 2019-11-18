@@ -15,8 +15,8 @@
 
 package com.amplifyframework.testutils.model;
 
-import com.amplifyframework.core.model.AmplifyModels;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelStore;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -26,19 +26,19 @@ import java.util.Set;
  * Contains the set of model classes that implement {@link Model}
  * interface.
  */
-public final class AmplifyCLIGeneratedAmplifyModels implements AmplifyModels {
+public final class AmplifyCLIGeneratedModelStore implements ModelStore {
 
     private static final String AMPLIFY_MODELS_VERSION = "hash-code";
-    private static AmplifyCLIGeneratedAmplifyModels amplifyCLIGeneratedAmplifyModelsInstance;
+    private static AmplifyCLIGeneratedModelStore amplifyCLIGeneratedModelStoreInstance;
 
-    private AmplifyCLIGeneratedAmplifyModels() {
+    private AmplifyCLIGeneratedModelStore() {
     }
 
-    public static synchronized AmplifyCLIGeneratedAmplifyModels getInstance() {
-        if (amplifyCLIGeneratedAmplifyModelsInstance == null) {
-            amplifyCLIGeneratedAmplifyModelsInstance = new AmplifyCLIGeneratedAmplifyModels();
+    public static synchronized AmplifyCLIGeneratedModelStore getInstance() {
+        if (amplifyCLIGeneratedModelStoreInstance == null) {
+            amplifyCLIGeneratedModelStoreInstance = new AmplifyCLIGeneratedModelStore();
         }
-        return amplifyCLIGeneratedAmplifyModelsInstance;
+        return amplifyCLIGeneratedModelStoreInstance;
     }
 
     /**
