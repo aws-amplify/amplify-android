@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -49,20 +50,23 @@ public final class AWSApiPluginConfiguration {
         return apiDetails;
     }
 
-    @SuppressWarnings({"NeedBraces"})
     @Override
     public boolean equals(Object thatObject) {
-        if (this == thatObject) return true;
-        if (thatObject == null || getClass() != thatObject.getClass()) return false;
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
 
         AWSApiPluginConfiguration that = (AWSApiPluginConfiguration) thatObject;
 
-        return apiDetails.equals(that.apiDetails);
+        return ObjectsCompat.equals(apiDetails, that.apiDetails);
     }
 
     @Override
     public int hashCode() {
-        return apiDetails.hashCode();
+        return apiDetails != null ? apiDetails.hashCode() : 0;
     }
 
     /**

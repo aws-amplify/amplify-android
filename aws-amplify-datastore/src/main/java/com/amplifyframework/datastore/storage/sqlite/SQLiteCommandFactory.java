@@ -65,9 +65,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("CREATE TABLE IF NOT EXISTS " +
-                modelSchema.getName() +
-                SQLITE_COMMAND_DELIMITER);
+        stringBuilder.append("CREATE TABLE IF NOT EXISTS ")
+            .append(modelSchema.getName())
+            .append(SQLITE_COMMAND_DELIMITER);
         if (modelSchema.getFields() == null || modelSchema.getFields().isEmpty()) {
             return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
         }
@@ -79,10 +79,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final Map.Entry<String, ModelField> entry = modelFieldMapIterator.next();
             final String modelFieldName = entry.getKey();
             final ModelField modelField = entry.getValue();
-            stringBuilder.append(modelFieldName +
-                    SQLITE_COMMAND_DELIMITER +
-                    TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()) +
-                    SQLITE_COMMAND_DELIMITER);
+            stringBuilder.append(modelFieldName)
+                .append(SQLITE_COMMAND_DELIMITER)
+                .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()))
+                .append(SQLITE_COMMAND_DELIMITER);
 
             if (modelField.isPrimaryKey()) {
                 stringBuilder.append("PRIMARY KEY" + SQLITE_COMMAND_DELIMITER);
@@ -120,11 +120,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
 
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("CREATE INDEX IF NOT EXISTS " +
-                modelIndex.getIndexName() +
-                " ON " +
-                modelSchema.getName() +
-                SQLITE_COMMAND_DELIMITER);
+        stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
+            .append(modelIndex.getIndexName()).append(" ON ")
+            .append(modelSchema.getName())
+            .append(SQLITE_COMMAND_DELIMITER);
 
         stringBuilder.append("(");
         Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();

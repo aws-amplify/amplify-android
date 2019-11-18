@@ -15,6 +15,8 @@
 
 package com.amplifyframework.hub;
 
+import androidx.core.util.ObjectsCompat;
+
 import java.util.UUID;
 
 /**
@@ -46,15 +48,17 @@ public final class SubscriptionToken {
         if (this == thatObject) {
             return true;
         }
-        if (!(thatObject instanceof SubscriptionToken)) {
+        if (thatObject == null || getClass() != thatObject.getClass()) {
             return false;
         }
-        final SubscriptionToken that = (SubscriptionToken) thatObject;
-        return uuid.equals(that.uuid);
+
+        SubscriptionToken that = (SubscriptionToken) thatObject;
+
+        return ObjectsCompat.equals(uuid, that.uuid);
     }
 
     @Override
     public int hashCode() {
-        return uuid.hashCode();
+        return uuid != null ? uuid.hashCode() : 0;
     }
 }

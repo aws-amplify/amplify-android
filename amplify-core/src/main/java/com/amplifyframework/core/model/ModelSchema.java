@@ -47,7 +47,7 @@ public final class ModelSchema {
 
     // the name of the Model in the target. For example: the name of the
     // model in the GraphQL Schema.
-    private String targetModelName;
+    private final String targetModelName;
 
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
@@ -264,7 +264,8 @@ public final class ModelSchema {
             if (fieldOne.isConnected() && !fieldOther.isConnected()) {
                 return -1;
             }
-            if (fieldOne.isConnected() && !fieldOther.isConnected()) {
+
+            if (!fieldOne.isConnected() && fieldOther.isConnected()) {
                 return 1;
             }
             return fieldOne.getName().compareTo(fieldOther.getName());

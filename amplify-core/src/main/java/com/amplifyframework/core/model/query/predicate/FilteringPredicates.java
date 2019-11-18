@@ -24,8 +24,7 @@ import com.amplifyframework.core.model.Model;
  * some useful {@link FilteringPredicates}s.
  */
 public final class FilteringPredicates {
-
-    @SuppressWarnings({"AnnotationLocation", "WhitespaceAround"}) private FilteringPredicates() {}
+    @SuppressWarnings("checkstyle:all") private FilteringPredicates() {}
 
     /**
      * Builds a predicate which checks if an object has a String-typed
