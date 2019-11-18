@@ -35,19 +35,11 @@
     "plugins": {
       "AWSAPIPlugin": {
         "GraphQLInstrumentationTest": {
-          "Endpoint": "https://p6skfg4aijcqrc4amu4kx5yaw4.appsync-api.us-west-2.amazonaws.com/graphql",
-          "Region": "us-west-2",
+          "Endpoint": "https://bb2xm5ttqvbfdeu5oi5gw7cvma.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-l4flwhz4jjf3hfjahcxi3hftrq"
+          "ApiKey": "da2-og4mnlou65dm5d6hs2itesgkzm"
         }
-      },
-      "FirebaseRESTfulAPI": {
-        "endpoint": "http://firebase-gw-endpoint-1.firebaseurl.com/v1/photos",
-        "secret": "ABC123",
-        "supportedOperations": [
-          "GET",
-          "POST"
-        ]
       }
     }
   }

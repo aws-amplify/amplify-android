@@ -19,13 +19,17 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-
-import java.util.Map;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 
 /**
  * The API category provides methods for interacting with remote systems
@@ -40,33 +44,63 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryType queryType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().query(apiName, modelClass, predicate, queryType, responseListener);
+    }
+
+    @Override
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
-        return getSelectedPlugin().query(apiName, gqlDocument, variables, classToCast, responseListener);
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().query(apiName, graphQlRequest, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull T model,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull MutationType mutationType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().mutate(apiName, model, predicate, mutationType, responseListener);
     }
 
     @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
-        return getSelectedPlugin().mutate(apiName, gqlDocument, variables, classToCast, responseListener);
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().mutate(apiName, graphQlRequest, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull SubscriptionType subscriptionType,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        return getSelectedPlugin().subscribe(apiName, modelClass, predicate, subscriptionType, subscriptionListener);
     }
 
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
-        return getSelectedPlugin().subscribe(apiName, gqlDocument, variables, classToCast, subscriptionListener);
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        return getSelectedPlugin().subscribe(apiName, graphQlRequest, subscriptionListener);
     }
 }
 

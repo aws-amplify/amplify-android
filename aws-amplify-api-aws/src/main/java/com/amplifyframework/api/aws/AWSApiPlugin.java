@@ -20,13 +20,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.QueryType;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
@@ -79,19 +85,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public void configure(@NonNull JSONObject pluginConfigurationJson, Context context) throws PluginException {
         AWSApiPluginConfiguration pluginConfig =
-            AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
+                AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
         final InterceptorFactory interceptorFactory =
-            new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
+                new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
 
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
             final OkHttpClient okHttpClient = new OkHttpClient.Builder()
-                .addInterceptor(interceptorFactory.create(apiConfiguration))
-                .build();
+                    .addInterceptor(interceptorFactory.create(apiConfiguration))
+                    .build();
             final SubscriptionEndpoint subscriptionEndpoint =
-                new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);
+                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);
             apiDetails.put(apiName, new ClientDetails(apiConfiguration, okHttpClient, subscriptionEndpoint));
         }
     }
@@ -106,37 +112,70 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryType queryType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return null;
+    }
+
+    @Override
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
+            @NonNull GraphQLRequest<T> graphQLRequest,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
         final GraphQLOperation<T> operation =
-            buildSingleResponseOperation(apiName, gqlDocument, variables, classToCast, responseListener);
+                buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
         operation.start();
         return operation;
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull T model,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull MutationType mutationType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        try {
+            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildMutation(model, predicate, mutationType);
+            return mutate(apiName, request, responseListener);
+        } catch (AmplifyException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
+            @NonNull GraphQLRequest<T> qraphQlRequest,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
         final GraphQLOperation<T> operation =
-            buildSingleResponseOperation(apiName, gqlDocument, variables, classToCast, responseListener);
+                buildSingleResponseOperation(apiName, qraphQlRequest, responseListener);
         operation.start();
         return operation;
     }
 
     @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull FilteringPredicate<T> predicate,
+            @NonNull SubscriptionType subscriptionType,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        return null;
+    }
+
+    @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
+            @NonNull GraphQLRequest<T> qraphQlRequest,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
@@ -145,26 +184,20 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
-            .subscriptionManager(clientDetails.webSocketEndpoint())
-            .endpoint(clientDetails.apiConfiguration().getEndpoint())
-            .client(clientDetails.okHttpClient())
-            .graphQLRequest(GraphQLRequest.builder()
-                .addVariables(variables)
-                .document(gqlDocument)
-                .build())
-            .responseFactory(gqlResponseFactory)
-            .classToCast(classToCast)
-            .streamListener(subscriptionListener)
-            .build();
+                .subscriptionManager(clientDetails.webSocketEndpoint())
+                .endpoint(clientDetails.apiConfiguration().getEndpoint())
+                .client(clientDetails.okHttpClient())
+                .graphQLRequest(qraphQlRequest)
+                .responseFactory(gqlResponseFactory)
+                .streamListener(subscriptionListener)
+                .build();
         operation.start();
         return operation;
     }
 
     private <T> SingleResultOperation<T> buildSingleResponseOperation(
             @NonNull String apiName,
-            @NonNull String gqlDocument,
-            @Nullable Map<String, String> variables,
-            @NonNull Class<T> classToCast,
+            @NonNull GraphQLRequest<T> graphQLRequest,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
@@ -173,16 +206,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         return SingleResultOperation.<T>builder()
-            .endpoint(clientDetails.apiConfiguration().getEndpoint())
-            .client(clientDetails.okHttpClient())
-            .request(GraphQLRequest.builder()
-                .document(gqlDocument)
-                .addVariables(variables)
-                .build())
-            .responseFactory(gqlResponseFactory)
-            .classToCast(classToCast)
-            .responseListener(responseListener)
-            .build();
+                .endpoint(clientDetails.apiConfiguration().getEndpoint())
+                .client(clientDetails.okHttpClient())
+                .request(graphQLRequest)
+                .responseFactory(gqlResponseFactory)
+                .responseListener(responseListener)
+                .build();
     }
 
     /**

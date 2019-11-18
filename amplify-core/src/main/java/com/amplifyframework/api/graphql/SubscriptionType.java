@@ -18,32 +18,19 @@ package com.amplifyframework.api.graphql;
 /**
  * Enum of GraphQL operation types.
  */
-public enum OperationType {
-    /** GraphQL query. */
-    QUERY("query"),
-
-    /** GraphQL mutation. */
-    MUTATION("mutation"),
-
-    /** GraphQL subscription. */
-    SUBSCRIPTION("subscription");
-
-    private final String queryPrefix;
+public enum SubscriptionType {
+    /**
+     * GraphQL subscription onCreate.
+     */
+    ON_CREATE,
 
     /**
-     * Construct the enum with the query type.
-     * @param queryPrefix the query prefix used in GraphQL operation
+     * GraphQL subscription onUpdate.
      */
-    OperationType(final String queryPrefix) {
-        this.queryPrefix = queryPrefix;
-    }
+    ON_UPDATE,
 
     /**
-     * Returns the operation type as a string to be
-     * used in constructing a GraphQL query.
-     * @return The operation type as a string
+     * GraphQL subscription onDelete.
      */
-    public String getQueryPrefix() {
-        return queryPrefix;
-    }
+    ON_DELETE
 }
