@@ -49,7 +49,7 @@ import static org.mockito.Mockito.verify;
 @RunWith(RobolectricTestRunner.class)
 public class SyncEngineTest {
     // A "reasonable" amount of time our test(s) will wait for async operations to complete
-    private static final int OPERATIONS_TIMEOUT_MS = 100;
+    private static final int OPERATIONS_TIMEOUT_MS = 500;
 
     private ApiCategoryBehavior api;
     private String apiName;
