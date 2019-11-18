@@ -20,3 +20,6 @@ include ':aws-amplify-analytics-pinpoint'
 include ':aws-amplify-api-aws'
 include ':aws-amplify-storage-s3'
 include ':aws-amplify-datastore'
+
+// Test Utilities and assets
+include ':aws-amplify-testutils'

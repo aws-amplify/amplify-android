@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite.model;
+package com.amplifyframework.testutils.model;
 
 import androidx.core.util.ObjectsCompat;
 
@@ -43,7 +43,7 @@ public final class Person implements Model {
 
     // Default for isRequired is false
     @ModelField(targetName = "age", targetType = "Int")
-    private int age;
+    private Integer age;
 
     @ModelField(targetName = "dob", targetType = "AWSDate")
     private Date dob;
@@ -58,7 +58,7 @@ public final class Person implements Model {
     private Person(String uniqueId,
                    String firstName,
                    String lastName,
-                   int age,
+                   Integer age,
                    Date dob) {
         this.id = uniqueId;
         this.firstName = firstName;
@@ -103,7 +103,7 @@ public final class Person implements Model {
      * Returns age.
      * @return age.
      */
-    public int getAge() {
+    public Integer getAge() {
         return age;
     }
 

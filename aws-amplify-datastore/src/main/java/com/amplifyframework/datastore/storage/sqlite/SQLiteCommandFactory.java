@@ -81,7 +81,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final ModelField modelField = entry.getValue();
             stringBuilder.append(modelFieldName)
                 .append(SQLITE_COMMAND_DELIMITER)
-                .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()))
+                .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()).getSqliteDataType())
                 .append(SQLITE_COMMAND_DELIMITER);
 
             if (modelField.isPrimaryKey()) {
