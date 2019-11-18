@@ -48,9 +48,11 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -144,6 +146,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * {@link ResultListener#onError(Throwable)} method.
                  */
                 modelRegistry.load(models);
+
+                // Sort by dependency order
+                // use new HashSet<>() for now until PR#77 is approved
+                sortModelsByDependencyOrder(new HashSet<>(models));
 
                 /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
@@ -452,5 +458,80 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 null,
                 null,
                 null);
+    }
+
+    /*
+     * Sorts provided list of models by its topological order. A model comes before
+     * another if latter is dependent on former (uses as foreign key). This is to
+     * prevent the SQLite database from creating a table with reference to another
+     * table that it has not created yet.
+     *
+     * This method must be called after ModelRegistry.load() method is called so that
+     * sorting algorithm has access to model schema.
+     */
+    private List<Class<? extends Model>> sortModelsByDependencyOrder(Set<Class<? extends Model>> modelSet) {
+        final List<ModelSchema> sortedSchema = sortedSchemaByDependencyOrder();
+
+        // ArrayList > LinkedList for Collections.sort()
+        List<Class<? extends Model>> models = new ArrayList<>(modelSet);
+        Collections.sort(models, (Class<? extends Model> model1, Class<? extends Model> model2) -> {
+                ModelSchema schema1 = ModelRegistry.getInstance()
+                        .getModelSchemaForModelClass(model1.getSimpleName());
+                ModelSchema schema2 = ModelRegistry.getInstance()
+                        .getModelSchemaForModelClass(model2.getSimpleName());
+                return sortedSchema.indexOf(schema2) - sortedSchema.indexOf(schema1);
+            }
+        );
+        return models;
+    }
+
+    // Uses Kahn's algorithm to sort topologically (in reverse)
+    // This one works bottom-up rather than top-down
+    private List<ModelSchema> sortedSchemaByDependencyOrder() {
+        // Pre-process the models to store dependencies
+        // Model [key] is foreign key of the its corresponding set of models [value]
+        Map<ModelSchema, Set<ModelSchema>> dependencies = new TreeMap<>();
+        for (ModelSchema schema : ModelRegistry.getInstance().getModelSchemaMap().values()) {
+            for (ModelField field : schema.getForeignKeys()) {
+                ModelSchema foreignKeyOf = ModelRegistry.getInstance()
+                        .getModelSchemaForModelClass(field.getTargetType());
+                if (!dependencies.containsKey(foreignKeyOf)) {
+                    dependencies.put(foreignKeyOf, new HashSet<>());
+                }
+                dependencies.get(schema).add(schema);
+            }
+        }
+
+        LinkedList<ModelSchema> sortedList = new LinkedList<>();
+        LinkedList<ModelSchema> queue = new LinkedList<>();
+
+        for (ModelSchema schema : ModelRegistry.getInstance().getModelSchemaMap().values()) {
+            // Add model to queue if it is not foreign key of any other model
+            if (!dependencies.containsKey(schema) || dependencies.get(schema).isEmpty()) {
+                queue.offer(schema);
+            }
+
+            while (!queue.isEmpty()) {
+                ModelSchema current = queue.poll();
+
+                // Kahn's algorithm adds to tail, but order is reversed in here
+                sortedList.addFirst(current);
+
+                // Add all of its foreign keys to queue
+                for (ModelField field : current.getForeignKeys()) {
+                    ModelSchema foreignKeyModel = ModelRegistry.getInstance()
+                            .getModelSchemaForModelClass(field.getTargetType());
+
+                    // Remove dependency between current model and parent model
+                    if (dependencies.containsKey(foreignKeyModel)) {
+                        dependencies.get(foreignKeyModel).remove(current);
+                    }
+
+                    // Add the parent model to queue
+                    queue.offer(foreignKeyModel);
+                }
+            }
+        }
+        return sortedList;
     }
 }
