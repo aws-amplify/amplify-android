@@ -15,6 +15,8 @@
 
 package com.amplifyframework.hub;
 
+import androidx.core.util.ObjectsCompat;
+
 import java.util.UUID;
 
 /**
@@ -78,25 +80,32 @@ public final class HubEvent {
     public String toString() {
         return "HubEvent{" +
                 "name='" + name + '\'' +
-                ", data=" + data.toString() +
-                ", uuid =" + uuid.toString() +
+                ", data=" + data +
+                ", uuid=" + uuid +
                 '}';
     }
 
-    @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
     @Override
     public boolean equals(Object thatObject) {
-        if (this == thatObject) return true;
-        if (thatObject == null || getClass() != thatObject.getClass()) return false;
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
 
-        HubEvent that = (HubEvent) thatObject;
+        HubEvent hubEvent = (HubEvent) thatObject;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        return uuid != null ? uuid.equals(that.uuid) : that.uuid == null;
+        if (!ObjectsCompat.equals(name, hubEvent.name)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(data, hubEvent.data)) {
+            return false;
+        }
+        return ObjectsCompat.equals(uuid, hubEvent.uuid);
     }
 
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
@@ -105,4 +114,3 @@ public final class HubEvent {
         return result;
     }
 }
-

@@ -62,7 +62,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
             final Set<HubSubscription> safeSubscriptions = new HashSet<>();
             synchronized (subscriptionsLock) {
                 if (subscriptionsByChannel.containsKey(hubChannel)) {
-                    //noinspection ConstantConditions contains is true & our impl never puts() a null value.
                     safeSubscriptions.addAll(subscriptionsByChannel.get(hubChannel));
                 }
             }
@@ -101,7 +100,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
             if (!subscriptionsByChannel.containsKey(hubChannel)) {
                 subscriptionsByChannel.put(hubChannel, new HashSet<>());
             }
-            //noinspection ConstantConditions syncrhonized, and just ensured non-null via put(..., non-null).
             subscriptionsByChannel.get(hubChannel).add(hubSubscription);
         }
 
@@ -120,7 +118,6 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
             // Now that we have a handle to the subscription, figure out which channel
             final HubChannel channelToUpdate = subscriptionBeingEnded.getHubChannel();
             if (subscriptionsByChannel.containsKey(channelToUpdate)) {
-                //noinspection ConstantConditions syncrhonized, key is valid, and we never put null values in map
                 subscriptionsByChannel.get(channelToUpdate).remove(subscriptionBeingEnded);
             }
         }

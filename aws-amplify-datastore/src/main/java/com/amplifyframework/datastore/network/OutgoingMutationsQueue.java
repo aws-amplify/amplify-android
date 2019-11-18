@@ -39,10 +39,8 @@ import io.reactivex.subjects.PublishSubject;
  * When a write completes successfully, it is safe to remove the corresponding item
  * from the mutation queue.
  */
+@SuppressWarnings("CodeBlock2Expr") // In this class, some lambdas look more readable w/ blocks
 final class OutgoingMutationsQueue {
-
-    private static final String TAG = OutgoingMutationsQueue.class.getName();
-
     private final LocalStorageAdapter localStorageAdapter;
     private final PublishSubject<MutationEvent<?>> pendingMutations;
 
@@ -50,7 +48,6 @@ final class OutgoingMutationsQueue {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
         this.pendingMutations = PublishSubject.create();
     }
-
 
     /*
      * Enqueue a mutation into the mutation queue.
@@ -110,7 +107,7 @@ final class OutgoingMutationsQueue {
         }));
     }
 
-    @SuppressWarnings("rawtypes") // TODO: fix them...
+    @SuppressWarnings("rawtypes") // TODO: Use Class<MutationEvent<?>>, not Class<MutationEvent>.
     private Observable<MutationEvent<?>> previouslyUnhandledMutations() {
         return Observable.defer(() -> Observable.create(emitter -> {
             localStorageAdapter.query(MutationEvent.class, new ResultListener<Iterator<MutationEvent>>() {

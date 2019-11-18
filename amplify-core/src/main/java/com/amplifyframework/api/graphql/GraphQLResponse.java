@@ -17,6 +17,7 @@ package com.amplifyframework.api.graphql;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -77,19 +78,24 @@ public final class GraphQLResponse<T> {
         return data != null;
     }
 
-    @SuppressWarnings({"NeedBraces", "EqualsReplaceableByObjectsCall"})
     @Override
     public boolean equals(Object thatObject) {
-        if (this == thatObject) return true;
-        if (thatObject == null || getClass() != thatObject.getClass()) return false;
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
 
         GraphQLResponse<?> that = (GraphQLResponse<?>) thatObject;
 
-        if (data != null ? !data.equals(that.data) : that.data != null) return false;
-        return errors != null ? errors.equals(that.errors) : that.errors == null;
+        if (!ObjectsCompat.equals(data, that.data)) {
+            return false;
+        }
+        return ObjectsCompat.equals(errors, that.errors);
     }
 
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = data != null ? data.hashCode() : 0;
@@ -120,20 +126,23 @@ public final class GraphQLResponse<T> {
             return message;
         }
 
-        @SuppressWarnings("NeedBraces")
         @Override
         public boolean equals(Object thatObject) {
-            if (this == thatObject) return true;
-            if (thatObject == null || getClass() != thatObject.getClass()) return false;
+            if (this == thatObject) {
+                return true;
+            }
+            if (thatObject == null || getClass() != thatObject.getClass()) {
+                return false;
+            }
 
-            Error that = (Error) thatObject;
+            Error error = (Error) thatObject;
 
-            return message.equals(that.message);
+            return ObjectsCompat.equals(message, error.message);
         }
 
         @Override
         public int hashCode() {
-            return message.hashCode();
+            return message != null ? message.hashCode() : 0;
         }
     }
 
@@ -156,4 +165,3 @@ public final class GraphQLResponse<T> {
         <T> GraphQLResponse<T> buildResponse(String apiResponseJson, Class<T> classToCast);
     }
 }
-
