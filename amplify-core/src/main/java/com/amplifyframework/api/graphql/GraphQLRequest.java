@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.graphql;
 
-import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +29,7 @@ public final class GraphQLRequest<T> {
     private final Map<String, Object> variables;
     private final List<String> fragments;
     private final Class<T> modelClass;
+    private final VariablesSerializer variablesSerializer;
 
     /**
      * Constructor for GraphQLRequest with
@@ -38,9 +37,14 @@ public final class GraphQLRequest<T> {
      * @param document query document to process
      * @param modelClass class instance of model
      *                   to operate on
+     * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
-    public GraphQLRequest(String document, Class<T> modelClass) {
-        this(document, new HashMap<>(), modelClass);
+    public GraphQLRequest(
+            String document,
+            Class<T> modelClass,
+            VariablesSerializer variablesSerializer
+    ) {
+        this(document, new HashMap<>(), modelClass, variablesSerializer);
     }
 
     /**
@@ -50,12 +54,19 @@ public final class GraphQLRequest<T> {
      * @param variables variables to be added
      * @param modelClass class instance of model
      *                   to operate on
+     * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
-    public GraphQLRequest(String document, Map<String, Object> variables, Class<T> modelClass) {
+    public GraphQLRequest(
+            String document,
+            Map<String, Object> variables,
+            Class<T> modelClass,
+            VariablesSerializer variablesSerializer
+    ) {
         this.document = document;
         this.variables = variables;
         this.fragments = new ArrayList<>();
         this.modelClass = modelClass;
+        this.variablesSerializer = variablesSerializer;
     }
 
     /**
@@ -89,8 +100,7 @@ public final class GraphQLRequest<T> {
         if (variables.isEmpty()) {
             completeQuery.append("null");
         } else {
-            Gson gson = new Gson();
-            completeQuery.append(gson.toJson(this.variables));
+            completeQuery.append(variablesSerializer.serialize(this.variables));
         }
 
         completeQuery.append("}");
@@ -131,5 +141,17 @@ public final class GraphQLRequest<T> {
      */
     public Class<T> getModelClass() {
         return modelClass;
+    }
+
+    /**
+     * An interface defining the method used to serialize a map of variables to go with a request.
+     */
+    public interface VariablesSerializer {
+        /**
+         * Takes a map and returns it as a serialized string.
+         * @param variables a map of the variables to go with a GraphQL request
+         * @return a string of the map properly serialized to be sent
+         */
+        String serialize(Map<String, Object> variables);
     }
 }

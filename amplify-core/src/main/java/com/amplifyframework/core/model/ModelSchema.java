@@ -192,11 +192,12 @@ public final class ModelSchema {
 
     /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
+     * NOTE: This uses the schema target names as the keys, not the local Java field names.
      * @param instance An instance of this model populated with values to map
-     * @return a map of the fields in this schema to the actual values in the provided object
+     * @return a map of the target fields in the schema to the actual values in the provided object
      * @throws AmplifyException if the object does not match the fields in this schema
      */
-    public Map<String, Object> getValuesFromInstance(Object instance) throws AmplifyException {
+    public Map<String, Object> getMapOfFieldNameAndValues(Model instance) throws AmplifyException {
         HashMap<String, Object> result = new HashMap<>();
 
         if (!instance.getClass().getSimpleName().equals(this.getName())) {

@@ -63,37 +63,36 @@ final class AppSyncGraphQLRequestFactory {
         String typeStr = type.toString();
         String modelName = schema.getTargetModelName();
 
-        doc.append("mutation ");
-        doc.append(StringUtils.capitalize(typeStr) +
-                StringUtils.capitalize(modelName));
-        doc.append("($input: ");
-        doc.append(StringUtils.capitalize(typeStr) +
-                StringUtils.capitalize(modelName) +
-                "Input!");
-        doc.append(") { ");
-        doc.append(typeStr.toLowerCase(Locale.getDefault()) +
-                StringUtils.capitalize(modelName));
-        doc.append("(input: $input) { ");
-
-        doc.append(getModelFields(schema));
-
-        doc.append("}}");
+        doc.append("mutation ")
+            .append(StringUtils.capitalize(typeStr) +
+                    StringUtils.capitalize(modelName))
+            .append("($input: ")
+            .append(StringUtils.capitalize(typeStr) +
+                    StringUtils.capitalize(modelName) +
+                    "Input!")
+            .append(") { ")
+            .append(typeStr.toLowerCase(Locale.getDefault()) +
+                    StringUtils.capitalize(modelName))
+            .append("(input: $input) { ")
+            .append(getModelFields(schema))
+            .append("}}");
 
         Map<String, Object> input = new HashMap<>();
 
         if (type.equals(MutationType.DELETE)) {
             input.put("input", Collections.singletonMap("id", model.getId()));
         } else {
-            input.put("input", schema.getValuesFromInstance(model));
+            input.put("input", schema.getMapOfFieldNameAndValues(model));
         }
 
-        GraphQLRequest<T> result = new GraphQLRequest<T>(
+        GraphQLRequest<T> request = new GraphQLRequest<T>(
                 doc.toString(),
                 input,
-                modelClass
+                modelClass,
+                new GsonVariablesSerializer()
         );
 
-        return result;
+        return request;
     }
 
     public static <T extends Model> GraphQLRequest<T> buildSubscription(

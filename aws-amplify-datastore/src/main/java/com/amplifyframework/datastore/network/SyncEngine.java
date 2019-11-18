@@ -123,7 +123,8 @@ public final class SyncEngine {
             GraphQLRequest<M> request = new GraphQLRequest<>(
                 MutationDocument.from(mutationEvent),
                 Collections.emptyMap(),
-                (Class<M>) mutationEvent.getClass()
+                (Class<M>) mutationEvent.getClass(),
+                new GsonVariablesSerializer()
             );
 
             api.mutate(

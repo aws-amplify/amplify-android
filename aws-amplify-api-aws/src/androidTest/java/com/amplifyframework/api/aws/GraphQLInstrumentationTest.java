@@ -134,7 +134,8 @@ public final class GraphQLInstrumentationTest {
                 new GraphQLRequest<Comment>(
                     TestAssets.readAsString("subscribe-event-comments.graphql"),
                     Collections.singletonMap("eventId", eventId),
-                    Comment.class
+                    Comment.class,
+                    new GsonVariablesSerializer()
                 ),
                 streamListener
         );
@@ -175,7 +176,8 @@ public final class GraphQLInstrumentationTest {
                 new GraphQLRequest<>(
                     TestAssets.readAsString("create-comment.graphql"),
                     variables,
-                    Comment.class
+                    Comment.class,
+                    new GsonVariablesSerializer()
                 ),
                 creationListener
         );
@@ -226,7 +228,8 @@ public final class GraphQLInstrumentationTest {
                 new GraphQLRequest<>(
                     TestAssets.readAsString("create-event.graphql"),
                     variables,
-                    Event.class
+                    Event.class,
+                    new GsonVariablesSerializer()
                 ),
                 creationListener
         );
