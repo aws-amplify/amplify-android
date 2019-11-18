@@ -56,18 +56,16 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
      * @param client OkHttp client being used to hit the endpoint
      * @param request GraphQL request being enacted
      * @param responseFactory an implementation of GsonGraphQLResponseFactory
-     * @param classToCast class to cast the response to
      * @param responseListener
      *        listener to be invoked when response is available, or if
      */
     private SingleResultOperation(
             String endpoint,
             OkHttpClient client,
-            GraphQLRequest request,
+            GraphQLRequest<T> request,
             GraphQLResponse.Factory responseFactory,
-            Class<T> classToCast,
             ResultListener<GraphQLResponse<T>> responseListener) {
-        super(request, responseFactory, classToCast);
+        super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
         this.responseListener = responseListener;
@@ -81,13 +79,13 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
         }
 
         try {
-            Log.d("graphql", getRequest().content());
+            Log.d("graphql", getRequest().getContent());
             ongoingCall = client.newCall(new Request.Builder()
-                .url(endpoint)
-                .addHeader("accept", CONTENT_TYPE)
-                .addHeader("content-type", CONTENT_TYPE)
-                .post(RequestBody.create(getRequest().content(), MediaType.parse(CONTENT_TYPE)))
-                .build());
+                    .url(endpoint)
+                    .addHeader("accept", CONTENT_TYPE)
+                    .addHeader("content-type", CONTENT_TYPE)
+                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                    .build());
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {
             // Cancel if possible
@@ -148,9 +146,8 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
     static final class Builder<T> {
         private String endpoint;
         private OkHttpClient client;
-        private GraphQLRequest request;
+        private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
-        private Class<T> classToCast;
         private ResultListener<GraphQLResponse<T>> responseListener;
 
         Builder<T> endpoint(final String endpoint) {
@@ -163,18 +160,13 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        Builder<T> request(final GraphQLRequest request) {
+        Builder<T> request(final GraphQLRequest<T> request) {
             this.request = request;
             return this;
         }
 
         Builder<T> responseFactory(final GraphQLResponse.Factory responseFactory) {
             this.responseFactory = responseFactory;
-            return this;
-        }
-
-        Builder<T> classToCast(final Class<T> classToCast) {
-            this.classToCast = classToCast;
             return this;
         }
 
@@ -185,12 +177,11 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
 
         SingleResultOperation<T> build() {
             return new SingleResultOperation<>(
-                endpoint,
-                client,
-                request,
-                responseFactory,
-                classToCast,
-                responseListener);
+                    endpoint,
+                    client,
+                    request,
+                    responseFactory,
+                    responseListener);
         }
     }
 }

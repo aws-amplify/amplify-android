@@ -39,11 +39,10 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             final SubscriptionEndpoint subscriptionEndpoint,
             final String endpoint,
             final OkHttpClient client,
-            final GraphQLRequest graphQLRequest,
+            final GraphQLRequest<T> graphQLRequest,
             final GraphQLResponse.Factory responseFactory,
-            final Class<T> classToCast,
             final StreamListener<GraphQLResponse<T>> subscriptionListener) {
-        super(graphQLRequest, responseFactory, classToCast);
+        super(graphQLRequest, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
         this.subscriptionEndpoint = subscriptionEndpoint;
@@ -82,7 +81,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     @Override
     public void start() {
         subscriptionId = subscriptionEndpoint.requestSubscription(
-            getRequest(), subscriptionListener, getClassToCast());
+            getRequest(), subscriptionListener);
     }
 
     @Override
@@ -96,15 +95,13 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             OkHttpClientStep<T>,
             GraphQlRequestStep<T>,
             ResponseFactoryStep<T>,
-            ClassToCastStep<T>,
             StreamListenerStep<T>,
             BuilderStep<T> {
         private SubscriptionEndpoint subscriptionEndpoint;
         private String endpoint;
         private OkHttpClient client;
-        private GraphQLRequest graphQLRequest;
+        private GraphQLRequest<T> graphQLRequest;
         private GraphQLResponse.Factory responseFactory;
-        private Class<T> classToCast;
         private StreamListener<GraphQLResponse<T>> streamListener;
 
         @NonNull
@@ -130,22 +127,15 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
         @NonNull
         @Override
-        public ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest graphQLRequest) {
+        public ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest<T> graphQLRequest) {
             this.graphQLRequest = Objects.requireNonNull(graphQLRequest);
             return this;
         }
 
         @NonNull
         @Override
-        public ClassToCastStep<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
+        public StreamListenerStep<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
             this.responseFactory = Objects.requireNonNull(responseFactory);
-            return this;
-        }
-
-        @NonNull
-        @Override
-        public StreamListenerStep<T> classToCast(@NonNull Class<T> classToCast) {
-            this.classToCast = Objects.requireNonNull(classToCast);
             return this;
         }
 
@@ -165,7 +155,6 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
                 Objects.requireNonNull(Builder.this.client),
                 Objects.requireNonNull(Builder.this.graphQLRequest),
                 Objects.requireNonNull(Builder.this.responseFactory),
-                Objects.requireNonNull(Builder.this.classToCast),
                 Builder.this.streamListener // It's a @Nullable field
             );
         }
@@ -188,17 +177,12 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     interface GraphQlRequestStep<T> {
         @NonNull
-        ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest graphQlRequest);
+        ResponseFactoryStep<T> graphQLRequest(@NonNull GraphQLRequest<T> graphQlRequest);
     }
 
     interface ResponseFactoryStep<T> {
         @NonNull
-        ClassToCastStep<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory);
-    }
-
-    interface ClassToCastStep<T> {
-        @NonNull
-        StreamListenerStep<T> classToCast(@NonNull Class<T> classToCast);
+        StreamListenerStep<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory);
     }
 
     interface StreamListenerStep<T> {
