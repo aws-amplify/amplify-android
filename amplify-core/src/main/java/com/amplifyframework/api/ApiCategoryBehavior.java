@@ -27,7 +27,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 /**
  * API category behaviors include REST and GraphQL operations. These
@@ -59,7 +59,7 @@ public interface ApiCategoryBehavior {
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull QueryType queryType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener);
 
@@ -107,7 +107,7 @@ public interface ApiCategoryBehavior {
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
-            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull MutationType mutationType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener);
 
@@ -154,7 +154,7 @@ public interface ApiCategoryBehavior {
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener);
 

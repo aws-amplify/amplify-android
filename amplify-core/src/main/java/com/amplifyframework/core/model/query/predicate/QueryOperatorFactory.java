@@ -16,21 +16,21 @@
 package com.amplifyframework.core.model.query.predicate;
 
 /**
- * A Filtering Predicate defines matching rules on a subject.
- * For example, given:
- * FilteringPredicate&lt;Object&gt; isNumber = subject -> (subject instanceof Number);
- * isNumber.matches("Tony Balogne") // false
- * isNumber.matches(4); // true
- *
- * @param <T> The type of the subject that is being considered by the predicate.
+ * A single source for developers to see what types of comparison operators they can create.
  */
-@FunctionalInterface
-public interface FilteringPredicate<T> {
+public final class QueryOperatorFactory {
 
     /**
-     * Defines matching rules on a subject.
-     * @param subject An object which may or may not match defined criteria
-     * @return true, if the subject provides a match, false, otherwise
+     * Private constructor to prevent developers from instantiating this factory.
      */
-    boolean matches(T subject);
+    private QueryOperatorFactory() { }
+
+    /**
+     * Returns an equality comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the equality condition
+     */
+    public static EqualQueryOperator equalTo(Object value) {
+        return new EqualQueryOperator(value);
+    }
 }

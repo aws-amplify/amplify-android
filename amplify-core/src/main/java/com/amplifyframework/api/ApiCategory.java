@@ -29,7 +29,7 @@ import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 /**
  * The API category provides methods for interacting with remote systems
@@ -47,7 +47,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull QueryType queryType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
@@ -67,7 +67,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
-            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull MutationType mutationType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
@@ -87,7 +87,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull FilteringPredicate<T> predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
     ) {

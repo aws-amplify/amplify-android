@@ -115,7 +115,7 @@ public interface DataStoreCategoryBehavior {
      * Observe changes to objects of a model type, only when those changes match the
      * criteria of the provide filtering predicate.
      * @param modelClass The class of object to observe
-     * @param filteringPredicate A predicate which will be evaluated to determine
+     * @param queryPredicate A predicate which will be evaluated to determine
      *                           if a particular change on modelClass should be
      *                           emitted onto the returned observable.
      * @param <T> The type of the object to observe
@@ -124,6 +124,6 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> Observable<MutationEvent<T>> observe(
             Class<T> modelClass,
-            FilteringPredicate<MutationEvent<T>> filteringPredicate);
+            QueryPredicate queryPredicate);
 }
 
