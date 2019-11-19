@@ -126,7 +126,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
                                        int oldVersion,
                                        int newVersion) {
         if (oldVersion != newVersion) {
-            // Loop all the tables in the list and drop them if they exist
+            // Loop all the tables in the set and drop them if they exist
             // and re-create all the tables.
             sqLiteDatabase.beginTransaction();
             try {
@@ -147,7 +147,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
     }
 
     private void createTablesAndIndexes(SQLiteDatabase sqLiteDatabase) {
-        // Loop all the create table sql command string in the list.
+        // Loop all the create table sql command string in the set.
         // each sql will create a table in SQLite database.
         sqLiteDatabase.beginTransaction();
         try {

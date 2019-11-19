@@ -23,8 +23,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
-import com.amplifyframework.core.model.ModelRegistry;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 
 import java.util.Iterator;
@@ -199,7 +199,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             ModelField foreignKey = foreignKeyIterator.next();
             String connectionName = foreignKey.getName();
             String connectionTarget = foreignKey.belongsTo();
-            String connectionId = ModelRegistry.getInstance()
+            String connectionId = ModelSchemaRegistry.getInstance()
                     .getModelSchemaForModelClass(connectionTarget)
                     .getPrimaryKey()
                     .getName();
