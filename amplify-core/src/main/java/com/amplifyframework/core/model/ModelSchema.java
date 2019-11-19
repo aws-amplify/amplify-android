@@ -17,6 +17,7 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.Connection;
 import com.amplifyframework.core.model.annotations.Index;
@@ -27,6 +28,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -57,7 +59,7 @@ public final class ModelSchema {
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
     // persistence-related operations guarantee that the results are always consistent.
-    private final List<Map.Entry<String, ModelField>> sortedFields;
+    private final List<ModelField> sortedFields;
 
     // Specifies the index of a Model.
     private final ModelIndex modelIndex;
@@ -85,11 +87,9 @@ public final class ModelSchema {
      * Construct the ModelSchema from the {@link Model} class.
      *
      * @param clazz the instance of a model class
-     * @param <T> parameter type of a data model that conforms
-     *           to the {@link Model} interface.
      * @return the ModelSchema object.
      */
-    static <T extends Model> ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
+    public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
@@ -176,6 +176,16 @@ public final class ModelSchema {
     }
 
     /**
+     * Returns a sorted copy of all the fields of a Model.
+     *
+     * @return list of fieldName and the fieldObject of all
+     *          the fields of the model in sorted order.
+     */
+    public List<ModelField> getSortedFields() {
+        return sortedFields;
+    }
+
+    /**
      * Returns the attributes of a {@link Model}.
      *
      * @return the attributes of a {@link Model}.
@@ -190,9 +200,9 @@ public final class ModelSchema {
      * @return the primary key of the Model.
      */
     public ModelField getPrimaryKey() {
-        for (Map.Entry<String, ModelField> field: sortedFields) {
-            if (field.getValue().isPrimaryKey()) {
-                return field.getValue();
+        for (ModelField field: sortedFields) {
+            if (field.isPrimaryKey()) {
+                return field;
             }
         }
         return null;
@@ -205,9 +215,9 @@ public final class ModelSchema {
      */
     public List<ModelField> getForeignKeys() {
         List<ModelField> foreignKeys = new LinkedList<>();
-        for (Map.Entry<String, ModelField> field: sortedFields) {
-            if (field.getValue().isForeignKey()) {
-                foreignKeys.add(field.getValue());
+        for (ModelField field: sortedFields) {
+            if (field.isForeignKey()) {
+                foreignKeys.add(field);
             }
         }
         return foreignKeys;
@@ -220,13 +230,47 @@ public final class ModelSchema {
      */
     public Map<ModelField, ModelConnection> getConnections() {
         Map<ModelField, ModelConnection> connections = new TreeMap<>();
-        for (Map.Entry<String, ModelField> field: sortedFields) {
-            ModelField modelField = field.getValue();
-            if (modelField.isConnected()) {
-                connections.put(modelField, modelField.getConnection());
+        for (ModelField field : sortedFields) {
+            if (field.isConnected()) {
+                connections.put(field, field.getConnection());
             }
         }
         return connections;
+    }
+
+    /**
+     * Creates a map of the fields in this schema to the actual values in the provided object.
+     * NOTE: This uses the schema target names as the keys, not the local Java field names.
+     * @param instance An instance of this model populated with values to map
+     * @return a map of the target fields in the schema to the actual values in the provided object
+     * @throws AmplifyException if the object does not match the fields in this schema
+     */
+    public Map<String, Object> getMapOfFieldNameAndValues(Model instance) throws AmplifyException {
+        HashMap<String, Object> result = new HashMap<>();
+
+        if (!instance.getClass().getSimpleName().equals(this.getName())) {
+            throw new AmplifyException(
+                    "The object provided is not an instance of this Model." +
+                    "Please provide an instance of " + this.getName() + " which this is a schema for.");
+        }
+
+        for (ModelField field : this.getSortedFields()) {
+            try {
+                Field privateField = instance.getClass().getDeclaredField(field.getName());
+                privateField.setAccessible(true);
+                result.put(field.getTargetName(), privateField.get(instance));
+            } catch (Exception exception) {
+                throw new AmplifyException("An invalid field was provided - " +
+                        field.getName() +
+                        " is not present in " +
+                        instance.getClass().getSimpleName(),
+                        exception,
+                        "Check if this model schema is a correct representation of the fields in the provided Object",
+                        false);
+            }
+        }
+
+        return result;
     }
 
     private static ModelIndex getModelIndex(@NonNull Class<? extends Model> clazz) {
@@ -242,13 +286,13 @@ public final class ModelSchema {
         return builder.build();
     }
 
-    private List<Map.Entry<String, ModelField>> sortModelFields() {
+    private List<ModelField> sortModelFields() {
         if (fields == null) {
             return null;
         }
 
         // Create a list from elements of sortedFields
-        final List<Map.Entry<String, ModelField>> modelFieldEntries = new LinkedList<>(fields.entrySet());
+        final List<ModelField> modelFieldEntries = new LinkedList<>(fields.values());
 
         // Returns an array of the values sorted by some pre-defined rules:
         //
@@ -258,9 +302,7 @@ public final class ModelSchema {
         //
         // This is useful so code that uses the sortedFields to generate queries and other
         // persistence-related operations guarantee that the results are always consistent.
-        Collections.sort(modelFieldEntries, (fieldEntryOne, fieldEntryOther) -> {
-            ModelField fieldOne = fieldEntryOne.getValue();
-            ModelField fieldOther = fieldEntryOther.getValue();
+        Collections.sort(modelFieldEntries, (fieldOne, fieldOther) -> {
 
             if (fieldOne.isPrimaryKey()) {
                 return 1;

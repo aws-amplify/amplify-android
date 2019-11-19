@@ -21,7 +21,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLOperation;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Immutable;
@@ -67,7 +69,6 @@ import static org.junit.Assert.assertTrue;
 public final class GraphQLInstrumentationTest {
     private static final String API_NAME = GraphQLInstrumentationTest.class.getSimpleName();
     private static final int DEFAULT_RESPONSE_TIMEOUT = 5 /* seconds */; // 5 is chosen arbitrarily
-    private static final int THREAD_WAIT_DURATION = 300;
 
     /**
      * Before any test is run, configure Amplify to use an
@@ -80,6 +81,34 @@ public final class GraphQLInstrumentationTest {
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.configure(configuration, context);
+    }
+
+    /**
+     * Testing autogeneration for creation mutation.
+     * @throws Throwable when interrupted
+     */
+    @Test
+    public void testCodegen() throws Throwable {
+        BlockingResultListener<Person> codegenListener = new BlockingResultListener<>();
+
+        Person person = Person
+                .builder()
+                .firstName("David")
+                .lastName("Daudelin")
+                .relationship(MaritalStatus.married)
+                .build();
+
+        Amplify.API.mutate(
+                API_NAME,
+                person,
+                null,
+                MutationType.CREATE,
+                codegenListener
+        );
+
+        GraphQLResponse<Person> response = codegenListener.awaitResult();
+        assertFalse(response.hasErrors());
+        assertTrue(response.hasData());
     }
 
     /**
@@ -101,11 +130,14 @@ public final class GraphQLInstrumentationTest {
         // Start listening for comments on that event
         BlockingStreamListener<Comment> streamListener = new BlockingStreamListener<>(1);
         GraphQLOperation<Comment> operation = Amplify.API.subscribe(
-            API_NAME,
-            TestAssets.readAsString("subscribe-event-comments.graphql"),
-            Collections.singletonMap("eventId", eventId),
-            Comment.class,
-            streamListener
+                API_NAME,
+                new GraphQLRequest<Comment>(
+                    TestAssets.readAsString("subscribe-event-comments.graphql"),
+                    Collections.singletonMap("eventId", eventId),
+                    Comment.class,
+                    new GsonVariablesSerializer()
+                ),
+                streamListener
         );
 
         // Create a comment
@@ -132,7 +164,7 @@ public final class GraphQLInstrumentationTest {
     private void createComment(String eventId) throws Throwable {
         String commentId = UUID.randomUUID().toString();
 
-        final Map<String, String> variables = new HashMap<>();
+        final Map<String, Object> variables = new HashMap<>();
         variables.put("eventId", eventId);
         variables.put("commentId", commentId);
         variables.put("content", "It's going to be fun!");
@@ -140,11 +172,14 @@ public final class GraphQLInstrumentationTest {
 
         BlockingResultListener<Comment> creationListener = new BlockingResultListener<>();
         Amplify.API.mutate(
-            API_NAME,
-            TestAssets.readAsString("create-comment.graphql"),
-            variables,
-            Comment.class,
-            creationListener
+                API_NAME,
+                new GraphQLRequest<>(
+                    TestAssets.readAsString("create-comment.graphql"),
+                    variables,
+                    Comment.class,
+                    new GsonVariablesSerializer()
+                ),
+                creationListener
         );
         GraphQLResponse<Comment> response = creationListener.awaitResult();
         assertFalse(response.hasErrors());
@@ -179,7 +214,7 @@ public final class GraphQLInstrumentationTest {
      */
     private String createEvent() throws Throwable {
         // Arrange a creation request, including a map of plug-able variables
-        final Map<String, String> variables = new HashMap<>();
+        final Map<String, Object> variables = new HashMap<>();
         variables.put("name", "Pizza Party");
         variables.put("when", "Tomorrow");
         variables.put("where", "Mario's Pizza Emporium");
@@ -189,11 +224,14 @@ public final class GraphQLInstrumentationTest {
         // Block this test runner until a response is rendered.
         BlockingResultListener<Event> creationListener = new BlockingResultListener<>();
         Amplify.API.mutate(
-            API_NAME,
-            TestAssets.readAsString("create-event.graphql"),
-            variables,
-            Event.class,
-            creationListener
+                API_NAME,
+                new GraphQLRequest<>(
+                    TestAssets.readAsString("create-event.graphql"),
+                    variables,
+                    Event.class,
+                    new GsonVariablesSerializer()
+                ),
+                creationListener
         );
 
         // Validate the response. No errors are expected.
@@ -281,7 +319,7 @@ public final class GraphQLInstrumentationTest {
      * of expected items, in the call to {@link BlockingStreamListener#BlockingStreamListener(int)}.
      *
      * Then, provide the instance to the
-     * {@link ApiCategoryBehavior#subscribe(String, String, Map, Class, StreamListener)}
+     * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, StreamListener)}
      * call.
      *
      * You can await results and completion by calling {@link BlockingStreamListener#awaitItems()}

@@ -71,7 +71,7 @@ public final class Person implements Model {
      * Returns an instance of the builder.
      * @return an instance of the builder.
      */
-    public static Builder builder() {
+    public static FirstNameStep builder() {
         return new Builder();
     }
 
@@ -173,37 +173,27 @@ public final class Person implements Model {
          * @param lastName last name.
          * @return next step.
          */
-        AgeStep lastName(String lastName);
-    }
-
-    /**
-     * Interface for age step.
-     */
-    public interface AgeStep {
-        /**
-         * Set the age.
-         * @param age age.
-         * @return next step.
-         */
-        DOBStep age(int age);
-    }
-
-    /**
-     * Interface for date of birth step.
-     */
-    public interface DOBStep {
-        /**
-         * Set the date of birth.
-         * @param dob date of birth.
-         * @return next step.
-         */
-        FinalStep dob(Date dob);
+        FinalStep lastName(String lastName);
     }
 
     /**
      * Interface for final step.
      */
     public interface FinalStep {
+        /**
+         * Set the age.
+         * @param age age.
+         * @return next step.
+         */
+        FinalStep age(int age);
+
+        /**
+         * Set the date of birth.
+         * @param dob date of birth.
+         * @return next step.
+         */
+        FinalStep dob(Date dob);
+
         /**
          * Returns the built Person object.
          * @return the built Person object.
@@ -215,7 +205,7 @@ public final class Person implements Model {
      * Builder to build the Person object.
      */
     public static final class Builder implements
-            FirstNameStep, LastNameStep, AgeStep, DOBStep, FinalStep {
+            FirstNameStep, LastNameStep, FinalStep {
         private String firstName;
         private String lastName;
         private int age;
@@ -236,7 +226,7 @@ public final class Person implements Model {
          * @param lastName last name
          * @return next step
          */
-        public AgeStep lastName(String lastName) {
+        public FinalStep lastName(String lastName) {
             this.lastName = lastName;
             return this;
         }
@@ -246,7 +236,7 @@ public final class Person implements Model {
          * @param age age
          * @return next step
          */
-        public DOBStep age(int age) {
+        public FinalStep age(int age) {
             this.age = age;
             return this;
         }
