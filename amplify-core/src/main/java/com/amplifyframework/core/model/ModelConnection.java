@@ -21,6 +21,10 @@ import java.util.List;
 
 /**
  * Represents a connection of the {@link Model} class.
+ *
+ * This class may no longer be needed when an alternative solution
+ * using specialized annotations for marking connections is
+ * implemented. See {@link com.amplifyframework.core.model.annotations.BelongsTo}.
  */
 public final class ModelConnection {
     // Name of the connection to identify the relationship.
