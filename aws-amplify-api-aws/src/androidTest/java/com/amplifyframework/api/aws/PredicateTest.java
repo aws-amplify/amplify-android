@@ -13,19 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.api.aws;
 
 import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
-
-import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 
 import org.junit.Test;
 
 public class PredicateTest {
     @Test
     public void testSingleQueryPredicateOperation() {
-        QueryPredicateOperation op = field("id").eq("1234");
+        QueryPredicateOperation op = Person.ID.eq("1234");
 
         assert(op.field().equals("id"));
         assert(op.operator().getClass().equals(EqualQueryOperator.class));
