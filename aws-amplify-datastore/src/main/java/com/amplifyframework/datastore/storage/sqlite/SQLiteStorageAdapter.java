@@ -28,9 +28,9 @@ import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
-import com.amplifyframework.core.model.ModelRegistry;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelStore;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
@@ -73,9 +73,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // LogCat Tag.
     private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
 
-    // ModelRegistry instance that gives the ModelSchema and Model objects
+    // ModelSchemaRegistry instance that gives the ModelSchema and Model objects
     // based on Model class name lookup mechanism.
-    private final ModelRegistry modelRegistry;
+    private final ModelSchemaRegistry modelSchemaRegistry;
 
     // ThreadPool for SQLite operations.
     private final ExecutorService threadPool;
@@ -101,10 +101,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Construct the SQLiteStorageAdapter object.
-     * @param modelRegistry modelRegistry that hosts the models and their schema.
+     * @param modelSchemaRegistry modelSchemaRegistry that hosts the models and their schema.
      */
-    public SQLiteStorageAdapter(@NonNull ModelRegistry modelRegistry) {
-        this.modelRegistry = modelRegistry;
+    public SQLiteStorageAdapter(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
+        this.modelSchemaRegistry = modelSchemaRegistry;
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
@@ -116,7 +116,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @return the default instance of the SQLiteStorageAdapter.
      */
     public static SQLiteStorageAdapter defaultInstance() {
-        return new SQLiteStorageAdapter(ModelRegistry.getInstance());
+        return new SQLiteStorageAdapter(ModelSchemaRegistry.getInstance());
     }
 
     /**
@@ -130,24 +130,24 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      *
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
-     * @param modelStore  container of all data {@link Model} classes
+     * @param modelProvider  container of all data {@link Model} classes
      * @param listener the listener to be invoked to notify completion
      *                 of the setUp.
      */
     @Override
     public void setUp(@NonNull Context context,
-                      @NonNull ModelStore modelStore,
+                      @NonNull ModelProvider modelProvider,
                       @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
-                final Set<Class<? extends Model>> models = modelStore.set();
+                final Set<Class<? extends Model>> models = modelProvider.set();
                 /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes
                  * through reflection will be notified via the
                  * {@link ResultListener#onError(Throwable)} method.
                  */
-                modelRegistry.load(models);
+                modelSchemaRegistry.load(models);
 
                 /*
                  * Create the CREATE TABLE and CREATE INDEX commands for each of the
@@ -189,7 +189,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 this.insertSqlPreparedStatements = getInsertSqlPreparedStatements();
 
                 listener.onResult(
-                        new ArrayList<>(modelRegistry.getModelSchemaMap().values())
+                        new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())
                 );
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in creating and opening a " +
@@ -209,7 +209,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                        @NonNull ResultListener<MutationEvent<T>> listener) {
         threadPool.submit(() -> {
             try {
-                final ModelSchema modelSchema = modelRegistry
+                final ModelSchema modelSchema = modelSchemaRegistry
                         .getModelSchemaForModelClass(model.getClass().getSimpleName());
                 final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                 if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
@@ -253,7 +253,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 Log.d(TAG, "Querying data for: " + modelClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
-                final ModelSchema modelSchema = modelRegistry
+                final ModelSchema modelSchema = modelSchemaRegistry
                         .getModelSchemaForModelClass(modelClass.getSimpleName());
 
                 final Cursor cursor = getQueryAllCursor(modelClass.getSimpleName());
@@ -296,7 +296,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
         for (Class<? extends Model> model: models) {
-            final ModelSchema modelSchema = modelRegistry
+            final ModelSchema modelSchema = modelSchemaRegistry
                     .getModelSchemaForModelClass(model.getSimpleName());
             sqlCommandFactory.createTableFor(modelSchema);
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
@@ -308,7 +308,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
         final Map<String, SqlCommand> modifiableMap = new HashMap<>();
         final Set<Map.Entry<String, ModelSchema>> modelSchemaEntrySet =
-                ModelRegistry.getInstance().getModelSchemaMap().entrySet();
+                ModelSchemaRegistry.getInstance().getModelSchemaMap().entrySet();
         for (final Map.Entry<String, ModelSchema> entry: modelSchemaEntrySet) {
             final String tableName = entry.getKey();
             final ModelSchema modelSchema = entry.getValue();

@@ -22,7 +22,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
-import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelStore;
+import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
 
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -75,7 +75,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         Amplify.DataStore.setUp(
                 context,
-                AmplifyCliGeneratedModelStore.getInstance(),
+                AmplifyCliGeneratedModelProvider.getInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
                     public void onResult(List<ModelSchema> result) {

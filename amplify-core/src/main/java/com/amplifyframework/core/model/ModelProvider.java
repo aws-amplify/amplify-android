@@ -21,7 +21,7 @@ import java.util.Set;
  * Defines the contract for retrieving information about the
  * models generated for DataStoreCategoryBehavior.
  */
-public interface ModelStore {
+public interface ModelProvider {
     /**
      * Get a set of the model classes.
      * @return a set of the model classes.

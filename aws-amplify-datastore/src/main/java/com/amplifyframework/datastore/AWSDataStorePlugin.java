@@ -22,8 +22,8 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.ModelStore;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -105,16 +105,16 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
      *
      * @param context  Android application context required to
      *                 interact with a storage mechanism in Android.
-     * @param modelStore   container of all Model classes
+     * @param modelProvider   container of all Model classes
      * @param listener the listener to be invoked to notify completion
      *                 of the setUp.
      */
     @Override
     public void setUp(
             @NonNull Context context,
-            @NonNull ModelStore modelStore,
+            @NonNull ModelProvider modelProvider,
             @NonNull ResultListener<List<ModelSchema>> listener) {
-        localStorageAdapter.setUp(context, modelStore, listener);
+        localStorageAdapter.setUp(context, modelProvider, listener);
     }
 
     /**
