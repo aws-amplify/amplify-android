@@ -5,7 +5,7 @@
  * You may not use this file except in compliance with the License.
  * A copy of the License is located at
  *
- * http://aws.amazon.com/apache2.0
+ *  http://aws.amazon.com/apache2.0
  *
  * or in the "license" file accompanying this file. This file is distributed
  * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
@@ -20,13 +20,19 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 
 import org.junit.Test;
 
+/**
+ * Tests predicate creation.
+ */
 public class PredicateTest {
+    /**
+     * Tests the creation of a simple single operation predicate.
+     */
     @Test
     public void testSingleQueryPredicateOperation() {
         QueryPredicateOperation op = Person.ID.eq("1234");
 
-        assert(op.field().equals("id"));
-        assert(op.operator().getClass().equals(EqualQueryOperator.class));
-        assert(((EqualQueryOperator)op.operator()).value().equals("1234"));
+        assert (op.field().equals("id"));
+        assert (op.operator().getClass().equals(EqualQueryOperator.class));
+        assert (((EqualQueryOperator) op.operator()).value().equals("1234"));
     }
 }

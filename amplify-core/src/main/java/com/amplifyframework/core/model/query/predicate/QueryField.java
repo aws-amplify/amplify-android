@@ -15,17 +15,35 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
-public class QueryField {
+/**
+ * Represents a property in a model with methods for chaining conditions.
+ */
+public final class QueryField {
     private String fieldName;
 
+    /**
+     * Constructs a new QueryField for a given model property.
+     * This would not be used by the developer but rather is called from the static factory method.
+     * @param fieldName the model property this QueryField represents
+     */
     private QueryField(String fieldName) {
         this.fieldName = fieldName;
     }
 
+    /**
+     * Public factory method to create a new QueryField from the name of the property in the model.
+     * @param fieldName the model property this QueryField represents
+     * @return a new QueryField which represents the given model property
+     */
     public static QueryField field(String fieldName) {
         return new QueryField(fieldName);
     }
 
+    /**
+     * Generates a new equality comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the equality condition
+     */
     public QueryPredicateOperation eq(String value) {
         return new QueryPredicateOperation(fieldName, QueryOperatorFactory.equalTo(value));
     }
