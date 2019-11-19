@@ -49,13 +49,13 @@ public @interface Connection {
     String keyField();
 
     /**
-     * Gets the sort key equivalent in DynamoDB.
+     * Gets the sort key.
      * @return name of the sort key
      */
     String sortField();
 
     /**
-     * Gets the key name used for indexing in DynamoDB.
+     * Gets the key name used for indexing.
      * @return name of the key
      */
     String keyName();

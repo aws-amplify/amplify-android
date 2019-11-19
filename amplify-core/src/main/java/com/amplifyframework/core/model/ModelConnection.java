@@ -21,25 +21,24 @@ import java.util.List;
 
 /**
  * Represents a connection of the {@link Model} class.
- * Encapsulates all the information of a connection.
  */
 public final class ModelConnection {
     // Name of the connection to identify the relationship.
     private final String name;
 
     // Relationship that model has with the field.
-    private final Relationship relationship;
+    private final RelationalModel relationship;
 
     // The name of the foreign key.
     private final String keyField;
 
-    // The sort key equivalent in DynamoDB.
+    // The sort key.
     private final String sortField;
 
     // The pagination limit.
     private final int limit;
 
-    // The key name used for indexing in DynamoDB.
+    // The key name used for indexing.
     private final String keyName;
 
     // Sorted collection of keyField, sortField, and
@@ -52,7 +51,7 @@ public final class ModelConnection {
     /**
      * Construct the ModelConnection object from the builder.
      */
-    private ModelConnection(@NonNull ModelConnectionBuilder builder) {
+    private ModelConnection(@NonNull Builder builder) {
         this.name = builder.name;
         this.relationship = builder.relationship;
         this.keyField = builder.keyField;
@@ -67,8 +66,8 @@ public final class ModelConnection {
      * Return the builder object.
      * @return the builder object.
      */
-    public static ModelConnectionBuilder builder() {
-        return new ModelConnectionBuilder();
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**
@@ -83,7 +82,7 @@ public final class ModelConnection {
      * Gets the relationship type that this model has with field.
      * @return The type of relationship
      */
-    public Relationship getRelationship() {
+    public RelationalModel getRelationship() {
         return relationship;
     }
 
@@ -139,12 +138,12 @@ public final class ModelConnection {
     /**
      * Builder class for {@link ModelConnection}.
      */
-    public static final class ModelConnectionBuilder {
+    public static final class Builder {
         // Name of the connection to identify the relationship.
         private String name;
 
         // Type of relationship that this model has with field.
-        private Relationship relationship;
+        private RelationalModel relationship;
 
         // The name of the foreign key.
         private String keyField;
@@ -170,7 +169,7 @@ public final class ModelConnection {
          * @param name name of the connection model
          * @return the connection model with given name
          */
-        public ModelConnectionBuilder name(String name) {
+        public Builder name(String name) {
             this.name = name;
             return this;
         }
@@ -180,7 +179,7 @@ public final class ModelConnection {
          * @param relationship relationship that model has with field
          * @return the relationship that model has with field
          */
-        public ModelConnectionBuilder relationship(Relationship relationship) {
+        public Builder relationship(RelationalModel relationship) {
             this.relationship = relationship;
             return this;
         }
@@ -190,7 +189,7 @@ public final class ModelConnection {
          * @param fieldName name of the key field
          * @return the connection model with given key field
          */
-        public ModelConnectionBuilder keyField(String fieldName) {
+        public Builder keyField(String fieldName) {
             this.keyField = fieldName;
             return this;
         }
@@ -200,7 +199,7 @@ public final class ModelConnection {
          * @param fieldName name of the sort field
          * @return the connection model with given sort field
          */
-        public ModelConnectionBuilder sortField(String fieldName) {
+        public Builder sortField(String fieldName) {
             this.sortField = fieldName;
             return this;
         }
@@ -210,7 +209,7 @@ public final class ModelConnection {
          * @param limit the pagination limit
          * @return the connection model with given limit
          */
-        public ModelConnectionBuilder limit(int limit) {
+        public Builder limit(int limit) {
             this.limit = limit;
             return this;
         }
@@ -220,7 +219,7 @@ public final class ModelConnection {
          * @param keyName name of the key
          * @return the connection model with given key name
          */
-        public ModelConnectionBuilder keyName(String keyName) {
+        public Builder keyName(String keyName) {
             this.keyName = keyName;
             return this;
         }
@@ -230,7 +229,7 @@ public final class ModelConnection {
          * @param fields list of fields
          * @return the connection model with given list of fields
          */
-        public ModelConnectionBuilder fields(List<String> fields) {
+        public Builder fields(List<String> fields) {
             this.fields = fields;
             return this;
         }
@@ -240,7 +239,7 @@ public final class ModelConnection {
          * @param connectionTarget The field type of connection target
          * @return the connection model with given connection target
          */
-        public ModelConnectionBuilder connectionTarget(String connectionTarget) {
+        public Builder connectionTarget(String connectionTarget) {
             this.connectionTarget = connectionTarget;
             return this;
         }

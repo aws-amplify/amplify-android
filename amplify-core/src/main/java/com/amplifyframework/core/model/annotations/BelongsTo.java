@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.annotations;
 
+import com.amplifyframework.core.model.Model;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -39,5 +41,5 @@ public @interface BelongsTo {
      * @return the data type of the foreign key associated
      *         with this field.
      */
-    String targetType();
+    Class<? extends Model> type();
 }

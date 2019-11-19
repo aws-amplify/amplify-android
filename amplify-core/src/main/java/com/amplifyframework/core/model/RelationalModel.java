@@ -19,7 +19,7 @@ package com.amplifyframework.core.model;
  * The type of relationship between two classes that
  * extend {@link Model}.
  */
-enum Relationship {
+enum RelationalModel {
     ONE_TO_ONE,
     ONE_TO_MANY,
     MANY_TO_ONE,

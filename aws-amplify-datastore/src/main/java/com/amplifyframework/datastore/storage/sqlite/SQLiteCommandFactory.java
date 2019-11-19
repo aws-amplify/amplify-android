@@ -73,58 +73,14 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
         }
 
-        final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
-                modelSchema.getFields().entrySet().iterator();
         stringBuilder.append("(");
-        while (modelFieldMapIterator.hasNext()) {
-            final Map.Entry<String, ModelField> entry = modelFieldMapIterator.next();
-            final String modelFieldName = entry.getKey();
-            final ModelField modelField = entry.getValue();
-
-            stringBuilder.append(modelFieldName)
-                .append(SQLITE_COMMAND_DELIMITER)
-                .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()).getSqliteDataType())
-                .append(SQLITE_COMMAND_DELIMITER);
-
-            if (modelField.isPrimaryKey()) {
-                stringBuilder.append("PRIMARY KEY" + SQLITE_COMMAND_DELIMITER);
-            }
-
-            if (modelField.isRequired()) {
-                stringBuilder.append("NOT NULL");
-            }
-
-            if (modelFieldMapIterator.hasNext()) {
-                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
-            }
-        }
-
-        final Iterator<ModelField> foreignKeyIterator = modelSchema.getForeignKeys().iterator();
-        if (foreignKeyIterator.hasNext()) {
+        appendColumns(stringBuilder, modelSchema);
+        if (!modelSchema.getForeignKeys().isEmpty()) {
             stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            appendForeignKeys(stringBuilder, modelSchema);
         }
-
-        while (foreignKeyIterator.hasNext()) {
-            ModelField foreignKey = foreignKeyIterator.next();
-            String connectionName = foreignKey.getName();
-            String connectionTarget = foreignKey.belongsTo();
-            String connectionId = ModelRegistry.getInstance()
-                    .getModelSchemaForModelClass(connectionTarget)
-                    .getPrimaryKey()
-                    .getName();
-
-            stringBuilder.append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
-                    .append("(" + connectionName + ")")
-                    .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
-                    .append(connectionTarget)
-                    .append("(" + connectionId + ")");
-
-            if (foreignKeyIterator.hasNext()) {
-                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
-            }
-        }
-
         stringBuilder.append(");");
+
         final String createSqlStatement = stringBuilder.toString();
         return new SqlCommand(modelSchema.getName(), createSqlStatement);
     }
@@ -206,5 +162,57 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final SQLiteStatement compiledInsertStatement =
                 writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
         return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
+    }
+
+    // Utility method to append columns in CREATE TABLE
+    private void appendColumns(StringBuilder stringBuilder, ModelSchema modelSchema) {
+        final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
+                modelSchema.getFields().entrySet().iterator();
+        while (modelFieldMapIterator.hasNext()) {
+            final Map.Entry<String, ModelField> entry = modelFieldMapIterator.next();
+            final String modelFieldName = entry.getKey();
+            final ModelField modelField = entry.getValue();
+
+            stringBuilder.append(modelFieldName)
+                    .append(SQLITE_COMMAND_DELIMITER)
+                    .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()).getSqliteDataType())
+                    .append(SQLITE_COMMAND_DELIMITER);
+
+            if (modelField.isPrimaryKey()) {
+                stringBuilder.append("PRIMARY KEY" + SQLITE_COMMAND_DELIMITER);
+            }
+
+            if (modelField.isRequired()) {
+                stringBuilder.append("NOT NULL");
+            }
+
+            if (modelFieldMapIterator.hasNext()) {
+                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            }
+        }
+    }
+
+    // Utility method to append foreign key references in CREATE TABLE
+    private void appendForeignKeys(StringBuilder stringBuilder, ModelSchema modelSchema) {
+        final Iterator<ModelField> foreignKeyIterator = modelSchema.getForeignKeys().iterator();
+        while (foreignKeyIterator.hasNext()) {
+            ModelField foreignKey = foreignKeyIterator.next();
+            String connectionName = foreignKey.getName();
+            String connectionTarget = foreignKey.belongsTo();
+            String connectionId = ModelRegistry.getInstance()
+                    .getModelSchemaForModelClass(connectionTarget)
+                    .getPrimaryKey()
+                    .getName();
+
+            stringBuilder.append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
+                    .append("(" + connectionName + ")")
+                    .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
+                    .append(connectionTarget)
+                    .append("(" + connectionId + ")");
+
+            if (foreignKeyIterator.hasNext()) {
+                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            }
+        }
     }
 }

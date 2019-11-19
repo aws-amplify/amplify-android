@@ -43,10 +43,12 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -98,8 +100,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @After
     public void tearDown() {
-        sqLiteStorageAdapter.getDatabaseConnectionHandle().close();
-        sqLiteStorageAdapter.getSqLiteOpenHelper().close();
+        if (sqLiteStorageAdapter != null) {
+            sqLiteStorageAdapter.getDatabaseConnectionHandle().close();
+            sqLiteStorageAdapter.getSqLiteOpenHelper().close();
+        }
         deleteDatabase();
     }
 
@@ -277,6 +281,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @SuppressWarnings("MagicNumber")
     @Test
     public void saveModelWithInvalidForeignKey() throws ParseException, InterruptedException {
+        final String expectedError = "FOREIGN KEY constraint failed";
+
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -290,24 +296,29 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .personId(UUID.randomUUID().toString())
                 .build();
 
+        AtomicReference<Throwable> responseError = new AtomicReference<>();
         final CountDownLatch waitForError = new CountDownLatch(1);
         sqLiteStorageAdapter.save(car, new ResultListener<MutationEvent<Car>>() {
             @Override
             public void onResult(MutationEvent<Car> result) {
-                fail("Must fail on FOREIGN KEY constraint violation.");
+                waitForError.countDown();
             }
 
             @Override
             public void onError(Throwable error) {
                 Log.d(TAG, error.getCause().getMessage());
+                responseError.set(error);
                 waitForError.countDown();
             }
         });
         assertTrue(waitForError.await(
                 SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+        assertNotNull(responseError.get());
+        assertTrue(responseError.get().getCause().getMessage().contains(expectedError));
     }
 
     private <T extends Model> void saveModel(T model) throws InterruptedException {
+        AtomicReference<Throwable> responseError = new AtomicReference<>();
         final CountDownLatch waitForSave = new CountDownLatch(1);
         sqLiteStorageAdapter.save(model, new ResultListener<MutationEvent<T>>() {
             @Override
@@ -319,13 +330,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             @Override
             public void onError(Throwable error) {
                 assertNotNull(error);
-                Log.e(TAG, error.toString());
                 Log.e(TAG, error.getCause().getMessage());
-                fail(error.getMessage());
+                responseError.set(error);
+                waitForSave.countDown();
             }
         });
         assertTrue(waitForSave.await(
                 SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+        assertNull(responseError.get());
     }
 
     private void deleteDatabase() {

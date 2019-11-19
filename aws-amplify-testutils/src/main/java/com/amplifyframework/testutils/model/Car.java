@@ -38,16 +38,9 @@ public final class Car implements Model {
     @ModelField(targetName = "vehicle_model", targetType = "String", isRequired = true)
     private String vehicleModel;
 
-    @BelongsTo(targetType = "Person")
+    @BelongsTo(type = Person.class)
     @ModelField(targetName = "personId", targetType = "ID", isRequired = true)
     private String personId;
-
-    /**
-     * Default constructor.
-     */
-    public Car() {
-        super();
-    }
 
     private Car(String uniqueId,
                 String vehicleModel,

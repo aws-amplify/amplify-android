@@ -194,11 +194,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         });
     }
 
-    private synchronized void enableForeignKeys() {
-        final String preparedPragmaStatement = "PRAGMA foreign_keys = ON;";
-        databaseConnectionHandle.compileStatement(preparedPragmaStatement).execute();
-    }
-
     /**
      * Save a {@link Model} to the local storage engine. The {@link ResultListener} will be invoked when the
      * save operation is completed to notify the success and failure.
@@ -210,8 +205,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                        @NonNull ResultListener<MutationEvent<T>> listener) {
         threadPool.submit(() -> {
             try {
-                enableForeignKeys();
-
                 final ModelSchema modelSchema = modelRegistry
                         .getModelSchemaForModelClass(model.getClass().getSimpleName());
                 final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
