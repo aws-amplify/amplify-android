@@ -17,6 +17,7 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.Connection;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -92,7 +93,6 @@ public final class ModelSchema {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
-            final TreeMap<String, ModelConnection> connections = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
@@ -127,7 +127,9 @@ public final class ModelSchema {
                         .isRequired(annotation.isRequired())
                         .isArray(Collection.class.isAssignableFrom(field.getType()))
                         .isPrimaryKey(PrimaryKey.matches(field.getName()))
-                        .isForeignKey(annotation.isForeignKey())
+                        .belongsTo(field.isAnnotationPresent(BelongsTo.class)
+                                ? field.getAnnotation(BelongsTo.class).targetType()
+                                : null)
                         .connection(modelConnection)
                         .build();
                 fields.put(modelField.getName(), modelField);

@@ -44,8 +44,8 @@ public final class ModelField {
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
 
-    // True if the field is a foreign key in the Model.
-    private final boolean isForeignKey;
+    // Type of foreign key model that this field identifies.
+    private final String belongsTo;
 
     // Name of the Model that this field is connecting to.
     private final ModelConnection connection;
@@ -60,7 +60,7 @@ public final class ModelField {
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isPrimaryKey = builder.isPrimaryKey;
-        this.isForeignKey = builder.isForeignKey;
+        this.belongsTo = builder.belongsTo;
         this.connection = builder.connection;
     }
 
@@ -128,7 +128,15 @@ public final class ModelField {
      * @return True if the field is a foreign key in the Model.
      */
     public boolean isForeignKey() {
-        return isForeignKey;
+        return belongsTo != null;
+    }
+
+    /**
+     * Returns the name of model that this field belongs to.
+     * @return the name of model that this field belongs to.
+     */
+    public String belongsTo() {
+        return belongsTo;
     }
 
     /**
@@ -172,11 +180,11 @@ public final class ModelField {
         // True if the field is a primary key in the Model.
         private boolean isPrimaryKey = false;
 
-        // True if the field is a foreign key in the Model.
-        private boolean isForeignKey = false;
+        // Name of the model that this field identifies.
+        private String belongsTo;
 
         // The Model Connection metadata of this field.
-        private ModelConnection connection = null;
+        private ModelConnection connection;
 
         /**
          * Set the name of the field.
@@ -242,12 +250,12 @@ public final class ModelField {
         }
 
         /**
-         * Set the flag indicating if the field is a foreign key.
-         * @param isForeignKey  True if the field is a foreign key in the Model
+         * Set the name of model that this field identifies as foreign key.
+         * @param belongsTo  name of model that acts as foreign key
          * @return the builder object
          */
-        public ModelFieldBuilder isForeignKey(boolean isForeignKey) {
-            this.isForeignKey = isForeignKey;
+        public ModelFieldBuilder belongsTo(String belongsTo) {
+            this.belongsTo = belongsTo;
             return this;
         }
 

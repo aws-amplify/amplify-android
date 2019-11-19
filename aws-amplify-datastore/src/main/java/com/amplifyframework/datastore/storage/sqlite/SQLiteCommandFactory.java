@@ -80,6 +80,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final Map.Entry<String, ModelField> entry = modelFieldMapIterator.next();
             final String modelFieldName = entry.getKey();
             final ModelField modelField = entry.getValue();
+
             stringBuilder.append(modelFieldName)
                 .append(SQLITE_COMMAND_DELIMITER)
                 .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()).getSqliteDataType())
@@ -105,19 +106,18 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         while (foreignKeyIterator.hasNext()) {
             ModelField foreignKey = foreignKeyIterator.next();
-            String connectionTarget = foreignKey.getConnection().getConnectionTarget();
-            String connectionId = ModelRegistry.getInstance().getModelSchemaForModelClass(connectionTarget)
+            String connectionName = foreignKey.getName();
+            String connectionTarget = foreignKey.belongsTo();
+            String connectionId = ModelRegistry.getInstance()
+                    .getModelSchemaForModelClass(connectionTarget)
                     .getPrimaryKey()
                     .getName();
 
-            stringBuilder.append("FOREIGN KEY (\"")
-                    .append(foreignKey.getName())
-                    .append("\")" + SQLITE_COMMAND_DELIMITER)
-                    .append("REFERENCES")
+            stringBuilder.append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
+                    .append("(" + connectionName + ")")
+                    .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
                     .append(connectionTarget)
-                    .append("(\"")
-                    .append(connectionId)
-                    .append("\")");
+                    .append("(" + connectionId + ")");
 
             if (foreignKeyIterator.hasNext()) {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);

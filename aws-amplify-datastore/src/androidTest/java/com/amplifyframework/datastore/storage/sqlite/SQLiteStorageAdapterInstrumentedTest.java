@@ -24,6 +24,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.MutationEvent;
+import com.amplifyframework.testutils.model.Car;
 import com.amplifyframework.testutils.model.Person;
 
 import org.junit.After;
@@ -33,11 +34,13 @@ import org.junit.Test;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -72,7 +75,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         sqLiteStorageAdapter.setUp(context,
-                Collections.singletonList(Person.class),
+                new ArrayList<>(Arrays.asList(Person.class, Car.class)),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
                     public void onResult(List<ModelSchema> result) {
@@ -95,6 +98,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @After
     public void tearDown() {
+        sqLiteStorageAdapter.getDatabaseConnectionHandle().close();
+        sqLiteStorageAdapter.getSqLiteOpenHelper().close();
         deleteDatabase();
     }
 
@@ -229,12 +234,85 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
     }
 
-    private void saveModel(Person person) throws InterruptedException {
-        final CountDownLatch waitForSave = new CountDownLatch(1);
-        sqLiteStorageAdapter.save(person, new ResultListener<MutationEvent<Person>>() {
+    /**
+     * Assert that save stores foreign key in the SQLite database correctly.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     * @throws InterruptedException when the waiting for save is interrupted.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithValidForeignKey() throws ParseException, InterruptedException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("Lamborghini")
+                .personId(person.getId())
+                .build();
+        saveModel(car);
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("Lamborghini",
+                    cursor.getString(cursor.getColumnIndexOrThrow("vehicleModel")));
+            assertNotNull(cursor.getString(cursor.getColumnIndexOrThrow("personId")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Assert that foreign key constraint is enforced.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     * @throws InterruptedException when the waiting for save is interrupted.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithInvalidForeignKey() throws ParseException, InterruptedException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("Lamborghini")
+                .personId(UUID.randomUUID().toString())
+                .build();
+
+        final CountDownLatch waitForError = new CountDownLatch(1);
+        sqLiteStorageAdapter.save(car, new ResultListener<MutationEvent<Car>>() {
             @Override
-            public void onResult(MutationEvent<Person> result) {
-                assertEquals(person, result.data());
+            public void onResult(MutationEvent<Car> result) {
+                fail("Must fail on FOREIGN KEY constraint violation.");
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                Log.d(TAG, error.getCause().getMessage());
+                waitForError.countDown();
+            }
+        });
+        assertTrue(waitForError.await(
+                SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+    }
+
+    private <T extends Model> void saveModel(T model) throws InterruptedException {
+        final CountDownLatch waitForSave = new CountDownLatch(1);
+        sqLiteStorageAdapter.save(model, new ResultListener<MutationEvent<T>>() {
+            @Override
+            public void onResult(MutationEvent<T> result) {
+                assertEquals(model, result.data());
                 waitForSave.countDown();
             }
 
