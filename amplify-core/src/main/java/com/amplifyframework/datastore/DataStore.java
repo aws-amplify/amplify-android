@@ -18,7 +18,7 @@ package com.amplifyframework.datastore;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import io.reactivex.Observable;
 
@@ -87,7 +87,7 @@ public interface DataStore {
      * Observe changes to objects of a model type, only when those changes match the
      * criteria of the provide filtering predicate.
      * @param modelClass The class of object to observe
-     * @param filteringPredicate A predicate which will be evaluated to determine
+     * @param queryPredicate A predicate which will be evaluated to determine
      *                           if a particular change on modelClass should be
      *                           emitted onto the returned observable.
      * @param <T> The type of the object to observe
@@ -96,6 +96,6 @@ public interface DataStore {
      */
     <T extends Model> Observable<MutationEvent<T>> observe(
             Class<T> modelClass,
-            FilteringPredicate<MutationEvent<T>> filteringPredicate);
+            QueryPredicate queryPredicate);
 }
 
