@@ -28,7 +28,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 import java.util.concurrent.ExecutorService;
 
 /**
- * An operation to list items from AWS S3.
+ * An operation to set items from AWS S3.
  */
 
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
@@ -40,8 +40,8 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
      * Constructs a new AWSS3StorageListOperation.
      * @param storageService S3 client wrapper
      * @param executorService Executor service used for running blocking operations on a separate thread
-     * @param request list request parameters
-     * @param resultListener notified when list operation results are available
+     * @param request set request parameters
+     * @param resultListener notified when set operation results are available
      */
     public AWSS3StorageListOperation(AWSS3StorageService storageService,
                                      ExecutorService executorService,

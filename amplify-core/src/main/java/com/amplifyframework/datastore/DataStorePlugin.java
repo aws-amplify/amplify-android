@@ -13,24 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model;
+package com.amplifyframework.datastore;
 
-import java.util.Set;
+import com.amplifyframework.core.plugin.Plugin;
 
 /**
- * Defines the contract for retrieving information about the
- * models generated for DataStoreCategoryBehavior.
+ * A plugin which implements the required behavior of the {@link DataStoreCategory}.
+ * @param <E> The class type of the escape hatch which a subclass shall
+ *            make available, to perform low-level implementation-specific operations.
  */
-public interface ModelStore {
-    /**
-     * Get a set of the model classes.
-     * @return a set of the model classes.
-     */
-    Set<Class<? extends Model>> set();
-
-    /**
-     * Get the version of the models.
-     * @return the version string of the models.
-     */
-    String version();
+public interface DataStorePlugin<E> extends DataStoreCategoryBehavior, Plugin<E> {
 }

@@ -56,7 +56,7 @@ public final class Amplify {
     private static final String TAG = Amplify.class.getSimpleName();
 
     // These static references provide an entry point to the different categories.
-    // For example, you can call storage operations through Amplify.Storage.list(String path).
+    // For example, you can call storage operations through Amplify.Storage.set(String path).
     @SuppressWarnings("all") public static final AnalyticsCategory Analytics;
     @SuppressWarnings("all") public static final ApiCategory API;
     @SuppressWarnings("all") public static final LoggingCategory Logging;

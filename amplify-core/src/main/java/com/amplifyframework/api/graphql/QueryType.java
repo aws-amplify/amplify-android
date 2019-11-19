@@ -25,7 +25,7 @@ public enum QueryType {
     GET,
 
     /**
-     * GraphQL query list.
+     * GraphQL query set.
      */
     LIST
 }

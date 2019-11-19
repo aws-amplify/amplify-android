@@ -26,19 +26,19 @@ import java.util.Set;
  * Contains the set of model classes that implement {@link Model}
  * interface.
  */
-public final class AmplifyCLIGeneratedModelStore implements ModelStore {
+public final class AmplifyCliGeneratedModelStore implements ModelStore {
 
     private static final String AMPLIFY_MODELS_VERSION = "hash-code";
-    private static AmplifyCLIGeneratedModelStore amplifyCLIGeneratedModelStoreInstance;
+    private static AmplifyCliGeneratedModelStore amplifyCliGeneratedModelStoreInstance;
 
-    private AmplifyCLIGeneratedModelStore() {
+    private AmplifyCliGeneratedModelStore() {
     }
 
-    public static synchronized AmplifyCLIGeneratedModelStore getInstance() {
-        if (amplifyCLIGeneratedModelStoreInstance == null) {
-            amplifyCLIGeneratedModelStoreInstance = new AmplifyCLIGeneratedModelStore();
+    public static synchronized AmplifyCliGeneratedModelStore getInstance() {
+        if (amplifyCliGeneratedModelStoreInstance == null) {
+            amplifyCliGeneratedModelStoreInstance = new AmplifyCliGeneratedModelStore();
         }
-        return amplifyCLIGeneratedModelStoreInstance;
+        return amplifyCliGeneratedModelStoreInstance;
     }
 
     /**
@@ -47,7 +47,7 @@ public final class AmplifyCLIGeneratedModelStore implements ModelStore {
      * @return a set of the model classes.
      */
     @Override
-    public Set<Class<? extends Model>> list() {
+    public Set<Class<? extends Model>> set() {
         return new HashSet<Class<? extends Model>>(Arrays.asList(
                 Person.class
         ));

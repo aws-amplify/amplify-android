@@ -19,7 +19,7 @@ import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Options to specify attributes of list API invocation.
+ * Options to specify attributes of set API invocation.
  */
 public final class StorageListOptions implements Options {
     private final StorageAccessLevel accessLevel;
@@ -58,7 +58,7 @@ public final class StorageListOptions implements Options {
     /**
      * Factory method to create a simple, defaulted instance of the
      * {@link StorageListOptions}.
-     * @return Default storage list options instance
+     * @return Default storage set options instance
      */
     public static StorageListOptions defaultInstance() {
         return builder().build();

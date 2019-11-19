@@ -56,7 +56,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * Validates that response with null content does not break
      * the response object builder. Null data and/or error will
      * return a non-null response object with null data and/or
-     * an empty list of errors.
+     * an empty set of errors.
      */
     @Test
     public void nullDataNullErrorsReturnsEmptyResponseObject() {
@@ -77,7 +77,7 @@ public final class GsonGraphQLResponseFactoryTest {
     /**
      * Validates that the converter is able to parse a partial GraphQL
      * response into a result. In this case, the result contains some
-     * data, but also a list of errors.
+     * data, but also a set of errors.
      */
     @Test
     public void partialResponseRendersWithTodoDataAndErrors() {

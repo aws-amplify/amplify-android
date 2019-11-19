@@ -39,7 +39,7 @@ public final class ModelRegistry {
 
     /**
      * Create the ModelSchema objects for all Model classes.
-     * @param models the list that contains all the Model classes.
+     * @param models the set that contains all the Model classes.
      */
     public synchronized void load(@NonNull Set<Class<? extends Model>> models) {
         for (Class<? extends Model> modelClass : models) {

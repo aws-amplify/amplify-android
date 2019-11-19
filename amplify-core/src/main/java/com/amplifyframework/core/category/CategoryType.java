@@ -32,31 +32,37 @@ public enum CategoryType {
     ANALYTICS("Analytics"),
 
     /**
-     * API simplifies interactions with a remove AWS backend via REST
-     * And GraphQL operations.
+     * API simplifies interactions with a remote backend via REST
+     * and GraphQL operations.
      */
     API("API"),
+
+    /**
+     * DataStore simplifies local storage of your application data on the
+     * device for offline access and automatically synchronizes data with
+     * the cloud.
+     */
+    DATASTORE("DataStore"),
 
     /**
      * Hub is an event bus style pub/sub system that is used to
      * communicate state inside and outside of the Amplify framework.
      * This category is expected to operate locally to the device,
-     * without talking to AWS backend services, directly.
+     * without talking to the cloud backend services, directly.
      */
     HUB("Hub"),
 
     /**
      * Logging for troubleshooting of component behaviors during
      * development, or when deployed in production.  This category is
-     * expected to operate locally to the device, without talking to AWS
-     * backend services, directly.
+     * expected to operate locally to the device, without talking to the
+     * cloud backend services, directly.
      */
     LOGGING("Logging"),
 
     /**
      * Storage is an interface to a remote repository to store and
-     * retrieve instances of domain models. AWS provides several backend
-     * systems that are suitable for storage of your data.
+     * retrieve instances of domain models.
      */
     STORAGE("Storage");
 

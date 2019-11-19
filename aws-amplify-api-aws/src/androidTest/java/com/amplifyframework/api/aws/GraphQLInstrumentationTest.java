@@ -189,9 +189,9 @@ public final class GraphQLInstrumentationTest {
     }
 
     /**
-     * Validates a list of GraphQLResponse objects which contains comments. Our test
+     * Validates a set of GraphQLResponse objects which contains comments. Our test
      * code only attempts to create a single subscription and to create a single comment,
-     * so this list should have size one and its singleton item should not have errors.
+     * so this set should have size one and its singleton item should not have errors.
      * @param subscriptionResponses List of responses received by subscription
      */
     private void validateSubscribedComments(List<GraphQLResponse<Comment>> subscriptionResponses) {

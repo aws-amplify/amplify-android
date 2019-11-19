@@ -35,7 +35,7 @@ public final class GraphQLResponse<T> {
     /**
      * Constructs a wrapper for graphql response.
      * @param data response data with user-defined cast type
-     * @param errors list of error responses as defined
+     * @param errors set of error responses as defined
      *               by graphql doc
      */
     public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {

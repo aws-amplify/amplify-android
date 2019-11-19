@@ -21,7 +21,7 @@ import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
 /**
- * Base operation type for list behavior on the Storage category.
+ * Base operation type for set behavior on the Storage category.
  * @param <R> type of the request object
  */
 public abstract class StorageListOperation<R> extends AmplifyOperation<R> {

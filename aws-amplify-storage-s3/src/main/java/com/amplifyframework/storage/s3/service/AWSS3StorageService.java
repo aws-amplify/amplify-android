@@ -109,7 +109,7 @@ public final class AWSS3StorageService {
 
     /**
      * List items inside an S3 path.
-     * @param path The path to list items from
+     * @param path The path to set items from
      * @return An object containing the parsed items
      */
     public StorageListResult listFiles(String path) {

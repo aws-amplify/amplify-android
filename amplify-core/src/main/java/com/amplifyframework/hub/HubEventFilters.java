@@ -39,10 +39,10 @@ public final class HubEventFilters {
 
     /**
      * Gets a {@link HubEventFilter} that returns true if and only if all of the
-     * provides filters in the variable argument list return true.
-     * @param filters A list of {@link HubEventFilter}; if all filters return
+     * provides filters in the variable argument set return true.
+     * @param filters A set of {@link HubEventFilter}; if all filters return
      *                true for a given event, then the returned filter will do so,
-     *                as well. If filters is an empty list, then the returned filter will
+     *                as well. If filters is an empty set, then the returned filter will
      *                return true. filters may contain null objects, they will be ignored.
      * @return A {@link HubEventFilter} which returns true only if all of the provided
      *         filters return true, as described
@@ -63,11 +63,11 @@ public final class HubEventFilters {
     /**
      * Gets a {@link HubEventFilter} instance that will return true if any of the
      * provided filters returns true.
-     * @param filters A variable argument list of filters. If any filter returns true,
+     * @param filters A variable argument set of filters. If any filter returns true,
      *                then the composite filter that is returned will also return true.
-     *                If the list is empty, then the composite filter will return false,
+     *                If the set is empty, then the composite filter will return false,
      *                because no filter (not "any") was a match. If a null filter is
-     *                found in the list, it is ignored / not evaluated.
+     *                found in the set, it is ignored / not evaluated.
      * @return A composite {@link HubEventFilter} which will return true if and only if
      *         one or more of the provided filters returns true
      */

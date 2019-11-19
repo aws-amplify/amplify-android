@@ -23,8 +23,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.testutils.model.AmplifyCLIGeneratedModelStore;
+import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelStore;
 import com.amplifyframework.testutils.model.Person;
 
 import org.junit.After;
@@ -49,7 +50,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Test the functionality of
- * {@link com.amplifyframework.datastore.DataStore#save(Model, ResultListener)} operation.
+ * {@link DataStoreCategoryBehavior#save(Model, ResultListener)} operation.
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
 
@@ -72,7 +73,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         sqLiteStorageAdapter.setUp(context,
-                AmplifyCLIGeneratedModelStore.getInstance(),
+                AmplifyCliGeneratedModelStore.getInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
                     public void onResult(List<ModelSchema> result) {

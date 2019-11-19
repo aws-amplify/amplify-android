@@ -63,14 +63,14 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
      *
      * @param context  Android application context required to
      *                 interact with a storage mechanism in Android.
-     * @param models   list of Model classes
+     * @param modelStore   container of all Model classes
      * @param listener the listener to be invoked to notify completion
      *                 of the setUp.
      */
     @Override
-    public <T extends ModelStore> void setUp(@NonNull Context context,
-                                             @NonNull T models,
-                                             @NonNull ResultListener<List<ModelSchema>> listener) {
+    public void setUp(@NonNull Context context,
+                      @NonNull ModelStore modelStore,
+                      @NonNull ResultListener<List<ModelSchema>> listener) {
 
     }
 

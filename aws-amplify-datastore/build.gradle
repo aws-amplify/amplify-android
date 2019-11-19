@@ -57,7 +57,7 @@ dependencies {
     /**
      * The following Gson dependencies are used for converting
      * raw data read from SQLite tables into strongly typed Java
-     * objects by the DataStore.
+     * objects by the DataStoreCategoryBehavior.
      */
     implementation "com.google.code.gson:gson:2.8.6"
 

@@ -15,17 +15,42 @@
 
 package com.amplifyframework.datastore;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelStore;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+
+import java.util.List;
 
 import io.reactivex.Observable;
 
 /**
  * A high-level interface to an object repository.
  */
-public interface DataStore {
+public interface DataStoreCategoryBehavior {
+
+    /**
+     * Setup the storage engine with the models.
+     * For each {@link Model}, construct a
+     * {@link com.amplifyframework.core.model.ModelSchema}
+     * and setup the necessities for persisting a {@link Model}.
+     * This setUp is a pre-requisite for all other operations
+     * of a LocalStorageAdapter.
+     *
+     * @param context Android application context required to
+     *                interact with a storage mechanism in Android.
+     * @param modelStore container of all the Model classes
+     * @param listener the listener to be invoked to notify completion
+     *                 of the setUp.
+     */
+    void setUp(@NonNull Context context,
+               @NonNull ModelStore modelStore,
+               @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
      * Saves an object into the data store.
@@ -34,7 +59,8 @@ public interface DataStore {
      *                       is complete or if the save fails
      * @param <T> The type of the object being saved
      */
-    <T extends Model> void save(T object, ResultListener<Result> resultListener);
+    <T extends Model> void save(@NonNull T object,
+                                ResultListener<Result> resultListener);
 
     /**
      * Deletes an object from the data store.
@@ -43,7 +69,8 @@ public interface DataStore {
      *                       complete or if the delete fails
      * @param <T> The type of the object being deleted
      */
-    <T extends Model> void delete(T object, ResultListener<Result> resultListener);
+    <T extends Model> void delete(@NonNull T object,
+                                  ResultListener<Result> resultListener);
 
     /**
      * Query the data store to find objects of the provided type.
@@ -52,17 +79,18 @@ public interface DataStore {
      *                       returns results, or if there is a failure to query
      * @param <T> the type of the objects for which a query is to be performed
      */
-    <T extends Model> void query(Class<T> objectType, ResultListener<Result> resultListener);
+    <T extends Model> void query(@NonNull Class<T> objectType,
+                                 ResultListener<Result> resultListener);
 
     /**
-     * Observe all changes in the DataStore.
-     * @return An observable stream of DataStore change events,
-     *         one for each and every change that occurs in the DataStore.
+     * Observe all changes in the DataStoreCategoryBehavior.
+     * @return An observable stream of DataStoreCategoryBehavior change events,
+     *         one for each and every change that occurs in the DataStoreCategoryBehavior.
      */
     Observable<MutationEvent<? extends Model>> observe();
 
     /**
-     * Observe changes to a certain type of object in the DataStore.
+     * Observe changes to a certain type of object in the DataStoreCategoryBehavior.
      * @param modelClass The class of the model objects to observe
      * @param <T> The type of the model objects to observe
      * @return An observable stream of data store change events, that

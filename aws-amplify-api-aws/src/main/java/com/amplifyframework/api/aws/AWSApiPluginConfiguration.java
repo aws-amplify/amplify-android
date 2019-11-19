@@ -44,7 +44,7 @@ public final class AWSApiPluginConfiguration {
 
     /**
      * Gets all of the API configurations.
-     * @return list of every API configurations
+     * @return set of every API configurations
      */
     public Map<String, ApiConfiguration> getApis() {
         return apiDetails;
