@@ -23,7 +23,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.util.StringUtils;
 
 import java.util.Collections;
@@ -43,7 +43,7 @@ final class AppSyncGraphQLRequestFactory {
 
     public static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
-            FilteringPredicate<T> predicate,
+            QueryPredicate predicate,
             QueryType type
     ) throws AmplifyException {
         return null;
@@ -52,7 +52,7 @@ final class AppSyncGraphQLRequestFactory {
     @SuppressWarnings("unchecked")
     public static <T extends Model> GraphQLRequest<T> buildMutation(
             T model,
-            FilteringPredicate<T> predicate,
+            QueryPredicate predicate,
             MutationType type
     ) throws AmplifyException {
         // model is of type T so this is a safe cast - hence the warning suppression
@@ -97,7 +97,7 @@ final class AppSyncGraphQLRequestFactory {
 
     public static <T extends Model> GraphQLRequest<T> buildSubscription(
             Class<T> modelClass,
-            FilteringPredicate<T> predicate,
+            QueryPredicate predicate,
             SubscriptionType type
     ) throws AmplifyException {
         return null;
