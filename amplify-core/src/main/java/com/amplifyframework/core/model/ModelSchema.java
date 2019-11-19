@@ -160,7 +160,7 @@ public final class ModelSchema {
     /**
      * Returns a sorted copy of all the fields of a Model.
      *
-     * @return set of fieldName and the fieldObject of all
+     * @return list of fieldName and the fieldObject of all
      *          the fields of the model in sorted order.
      */
     public List<ModelField> getSortedFields() {
@@ -243,7 +243,7 @@ public final class ModelSchema {
             return null;
         }
 
-        // Create a set from elements of sortedFields
+        // Create a list from elements of sortedFields
         final List<ModelField> modelFieldEntries = new LinkedList<>(fields.values());
 
         // Returns an array of the values sorted by some pre-defined rules:

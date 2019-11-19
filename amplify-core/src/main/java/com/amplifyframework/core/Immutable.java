@@ -68,10 +68,10 @@ public final class Immutable {
     }
 
     /**
-     * Creates an immutable copy of the provided set.
-     * @param mutableList A possibly null, possibly empty set
-     * @param <T> The type of items in the set
-     * @return An immutable copy of the provided set
+     * Creates an immutable copy of the provided list.
+     * @param mutableList A possibly null, possibly empty list
+     * @param <T> The type of items in the list
+     * @return An immutable copy of the provided list
      */
     public static <T> List<T> of(final List<T> mutableList) {
         if (mutableList == null) {

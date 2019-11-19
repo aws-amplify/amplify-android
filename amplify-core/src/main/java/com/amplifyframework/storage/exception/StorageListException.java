@@ -18,7 +18,7 @@ package com.amplifyframework.storage.exception;
 import com.amplifyframework.AmplifyException;
 
 /**
- * Exception encountered in set API of Storage category.
+ * Exception encountered in list API of Storage category.
  */
 public class StorageListException extends AmplifyException {
 

@@ -56,10 +56,10 @@ import static org.junit.Assert.assertTrue;
  * 1. Create a new "Event App" AppSync endpoint via "Create with Wizard" at
  *    https://us-west-2.console.aws.amazon.com/appsync/home?region=us-west-2#/create
  *
- * 2. In the App Sync console, find the settings for the API you just created. Get
+ * 2. In the App Sync console, find the listtings for the API you just created. Get
  *    the API URL and API Key, and populate them into the
  *    src/androidTest/res/raw/amplifyconfiguration.json.
- *    Name the API "GraphQLInstrumentationTest". Ensure the region is set correctly.
+ *    Name the API "GraphQLInstrumentationTest". Ensure the region is list correctly.
  *
  * 3. Remove @Ignore from this test.
  *
@@ -189,9 +189,9 @@ public final class GraphQLInstrumentationTest {
     }
 
     /**
-     * Validates a set of GraphQLResponse objects which contains comments. Our test
+     * Validates a list of GraphQLResponse objects which contains comments. Our test
      * code only attempts to create a single subscription and to create a single comment,
-     * so this set should have size one and its singleton item should not have errors.
+     * so this list should have size one and its singleton item should not have errors.
      * @param subscriptionResponses List of responses received by subscription
      */
     private void validateSubscribedComments(List<GraphQLResponse<Comment>> subscriptionResponses) {

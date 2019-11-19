@@ -25,7 +25,7 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * A result of an set operation on the Storage category.
+ * A result of an list operation on the Storage category.
  */
 public final class StorageListResult implements Result {
     private final List<Item> items;
@@ -35,8 +35,8 @@ public final class StorageListResult implements Result {
     }
 
     /**
-     * Factory method to construct a storage set result from a set of items.
-     * @param items A possibly null, possibly empty set of items
+     * Factory method to construct a storage list result from a list of items.
+     * @param items A possibly null, possibly empty list of items
      * @return A new immutable instance of StorageListResult
      */
     public static StorageListResult fromItems(@Nullable List<Item> items) {
@@ -48,8 +48,8 @@ public final class StorageListResult implements Result {
     }
 
     /**
-     * Gets the items retrieved by the set API.
-     * @return List of items that were returned by the Storage category's set API(s).
+     * Gets the items retrieved by the list API.
+     * @return List of items that were returned by the Storage category's list API(s).
      */
     public List<Item> getItems() {
         return items;

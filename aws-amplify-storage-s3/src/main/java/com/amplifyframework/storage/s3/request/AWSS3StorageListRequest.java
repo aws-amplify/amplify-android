@@ -18,7 +18,7 @@ package com.amplifyframework.storage.s3.request;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
- * Parameters to provide to S3 that describe a request to set files.
+ * Parameters to provide to S3 that describe a request to list files.
  */
 public final class AWSS3StorageListRequest {
     private final String path;
@@ -27,9 +27,9 @@ public final class AWSS3StorageListRequest {
 
     /**
      * Constructs a new AWSS3StorageListRequest.
-     * @param path the path in S3 to set items from
+     * @param path the path in S3 to list items from
      * @param accessLevel Storage access level
-     * @param targetIdentityId The user id for the user to set S3 storage items for
+     * @param targetIdentityId The user id for the user to list S3 storage items for
      *                         (to override it from assuming the currently logged in user)
      */
     public AWSS3StorageListRequest(

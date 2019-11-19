@@ -109,7 +109,7 @@ public final class AWSS3StorageService {
 
     /**
      * List items inside an S3 path.
-     * @param path The path to set items from
+     * @param path The path to list items from
      * @return An object containing the parsed items
      */
     public StorageListResult listFiles(String path) {
@@ -177,7 +177,7 @@ public final class AWSS3StorageService {
 
     private void startServiceIfNotAlreadyStarted() {
         if (!transferUtilityServiceStarted) {
-            // TODO: When a reset method is defined, stop service.
+            // TODO: When a relist method is defined, stop service.
             context.startService(new Intent(context, TransferService.class));
             transferUtilityServiceStarted = true;
         }
