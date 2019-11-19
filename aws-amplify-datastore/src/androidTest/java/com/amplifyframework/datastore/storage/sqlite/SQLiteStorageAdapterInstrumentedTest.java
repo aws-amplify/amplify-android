@@ -23,7 +23,9 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.MutationEvent;
+import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testutils.model.Person;
 
 import org.junit.After;
@@ -33,7 +35,6 @@ import org.junit.Test;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -49,7 +50,7 @@ import static org.junit.Assert.fail;
 
 /**
  * Test the functionality of
- * {@link com.amplifyframework.datastore.DataStore#save(Model, ResultListener)} operation.
+ * {@link DataStoreCategoryBehavior#save(Model, ResultListener)} operation.
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
 
@@ -72,7 +73,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         sqLiteStorageAdapter.setUp(context,
-                Collections.singletonList(Person.class),
+                AmplifyCliGeneratedModelProvider.getInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
                     public void onResult(List<ModelSchema> result) {
