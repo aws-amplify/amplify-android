@@ -18,6 +18,9 @@ package com.amplifyframework.core.model;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Immutable;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.Connection;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
@@ -98,23 +101,38 @@ public final class ModelSchema {
             }
 
             for (Field field : classFields) {
-                com.amplifyframework.core.model.annotations.ModelField annotation = null;
-                if (field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class) != null) {
-                    annotation = field.getAnnotation(
-                            com.amplifyframework.core.model.annotations.ModelField.class);
+                Connection connection = field.getAnnotation(Connection.class);
+                ModelConnection modelConnection = null;
+                if (connection != null && Model.class.isAssignableFrom(field.getType())) {
+                    modelConnection = ModelConnection.builder()
+                            .name(connection.name())
+                            .keyField(connection.keyField())
+                            .sortField(connection.sortField())
+                            .limit(connection.limit())
+                            .keyName(connection.keyName())
+                            .fields(Arrays.asList(connection.fields()))
+                            .relationship(RelationalModel.valueOf(connection.relationship()))
+                            .connectionTarget(field.getType().getName())
+                            .build();
                 }
-                final ModelField modelField = ModelField.builder()
-                        .name(field.getName())
-                        .targetName(annotation.targetName())
-                        .targetType(annotation.targetType())
-                        .isRequired(annotation.isRequired())
-                        .isArray(Collection.class.isAssignableFrom(field.getType()))
-                        .isPrimaryKey(PrimaryKey.matches(field.getName()))
-                        .connectionTarget(Model.class.isAssignableFrom(field.getType())
-                                ? field.getType().getName()
-                                : null)
-                        .build();
-                fields.put(field.getName(), modelField);
+
+                com.amplifyframework.core.model.annotations.ModelField annotation =
+                        field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
+                if (annotation != null) {
+                    final ModelField modelField = ModelField.builder()
+                            .name(field.getName())
+                            .targetName(annotation.targetName())
+                            .targetType(annotation.targetType())
+                            .isRequired(annotation.isRequired())
+                            .isArray(Collection.class.isAssignableFrom(field.getType()))
+                            .isPrimaryKey(PrimaryKey.matches(field.getName()))
+                            .belongsTo(field.isAnnotationPresent(BelongsTo.class)
+                                    ? field.getAnnotation(BelongsTo.class).type().getSimpleName()
+                                    : null)
+                            .connection(modelConnection)
+                            .build();
+                    fields.put(modelField.getName(), modelField);
+                }
             }
             return ModelSchema.builder()
                     .name(clazz.getSimpleName())
@@ -188,6 +206,36 @@ public final class ModelSchema {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the list of foreign keys of the Model.
+     *
+     * @return the list of foreign keys of the Model.
+     */
+    public List<ModelField> getForeignKeys() {
+        List<ModelField> foreignKeys = new LinkedList<>();
+        for (ModelField field: sortedFields) {
+            if (field.isForeignKey()) {
+                foreignKeys.add(field);
+            }
+        }
+        return Immutable.of(foreignKeys);
+    }
+
+    /**
+     * Returns a map of field to connection of the model.
+     *
+     * @return a map of field to connection of the model.
+     */
+    public Map<ModelField, ModelConnection> getConnections() {
+        Map<ModelField, ModelConnection> connections = new TreeMap<>();
+        for (ModelField field : sortedFields) {
+            if (field.isConnected()) {
+                connections.put(field, field.getConnection());
+            }
+        }
+        return Immutable.of(connections);
     }
 
     /**
@@ -265,7 +313,6 @@ public final class ModelSchema {
             if (fieldOne.isConnected() && !fieldOther.isConnected()) {
                 return -1;
             }
-
             if (!fieldOne.isConnected() && fieldOther.isConnected()) {
                 return 1;
             }
@@ -335,7 +382,10 @@ public final class ModelSchema {
          * @return the ModelSchema object.
          */
         public ModelSchema build() {
-            return new ModelSchema(name, targetModelName, fields, modelIndex);
+            return new ModelSchema(name,
+                    targetModelName,
+                    fields,
+                    modelIndex);
         }
     }
 }

@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.os.Build;
 import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.NonNull;
@@ -77,13 +78,8 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
     @Override
     public void onConfigure(SQLiteDatabase sqLiteDatabase) {
         super.onConfigure(sqLiteDatabase);
-
-        sqLiteDatabase.beginTransaction();
-        try {
-            sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON");
-            sqLiteDatabase.setTransactionSuccessful();
-        } finally {
-            sqLiteDatabase.endTransaction();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            sqLiteDatabase.setForeignKeyConstraintsEnabled(true);
         }
     }
 
@@ -97,6 +93,18 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
     @Override
     public synchronized void onCreate(SQLiteDatabase sqLiteDatabase) {
         createTablesAndIndexes(sqLiteDatabase);
+    }
+
+    /**
+     * Called ONCE when the database is opened. It enables features
+     * such as foreign key support.
+     */
+    @Override
+    public synchronized void onOpen(SQLiteDatabase sqLiteDatabase) {
+        super.onOpen(sqLiteDatabase);
+        if (!sqLiteDatabase.isReadOnly()) {
+            sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON;");
+        }
     }
 
     /**

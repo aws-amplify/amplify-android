@@ -457,4 +457,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 null,
                 null);
     }
+
+    @VisibleForTesting
+    SQLiteDatabase getDatabaseConnectionHandle() {
+        return databaseConnectionHandle;
+    }
+
+    @VisibleForTesting
+    SQLiteOpenHelper getSqLiteOpenHelper() {
+        return sqLiteOpenHelper;
+    }
 }
