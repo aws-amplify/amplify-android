@@ -24,6 +24,7 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Immutable;
@@ -88,8 +89,9 @@ public final class GraphQLInstrumentationTest {
      * @throws Throwable when interrupted
      */
     @Test
-    public void testCodegen() throws Throwable {
-        BlockingResultListener<Person> codegenListener = new BlockingResultListener<>();
+    public void testCodegenMutate() throws Throwable {
+        BlockingResultListener<Person> mutationListener = new BlockingResultListener<>();
+        BlockingResultListener<Person> queryListener = new BlockingResultListener<>();
 
         Person person = Person
                 .builder()
@@ -103,12 +105,23 @@ public final class GraphQLInstrumentationTest {
                 person,
                 null,
                 MutationType.CREATE,
-                codegenListener
+                mutationListener
         );
 
-        GraphQLResponse<Person> response = codegenListener.awaitResult();
+        GraphQLResponse<Person> response = mutationListener.awaitResult();
         assertFalse(response.hasErrors());
         assertTrue(response.hasData());
+
+        Amplify.API.query(
+                API_NAME,
+                Person.class,
+                Person.ID.eq(response.getData().getId()),
+                QueryType.GET,
+                queryListener
+        );
+
+        GraphQLResponse<Person> response2 = queryListener.awaitResult();
+        assert (response.getData().getId().equals(response2.getData().getId()));
     }
 
     /**
