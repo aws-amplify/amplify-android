@@ -20,7 +20,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyRuntimeException;
 
 /**
- * Exception thrown by {@link DataStore} operations.
+ * Exception thrown by {@link DataStoreCategoryBehavior} operations.
  */
 public final class DataStoreException extends AmplifyRuntimeException {
 

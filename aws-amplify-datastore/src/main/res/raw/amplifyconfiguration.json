@@ -1,0 +1,21 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "API": {
+    "plugins": {
+      "AWSAPIPlugin": {
+        "GraphQLInstrumentationTest": {
+          "Endpoint": "https://bb2xm5ttqvbfdeu5oi5gw7cvma.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-og4mnlou65dm5d6hs2itesgkzm"
+        }
+      }
+    }
+  },
+  "DataStore": {
+    "plugins": {
+      "AWSDataStorePlugin": {}
+    }
+  }
+}

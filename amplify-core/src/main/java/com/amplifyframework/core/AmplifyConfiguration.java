@@ -24,6 +24,7 @@ import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
@@ -33,6 +34,7 @@ import org.json.JSONObject;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Scanner;
 
 /**
@@ -44,7 +46,7 @@ public final class AmplifyConfiguration {
 
     private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
-    private final HashMap<String, CategoryConfiguration> categoryConfigurations;
+    private final Map<String, CategoryConfiguration> categoryConfigurations;
 
     /**
      * Constructs a new AmplifyConfiguration object.
@@ -52,16 +54,19 @@ public final class AmplifyConfiguration {
     public AmplifyConfiguration() {
         AnalyticsCategoryConfiguration analytics = new AnalyticsCategoryConfiguration();
         ApiCategoryConfiguration api = new ApiCategoryConfiguration();
+        DataStoreCategoryConfiguration dataStore = new DataStoreCategoryConfiguration();
         HubCategoryConfiguration hub = new HubCategoryConfiguration();
         LoggingCategoryConfiguration logging = new LoggingCategoryConfiguration();
         StorageCategoryConfiguration storage = new StorageCategoryConfiguration();
 
-        categoryConfigurations = new HashMap<>();
-        categoryConfigurations.put(analytics.getCategoryType().getConfigurationKey(), analytics);
-        categoryConfigurations.put(api.getCategoryType().getConfigurationKey(), api);
-        categoryConfigurations.put(hub.getCategoryType().getConfigurationKey(), hub);
-        categoryConfigurations.put(logging.getCategoryType().getConfigurationKey(), logging);
-        categoryConfigurations.put(storage.getCategoryType().getConfigurationKey(), storage);
+        Map<String, CategoryConfiguration> modifiableCategoryConfigurations = new HashMap<>();
+        modifiableCategoryConfigurations.put(analytics.getCategoryType().getConfigurationKey(), analytics);
+        modifiableCategoryConfigurations.put(api.getCategoryType().getConfigurationKey(), api);
+        modifiableCategoryConfigurations.put(dataStore.getCategoryType().getConfigurationKey(), dataStore);
+        modifiableCategoryConfigurations.put(hub.getCategoryType().getConfigurationKey(), hub);
+        modifiableCategoryConfigurations.put(logging.getCategoryType().getConfigurationKey(), logging);
+        modifiableCategoryConfigurations.put(storage.getCategoryType().getConfigurationKey(), storage);
+        categoryConfigurations = Immutable.of(modifiableCategoryConfigurations);
     }
 
     /**

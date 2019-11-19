@@ -15,16 +15,17 @@
 
 package com.amplifyframework.datastore;
 
+import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.model.Model;
 
 import java.util.UUID;
 
 /**
  * A MutationEvent is emitted whenever there is a mutation
- * to an object in the DataStore.
+ * to an object in the DataStoreCategoryBehavior.
  * @param <T> The type of the object has been mutated
  */
-public final class MutationEvent<T extends Model> implements Model {
+public final class MutationEvent<T extends Model> implements Model, Result {
     private final UUID mutationId;
     private final MutationType mutationType;
     private final T data;
@@ -52,7 +53,7 @@ public final class MutationEvent<T extends Model> implements Model {
      * this is reference to the newly inserted object. In the case of
      * an update, this is a reference to the item as it exists *after*
      * the update. In the case of a deletion, this is an in-memory snapshot
-     * of an object that was just deleted, and no longer exists in the DataStore.
+     * of an object that was just deleted, and no longer exists in the DataStoreCategoryBehavior.
      * @return The data that mutated
      */
     public T data() {
@@ -181,7 +182,7 @@ public final class MutationEvent<T extends Model> implements Model {
     public enum MutationType {
 
         /**
-         * An item is newly put into the DataStore. It is determined
+         * An item is newly put into the DataStoreCategoryBehavior. It is determined
          * as "new" based on its class type and its unique ID.
          */
         INSERT,
@@ -195,7 +196,7 @@ public final class MutationEvent<T extends Model> implements Model {
         UPDATE,
 
         /**
-         * An existing item has been removed from the DataStore.
+         * An existing item has been removed from the DataStoreCategoryBehavior.
          */
         DELETE
     }
@@ -206,7 +207,7 @@ public final class MutationEvent<T extends Model> implements Model {
     public enum Source {
 
         /**
-         * This event was initiated by the DataStore API.
+         * This event was initiated by the DataStoreCategoryBehavior API.
          */
         DATA_STORE,
 

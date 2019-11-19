@@ -56,10 +56,10 @@ import static org.junit.Assert.assertTrue;
  * 1. Create a new "Event App" AppSync endpoint via "Create with Wizard" at
  *    https://us-west-2.console.aws.amazon.com/appsync/home?region=us-west-2#/create
  *
- * 2. In the App Sync console, find the settings for the API you just created. Get
+ * 2. In the App Sync console, find the listtings for the API you just created. Get
  *    the API URL and API Key, and populate them into the
  *    src/androidTest/res/raw/amplifyconfiguration.json.
- *    Name the API "GraphQLInstrumentationTest". Ensure the region is set correctly.
+ *    Name the API "GraphQLInstrumentationTest". Ensure the region is list correctly.
  *
  * 3. Remove @Ignore from this test.
  *
