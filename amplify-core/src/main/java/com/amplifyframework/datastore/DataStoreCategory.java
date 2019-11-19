@@ -24,7 +24,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
 import java.util.List;
@@ -119,7 +119,7 @@ public class DataStoreCategory
     @Override
     public <T extends Model> Observable<MutationEvent<T>> observe(
             Class<T> modelClass,
-            FilteringPredicate<MutationEvent<T>> filteringPredicate) {
-        return getSelectedPlugin().observe(modelClass, filteringPredicate);
+            QueryPredicate queryPredicate) {
+        return getSelectedPlugin().observe(modelClass, queryPredicate);
     }
 }

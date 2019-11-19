@@ -23,7 +23,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
@@ -154,7 +154,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> Observable<MutationEvent<T>> observe(
             Class<T> modelClass,
-            FilteringPredicate<MutationEvent<T>> filteringPredicate) {
+            QueryPredicate queryPredicate) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
     }
 }

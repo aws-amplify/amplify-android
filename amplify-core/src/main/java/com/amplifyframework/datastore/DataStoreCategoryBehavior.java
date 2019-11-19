@@ -22,7 +22,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
 import java.util.List;
