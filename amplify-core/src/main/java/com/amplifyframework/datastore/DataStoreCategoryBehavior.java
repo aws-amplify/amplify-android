@@ -19,7 +19,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -36,7 +35,7 @@ import io.reactivex.Observable;
 public interface DataStoreCategoryBehavior {
 
     /**
-     * Setup the storage engine with the models.
+     * Setup the DataStore with some models.
      * For each {@link Model}, construct a
      * {@link com.amplifyframework.core.model.ModelSchema}
      * and setup the necessities for persisting a {@link Model}.
@@ -61,7 +60,7 @@ public interface DataStoreCategoryBehavior {
      * @param <T> The type of the object being saved
      */
     <T extends Model> void save(@NonNull T object,
-                                ResultListener<Result> resultListener);
+                                ResultListener<MutationEvent<T>> resultListener);
 
     /**
      * Deletes an object from the data store.
@@ -71,7 +70,7 @@ public interface DataStoreCategoryBehavior {
      * @param <T> The type of the object being deleted
      */
     <T extends Model> void delete(@NonNull T object,
-                                  ResultListener<Result> resultListener);
+                                  ResultListener<MutationEvent<T>> resultListener);
 
     /**
      * Query the data store to find objects of the provided type.
@@ -84,14 +83,14 @@ public interface DataStoreCategoryBehavior {
                                  ResultListener<Iterator<T>> resultListener);
 
     /**
-     * Observe all changes in the DataStoreCategoryBehavior.
-     * @return An observable stream of DataStoreCategoryBehavior change events,
-     *         one for each and every change that occurs in the DataStoreCategoryBehavior.
+     * Observe all changes in the DataStore.
+     * @return An observable stream of DataStore change events,
+     *         one for each and every change that occurs in the DataStore.
      */
     Observable<MutationEvent<? extends Model>> observe();
 
     /**
-     * Observe changes to a certain type of object in the DataStoreCategoryBehavior.
+     * Observe changes to a certain type of object in the DataStore.
      * @param modelClass The class of the model objects to observe
      * @param <T> The type of the model objects to observe
      * @return An observable stream of data store change events, that

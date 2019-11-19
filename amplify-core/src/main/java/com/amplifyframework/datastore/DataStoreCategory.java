@@ -19,7 +19,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
@@ -42,10 +41,9 @@ import io.reactivex.Observable;
 public class DataStoreCategory
         extends Category<DataStorePlugin<?>>
         implements DataStoreCategoryBehavior {
+
     /**
-     * Gets the category type associated with the current object.
-     *
-     * @return The category type to which the current object is affiliated
+     * {@inheritDoc}
      */
     @Override
     public CategoryType getCategoryType() {
@@ -53,18 +51,7 @@ public class DataStoreCategory
     }
 
     /**
-     * Setup the storage engine with the models.
-     * For each {@link Model}, construct a
-     * {@link ModelSchema}
-     * and setup the necessities for persisting a {@link Model}.
-     * This setUp is a pre-requisite for all other operations
-     * of a LocalStorageAdapter.
-     *
-     * @param context  Android application context required to
-     *                 interact with a storage mechanism in Android.
-     * @param modelProvider   container of all Model classes
-     * @param listener the listener to be invoked to notify completion
-     *                 of the setUp.
+     * {@inheritDoc}
      */
     @Override
     public void setUp(@NonNull Context context,
@@ -74,37 +61,25 @@ public class DataStoreCategory
     }
 
     /**
-     * Saves an object into the data store.
-     *
-     * @param object         The object to save
-     * @param resultListener A listener which will be invoked when the save
-     *                       is complete or if the save fails
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void save(@NonNull T object,
-                                       ResultListener<Result> resultListener) {
+                                       ResultListener<MutationEvent<T>> resultListener) {
         getSelectedPlugin().save(object, resultListener);
     }
 
     /**
-     * Deletes an object from the data store.
-     *
-     * @param object         The object to delete from the data store
-     * @param resultListener A listener which will be invoked when the delete is
-     *                       complete or if the delete fails
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void delete(@NonNull T object,
-                                         ResultListener<Result> resultListener) {
+                                         ResultListener<MutationEvent<T>> resultListener) {
         getSelectedPlugin().delete(object, resultListener);
     }
 
     /**
-     * Query the data store to find objects of the provided type.
-     *
-     * @param objectType     The class type of the objects being queried
-     * @param resultListener A listener which will be invoked when the query
-     *                       returns results, or if there is a failure to query
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void query(@NonNull Class<T> objectType,
@@ -113,10 +88,7 @@ public class DataStoreCategory
     }
 
     /**
-     * Observe all changes in the DataStoreCategoryBehavior.
-     *
-     * @return An observable stream of DataStoreCategoryBehavior change events,
-     * one for each and every change that occurs in the DataStoreCategoryBehavior.
+     * {@inheritDoc}
      */
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
@@ -124,12 +96,7 @@ public class DataStoreCategory
     }
 
     /**
-     * Observe changes to a certain type of object in the DataStoreCategoryBehavior.
-     *
-     * @param modelClass The class of the model objects to observe
-     * @return An observable stream of data store change events, that
-     * will emit events for any changes that occur to the named
-     * model class.
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> Observable<MutationEvent<T>> observe(Class<T> modelClass) {
@@ -137,14 +104,7 @@ public class DataStoreCategory
     }
 
     /**
-     * Observe changes to a specific object with the given model class,
-     * and having the given model ID.
-     *
-     * @param modelClass The class of the object being observed
-     * @param uniqueId   The unique ID of the object being observed
-     * @return A stream of change events surrounding the specific object
-     * which is uniquely identified by the provide class type and
-     * unique id.
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> Observable<MutationEvent<T>> observe(
@@ -154,15 +114,7 @@ public class DataStoreCategory
     }
 
     /**
-     * Observe changes to objects of a model type, only when those changes match the
-     * criteria of the provide filtering predicate.
-     *
-     * @param modelClass         The class of object to observe
-     * @param filteringPredicate A predicate which will be evaluated to determine
-     *                           if a particular change on modelClass should be
-     *                           emitted onto the returned observable.
-     * @return An observable stream of model change events, for the requested model class,
-     * and considering the provided filtering predicate.
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> Observable<MutationEvent<T>> observe(

@@ -140,7 +140,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                       @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
-                final Set<Class<? extends Model>> models = modelProvider.set();
+                final Set<Class<? extends Model>> models = modelProvider.models();
                 /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes

@@ -26,7 +26,7 @@ public interface ModelProvider {
      * Get a set of the model classes.
      * @return a set of the model classes.
      */
-    Set<Class<? extends Model>> set();
+    Set<Class<? extends Model>> models();
 
     /**
      * Get the version of the models.

@@ -241,11 +241,11 @@ public interface StorageCategoryBehavior {
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
-     * @param path The path in storage to set items from
+     * @param path The path in storage to list items from
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageException
-     *         On failure to set items in storage. This can occur for
+     *         On failure to list items in storage. This can occur for
      *         a variety or reasons, such as if the storage system is not
      *         currently accessible.
      */
@@ -254,12 +254,12 @@ public interface StorageCategoryBehavior {
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
-     * @param path The path in storage to set items from
+     * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageException
-     *         On failure to set items in storage. This can happen
+     *         On failure to list items in storage. This can happen
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
@@ -268,12 +268,12 @@ public interface StorageCategoryBehavior {
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
-     * @param path The path in storage to set items from
-     * @param resultListener Listens for results of set operation
+     * @param path The path in storage to list items from
+     * @param resultListener Listens for results of list operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageException
-     *         On failure to set items in storage. This can happen
+     *         On failure to list items in storage. This can happen
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
@@ -284,13 +284,13 @@ public interface StorageCategoryBehavior {
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
      * Register a listener to observe progress.
-     * @param path The path in storage to set items from
+     * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
-     * @param resultListener listens to results of set operation
+     * @param resultListener listens to results of list operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      * @throws StorageException
-     *         If a failure to set items in storage occurs before
+     *         If a failure to list items in storage occurs before
      *         asynchronous operation begins. Otherwise, failures will
      *         be reported via the {@see resultListener}.
      */

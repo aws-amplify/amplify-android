@@ -44,8 +44,8 @@ android {
 }
 
 dependencies {
-    // Rx is part of our API signature for the DataStoreCategoryBehavior category.  If a
-    // consumer of Amplify will use the Rx-based DataStoreCategoryBehavior APIs, RxJava2
+    // Rx is part of our API signature for the DataStore category.  If a
+    // consumer of Amplify will use the Rx-based DataStore APIs, RxJava2
     // must be available at runtime.
     //
     // As a corollary, a plugin should declare an `implementation`

@@ -48,7 +48,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * Set up the object under test, a GsonGraphQLResponseFactory.
      */
     @Before
-    public void listup() {
+    public void setup() {
         responseFactory = new GsonGraphQLResponseFactory();
     }
 

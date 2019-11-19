@@ -31,11 +31,12 @@ import org.junit.Test;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Tests the functions of {@link com.amplifyframework.datastore.AWSDataStorePlugin}.
@@ -73,24 +74,29 @@ public final class AWSDataStorePluginInstrumentedTest {
         Amplify.configure(context);
 
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
+        final AtomicReference<Throwable> error = new AtomicReference<>();
+        final AtomicReference<List<ModelSchema>> result = new AtomicReference<>();
         Amplify.DataStore.setUp(
                 context,
                 AmplifyCliGeneratedModelProvider.getInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
-                    public void onResult(List<ModelSchema> result) {
-                        assertNotNull(result);
-                        assertFalse(result.isEmpty());
+                    public void onResult(List<ModelSchema> modelSchemaList) {
+                        result.set(modelSchemaList);
                         waitForSetUp.countDown();
                     }
 
                     @Override
-                    public void onError(Throwable error) {
-                        fail(error.getMessage());
+                    public void onError(Throwable throwable) {
+                        error.set(throwable);
+                        waitForSetUp.countDown();
                     }
                 });
         assertTrue(waitForSetUp.await(
                 DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
+        assertNotNull("Expecting a non-null ModelSchema list", result.get());
+        assertFalse("Expecting a non-empty ModelSchema list", result.get().isEmpty());
+        assertNull("Expecting no exception to be thrown from setUp", error.get());
     }
 
     private void deleteDatabase() {

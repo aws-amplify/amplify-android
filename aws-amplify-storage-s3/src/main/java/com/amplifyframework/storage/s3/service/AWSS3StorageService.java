@@ -177,7 +177,7 @@ public final class AWSS3StorageService {
 
     private void startServiceIfNotAlreadyStarted() {
         if (!transferUtilityServiceStarted) {
-            // TODO: When a relist method is defined, stop service.
+            // TODO: When a reset method is defined, stop service.
             context.startService(new Intent(context, TransferService.class));
             transferUtilityServiceStarted = true;
         }

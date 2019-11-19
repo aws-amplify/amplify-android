@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils.model;
 
+import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 
@@ -47,10 +48,12 @@ public final class AmplifyCliGeneratedModelProvider implements ModelProvider {
      * @return a set of the model classes.
      */
     @Override
-    public Set<Class<? extends Model>> set() {
-        return new HashSet<Class<? extends Model>>(Arrays.asList(
-                Person.class
-        ));
+    public Set<Class<? extends Model>> models() {
+        final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
+                Arrays.<Class<? extends Model>>asList(Person.class)
+        );
+
+        return Immutable.of(modifiableSet);
     }
 
     /**
