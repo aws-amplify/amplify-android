@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore;
 
+import com.amplifyframework.core.async.Result;
 import com.amplifyframework.core.model.Model;
 
 import java.util.UUID;
@@ -24,7 +25,7 @@ import java.util.UUID;
  * to an object in the DataStoreCategoryBehavior.
  * @param <T> The type of the object has been mutated
  */
-public final class MutationEvent<T extends Model> implements Model {
+public final class MutationEvent<T extends Model> implements Model, Result {
     private final UUID mutationId;
     private final MutationType mutationType;
     private final T data;

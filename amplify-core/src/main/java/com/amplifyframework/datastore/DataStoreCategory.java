@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelStore;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 
+import java.util.Iterator;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -107,7 +108,7 @@ public class DataStoreCategory
      */
     @Override
     public <T extends Model> void query(@NonNull Class<T> objectType,
-                                        ResultListener<Result> resultListener) {
+                                        ResultListener<Iterator<T>> resultListener) {
         getSelectedPlugin().query(objectType, resultListener);
     }
 

@@ -27,6 +27,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
@@ -62,6 +63,7 @@ public final class Amplify {
     @SuppressWarnings("all") public static final LoggingCategory Logging;
     @SuppressWarnings("all") public static final StorageCategory Storage;
     @SuppressWarnings("all") public static final HubCategory Hub;
+    @SuppressWarnings("all") public static final DataStoreCategory DataStore;
 
     private static final Object LOCK;
     private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES;
@@ -78,6 +80,7 @@ public final class Amplify {
         Logging = new LoggingCategory();
         Storage = new StorageCategory();
         Hub = new HubCategory();
+        DataStore = new DataStoreCategory();
 
         final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new HashMap<>();
         modifiableCategories.put(CategoryType.ANALYTICS, Analytics);
@@ -85,6 +88,7 @@ public final class Amplify {
         modifiableCategories.put(CategoryType.LOGGING, Logging);
         modifiableCategories.put(CategoryType.STORAGE, Storage);
         modifiableCategories.put(CategoryType.HUB, Hub);
+        modifiableCategories.put(CategoryType.DATASTORE, DataStore);
         CATEGORIES = Collections.unmodifiableMap(modifiableCategories);
     }
 

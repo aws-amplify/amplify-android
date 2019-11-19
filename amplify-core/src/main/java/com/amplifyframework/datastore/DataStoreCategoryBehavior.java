@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelStore;
 import com.amplifyframework.core.model.query.predicate.FilteringPredicate;
 
+import java.util.Iterator;
 import java.util.List;
 
 import io.reactivex.Observable;
@@ -80,7 +81,7 @@ public interface DataStoreCategoryBehavior {
      * @param <T> the type of the objects for which a query is to be performed
      */
     <T extends Model> void query(@NonNull Class<T> objectType,
-                                 ResultListener<Result> resultListener);
+                                 ResultListener<Iterator<T>> resultListener);
 
     /**
      * Observe all changes in the DataStoreCategoryBehavior.
