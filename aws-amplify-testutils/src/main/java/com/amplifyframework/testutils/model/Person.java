@@ -48,13 +48,6 @@ public final class Person implements Model {
     @ModelField(targetName = "dob", targetType = "AWSDate")
     private Date dob;
 
-    /**
-     * Default constructor.
-     */
-    public Person() {
-        super();
-    }
-
     private Person(String uniqueId,
                    String firstName,
                    String lastName,

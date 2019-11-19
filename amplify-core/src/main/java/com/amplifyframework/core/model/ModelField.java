@@ -44,8 +44,11 @@ public final class ModelField {
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
 
+    // Type of foreign key model that this field identifies.
+    private final String belongsTo;
+
     // Name of the Model that this field is connecting to.
-    private final String connectionTarget;
+    private final ModelConnection connection;
 
     /**
      * Construct the ModelField object from the builder.
@@ -57,7 +60,8 @@ public final class ModelField {
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isPrimaryKey = builder.isPrimaryKey;
-        this.connectionTarget = builder.connectionTarget;
+        this.belongsTo = builder.belongsTo;
+        this.connection = builder.connection;
     }
 
     /**
@@ -120,11 +124,27 @@ public final class ModelField {
     }
 
     /**
-     * Returns the name of the Model that this field is connecting to.
-     * @return  Name of the Model that this field is connecting to.
+     * Returns true if the field is a foreign key in the Model.
+     * @return True if the field is a foreign key in the Model.
      */
-    public String getConnectionTarget() {
-        return connectionTarget;
+    public boolean isForeignKey() {
+        return belongsTo != null;
+    }
+
+    /**
+     * Returns the name of model that this field belongs to.
+     * @return the name of model that this field belongs to.
+     */
+    public String belongsTo() {
+        return belongsTo;
+    }
+
+    /**
+     * Returns the Model Connection metadata of this field.
+     * @return The Model Connection metadata of this field.
+     */
+    public ModelConnection getConnection() {
+        return connection;
     }
 
     /**
@@ -132,7 +152,7 @@ public final class ModelField {
      * @return True if this ModelField is connected to an other Model.
      */
     public boolean isConnected() {
-        return connectionTarget != null;
+        return connection != null;
     }
 
     /**
@@ -160,8 +180,11 @@ public final class ModelField {
         // True if the field is a primary key in the Model.
         private boolean isPrimaryKey = false;
 
-        // Name of the Model that this field is connecting to.
-        private String connectionTarget = null;
+        // Name of the model that this field identifies.
+        private String belongsTo;
+
+        // The Model Connection metadata of this field.
+        private ModelConnection connection;
 
         /**
          * Set the name of the field.
@@ -227,12 +250,22 @@ public final class ModelField {
         }
 
         /**
-         * Set the name of the Model that this field is connected to.
-         * @param connectionTarget Name of the Model that this field is connected to
+         * Set the name of model that this field identifies as foreign key.
+         * @param belongsTo  name of model that acts as foreign key
          * @return the builder object
          */
-        public ModelFieldBuilder connectionTarget(String connectionTarget) {
-            this.connectionTarget = connectionTarget;
+        public ModelFieldBuilder belongsTo(String belongsTo) {
+            this.belongsTo = belongsTo;
+            return this;
+        }
+
+        /**
+         * Set the Model Connection metadata of this field.
+         * @param connection The Model Connection metadata of this field.
+         * @return the builder object
+         */
+        public ModelFieldBuilder connection(ModelConnection connection) {
+            this.connection = connection;
             return this;
         }
 

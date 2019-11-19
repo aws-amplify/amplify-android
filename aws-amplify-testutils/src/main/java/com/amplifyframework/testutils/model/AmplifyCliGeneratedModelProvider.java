@@ -50,7 +50,7 @@ public final class AmplifyCliGeneratedModelProvider implements ModelProvider {
     @Override
     public Set<Class<? extends Model>> models() {
         final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-                Arrays.<Class<? extends Model>>asList(Person.class)
+                Arrays.asList(Person.class, Car.class)
         );
 
         return Immutable.of(modifiableSet);
