@@ -18,31 +18,22 @@ package com.amplifyframework.api.aws;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.Immutable;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -57,10 +48,10 @@ import static org.junit.Assert.assertTrue;
  * 1. Create a new "Event App" AppSync endpoint via "Create with Wizard" at
  *    https://us-west-2.console.aws.amazon.com/appsync/home?region=us-west-2#/create
  *
- * 2. In the App Sync console, find the listtings for the API you just created. Get
+ * 2. In the App Sync console, find the settings for the API you just created. Get
  *    the API URL and API Key, and populate them into the
  *    src/androidTest/res/raw/amplifyconfiguration.json.
- *    Name the API "GraphQLInstrumentationTest". Ensure the region is list correctly.
+ *    Name the API "GraphQLInstrumentationTest". Ensure the region is set correctly.
  *
  * 3. Remove @Ignore from this test.
  *
@@ -69,7 +60,6 @@ import static org.junit.Assert.assertTrue;
 @Ignore("This is a developer-only test, requiring some backend configuration. See Javadoc for details.")
 public final class GraphQLInstrumentationTest {
     private static final String API_NAME = GraphQLInstrumentationTest.class.getSimpleName();
-    private static final int DEFAULT_RESPONSE_TIMEOUT = 5 /* seconds */; // 5 is chosen arbitrarily
 
     /**
      * Before any test is run, configure Amplify to use an
@@ -82,50 +72,6 @@ public final class GraphQLInstrumentationTest {
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.configure(configuration, context);
-    }
-
-    /**
-     * Mutates an object, and then queries for its value back. Asserts that the two values are the same.
-     * This tests our ability to generate GraphQL queries at runtime, from model primitives,
-     * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
-     * @throws Throwable when interrupted
-     */
-    @SuppressWarnings("magicnumber") // for age 29
-    @Test
-    public void testCodegenCreateAndGet() throws Throwable {
-        BlockingResultListener<Person> mutationListener = new BlockingResultListener<>();
-        BlockingResultListener<Person> queryListener = new BlockingResultListener<>();
-
-        Person person = Person
-                .builder()
-                .firstName("David")
-                .lastName("Daudelin")
-                .age(29)
-                .relationship(MaritalStatus.married)
-                .build();
-
-        Amplify.API.mutate(
-                API_NAME,
-                person,
-                null,
-                MutationType.CREATE,
-                mutationListener
-        );
-
-        GraphQLResponse<Person> mutationResponse = mutationListener.awaitResult();
-        assertFalse(mutationResponse.hasErrors());
-        assertTrue(mutationResponse.hasData());
-
-        Amplify.API.query(
-                API_NAME,
-                Person.class,
-                Person.ID.eq(mutationResponse.getData().getId()),
-                QueryType.GET,
-                queryListener
-        );
-
-        GraphQLResponse<Person> queryResponse = queryListener.awaitResult();
-        assert (queryResponse.getData().getId().equals(queryResponse.getData().getId()));
     }
 
     /**
@@ -147,14 +93,14 @@ public final class GraphQLInstrumentationTest {
         // Start listening for comments on that event
         BlockingStreamListener<Comment> streamListener = new BlockingStreamListener<>(1);
         GraphQLOperation<Comment> operation = Amplify.API.subscribe(
-                API_NAME,
-                new GraphQLRequest<Comment>(
-                    TestAssets.readAsString("subscribe-event-comments.graphql"),
-                    Collections.singletonMap("eventId", eventId),
-                    Comment.class,
-                    new GsonVariablesSerializer()
-                ),
-                streamListener
+            API_NAME,
+            new GraphQLRequest<>(
+                TestAssets.readAsString("subscribe-event-comments.graphql"),
+                Collections.singletonMap("eventId", eventId),
+                Comment.class,
+                new GsonVariablesSerializer()
+            ),
+            streamListener
         );
 
         // Create a comment
@@ -189,14 +135,14 @@ public final class GraphQLInstrumentationTest {
 
         BlockingResultListener<Comment> creationListener = new BlockingResultListener<>();
         Amplify.API.mutate(
-                API_NAME,
-                new GraphQLRequest<>(
-                    TestAssets.readAsString("create-comment.graphql"),
-                    variables,
-                    Comment.class,
-                    new GsonVariablesSerializer()
-                ),
-                creationListener
+            API_NAME,
+            new GraphQLRequest<>(
+                TestAssets.readAsString("create-comment.graphql"),
+                variables,
+                Comment.class,
+                new GsonVariablesSerializer()
+            ),
+            creationListener
         );
         GraphQLResponse<Comment> response = creationListener.awaitResult();
         assertFalse(response.hasErrors());
@@ -241,14 +187,14 @@ public final class GraphQLInstrumentationTest {
         // Block this test runner until a response is rendered.
         BlockingResultListener<Event> creationListener = new BlockingResultListener<>();
         Amplify.API.mutate(
-                API_NAME,
-                new GraphQLRequest<>(
-                    TestAssets.readAsString("create-event.graphql"),
-                    variables,
-                    Event.class,
-                    new GsonVariablesSerializer()
-                ),
-                creationListener
+            API_NAME,
+            new GraphQLRequest<>(
+                TestAssets.readAsString("create-event.graphql"),
+                variables,
+                Event.class,
+                new GsonVariablesSerializer()
+            ),
+            creationListener
         );
 
         // Validate the response. No errors are expected.
@@ -325,108 +271,6 @@ public final class GraphQLInstrumentationTest {
 
         String description() {
             return description;
-        }
-    }
-
-    /**
-     * An implementation of the {@link BlockingStreamListener} which can also await a number
-     * of responses, and await a completion callback, sort of like resolving a promise.
-     *
-     * Construct an instance of this {@link BlockingStreamListener} by providing the number
-     * of expected items, in the call to {@link BlockingStreamListener#BlockingStreamListener(int)}.
-     *
-     * Then, provide the instance to the
-     * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, StreamListener)}
-     * call.
-     *
-     * You can await results and completion by calling {@link BlockingStreamListener#awaitItems()}
-     * and/or {@link BlockingStreamListener#awaitCompletion()}.
-     * @param <T> The type of data expected in the {@link GraphQLResponse}s.
-     */
-    static final class BlockingStreamListener<T> implements StreamListener<GraphQLResponse<T>> {
-        private final CountDownLatch allItemsLatch;
-        private final CountDownLatch completedLatch;
-        private final List<GraphQLResponse<T>> items;
-        private Throwable error;
-
-        BlockingStreamListener(int countOfItemsExpected) {
-            this.allItemsLatch = new CountDownLatch(countOfItemsExpected);
-            this.completedLatch = new CountDownLatch(1);
-            this.items = new ArrayList<>();
-            this.error = null;
-        }
-
-        @Override
-        public void onNext(final GraphQLResponse<T> item) {
-            items.add(item);
-            allItemsLatch.countDown();
-        }
-
-        @Override
-        public void onComplete() {
-            completedLatch.countDown();
-        }
-
-        @Override
-        public void onError(final Throwable error) {
-            this.error = error;
-            while (0 != allItemsLatch.getCount()) {
-                allItemsLatch.countDown();
-            }
-        }
-
-        List<GraphQLResponse<T>> awaitItems() throws Throwable {
-            if (!allItemsLatch.await(DEFAULT_RESPONSE_TIMEOUT, TimeUnit.SECONDS)) {
-                throw new IllegalStateException("Items count down latch did not count down.");
-            }
-            if (error != null) {
-                throw error;
-            }
-            return Immutable.of(items);
-        }
-
-        void awaitCompletion() throws Throwable {
-            if (!completedLatch.await(DEFAULT_RESPONSE_TIMEOUT, TimeUnit.SECONDS)) {
-                throw new IllegalStateException("Completion latch did not count down.");
-            }
-        }
-    }
-
-    /**
-     * An implementation of an {@link ResultListener} which can also await for a response,
-     * kind of like resolving a promise. Provide an instance of this {@link BlockingResultListener}
-     * to an API call, and then wait for a response by calling {@link BlockingResultListener#awaitResult()}.
-     * @param <T> The type of data in the {@link GraphQLResponse}.
-     */
-    static final class BlockingResultListener<T> implements ResultListener<GraphQLResponse<T>> {
-        private final CountDownLatch latch;
-        private Throwable error;
-        private GraphQLResponse<T> response;
-
-        BlockingResultListener() {
-            this.latch = new CountDownLatch(1);
-        }
-
-        @Override
-        public void onResult(final GraphQLResponse<T> response) {
-            this.response = response;
-            latch.countDown();
-        }
-
-        @Override
-        public void onError(final Throwable error) {
-            this.error = error;
-            latch.countDown();
-        }
-
-        GraphQLResponse<T> awaitResult() throws Throwable {
-            if (!latch.await(DEFAULT_RESPONSE_TIMEOUT, TimeUnit.SECONDS)) {
-                throw new IllegalStateException("Latch never counted down.");
-            }
-            if (error != null) {
-                throw error;
-            }
-            return response;
         }
     }
 }
