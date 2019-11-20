@@ -56,6 +56,6 @@ public class PredicateTest {
                         new QueryPredicateOperation("age", new GreaterThanQueryOperator(21))
                 ));
 
-        Assert.assertEquals(op, expected);
+        Assert.assertEquals(expected, op);
     }
 }

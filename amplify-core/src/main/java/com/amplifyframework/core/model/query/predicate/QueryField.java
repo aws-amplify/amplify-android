@@ -45,7 +45,7 @@ public final class QueryField {
      * @return an operation object representing the beginsWith condition
      */
     public QueryPredicateOperation beginsWith(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.beginsWith(value));
+        return new QueryPredicateOperation(fieldName, new BeginsWithQueryOperator(value));
     }
 
     /**
@@ -55,7 +55,7 @@ public final class QueryField {
      * @return an operation object representing the between condition
      */
     public QueryPredicateOperation between(Object start, Object end) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.between(start, end));
+        return new QueryPredicateOperation(fieldName, new BetweenQueryOperator(start, end));
     }
 
     /**
@@ -64,7 +64,7 @@ public final class QueryField {
      * @return an operation object representing the contains condition
      */
     public QueryPredicateOperation contains(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.contains(value));
+        return new QueryPredicateOperation(fieldName, new ContainsQueryOperator(value));
     }
 
     /**
@@ -73,7 +73,7 @@ public final class QueryField {
      * @return an operation object representing the equality condition
      */
     public QueryPredicateOperation eq(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.equalTo(value));
+        return new QueryPredicateOperation(fieldName, new EqualQueryOperator(value));
     }
 
     /**
@@ -82,7 +82,7 @@ public final class QueryField {
      * @return an operation object representing the greater or equal condition
      */
     public QueryPredicateOperation ge(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.greaterOrEqual(value));
+        return new QueryPredicateOperation(fieldName, new GreaterOrEqualQueryOperator(value));
     }
 
     /**
@@ -91,7 +91,7 @@ public final class QueryField {
      * @return an operation object representing the greater than condition
      */
     public QueryPredicateOperation gt(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.greaterThan(value));
+        return new QueryPredicateOperation(fieldName, new GreaterThanQueryOperator(value));
     }
 
     /**
@@ -100,7 +100,7 @@ public final class QueryField {
      * @return an operation object representing the less or equal condition
      */
     public QueryPredicateOperation le(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.lessOrEqual(value));
+        return new QueryPredicateOperation(fieldName, new LessOrEqualQueryOperator(value));
     }
 
     /**
@@ -109,7 +109,7 @@ public final class QueryField {
      * @return an operation object representing the less than condition
      */
     public QueryPredicateOperation lt(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.lessThan(value));
+        return new QueryPredicateOperation(fieldName, new LessThanQueryOperator(value));
     }
 
     /**
@@ -118,6 +118,6 @@ public final class QueryField {
      * @return an operation object representing the not equal condition
      */
     public QueryPredicateOperation ne(Object value) {
-        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.notEqual(value));
+        return new QueryPredicateOperation(fieldName, new NotEqualQueryOperator(value));
     }
 }
