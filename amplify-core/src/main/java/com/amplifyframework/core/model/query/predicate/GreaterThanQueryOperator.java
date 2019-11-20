@@ -18,17 +18,17 @@ package com.amplifyframework.core.model.query.predicate;
 import androidx.core.util.ObjectsCompat;
 
 /**
- * Represents an equality condition with a target value for comparison.
+ * Represents a greater than condition with a target value for comparison.
  */
-public final class EqualQueryOperator extends QueryOperator {
+public final class GreaterThanQueryOperator extends QueryOperator {
     private Object value;
 
     /**
-     * Constructs an equality condition.
+     * Constructs a greater than condition.
      * @param value the value to be used in the comparison
      */
-    public EqualQueryOperator(Object value) {
-        super(Type.EQUAL);
+    public GreaterThanQueryOperator(Object value) {
+        super(Type.GREATER_THAN);
         this.value = value;
     }
 
@@ -47,7 +47,7 @@ public final class EqualQueryOperator extends QueryOperator {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            EqualQueryOperator op = (EqualQueryOperator) obj;
+            GreaterThanQueryOperator op = (GreaterThanQueryOperator) obj;
 
             return ObjectsCompat.equals(type(), op.type()) &&
                     ObjectsCompat.equals(value(), op.value());
@@ -65,7 +65,7 @@ public final class EqualQueryOperator extends QueryOperator {
     @Override
     public String toString() {
         return new StringBuilder()
-                .append("EqualQueryOperator { ")
+                .append("GreaterThanQueryOperator { ")
                 .append("type: ")
                 .append(type())
                 .append(", value: ")
