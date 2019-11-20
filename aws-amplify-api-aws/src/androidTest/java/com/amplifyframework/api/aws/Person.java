@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
@@ -128,6 +130,36 @@ public final class Person implements Model {
      */
     public MaritalStatus getRelationship() {
         return relationship;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if(obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            Person person = (Person) obj;
+            return ObjectsCompat.equals(getId(), person.getId()) &&
+                    ObjectsCompat.equals(getAge(), person.getAge()) &&
+                    ObjectsCompat.equals(getDob(), person.getDob()) &&
+                    ObjectsCompat.equals(getFirstName(), person.getFirstName()) &&
+                    ObjectsCompat.equals(getLastName(), person.getLastName()) &&
+                    ObjectsCompat.equals(getRelationship(), person.getRelationship());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return new StringBuilder()
+                .append(getId())
+                .append(getDob())
+                .append(getAge())
+                .append(getFirstName())
+                .append(getLastName())
+                .append(getRelationship())
+                .toString()
+                .hashCode();
     }
 
     /**
