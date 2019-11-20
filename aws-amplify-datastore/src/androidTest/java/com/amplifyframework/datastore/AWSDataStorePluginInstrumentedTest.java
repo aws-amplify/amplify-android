@@ -23,7 +23,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 
 import org.junit.After;
 import org.junit.BeforeClass;
@@ -94,7 +94,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         final AtomicReference<List<ModelSchema>> result = new AtomicReference<>();
         Amplify.DataStore.initialize(
                 context,
-                AmplifyCliGeneratedModelProvider.getInstance(),
+                AmplifyCliGeneratedModelProvider.singletonInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
                     public void onResult(List<ModelSchema> modelSchemaList) {

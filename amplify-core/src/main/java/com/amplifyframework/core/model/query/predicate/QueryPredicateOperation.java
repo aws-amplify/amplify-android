@@ -15,10 +15,14 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import androidx.core.util.ObjectsCompat;
+
+import java.util.Arrays;
+
 /**
  * Represents an individual comparison operation on a model field.
  */
-public class QueryPredicateOperation implements QueryPredicate {
+public final class QueryPredicateOperation implements QueryPredicate {
     private String field;
     private QueryOperator operator;
 
@@ -55,7 +59,7 @@ public class QueryPredicateOperation implements QueryPredicate {
      * @return a group connecting this operation with another group/operation with an AND type
      */
     public QueryPredicateGroup and(QueryPredicate predicate) {
-        return null;
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.AND, Arrays.asList(this, predicate));
     }
 
     /**
@@ -64,7 +68,7 @@ public class QueryPredicateOperation implements QueryPredicate {
      * @return a group connecting this operation with another group/operation with an OR type
      */
     public QueryPredicateGroup or(QueryPredicate predicate) {
-        return null;
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.OR, Arrays.asList(this, predicate));
     }
 
     /**
@@ -73,6 +77,40 @@ public class QueryPredicateOperation implements QueryPredicate {
      * @return a group negating the given operation
      */
     public static QueryPredicateGroup not(QueryPredicateOperation predicate) {
-        return null;
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Arrays.asList(predicate));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            QueryPredicateOperation op = (QueryPredicateOperation) obj;
+
+            return ObjectsCompat.equals(field(), op.field()) &&
+                    ObjectsCompat.equals(operator(), op.operator());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                field(),
+                operator()
+        );
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("QueryPredicateOperation { ")
+                .append("field: ")
+                .append(field())
+                .append(", operator: ")
+                .append(operator())
+                .append(" }")
+                .toString();
     }
 }

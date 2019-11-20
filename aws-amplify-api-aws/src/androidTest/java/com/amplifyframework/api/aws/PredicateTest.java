@@ -16,9 +16,15 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.testmodels.Person;
 
+import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 /**
  * Tests predicate creation.
@@ -34,5 +40,23 @@ public class PredicateTest {
         assert (op.field().equals("id"));
         assert (op.operator().getClass().equals(EqualQueryOperator.class));
         assert (((EqualQueryOperator) op.operator()).value().equals("1234"));
+    }
+
+    /**
+     * Tests the creation of an AND group predicate.
+     */
+    @Test
+    @SuppressWarnings("magicnumber")
+    public void testSingleQueryPredicateGroup() {
+        QueryPredicateGroup op = Person.ID.eq("1234").and(Person.AGE.gt(21));
+
+        QueryPredicateGroup expected = new QueryPredicateGroup(
+                QueryPredicateGroup.Type.AND,
+                Arrays.asList(
+                        new QueryPredicateOperation("id", new EqualQueryOperator("1234")),
+                        new QueryPredicateOperation("age", new GreaterThanQueryOperator(21))
+                ));
+
+        Assert.assertEquals(expected, op);
     }
 }

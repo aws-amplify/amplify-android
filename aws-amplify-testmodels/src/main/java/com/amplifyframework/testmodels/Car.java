@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils.model;
+package com.amplifyframework.testmodels;
 
 import androidx.core.util.ObjectsCompat;
 

@@ -26,9 +26,9 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testutils.model.Car;
-import com.amplifyframework.testutils.model.Person;
+import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.Car;
+import com.amplifyframework.testmodels.Person;
 
 import org.junit.After;
 import org.junit.Before;
@@ -93,7 +93,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         AtomicReference<Throwable> responseError = new AtomicReference<>();
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         sqLiteStorageAdapter.initialize(context,
-                AmplifyCliGeneratedModelProvider.getInstance(),
+                AmplifyCliGeneratedModelProvider.singletonInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
                     public void onResult(List<ModelSchema> result) {
