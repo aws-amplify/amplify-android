@@ -21,9 +21,10 @@ import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.datastore.RandomString;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testutils.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -80,11 +81,18 @@ public class SyncEngineTest {
         syncEngine.start();
 
         // The latch can be used to block until response is received
+        Person tony = Person.builder()
+            .firstName("Tony")
+            .lastName("Daniels")
+            .build();
         CountDownLatch responseLatch =
-            awaitResponse(api, new GraphQLResponse<>(Person.named("Tony"), null));
+            awaitResponse(api, new GraphQLResponse<>(tony, null));
 
         // Arrange: create a person
-        final Person susan = Person.named("Susan");
+        final Person susan = Person.builder()
+            .firstName("Susan")
+            .lastName("Quimby")
+            .build();
         final MutationEvent<Person> insertSusan = MutationEvent.<Person>builder()
             .dataClass(Person.class)
             .data(susan)
