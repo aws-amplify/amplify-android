@@ -16,18 +16,16 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
+import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.AWSDataStorePlugin;
-import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
 
 import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -51,6 +49,19 @@ public final class AWSDataStorePluginInstrumentedTest {
     private static AWSDataStorePlugin awsDataStorePlugin;
 
     /**
+     * Enable strict mode for catching SQLite leaks.
+     */
+    @BeforeClass
+    public static void enableStrictMode() {
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+    }
+
+    /**
      * Setup the Android application context.
      */
     @BeforeClass
@@ -58,30 +69,30 @@ public final class AWSDataStorePluginInstrumentedTest {
         context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
         amplifyConfiguration.populateFromConfigFile(context);
-        awsDataStorePlugin = new AWSDataStorePlugin();
+        awsDataStorePlugin = AWSDataStorePlugin.singleton();
         Amplify.addPlugin(awsDataStorePlugin);
         Amplify.configure(amplifyConfiguration, context);
     }
 
     /**
-     * Drop all tables and database, close and delete the database.
+     * Drop all tables and database, terminate and delete the database.
      */
     @After
     public void tearDown() {
-        awsDataStorePlugin.getSqLiteStorageAdapter().close();
+        awsDataStorePlugin.terminate();
         deleteDatabase();
     }
 
     /**
      * Test adding, configuring and setting up AWSDataStorePlugin.
-     * @throws InterruptedException when setUp times out.
+     * @throws InterruptedException when initialize times out.
      */
     @Test
     public void testSetUp() throws InterruptedException {
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         final AtomicReference<Throwable> error = new AtomicReference<>();
         final AtomicReference<List<ModelSchema>> result = new AtomicReference<>();
-        Amplify.DataStore.setUp(
+        Amplify.DataStore.initialize(
                 context,
                 AmplifyCliGeneratedModelProvider.getInstance(),
                 new ResultListener<List<ModelSchema>>() {
@@ -101,7 +112,7 @@ public final class AWSDataStorePluginInstrumentedTest {
                 DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
         assertNotNull("Expecting a non-null ModelSchema list", result.get());
         assertFalse("Expecting a non-empty ModelSchema list", result.get().isEmpty());
-        assertNull("Expecting no exception to be thrown from setUp", error.get());
+        assertNull("Expecting no exception to be thrown from initialize", error.get());
     }
 
     private void deleteDatabase() {

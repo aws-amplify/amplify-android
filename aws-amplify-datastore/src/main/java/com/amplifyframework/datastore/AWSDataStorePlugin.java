@@ -17,7 +17,6 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.CategoryType;
@@ -38,17 +37,29 @@ import io.reactivex.Observable;
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
-public class AWSDataStorePlugin implements DataStorePlugin<Void> {
+public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
+
+    // Singleton instance
+    private static AWSDataStorePlugin singleton;
 
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final SQLiteStorageAdapter sqLiteStorageAdapter;
 
-    /**
-     * Construct the AWSDataStorePlugin object.
-     */
-    public AWSDataStorePlugin() {
+    private AWSDataStorePlugin() {
         sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
+    }
+
+    /**
+     * Return the singleton instance if it exists, otherwise create, assign
+     * and return.
+     * @return the singleton instance.
+     */
+    public static synchronized AWSDataStorePlugin singleton() {
+        if (singleton == null) {
+            singleton = new AWSDataStorePlugin();
+        }
+        return singleton;
     }
 
     /**
@@ -88,11 +99,11 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @Override
-    public void setUp(
+    public void initialize(
             @NonNull Context context,
             @NonNull ModelProvider modelProvider,
             @NonNull ResultListener<List<ModelSchema>> listener) {
-        sqLiteStorageAdapter.setUp(context, modelProvider, listener);
+        sqLiteStorageAdapter.initialize(context, modelProvider, listener);
     }
 
     /**
@@ -158,8 +169,15 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
     }
 
-    @VisibleForTesting
-    SQLiteStorageAdapter getSqLiteStorageAdapter() {
-        return sqLiteStorageAdapter;
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void terminate() {
+        try {
+            sqLiteStorageAdapter.terminate();
+        } catch (Exception exception) {
+            throw new DataStoreException("Error in terminating the AWSDataStorePlugin.", exception);
+        }
     }
 }

@@ -35,22 +35,22 @@ import io.reactivex.Observable;
 public interface DataStoreCategoryBehavior {
 
     /**
-     * Setup the DataStore with some models.
+     * Initialize the DataStore with some models.
      * For each {@link Model}, construct a
      * {@link com.amplifyframework.core.model.ModelSchema}
      * and setup the necessities for persisting a {@link Model}.
-     * This setUp is a pre-requisite for all other operations
+     * This initialize is a pre-requisite for all other operations
      * of a LocalStorageAdapter.
      *
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
      * @param modelProvider container of all the Model classes
      * @param listener the listener to be invoked to notify completion
-     *                 of the setUp.
+     *                 of the initialize.
      */
-    void setUp(@NonNull Context context,
-               @NonNull ModelProvider modelProvider,
-               @NonNull ResultListener<List<ModelSchema>> listener);
+    void initialize(@NonNull Context context,
+                    @NonNull ModelProvider modelProvider,
+                    @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
      * Saves an object into the data store.
@@ -125,5 +125,11 @@ public interface DataStoreCategoryBehavior {
     <T extends Model> Observable<MutationEvent<T>> observe(
             Class<T> modelClass,
             QueryPredicate queryPredicate);
+
+    /**
+     * Release all resources created during construction and initialization
+     * time.
+     */
+    void terminate();
 }
 

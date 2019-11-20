@@ -128,7 +128,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * Setup the storage engine with the models. For each {@link Model}, construct a
      * {@link ModelSchema} and setup the necessities for persisting a {@link Model}.
-     * This setUp is a pre-requisite for all other operations of a {@link LocalStorageAdapter}.
+     * This initialize is a pre-requisite for all other operations of a {@link LocalStorageAdapter}.
      *
      * The setup is synchronous and the completion of this method guarantees completion
      * of the creation of SQL database and tables for the corresponding data models
@@ -138,12 +138,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      *                interact with a storage mechanism in Android.
      * @param modelProvider  container of all data {@link Model} classes
      * @param listener the listener to be invoked to notify completion
-     *                 of the setUp.
+     *                 of the initialize.
      */
     @Override
-    public void setUp(@NonNull Context context,
-                      @NonNull ModelProvider modelProvider,
-                      @NonNull final ResultListener<List<ModelSchema>> listener) {
+    public void initialize(@NonNull Context context,
+                           @NonNull ModelProvider modelProvider,
+                           @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
                 final Set<Class<? extends Model>> models = modelProvider.models();
@@ -207,6 +207,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings("unchecked") // model.getClass() has Class<?>, but we assume Class<T>
     public <T extends Model> void save(@NonNull T model,
                                        @NonNull ResultListener<MutationEvent<T>> listener) {
@@ -299,13 +300,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void close() {
-        if (databaseConnectionHandle != null) {
+    public void terminate() {
+        try {
+            insertSqlPreparedStatements.clear();
+            mutationEventSubject.onComplete();
+            threadPool.shutdown();
             databaseConnectionHandle.close();
-        }
-
-        if (sqLiteOpenHelper != null) {
             sqLiteOpenHelper.close();
+        } catch (Exception exception) {
+            throw new DataStoreException("Error in terminating the SQLiteStorageAdapter.", exception);
         }
     }
 

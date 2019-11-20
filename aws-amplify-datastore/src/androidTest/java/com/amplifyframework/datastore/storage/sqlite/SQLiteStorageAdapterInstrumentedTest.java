@@ -65,6 +65,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
 
+    /**
+     * Enable strict mode for catching SQLite leaks.
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
@@ -77,7 +80,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
-     * @throws InterruptedException when the waiting for setUp is interrupted.
+     * @throws InterruptedException when the waiting for initialize is interrupted.
      */
     @Before
     public void setUp() throws InterruptedException {
@@ -89,7 +92,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         AtomicReference<List<ModelSchema>> responseSuccess = new AtomicReference<>();
         AtomicReference<Throwable> responseError = new AtomicReference<>();
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
-        sqLiteStorageAdapter.setUp(context,
+        sqLiteStorageAdapter.initialize(context,
                 AmplifyCliGeneratedModelProvider.getInstance(),
                 new ResultListener<List<ModelSchema>>() {
                     @Override
@@ -112,7 +115,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Drop all tables and database, close and delete the database.
+     * Drop all tables and database, terminate and delete the database.
      */
     @After
     public void tearDown() {
