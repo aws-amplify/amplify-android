@@ -17,6 +17,7 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.CategoryType;
@@ -25,7 +26,6 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 
 import org.json.JSONObject;
@@ -42,13 +42,13 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
 
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
-    private final LocalStorageAdapter localStorageAdapter;
+    private final SQLiteStorageAdapter sqLiteStorageAdapter;
 
     /**
      * Construct the AWSDataStorePlugin object.
      */
     public AWSDataStorePlugin() {
-        localStorageAdapter = SQLiteStorageAdapter.defaultInstance();
+        sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
     }
 
     /**
@@ -92,7 +92,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Context context,
             @NonNull ModelProvider modelProvider,
             @NonNull ResultListener<List<ModelSchema>> listener) {
-        localStorageAdapter.setUp(context, modelProvider, listener);
+        sqLiteStorageAdapter.setUp(context, modelProvider, listener);
     }
 
     /**
@@ -101,7 +101,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(@NonNull T object,
                                        ResultListener<MutationEvent<T>> resultListener) {
-        localStorageAdapter.save(object, resultListener);
+        sqLiteStorageAdapter.save(object, resultListener);
     }
 
     /**
@@ -110,7 +110,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void delete(@NonNull T object,
                                          ResultListener<MutationEvent<T>> resultListener) {
-        localStorageAdapter.delete(object, resultListener);
+        sqLiteStorageAdapter.delete(object, resultListener);
     }
 
     /**
@@ -119,7 +119,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(@NonNull Class<T> objectType,
                                         ResultListener<Iterator<T>> resultListener) {
-        localStorageAdapter.query(objectType, resultListener);
+        sqLiteStorageAdapter.query(objectType, resultListener);
     }
 
     /**
@@ -127,7 +127,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
      */
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
-        return localStorageAdapter.observe();
+        return sqLiteStorageAdapter.observe();
     }
 
     /**
@@ -156,5 +156,10 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
             Class<T> modelClass,
             QueryPredicate queryPredicate) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
+    }
+
+    @VisibleForTesting
+    SQLiteStorageAdapter getSqLiteStorageAdapter() {
+        return sqLiteStorageAdapter;
     }
 }

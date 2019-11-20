@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.os.StrictMode;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -31,6 +32,7 @@ import com.amplifyframework.testutils.model.Person;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.text.DateFormat;
@@ -62,6 +64,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
+
+    @BeforeClass
+    public static void enableStrictMode() {
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+    }
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.

@@ -205,11 +205,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * Save a {@link Model} to the local storage engine. The {@link ResultListener} will be invoked when the
-     * save operation is completed to notify the success and failure.
-     * @param model    the Model object
-     * @param listener the listener to be invoked when the save operation completes
-     * @param <T> parameter type of the Model
+     * {@inheritDoc}
      */
     @SuppressWarnings("unchecked") // model.getClass() has Class<?>, but we assume Class<T>
     public <T extends Model> void save(@NonNull T model,
@@ -250,10 +246,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * Query the storage adapter for models of a given type.
-     *
-     * @param modelClass The class type of models for which to query
-     * @param listener   A listener who will be notified of the result of the query
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void query(@NonNull Class<T> modelClass,
@@ -286,10 +279,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * Deletes an item from storage.
-     *
-     * @param item     Item to delete
-     * @param listener Listener to callback with result
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void delete(@NonNull T item,
@@ -297,9 +287,26 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         /* TODO */
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
         return mutationEventSubject;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void close() {
+        if (databaseConnectionHandle != null) {
+            databaseConnectionHandle.close();
+        }
+
+        if (sqLiteOpenHelper != null) {
+            sqLiteOpenHelper.close();
+        }
     }
 
     private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite;
+package com.amplifyframework.datastore;
 
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
@@ -23,9 +23,11 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
 
 import org.junit.After;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -45,8 +47,8 @@ import static org.junit.Assert.assertTrue;
 public final class AWSDataStorePluginInstrumentedTest {
 
     private static final long DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
-
     private static Context context;
+    private static AWSDataStorePlugin awsDataStorePlugin;
 
     /**
      * Setup the Android application context.
@@ -56,7 +58,8 @@ public final class AWSDataStorePluginInstrumentedTest {
         context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
         amplifyConfiguration.populateFromConfigFile(context);
-        Amplify.addPlugin(new AWSDataStorePlugin());
+        awsDataStorePlugin = new AWSDataStorePlugin();
+        Amplify.addPlugin(awsDataStorePlugin);
         Amplify.configure(amplifyConfiguration, context);
     }
 
@@ -65,6 +68,7 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @After
     public void tearDown() {
+        awsDataStorePlugin.getSqLiteStorageAdapter().close();
         deleteDatabase();
     }
 
@@ -101,6 +105,6 @@ public final class AWSDataStorePluginInstrumentedTest {
     }
 
     private void deleteDatabase() {
-        context.deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
+        context.deleteDatabase("AmplifyDataStore.db");
     }
 }

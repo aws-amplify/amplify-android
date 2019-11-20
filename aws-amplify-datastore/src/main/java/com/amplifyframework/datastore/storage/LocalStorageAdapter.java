@@ -93,4 +93,9 @@ public interface LocalStorageAdapter {
      *         any object managed by the storage adapter is mutated.
      */
     Observable<MutationEvent<? extends Model>> observe();
+
+    /**
+     * Closes the database connection and all resources associated with database.
+     */
+    void close();
 }
