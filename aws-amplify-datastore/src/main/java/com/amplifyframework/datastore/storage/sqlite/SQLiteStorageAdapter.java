@@ -51,11 +51,13 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.reactivex.Observable;
+import io.reactivex.subjects.PublishSubject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -87,6 +89,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // into a strongly typed Java object.
     private final Gson gson;
 
+    // Used to publish events to the observables subscribed.
+    private final PublishSubject<MutationEvent<? extends Model>> mutationEventSubject;
+
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
 
@@ -104,11 +109,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @param modelSchemaRegistry modelSchemaRegistry that hosts the models and their schema.
      */
     public SQLiteStorageAdapter(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
-        this.modelSchemaRegistry = modelSchemaRegistry;
+        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
         this.gson = new Gson();
+        this.mutationEventSubject = PublishSubject.create();
     }
 
     /**
@@ -205,6 +211,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @param listener the listener to be invoked when the save operation completes
      * @param <T> parameter type of the Model
      */
+    @SuppressWarnings("unchecked")
     public <T extends Model> void save(@NonNull T model,
                                        @NonNull ResultListener<MutationEvent<T>> listener) {
         threadPool.submit(() -> {
@@ -228,12 +235,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 Log.d(TAG, "Successfully written data to table for: " + model.toString());
 
-                listener.onResult(MutationEvent.<T>builder()
+                final MutationEvent<T> mutationEvent = MutationEvent.<T>builder()
                         .data(model)
+                        .dataClass((Class<T>) model.getClass())
                         .mutationType(MutationEvent.MutationType.INSERT)
                         .source(MutationEvent.Source.DATA_STORE)
-                        .build());
+                        .build();
+                mutationEventSubject.onNext(mutationEvent);
+                listener.onResult(mutationEvent);
             } catch (Exception exception) {
+                mutationEventSubject.onError(exception);
                 listener.onError(new DataStoreException("Error in saving the model.", exception));
             }
         });
@@ -289,7 +300,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
-        return null;
+        return mutationEventSubject;
     }
 
     private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {

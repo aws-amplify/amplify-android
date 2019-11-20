@@ -53,6 +53,10 @@ public final class AWSDataStorePluginInstrumentedTest {
     @BeforeClass
     public static void setUp() {
         context = ApplicationProvider.getApplicationContext();
+
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin();
+        Amplify.addPlugin(awsDataStorePlugin);
+        Amplify.configure(context);
     }
 
     /**
@@ -69,10 +73,6 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @Test
     public void testSetUp() throws InterruptedException {
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin();
-        Amplify.addPlugin(awsDataStorePlugin);
-        Amplify.configure(context);
-
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         final AtomicReference<Throwable> error = new AtomicReference<>();
         final AtomicReference<List<ModelSchema>> result = new AtomicReference<>();
