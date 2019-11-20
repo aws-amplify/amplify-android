@@ -26,11 +26,84 @@ public final class QueryOperatorFactory {
     private QueryOperatorFactory() { }
 
     /**
+     * Returns a begins with comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the begins with condition
+     */
+    public static BeginsWithQueryOperator beginsWith(Object value) {
+        return new BeginsWithQueryOperator(value);
+    }
+
+    /**
+     * Returns a between comparison operator.
+     * @param start the value to be compared for the start of the range
+     * @param end the value to be compared for the end of the range
+     * @return an operator object representing the between condition
+     */
+    public static BetweenQueryOperator between(Object start, Object end) {
+        return new BetweenQueryOperator(start, end);
+    }
+
+    /**
+     * Returns a contains comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the contains condition
+     */
+    public static ContainsQueryOperator contains(Object value) {
+        return new ContainsQueryOperator(value);
+    }
+
+    /**
      * Returns an equality comparison operator.
      * @param value the value to be compared
      * @return an operator object representing the equality condition
      */
     public static EqualQueryOperator equalTo(Object value) {
         return new EqualQueryOperator(value);
+    }
+
+    /**
+     * Returns a greater or equal comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the greater or equal condition
+     */
+    public static GreaterOrEqualQueryOperator greaterOrEqual(Object value) {
+        return new GreaterOrEqualQueryOperator(value);
+    }
+
+    /**
+     * Returns a greater than comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the greater than condition
+     */
+    public static GreaterThanQueryOperator greaterThan(Object value) {
+        return new GreaterThanQueryOperator(value);
+    }
+
+    /**
+     * Returns a less or equal comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the less or equal condition
+     */
+    public static LessOrEqualQueryOperator lessOrEqual(Object value) {
+        return new LessOrEqualQueryOperator(value);
+    }
+
+    /**
+     * Returns a less than comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the less than condition
+     */
+    public static LessThanQueryOperator lessThan(Object value) {
+        return new LessThanQueryOperator(value);
+    }
+
+    /**
+     * Returns a not equal comparison operator.
+     * @param value the value to be compared
+     * @return an operator object representing the not equal condition
+     */
+    public static NotEqualQueryOperator notEqual(Object value) {
+        return new NotEqualQueryOperator(value);
     }
 }

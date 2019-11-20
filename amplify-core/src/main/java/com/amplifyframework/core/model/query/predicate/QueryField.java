@@ -40,11 +40,84 @@ public final class QueryField {
     }
 
     /**
+     * Generates a new beginsWith comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the beginsWith condition
+     */
+    public QueryPredicateOperation beginsWith(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.beginsWith(value));
+    }
+
+    /**
+     * Generates a new between comparison object to compare this field to the specified range of values.
+     * @param start the value to be used for the start of the range
+     * @param end the value to be used for the end of the range
+     * @return an operation object representing the between condition
+     */
+    public QueryPredicateOperation between(Object start, Object end) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.between(start, end));
+    }
+
+    /**
+     * Generates a new contains comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the contains condition
+     */
+    public QueryPredicateOperation contains(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.contains(value));
+    }
+
+    /**
      * Generates a new equality comparison object to compare this field to the specified value.
      * @param value the value to be compared
      * @return an operation object representing the equality condition
      */
-    public QueryPredicateOperation eq(String value) {
+    public QueryPredicateOperation eq(Object value) {
         return new QueryPredicateOperation(fieldName, QueryOperatorFactory.equalTo(value));
+    }
+
+    /**
+     * Generates a new greater or equal comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the greater or equal condition
+     */
+    public QueryPredicateOperation ge(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.greaterOrEqual(value));
+    }
+
+    /**
+     * Generates a new greater than comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the greater than condition
+     */
+    public QueryPredicateOperation gt(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.greaterThan(value));
+    }
+
+    /**
+     * Generates a new less or equal comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the less or equal condition
+     */
+    public QueryPredicateOperation le(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.lessOrEqual(value));
+    }
+
+    /**
+     * Generates a new less than comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the less than condition
+     */
+    public QueryPredicateOperation lt(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.lessThan(value));
+    }
+
+    /**
+     * Generates a new not equals comparison object to compare this field to the specified value.
+     * @param value the value to be compared
+     * @return an operation object representing the not equal condition
+     */
+    public QueryPredicateOperation ne(Object value) {
+        return new QueryPredicateOperation(fieldName, QueryOperatorFactory.notEqual(value));
     }
 }
