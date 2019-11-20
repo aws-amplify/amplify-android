@@ -13,35 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.testutils;
 
-import com.amplifyframework.core.model.Model;
-
-import java.util.Objects;
 import java.util.UUID;
 
 /**
- * Some little POJO we can use to test the queue.
+ * A test utility to build random string.
+ * This just uses UUID.randomUUID().toString(),
+ * but it has a more semantic name.
  */
-final class Person implements Model {
-    private final String name;
-    private final String uuid;
+public final class RandomString {
+    @SuppressWarnings("checkstyle:all") private RandomString() {}
 
-    private Person(String name) {
-        this.name = name;
-        this.uuid = UUID.randomUUID().toString();
-    }
-
-    static Person named(final String name) {
-        return new Person(Objects.requireNonNull(name));
-    }
-
-    String name() {
-        return name;
-    }
-
-    @Override
-    public String getId() {
-        return uuid;
+    /**
+     * Builds a new random string.
+     * @return A random string
+     */
+    public static String string() {
+        return UUID.randomUUID().toString();
     }
 }

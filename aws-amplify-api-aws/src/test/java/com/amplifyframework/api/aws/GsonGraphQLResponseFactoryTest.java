@@ -17,8 +17,8 @@ package com.amplifyframework.api.aws;
 
 import android.os.Build;
 
-import com.amplifyframework.api.Resources;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -62,7 +62,7 @@ public final class GsonGraphQLResponseFactoryTest {
     public void nullDataNullErrorsReturnsEmptyResponseObject() {
         // Arrange some JSON string from a "server"
         final String nullResponseJson =
-                Resources.readAsString("null-gql-response.json");
+            Resources.readAsString("null-gql-response.json");
 
         // Act! Parse it into a model.
         final GraphQLResponse<ListTodosResult> response =

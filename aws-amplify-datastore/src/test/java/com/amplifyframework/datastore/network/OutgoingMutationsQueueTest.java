@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
+import com.amplifyframework.testmodels.Person;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -63,7 +64,10 @@ public class OutgoingMutationsQueueTest {
         MutationEvent<Person> insertJamesonMutation = MutationEvent.<Person>builder()
             .mutationType(MutationEvent.MutationType.INSERT)
             .dataClass(Person.class)
-            .data(Person.named("Jameson"))
+            .data(Person.builder()
+                .firstName("Jameson")
+                .lastName("Williams")
+                .build())
             .source(MutationEvent.Source.DATA_STORE)
             .build();
 
@@ -101,7 +105,10 @@ public class OutgoingMutationsQueueTest {
         // Enqueue something, but don't subscribe to the observable just yet.
         outgoingMutationsQueue.enqueue(MutationEvent.<Person>builder()
             .dataClass(Person.class)
-            .data(Person.named("tony"))
+            .data(Person.builder()
+                .firstName("Tony")
+                .lastName("Daniels")
+                .build())
             .mutationType(MutationEvent.MutationType.UPDATE)
             .source(MutationEvent.Source.DATA_STORE)
             .build());
@@ -127,19 +134,28 @@ public class OutgoingMutationsQueueTest {
         // Arrange: some mutations.
         MutationEvent<Person> updateTony = MutationEvent.<Person>builder()
             .mutationType(MutationEvent.MutationType.UPDATE)
-            .data(Person.named("Tony"))
+            .data(Person.builder()
+                .firstName("Tony")
+                .lastName("Daniels")
+                .build())
             .dataClass(Person.class)
             .source(MutationEvent.Source.DATA_STORE)
             .build();
         MutationEvent<Person> insertSam = MutationEvent.<Person>builder()
             .mutationType(MutationEvent.MutationType.INSERT)
-            .data(Person.named("Sam"))
+            .data(Person.builder()
+                .firstName("Sam")
+                .lastName("Watson")
+                .build())
             .dataClass(Person.class)
             .source(MutationEvent.Source.DATA_STORE)
             .build();
         MutationEvent<Person> deleteBetty = MutationEvent.<Person>builder()
             .mutationType(MutationEvent.MutationType.DELETE)
-            .data(Person.named("Betty"))
+            .data(Person.builder()
+                .firstName("Betty")
+                .lastName("Smith")
+                .build())
             .dataClass(Person.class)
             .source(MutationEvent.Source.DATA_STORE)
             .build();
@@ -167,7 +183,10 @@ public class OutgoingMutationsQueueTest {
         MutationEvent<Person> deleteBillGates = MutationEvent.<Person>builder()
             .mutationType(MutationEvent.MutationType.DELETE)
             .dataClass(Person.class)
-            .data(Person.named("Bill Gates"))
+            .data(Person.builder()
+                .firstName("Bill")
+                .lastName("Gates")
+                .build())
             .source(MutationEvent.Source.DATA_STORE)
             .build();
         inMemoryStorageAdapter.items().add(deleteBillGates);
