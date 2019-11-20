@@ -138,12 +138,12 @@ public final class Person implements Model {
             return false;
         } else {
             Person person = (Person) obj;
-            return this.getId().equals(person.getId()) &&
-                    this.getAge().equals(person.getAge()) &&
-                    this.getDob().equals(person.getDob()) &&
-                    this.getFirstName().equals(person.getFirstName()) &&
-                    this.getLastName().equals(person.getLastName()) &&
-                    this.getRelationship().equals(person.getRelationship());
+            return getId().equals(person.getId()) &&
+                    getAge().equals(person.getAge()) &&
+                    getDob().equals(person.getDob()) &&
+                    getFirstName().equals(person.getFirstName()) &&
+                    getLastName().equals(person.getLastName()) &&
+                    getRelationship().equals(person.getRelationship());
         }
     }
 
