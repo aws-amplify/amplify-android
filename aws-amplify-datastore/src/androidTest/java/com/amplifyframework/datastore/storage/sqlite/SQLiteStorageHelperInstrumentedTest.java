@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.After;
@@ -24,6 +25,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -38,7 +40,7 @@ import static org.junit.Assert.assertTrue;
 public class SQLiteStorageHelperInstrumentedTest {
 
     private SQLiteStorageHelper sqLiteStorageHelper;
-
+    private SQLiteDatabase sqLiteDatabase;
     private Set<SqlCommand> createTableCommands;
 
     /**
@@ -46,18 +48,21 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @Before
     public void setUp() {
+        deleteDatabase();
+
         createTableCommands = new HashSet<>();
         createTableCommands.add(
-                new SqlCommand("PERSON",
-                        "CREATE TABLE IF NOT EXISTS PERSON (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
+                new SqlCommand("Person",
+                        "CREATE TABLE IF NOT EXISTS Person (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         createTableCommands.add(
-                new SqlCommand("CAR",
-                        "CREATE TABLE IF NOT EXISTS CAR (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
+                new SqlCommand("Car",
+                        "CREATE TABLE IF NOT EXISTS Car (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
                 SQLiteStorageAdapter.DATABASE_NAME,
                 SQLiteStorageAdapter.DATABASE_VERSION,
                 new CreateSqlCommands(createTableCommands, Collections.emptySet()));
+        sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
     }
 
     /**
@@ -65,12 +70,9 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @After
     public void tearDown() {
-        SQLiteDatabase sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
-        dropAllTables(sqLiteDatabase);
         sqLiteDatabase.close();
         sqLiteStorageHelper.close();
-        ApplicationProvider.getApplicationContext().deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
-        sqLiteStorageHelper = null;
+        deleteDatabase();
     }
 
     /**
@@ -86,7 +88,7 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @Test
     public void isDatabaseOpen() {
-        assertTrue(sqLiteStorageHelper.getWritableDatabase().isOpen());
+        assertTrue(sqLiteDatabase.isOpen());
     }
 
     /**
@@ -97,10 +99,13 @@ public class SQLiteStorageHelperInstrumentedTest {
     public void onCreateCreatesTables() {
         // Getting an instance to the writable database
         // invokes onCreate on the SQLiteStorageHelper.
-        final SQLiteDatabase sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
         final List<String> tableNamesFromDatabase = getTableNames(sqLiteDatabase);
+        Log.d("onCreateCreatesTables", Arrays.toString(tableNamesFromDatabase.toArray()));
         for (SqlCommand sqlCommand : createTableCommands) {
-            assertTrue(tableNamesFromDatabase.contains(sqlCommand.tableName()));
+            assertTrue(
+                    sqlCommand.tableName() + " was not in the list: " + tableNamesFromDatabase,
+                    tableNamesFromDatabase.contains(sqlCommand.tableName())
+            );
         }
     }
 
@@ -112,8 +117,9 @@ public class SQLiteStorageHelperInstrumentedTest {
 
         if (cursor.moveToFirst()) {
             while (!cursor.isAfterLast()) {
-                if (!"android_metadata".equals(cursor.getColumnIndex("name"))) {
-                    tableNamesFromDatabase.add(cursor.getString(cursor.getColumnIndex("name")));
+                final String tableName = cursor.getString(cursor.getColumnIndex("name"));
+                if (!"android_metadata".equals(tableName)) {
+                    tableNamesFromDatabase.add(tableName);
                 }
                 cursor.moveToNext();
             }
@@ -121,11 +127,8 @@ public class SQLiteStorageHelperInstrumentedTest {
         return tableNamesFromDatabase;
     }
 
-    private void dropAllTables(SQLiteDatabase sqLiteDatabase) {
-        // call DROP TABLE on every table name
-        for (final String table: getTableNames(sqLiteStorageHelper.getWritableDatabase())) {
-            String dropQuery = "DROP TABLE IF EXISTS " + table;
-            sqLiteDatabase.execSQL(dropQuery);
-        }
+    private void deleteDatabase() {
+        ApplicationProvider.getApplicationContext()
+                .deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
     }
 }
