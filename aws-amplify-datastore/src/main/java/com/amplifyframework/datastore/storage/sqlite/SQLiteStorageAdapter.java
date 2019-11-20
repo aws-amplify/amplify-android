@@ -302,7 +302,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public void terminate() {
         try {
-            insertSqlPreparedStatements.clear();
+            insertSqlPreparedStatements = null;
             mutationEventSubject.onComplete();
             threadPool.shutdown();
             databaseConnectionHandle.close();

@@ -174,10 +174,6 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      */
     @Override
     public void terminate() {
-        try {
-            sqLiteStorageAdapter.terminate();
-        } catch (Exception exception) {
-            throw new DataStoreException("Error in terminating the AWSDataStorePlugin.", exception);
-        }
+        sqLiteStorageAdapter.terminate();
     }
 }
