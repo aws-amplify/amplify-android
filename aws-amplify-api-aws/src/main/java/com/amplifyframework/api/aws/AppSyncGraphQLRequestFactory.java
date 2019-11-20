@@ -50,6 +50,7 @@ final class AppSyncGraphQLRequestFactory {
             QueryType type
     ) throws AmplifyException {
         StringBuilder doc = new StringBuilder();
+        Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
         String modelName = schema.getTargetModelName();
@@ -66,6 +67,31 @@ final class AppSyncGraphQLRequestFactory {
                         .append("(id: $id) { ")
                         .append(getModelFields(schema))
                         .append("}}");
+
+                try {
+                    QueryPredicateOperation operation = (QueryPredicateOperation) predicate;
+                    if (
+                            schema.getFields().get(operation.field()).getTargetName().equals("id") &&
+                                    operation.operator().type().equals(QueryOperator.Type.EQUAL)
+                    ) {
+                        variables.put("id", ((EqualQueryOperator) operation.operator()).value());
+                    } else {
+                        throw new AmplifyException(
+                                "Invalid predicate supplied for GET query",
+                                null,
+                                "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
+                                false
+                        );
+                    }
+                } catch (ClassCastException | NullPointerException exception) {
+                    throw new AmplifyException(
+                            "Invalid predicate supplied for GET query",
+                            exception,
+                            "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
+                            false
+                    );
+                }
+                
                 break;
             case LIST:
                 doc.append("$filter: Model")
@@ -80,42 +106,12 @@ final class AppSyncGraphQLRequestFactory {
             default:
         }
 
-        Map<String, Object> input = new HashMap<>();
-
-        if (type.equals(QueryType.GET)) {
-            try {
-                QueryPredicateOperation operation = (QueryPredicateOperation) predicate;
-                if (
-                    schema.getFields().get(operation.field()).getTargetName().equals("id") &&
-                        operation.operator().type().equals(QueryOperator.Type.EQUAL)
-                ) {
-                    input.put("id", ((EqualQueryOperator) operation.operator()).value());
-                } else {
-                    throw new AmplifyException(
-                        "Invalid predicate supplied for GET query",
-                        null,
-                        "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
-                        false
-                    );
-                }
-            } catch (Exception exception) {
-                throw new AmplifyException(
-                    "Invalid predicate supplied for GET query",
-                    exception,
-                    "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
-                    false
-                );
-            }
-        }
-
-        GraphQLRequest<T> request = new GraphQLRequest<>(
+        return new GraphQLRequest<>(
                 doc.toString(),
-                input,
+                variables,
                 modelClass,
                 new GsonVariablesSerializer()
         );
-
-        return request;
     }
 
     @SuppressWarnings("unchecked")
@@ -153,14 +149,12 @@ final class AppSyncGraphQLRequestFactory {
             input.put("input", schema.getMapOfFieldNameAndValues(model));
         }
 
-        GraphQLRequest<T> request = new GraphQLRequest<>(
+        return new GraphQLRequest<>(
                 doc.toString(),
                 input,
                 modelClass,
                 new GsonVariablesSerializer()
         );
-
-        return request;
     }
 
     public static <T extends Model> GraphQLRequest<T> buildSubscription(

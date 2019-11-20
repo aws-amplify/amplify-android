@@ -85,11 +85,13 @@ public final class GraphQLInstrumentationTest {
     }
 
     /**
-     * Testing autogeneration for creation mutation.
+     * Mutates an object, and then queries for its value back. Asserts that the two values are the same.
+     * This tests our ability to generate GraphQL queries at runtime, from model primitives,
+     * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
      * @throws Throwable when interrupted
      */
     @Test
-    public void testCodegenMutate() throws Throwable {
+    public void testCodegenCreateAndGet() throws Throwable {
         BlockingResultListener<Person> mutationListener = new BlockingResultListener<>();
         BlockingResultListener<Person> queryListener = new BlockingResultListener<>();
 
@@ -108,20 +110,20 @@ public final class GraphQLInstrumentationTest {
                 mutationListener
         );
 
-        GraphQLResponse<Person> response = mutationListener.awaitResult();
-        assertFalse(response.hasErrors());
-        assertTrue(response.hasData());
+        GraphQLResponse<Person> mutationResponse = mutationListener.awaitResult();
+        assertFalse(mutationResponse.hasErrors());
+        assertTrue(mutationResponse.hasData());
 
         Amplify.API.query(
                 API_NAME,
                 Person.class,
-                Person.ID.eq(response.getData().getId()),
+                Person.ID.eq(mutationResponse.getData().getId()),
                 QueryType.GET,
                 queryListener
         );
 
-        GraphQLResponse<Person> response2 = queryListener.awaitResult();
-        assert (response.getData().getId().equals(response2.getData().getId()));
+        GraphQLResponse<Person> queryResponse = queryListener.awaitResult();
+        assert (queryResponse.getData().getId().equals(queryResponse.getData().getId()));
     }
 
     /**
