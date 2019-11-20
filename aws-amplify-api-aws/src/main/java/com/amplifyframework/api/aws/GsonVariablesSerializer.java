@@ -17,8 +17,17 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
 
-import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
+import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -27,6 +36,16 @@ import java.util.Map;
 public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
     @Override
     public String serialize(Map<String, Object> variables) {
-        return new Gson().toJson(variables);
+        return new GsonBuilder()
+                .registerTypeAdapter(Date.class, new DateSerializer())
+                .create()
+                .toJson(variables);
+    }
+
+    class DateSerializer implements JsonSerializer<Date> {
+        public JsonElement serialize(Date date, Type typeOfSrc, JsonSerializationContext context) {
+            DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            return new JsonPrimitive(df.format(new Date()));
+        }
     }
 }
