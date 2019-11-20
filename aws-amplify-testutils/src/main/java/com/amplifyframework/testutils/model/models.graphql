@@ -1,0 +1,14 @@
+type Person {
+    id: ID!
+    first_name: String!
+    last_name: String!
+    age: Int
+    dob: AWSDate
+    cars: [Car] @connection
+}
+
+type Car {
+    id: ID!
+    vehicle_model: String!
+    owner: Person @connection
+}

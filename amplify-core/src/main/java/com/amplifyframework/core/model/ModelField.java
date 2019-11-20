@@ -34,6 +34,9 @@ public final class ModelField {
     // field in the GraphQL target.
     private final String targetType;
 
+    // The type of foreign key model that this field identifies.
+    private final String belongsTo;
+
     // If the field is a required or an optional field
     private final boolean isRequired;
 
@@ -43,12 +46,6 @@ public final class ModelField {
 
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
-
-    // Type of foreign key model that this field identifies.
-    private final String belongsTo;
-
-    // Name of the Model that this field is connecting to.
-    private final ModelConnection connection;
 
     /**
      * Construct the ModelField object from the builder.
@@ -61,7 +58,6 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isPrimaryKey = builder.isPrimaryKey;
         this.belongsTo = builder.belongsTo;
-        this.connection = builder.connection;
     }
 
     /**
@@ -97,6 +93,14 @@ public final class ModelField {
     }
 
     /**
+     * Returns the name of model that this field belongs to.
+     * @return the name of model that this field belongs to.
+     */
+    public String belongsTo() {
+        return belongsTo;
+    }
+
+    /**
      * Returns if the field is a required or an optional field.
      * @return If the field is a required or an optional field.
      */
@@ -128,63 +132,20 @@ public final class ModelField {
      * @return True if the field is a foreign key in the Model.
      */
     public boolean isForeignKey() {
-        return belongsTo != null;
-    }
-
-    /**
-     * Returns the name of model that this field belongs to.
-     * @return the name of model that this field belongs to.
-     */
-    public String belongsTo() {
-        return belongsTo;
-    }
-
-    /**
-     * Returns the Model Connection metadata of this field.
-     * @return The Model Connection metadata of this field.
-     */
-    public ModelConnection getConnection() {
-        return connection;
-    }
-
-    /**
-     * Returns true if this ModelField is connected to an other Model.
-     * @return True if this ModelField is connected to an other Model.
-     */
-    public boolean isConnected() {
-        return connection != null;
+        return belongsTo != null && !belongsTo.isEmpty();
     }
 
     /**
      * Builder class for {@link ModelField}.
      */
     public static class ModelFieldBuilder {
-        // Name of the field is the name of the instance variable
-        // of the Model class.
         private String name;
-
-        // Name of the field in the target. For example: name of the
-        // field in the GraphQL targetType.
         private String targetName;
-
-        // The data targetType of the field.
         private String targetType;
-
-        // If the field is a required or an optional field
-        private boolean isRequired = false;
-
-        // If the field is an array targetType. False if it is a primitive
-        // targetType and True if it is an array targetType.
-        private boolean isArray = false;
-
-        // True if the field is a primary key in the Model.
-        private boolean isPrimaryKey = false;
-
-        // Name of the model that this field identifies.
         private String belongsTo;
-
-        // The Model Connection metadata of this field.
-        private ModelConnection connection;
+        private boolean isRequired = false;
+        private boolean isArray = false;
+        private boolean isPrimaryKey = false;
 
         /**
          * Set the name of the field.
@@ -218,6 +179,16 @@ public final class ModelField {
         }
 
         /**
+         * Set the name of model that this field identifies as foreign key.
+         * @param belongsTo  name of model that acts as foreign key
+         * @return the builder object
+         */
+        public ModelFieldBuilder belongsTo(String belongsTo) {
+            this.belongsTo = belongsTo;
+            return this;
+        }
+
+        /**
          * Set the flag indicating if the field is a required field or not.
          * @param isRequired ff the field is a required or an optional field
          * @return the builder object
@@ -246,26 +217,6 @@ public final class ModelField {
          */
         public ModelFieldBuilder isPrimaryKey(boolean isPrimaryKey) {
             this.isPrimaryKey = isPrimaryKey;
-            return this;
-        }
-
-        /**
-         * Set the name of model that this field identifies as foreign key.
-         * @param belongsTo  name of model that acts as foreign key
-         * @return the builder object
-         */
-        public ModelFieldBuilder belongsTo(String belongsTo) {
-            this.belongsTo = belongsTo;
-            return this;
-        }
-
-        /**
-         * Set the Model Connection metadata of this field.
-         * @param connection The Model Connection metadata of this field.
-         * @return the builder object
-         */
-        public ModelFieldBuilder connection(ModelConnection connection) {
-            this.connection = connection;
             return this;
         }
 

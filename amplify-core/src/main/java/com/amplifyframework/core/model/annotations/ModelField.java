@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.annotations;
 
+import com.amplifyframework.core.model.Model;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -58,4 +60,12 @@ public @interface ModelField {
      *         in the GraphQL schema.
      */
     String targetType() default "";
+
+    /**
+     * Returns the name of class that this foreign key points to.
+     * Only assign with non-empty string IF this field is
+     * a foreign key to another {@link Model}.
+     * @return the name of class that this foreign key points to.
+     */
+    String belongsTo() default "";
 }

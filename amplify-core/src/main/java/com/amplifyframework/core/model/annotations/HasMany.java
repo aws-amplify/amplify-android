@@ -21,8 +21,9 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * This annotation is used to indicate that a field is foreign key to another
- * class that extends {@link com.amplifyframework.core.model.Model}.
+ * This annotation is used to indicate that a field has one to many relationship
+ * with another class that extends {@link com.amplifyframework.core.model.Model}.
+ * The model containing this annotation is the owner of annotated field.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
  * retain {@link ModelField} at runtime for the reflection capabilities to work
@@ -33,7 +34,7 @@ import java.lang.annotation.Target;
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface BelongsTo {
+public @interface HasMany {
     /**
      * Returns the name of connection.
      * @return the name of connection.

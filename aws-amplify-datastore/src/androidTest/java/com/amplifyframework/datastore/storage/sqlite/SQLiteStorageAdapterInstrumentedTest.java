@@ -36,11 +36,11 @@ import org.junit.Test;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -58,7 +58,7 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterInstrumentedTest {
 
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000 * 100;
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
@@ -205,40 +205,6 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert that save stores foreign key in the SQLite database correctly.
-     *
-     * @throws ParseException when the date cannot be parsed.
-     * @throws InterruptedException when the waiting for save is interrupted.
-     */
-    @SuppressWarnings("MagicNumber")
-    @Test
-    public void saveModelWithValidForeignKey() throws ParseException, InterruptedException {
-        final Person person = Person.builder()
-                .firstName("Alan")
-                .lastName("Turing")
-                .age(41)
-                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .build();
-        saveModel(person);
-
-        final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
-                .personId(person.getId())
-                .build();
-        saveModel(car);
-
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
-        assertNotNull(cursor);
-        assertEquals(1, cursor.getCount());
-        if (cursor.moveToFirst()) {
-            assertEquals("Lamborghini",
-                    cursor.getString(cursor.getColumnIndexOrThrow("vehicleModel")));
-            assertNotNull(cursor.getString(cursor.getColumnIndexOrThrow("personId")));
-        }
-        cursor.close();
-    }
-
-    /**
      * Assert that foreign key constraint is enforced.
      *
      * @throws ParseException when the date cannot be parsed.
@@ -255,11 +221,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
                 .build();
-        saveModel(person);
+        //saveModel(person); // do not save
 
         final Car car = Car.builder()
                 .vehicleModel("Lamborghini")
-                .personId(UUID.randomUUID().toString())
+                .owner(person)
                 .build();
 
         AtomicReference<Car> responseSuccess = new AtomicReference<>();
@@ -285,6 +251,53 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertNull(responseSuccess.get());
         assertNotNull(responseError.get());
         assertTrue(responseError.get().getCause().getMessage().contains(expectedError));
+    }
+
+    /**
+     * Assert that save stores foreign key in the SQLite database correctly.
+     * Foreign key is passed via model containing the field.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     * @throws InterruptedException when the waiting for save is interrupted.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithValidForeignKeyInOwned() throws ParseException, InterruptedException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("Lamborghini")
+                .owner(person)
+                .build();
+        saveModel(car);
+    }
+
+    /**
+     * Assert that save stores foreign key in the SQLite database correctly.
+     * Foreign key is passed via model that owns the model containing the field.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     * @throws InterruptedException when the waiting for save is interrupted.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithValidForeignKeyInOwner() throws ParseException, InterruptedException {
+        final Car car = Car.builder()
+            .vehicleModel("Lamborghini")
+            .build();
+
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .cars(Arrays.asList(car))
+                .build();
+
+        saveModel(car);
+        saveModel(person);
     }
 
     private <T extends Model> T saveModel(T model) throws InterruptedException {

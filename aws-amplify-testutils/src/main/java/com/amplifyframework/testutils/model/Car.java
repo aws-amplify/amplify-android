@@ -38,16 +38,22 @@ public final class Car implements Model {
     @ModelField(targetName = "vehicle_model", targetType = "String", isRequired = true)
     private String vehicleModel;
 
-    @BelongsTo(type = Person.class)
-    @ModelField(targetName = "personId", targetType = "ID", isRequired = true)
+    @BelongsTo()
+    private Person owner;
+
+    @ModelField(targetName = "personId", targetType = "ID", belongsTo = "Person")
     private String personId;
 
     private Car(String uniqueId,
                 String vehicleModel,
-                String personId) {
+                Person owner) {
         this.id = uniqueId;
         this.vehicleModel = vehicleModel;
-        this.personId = personId;
+        this.owner = owner;
+
+        if (owner != null) {
+            this.personId = owner.getId();
+        }
     }
 
     /**
@@ -75,11 +81,25 @@ public final class Car implements Model {
     }
 
     /**
+     * Return the owner.
+     * @return the owner.
+     */
+    public Person getOwner() {
+        return owner;
+    }
+
+    /**
      * Return the person Id.
      * @return the person Id.
      */
     public String getPersonId() {
         return personId;
+    }
+
+    void setPersonId(String personId) {
+        if (this.personId != null) {
+            this.personId = personId;
+        }
     }
 
     @Override
@@ -93,7 +113,7 @@ public final class Car implements Model {
         Car car = (Car) obj;
         return ObjectsCompat.equals(getId(), car.getId()) &&
                 ObjectsCompat.equals(getVehicleModel(), car.getVehicleModel()) &&
-                ObjectsCompat.equals(getPersonId(), car.getPersonId());
+                ObjectsCompat.equals(getOwner(), car.getOwner());
     }
 
     @Override
@@ -101,7 +121,7 @@ public final class Car implements Model {
         return ObjectsCompat.hash(
                 getId(),
                 getVehicleModel(),
-                getPersonId());
+                getOwner());
     }
 
     @Override
@@ -109,7 +129,7 @@ public final class Car implements Model {
         return "Car{" +
                 "id='" + id + '\'' +
                 ", vehicleModel='" + vehicleModel + '\'' +
-                ", personId=" + personId +
+                ", owner=" + owner +
                 '}';
     }
 
@@ -122,25 +142,20 @@ public final class Car implements Model {
          * @param vehicleModel vehicle model.
          * @return next step.
          */
-        PersonIdStep vehicleModel(String vehicleModel);
-    }
-
-    /**
-     * Interface for personId step.
-     */
-    public interface PersonIdStep {
-        /**
-         * Set the person Id.
-         * @param personId person Id.
-         * @return next step.
-         */
-        FinalStep personId(String personId);
+        FinalStep vehicleModel(String vehicleModel);
     }
 
     /**
      * Interface for final step.
      */
     public interface FinalStep {
+        /**
+         * Set the owner.
+         * @param owner owner.
+         * @return next step.
+         */
+        FinalStep owner(Person owner);
+
         /**
          * Returns the built Car object.
          * @return the built Car object.
@@ -152,27 +167,27 @@ public final class Car implements Model {
      * Builder to build the Person object.
      */
     public static final class Builder implements
-            VehicleModelStep, PersonIdStep, FinalStep {
+            VehicleModelStep, FinalStep {
         private String vehicleModel;
-        private String personId;
+        private Person owner;
 
         /**
-         * Set the vehicle model and proceed to PersonStep.
+         * Set the vehicle model and proceed to OwnerStep.
          * @param vehicleModel vehicle model
          * @return next step
          */
-        public PersonIdStep vehicleModel(String vehicleModel) {
+        public FinalStep vehicleModel(String vehicleModel) {
             this.vehicleModel = vehicleModel;
             return this;
         }
 
         /**
-         * Set the person Id and proceed to FinalStep.
-         * @param personId person Id
+         * Set the owner and proceed to FinalStep.
+         * @param owner owner
          * @return next step
          */
-        public FinalStep personId(String personId) {
-            this.personId = personId;
+        public FinalStep owner(Person owner) {
+            this.owner = owner;
             return this;
         }
 
@@ -184,7 +199,7 @@ public final class Car implements Model {
             return new Car(
                     UUID.randomUUID().toString(),
                     vehicleModel,
-                    personId);
+                    owner);
         }
     }
 }

@@ -18,11 +18,15 @@ package com.amplifyframework.testutils.model;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -48,16 +52,27 @@ public final class Person implements Model {
     @ModelField(targetName = "dob", targetType = "AWSDate")
     private Date dob;
 
+    @HasMany()
+    private List<Car> cars;
+
     private Person(String uniqueId,
                    String firstName,
                    String lastName,
                    Integer age,
-                   Date dob) {
+                   Date dob,
+                   List<Car> cars) {
         this.id = uniqueId;
         this.firstName = firstName;
         this.lastName = lastName;
         this.age = age;
         this.dob = dob;
+        this.cars = cars;
+
+        if (cars != null) {
+            for (Car car : cars) {
+                car.setPersonId(this.id);
+            }
+        }
     }
 
     /**
@@ -108,6 +123,14 @@ public final class Person implements Model {
         return dob;
     }
 
+    /**
+     * Return the cars.
+     * @return the cars.
+     */
+    public List<Car> getCars() {
+        return cars;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -121,7 +144,8 @@ public final class Person implements Model {
                 ObjectsCompat.equals(getId(), person.getId()) &&
                 ObjectsCompat.equals(getFirstName(), person.getFirstName()) &&
                 ObjectsCompat.equals(getLastName(), person.getLastName()) &&
-                ObjectsCompat.equals(getDob(), person.getDob());
+                ObjectsCompat.equals(getDob(), person.getDob()) &&
+                ObjectsCompat.equals(getCars(), person.getCars());
     }
 
     @Override
@@ -142,6 +166,7 @@ public final class Person implements Model {
                 ", lastName='" + lastName + '\'' +
                 ", age=" + age +
                 ", dob=" + dob +
+                ", cars=" + cars +
                 '}';
     }
 
@@ -188,6 +213,13 @@ public final class Person implements Model {
         FinalStep dob(Date dob);
 
         /**
+         * Set the cars.
+         * @param cars cars.
+         * @return next step.
+         */
+        FinalStep cars(List<Car> cars);
+
+        /**
          * Returns the built Person object.
          * @return the built Person object.
          */
@@ -203,6 +235,7 @@ public final class Person implements Model {
         private String lastName;
         private int age;
         private Date dob;
+        private List<Car> cars;
 
         /**
          * Set the first name and proceed to LastNameStep.
@@ -247,6 +280,18 @@ public final class Person implements Model {
         }
 
         /**
+         * Set the cars.
+         *
+         * @param cars cars.
+         * @return next step.
+         */
+        @Override
+        public FinalStep cars(List<Car> cars) {
+            this.cars = cars;
+            return this;
+        }
+
+        /**
          * Returns the builder object.
          * @return the builder object.
          */
@@ -256,7 +301,8 @@ public final class Person implements Model {
                     firstName,
                     lastName,
                     age,
-                    dob);
+                    dob,
+                    cars);
         }
     }
 }

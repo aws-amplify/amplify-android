@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Immutable;
-import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.Connection;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -57,6 +56,11 @@ public final class ModelSchema {
     // The value is the ModelField object that encapsulates all the information about the instance variable.
     private final Map<String, ModelField> fields;
 
+    // A map that contains the connections of a Model.
+    // The key is the name of the instance variable in the Java class that represents one of Model's connections
+    // The value is the ModelConnection object that encapsulates all the information about the instance variable.
+    private final Map<String, ModelConnection> connections;
+
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
     // persistence-related operations guarantee that the results are always consistent.
@@ -68,10 +72,12 @@ public final class ModelSchema {
     private ModelSchema(String name,
                         String targetModelName,
                         Map<String, ModelField> fields,
+                        Map<String, ModelConnection> connections,
                         ModelIndex modelIndex) {
         this.name = name;
         this.targetModelName = targetModelName;
         this.fields = fields;
+        this.connections = connections;
         this.modelIndex = modelIndex;
         this.sortedFields = sortModelFields();
     }
@@ -94,6 +100,7 @@ public final class ModelSchema {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
+            final TreeMap<String, ModelConnection> connections = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
@@ -101,48 +108,63 @@ public final class ModelSchema {
             }
 
             for (Field field : classFields) {
-                Connection connection = field.getAnnotation(Connection.class);
-                ModelConnection modelConnection = null;
-                if (connection != null && Model.class.isAssignableFrom(field.getType())) {
-                    modelConnection = ModelConnection.builder()
-                            .name(connection.name())
-                            .keyField(connection.keyField())
-                            .sortField(connection.sortField())
-                            .limit(connection.limit())
-                            .keyName(connection.keyName())
-                            .fields(Arrays.asList(connection.fields()))
-                            .relationship(RelationalModel.valueOf(connection.relationship()))
-                            .connectionTarget(field.getType().getName())
-                            .build();
+                final ModelConnection modelConnection = createModelConnection(field);
+                if (modelConnection != null) {
+                    connections.put(field.getName(), modelConnection);
                 }
 
-                com.amplifyframework.core.model.annotations.ModelField annotation =
-                        field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
-                if (annotation != null) {
-                    final ModelField modelField = ModelField.builder()
-                            .name(field.getName())
-                            .targetName(annotation.targetName())
-                            .targetType(annotation.targetType())
-                            .isRequired(annotation.isRequired())
-                            .isArray(Collection.class.isAssignableFrom(field.getType()))
-                            .isPrimaryKey(PrimaryKey.matches(field.getName()))
-                            .belongsTo(field.isAnnotationPresent(BelongsTo.class)
-                                    ? field.getAnnotation(BelongsTo.class).type().getSimpleName()
-                                    : null)
-                            .connection(modelConnection)
-                            .build();
-                    fields.put(modelField.getName(), modelField);
+                final ModelField modelField = createModelField(field);
+                if (modelField != null) {
+                    fields.put(field.getName(), modelField);
                 }
             }
+
             return ModelSchema.builder()
                     .name(clazz.getSimpleName())
                     .targetModelName(targetModelName)
                     .fields(fields)
+                    .connections(connections)
                     .modelIndex(modelIndex)
                     .build();
         } catch (Exception exception) {
             throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
         }
+    }
+
+    // Utility method to extract connection metadata from a field
+    private static ModelConnection createModelConnection(Field field) {
+        Connection connection = field.getAnnotation(Connection.class);
+        if (connection != null && Model.class.isAssignableFrom(field.getType())) {
+            return ModelConnection.builder()
+                    .name(connection.name())
+                    .keyField(connection.keyField())
+                    .sortField(connection.sortField())
+                    .limit(connection.limit())
+                    .keyName(connection.keyName())
+                    .fields(Arrays.asList(connection.fields()))
+                    .relationship(RelationalModel.valueOf(connection.relationship()))
+                    .connectionTarget(field.getType().getSimpleName())
+                    .build();
+        }
+        return null;
+    }
+
+    // Utility method to extract field metadata
+    private static ModelField createModelField(Field field) {
+        com.amplifyframework.core.model.annotations.ModelField annotation =
+                field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
+        if (annotation != null) {
+            return ModelField.builder()
+                    .name(field.getName())
+                    .targetName(annotation.targetName())
+                    .targetType(annotation.targetType())
+                    .isRequired(annotation.isRequired())
+                    .isArray(Collection.class.isAssignableFrom(field.getType()))
+                    .isPrimaryKey(PrimaryKey.matches(field.getName()))
+                    .belongsTo(annotation.belongsTo())
+                    .build();
+        }
+        return null;
     }
 
     /**
@@ -173,6 +195,17 @@ public final class ModelSchema {
      */
     public Map<String, ModelField> getFields() {
         return fields;
+    }
+
+    /**
+     * Returns the map of every connection objects and their
+     * associated field name in the model.
+     *
+     * @return map of fieldName and the connectionObjects
+     *         of all the connection fields of the model.
+     */
+    public Map<String, ModelConnection> getConnections() {
+        return connections;
     }
 
     /**
@@ -221,21 +254,6 @@ public final class ModelSchema {
             }
         }
         return Immutable.of(foreignKeys);
-    }
-
-    /**
-     * Returns a map of field to connection of the model.
-     *
-     * @return a map of field to connection of the model.
-     */
-    public Map<ModelField, ModelConnection> getConnections() {
-        Map<ModelField, ModelConnection> connections = new TreeMap<>();
-        for (ModelField field : sortedFields) {
-            if (field.isConnected()) {
-                connections.put(field, field.getConnection());
-            }
-        }
-        return Immutable.of(connections);
     }
 
     /**
@@ -333,6 +351,7 @@ public final class ModelSchema {
         // model in the GraphQL Schema.
         private String targetModelName;
         private Map<String, ModelField> fields;
+        private Map<String, ModelConnection> connections;
         private ModelIndex modelIndex;
 
         /**
@@ -368,6 +387,16 @@ public final class ModelSchema {
         }
 
         /**
+         * Set the map of fieldName and the connectionObject of all the connection fields of the model.
+         * @param connections the map of fieldName and the connectionObjects.
+         * @return the builder object.
+         */
+        public Builder connections(Map<String, ModelConnection> connections) {
+            this.connections = connections;
+            return this;
+        }
+
+        /**
          * Set the index of a model.
          * @param modelIndex the index of the model.
          * @return the builder object.
@@ -385,6 +414,7 @@ public final class ModelSchema {
             return new ModelSchema(name,
                     targetModelName,
                     fields,
+                    connections,
                     modelIndex);
         }
     }
