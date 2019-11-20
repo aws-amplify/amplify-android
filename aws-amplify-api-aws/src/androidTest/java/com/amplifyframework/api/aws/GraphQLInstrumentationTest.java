@@ -90,6 +90,7 @@ public final class GraphQLInstrumentationTest {
      * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
      * @throws Throwable when interrupted
      */
+    @SuppressWarnings("magicnumber") // for age 29
     @Test
     public void testCodegenCreateAndGet() throws Throwable {
         BlockingResultListener<Person> mutationListener = new BlockingResultListener<>();
