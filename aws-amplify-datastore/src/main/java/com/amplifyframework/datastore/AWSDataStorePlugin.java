@@ -127,7 +127,7 @@ public class AWSDataStorePlugin implements DataStorePlugin<Void> {
      */
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
-        return Observable.error(new DataStoreException("Not implemented yet, buster!"));
+        return localStorageAdapter.observe();
     }
 
     /**

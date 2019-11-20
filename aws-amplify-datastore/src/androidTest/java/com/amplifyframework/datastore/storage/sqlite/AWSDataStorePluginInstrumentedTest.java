@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
@@ -51,8 +52,12 @@ public final class AWSDataStorePluginInstrumentedTest {
      * Setup the Android application context.
      */
     @BeforeClass
-    public static void setUp() {
+    public static void configureAmplify() {
         context = ApplicationProvider.getApplicationContext();
+        AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
+        amplifyConfiguration.populateFromConfigFile(context);
+        Amplify.addPlugin(new AWSDataStorePlugin());
+        Amplify.configure(amplifyConfiguration, context);
     }
 
     /**
@@ -69,10 +74,6 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @Test
     public void testSetUp() throws InterruptedException {
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin();
-        Amplify.addPlugin(awsDataStorePlugin);
-        Amplify.configure(context);
-
         final CountDownLatch waitForSetUp = new CountDownLatch(1);
         final AtomicReference<Throwable> error = new AtomicReference<>();
         final AtomicReference<List<ModelSchema>> result = new AtomicReference<>();
