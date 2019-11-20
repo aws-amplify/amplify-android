@@ -99,6 +99,7 @@ public final class GraphQLInstrumentationTest {
                 .builder()
                 .firstName("David")
                 .lastName("Daudelin")
+                .age(29)
                 .relationship(MaritalStatus.married)
                 .build();
 
