@@ -19,6 +19,8 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.testmodels.MaritalStatus;
+import com.amplifyframework.testmodels.Person;
 
 import org.junit.Ignore;
 import org.junit.Test;

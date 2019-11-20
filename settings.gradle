@@ -23,3 +23,5 @@ include ':aws-amplify-datastore'
 
 // Test Utilities and assets
 include ':aws-amplify-testutils'
+include ':aws-amplify-testmodels'
+

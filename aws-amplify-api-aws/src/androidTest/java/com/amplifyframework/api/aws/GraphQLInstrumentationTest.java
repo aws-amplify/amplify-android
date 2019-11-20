@@ -24,6 +24,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.testutils.TestAssets;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;

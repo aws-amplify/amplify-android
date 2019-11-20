@@ -14,5 +14,4 @@
    permissions and limitations under the License.
 -->
 
-<manifest package="com.amplifyframework.testutils" />
-
+<manifest package="com.amplifyframework.testmodels" />
