@@ -18,17 +18,17 @@ package com.amplifyframework.core.model.query.predicate;
 import androidx.core.util.ObjectsCompat;
 
 /**
- * Represents an equality condition with a target value for comparison.
+ * Represents a not equal condition with a target value for comparison.
  */
-public final class EqualQueryOperator extends QueryOperator {
+public final class NotEqualQueryOperator extends QueryOperator {
     private Object value;
 
     /**
-     * Constructs an equality condition.
+     * Constructs a not equal condition.
      * @param value the value to be used in the comparison
      */
-    public EqualQueryOperator(Object value) {
-        super(Type.EQUAL);
+    public NotEqualQueryOperator(Object value) {
+        super(Type.NOT_EQUAL);
         this.value = value;
     }
 
@@ -47,7 +47,7 @@ public final class EqualQueryOperator extends QueryOperator {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            EqualQueryOperator op = (EqualQueryOperator) obj;
+            NotEqualQueryOperator op = (NotEqualQueryOperator) obj;
 
             return ObjectsCompat.equals(type(), op.type()) &&
                     ObjectsCompat.equals(value(), op.value());
@@ -65,7 +65,7 @@ public final class EqualQueryOperator extends QueryOperator {
     @Override
     public String toString() {
         return new StringBuilder()
-                .append("EqualQueryOperator { ")
+                .append("NotEqualQueryOperator { ")
                 .append("type: ")
                 .append(type())
                 .append(", value: ")

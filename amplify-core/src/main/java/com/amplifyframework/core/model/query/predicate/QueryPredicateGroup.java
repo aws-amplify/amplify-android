@@ -15,14 +15,17 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import androidx.core.util.ObjectsCompat;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Groups two conditions (or groups of conditions) by a combination
  * operation or wraps a given condition/group in a negation.
  */
-public class QueryPredicateGroup {
+public final class QueryPredicateGroup implements QueryPredicate {
     private Type type;
     private List<QueryPredicate> predicates;
 
@@ -46,12 +49,33 @@ public class QueryPredicateGroup {
     }
 
     /**
+     * Returns this group's operation type (e.g. AND, OR, NOT).
+     * @return this group's type
+     */
+    public Type type() {
+        return type;
+    }
+
+    /**
+     * Returns the predicates included in this group.
+     * @return the predicates included in this group
+     */
+    public List<QueryPredicate> predicates() {
+        return predicates;
+    }
+
+    /**
      * Return a group connecting this group with another group/operation with an AND type.
      * @param predicate the group/operation to connect to
      * @return a group connecting this group with another group/operation with an AND type
      */
     public QueryPredicateGroup and(QueryPredicate predicate) {
-        return null;
+        if (type.equals(Type.AND)) {
+            predicates.add(predicate);
+            return this;
+        }
+
+        return new QueryPredicateGroup(Type.AND, Arrays.asList(this, predicate));
     }
 
     /**
@@ -60,7 +84,12 @@ public class QueryPredicateGroup {
      * @return a group connecting this group with another group/operation with an OR type
      */
     public QueryPredicateGroup or(QueryPredicate predicate) {
-        return null;
+        if (type.equals(Type.OR)) {
+            predicates.add(predicate);
+            return this;
+        }
+
+        return new QueryPredicateGroup(Type.OR, Arrays.asList(this, predicate));
     }
 
     /**
@@ -69,7 +98,41 @@ public class QueryPredicateGroup {
      * @return a group negating the given group of operations
      */
     public static QueryPredicateGroup not(QueryPredicateGroup predicate) {
-        return null;
+        return new QueryPredicateGroup(Type.NOT, Arrays.asList(predicate));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            QueryPredicateGroup group = (QueryPredicateGroup) obj;
+
+            return ObjectsCompat.equals(type(), group.type()) &&
+                    ObjectsCompat.equals(predicates(), group.predicates());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                type(),
+                predicates()
+        );
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("QueryPredicateGroup { ")
+                .append("type: ")
+                .append(type())
+                .append(", predicates: ")
+                .append(predicates())
+                .append(" }")
+                .toString();
     }
 
     /**
