@@ -130,6 +130,36 @@ public final class Person implements Model {
         return relationship;
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if(obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            Person person = (Person) obj;
+            return this.getId().equals(person.getId()) &&
+                    this.getAge().equals(person.getAge()) &&
+                    this.getDob().equals(person.getDob()) &&
+                    this.getFirstName().equals(person.getFirstName()) &&
+                    this.getLastName().equals(person.getLastName()) &&
+                    this.getRelationship().equals(person.getRelationship());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return new StringBuilder()
+                .append(getId())
+                .append(getDob())
+                .append(getAge())
+                .append(getFirstName())
+                .append(getLastName())
+                .append(getRelationship())
+                .toString()
+                .hashCode();
+    }
+
     /**
      * Interface for required first_name step.
      */
