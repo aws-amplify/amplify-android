@@ -305,16 +305,16 @@ public final class ModelSchema {
         Collections.sort(modelFieldEntries, (fieldOne, fieldOther) -> {
 
             if (fieldOne.isPrimaryKey()) {
-                return 1;
+                return -1;
             }
             if (fieldOther.isPrimaryKey()) {
-                return -1;
-            }
-            if (fieldOne.isConnected() && !fieldOther.isConnected()) {
-                return -1;
-            }
-            if (!fieldOne.isConnected() && fieldOther.isConnected()) {
                 return 1;
+            }
+            if (fieldOne.isForeignKey() && !fieldOther.isForeignKey()) {
+                return 1;
+            }
+            if (!fieldOne.isForeignKey() && fieldOther.isForeignKey()) {
+                return -1;
             }
             return fieldOne.getName().compareTo(fieldOther.getName());
         });

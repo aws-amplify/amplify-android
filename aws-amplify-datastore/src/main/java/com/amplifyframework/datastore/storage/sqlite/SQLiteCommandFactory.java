@@ -28,7 +28,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -137,10 +137,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append("INSERT INTO ");
         stringBuilder.append(tableName);
         stringBuilder.append(" (");
-        final Map<String, ModelField> fields = modelSchema.getFields();
-        final Iterator<String> fieldsIterator = fields.keySet().iterator();
+        final List<ModelField> fields = modelSchema.getSortedFields();
+        final Iterator<ModelField> fieldsIterator = fields.iterator();
         while (fieldsIterator.hasNext()) {
-            final String fieldName = fieldsIterator.next();
+            final String fieldName = fieldsIterator.next().getName();
             stringBuilder.append(fieldName);
             if (fieldsIterator.hasNext()) {
                 stringBuilder.append(", ");
@@ -166,27 +166,29 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
     // Utility method to append columns in CREATE TABLE
     private void appendColumns(StringBuilder stringBuilder, ModelSchema modelSchema) {
-        final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
-                modelSchema.getFields().entrySet().iterator();
-        while (modelFieldMapIterator.hasNext()) {
-            final Map.Entry<String, ModelField> entry = modelFieldMapIterator.next();
-            final String modelFieldName = entry.getKey();
-            final ModelField modelField = entry.getValue();
+        final Iterator<ModelField> modelFieldIterator =
+                modelSchema.getSortedFields().iterator();
+        while (modelFieldIterator.hasNext()) {
+            final ModelField modelField = modelFieldIterator.next();
+            final String modelFieldName = modelField.getName();
+
+            // Store connected models as ID in SQLite DB
+            final String columnType = modelField.isForeignKey()
+                    ? "ID" : modelField.getTargetType();
 
             stringBuilder.append(modelFieldName)
                     .append(SQLITE_COMMAND_DELIMITER)
-                    .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()).getSqliteDataType())
-                    .append(SQLITE_COMMAND_DELIMITER);
+                    .append(TypeConverter.getSqlTypeForGraphQLType(columnType).getSqliteDataType());
 
             if (modelField.isPrimaryKey()) {
-                stringBuilder.append("PRIMARY KEY" + SQLITE_COMMAND_DELIMITER);
+                stringBuilder.append(SQLITE_COMMAND_DELIMITER + "PRIMARY KEY");
             }
 
             if (modelField.isRequired()) {
-                stringBuilder.append("NOT NULL");
+                stringBuilder.append(SQLITE_COMMAND_DELIMITER + "NOT NULL");
             }
 
-            if (modelFieldMapIterator.hasNext()) {
+            if (modelFieldIterator.hasNext()) {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
             }
         }
