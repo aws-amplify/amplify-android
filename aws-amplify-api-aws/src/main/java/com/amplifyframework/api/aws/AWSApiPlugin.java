@@ -119,7 +119,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull QueryType queryType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
-        return null;
+        try {
+            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate, queryType);
+            return query(apiName, request, responseListener);
+        } catch (AmplifyException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override

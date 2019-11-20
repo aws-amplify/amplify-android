@@ -23,7 +23,10 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.util.StringUtils;
 
 import java.util.Collections;
@@ -46,7 +49,69 @@ final class AppSyncGraphQLRequestFactory {
             QueryPredicate predicate,
             QueryType type
     ) throws AmplifyException {
-        return null;
+        StringBuilder doc = new StringBuilder();
+        Map<String, Object> variables = new HashMap<>();
+        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+        String typeStr = type.toString();
+        String modelName = schema.getTargetModelName();
+
+        doc.append("query ")
+                .append(StringUtils.capitalize(typeStr))
+                .append(StringUtils.capitalize(modelName))
+                .append("(");
+
+        switch (type) {
+            case GET:
+                doc.append("$id: ID!) { get")
+                        .append(StringUtils.capitalize(modelName))
+                        .append("(id: $id) { ")
+                        .append(getModelFields(schema))
+                        .append("}}");
+
+                try {
+                    QueryPredicateOperation operation = (QueryPredicateOperation) predicate;
+                    if (
+                            schema.getFields().get(operation.field()).getTargetName().equals("id") &&
+                                    operation.operator().type().equals(QueryOperator.Type.EQUAL)
+                    ) {
+                        variables.put("id", ((EqualQueryOperator) operation.operator()).value());
+                    } else {
+                        throw new AmplifyException(
+                                "Invalid predicate supplied for GET query",
+                                null,
+                                "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
+                                false
+                        );
+                    }
+                } catch (ClassCastException | NullPointerException exception) {
+                    throw new AmplifyException(
+                            "Invalid predicate supplied for GET query",
+                            exception,
+                            "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
+                            false
+                    );
+                }
+                
+                break;
+            case LIST:
+                doc.append("$filter: Model")
+                        .append(StringUtils.capitalize(modelName))
+                        .append("FilterInput ")
+                        .append("$limit: Int $nextToken: String) { list")
+                        .append(StringUtils.capitalize(modelName))
+                        .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
+                        .append(getModelFields(schema))
+                        .append("} nextToken }}");
+                break;
+            default:
+        }
+
+        return new GraphQLRequest<>(
+                doc.toString(),
+                variables,
+                modelClass,
+                new GsonVariablesSerializer()
+        );
     }
 
     @SuppressWarnings("unchecked")
@@ -64,15 +129,14 @@ final class AppSyncGraphQLRequestFactory {
         String modelName = schema.getTargetModelName();
 
         doc.append("mutation ")
-            .append(StringUtils.capitalize(typeStr) +
-                    StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(typeStr))
+            .append(StringUtils.capitalize(modelName))
             .append("($input: ")
-            .append(StringUtils.capitalize(typeStr) +
-                    StringUtils.capitalize(modelName) +
-                    "Input!")
-            .append(") { ")
-            .append(typeStr.toLowerCase(Locale.getDefault()) +
-                    StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(typeStr))
+            .append(StringUtils.capitalize(modelName))
+            .append("Input!) { ")
+            .append(typeStr.toLowerCase(Locale.getDefault()))
+            .append(StringUtils.capitalize(modelName))
             .append("(input: $input) { ")
             .append(getModelFields(schema))
             .append("}}");
@@ -85,14 +149,12 @@ final class AppSyncGraphQLRequestFactory {
             input.put("input", schema.getMapOfFieldNameAndValues(model));
         }
 
-        GraphQLRequest<T> request = new GraphQLRequest<T>(
+        return new GraphQLRequest<>(
                 doc.toString(),
                 input,
                 modelClass,
                 new GsonVariablesSerializer()
         );
-
-        return request;
     }
 
     public static <T extends Model> GraphQLRequest<T> buildSubscription(
