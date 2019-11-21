@@ -44,10 +44,10 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
 
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
-    private final SQLiteStorageAdapter sqLiteStorageAdapter;
+    private final SQLiteStorageAdapter sqliteStorageAdapter;
 
     private AWSDataStorePlugin() {
-        sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
+        sqliteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
     }
 
     /**
@@ -99,11 +99,11 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @Override
-    public void initialize(
+    public synchronized void initialize(
             @NonNull Context context,
             @NonNull ModelProvider modelProvider,
             @NonNull ResultListener<List<ModelSchema>> listener) {
-        sqLiteStorageAdapter.initialize(context, modelProvider, listener);
+        sqliteStorageAdapter.initialize(context, modelProvider, listener);
     }
 
     /**
@@ -112,7 +112,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(@NonNull T object,
                                        ResultListener<MutationEvent<T>> resultListener) {
-        sqLiteStorageAdapter.save(object, resultListener);
+        sqliteStorageAdapter.save(object, resultListener);
     }
 
     /**
@@ -121,7 +121,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void delete(@NonNull T object,
                                          ResultListener<MutationEvent<T>> resultListener) {
-        sqLiteStorageAdapter.delete(object, resultListener);
+        sqliteStorageAdapter.delete(object, resultListener);
     }
 
     /**
@@ -130,7 +130,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(@NonNull Class<T> objectType,
                                         ResultListener<Iterator<T>> resultListener) {
-        sqLiteStorageAdapter.query(objectType, resultListener);
+        sqliteStorageAdapter.query(objectType, resultListener);
     }
 
     /**
@@ -138,7 +138,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      */
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
-        return sqLiteStorageAdapter.observe();
+        return sqliteStorageAdapter.observe();
     }
 
     /**
@@ -173,7 +173,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @Override
-    public void terminate() {
-        sqLiteStorageAdapter.terminate();
+    public synchronized void terminate() {
+        sqliteStorageAdapter.terminate();
     }
 }

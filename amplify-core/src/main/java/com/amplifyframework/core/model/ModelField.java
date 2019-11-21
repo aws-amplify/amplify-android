@@ -125,11 +125,9 @@ public final class ModelField {
     }
 
     /**
-     * Returns if the field is an enum targetType. If the field is an Enum targetType.
-     * True if it a enumeration type, False otherwise.
+     * Returns true if the field's target type is Enum.
      *
-     * @return if the field is an enum targetType. If the field is an Enum targetType.
-     *         True if it a enumeration type, False otherwise.
+     * @return true if the field's target type is Enum.
      */
     public boolean isEnum() {
         return isEnum;
@@ -201,8 +199,7 @@ public final class ModelField {
         // targetType and True if it is an array targetType.
         private boolean isArray = false;
 
-        // If the field is an Enum targetType. True if it a enumeration type,
-        // False otherwise.
+        // True if the field's target type is Enum.
         private boolean isEnum = false;
 
         // True if the field is a primary key in the Model.
@@ -278,9 +275,7 @@ public final class ModelField {
         }
 
         /**
-         * Set the flag indicating if the field is an enum targetType.
-         * If the field is an Enum targetType. True if it a enumeration type,
-         * False otherwise
+         * Sets a flag indicating whether or not the field's target type is an Enum.
          * @param isEnum flag indicating if the field is an enum targetType
          * @return the builder object
          */

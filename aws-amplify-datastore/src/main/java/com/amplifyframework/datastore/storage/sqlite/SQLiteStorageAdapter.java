@@ -125,23 +125,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return new SQLiteStorageAdapter(ModelSchemaRegistry.singleton());
     }
 
-    /**
-     * Setup the storage engine with the models. For each {@link Model}, construct a
-     * {@link ModelSchema} and setup the necessities for persisting a {@link Model}.
-     * This initialize is a pre-requisite for all other operations of a {@link LocalStorageAdapter}.
-     *
-     * The setup is synchronous and the completion of this method guarantees completion
-     * of the creation of SQL database and tables for the corresponding data models
-     * passed in.
-     *
-     * @param context Android application context required to
-     *                interact with a storage mechanism in Android.
-     * @param modelProvider  container of all data {@link Model} classes
-     * @param listener the listener to be invoked to notify completion
-     *                 of the initialize.
-     */
+    /** {@inheritDoc} */
     @Override
-    public void initialize(@NonNull Context context,
+    public synchronized void initialize(@NonNull Context context,
                            @NonNull ModelProvider modelProvider,
                            @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
@@ -306,7 +292,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void terminate() {
+    public synchronized void terminate() {
         try {
             insertSqlPreparedStatements = null;
 
@@ -505,15 +491,5 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 null,
                 null,
                 null);
-    }
-
-    @VisibleForTesting
-    SQLiteDatabase getDatabaseConnectionHandle() {
-        return databaseConnectionHandle;
-    }
-
-    @VisibleForTesting
-    SQLiteOpenHelper getSqLiteOpenHelper() {
-        return sqLiteOpenHelper;
     }
 }

@@ -83,48 +83,48 @@ public final class Person implements Model {
     }
 
     /**
-     * Returns id.
-     * @return id.
+     * Returns the person's id.
+     * @return The person's id.
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns firstName.
-     * @return firstName.
+     * Returns the person's first name.
+     * @return The person's first name.
      */
     public String getFirstName() {
         return first_name;
     }
 
     /**
-     * Returns lastName.
-     * @return lastName.
+     * Returns the person's last name.
+     * @return The person's last name.
      */
     public String getLastName() {
         return last_name;
     }
 
     /**
-     * Returns age.
-     * @return age.
+     * Returns the person's age.
+     * @return The person's age.
      */
     public Integer getAge() {
         return age;
     }
 
     /**
-     * Returns dob.
-     * @return dob.
+     * Returns the person's date of birth.
+     * @return date of birth.
      */
     public Date getDob() {
         return dob;
     }
 
     /**
-     * Returns relationship.
-     * @return relationship.
+     * Returns the person's relationship status.
+     * @return relationship status.
      */
     public MaritalStatus getRelationship() {
         return relationship;
@@ -165,8 +165,8 @@ public final class Person implements Model {
      */
     public interface FirstNameStep {
         /**
-         * Set firstName.
-         * @param firstName firstName.
+         * Set the person's first name.
+         * @param firstName The person's first name.
          * @return next step.
          */
         LastNameStep firstName(String firstName);
@@ -177,8 +177,8 @@ public final class Person implements Model {
      */
     public interface LastNameStep {
         /**
-         * Set lastName.
-         * @param lastName lastName.
+         * Set the person's last name.
+         * @param lastName The person's last name.
          * @return next step.
          */
         FinalStep lastName(String lastName);
@@ -189,30 +189,30 @@ public final class Person implements Model {
      */
     public interface FinalStep {
         /**
-         * Set id.
-         * @param id id.
+         * Set the person's id.
+         * @param id The person's id.
          * @return next step.
          * @throws AmplifyException Checks that ID is in the proper format
          */
         FinalStep id(String id) throws AmplifyException;
 
         /**
-         * Set age.
-         * @param age age.
+         * Set the person's age.
+         * @param age The person's age.
          * @return next step.
          */
         FinalStep age(Integer age);
 
         /**
-         * Set dob.
-         * @param dob dob.
+         * Set the person's date of birth.
+         * @param dob The person's date of birth.
          * @return next step.
          */
         FinalStep dob(Date dob);
 
         /**
-         * Set relationship.
-         * @param relationship relationship.
+         * Set the person's relationship status.
+         * @param relationship The person's relationship.
          * @return next step.
          */
         FinalStep relationship(MaritalStatus relationship);
@@ -262,8 +262,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set firstName.
-         * @param firstName firstName
+         * Sets the person's first name.
+         * @param firstName The person's first name.
          * @return Current Builder instance, for fluent method chaining
          */
         public LastNameStep firstName(String first_name) {
@@ -272,8 +272,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set lastName.
-         * @param lastName lastName
+         * Sets the person's last name.
+         * @param lastName The person's last name.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep lastName(String last_name) {
@@ -282,8 +282,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set age.
-         * @param age age
+         * Sets the person's age.
+         * @param age The person's age
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep age(Integer age) {
@@ -292,8 +292,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set dob.
-         * @param dob dob.
+         * Sets the person's date of birth.
+         * @param dob The person's date of birth.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep dob(Date dob) {
@@ -302,8 +302,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set relationship.
-         * @param relationship relationship.
+         * Sets the person's relationship status.
+         * @param relationship The person's relationship status.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep relationship(MaritalStatus relationship) {

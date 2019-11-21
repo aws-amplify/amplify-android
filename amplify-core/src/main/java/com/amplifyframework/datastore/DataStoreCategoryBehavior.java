@@ -35,18 +35,16 @@ import io.reactivex.Observable;
 public interface DataStoreCategoryBehavior {
 
     /**
-     * Initialize the DataStore with some models.
-     * For each {@link Model}, construct a
-     * {@link com.amplifyframework.core.model.ModelSchema}
-     * and setup the necessities for persisting a {@link Model}.
-     * This initialize is a pre-requisite for all other operations
-     * of a LocalStorageAdapter.
+     * Initialize the DataStore with some models. For each {@link Model}, construct a
+     * {@link com.amplifyframework.core.model.ModelSchema} and setup the necessities for
+     * persisting a {@link Model}. This initialize is a pre-requisite for all other operations
+     * of the DataStore.
      *
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
-     * @param modelProvider container of all the Model classes
+     * @param modelProvider provider of all the Model classes
      * @param listener the listener to be invoked to notify completion
-     *                 of the initialize.
+     *                 of the initialization.
      */
     void initialize(@NonNull Context context,
                     @NonNull ModelProvider modelProvider,
