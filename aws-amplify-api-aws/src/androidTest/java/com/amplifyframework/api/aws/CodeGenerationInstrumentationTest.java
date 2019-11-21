@@ -40,13 +40,12 @@ public final class CodeGenerationInstrumentationTest {
      * Mutates an object, and then queries for its value back. Asserts that the two values are the same.
      * This tests our ability to generate GraphQL queries at runtime, from model primitives,
      * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
-     * @throws Throwable when interrupted
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void codeGeneratedQueryMatchesMutationResult() throws Throwable {
-        BlockingResultListener<Person> mutationListener = new BlockingResultListener<>();
-        BlockingResultListener<Person> queryListener = new BlockingResultListener<>();
+    public void codeGeneratedQueryMatchesMutationResult() {
+        LatchedSingleResponseListener<Person> mutationListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Person> queryListener = new LatchedSingleResponseListener<>();
 
         Person person = Person
             .builder()
@@ -65,7 +64,7 @@ public final class CodeGenerationInstrumentationTest {
             mutationListener
         );
 
-        GraphQLResponse<Person> mutationResponse = mutationListener.awaitResult();
+        GraphQLResponse<Person> mutationResponse = mutationListener.awaitTerminalEvent().getResponse();
         assertFalse(mutationResponse.hasErrors());
         assertTrue(mutationResponse.hasData());
 
@@ -77,7 +76,7 @@ public final class CodeGenerationInstrumentationTest {
             queryListener
         );
 
-        GraphQLResponse<Person> queryResponse = queryListener.awaitResult();
+        GraphQLResponse<Person> queryResponse = queryListener.awaitTerminalEvent().getResponse();
         assertEquals(queryResponse.getData().getId(), queryResponse.getData().getId());
     }
 }
