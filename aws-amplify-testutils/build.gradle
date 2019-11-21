@@ -42,6 +42,7 @@ android {
 }
 
 dependencies {
+    implementation "junit:junit:4.12"
     implementation 'androidx.test:core:1.2.0'
     implementation project(':amplify-core')
 }
