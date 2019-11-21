@@ -20,23 +20,21 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.AWSDataStorePlugin;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -74,30 +72,31 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @Test
     public void testSetUp() throws InterruptedException {
-        final CountDownLatch waitForSetUp = new CountDownLatch(1);
-        final AtomicReference<Throwable> error = new AtomicReference<>();
-        final AtomicReference<List<ModelSchema>> result = new AtomicReference<>();
-        Amplify.DataStore.setUp(
-                context,
-                AmplifyCliGeneratedModelProvider.singletonInstance(),
-                new ResultListener<List<ModelSchema>>() {
-                    @Override
-                    public void onResult(List<ModelSchema> modelSchemaList) {
-                        result.set(modelSchemaList);
-                        waitForSetUp.countDown();
-                    }
+        final LatchedResultListener<List<ModelSchema>> schemaListener =
+            new LatchedResultListener<>(DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS);
 
-                    @Override
-                    public void onError(Throwable throwable) {
-                        error.set(throwable);
-                        waitForSetUp.countDown();
-                    }
-                });
-        assertTrue(waitForSetUp.await(
-                DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS, TimeUnit.MILLISECONDS));
-        assertNotNull("Expecting a non-null ModelSchema list", result.get());
-        assertFalse("Expecting a non-empty ModelSchema list", result.get().isEmpty());
-        assertNull("Expecting no exception to be thrown from setUp", error.get());
+        ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
+
+        Amplify.DataStore.setUp(
+            context,
+            modelProvider,
+            schemaListener
+        );
+
+        // Await result, and obtain the received list of schema
+        final List<ModelSchema> schemaList =
+            schemaListener.awaitTerminalEvent().assertNoError().getResult();
+
+        // Prepare a set of the actual model schema names, as string
+        Set<String> expectedModelClassNames = new HashSet<>();
+        for (ModelSchema actualSchema : schemaList) {
+            expectedModelClassNames.add(actualSchema.getName());
+        }
+
+        // Ensure that we got a schema for each of the models that we requested.
+        for (Class<? extends Model> requestedModel : modelProvider.models()) {
+            assertTrue(expectedModelClassNames.contains(requestedModel.getSimpleName()));
+        }
     }
 
     private void deleteDatabase() {

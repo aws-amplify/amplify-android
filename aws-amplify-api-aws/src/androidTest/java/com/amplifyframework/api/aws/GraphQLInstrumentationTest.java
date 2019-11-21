@@ -92,7 +92,7 @@ public final class GraphQLInstrumentationTest {
         String eventId = createEvent();
 
         // Start listening for comments on that event
-        BlockingStreamListener<Comment> streamListener = new BlockingStreamListener<>(1);
+        LatchedResponseStreamListener<Comment> streamListener = new LatchedResponseStreamListener<>(1);
         GraphQLOperation<Comment> operation = Amplify.API.subscribe(
             API_NAME,
             new GraphQLRequest<>(
@@ -121,11 +121,8 @@ public final class GraphQLInstrumentationTest {
     /**
      * Creates a comment, associated to an event whose ID is {@see eventId}.
      * @param eventId ID of event to which this comment will be associated
-     * @throws Throwable For various reasons, but commonly if we fail to receive
-     *                   a response from the GraphQL endpoint within a few seconds.
-     *                   Potentially also if validations fail.
      */
-    private void createComment(String eventId) throws Throwable {
+    private void createComment(String eventId) {
         String commentId = UUID.randomUUID().toString();
 
         final Map<String, Object> variables = new HashMap<>();
@@ -134,7 +131,7 @@ public final class GraphQLInstrumentationTest {
         variables.put("content", "It's going to be fun!");
         variables.put("createdAt", Iso8601Timestamp.now());
 
-        BlockingResultListener<Comment> creationListener = new BlockingResultListener<>();
+        LatchedSingleResponseListener<Comment> creationListener = new LatchedSingleResponseListener<>();
         Amplify.API.mutate(
             API_NAME,
             new GraphQLRequest<>(
@@ -145,7 +142,7 @@ public final class GraphQLInstrumentationTest {
             ),
             creationListener
         );
-        GraphQLResponse<Comment> response = creationListener.awaitResult();
+        GraphQLResponse<Comment> response = creationListener.awaitTerminalEvent().getResponse();
         assertFalse(response.hasErrors());
         assertTrue(response.hasData());
         Comment comment = response.getData();
@@ -171,12 +168,8 @@ public final class GraphQLInstrumentationTest {
      * Validate the response to ensure that what was created is what we requested.
      * @return The unique ID of the newly created event. This ID may be used
      *         to associate comments to this event object.
-     * @throws Throwable On test failure. One common source of failure is if
-     *                   creation listener times out, which means that we never
-     *                   got a response back from the server. Other possible
-     *                   failures may arise from failed assert*() calls.
      */
-    private String createEvent() throws Throwable {
+    private String createEvent() {
         // Arrange a creation request, including a map of plug-able variables
         final Map<String, Object> variables = new HashMap<>();
         variables.put("name", "Pizza Party");
@@ -186,7 +179,7 @@ public final class GraphQLInstrumentationTest {
 
         // Act: call the API to create the event.
         // Block this test runner until a response is rendered.
-        BlockingResultListener<Event> creationListener = new BlockingResultListener<>();
+        LatchedSingleResponseListener<Event> creationListener = new LatchedSingleResponseListener<>();
         Amplify.API.mutate(
             API_NAME,
             new GraphQLRequest<>(
@@ -199,7 +192,7 @@ public final class GraphQLInstrumentationTest {
         );
 
         // Validate the response. No errors are expected.
-        GraphQLResponse<Event> creationResponse = creationListener.awaitResult();
+        GraphQLResponse<Event> creationResponse = creationListener.awaitTerminalEvent().getResponse();
         assertFalse(creationResponse.hasErrors());
 
         // The echo-d response mimics what we provided.
