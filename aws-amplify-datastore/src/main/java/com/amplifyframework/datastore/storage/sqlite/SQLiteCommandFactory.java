@@ -19,6 +19,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
@@ -26,6 +27,7 @@ import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
+import com.amplifyframework.util.StringUtils;
 
 import java.util.Iterator;
 import java.util.Map;
@@ -57,11 +59,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     /**
-     * Generates the CREATE TABLE SQL command from the {@link ModelSchema}.
-     *
-     * @param modelSchema the schema of a {@link Model}
-     *                    for which a CREATE TABLE SQL command needs to be generated.
-     * @return the CREATE TABLE SQL command
+     * {@inheritDoc}
      */
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
@@ -86,11 +84,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     /**
-     * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
-     *
-     * @param modelSchema the schema of a {@link Model}
-     *                    for which a CREATE INDEX SQL command needs to be generated.
-     * @return the CREATE INDEX SQL command
+     * {@inheritDoc}
      */
     @Override
     public SqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
@@ -122,13 +116,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     /**
-     * Generates the INSERT INTO command in a raw string representation and a compiled
-     * prepared statement that can be bound later with inputs.
+     * {@inheritDoc}
      *
-     * @param tableName   name of the table
-     * @param modelSchema schema of the model
-     * @return the SQL command that encapsulates the INSERT INTO command
+     * This method should be invoked from a worker thread and not from the main thread
+     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @WorkerThread
     @Override
     public SqlCommand insertFor(@NonNull String tableName,
                                 @NonNull ModelSchema modelSchema,
@@ -164,8 +157,58 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
     }
 
+    /**
+     * {@inheritDoc}
+     *
+     * This method should be invoked from a worker thread and not from the main thread
+     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
+     */
+    @WorkerThread
+    @Override
+    public SqlCommand updateFor(@NonNull String tableName,
+                                @NonNull ModelSchema modelSchema,
+                                @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("UPDATE ");
+        stringBuilder.append(tableName);
+        stringBuilder.append(" SET ");
+        final Map<String, ModelField> fields = modelSchema.getFields();
+        final Iterator<Map.Entry<String, ModelField>> fieldsIterator = fields.entrySet().iterator();
+        while (fieldsIterator.hasNext()) {
+            final Map.Entry<String, ModelField> fieldEntry = fieldsIterator.next();
+            String fieldName = fieldEntry.getKey();
+            ModelField modelField = fieldEntry.getValue();
+            if (!modelField.isPrimaryKey()) {
+                stringBuilder.append(fieldName).append(" = ?");
+                if (fieldsIterator.hasNext()) {
+                    stringBuilder.append(", ");
+                }
+            }
+        }
+
+        stringBuilder.append(" WHERE id = ?;");
+        final String preparedUpdateStatement = stringBuilder.toString();
+        final SQLiteStatement compiledUpdateStatement =
+                writableDatabaseConnectionHandle.compileStatement(preparedUpdateStatement);
+        return new SqlCommand(tableName, preparedUpdateStatement, compiledUpdateStatement);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SqlCommand queryFor(@NonNull String tableName,
+                               @NonNull String columnName,
+                               @NonNull String columnValue) {
+        return new SqlCommand(
+                tableName,
+                "SELECT * FROM " + tableName + " WHERE " +
+                        columnName + " = " + StringUtils.singleQuote(columnValue));
+    }
+
     // Utility method to append columns in CREATE TABLE
-    private void appendColumns(StringBuilder stringBuilder, ModelSchema modelSchema) {
+    private void appendColumns(@NonNull StringBuilder stringBuilder,
+                               @NonNull ModelSchema modelSchema) {
         final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
                 modelSchema.getFields().entrySet().iterator();
         while (modelFieldMapIterator.hasNext()) {
@@ -193,7 +236,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to append foreign key references in CREATE TABLE
-    private void appendForeignKeys(StringBuilder stringBuilder, ModelSchema modelSchema) {
+    private void appendForeignKeys(@NonNull StringBuilder stringBuilder,
+                                   @NonNull ModelSchema modelSchema) {
         final Iterator<ModelField> foreignKeyIterator = modelSchema.getForeignKeys().iterator();
         while (foreignKeyIterator.hasNext()) {
             ModelField foreignKey = foreignKeyIterator.next();

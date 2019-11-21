@@ -53,4 +53,29 @@ interface SQLCommandFactory {
     SqlCommand insertFor(@NonNull String tableName,
                          @NonNull ModelSchema modelSchema,
                          @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
+
+    /**
+     * Generates the UPDATE command in a raw string representation and a compiled
+     * prepared statement that can be bound later with inputs.
+     *
+     * @param tableName name of the table
+     * @param modelSchema schema of the model
+     * @param writableDatabaseConnectionHandle connection handle to writable database
+     * @return the SQL command that encapsulates the UPDATE command
+     */
+    SqlCommand updateFor(@NonNull String tableName,
+                         @NonNull ModelSchema modelSchema,
+                         @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
+
+    /**
+     * Generates the SELECT * FROM command in a raw string representation.
+     *
+     * @param tableName name of the table
+     * @param columnName name of the column
+     * @param columnValue value of the column
+     * @return the SQL command that encapsulates the SELECT * FROM command
+     */
+    SqlCommand queryFor(@NonNull String tableName,
+                        @NonNull String columnName,
+                        @NonNull String columnValue);
 }

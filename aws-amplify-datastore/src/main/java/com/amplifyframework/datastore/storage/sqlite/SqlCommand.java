@@ -99,4 +99,13 @@ final class SqlCommand {
     boolean hasCompiledSqlStatement() {
         return compiledSqlStatement != null;
     }
+
+    @Override
+    public String toString() {
+        return "SqlCommand{" +
+                "tableName='" + tableName + '\'' +
+                ", sqlStatement='" + sqlStatement + '\'' +
+                ", compiledSqlStatement=" + compiledSqlStatement +
+                '}';
+    }
 }
