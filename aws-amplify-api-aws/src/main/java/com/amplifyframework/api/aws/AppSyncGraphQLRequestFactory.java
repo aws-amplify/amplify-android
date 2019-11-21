@@ -213,7 +213,7 @@ final class AppSyncGraphQLRequestFactory {
             throw new AmplifyException(
                     "Tried to parse an unsupported QueryPredicate",
                     null,
-                    "We currently only support QueryPredicateOperation and QueryPredicateGroup",
+                    "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup.",
                     false
             );
         }

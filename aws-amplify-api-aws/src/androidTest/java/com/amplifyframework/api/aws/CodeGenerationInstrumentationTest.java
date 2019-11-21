@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.QueryType;
@@ -50,7 +51,7 @@ public final class CodeGenerationInstrumentationTest {
     public static void configureAmplify() {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, com.amplifyframework.api.aws.test.R.raw.amplifyconfiguration);
+        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.configure(configuration, context);
     }
