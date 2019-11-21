@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Represents a field of the {@link Model} class.
@@ -171,6 +172,79 @@ public final class ModelField {
      */
     public boolean isConnected() {
         return connection != null;
+    }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ModelField that = (ModelField) thatObject;
+
+        if (isRequired != that.isRequired) {
+            return false;
+        }
+        if (isArray != that.isArray) {
+            return false;
+        }
+        if (isEnum != that.isEnum) {
+            return false;
+        }
+        if (isPrimaryKey != that.isPrimaryKey) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(name, that.name)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(type, that.type)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(targetName, that.targetName)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(targetType, that.targetType)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(belongsTo, that.belongsTo)) {
+            return false;
+        }
+        return ObjectsCompat.equals(connection, that.connection);
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
+        result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
+        result = 31 * result + (isRequired ? 1 : 0);
+        result = 31 * result + (isArray ? 1 : 0);
+        result = 31 * result + (isEnum ? 1 : 0);
+        result = 31 * result + (isPrimaryKey ? 1 : 0);
+        result = 31 * result + (belongsTo != null ? belongsTo.hashCode() : 0);
+        result = 31 * result + (connection != null ? connection.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ModelField{" +
+            "name='" + name + '\'' +
+            ", type='" + type + '\'' +
+            ", targetName='" + targetName + '\'' +
+            ", targetType='" + targetType + '\'' +
+            ", isRequired=" + isRequired +
+            ", isArray=" + isArray +
+            ", isEnum=" + isEnum +
+            ", isPrimaryKey=" + isPrimaryKey +
+            ", belongsTo='" + belongsTo + '\'' +
+            ", connection=" + connection +
+            '}';
     }
 
     /**
