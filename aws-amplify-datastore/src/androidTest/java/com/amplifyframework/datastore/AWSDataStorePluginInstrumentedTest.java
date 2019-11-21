@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class AWSDataStorePluginInstrumentedTest {
 
-    private static final long DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000000;
+    private static final long DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
 

@@ -22,6 +22,5 @@ package com.amplifyframework.testmodels;
 public enum MaritalStatus {
     single,
     engaged,
-    married,
-    complicated
+    married
 }
