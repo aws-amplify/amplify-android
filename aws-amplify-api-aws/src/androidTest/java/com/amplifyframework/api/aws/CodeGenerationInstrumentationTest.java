@@ -53,7 +53,7 @@ public final class CodeGenerationInstrumentationTest {
             .firstName("David")
             .lastName("Daudelin")
             .age(29)
-            .relationship(MaritalStatus.married)
+            .relationship(MaritalStatus.MARRIED)
             .build();
 
         //noinspection ConstantConditions TODO: predicate isn't supposed to be null...
