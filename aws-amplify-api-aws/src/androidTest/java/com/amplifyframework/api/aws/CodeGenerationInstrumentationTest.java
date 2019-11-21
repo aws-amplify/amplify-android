@@ -15,13 +15,19 @@
 
 package com.amplifyframework.api.aws;
 
+import android.content.Context;
+import androidx.test.core.app.ApplicationProvider;
+
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
 
+import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -37,13 +43,26 @@ public final class CodeGenerationInstrumentationTest {
     private static final String API_NAME = GraphQLInstrumentationTest.class.getSimpleName();
 
     /**
+     * Before any test is run, configure Amplify to use an
+     * {@link AWSApiPlugin} to satisfy the Api category.
+     */
+    @BeforeClass
+    public static void configureAmplify() {
+        Context context = ApplicationProvider.getApplicationContext();
+        AmplifyConfiguration configuration = new AmplifyConfiguration();
+        configuration.populateFromConfigFile(context, com.amplifyframework.api.aws.test.R.raw.amplifyconfiguration);
+        Amplify.addPlugin(new AWSApiPlugin());
+        Amplify.configure(configuration, context);
+    }
+
+    /**
      * Mutates an object, and then queries for its value back. Asserts that the two values are the same.
      * This tests our ability to generate GraphQL queries at runtime, from model primitives,
      * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void codeGeneratedQueryMatchesMutationResult() {
+    public void queryMatchesMutationResult() {
         LatchedSingleResponseListener<Person> mutationListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Person> queryListener = new LatchedSingleResponseListener<>();
 
@@ -78,5 +97,28 @@ public final class CodeGenerationInstrumentationTest {
 
         GraphQLResponse<Person> queryResponse = queryListener.awaitTerminalEvent().getResponse();
         assertEquals(queryResponse.getData().getId(), queryResponse.getData().getId());
+    }
+
+    /**
+     * Tests the code generation for LIST query with a predicate.
+     */
+    @Test
+    public void queryList() {
+        LatchedSingleResponseListener<Person> queryListener = new LatchedSingleResponseListener<>();
+
+        QueryPredicate predicate = Person.LAST_NAME.eq("Daudelin")
+                .and(Person.FIRST_NAME.eq("David").or(Person.FIRST_NAME.eq("Sarah")));
+
+        Amplify.API.query(
+                API_NAME,
+                Person.class,
+                predicate,
+                QueryType.LIST,
+                queryListener
+        );
+
+        GraphQLResponse<Person> queryResponse = queryListener.awaitTerminalEvent().getResponse();
+        assertTrue(queryResponse.hasData());
+        assertFalse(queryResponse.hasErrors());
     }
 }
