@@ -123,7 +123,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .relationship(MaritalStatus.SINGLE)
+                .relationship(MaritalStatus.single)
                 .build();
         assertEquals(person, saveModel(person));
 
@@ -132,9 +132,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
             assertEquals("Alan",
-                    cursor.getString(cursor.getColumnIndexOrThrow("firstName")));
+                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
             assertEquals("Turing",
-                    cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
+                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
             assertEquals(41,
                     cursor.getInt(cursor.getColumnIndexOrThrow("age")));
             assertEquals("Jun 23, 1912",
@@ -156,7 +156,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
-                .relationship(MaritalStatus.SINGLE)
+                .relationship(MaritalStatus.single)
                 .build();
         assertEquals(person, saveModel(person));
 
@@ -185,7 +185,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     .lastName("lastNamePrefix:" + counter)
                     .age(counter)
                     .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
-                    .relationship(MaritalStatus.SINGLE)
+                    .relationship(MaritalStatus.single)
                     .build();
             saveModel(person);
             savedModels.add(person);
@@ -216,7 +216,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .relationship(MaritalStatus.SINGLE)
+                .relationship(MaritalStatus.single)
                 .build();
         saveModel(person);
 
@@ -253,7 +253,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .relationship(MaritalStatus.SINGLE)
+                .relationship(MaritalStatus.single)
                 .build();
         saveModel(person);
 
