@@ -32,12 +32,12 @@ import java.util.UUID;
  */
 @SuppressWarnings("all")
 @ModelConfig(targetName = "Person")
-@Index(fields = {"first_name", "age"}, name = "firstNameBasedIndex")
+@Index(fields = {"firstName", "age"}, name = "firstNameBasedIndex")
 public final class Person implements Model {
     // Constant QueryFields for each property in this model to be used for constructing conditions
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField FIRST_NAME = QueryField.field("first_name");
-    public static final QueryField LAST_NAME = QueryField.field("last_name");
+    public static final QueryField FIRST_NAME = QueryField.field("firstName");
+    public static final QueryField LAST_NAME = QueryField.field("lastName");
     public static final QueryField AGE = QueryField.field("age");
     public static final QueryField DOB = QueryField.field("dob");
     public static final QueryField RELATIONSHIP = QueryField.field("relationship");
@@ -46,10 +46,10 @@ public final class Person implements Model {
     private final String id;
 
     @ModelField(targetName = "first_name", targetType = "String", isRequired = true)
-    private final String first_name;
+    private final String firstName;
 
     @ModelField(targetName = "last_name", targetType = "String", isRequired = true)
-    private final String last_name;
+    private final String lastName;
 
     @ModelField(targetName = "age", targetType = "Int")
     private final Integer age;
@@ -61,14 +61,14 @@ public final class Person implements Model {
     private final MaritalStatus relationship;
 
     private Person(String id,
-                   String first_name,
-                   String last_name,
+                   String firstName,
+                   String lastName,
                    Integer age,
                    Date dob,
                    MaritalStatus relationship) {
         this.id = id;
-        this.first_name = first_name;
-        this.last_name = last_name;
+        this.firstName = firstName;
+        this.lastName = lastName;
         this.age = age;
         this.dob = dob;
         this.relationship = relationship;
@@ -91,19 +91,19 @@ public final class Person implements Model {
     }
 
     /**
-     * Returns first_name.
-     * @return first_name.
+     * Returns firstName.
+     * @return firstName.
      */
     public String getFirstName() {
-        return first_name;
+        return firstName;
     }
 
     /**
-     * Returns last_name.
-     * @return last_name.
+     * Returns lastName.
+     * @return lastName.
      */
     public String getLastName() {
-        return last_name;
+        return lastName;
     }
 
     /**
@@ -161,27 +161,27 @@ public final class Person implements Model {
     }
 
     /**
-     * Interface for required first_name step.
+     * Interface for required firstName step.
      */
     public interface FirstNameStep {
         /**
-         * Set first_name.
-         * @param first_name first_name.
+         * Set firstName.
+         * @param firstName firstName.
          * @return next step.
          */
-        LastNameStep firstName(String first_name);
+        LastNameStep firstName(String firstName);
     }
 
     /**
-     * Interface for last_name step.
+     * Interface for lastName step.
      */
     public interface LastNameStep {
         /**
-         * Set last_name.
-         * @param last_name last_name.
+         * Set lastName.
+         * @param lastName lastName.
          * @return next step.
          */
-        FinalStep lastName(String last_name);
+        FinalStep lastName(String lastName);
     }
 
     /**
@@ -230,8 +230,8 @@ public final class Person implements Model {
     public static final class Builder implements
             FirstNameStep, LastNameStep, FinalStep {
         private String id;
-        private String first_name;
-        private String last_name;
+        private String firstName;
+        private String lastName;
         private Integer age;
         private Date dob;
         private MaritalStatus relationship;
@@ -262,22 +262,22 @@ public final class Person implements Model {
         }
 
         /**
-         * Set first_name.
-         * @param first_name first_name
+         * Set firstName.
+         * @param firstName firstName
          * @return Current Builder instance, for fluent method chaining
          */
-        public LastNameStep firstName(String first_name) {
-            this.first_name = first_name;
+        public LastNameStep firstName(String firstName) {
+            this.firstName = firstName;
             return this;
         }
 
         /**
-         * Set last_name.
-         * @param last_name last_name
+         * Set lastName.
+         * @param lastName lastName
          * @return Current Builder instance, for fluent method chaining
          */
-        public FinalStep lastName(String last_name) {
-            this.last_name = last_name;
+        public FinalStep lastName(String lastName) {
+            this.lastName = lastName;
             return this;
         }
 
@@ -320,8 +320,8 @@ public final class Person implements Model {
 
             return new Person(
                     id,
-                    first_name,
-                    last_name,
+                    firstName,
+                    lastName,
                     age,
                     dob,
                     relationship);

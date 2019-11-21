@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.MutationEvent;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.Car;
+import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
 
 import org.junit.After;
@@ -60,7 +61,7 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterInstrumentedTest {
 
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000 * 1000;
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
@@ -103,6 +104,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
                     @Override
                     public void onError(Throwable error) {
+                        Log.e(TAG, Log.getStackTraceString(error));
                         responseError.set(error);
                         waitForSetUp.countDown();
                     }
@@ -119,10 +121,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @After
     public void tearDown() {
-        if (sqLiteStorageAdapter != null) {
-            sqLiteStorageAdapter.getDatabaseConnectionHandle().close();
-            sqLiteStorageAdapter.getSqLiteOpenHelper().close();
-        }
+        sqLiteStorageAdapter.terminate();
         deleteDatabase();
     }
 
@@ -140,6 +139,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.SINGLE)
                 .build();
         assertEquals(person, saveModel(person));
 
@@ -173,6 +173,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                .relationship(MaritalStatus.SINGLE)
                 .build();
         assertEquals(person, saveModel(person));
 
@@ -202,6 +203,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     .lastName("lastNamePrefix:" + counter)
                     .age(counter)
                     .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.SINGLE)
                     .build();
             saveModel(person);
             savedModels.add(person);
@@ -233,6 +235,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.SINGLE)
                 .build();
         saveModel(person);
 
@@ -269,6 +272,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.SINGLE)
                 .build();
         saveModel(person);
 
@@ -289,7 +293,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
             @Override
             public void onError(Throwable error) {
-                Log.e(TAG, error.getCause().getMessage());
+                Log.e(TAG, Log.getStackTraceString(error));
                 responseError.set(error);
                 waitForSave.countDown();
             }
@@ -323,7 +327,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
             @Override
             public void onError(Throwable error) {
-                Log.e(TAG, error.getCause().getMessage());
+                Log.e(TAG, Log.getStackTraceString(error));
                 if (listener != null) {
                     listener.onError(error);
                 }

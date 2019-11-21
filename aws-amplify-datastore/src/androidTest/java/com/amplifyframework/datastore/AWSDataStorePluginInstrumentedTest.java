@@ -17,6 +17,8 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import android.os.StrictMode;
+import android.util.Log;
+
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
@@ -44,7 +46,8 @@ import static org.junit.Assert.assertTrue;
  */
 public final class AWSDataStorePluginInstrumentedTest {
 
-    private static final long DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final String TAG = AWSDataStorePluginInstrumentedTest.class.getSimpleName();
+    private static final long DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000000;
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
 
@@ -104,6 +107,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
                     @Override
                     public void onError(Throwable throwable) {
+                        Log.e(TAG, Log.getStackTraceString(throwable));
                         error.set(throwable);
                         waitForSetUp.countDown();
                     }

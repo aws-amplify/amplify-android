@@ -20,7 +20,8 @@ package com.amplifyframework.testmodels;
  */
 @SuppressWarnings("all")
 public enum MaritalStatus {
-    single,
-    engaged,
-    married
+    SINGLE,
+    ENGAGED,
+    MARRIED,
+    COMPLICATED
 }
