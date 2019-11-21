@@ -17,7 +17,6 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import android.os.StrictMode;
-import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;

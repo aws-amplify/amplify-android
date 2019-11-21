@@ -19,7 +19,6 @@ import android.content.Context;
 import android.database.Cursor;
 import android.os.StrictMode;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
