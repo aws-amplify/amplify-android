@@ -57,7 +57,9 @@ public final class Person implements Model {
     @ModelField(targetName = "dob", targetType = "AWSDate")
     private final Date dob;
 
-    @ModelField(targetName = "relationship", targetType = "MaritalStatus")
+    // The type converter currenty has no way to handle the target type
+    // of MaritalStatus, so this is commented out for now.
+    //@ModelField(targetName = "relationship", targetType = "MaritalStatus")
     private final MaritalStatus relationship;
 
     private Person(String id,

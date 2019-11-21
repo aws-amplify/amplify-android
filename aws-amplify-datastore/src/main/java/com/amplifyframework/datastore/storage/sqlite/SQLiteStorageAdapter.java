@@ -199,7 +199,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 );
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in creating and opening a " +
-                        "connection to the database." + exception));
+                        "connection to the database.", exception));
             }
         });
     }
@@ -306,9 +306,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
         for (Class<? extends Model> model: models) {
-            final ModelSchema modelSchema = modelSchemaRegistry
-                    .getModelSchemaForModelClass(model.getSimpleName());
-            sqlCommandFactory.createTableFor(modelSchema);
+            final ModelSchema modelSchema =
+                modelSchemaRegistry.getModelSchemaForModelClass(model.getSimpleName());
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
             createIndexCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
         }

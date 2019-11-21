@@ -72,7 +72,7 @@ public enum JavaFieldType {
      * Return the string that represents the value of the enumeration constant.
      * @return the string that represents the value of the enumeration constant.
      */
-    public String getJavaFieldType() {
+    public String stringValue() {
         return this.javaFieldType;
     }
 
@@ -84,7 +84,7 @@ public enum JavaFieldType {
      */
     public static JavaFieldType from(@NonNull String javaFieldType) {
         for (final JavaFieldType type: JavaFieldType.values()) {
-            if (javaFieldType.equals(type.getJavaFieldType())) {
+            if (javaFieldType.equals(type.stringValue())) {
                 return type;
             }
         }
