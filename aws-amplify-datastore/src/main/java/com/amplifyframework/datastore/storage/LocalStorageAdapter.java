@@ -39,18 +39,18 @@ public interface LocalStorageAdapter {
      * For each {@link Model}, construct a
      * {@link com.amplifyframework.core.model.ModelSchema}
      * and setup the necessities for persisting a {@link Model}.
-     * This setUp is a pre-requisite for all other operations
+     * This initialize is a pre-requisite for all other operations
      * of a LocalStorageAdapter.
      *
      * @param context Android application context required to
      *                interact with a storage mechanism in Android.
      * @param modelProvider container of all Model classes
      * @param listener the listener to be invoked to notify completion
-     *                 of the setUp.
+     *                 of the initialize.
      */
-    void setUp(@NonNull Context context,
-               @NonNull ModelProvider modelProvider,
-               @NonNull ResultListener<List<ModelSchema>> listener);
+    void initialize(@NonNull Context context,
+                    @NonNull ModelProvider modelProvider,
+                    @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
      * Save a {@link Model} to the local storage engine.
@@ -93,4 +93,9 @@ public interface LocalStorageAdapter {
      *         any object managed by the storage adapter is mutated.
      */
     Observable<MutationEvent<? extends Model>> observe();
+
+    /**
+     * Release all resources created by the storage engine.
+     */
+    void terminate();
 }

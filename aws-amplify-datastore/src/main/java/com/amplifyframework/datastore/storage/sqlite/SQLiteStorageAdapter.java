@@ -122,28 +122,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @return the default instance of the SQLiteStorageAdapter.
      */
     public static SQLiteStorageAdapter defaultInstance() {
-        return new SQLiteStorageAdapter(ModelSchemaRegistry.getInstance());
+        return new SQLiteStorageAdapter(ModelSchemaRegistry.singleton());
     }
 
-    /**
-     * Setup the storage engine with the models. For each {@link Model}, construct a
-     * {@link ModelSchema} and setup the necessities for persisting a {@link Model}.
-     * This setUp is a pre-requisite for all other operations of a {@link LocalStorageAdapter}.
-     *
-     * The setup is synchronous and the completion of this method guarantees completion
-     * of the creation of SQL database and tables for the corresponding data models
-     * passed in.
-     *
-     * @param context Android application context required to
-     *                interact with a storage mechanism in Android.
-     * @param modelProvider  container of all data {@link Model} classes
-     * @param listener the listener to be invoked to notify completion
-     *                 of the setUp.
-     */
+    /** {@inheritDoc} */
     @Override
-    public void setUp(@NonNull Context context,
-                      @NonNull ModelProvider modelProvider,
-                      @NonNull final ResultListener<List<ModelSchema>> listener) {
+    public synchronized void initialize(@NonNull Context context,
+                           @NonNull ModelProvider modelProvider,
+                           @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
                 final Set<Class<? extends Model>> models = modelProvider.models();
@@ -198,19 +184,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())
                 );
             } catch (Exception exception) {
-                listener.onError(new DataStoreException("Error in creating and opening a " +
-                        "connection to the database." + exception));
+                listener.onError(new DataStoreException("Error in initializing the " +
+                        "SQLiteStorageAdapter", exception));
             }
         });
     }
 
     /**
-     * Save a {@link Model} to the local storage engine. The {@link ResultListener} will be invoked when the
-     * save operation is completed to notify the success and failure.
-     * @param model    the Model object
-     * @param listener the listener to be invoked when the save operation completes
-     * @param <T> parameter type of the Model
+     * {@inheritDoc}
      */
+    @Override
     @SuppressWarnings("unchecked") // model.getClass() has Class<?>, but we assume Class<T>
     public <T extends Model> void save(@NonNull T model,
                                        @NonNull ResultListener<MutationEvent<T>> listener) {
@@ -250,10 +233,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * Query the storage adapter for models of a given type.
-     *
-     * @param modelClass The class type of models for which to query
-     * @param listener   A listener who will be notified of the result of the query
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void query(@NonNull Class<T> modelClass,
@@ -267,14 +247,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         .getModelSchemaForModelClass(modelClass.getSimpleName());
 
                 final Cursor cursor = getQueryAllCursor(modelClass.getSimpleName());
+                if (cursor == null) {
+                    throw new DataStoreException("Error in getting a cursor to the " +
+                            "table for class: " + modelClass.getSimpleName());
+                }
+
                 if (cursor.moveToFirst()) {
                     do {
-                        final Map<String, Object> mapForModel = buildMapForModel(modelSchema, cursor);
+                        final Map<String, Object> mapForModel = buildMapForModel(
+                                modelClass, modelSchema, cursor);
                         final String modelInJsonFormat = gson.toJson(mapForModel);
                         models.add(gson.getAdapter(modelClass).fromJson(modelInJsonFormat));
                     } while (cursor.moveToNext());
                 }
-                if (cursor != null && !cursor.isClosed()) {
+                if (!cursor.isClosed()) {
                     cursor.close();
                 }
 
@@ -286,10 +272,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * Deletes an item from storage.
-     *
-     * @param item     Item to delete
-     * @param listener Listener to callback with result
+     * {@inheritDoc}
      */
     @Override
     public <T extends Model> void delete(@NonNull T item,
@@ -297,9 +280,37 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         /* TODO */
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Observable<MutationEvent<? extends Model>> observe() {
         return mutationEventSubject;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public synchronized void terminate() {
+        try {
+            insertSqlPreparedStatements = null;
+
+            if (mutationEventSubject != null) {
+                mutationEventSubject.onComplete();
+            }
+            if (threadPool != null) {
+                threadPool.shutdown();
+            }
+            if (databaseConnectionHandle != null) {
+                databaseConnectionHandle.close();
+            }
+            if (sqLiteOpenHelper != null) {
+                sqLiteOpenHelper.close();
+            }
+        } catch (Exception exception) {
+            throw new DataStoreException("Error in terminating the SQLiteStorageAdapter.", exception);
+        }
     }
 
     private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {
@@ -318,7 +329,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
         final Map<String, SqlCommand> modifiableMap = new HashMap<>();
         final Set<Map.Entry<String, ModelSchema>> modelSchemaEntrySet =
-                ModelSchemaRegistry.getInstance().getModelSchemaMap().entrySet();
+                ModelSchemaRegistry.singleton().getModelSchemaMap().entrySet();
         for (final Map.Entry<String, ModelSchema> entry: modelSchemaEntrySet) {
             final String tableName = entry.getKey();
             final ModelSchema modelSchema = entry.getValue();
@@ -355,7 +366,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 return;
             }
 
-            final JavaFieldType javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
+            JavaFieldType javaFieldType = Enum.class.isAssignableFrom(field.getType())
+                    ? JavaFieldType.ENUM
+                    : JavaFieldType.from(field.getType().getSimpleName());
             bindPreCompiledInsertStatementWithJavaFields(
                     preCompiledInsertStatement,
                     fieldValue,
@@ -388,8 +401,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
                 break;
             case STRING:
-            case ENUM:
                 preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
+                break;
+            case ENUM:
+                preCompiledInsertStatement.bindString(columnIndex, gson.toJson(fieldValue));
                 break;
             case DATE:
                 final Date dateValue = (Date) fieldValue;
@@ -407,20 +422,30 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
-    private Map<String, Object> buildMapForModel(ModelSchema modelSchema, Cursor cursor) {
+    private <T extends Model> Map<String, Object> buildMapForModel(
+            Class<T> modelClass,
+            ModelSchema modelSchema,
+            Cursor cursor) {
         final Map<String, Object> mapForModel = new HashMap<>();
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
             try {
+                final ModelField modelField = entry.getValue();
                 final String fieldGraphQLType = entry.getValue().getTargetType();
-                final JavaFieldType fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+                final JavaFieldType fieldJavaType = modelField.isEnum()
+                        ? JavaFieldType.ENUM
+                        : TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
 
                 final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
                 switch (fieldJavaType) {
                     case STRING:
-                    case ENUM:
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
+                        break;
+                    case ENUM:
+                        String stringValueFromCursor = cursor.getString(columnIndex);
+                        Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
+                        mapForModel.put(fieldName, gson.getAdapter(enumType).fromJson(stringValueFromCursor));
                         break;
                     case INTEGER:
                         mapForModel.put(fieldName, cursor.getInt(columnIndex));
@@ -449,7 +474,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
                 }
             } catch (Exception exception) {
-                Log.e(TAG, "Error in reading data for field: " + fieldName);
+                Log.e(TAG, "Error in reading data for field: " + fieldName, exception);
                 mapForModel.put(fieldName, null);
             }
         }
@@ -466,15 +491,5 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 null,
                 null,
                 null);
-    }
-
-    @VisibleForTesting
-    SQLiteDatabase getDatabaseConnectionHandle() {
-        return databaseConnectionHandle;
-    }
-
-    @VisibleForTesting
-    SQLiteOpenHelper getSqLiteOpenHelper() {
-        return sqLiteOpenHelper;
     }
 }

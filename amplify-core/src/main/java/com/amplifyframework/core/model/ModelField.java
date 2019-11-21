@@ -26,6 +26,10 @@ public final class ModelField {
     // of the Model class.
     private final String name;
 
+    // Type of the field is the data type of the instance variables
+    // of the Model class.
+    private final String type;
+
     // Name of the field in the target. For example: name of the
     // field in the GraphQL target.
     private final String targetName;
@@ -41,6 +45,9 @@ public final class ModelField {
     // targetType and True if it is an array targetType.
     private final boolean isArray;
 
+    // True if the field is an enumeration type.
+    private final boolean isEnum;
+
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
 
@@ -55,10 +62,12 @@ public final class ModelField {
      */
     private ModelField(@NonNull ModelFieldBuilder builder) {
         this.name = builder.name;
+        this.type = builder.type;
         this.targetName = builder.targetName;
         this.targetType = builder.targetType;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
+        this.isEnum = builder.isEnum;
         this.isPrimaryKey = builder.isPrimaryKey;
         this.belongsTo = builder.belongsTo;
         this.connection = builder.connection;
@@ -116,6 +125,15 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is Enum.
+     *
+     * @return true if the field's target type is Enum.
+     */
+    public boolean isEnum() {
+        return isEnum;
+    }
+
+    /**
      * Returns true if the field is a primary key in the Model.
      * @return True if the field is a primary key in the Model.
      */
@@ -163,6 +181,10 @@ public final class ModelField {
         // of the Model class.
         private String name;
 
+        // Type of the field is the data type of the instance variables
+        // of the Model class.
+        private String type;
+
         // Name of the field in the target. For example: name of the
         // field in the GraphQL targetType.
         private String targetName;
@@ -176,6 +198,9 @@ public final class ModelField {
         // If the field is an array targetType. False if it is a primitive
         // targetType and True if it is an array targetType.
         private boolean isArray = false;
+
+        // True if the field's target type is Enum.
+        private boolean isEnum = false;
 
         // True if the field is a primary key in the Model.
         private boolean isPrimaryKey = false;
@@ -193,6 +218,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        /**
+         * Set the type of the field.
+         * @param type Type of the field is the type of the instance variable of the Model class.
+         * @return the builder object
+         */
+        public ModelFieldBuilder type(String type) {
+            this.type = type;
             return this;
         }
 
@@ -236,6 +271,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isArray(boolean isArray) {
             this.isArray = isArray;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is an Enum.
+         * @param isEnum flag indicating if the field is an enum targetType
+         * @return the builder object
+         */
+        public ModelFieldBuilder isEnum(boolean isEnum) {
+            this.isEnum = isEnum;
             return this;
         }
 

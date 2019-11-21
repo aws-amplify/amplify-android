@@ -32,7 +32,7 @@ import java.util.UUID;
  */
 @SuppressWarnings("all")
 @ModelConfig(targetName = "Person")
-@Index(fields = {"first_name", "age"}, name = "firstNameBasedIndex")
+@Index(fields = {"first_name", "age"}, name = "first_name_and_age_based_index")
 public final class Person implements Model {
     // Constant QueryFields for each property in this model to be used for constructing conditions
     public static final QueryField ID = QueryField.field("id");
@@ -83,48 +83,48 @@ public final class Person implements Model {
     }
 
     /**
-     * Returns id.
-     * @return id.
+     * Returns the person's id.
+     * @return The person's id.
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns first_name.
-     * @return first_name.
+     * Returns the person's first name.
+     * @return The person's first name.
      */
     public String getFirstName() {
         return first_name;
     }
 
     /**
-     * Returns last_name.
-     * @return last_name.
+     * Returns the person's last name.
+     * @return The person's last name.
      */
     public String getLastName() {
         return last_name;
     }
 
     /**
-     * Returns age.
-     * @return age.
+     * Returns the person's age.
+     * @return The person's age.
      */
     public Integer getAge() {
         return age;
     }
 
     /**
-     * Returns dob.
-     * @return dob.
+     * Returns the person's date of birth.
+     * @return date of birth.
      */
     public Date getDob() {
         return dob;
     }
 
     /**
-     * Returns relationship.
-     * @return relationship.
+     * Returns the person's relationship status.
+     * @return relationship status.
      */
     public MaritalStatus getRelationship() {
         return relationship;
@@ -161,27 +161,27 @@ public final class Person implements Model {
     }
 
     /**
-     * Interface for required first_name step.
+     * Interface for required firstName step.
      */
     public interface FirstNameStep {
         /**
-         * Set first_name.
-         * @param first_name first_name.
+         * Set the person's first name.
+         * @param firstName The person's first name.
          * @return next step.
          */
-        LastNameStep firstName(String first_name);
+        LastNameStep firstName(String firstName);
     }
 
     /**
-     * Interface for last_name step.
+     * Interface for lastName step.
      */
     public interface LastNameStep {
         /**
-         * Set last_name.
-         * @param last_name last_name.
+         * Set the person's last name.
+         * @param lastName The person's last name.
          * @return next step.
          */
-        FinalStep lastName(String last_name);
+        FinalStep lastName(String lastName);
     }
 
     /**
@@ -189,30 +189,30 @@ public final class Person implements Model {
      */
     public interface FinalStep {
         /**
-         * Set id.
-         * @param id id.
+         * Set the person's id.
+         * @param id The person's id.
          * @return next step.
          * @throws AmplifyException Checks that ID is in the proper format
          */
         FinalStep id(String id) throws AmplifyException;
 
         /**
-         * Set age.
-         * @param age age.
+         * Set the person's age.
+         * @param age The person's age.
          * @return next step.
          */
         FinalStep age(Integer age);
 
         /**
-         * Set dob.
-         * @param dob dob.
+         * Set the person's date of birth.
+         * @param dob The person's date of birth.
          * @return next step.
          */
         FinalStep dob(Date dob);
 
         /**
-         * Set relationship.
-         * @param relationship relationship.
+         * Set the person's relationship status.
+         * @param relationship The person's relationship.
          * @return next step.
          */
         FinalStep relationship(MaritalStatus relationship);
@@ -262,8 +262,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set first_name.
-         * @param first_name first_name
+         * Sets the person's first name.
+         * @param firstName The person's first name.
          * @return Current Builder instance, for fluent method chaining
          */
         public LastNameStep firstName(String first_name) {
@@ -272,8 +272,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set last_name.
-         * @param last_name last_name
+         * Sets the person's last name.
+         * @param lastName The person's last name.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep lastName(String last_name) {
@@ -282,8 +282,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set age.
-         * @param age age
+         * Sets the person's age.
+         * @param age The person's age
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep age(Integer age) {
@@ -292,8 +292,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set dob.
-         * @param dob dob.
+         * Sets the person's date of birth.
+         * @param dob The person's date of birth.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep dob(Date dob) {
@@ -302,8 +302,8 @@ public final class Person implements Model {
         }
 
         /**
-         * Set relationship.
-         * @param relationship relationship.
+         * Sets the person's relationship status.
+         * @param relationship The person's relationship status.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep relationship(MaritalStatus relationship) {

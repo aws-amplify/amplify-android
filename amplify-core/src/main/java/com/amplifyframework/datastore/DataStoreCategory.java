@@ -54,10 +54,10 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
-    public void setUp(@NonNull Context context,
-                      @NonNull ModelProvider modelProvider,
-                      @NonNull ResultListener<List<ModelSchema>> listener) {
-        getSelectedPlugin().setUp(context, modelProvider, listener);
+    public void initialize(@NonNull Context context,
+                           @NonNull ModelProvider modelProvider,
+                           @NonNull ResultListener<List<ModelSchema>> listener) {
+        getSelectedPlugin().initialize(context, modelProvider, listener);
     }
 
     /**
@@ -121,5 +121,13 @@ public class DataStoreCategory
             Class<T> modelClass,
             QueryPredicate queryPredicate) {
         return getSelectedPlugin().observe(modelClass, queryPredicate);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void terminate() {
+        getSelectedPlugin().terminate();
     }
 }

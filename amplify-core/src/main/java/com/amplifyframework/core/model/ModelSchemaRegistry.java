@@ -28,7 +28,7 @@ import java.util.Set;
  */
 public final class ModelSchemaRegistry {
     // Singleton instance
-    private static ModelSchemaRegistry modelSchemaRegistryInstance;
+    private static ModelSchemaRegistry singleton;
 
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
@@ -71,10 +71,10 @@ public final class ModelSchemaRegistry {
      * Returns the singleton instance.
      * @return the singleton instance of the ModelSchemaRegistry.
      */
-    public static synchronized ModelSchemaRegistry getInstance() {
-        if (modelSchemaRegistryInstance == null) {
-            modelSchemaRegistryInstance = new ModelSchemaRegistry();
+    public static synchronized ModelSchemaRegistry singleton() {
+        if (singleton == null) {
+            singleton = new ModelSchemaRegistry();
         }
-        return modelSchemaRegistryInstance;
+        return singleton;
     }
 }
