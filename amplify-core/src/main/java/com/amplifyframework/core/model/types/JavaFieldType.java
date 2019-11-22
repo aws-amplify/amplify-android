@@ -17,6 +17,8 @@ package com.amplifyframework.core.model.types;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.Model;
+
 /**
  * Enumerate the types used in the fields
  * of {@link com.amplifyframework.core.model.Model} classes.
@@ -60,7 +62,12 @@ public enum JavaFieldType {
     /**
      * Represents the Enum type.
      */
-    ENUM(Enum.class.getSimpleName());
+    ENUM(Enum.class.getSimpleName()),
+
+    /**
+     * Represents the Model type.
+     */
+    MODEL(Model.class.getSimpleName());
 
     private final String javaFieldType;
 

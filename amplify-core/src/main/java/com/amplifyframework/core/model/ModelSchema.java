@@ -107,6 +107,9 @@ public final class ModelSchema {
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
                 targetModelName = clazz.getAnnotation(ModelConfig.class).targetName();
+                if (targetModelName.isEmpty()) {
+                    targetModelName = clazz.getSimpleName();
+                }
             }
 
             for (Field field : classFields) {
@@ -135,7 +138,7 @@ public final class ModelSchema {
     // Utility method to extract connection metadata from a field
     private static ModelConnection createModelConnection(Field field) {
         Connection connection = field.getAnnotation(Connection.class);
-        if (connection != null && Model.class.isAssignableFrom(field.getType())) {
+        if (connection != null) {
             return ModelConnection.builder()
                     .name(connection.name())
                     .keyField(connection.keyField())
@@ -155,15 +158,20 @@ public final class ModelSchema {
         com.amplifyframework.core.model.annotations.ModelField annotation =
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
         if (annotation != null) {
+            final String fieldName = field.getName();
+            final String fieldType = field.getType().getSimpleName();
+            final String targetName = annotation.targetName();
+            final String targetType = annotation.targetType();
             return ModelField.builder()
-                    .name(field.getName())
-                    .type(field.getType().getSimpleName())
-                    .targetName(annotation.targetName())
-                    .targetType(annotation.targetType())
+                    .name(fieldName)
+                    .type(fieldType)
+                    .targetName(targetName.isEmpty() ? fieldName : targetName)
+                    .targetType(targetType.isEmpty() ? fieldType : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
-                    .isPrimaryKey(PrimaryKey.matches(field.getName()))
+                    .isModel(Model.class.isAssignableFrom(field.getType()))
+                    .isPrimaryKey(PrimaryKey.matches(fieldName))
                     .belongsTo(field.isAnnotationPresent(BelongsTo.class)
                             ? field.getAnnotation(BelongsTo.class).type().getSimpleName()
                             : null)
@@ -375,6 +383,7 @@ public final class ModelSchema {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
+        result = 31 * result + (connections != null ? connections.hashCode() : 0);
         result = 31 * result + (sortedFields != null ? sortedFields.hashCode() : 0);
         result = 31 * result + (modelIndex != null ? modelIndex.hashCode() : 0);
         return result;
