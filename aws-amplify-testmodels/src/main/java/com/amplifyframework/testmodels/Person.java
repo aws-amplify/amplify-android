@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -80,6 +81,19 @@ public final class Person implements Model {
      */
     public static FirstNameStep builder() {
         return new Builder();
+    }
+
+    /**
+     * Returns an instance of the pre-set builder to update values with.
+     * @return an instance of the pre-set builder to update values with.
+     */
+    public NewBuilder newBuilder() {
+        return new NewBuilder(id,
+                first_name,
+                last_name,
+                age,
+                dob,
+                relationship);
     }
 
     /**
@@ -227,7 +241,7 @@ public final class Person implements Model {
     /**
      * Builder to build the Person object.
      */
-    public static final class Builder implements
+    public static class Builder implements
             FirstNameStep, LastNameStep, FinalStep {
         private String id;
         private String first_name;
@@ -297,7 +311,9 @@ public final class Person implements Model {
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep dob(Date dob) {
-            this.dob = new Date(dob.getTime());
+            if (dob != null) {
+                this.dob = new Date(dob.getTime());
+            }
             return this;
         }
 
@@ -325,6 +341,39 @@ public final class Person implements Model {
                     age,
                     dob,
                     relationship);
+        }
+    }
+
+    /**
+     * New Builder to update the Person object.
+     */
+    public static final class NewBuilder extends Builder {
+        private NewBuilder(String id,
+                String first_name,
+                String last_name,
+                Integer age,
+                Date dob,
+                MaritalStatus relationship) {
+            try {
+                super.id(id);
+            } catch (AmplifyException exception) {
+                throw new RuntimeException("");
+            }
+            super.firstName(first_name)
+                    .lastName(last_name)
+                    .age(age)
+                    .dob(dob)
+                    .relationship(relationship);
+        }
+
+        @Override
+        public NewBuilder firstName(String first_name) {
+            return (NewBuilder) super.firstName(first_name);
+        }
+
+        @Override
+        public NewBuilder lastName(String last_name) {
+            return (NewBuilder) super.lastName(last_name);
         }
     }
 }

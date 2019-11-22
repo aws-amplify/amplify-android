@@ -36,6 +36,7 @@ import com.amplifyframework.testutils.LatchedResultListener;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.DateFormat;
@@ -117,6 +118,41 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @SuppressWarnings("MagicNumber")
     @Test
+    @Ignore("Update is not implemented yet.")
+    public void saveModelUpdatesData() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Raphael")
+                .lastName("Kim")
+                .age(23)
+                .build();
+        assertEquals(person, saveModel(person));
+
+        final Person newPerson = person.newBuilder()
+                .firstName("Raph")
+                .build();
+        assertEquals(newPerson, saveModel(newPerson));
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("Raph",
+                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
+            assertEquals("Kim",
+                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
+            assertEquals(23,
+                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Assert that save stores data in the SQLite database correctly.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
     public void saveModelInsertsData() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
@@ -139,6 +175,35 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     cursor.getInt(cursor.getColumnIndexOrThrow("age")));
             assertEquals("Jun 23, 1912",
                     cursor.getString(cursor.getColumnIndexOrThrow("dob")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Assert that save stores data in the SQLite database correctly
+     * even if some optional values are null.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithNullsInsertsData() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .build();
+        assertEquals(person, saveModel(person));
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("Alan",
+                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
+            assertEquals("Turing",
+                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
+            assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("age")));
+            assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("dob")));
         }
         cursor.close();
     }
