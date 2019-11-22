@@ -155,18 +155,20 @@ public final class ModelSchema {
         com.amplifyframework.core.model.annotations.ModelField annotation =
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
         if (annotation != null) {
+            final String fieldName = field.getName();
+            final String fieldType = field.getType().getSimpleName();
+            final String targetName = annotation.targetName();
+            final String targetType = annotation.targetType();
             return ModelField.builder()
-                    .name(field.getName())
-                    .type(field.getType().getSimpleName())
-                    .targetName(annotation.targetName())
-                    .targetType(annotation.targetType().isEmpty()
-                            ? field.getType().getSimpleName()
-                            : annotation.targetType())
+                    .name(fieldName)
+                    .type(fieldType)
+                    .targetName(targetName.isEmpty() ? fieldName : targetName)
+                    .targetType(targetType.isEmpty() ? fieldType : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
-                    .isPrimaryKey(PrimaryKey.matches(field.getName()))
+                    .isPrimaryKey(PrimaryKey.matches(fieldName))
                     .belongsTo(field.isAnnotationPresent(BelongsTo.class)
                             ? field.getAnnotation(BelongsTo.class).type().getSimpleName()
                             : null)

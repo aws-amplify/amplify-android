@@ -43,22 +43,22 @@ public final class Person implements Model {
     public static final QueryField DOB = QueryField.field("dob");
     public static final QueryField RELATIONSHIP = QueryField.field("relationship");
 
-    @ModelField(targetName = "id", targetType = "ID", isRequired = true)
+    @ModelField(targetType = "ID", isRequired = true)
     private final String id;
 
-    @ModelField(targetName = "first_name", isRequired = true)
+    @ModelField(isRequired = true)
     private final String first_name;
 
-    @ModelField(targetName = "last_name", isRequired = true)
+    @ModelField(isRequired = true)
     private final String last_name;
 
-    @ModelField(targetName = "age", targetType = "Int")
+    @ModelField(targetType = "Int")
     private final Integer age;
 
-    @ModelField(targetName = "dob", targetType = "AWSDate")
+    @ModelField(targetType = "AWSDate")
     private final Date dob;
 
-    @ModelField(targetName = "relationship")
+    @ModelField()
     private final MaritalStatus relationship;
 
     private Person(String id,

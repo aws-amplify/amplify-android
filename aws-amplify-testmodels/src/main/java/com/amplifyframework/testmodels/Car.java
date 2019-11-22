@@ -33,14 +33,14 @@ import java.util.UUID;
 @Index(fields = {"vehicle_model"}, name = "model_based_index")
 public final class Car implements Model {
 
-    @ModelField(targetName = "id", targetType = "ID", isRequired = true)
+    @ModelField(targetType = "ID", isRequired = true)
     private String id;
 
-    @ModelField(targetName = "vehicle_model", isRequired = true)
+    @ModelField(isRequired = true)
     private String vehicle_model;
 
     @BelongsTo(type = Person.class)
-    @ModelField(targetName = "owner", isRequired = true)
+    @ModelField(isRequired = true)
     private Person owner;
 
     private Car(String id,
