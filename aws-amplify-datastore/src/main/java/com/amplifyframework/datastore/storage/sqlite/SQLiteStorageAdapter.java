@@ -362,7 +362,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final int columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
             if (fieldValue == null) {
                 preCompiledInsertStatement.bindNull(columnIndex);
-                return;
+                continue;
             }
 
             JavaFieldType javaFieldType = Enum.class.isAssignableFrom(field.getType())
