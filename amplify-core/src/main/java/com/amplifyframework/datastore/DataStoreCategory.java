@@ -17,6 +17,7 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.Category;
@@ -56,8 +57,8 @@ public class DataStoreCategory
     @Override
     public void initialize(@NonNull Context context,
                            @NonNull ModelProvider modelProvider,
-                           @NonNull ResultListener<List<ModelSchema>> listener) {
-        getSelectedPlugin().initialize(context, modelProvider, listener);
+                           @Nullable ResultListener<List<ModelSchema>> initializationResultListener) {
+        getSelectedPlugin().initialize(context, modelProvider, initializationResultListener);
     }
 
     /**
@@ -65,8 +66,8 @@ public class DataStoreCategory
      */
     @Override
     public <T extends Model> void save(@NonNull T object,
-                                       ResultListener<MutationEvent<T>> resultListener) {
-        getSelectedPlugin().save(object, resultListener);
+                                       ResultListener<DataStoreItemChange<T>> saveItemListener) {
+        getSelectedPlugin().save(object, saveItemListener);
     }
 
     /**
@@ -74,53 +75,57 @@ public class DataStoreCategory
      */
     @Override
     public <T extends Model> void delete(@NonNull T object,
-                                         ResultListener<MutationEvent<T>> resultListener) {
-        getSelectedPlugin().delete(object, resultListener);
+                                         ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+        getSelectedPlugin().delete(object, deleteItemListener);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> objectType,
-                                        ResultListener<Iterator<T>> resultListener) {
-        getSelectedPlugin().query(objectType, resultListener);
+    public <T extends Model> void query(@NonNull Class<T> itemClass,
+                                        ResultListener<Iterator<T>> queryResultsListener) {
+        getSelectedPlugin().query(itemClass, queryResultsListener);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public Observable<MutationEvent<? extends Model>> observe() {
+    public Observable<DataStoreItemChange<? extends Model>> observe() {
         return getSelectedPlugin().observe();
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> Observable<MutationEvent<T>> observe(Class<T> modelClass) {
-        return getSelectedPlugin().observe(modelClass);
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass) {
+        return getSelectedPlugin().observe(itemClass);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> Observable<MutationEvent<T>> observe(
-            Class<T> modelClass,
-            String uniqueId) {
-        return getSelectedPlugin().observe(modelClass, uniqueId);
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+            @NonNull Class<T> itemClass,
+            @NonNull String uniqueId) {
+        return getSelectedPlugin().observe(itemClass, uniqueId);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> Observable<MutationEvent<T>> observe(
-            Class<T> modelClass,
-            QueryPredicate queryPredicate) {
-        return getSelectedPlugin().observe(modelClass, queryPredicate);
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate selectionCriteria) {
+        return getSelectedPlugin().observe(itemClass, selectionCriteria);
     }
 
     /**

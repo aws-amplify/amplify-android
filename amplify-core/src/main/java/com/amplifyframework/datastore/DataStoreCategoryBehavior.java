@@ -17,9 +17,11 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -30,104 +32,136 @@ import java.util.List;
 import io.reactivex.Observable;
 
 /**
- * A high-level interface to an object repository.
+ * A DataStore is a high-level abstraction of an object repository.
+ *
+ * The DataStore can store items which extends {@link Model}, and are dressed with various
+ * annotations, e.g. {@link ModelField}, etc. For a full discussion of Amplify model annotations,
+ * see the <a href="https://todo.link">Amplify Android Model Annotations Documentation</a>.
+ *
+ * The DataStore is initialized by providing a collection of Models to be managed.
+ * A result of this initialization is that the models are parsed for comprehension of
+ * their schema. An implementation of the DataStore may use these schema to prepare
+ * durable storage for the managed models.
+ *
+ * After this, items of the initialized model classes may be saved, deleted,
+ * queried, and observed.
+ *
+ * When your are done using the DataStore, you should invoke {@link #terminate()} to free any
+ * resources that may have been in use by the DataStore implementation.
  */
 public interface DataStoreCategoryBehavior {
 
     /**
-     * Initialize the DataStore with some models. For each {@link Model}, construct a
-     * {@link com.amplifyframework.core.model.ModelSchema} and setup the necessities for
-     * persisting a {@link Model}. This initialize is a pre-requisite for all other operations
-     * of the DataStore.
+     * Initialize the DataStore with a collection of models that it will become able to store.
+     * This call must be made before using any other method of the {@link DataStoreCategoryBehavior}.
      *
-     * @param context Android application context required to
-     *                interact with a storage mechanism in Android.
-     * @param modelProvider provider of all the Model classes
-     * @param listener the listener to be invoked to notify completion
-     *                 of the initialization.
+     * A {@link ModelProvider} provides a collection of {@link Model}. The ModelProvider
+     * must provide a Model for each type of item you will store into this DataStore.
+     *
+     * A result of calling this initialization method is a callback that provides a list of
+     * {@link ModelSchema}, one for each {@link Model} that was provided by the {@link ModelProvider}.
+     *
+     * An implementation of the {@link DataStoreCategoryBehavior} may initialize itself by creating
+     * resources to house the various types of data requested.
+     *
+     * @param context Android application context
+     * @param modelProvider Provides all types of Models that are to be usable by the DataStore
+     * @param initializationResultListener
+     *        An optional listener that will invoked when initialization succeeds or fails
      */
-    void initialize(@NonNull Context context,
-                    @NonNull ModelProvider modelProvider,
-                    @NonNull ResultListener<List<ModelSchema>> listener);
+    void initialize(
+            @NonNull Context context,
+            @NonNull ModelProvider modelProvider,
+            @Nullable ResultListener<List<ModelSchema>> initializationResultListener);
 
     /**
-     * Saves an object into the data store.
-     * @param object The object to save
-     * @param resultListener A listener which will be invoked when the save
-     *                       is complete or if the save fails
-     * @param <T> The type of the object being saved
+     * Saves an item into the DataStore.
+     * @param item An item to save
+     * @param saveItemListener
+     *        An optional listener which will be callback'd when the save succeeds or fails
+     * @param <T> The time of item being saved
      */
-    <T extends Model> void save(@NonNull T object,
-                                ResultListener<MutationEvent<T>> resultListener);
+    <T extends Model> void save(
+            @NonNull T item,
+            @Nullable ResultListener<DataStoreItemChange<T>> saveItemListener);
 
     /**
-     * Deletes an object from the data store.
-     * @param object The object to delete from the data store
-     * @param resultListener A listener which will be invoked when the delete is
-     *                       complete or if the delete fails
-     * @param <T> The type of the object being deleted
+     * Deletes an item from the DataStore.
+     * @param item An item to delete from the DataStore
+     * @param deleteItemListener
+     *        An optional listener which will be invoked when the deletion succeeds or fails
+     * @param <T> The type of item being deleted
      */
-    <T extends Model> void delete(@NonNull T object,
-                                  ResultListener<MutationEvent<T>> resultListener);
+    <T extends Model> void delete(
+            @NonNull T item,
+            @Nullable ResultListener<DataStoreItemChange<T>> deleteItemListener);
 
     /**
-     * Query the data store to find objects of the provided type.
-     * @param objectType The class type of the objects being queried
-     * @param resultListener A listener which will be invoked when the query
-     *                       returns results, or if there is a failure to query
-     * @param <T> the type of the objects for which a query is to be performed
+     * Query the DataStore to find all items of the requested Java class.
+     * @param itemClass Items of this class will be targeted by this query
+     * @param queryResultsListener
+     *        An optional listener which will be invoked when the query returns
+     *        results, or if there is a failure to query
+     * @param <T> The type of items being queried
      */
-    <T extends Model> void query(@NonNull Class<T> objectType,
-                                 ResultListener<Iterator<T>> resultListener);
+    <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @Nullable ResultListener<Iterator<T>> queryResultsListener);
 
     /**
-     * Observe all changes in the DataStore.
-     * @return An observable stream of DataStore change events,
-     *         one for each and every change that occurs in the DataStore.
+     * Observe all changes to any/all item(s) in the DataStore.
+     * @return An observable stream of {@link DataStoreItemChange}s,
+     *         one for each and every change that occurs to any/all item(s)
+     *         in the DataStore.
      */
-    Observable<MutationEvent<? extends Model>> observe();
+    @NonNull
+    Observable<DataStoreItemChange<? extends Model>> observe();
 
     /**
-     * Observe changes to a certain type of object in the DataStore.
-     * @param modelClass The class of the model objects to observe
-     * @param <T> The type of the model objects to observe
-     * @return An observable stream of data store change events, that
-     *         will emit events for any changes that occur to the named
-     *         model class.
+     * Observe changes to a certain type of item(s) in the DataStore.
+     * @param itemClass The class of the item(s) to observe
+     * @param <T> The type of the item(s) to observe
+     * @return An observable stream of {@link DataStoreItemChange}s, that
+     *         will emit a new {@link DataStoreItemChange} whenever there there are
+     *         changes to any item of the requested item class.
      */
-    <T extends Model> Observable<MutationEvent<T>> observe(Class<T> modelClass);
+    @NonNull
+    <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass);
 
     /**
-     * Observe changes to a specific object with the given model class,
-     * and having the given model ID.
-     * @param modelClass The class of the object being observed
-     * @param uniqueId The unique ID of the object being observed
-     * @param <T> The type of the object being observed
-     * @return A stream of change events surrounding the specific object
-     *         which is uniquely identified by the provide class type and
-     *         unique id.
+     * Observe changes to a specific item, identified by its class and unique ID.
+     * @param itemClass The class of the item being observed
+     * @param uniqueId The unique ID of the item being observed
+     * @param <T> The type of item being observed
+     * @return A stream of {@link DataStoreItemChange} events, specific to a single item
+     *         which was uniquely identified by the provided class and unique id.
+     *         Note that this stream may emit a non-trivial number of events, in case the
+     *         selected item is updated many times.
      */
-    <T extends Model> Observable<MutationEvent<T>> observe(Class<T> modelClass, String uniqueId);
+    @NonNull
+    <T extends Model> Observable<DataStoreItemChange<T>> observe(
+            @NonNull Class<T> itemClass,
+            @NonNull String uniqueId);
 
     /**
-     * Observe changes to objects of a model type, only when those changes match the
-     * criteria of the provide filtering predicate.
-     * @param modelClass The class of object to observe
-     * @param queryPredicate A predicate which will be evaluated to determine
-     *                           if a particular change on modelClass should be
-     *                           emitted onto the returned observable.
-     * @param <T> The type of the object to observe
-     * @return An observable stream of model change events, for the requested model class,
-     *         and considering the provided filtering predicate.
+     * Observe a collection of item(s) that have a specified class type, and that match
+     * additional criteria, specified by a fluent chain of selection operators.
+     * @param itemClass The class of item(s) to observe
+     * @param selectionCriteria
+     *        Additional criteria which will be considered when identifying which
+     *        items in the DataStore should be observed for changes.
+     * @param <T> The type of the item(s) to observe
+     * @return An observable stream of {@link DataStoreItemChange}s, emitted for items that are
+     *         of the requested class, and that match the provided selection criteria
      */
-    <T extends Model> Observable<MutationEvent<T>> observe(
-            Class<T> modelClass,
-            QueryPredicate queryPredicate);
+    @NonNull
+    <T extends Model> Observable<DataStoreItemChange<T>> observe(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate selectionCriteria);
 
     /**
-     * Release all resources created during construction and initialization
-     * time.
+     * Terminate use of this instance of the DataStore.
+     * An implementation may free any used resources at this time.
      */
     void terminate();
 }
-

@@ -17,7 +17,6 @@ package com.amplifyframework.testutils;
 
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 
@@ -28,14 +27,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * An implementation of an {@link ResultListener} which can also await for a result,
- * kind of like resolving a promise. Provide an instance of this {@link LatchedResultListener}
- * to an asynchronous method invocation, and then wait for a result by calling
+ * An implementation of a {@link ResultListener} which can also await
+ * rececipt of a result/error, kind of like resolving a promise. Provide
+ * an instance of this {@link LatchedResultListener} to an asynchronous
+ * method invocation, and then wait for a result by calling
  * {@link LatchedResultListener#awaitTerminalEvent()}.
- * @param <T> The type of data expected in the response.
+ * @param <T> The type of the result data
  */
 public final class LatchedResultListener<T> implements ResultListener<T> {
-    private static final long REASONABLE_WAIT_TIME_MS = 100 /* ms */;
+    private static final long REASONABLE_WAIT_TIME_MS = 500 /* ms */;
 
     private final AtomicReference<T> resultReference;
     private final AtomicReference<Throwable> errorReference;
@@ -43,24 +43,40 @@ public final class LatchedResultListener<T> implements ResultListener<T> {
     private final long waitTimeMs;
 
     /**
-     * Constructs a new LatchedResultListener, using a default latch timeout.
-     * The default value is 100ms. If you don't like that, use {@link #LatchedResultListener(long)},
-     * instead.
-     */
-    public LatchedResultListener() {
-        this(REASONABLE_WAIT_TIME_MS);
-    }
-
-    /**
      * Constructs a new LatchedResultListener with a provided latch timeout.
-     * If you don't want to choose a latch timeout, prefer {@link #LatchedResultListener()}.
+     * If you don't want to choose a latch timeout, prefer {@link #instance()}.
      * @param waitTimeMs Latch will timeout after this many milliseconds
      */
-    public LatchedResultListener(long waitTimeMs) {
+    private LatchedResultListener(long waitTimeMs) {
         this.waitTimeMs = waitTimeMs;
         this.resultReference = new AtomicReference<>();
         this.errorReference = new AtomicReference<>();
         this.completionsPending = new CountDownLatch(1);
+    }
+
+
+    /**
+     * Creates an instance of {@link LatchedResultListener} that awaits
+     * reciept of a result or error, until the provided timeout (in
+     * milliseconds) has elapsed.
+     * @param milliseconds Time to wait for a result, in milliseconds
+     * @param <T> Type of result being awaited
+     * @return A LatchedResultListener configured to wait for the provided number of milliseconds
+     */
+    public static <T> LatchedResultListener<T> waitFor(long milliseconds) {
+        return new LatchedResultListener<>(milliseconds);
+    }
+
+    /**
+     * Creates an instance of {@link LatchedResultListener} that awaits
+     * reciept of a result or error, until a default timeout of 500s has
+     * elapsed.
+     * @param <T> The type of result being waited
+     * @return An instance of a LatchedResultListener, configure to await a result
+     *         for a default waiting time.
+     */
+    public static <T> LatchedResultListener<T> instance() {
+        return new LatchedResultListener<>(REASONABLE_WAIT_TIME_MS);
     }
 
     @Override
@@ -99,7 +115,7 @@ public final class LatchedResultListener<T> implements ResultListener<T> {
     /**
      * Assert that no errors have been received by the listener.
      * This should be called only after {@link #awaitTerminalEvent()};
-     * it is a usage error to call this before it.
+     * It is a usage error to call this before calling {@link #awaitTerminalEvent()}.
      * @return The current instance of the {@link LatchedResultListener},
      *         for the utility of fluent method chaining
      */
@@ -111,22 +127,66 @@ public final class LatchedResultListener<T> implements ResultListener<T> {
     }
 
     /**
+     * Asserts that an error was received by the listener.
+     * This should be called only after {@link #awaitTerminalEvent()}.
+     * It is a usage error to call this before calling {@link #awaitTerminalEvent()}.
+     * @return The current instance of the {@link LatchedResultListener},
+     *         for the purpose of fluent method chaining
+     */
+    public LatchedResultListener<T> assertError() {
+        Assert.assertTrue("Expected an error, but had none.", hasError());
+        return LatchedResultListener.this;
+    }
+
+    /**
+     * Asserts that the listener has received a non-null result.
+     * @return True if the listener has received a non-null result; false, otherwise
+     */
+    @NonNull
+    public LatchedResultListener<T> assertResult() {
+        final T result = resultReference.get();
+        Assert.assertNotNull("Expected a result, but had null.", result);
+        return LatchedResultListener.this;
+    }
+
+    /**
      * Gets the value of the of the result, as received int the {@link ResultListener#onResult(Object)}
      * callback. It is a usage error to call this method before {@link #awaitTerminalEvent()} has been called.
      * @return The value which the listener received in {@link ResultListener#onResult(Object)}.
      */
-    @Nullable
+    @NonNull
     public T getResult() {
+        Assert.assertTrue(hasResult());
         return resultReference.get();
     }
 
     /**
-     * Gets the value of the error that was obtained via {@link #onError(Throwable)}, if it was.
+     * Checks if the listener has received a result.
+     * It is a usage error to call this before first calling {@link #awaitTerminalEvent()}.
+     * @return True if the listener has received a result; false, otherwise
+     */
+    public boolean hasResult() {
+        return resultReference.get() != null;
+    }
+
+    /**
+     * Gets the value of the error that was obtained via {@link #onError(Throwable)},
+     * if an error was received, there.
      * It is a usage error to call this before {@link #awaitTerminalEvent()}.
      * @return The throwable that had been obtained via the onError(Throwable) callback.
      */
-    @Nullable
+    @NonNull
     public Throwable getError() {
+        Assert.assertTrue(hasError());
         return errorReference.get();
+    }
+
+    /**
+     * Checks if the listener has received an error.
+     * It is a usage error to call this before first calling {@link #awaitTerminalEvent()}.
+     * @return true if the listener has received an error, false otherwise
+     */
+    public boolean hasError() {
+        return errorReference.get() != null;
     }
 }
