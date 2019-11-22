@@ -49,6 +49,9 @@ public final class ModelField {
     // True if the field is an enumeration type.
     private final boolean isEnum;
 
+    // True if the field is an instance of model.
+    private final boolean isModel;
+
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
 
@@ -66,6 +69,7 @@ public final class ModelField {
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
+        this.isModel = builder.isModel;
         this.isPrimaryKey = builder.isPrimaryKey;
         this.belongsTo = builder.belongsTo;
     }
@@ -79,11 +83,19 @@ public final class ModelField {
     }
 
     /**
-     * Returns the name of the field is the name of the instance variable of the Model class.
-     * @return Name of the field is the name of the instance variable of the Model class.
+     * Returns the name of the instance variable of the Model class.
+     * @return Name of the instance variable of the Model class.
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the data type of the instance variable of the Model class.
+     * @return Data type of the instance variable of the Model class.
+     */
+    public String getType() {
+        return type;
     }
 
     /**
@@ -131,6 +143,15 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is Model.
+     *
+     * @return true if the field's target type is Model.
+     */
+    public boolean isModel() {
+        return isModel;
+    }
+
+    /**
      * Returns true if the field is a primary key in the Model.
      * @return True if the field is a primary key in the Model.
      */
@@ -174,6 +195,9 @@ public final class ModelField {
         if (isEnum != that.isEnum) {
             return false;
         }
+        if (isModel != that.isModel) {
+            return false;
+        }
         if (isPrimaryKey != that.isPrimaryKey) {
             return false;
         }
@@ -205,6 +229,7 @@ public final class ModelField {
         result = 31 * result + (isRequired ? 1 : 0);
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
+        result = 31 * result + (isModel ? 1 : 0);
         result = 31 * result + (isPrimaryKey ? 1 : 0);
         result = 31 * result + (belongsTo != null ? belongsTo.hashCode() : 0);
         return result;
@@ -220,6 +245,7 @@ public final class ModelField {
             ", isRequired=" + isRequired +
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
+            ", isModel=" + isModel +
             ", isPrimaryKey=" + isPrimaryKey +
             ", belongsTo='" + belongsTo + '\'' +
             '}';
@@ -253,6 +279,9 @@ public final class ModelField {
 
         // True if the field's target type is Enum.
         private boolean isEnum = false;
+
+        // True if the field's target type is Model.
+        private boolean isModel = false;
 
         // True if the field is a primary key in the Model.
         private boolean isPrimaryKey = false;
@@ -330,6 +359,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isEnum(boolean isEnum) {
             this.isEnum = isEnum;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is a Model.
+         * @param isModel flag indicating if the field is a model
+         * @return the builder object
+         */
+        public ModelFieldBuilder isModel(boolean isModel) {
+            this.isModel = isModel;
             return this;
         }
 
