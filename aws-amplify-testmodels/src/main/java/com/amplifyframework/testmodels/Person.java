@@ -46,10 +46,10 @@ public final class Person implements Model {
     @ModelField(targetName = "id", targetType = "ID", isRequired = true)
     private final String id;
 
-    @ModelField(targetName = "first_name", targetType = "String", isRequired = true)
+    @ModelField(targetName = "first_name", isRequired = true)
     private final String first_name;
 
-    @ModelField(targetName = "last_name", targetType = "String", isRequired = true)
+    @ModelField(targetName = "last_name", isRequired = true)
     private final String last_name;
 
     @ModelField(targetName = "age", targetType = "Int")
@@ -58,7 +58,7 @@ public final class Person implements Model {
     @ModelField(targetName = "dob", targetType = "AWSDate")
     private final Date dob;
 
-    @ModelField(targetName = "relationship", targetType = "MaritalStatus")
+    @ModelField(targetName = "relationship")
     private final MaritalStatus relationship;
 
     private Person(String id,

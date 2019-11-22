@@ -365,9 +365,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 continue;
             }
 
-            JavaFieldType javaFieldType = Enum.class.isAssignableFrom(field.getType())
-                    ? JavaFieldType.ENUM
-                    : JavaFieldType.from(field.getType().getSimpleName());
+            final JavaFieldType javaFieldType;
+            if (Model.class.isAssignableFrom(field.getType())) {
+                javaFieldType = JavaFieldType.MODEL;
+            } else if (Enum.class.isAssignableFrom(field.getType())) {
+                javaFieldType = JavaFieldType.ENUM;
+            } else {
+                javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
+            }
+
             bindPreCompiledInsertStatementWithJavaFields(
                     preCompiledInsertStatement,
                     fieldValue,
@@ -402,6 +408,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             case STRING:
                 preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
                 break;
+            case MODEL:
+                preCompiledInsertStatement.bindString(columnIndex, ((Model) fieldValue).getId());
+                break;
             case ENUM:
                 preCompiledInsertStatement.bindString(columnIndex, gson.toJson(fieldValue));
                 break;
@@ -432,14 +441,22 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 final ModelField modelField = entry.getValue();
                 final String fieldGraphQLType = entry.getValue().getTargetType();
-                final JavaFieldType fieldJavaType = modelField.isEnum()
-                        ? JavaFieldType.ENUM
-                        : TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+                final JavaFieldType fieldJavaType;
+                if (modelField.isModel()) {
+                    fieldJavaType = JavaFieldType.MODEL;
+                } else if (modelField.isEnum()) {
+                    fieldJavaType = JavaFieldType.ENUM;
+                } else {
+                    fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+                }
 
                 final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
                 switch (fieldJavaType) {
                     case STRING:
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
+                        break;
+                    case MODEL:
+                        mapForModel.put(fieldName, null);
                         break;
                     case ENUM:
                         String stringValueFromCursor = cursor.getString(columnIndex);

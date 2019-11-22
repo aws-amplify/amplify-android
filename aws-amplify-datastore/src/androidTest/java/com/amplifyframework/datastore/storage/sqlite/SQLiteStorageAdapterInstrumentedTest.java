@@ -46,7 +46,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -288,7 +287,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         final Car car = Car.builder()
                 .vehicleModel("Lamborghini")
-                .personId(person.getId())
+                .owner(person)
                 .build();
         saveModel(car);
 
@@ -297,8 +296,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
             assertEquals("Lamborghini",
-                    cursor.getString(cursor.getColumnIndexOrThrow("vehicleModel")));
-            assertNotNull(cursor.getString(cursor.getColumnIndexOrThrow("personId")));
+                    cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
+            assertEquals(person.getId(),
+                    cursor.getString(cursor.getColumnIndexOrThrow("owner")));
         }
         cursor.close();
     }
@@ -325,7 +325,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         final Car car = Car.builder()
                 .vehicleModel("Lamborghini")
-                .personId(UUID.randomUUID().toString())
+                .owner(Person.builder()
+                        .firstName("Jane")
+                        .lastName("Doe")
+                        .build())
                 .build();
 
         LatchedResultListener<MutationEvent<Car>> carSaveListener =
