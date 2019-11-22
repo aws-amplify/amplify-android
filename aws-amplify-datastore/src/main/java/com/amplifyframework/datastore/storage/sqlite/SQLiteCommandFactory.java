@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.SqliteDataType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 
@@ -173,7 +174,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final String fieldName = field.getName();
 
             SqliteDataType sqliteDataType = field.isEnum()
-                    ? TypeConverter.getSqlTypeForGraphQLType("Enum")
+                    ? TypeConverter.getSqlTypeForJavaType(JavaFieldType.ENUM.stringValue())
                     : TypeConverter.getSqlTypeForGraphQLType(field.getTargetType());
             stringBuilder.append(fieldName)
                     .append(SQLITE_COMMAND_DELIMITER)
