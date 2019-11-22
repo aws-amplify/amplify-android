@@ -107,6 +107,9 @@ public final class ModelSchema {
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
                 targetModelName = clazz.getAnnotation(ModelConfig.class).targetName();
+                if (targetModelName.isEmpty()) {
+                    targetModelName = clazz.getSimpleName();
+                }
             }
 
             for (Field field : classFields) {
