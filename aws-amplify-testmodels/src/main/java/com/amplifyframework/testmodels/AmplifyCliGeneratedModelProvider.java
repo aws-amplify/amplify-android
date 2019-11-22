@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils.model;
+package com.amplifyframework.testmodels;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
@@ -30,16 +30,20 @@ import java.util.Set;
 public final class AmplifyCliGeneratedModelProvider implements ModelProvider {
 
     private static final String AMPLIFY_MODELS_VERSION = "hash-code";
-    private static AmplifyCliGeneratedModelProvider amplifyCliGeneratedModelStoreInstance;
+    private static AmplifyCliGeneratedModelProvider singleton;
 
     private AmplifyCliGeneratedModelProvider() {
     }
 
-    public static synchronized AmplifyCliGeneratedModelProvider getInstance() {
-        if (amplifyCliGeneratedModelStoreInstance == null) {
-            amplifyCliGeneratedModelStoreInstance = new AmplifyCliGeneratedModelProvider();
+    /**
+     * Gets the singleton instance of the {@link AmplifyCliGeneratedModelProvider}.
+     * @return Singleton of the Model provider
+     */
+    public static synchronized AmplifyCliGeneratedModelProvider singletonInstance() {
+        if (singleton == null) {
+            singleton = new AmplifyCliGeneratedModelProvider();
         }
-        return amplifyCliGeneratedModelStoreInstance;
+        return singleton;
     }
 
     /**

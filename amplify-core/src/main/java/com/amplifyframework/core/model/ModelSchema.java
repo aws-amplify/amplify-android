@@ -121,10 +121,12 @@ public final class ModelSchema {
                 if (annotation != null) {
                     final ModelField modelField = ModelField.builder()
                             .name(field.getName())
+                            .type(field.getType().getSimpleName())
                             .targetName(annotation.targetName())
                             .targetType(annotation.targetType())
                             .isRequired(annotation.isRequired())
                             .isArray(Collection.class.isAssignableFrom(field.getType()))
+                            .isEnum(Enum.class.isAssignableFrom(field.getType()))
                             .isPrimaryKey(PrimaryKey.matches(field.getName()))
                             .belongsTo(field.isAnnotationPresent(BelongsTo.class)
                                     ? field.getAnnotation(BelongsTo.class).type().getSimpleName()

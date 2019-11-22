@@ -36,14 +36,13 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 }
 
 dependencies {
-    implementation "junit:junit:4.12"
-    implementation 'androidx.test:core:1.2.0'
-    implementation project(':amplify-core')
+    implementation project(path: ':amplify-core')
+    implementation 'androidx.core:core:1.1.0'
 }
 

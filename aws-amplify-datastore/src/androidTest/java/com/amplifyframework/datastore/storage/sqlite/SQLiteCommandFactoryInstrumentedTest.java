@@ -12,58 +12,79 @@ import android.content.Context;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.util.Log;
-
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testutils.LatchedResultListener;
 
-import org.junit.After;
-import org.junit.Before;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.HashSet;
 import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.Set;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class SQLiteCommandFactoryInstrumentedTest {
 
-    private static final String TAG = "sqlite-cmd-factory-test";
+    private static final String TAG = SQLiteCommandFactoryInstrumentedTest.class.getSimpleName();
     private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
 
-    private Context context;
-    private SQLiteStorageAdapter sqLiteStorageAdapter;
-    private SQLCommandFactory sqLiteCommandFactory;
-    private SQLiteDatabase sqLiteDatabase;
-    private ModelSchemaRegistry modelSchemaRegistry;
+    private static Context context;
+    private static SQLiteStorageAdapter sqLiteStorageAdapter;
+    private static SQLCommandFactory sqLiteCommandFactory;
+    private static SQLiteDatabase sqLiteDatabase;
+    private static ModelSchemaRegistry modelSchemaRegistry;
 
-    @Before
-    public void setUp() throws InterruptedException {
+    @BeforeClass
+    public static void setUp() {
         context = ApplicationProvider.getApplicationContext();
         deleteDatabase();
 
+        final LatchedResultListener<List<ModelSchema>> schemaListener =
+                new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+        ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
+
         sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
-        setUpSQLiteStorageAdapter();
+        sqLiteStorageAdapter.initialize(
+                context,
+                modelProvider,
+                schemaListener
+        );
+
+        // Await result, and obtain the received list of schema
+        final List<ModelSchema> schemaList =
+                schemaListener.awaitTerminalEvent().assertNoError().getResult();
+
+        // Prepare a set of the actual model schema names, as string
+        Set<String> expectedModelClassNames = new HashSet<>();
+        for (ModelSchema actualSchema : schemaList) {
+            expectedModelClassNames.add(actualSchema.getName());
+        }
+
+        // Ensure that we got a schema for each of the models that we requested.
+        for (Class<? extends Model> requestedModel : modelProvider.models()) {
+            assertTrue(expectedModelClassNames.contains(requestedModel.getSimpleName()));
+        }
 
         sqLiteCommandFactory = sqLiteStorageAdapter.getSqlCommandFactory();
         sqLiteDatabase = sqLiteStorageAdapter.getDatabaseConnectionHandle();
-        modelSchemaRegistry = ModelSchemaRegistry.getInstance();
+        modelSchemaRegistry = ModelSchemaRegistry.singleton();
     }
 
     /**
      * Drop all tables and database, close and delete the database.
      */
-    @After
-    public void tearDown() {
-        if (sqLiteStorageAdapter != null) {
-            sqLiteStorageAdapter.getDatabaseConnectionHandle().close();
-            sqLiteStorageAdapter.getSqLiteOpenHelper().close();
-        }
+    @AfterClass
+    public static void tearDown() {
+        sqLiteStorageAdapter.terminate();
         deleteDatabase();
     }
 
@@ -93,33 +114,7 @@ public class SQLiteCommandFactoryInstrumentedTest {
 
     }
 
-    private void setUpSQLiteStorageAdapter() throws InterruptedException {
-        AtomicReference<List<ModelSchema>> responseSuccess = new AtomicReference<>();
-        AtomicReference<Throwable> responseError = new AtomicReference<>();
-        final CountDownLatch waitForSetUp = new CountDownLatch(1);
-        sqLiteStorageAdapter.setUp(context,
-                AmplifyCliGeneratedModelProvider.getInstance(),
-                new ResultListener<List<ModelSchema>>() {
-                    @Override
-                    public void onResult(List<ModelSchema> result) {
-                        responseSuccess.set(result);
-                        waitForSetUp.countDown();
-                    }
-
-                    @Override
-                    public void onError(Throwable error) {
-                        responseError.set(error);
-                        waitForSetUp.countDown();
-                    }
-                });
-        assertTrue(waitForSetUp.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
-                TimeUnit.MILLISECONDS));
-        assertNotNull(responseSuccess.get());
-        assertFalse(responseSuccess.get().isEmpty());
-        assertNull(responseError.get());
-    }
-
-    private void deleteDatabase() {
+    private static void deleteDatabase() {
         context.deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
     }
 }

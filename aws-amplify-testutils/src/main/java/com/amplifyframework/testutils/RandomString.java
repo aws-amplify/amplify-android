@@ -13,24 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.query.predicate;
+package com.amplifyframework.testutils;
+
+import java.util.UUID;
 
 /**
- * A single source for developers to see what types of comparison operators they can create.
+ * A test utility to build random string.
+ * This just uses UUID.randomUUID().toString(),
+ * but it has a more semantic name.
  */
-public final class QueryOperatorFactory {
+public final class RandomString {
+    @SuppressWarnings("checkstyle:all") private RandomString() {}
 
     /**
-     * Private constructor to prevent developers from instantiating this factory.
+     * Builds a new random string.
+     * @return A random string
      */
-    private QueryOperatorFactory() { }
-
-    /**
-     * Returns an equality comparison operator.
-     * @param value the value to be compared
-     * @return an operator object representing the equality condition
-     */
-    public static EqualQueryOperator equalTo(Object value) {
-        return new EqualQueryOperator(value);
+    public static String string() {
+        return UUID.randomUUID().toString();
     }
 }

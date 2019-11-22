@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.testutils.TestAssets;
 
 import org.json.JSONException;
 import org.json.JSONObject;

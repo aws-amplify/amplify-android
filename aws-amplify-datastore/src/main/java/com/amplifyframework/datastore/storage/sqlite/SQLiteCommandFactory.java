@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.types.SqliteDataType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.util.StringUtils;
 
@@ -216,9 +217,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final String modelFieldName = entry.getKey();
             final ModelField modelField = entry.getValue();
 
+            SqliteDataType sqliteDataType = modelField.isEnum()
+                    ? TypeConverter.getSqlTypeForGraphQLType("Enum")
+                    : TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType());
             stringBuilder.append(modelFieldName)
                     .append(SQLITE_COMMAND_DELIMITER)
-                    .append(TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType()).getSqliteDataType())
+                    .append(sqliteDataType.getSqliteDataType())
                     .append(SQLITE_COMMAND_DELIMITER);
 
             if (modelField.isPrimaryKey()) {
@@ -243,7 +247,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             ModelField foreignKey = foreignKeyIterator.next();
             String connectionName = foreignKey.getName();
             String connectionTarget = foreignKey.belongsTo();
-            String connectionId = ModelSchemaRegistry.getInstance()
+            String connectionId = ModelSchemaRegistry.singleton()
                     .getModelSchemaForModelClass(connectionTarget)
                     .getPrimaryKey()
                     .getName();

@@ -17,7 +17,9 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.os.StrictMode;
 import android.util.Log;
+import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
@@ -25,12 +27,15 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.MutationEvent;
-import com.amplifyframework.testutils.model.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testutils.model.Car;
-import com.amplifyframework.testutils.model.Person;
+import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.Car;
+import com.amplifyframework.testmodels.MaritalStatus;
+import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.text.DateFormat;
@@ -41,14 +46,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -64,50 +65,48 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private SQLiteStorageAdapter sqLiteStorageAdapter;
 
     /**
+     * Enable strict mode for catching SQLite leaks.
+     */
+    @BeforeClass
+    public static void enableStrictMode() {
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+    }
+
+    /**
      * Setup the required information for SQLiteStorageHelper construction.
-     * @throws InterruptedException when the waiting for setUp is interrupted.
      */
     @Before
-    public void setUp() throws InterruptedException {
+    public void setUp() {
         context = ApplicationProvider.getApplicationContext();
         deleteDatabase();
 
         sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
 
-        AtomicReference<List<ModelSchema>> responseSuccess = new AtomicReference<>();
-        AtomicReference<Throwable> responseError = new AtomicReference<>();
-        final CountDownLatch waitForSetUp = new CountDownLatch(1);
-        sqLiteStorageAdapter.setUp(context,
-                AmplifyCliGeneratedModelProvider.getInstance(),
-                new ResultListener<List<ModelSchema>>() {
-                    @Override
-                    public void onResult(List<ModelSchema> result) {
-                        responseSuccess.set(result);
-                        waitForSetUp.countDown();
-                    }
+        LatchedResultListener<List<ModelSchema>> setupListener =
+            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
 
-                    @Override
-                    public void onError(Throwable error) {
-                        responseError.set(error);
-                        waitForSetUp.countDown();
-                    }
-                });
-        assertTrue(waitForSetUp.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
-                TimeUnit.MILLISECONDS));
-        assertNotNull(responseSuccess.get());
-        assertFalse(responseSuccess.get().isEmpty());
-        assertNull(responseError.get());
+        sqLiteStorageAdapter.initialize(
+            context,
+            AmplifyCliGeneratedModelProvider.singletonInstance(),
+            setupListener
+        );
+        List<ModelSchema> modelSchemaList =
+            setupListener.awaitTerminalEvent().assertNoError().getResult();
+        assertNotNull(modelSchemaList);
+        assertFalse(modelSchemaList.isEmpty());
     }
 
     /**
-     * Drop all tables and database, close and delete the database.
+     * Drop all tables and database, terminate and delete the database.
      */
     @After
     public void tearDown() {
-        if (sqLiteStorageAdapter != null) {
-            sqLiteStorageAdapter.getDatabaseConnectionHandle().close();
-            sqLiteStorageAdapter.getSqLiteOpenHelper().close();
-        }
+        sqLiteStorageAdapter.terminate();
         deleteDatabase();
     }
 
@@ -115,16 +114,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Assert that save stores data in the SQLite database correctly.
      *
      * @throws ParseException when the date cannot be parsed.
-     * @throws InterruptedException when the waiting for save is interrupted.
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelInsertsData() throws ParseException, InterruptedException {
+    public void saveModelInsertsData() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
                 .build();
         assertEquals(person, saveModel(person));
 
@@ -133,9 +132,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
             assertEquals("Alan",
-                    cursor.getString(cursor.getColumnIndexOrThrow("firstName")));
+                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
             assertEquals("Turing",
-                    cursor.getString(cursor.getColumnIndexOrThrow("lastName")));
+                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
             assertEquals(41,
                     cursor.getInt(cursor.getColumnIndexOrThrow("age")));
             assertEquals("Jun 23, 1912",
@@ -148,16 +147,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Test querying the saved data in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
-     * @throws InterruptedException when the waiting for save is interrupted.
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithSingleItem() throws ParseException, InterruptedException {
+    public void querySavedDataWithSingleItem() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                .relationship(MaritalStatus.single)
                 .build();
         assertEquals(person, saveModel(person));
 
@@ -174,11 +173,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Test querying the saved data in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
-     * @throws InterruptedException when the waiting for save is interrupted.
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithMultipleItems() throws ParseException, InterruptedException {
+    public void querySavedDataWithMultipleItems() throws ParseException {
         final Set<Person> savedModels = new HashSet<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -187,6 +185,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     .lastName("lastNamePrefix:" + counter)
                     .age(counter)
                     .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.single)
                     .build();
             saveModel(person);
             savedModels.add(person);
@@ -208,16 +207,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Assert that save stores foreign key in the SQLite database correctly.
      *
      * @throws ParseException when the date cannot be parsed.
-     * @throws InterruptedException when the waiting for save is interrupted.
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithValidForeignKey() throws ParseException, InterruptedException {
+    public void saveModelWithValidForeignKey() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
                 .build();
         saveModel(person);
 
@@ -254,6 +253,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .lastName("Turing")
                 .age(41)
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
                 .build();
         saveModel(person);
 
@@ -262,105 +262,29 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .personId(UUID.randomUUID().toString())
                 .build();
 
-        AtomicReference<Car> responseSuccess = new AtomicReference<>();
-        AtomicReference<Throwable> responseError = new AtomicReference<>();
-        final CountDownLatch waitForSave = new CountDownLatch(1);
-        sqLiteStorageAdapter.save(car, new ResultListener<MutationEvent<Car>>() {
-            @Override
-            public void onResult(MutationEvent<Car> result) {
-                responseSuccess.set(result.data());
-                waitForSave.countDown();
-            }
+        LatchedResultListener<MutationEvent<Car>> carSaveListener =
+            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+        sqLiteStorageAdapter.save(car, carSaveListener);
 
-            @Override
-            public void onError(Throwable error) {
-                Log.e(TAG, error.getCause().getMessage());
-                responseError.set(error);
-                waitForSave.countDown();
-            }
-        });
-
-        assertTrue(waitForSave.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
-                TimeUnit.MILLISECONDS));
-        assertNull(responseSuccess.get());
-        assertNotNull(responseError.get());
-        assertTrue(responseError.get().getCause().getMessage().contains(expectedError));
+        Throwable actualError = carSaveListener.awaitTerminalEvent().getError();
+        assertNotNull(actualError);
+        assertNotNull(actualError.getCause());
+        assertNotNull(actualError.getCause().getMessage());
+        assertTrue(actualError.getCause().getMessage().contains(expectedError));
     }
 
-    private <T extends Model> T saveModel(T model) throws InterruptedException {
-        return saveModel(model, null);
+    private <T extends Model> T saveModel(@NonNull T model) {
+        LatchedResultListener<MutationEvent<T>> saveListener =
+            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+        sqLiteStorageAdapter.save(model, saveListener);
+        return saveListener.awaitTerminalEvent().assertNoError().getResult().data();
     }
 
-    private <T extends Model> T saveModel(T model,
-                                          ResultListener<MutationEvent<T>> listener) throws InterruptedException {
-        AtomicReference<T> responseSuccess = new AtomicReference<>();
-        AtomicReference<Throwable> responseError = new AtomicReference<>();
-        final CountDownLatch waitForSave = new CountDownLatch(1);
-        sqLiteStorageAdapter.save(model, new ResultListener<MutationEvent<T>>() {
-            @Override
-            public void onResult(MutationEvent<T> result) {
-                if (listener != null) {
-                    listener.onResult(result);
-                }
-                responseSuccess.set(result.data());
-                waitForSave.countDown();
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                Log.e(TAG, error.getCause().getMessage());
-                if (listener != null) {
-                    listener.onError(error);
-                }
-                responseError.set(error);
-                waitForSave.countDown();
-            }
-        });
-
-        assertTrue(waitForSave.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
-                TimeUnit.MILLISECONDS));
-        assertNotNull(responseSuccess.get());
-        assertNull(responseError.get());
-
-        return responseSuccess.get();
-    }
-
-    private <T extends Model> Iterator<T> queryModel(Class<T> modelClass) throws InterruptedException {
-        return queryModel(modelClass, null);
-    }
-
-    private <T extends Model> Iterator<T> queryModel(Class<T> modelClass,
-                                              ResultListener<Iterator<T>> listener) throws InterruptedException {
-        AtomicReference<Iterator<T>> responseSuccess = new AtomicReference<>();
-        AtomicReference<Throwable> responseError = new AtomicReference<>();
-        final CountDownLatch waitForQuery = new CountDownLatch(1);
-        sqLiteStorageAdapter.query(modelClass, new ResultListener<Iterator<T>>() {
-            @Override
-            public void onResult(Iterator<T> result) {
-                if (listener != null) {
-                    listener.onResult(result);
-                }
-                responseSuccess.set(result);
-                waitForQuery.countDown();
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                Log.e(TAG, error.getCause().getMessage());
-                if (listener != null) {
-                    listener.onError(error);
-                }
-                responseError.set(error);
-                waitForQuery.countDown();
-            }
-        });
-
-        assertTrue(waitForQuery.await(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS,
-                TimeUnit.MILLISECONDS));
-        assertNotNull(responseSuccess.get());
-        assertNull(responseError.get());
-
-        return responseSuccess.get();
+    private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
+        LatchedResultListener<Iterator<T>> queryResultListener =
+            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+        sqLiteStorageAdapter.query(modelClass, queryResultListener);
+        return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
     }
 
     private void deleteDatabase() {
