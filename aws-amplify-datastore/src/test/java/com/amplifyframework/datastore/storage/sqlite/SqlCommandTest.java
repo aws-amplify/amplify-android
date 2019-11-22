@@ -56,10 +56,10 @@ public class SqlCommandTest {
         final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
                 .createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
-        assertEquals("CREATE TABLE IF NOT EXISTS Person " +
-                "(age INTEGER , " +
-                "firstName TEXT NOT NULL, " +
+        assertEquals("CREATE TABLE IF NOT EXISTS Person (" +
                 "id TEXT PRIMARY KEY NOT NULL, " +
+                "age INTEGER, " +
+                "firstName TEXT NOT NULL, " +
                 "lastName TEXT NOT NULL);", sqlCommand.sqlStatement());
     }
 

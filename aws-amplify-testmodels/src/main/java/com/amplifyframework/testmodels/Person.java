@@ -17,7 +17,7 @@ package com.amplifyframework.testmodels;
 
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
+import com.amplifyframework.AmplifyRuntimeException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import java.util.Date;
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -32,7 +33,7 @@ import java.util.UUID;
  */
 @SuppressWarnings("all")
 @ModelConfig(targetName = "Person")
-@Index(fields = {"first_name", "age"}, name = "firstNameBasedIndex")
+@Index(fields = {"first_name", "age"}, name = "first_name_and_age_based_index")
 public final class Person implements Model {
     // Constant QueryFields for each property in this model to be used for constructing conditions
     public static final QueryField ID = QueryField.field("id");
@@ -83,48 +84,61 @@ public final class Person implements Model {
     }
 
     /**
-     * Returns id.
-     * @return id.
+     * Returns an instance of the pre-set builder to update values with.
+     * @return an instance of the pre-set builder to update values with.
+     */
+    public NewBuilder newBuilder() {
+        return new NewBuilder(id,
+                first_name,
+                last_name,
+                age,
+                dob,
+                relationship);
+    }
+
+    /**
+     * Returns the person's id.
+     * @return The person's id.
      */
     public String getId() {
         return id;
     }
 
     /**
-     * Returns first_name.
-     * @return first_name.
+     * Returns the person's first name.
+     * @return The person's first name.
      */
     public String getFirstName() {
         return first_name;
     }
 
     /**
-     * Returns last_name.
-     * @return last_name.
+     * Returns the person's last name.
+     * @return The person's last name.
      */
     public String getLastName() {
         return last_name;
     }
 
     /**
-     * Returns age.
-     * @return age.
+     * Returns the person's age.
+     * @return The person's age.
      */
     public Integer getAge() {
         return age;
     }
 
     /**
-     * Returns dob.
-     * @return dob.
+     * Returns the person's date of birth.
+     * @return date of birth.
      */
     public Date getDob() {
         return dob;
     }
 
     /**
-     * Returns relationship.
-     * @return relationship.
+     * Returns the person's relationship status.
+     * @return relationship status.
      */
     public MaritalStatus getRelationship() {
         return relationship;
@@ -161,27 +175,27 @@ public final class Person implements Model {
     }
 
     /**
-     * Interface for required first_name step.
+     * Interface for required firstName step.
      */
     public interface FirstNameStep {
         /**
-         * Set first_name.
-         * @param first_name first_name.
+         * Set the person's first name.
+         * @param firstName The person's first name.
          * @return next step.
          */
-        LastNameStep firstName(String first_name);
+        LastNameStep firstName(String firstName);
     }
 
     /**
-     * Interface for last_name step.
+     * Interface for lastName step.
      */
     public interface LastNameStep {
         /**
-         * Set last_name.
-         * @param last_name last_name.
+         * Set the person's last name.
+         * @param lastName The person's last name.
          * @return next step.
          */
-        FinalStep lastName(String last_name);
+        FinalStep lastName(String lastName);
     }
 
     /**
@@ -189,30 +203,30 @@ public final class Person implements Model {
      */
     public interface FinalStep {
         /**
-         * Set id.
-         * @param id id.
+         * Set the person's id.
+         * @param id The person's id.
          * @return next step.
-         * @throws AmplifyException Checks that ID is in the proper format
+         * @throws AmplifyRuntimeException Checks that ID is in the proper format
          */
-        FinalStep id(String id) throws AmplifyException;
+        FinalStep id(String id) throws AmplifyRuntimeException;
 
         /**
-         * Set age.
-         * @param age age.
+         * Set the person's age.
+         * @param age The person's age.
          * @return next step.
          */
         FinalStep age(Integer age);
 
         /**
-         * Set dob.
-         * @param dob dob.
+         * Set the person's date of birth.
+         * @param dob The person's date of birth.
          * @return next step.
          */
         FinalStep dob(Date dob);
 
         /**
-         * Set relationship.
-         * @param relationship relationship.
+         * Set the person's relationship status.
+         * @param relationship The person's relationship.
          * @return next step.
          */
         FinalStep relationship(MaritalStatus relationship);
@@ -227,7 +241,7 @@ public final class Person implements Model {
     /**
      * Builder to build the Person object.
      */
-    public static final class Builder implements
+    private static class Builder implements
             FirstNameStep, LastNameStep, FinalStep {
         private String id;
         private String first_name;
@@ -241,15 +255,16 @@ public final class Person implements Model {
          *          This should only be set when referring to an already existing object.
          * @param id id
          * @return Current Builder instance, for fluent method chaining
-         * @throws AmplifyException Checks that ID is in the proper format
+         * @throws AmplifyRuntimeException Checks that ID is in the proper format
          */
-        public FinalStep id(String id) throws AmplifyException {
+        public FinalStep id(String id) throws AmplifyRuntimeException {
+            Objects.requireNonNull(id);
             this.id = id;
 
             try {
                 UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
             } catch (Exception exception) {
-                throw new AmplifyException("Model IDs must be unique in the format of UUID.",
+                throw new AmplifyRuntimeException("Model IDs must be unique in the format of UUID.",
                         exception,
                         "If you are creating a new object, leave ID blank and one will be autogenerated for you. " +
                                 "Otherwise, if you are referencing an existing object, be sure you are getting the correct " +
@@ -262,28 +277,30 @@ public final class Person implements Model {
         }
 
         /**
-         * Set first_name.
-         * @param first_name first_name
+         * Sets the person's first name.
+         * @param firstName The person's first name.
          * @return Current Builder instance, for fluent method chaining
          */
         public LastNameStep firstName(String first_name) {
+            Objects.requireNonNull(first_name);
             this.first_name = first_name;
             return this;
         }
 
         /**
-         * Set last_name.
-         * @param last_name last_name
+         * Sets the person's last name.
+         * @param lastName The person's last name.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep lastName(String last_name) {
+            Objects.requireNonNull(last_name);
             this.last_name = last_name;
             return this;
         }
 
         /**
-         * Set age.
-         * @param age age
+         * Sets the person's age.
+         * @param age The person's age
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep age(Integer age) {
@@ -292,18 +309,18 @@ public final class Person implements Model {
         }
 
         /**
-         * Set dob.
-         * @param dob dob.
+         * Sets the person's date of birth.
+         * @param dob The person's date of birth.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep dob(Date dob) {
-            this.dob = new Date(dob.getTime());
+            this.dob = dob == null ? null : new Date(dob.getTime());
             return this;
         }
 
         /**
-         * Set relationship.
-         * @param relationship relationship.
+         * Sets the person's relationship status.
+         * @param relationship The person's relationship status.
          * @return Current Builder instance, for fluent method chaining
          */
         public FinalStep relationship(MaritalStatus relationship) {
@@ -325,6 +342,55 @@ public final class Person implements Model {
                     age,
                     dob,
                     relationship);
+        }
+    }
+
+    /**
+     * New Builder to update the Person object.
+     */
+    public final class NewBuilder extends Builder {
+        private NewBuilder(String id,
+                String first_name,
+                String last_name,
+                Integer age,
+                Date dob,
+                MaritalStatus relationship) {
+            super.id(id);
+            super.firstName(first_name)
+                    .lastName(last_name)
+                    .age(age)
+                    .dob(dob)
+                    .relationship(relationship);
+        }
+
+        @Override
+        public NewBuilder id(String id) throws AmplifyRuntimeException {
+            return (NewBuilder) super.id(id);
+        }
+
+        @Override
+        public NewBuilder firstName(String first_name) {
+            return (NewBuilder) super.firstName(first_name);
+        }
+
+        @Override
+        public NewBuilder lastName(String last_name) {
+            return (NewBuilder) super.lastName(last_name);
+        }
+
+        @Override
+        public NewBuilder age(Integer age) {
+            return (NewBuilder) super.age(age);
+        }
+
+        @Override
+        public NewBuilder dob(Date dob) {
+            return (NewBuilder) super.dob(dob);
+        }
+
+        @Override
+        public NewBuilder relationship(MaritalStatus relationship) {
+            return (NewBuilder) super.relationship(relationship);
         }
     }
 }

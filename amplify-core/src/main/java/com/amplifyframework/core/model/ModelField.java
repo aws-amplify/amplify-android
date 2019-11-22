@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Represents a field of the {@link Model} class.
@@ -25,6 +26,10 @@ public final class ModelField {
     // Name of the field is the name of the instance variable
     // of the Model class.
     private final String name;
+
+    // Type of the field is the data type of the instance variables
+    // of the Model class.
+    private final String type;
 
     // Name of the field in the target. For example: name of the
     // field in the GraphQL target.
@@ -41,27 +46,28 @@ public final class ModelField {
     // targetType and True if it is an array targetType.
     private final boolean isArray;
 
+    // True if the field is an enumeration type.
+    private final boolean isEnum;
+
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
 
     // Type of foreign key model that this field identifies.
     private final String belongsTo;
 
-    // Name of the Model that this field is connecting to.
-    private final ModelConnection connection;
-
     /**
      * Construct the ModelField object from the builder.
      */
     private ModelField(@NonNull ModelFieldBuilder builder) {
         this.name = builder.name;
+        this.type = builder.type;
         this.targetName = builder.targetName;
         this.targetType = builder.targetType;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
+        this.isEnum = builder.isEnum;
         this.isPrimaryKey = builder.isPrimaryKey;
         this.belongsTo = builder.belongsTo;
-        this.connection = builder.connection;
     }
 
     /**
@@ -116,6 +122,15 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is Enum.
+     *
+     * @return true if the field's target type is Enum.
+     */
+    public boolean isEnum() {
+        return isEnum;
+    }
+
+    /**
      * Returns true if the field is a primary key in the Model.
      * @return True if the field is a primary key in the Model.
      */
@@ -139,20 +154,75 @@ public final class ModelField {
         return belongsTo;
     }
 
-    /**
-     * Returns the Model Connection metadata of this field.
-     * @return The Model Connection metadata of this field.
-     */
-    public ModelConnection getConnection() {
-        return connection;
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ModelField that = (ModelField) thatObject;
+
+        if (isRequired != that.isRequired) {
+            return false;
+        }
+        if (isArray != that.isArray) {
+            return false;
+        }
+        if (isEnum != that.isEnum) {
+            return false;
+        }
+        if (isPrimaryKey != that.isPrimaryKey) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(name, that.name)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(type, that.type)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(targetName, that.targetName)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(targetType, that.targetType)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(belongsTo, that.belongsTo)) {
+            return false;
+        }
+        return true;
     }
 
-    /**
-     * Returns true if this ModelField is connected to an other Model.
-     * @return True if this ModelField is connected to an other Model.
-     */
-    public boolean isConnected() {
-        return connection != null;
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
+        result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
+        result = 31 * result + (isRequired ? 1 : 0);
+        result = 31 * result + (isArray ? 1 : 0);
+        result = 31 * result + (isEnum ? 1 : 0);
+        result = 31 * result + (isPrimaryKey ? 1 : 0);
+        result = 31 * result + (belongsTo != null ? belongsTo.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ModelField{" +
+            "name='" + name + '\'' +
+            ", type='" + type + '\'' +
+            ", targetName='" + targetName + '\'' +
+            ", targetType='" + targetType + '\'' +
+            ", isRequired=" + isRequired +
+            ", isArray=" + isArray +
+            ", isEnum=" + isEnum +
+            ", isPrimaryKey=" + isPrimaryKey +
+            ", belongsTo='" + belongsTo + '\'' +
+            '}';
     }
 
     /**
@@ -162,6 +232,10 @@ public final class ModelField {
         // Name of the field is the name of the instance variable
         // of the Model class.
         private String name;
+
+        // Type of the field is the data type of the instance variables
+        // of the Model class.
+        private String type;
 
         // Name of the field in the target. For example: name of the
         // field in the GraphQL targetType.
@@ -177,14 +251,14 @@ public final class ModelField {
         // targetType and True if it is an array targetType.
         private boolean isArray = false;
 
+        // True if the field's target type is Enum.
+        private boolean isEnum = false;
+
         // True if the field is a primary key in the Model.
         private boolean isPrimaryKey = false;
 
         // Name of the model that this field identifies.
         private String belongsTo;
-
-        // The Model Connection metadata of this field.
-        private ModelConnection connection;
 
         /**
          * Set the name of the field.
@@ -193,6 +267,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        /**
+         * Set the type of the field.
+         * @param type Type of the field is the type of the instance variable of the Model class.
+         * @return the builder object
+         */
+        public ModelFieldBuilder type(String type) {
+            this.type = type;
             return this;
         }
 
@@ -240,6 +324,16 @@ public final class ModelField {
         }
 
         /**
+         * Sets a flag indicating whether or not the field's target type is an Enum.
+         * @param isEnum flag indicating if the field is an enum targetType
+         * @return the builder object
+         */
+        public ModelFieldBuilder isEnum(boolean isEnum) {
+            this.isEnum = isEnum;
+            return this;
+        }
+
+        /**
          * Set the flag indicating if the field is a primary key.
          * @param isPrimaryKey  True if the field is a primary key in the Model
          * @return the builder object
@@ -256,16 +350,6 @@ public final class ModelField {
          */
         public ModelFieldBuilder belongsTo(String belongsTo) {
             this.belongsTo = belongsTo;
-            return this;
-        }
-
-        /**
-         * Set the Model Connection metadata of this field.
-         * @param connection The Model Connection metadata of this field.
-         * @return the builder object
-         */
-        public ModelFieldBuilder connection(ModelConnection connection) {
-            this.connection = connection;
             return this;
         }
 
