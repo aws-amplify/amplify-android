@@ -207,11 +207,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .getPrimaryKey()
                     .getName();
 
-            stringBuilder.append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
-                    .append("(" + connectionName + ")")
-                    .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
-                    .append(connectionTarget)
-                    .append("(" + connectionId + ")");
+            stringBuilder
+                .append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
+                .append("(")
+                .append(connectionName)
+                .append(")")
+                .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
+                .append(connectionTarget).append("(").append(connectionId).append(")");
 
             if (foreignKeyIterator.hasNext()) {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);

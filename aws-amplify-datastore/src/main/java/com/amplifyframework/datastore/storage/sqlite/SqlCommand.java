@@ -17,6 +17,10 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
+
+import java.util.Objects;
 
 /**
  * An encapsulation of the information required to
@@ -43,9 +47,7 @@ final class SqlCommand {
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement) {
-        this.tableName = tableName;
-        this.sqlStatement = sqlStatement;
-        this.compiledSqlStatement = null;
+        this(tableName, sqlStatement, null);
     }
 
     /**
@@ -58,9 +60,9 @@ final class SqlCommand {
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
-               @NonNull SQLiteStatement compiledSqlStatement) {
-        this.tableName = tableName;
-        this.sqlStatement = sqlStatement;
+               @Nullable SQLiteStatement compiledSqlStatement) {
+        this.tableName = Objects.requireNonNull(tableName);
+        this.sqlStatement = Objects.requireNonNull(sqlStatement);
         this.compiledSqlStatement = compiledSqlStatement;
     }
 
@@ -98,5 +100,43 @@ final class SqlCommand {
      */
     boolean hasCompiledSqlStatement() {
         return compiledSqlStatement != null;
+    }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        SqlCommand that = (SqlCommand) thatObject;
+
+        if (!ObjectsCompat.equals(tableName, that.tableName)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(sqlStatement, that.sqlStatement)) {
+            return false;
+        }
+        return ObjectsCompat.equals(compiledSqlStatement, that.compiledSqlStatement);
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Override
+    public int hashCode() {
+        int result = tableName != null ? tableName.hashCode() : 0;
+        result = 31 * result + (sqlStatement != null ? sqlStatement.hashCode() : 0);
+        result = 31 * result + (compiledSqlStatement != null ? compiledSqlStatement.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "SqlCommand{" +
+            "tableName='" + tableName + '\'' +
+            ", sqlStatement='" + sqlStatement + '\'' +
+            ", compiledSqlStatement=" + compiledSqlStatement +
+            '}';
     }
 }

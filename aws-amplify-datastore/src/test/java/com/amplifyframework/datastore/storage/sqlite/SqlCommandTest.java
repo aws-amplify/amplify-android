@@ -20,6 +20,7 @@ import android.os.Build;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -130,5 +131,23 @@ public class SqlCommandTest {
                 .targetType("Int")
                 .build());
         return fields;
+    }
+
+    /**
+     * Tests that a CREATE index command is correctly constructs for the
+     * {@link StorageItemChange.Record}.
+     */
+    @Test
+    public void createIndexForStorageItemChangeRecord() {
+        assertEquals(
+            // expected
+            new SqlCommand(
+                "Record",
+                "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
+            ),
+            // actual
+            SQLiteCommandFactory.getInstance()
+                .createIndexFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+        );
     }
 }

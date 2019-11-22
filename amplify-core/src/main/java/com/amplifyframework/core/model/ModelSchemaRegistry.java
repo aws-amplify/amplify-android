@@ -77,4 +77,11 @@ public final class ModelSchemaRegistry {
         }
         return singleton;
     }
+
+    /**
+     * Clears the registry.
+     */
+    public void clear() {
+        this.modelSchemaMap.clear();
+    }
 }

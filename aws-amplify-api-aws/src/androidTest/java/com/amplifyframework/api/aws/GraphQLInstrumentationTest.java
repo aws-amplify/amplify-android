@@ -142,7 +142,8 @@ public final class GraphQLInstrumentationTest {
             ),
             creationListener
         );
-        GraphQLResponse<Comment> response = creationListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<Comment> response =
+            creationListener.awaitTerminalEvent().assertResponse().getResponse();
         assertFalse(response.hasErrors());
         assertTrue(response.hasData());
         Comment comment = response.getData();

@@ -50,6 +50,7 @@ public final class GraphQLResponse<T> {
      * Gets the error response.
      * @return wrapper containing error details
      */
+    @NonNull // The list is non-null, but hopefully empty!
     public List<Error> getErrors() {
         return errors;
     }
