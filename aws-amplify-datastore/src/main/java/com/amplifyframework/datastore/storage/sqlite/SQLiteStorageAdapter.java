@@ -216,7 +216,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "found for the Model: " + modelSchema.getName());
                     }
 
-                    saveModel(model, modelSchema, sqlCommand);
+                    saveModel(model, modelSchema, sqlCommand, MutationEvent.MutationType.UPDATE);
                     mutationEvent = MutationEvent.<T>builder()
                             .data(model)
                             .dataClass((Class<T>) model.getClass())
@@ -231,7 +231,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "found for the Model: " + modelSchema.getName());
                     }
 
-                    saveModel(model, modelSchema, sqlCommand);
+                    saveModel(model, modelSchema, sqlCommand, MutationEvent.MutationType.INSERT);
                     mutationEvent = MutationEvent.<T>builder()
                             .data(model)
                             .dataClass((Class<T>) model.getClass())
@@ -254,7 +254,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private <T extends Model> void saveModel(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            @NonNull SqlCommand sqlCommand) throws IllegalAccessException {
+            @NonNull SqlCommand sqlCommand,
+            MutationEvent.MutationType mutationType) throws IllegalAccessException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);
@@ -268,7 +269,17 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
             preCompiledInsertStatement.clearBindings();
             bindPreparedSQLStatementWithValues(model, sqlCommand);
-            preCompiledInsertStatement.executeInsert();
+            switch (mutationType) {
+                case INSERT:
+                    preCompiledInsertStatement.executeInsert();
+                    break;
+                case UPDATE:
+                case DELETE:
+                    preCompiledInsertStatement.executeUpdateDelete();
+                    break;
+                default:
+                    throw new DataStoreException("Unsupported MutationType: " + mutationType);
+            }
             preCompiledInsertStatement.clearBindings();
         }
 
@@ -360,9 +371,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
         for (Class<? extends Model> model: models) {
-            final ModelSchema modelSchema = modelSchemaRegistry
-                    .getModelSchemaForModelClass(model.getSimpleName());
-            sqlCommandFactory.createTableFor(modelSchema);
+            final ModelSchema modelSchema =
+                modelSchemaRegistry.getModelSchemaForModelClass(model.getSimpleName());
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
             createIndexCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
         }
@@ -408,7 +418,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final int columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
             if (fieldValue == null) {
                 preCompiledInsertStatement.bindNull(columnIndex);
-                return;
+                continue;
             }
 
             JavaFieldType javaFieldType = Enum.class.isAssignableFrom(field.getType())
@@ -490,7 +500,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     case ENUM:
                         String stringValueFromCursor = cursor.getString(columnIndex);
                         Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
-                        mapForModel.put(fieldName, gson.getAdapter(enumType).fromJson(stringValueFromCursor));
+                        Object enumValue = gson.getAdapter(enumType).fromJson(stringValueFromCursor);
+                        mapForModel.put(fieldName, enumValue);
                         break;
                     case INTEGER:
                         mapForModel.put(fieldName, cursor.getInt(columnIndex));

@@ -36,6 +36,7 @@ import com.amplifyframework.testutils.LatchedResultListener;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.DateFormat;
@@ -59,7 +60,7 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterInstrumentedTest {
 
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000 * 1000;
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
@@ -112,6 +113,43 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert that save stores data in the SQLite database correctly.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelUpdatesData() {
+        final Person person = Person.builder()
+                .firstName("Raphael")
+                .lastName("Kim")
+                .age(23)
+                .build();
+        assertEquals(person, saveModel(person));
+
+        final Person newPerson = person.newBuilder()
+                .firstName("Raph")
+                .build();
+        assertEquals(newPerson, saveModel(newPerson));
+        Iterator<Person> iterator = queryModel(Person.class);
+        while (iterator.hasNext()) {
+            Person p = iterator.next();
+            Log.d(TAG, p.toString());
+        }
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("Raph",
+                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
+            assertEquals("Kim",
+                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
+            assertEquals(23,
+                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Assert that save stores data in the SQLite database correctly.
      *
      * @throws ParseException when the date cannot be parsed.
      */
@@ -144,23 +182,33 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert that save updates data in the SQLite database correctly.
+     * Assert that save stores data in the SQLite database correctly
+     * even if some optional values are null.
      *
      * @throws ParseException when the date cannot be parsed.
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelUpdatesData() throws ParseException {
+    public void saveModelWithNullsInsertsData() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
-                .age(41)
-                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .relationship(MaritalStatus.single)
                 .build();
         assertEquals(person, saveModel(person));
 
-        
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("Alan",
+                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
+            assertEquals("Turing",
+                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
+            assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("age")));
+            assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("dob")));
+            assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("relationship")));
+        }
+        cursor.close();
     }
 
     /**

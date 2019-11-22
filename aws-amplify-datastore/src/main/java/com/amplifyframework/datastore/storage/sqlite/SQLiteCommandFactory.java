@@ -26,12 +26,13 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.SqliteDataType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.util.StringUtils;
 
 import java.util.Iterator;
-import java.util.Map;
+import java.util.List;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -131,10 +132,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append("INSERT INTO ");
         stringBuilder.append(tableName);
         stringBuilder.append(" (");
-        final Map<String, ModelField> fields = modelSchema.getFields();
-        final Iterator<String> fieldsIterator = fields.keySet().iterator();
+        final List<ModelField> fields = modelSchema.getSortedFields();
+        final Iterator<ModelField> fieldsIterator = fields.iterator();
         while (fieldsIterator.hasNext()) {
-            final String fieldName = fieldsIterator.next();
+            final String fieldName = fieldsIterator.next().getName();
             stringBuilder.append(fieldName);
             if (fieldsIterator.hasNext()) {
                 stringBuilder.append(", ");
@@ -174,14 +175,12 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append("UPDATE ")
                 .append(tableName)
                 .append(" SET ");
-        final Map<String, ModelField> fields = modelSchema.getFields();
-        final Iterator<Map.Entry<String, ModelField>> fieldsIterator = fields.entrySet().iterator();
+        final List<ModelField> fields = modelSchema.getSortedFields();
+        final Iterator<ModelField> fieldsIterator = fields.iterator();
         while (fieldsIterator.hasNext()) {
-            final Map.Entry<String, ModelField> fieldEntry = fieldsIterator.next();
-            String fieldName = fieldEntry.getKey();
-            ModelField modelField = fieldEntry.getValue();
-            if (!modelField.isPrimaryKey()) {
-                stringBuilder.append(fieldName).append(" = ?");
+            final ModelField field = fieldsIterator.next();
+            if (!field.isPrimaryKey()) {
+                stringBuilder.append(field.getName()).append(" = ?");
                 if (fieldsIterator.hasNext()) {
                     stringBuilder.append(", ");
                 }
@@ -209,32 +208,28 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to append columns in CREATE TABLE
-    private void appendColumns(@NonNull StringBuilder stringBuilder,
-                               @NonNull ModelSchema modelSchema) {
-        final Iterator<Map.Entry<String, ModelField>> modelFieldMapIterator =
-                modelSchema.getFields().entrySet().iterator();
-        while (modelFieldMapIterator.hasNext()) {
-            final Map.Entry<String, ModelField> entry = modelFieldMapIterator.next();
-            final String modelFieldName = entry.getKey();
-            final ModelField modelField = entry.getValue();
+    private void appendColumns(StringBuilder stringBuilder, ModelSchema modelSchema) {
+        final Iterator<ModelField> fieldsIterator = modelSchema.getSortedFields().iterator();
+        while (fieldsIterator.hasNext()) {
+            final ModelField field = fieldsIterator.next();
+            final String fieldName = field.getName();
 
-            SqliteDataType sqliteDataType = modelField.isEnum()
-                    ? TypeConverter.getSqlTypeForGraphQLType("Enum")
-                    : TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType());
-            stringBuilder.append(modelFieldName)
+            SqliteDataType sqliteDataType = field.isEnum()
+                    ? TypeConverter.getSqlTypeForJavaType(JavaFieldType.ENUM.stringValue())
+                    : TypeConverter.getSqlTypeForGraphQLType(field.getTargetType());
+            stringBuilder.append(fieldName)
                     .append(SQLITE_COMMAND_DELIMITER)
-                    .append(sqliteDataType.getSqliteDataType())
-                    .append(SQLITE_COMMAND_DELIMITER);
+                    .append(sqliteDataType.getSqliteDataType());
 
-            if (modelField.isPrimaryKey()) {
-                stringBuilder.append("PRIMARY KEY" + SQLITE_COMMAND_DELIMITER);
+            if (field.isPrimaryKey()) {
+                stringBuilder.append(SQLITE_COMMAND_DELIMITER + "PRIMARY KEY");
             }
 
-            if (modelField.isRequired()) {
-                stringBuilder.append("NOT NULL");
+            if (field.isRequired()) {
+                stringBuilder.append(SQLITE_COMMAND_DELIMITER + "NOT NULL");
             }
 
-            if (modelFieldMapIterator.hasNext()) {
+            if (fieldsIterator.hasNext()) {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
             }
         }
@@ -245,7 +240,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                                    @NonNull ModelSchema modelSchema) {
         final Iterator<ModelField> foreignKeyIterator = modelSchema.getForeignKeys().iterator();
         while (foreignKeyIterator.hasNext()) {
-            ModelField foreignKey = foreignKeyIterator.next();
+            final ModelField foreignKey = foreignKeyIterator.next();
+
             String connectionName = foreignKey.getName();
             String connectionTarget = foreignKey.belongsTo();
             String connectionId = ModelSchemaRegistry.singleton()
