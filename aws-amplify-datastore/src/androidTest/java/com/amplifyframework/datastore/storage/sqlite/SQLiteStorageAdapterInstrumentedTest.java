@@ -26,7 +26,8 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
-import com.amplifyframework.datastore.MutationEvent;
+import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.Car;
 import com.amplifyframework.testmodels.MaritalStatus;
@@ -86,10 +87,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         context = ApplicationProvider.getApplicationContext();
         deleteDatabase();
 
-        sqLiteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
+        sqLiteStorageAdapter = SQLiteStorageAdapter.create();
 
         LatchedResultListener<List<ModelSchema>> setupListener =
-            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
 
         sqLiteStorageAdapter.initialize(
             context,
@@ -112,14 +113,13 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert that save stores data in the SQLite database correctly.
+     * Assert that save stores item in the SQLite database correctly.
      *
-     * @throws ParseException when the date cannot be parsed.
      */
     @SuppressWarnings("MagicNumber")
     @Test
     @Ignore("Update is not implemented yet.")
-    public void saveModelUpdatesData() throws ParseException {
+    public void saveModelUpdatesData() {
         final Person person = Person.builder()
                 .firstName("Raphael")
                 .lastName("Kim")
@@ -183,11 +183,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Assert that save stores data in the SQLite database correctly
      * even if some optional values are null.
      *
-     * @throws ParseException when the date cannot be parsed.
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithNullsInsertsData() throws ParseException {
+    public void saveModelWithNullsInsertsData() {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -210,7 +209,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Test querying the saved data in the SQLite database.
+     * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
      */
@@ -236,7 +235,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Test querying the saved data in the SQLite database.
+     * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
      */
@@ -305,13 +304,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert that foreign key constraint is enforced.
-     *
      * @throws ParseException when the date cannot be parsed.
-     * @throws InterruptedException when the waiting for save is interrupted.
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithInvalidForeignKey() throws ParseException, InterruptedException {
+    public void saveModelWithInvalidForeignKey() throws ParseException {
         final String expectedError = "FOREIGN KEY constraint failed";
 
         final Person person = Person.builder()
@@ -328,11 +325,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .personId(UUID.randomUUID().toString())
                 .build();
 
-        LatchedResultListener<MutationEvent<Car>> carSaveListener =
-            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
-        sqLiteStorageAdapter.save(car, carSaveListener);
+        LatchedResultListener<StorageItemChange.Record> carSaveListener =
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
 
-        Throwable actualError = carSaveListener.awaitTerminalEvent().getError();
+        Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
         assertNotNull(actualError);
         assertNotNull(actualError.getCause());
         assertNotNull(actualError.getCause().getMessage());
@@ -340,20 +337,23 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     private <T extends Model> T saveModel(@NonNull T model) {
-        LatchedResultListener<MutationEvent<T>> saveListener =
-            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
-        sqLiteStorageAdapter.save(model, saveListener);
-        return saveListener.awaitTerminalEvent().assertNoError().getResult().data();
+        LatchedResultListener<StorageItemChange.Record> saveListener =
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+        sqLiteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
+        return saveListener.awaitTerminalEvent().assertNoError().getResult()
+            .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
+            .item();
     }
 
+    @SuppressWarnings("SameParameterValue")
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
         LatchedResultListener<Iterator<T>> queryResultListener =
-            new LatchedResultListener<>(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
         sqLiteStorageAdapter.query(modelClass, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
     }
 
     private void deleteDatabase() {
-        context.deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
+        context.deleteDatabase("AmplifyDatastore.db");
     }
 }

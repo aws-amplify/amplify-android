@@ -42,7 +42,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class AWSDataStorePluginInstrumentedTest {
 
-    private static final long DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final long DATA_STORE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
 
@@ -87,7 +87,7 @@ public final class AWSDataStorePluginInstrumentedTest {
     @Test
     public void testSetUp() {
         final LatchedResultListener<List<ModelSchema>> schemaListener =
-            new LatchedResultListener<>(DATASTORE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(DATA_STORE_OPERATION_TIMEOUT_IN_MILLISECONDS);
 
         ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
 

@@ -22,7 +22,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.MutationEvent;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -38,11 +37,13 @@ import io.reactivex.subjects.PublishSubject;
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     private final List<Model> items;
-    private final PublishSubject<MutationEvent<?>> publishSubject;
+    private final PublishSubject<StorageItemChange.Record> changeRecordStream;
+    private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     private InMemoryStorageAdapter() {
-        items = new ArrayList<>();
-        publishSubject = PublishSubject.create();
+        this.items = new ArrayList<>();
+        this.changeRecordStream = PublishSubject.create();
+        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
 
     /**
@@ -53,91 +54,79 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         return new InMemoryStorageAdapter();
     }
 
-    /**
-     * Setup the storage engine with the models.
-     * For each {@link Model}, construct a
-     * {@link ModelSchema}
-     * and setup the necessities for persisting a {@link Model}.
-     * This initialize is a pre-requisite for all other operations
-     * of a LocalStorageAdapter.
-     *
-     * @param context  Android application context required to
-     *                 interact with a storage mechanism in Android.
-     * @param modelProvider   container of all Model classes
-     * @param listener the listener to be invoked to notify completion
-     *                 of the initialize.
-     */
     @Override
-    public void initialize(@NonNull Context context,
-                           @NonNull ModelProvider modelProvider,
-                           @NonNull ResultListener<List<ModelSchema>> listener) {
-
+    public void initialize(
+            @NonNull Context context,
+            @NonNull ModelProvider modelProvider,
+            @NonNull ResultListener<List<ModelSchema>> listener) {
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
-    public <T extends Model> void save(@NonNull final T item,
-                     @NonNull final ResultListener<MutationEvent<T>> listener) {
+    public <T extends Model> void save(
+            @NonNull final T item,
+            @NonNull final StorageItemChange.Initiator initiator,
+            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener) {
         items.add(item);
-        MutationEvent<T> mutation = MutationEvent.<T>builder()
-            .data(item)
-            .dataClass((Class<T>) item.getClass())
-            .mutationType(MutationEvent.MutationType.INSERT)
-            .source(MutationEvent.Source.DATA_STORE)
-            .build();
-        publishSubject.onNext(mutation);
-        listener.onResult(mutation);
+        StorageItemChange.Record save = StorageItemChange.<T>builder()
+            .item(item)
+            .itemClass((Class<T>) item.getClass())
+            .type(StorageItemChange.Type.SAVE)
+            .initiator(initiator)
+            .build()
+            .toRecord(storageItemChangeConverter);
+        changeRecordStream.onNext(save);
+        itemSaveListener.onResult(save);
     }
 
     @SuppressWarnings("unchecked") // (T) item *is* checked, via isAssignableFrom().
     @Override
     public <T extends Model> void query(
-            @NonNull final Class<T> queryClass,
-            @NonNull final ResultListener<Iterator<T>> listener) {
+            @NonNull final Class<T> itemClass,
+            @NonNull final ResultListener<Iterator<T>> queryResultsListener) {
 
         List<T> result = new ArrayList<>();
         for (Model item : items) {
-            if (queryClass.isAssignableFrom((item.getClass()))) {
+            if (itemClass.isAssignableFrom((item.getClass()))) {
                 result.add((T) item);
             }
         }
-        listener.onResult(result.iterator());
+        queryResultsListener.onResult(result.iterator());
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void delete(
             @NonNull final T item,
-            @NonNull final ResultListener<MutationEvent<T>> listener) {
+            @NonNull final StorageItemChange.Initiator initiator,
+            @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener) {
 
         while (items.iterator().hasNext()) {
             Model next = items.iterator().next();
             if (next.equals(item)) {
                 items.remove(item);
-                MutationEvent<T> mutation = MutationEvent.<T>builder()
-                    .data(item)
-                    .dataClass((Class<T>) item.getClass())
-                    .mutationType(MutationEvent.MutationType.DELETE)
-                    .source(MutationEvent.Source.DATA_STORE)
-                    .build();
-                listener.onResult(mutation);
-                publishSubject.onNext(mutation);
+                StorageItemChange.Record deletion = StorageItemChange.<T>builder()
+                    .item(item)
+                    .itemClass((Class<T>) item.getClass())
+                    .type(StorageItemChange.Type.DELETE)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+                itemDeletionListener.onResult(deletion);
+                changeRecordStream.onNext(deletion);
             }
         }
     }
 
     @Override
-    public Observable<MutationEvent<?>> observe() {
-        return publishSubject;
+    public Observable<StorageItemChange.Record> observe() {
+        return changeRecordStream;
     }
 
-    /**
-     * Closes the database connection and all resources associated with database.
-     */
     @Override
     public void terminate() {
         items.clear();
-        publishSubject.onComplete();
+        changeRecordStream.onComplete();
     }
 
     /**

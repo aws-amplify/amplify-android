@@ -21,12 +21,16 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.MutationEvent;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicates;
+import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 
-import java.util.Collections;
 import java.util.Objects;
 
 import io.reactivex.Single;
@@ -36,36 +40,52 @@ import io.reactivex.schedulers.Schedulers;
 /**
  * Synchronizes changed data between the {@link LocalStorageAdapter}
  * and a GraphQL API.
+ *
+ * The SyncEngine will monitor changes in the {@link LocalStorageAdapter}, and record
+ * them into a {@link StorageItemChangeJournal}. The journal is persistent. Its purpose is
+ * to be durable to application and network failures, and to allow the SyncEngine to retry
+ * publication to a remote system, upon restart.
+ *
+ * At the same time, the SyncEngine will drain this journal, and try to publish each
+ * change out over the network via the
+ * {@link ApiCategoryBehavior#mutate(String, Model, QueryPredicate, MutationType, ResultListener)} .
+ *
+ * Meanwhile, the SyncEngine also subscribes to remote changes via the
+ * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, StreamListener)} operations.
+ * Remote changes are written into the local storage without going into the journal.
  */
+// The generics get intense, so we use MODEL and SIC instead of just M and S.
+@SuppressWarnings("checkstyle:MethodTypeParameterName")
 public final class SyncEngine {
     private static final String TAG = SyncEngine.class.getName();
 
     private final ApiCategoryBehavior api;
     private final String apiName;
     private final LocalStorageAdapter storageAdapter;
-    private final OutgoingMutationsQueue outgoingMutationsQueue;
+    private final StorageItemChangeJournal storageItemChangeJournal;
     private final CompositeDisposable observationsToDispose;
+    private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     /**
      * Constructs a new SyncEngine. This sync engine will
-     * synchronized data between the provided API and the provided
+     * synchronize data between the provided API and the provided
      * {@link LocalStorageAdapter}.
      * @param api Interface to a remote GraphQL endpoint
      * @param apiName The name of the configured GraphQL endpoint API
-     * @param storageAdapter Interface to a local data cache
-     * @param outgoingMutationsQueue A queue into which mutation events are
-     *                      stored durably until being writ to network
+     * @param storageAdapter Interface to local storage, used to
+     *                       durably store offline changes until
+     *                       then can be written to the network
      */
-    SyncEngine(
-            @NonNull ApiCategoryBehavior api,
-            @NonNull String apiName,
-            @NonNull final LocalStorageAdapter storageAdapter,
-            @NonNull final OutgoingMutationsQueue outgoingMutationsQueue) {
+    public SyncEngine(
+        @NonNull ApiCategoryBehavior api,
+        @NonNull String apiName,
+        @NonNull final LocalStorageAdapter storageAdapter) {
         this.api = Objects.requireNonNull((api));
         this.apiName = Objects.requireNonNull(apiName);
         this.storageAdapter = Objects.requireNonNull(storageAdapter);
-        this.outgoingMutationsQueue = Objects.requireNonNull(outgoingMutationsQueue);
+        this.storageItemChangeJournal = new StorageItemChangeJournal(storageAdapter);
         this.observationsToDispose = new CompositeDisposable();
+        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
 
     /**
@@ -73,70 +93,76 @@ public final class SyncEngine {
      * and the remote GraphQL endpoint.
      */
     public void start() {
-        // Start by observing the mutation queue for locally-initiated changes
+        startDrainingChangeJournal();
+        startObservingStorageChanges();
+    }
+
+    /**
+     * Start observing the change journal for locally-initiated changes.
+     */
+    private void startDrainingChangeJournal() {
         observationsToDispose.add(
-            outgoingMutationsQueue.observe()
+            storageItemChangeJournal.observe()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .flatMapSingle(this::publishToNetwork)
-                .flatMapSingle(outgoingMutationsQueue::remove)
+                .flatMapSingle(storageItemChangeJournal::remove)
                 .subscribe(
-                    publishedMutationEvent -> Log.i(TAG, "Mutation successfully published! " + publishedMutationEvent),
-                    errorInQueue -> Log.w(TAG, "Error ended mutation queue subscription: ", errorInQueue),
-                    () -> Log.w(TAG, "Mutation queue subscription was completed.")
+                    processedChange -> Log.i(TAG, "Change processed successfully! " + processedChange),
+                    error -> Log.w(TAG, "Error ended journal subscription: ", error),
+                    () -> Log.w(TAG, "Change journal subscription was completed.")
                 )
         );
+    }
 
-        /*
-         * When a change is observed on the storage adapter,
-         * and that change wasn't caused by the sync engine,
-         * then place that change into a persistently-backed
-         * mutation queue.
-         */
+    /**
+     * When a change is observed on the storage adapter, and that change wasn't caused
+     * by the sync engine, then place that change into the persistently-backed change journal.
+     */
+    private void startObservingStorageChanges() {
         observationsToDispose.add(
             storageAdapter.observe()
-                .filter(possibleCycleEvent -> {
-                    // Don't continue if the event was caused by the sync engine itself
-                    return !MutationEvent.Source.SYNC_ENGINE.equals(possibleCycleEvent.source());
+                .map(record -> record.toStorageItemChange(storageItemChangeConverter))
+                .filter(possiblyCyclicChange -> {
+                    // Don't continue if the storage change was caused by the sync engine itself
+                    return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
                 })
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .flatMapSingle(outgoingMutationsQueue::enqueue)
+                .flatMapSingle(storageItemChangeJournal::enqueue)
                 .subscribe(
-                    externalMutationEvent -> Log.i(TAG, "Successfully enqueued " + externalMutationEvent),
-                    errorInAdapter -> Log.w(TAG, "Storage adapter subscription ended in error", errorInAdapter),
+                    pendingChange -> Log.i(TAG, "Successfully enqueued " + pendingChange),
+                    error -> Log.w(TAG, "Storage adapter subscription ended in error", error),
                     () -> Log.w(TAG, "Storage adapter subscription terminated with completion.")
                 )
         );
     }
 
-    /*
-     * To process a mutation event, we try to publish it to the remote GraphQL
-     * API. If that succeeds, then we can remove it from the queue. Otherwise,
-     * we have to keep the event in the queue, so that we can try to publish
+    /**
+     * To process a StorageItemChange, we try to publish it to the remote GraphQL
+     * API. If that succeeds, then we can remove it from the journal. Otherwise,
+     * we have to keep the journal in the journal, so that we can try to publish
      * it again later, when network conditions become favorable again.
+     * @param storageItemChange A storage item change to be published to remote API
+     * @return A single which completes with the successfully published item, or errors
+     *         if the publication fails
      */
-    @SuppressWarnings("unchecked") // mutationEvent.getClass() yields Class<?>, not Class<M>.
-    private <T extends Model, M extends MutationEvent<T>> Single<M> publishToNetwork(final M mutationEvent) {
+    private <MODEL extends Model, SIC extends StorageItemChange<MODEL>> Single<SIC> publishToNetwork(
+            final SIC storageItemChange) {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            GraphQLRequest<M> request = new GraphQLRequest<>(
-                MutationDocument.from(mutationEvent),
-                Collections.emptyMap(),
-                (Class<M>) mutationEvent.getClass(),
-                new GsonVariablesSerializer()
-            );
-
             api.mutate(
                 apiName,
-                request,
-                new ResultListener<GraphQLResponse<M>>() {
+                storageItemChange.item(),
+                QueryPredicates.matchAll(),
+                selectMutationType(storageItemChange),
+                new ResultListener<GraphQLResponse<MODEL>>() {
                     @Override
-                    public void onResult(final GraphQLResponse<M> result) {
+                    public void onResult(final GraphQLResponse<MODEL> result) {
                         if (result.hasErrors() || !result.hasData()) {
-                            subscriber.onError(new RuntimeException("Failed to publish data to network."));
+                            subscriber.onError(new RuntimeException("Failed to publish item to network."));
                         }
-                        subscriber.onSuccess(mutationEvent);
+                        subscriber.onSuccess(storageItemChange);
                     }
 
                     @Override
@@ -149,10 +175,20 @@ public final class SyncEngine {
     }
 
     /**
+     * Determines the appropriate mutation type for a StorageItemChange.
+     * @param storageItemChange A {@link StorageItemChange} to be published to network
+     * @return An appropriate {@link MutationType} for this storage item change
+     */
+    private static <T extends Model> MutationType selectMutationType(StorageItemChange<T> storageItemChange) {
+        // TODO: add business logic here, this should be update/delete sometimes.
+        return MutationType.CREATE;
+    }
+
+    /**
      * Stop synchronizing state between the local storage adapter
      * and a remote GraphQL endpoint.
      */
-    public void stop() {
+    void stop() {
         observationsToDispose.clear();
     }
 }

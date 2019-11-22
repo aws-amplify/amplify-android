@@ -74,8 +74,8 @@ public class SQLiteStorageHelperInstrumentedTest {
                         "CREATE TABLE IF NOT EXISTS Car (ID TEXT PRIMARY KEY, NAME TEXT NOT NULL);"));
         sqLiteStorageHelper = SQLiteStorageHelper.getInstance(
                 ApplicationProvider.getApplicationContext(),
-                SQLiteStorageAdapter.DATABASE_NAME,
-                SQLiteStorageAdapter.DATABASE_VERSION,
+                "AmplifyDatastore.db",
+                1,
                 new CreateSqlCommands(createTableCommands, Collections.emptySet()));
         sqLiteDatabase = sqLiteStorageHelper.getWritableDatabase();
     }
@@ -144,6 +144,6 @@ public class SQLiteStorageHelperInstrumentedTest {
 
     private void deleteDatabase() {
         ApplicationProvider.getApplicationContext()
-                .deleteDatabase(SQLiteStorageAdapter.DATABASE_NAME);
+                .deleteDatabase("AmplifyDatastore.db");
     }
 }

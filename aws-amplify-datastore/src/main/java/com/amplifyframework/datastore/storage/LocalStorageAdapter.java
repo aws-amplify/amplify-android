@@ -22,7 +22,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.MutationEvent;
 
 import java.util.Iterator;
 import java.util.List;
@@ -30,72 +29,83 @@ import java.util.List;
 import io.reactivex.Observable;
 
 /**
- * The interface that defines the contract for local storage
- * engine implementation.
+ * A LocalStorageAdapter provides a simple set of interactions to
+ * save, delete, query, and observe changes to object models. An instance of an
+ * object model is called an "item" in the storage.
+ *
+ * An implementation of a LocalStorageAdapter is intended to provide a durable
+ * local repository implementation, where item does not leave the device on which
+ * this software is running (item is "local" to the localhost).
+ *
+ * Plausible implementations of the LocalStorageAdapter might use SQLite, SharedPreferences,
+ * Room, Realm, Flat-file, in-memory, etc., etc.
  */
 public interface LocalStorageAdapter {
-    /**
-     * Setup the storage engine with the models.
-     * For each {@link Model}, construct a
-     * {@link com.amplifyframework.core.model.ModelSchema}
-     * and setup the necessities for persisting a {@link Model}.
-     * This initialize is a pre-requisite for all other operations
-     * of a LocalStorageAdapter.
-     *
-     * @param context Android application context required to
-     *                interact with a storage mechanism in Android.
-     * @param modelProvider container of all Model classes
-     * @param listener the listener to be invoked to notify completion
-     *                 of the initialize.
-     */
-    void initialize(@NonNull Context context,
-                    @NonNull ModelProvider modelProvider,
-                    @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
-     * Save a {@link Model} to the local storage engine.
-     * The {@link ResultListener} will be invoked when the
-     * save operation is completed to notify the success and
-     * failure.
+     * Initialize the storage engine s.t. it will be able to host models
+     * of the provided types. A {@link ModelSchema} will be generated for each
+     * {@link Model} provided by the {@link ModelProvider}.
      *
-     * @param model the Model object
-     * @param listener the listener to be invoked when the
-     *                 save operation is completed.
-     * @param <T> The class type of the item being stored
+     * This method must be called before any other method on the LocalStorageAdapter
+     * may be used. Only models that have been provided at initialization time are "in-play"
+     * for use with the LocalStorageAdapter. It is a user error to try to save/query/delete
+     * any model type that has not been initialized by this call.
+     *
+     * @param context An Android Context
+     * @param modelProvider Provides a collection of all Model classes used by the DataStore system
+     * @param initializationListener A listener to be invoked upon completion of the initialization
+     */
+    void initialize(
+            @NonNull Context context,
+            @NonNull ModelProvider modelProvider,
+            @NonNull ResultListener<List<ModelSchema>> initializationListener);
+
+    /**
+     * Save an item into local storage. The {@link ResultListener} will be invoked when the
+     * save operation is completed, to notify the caller of success or failure.
+     * @param item the item to save into the repository
+     * @param initiator An identification of the actor who initiated this save
+     * @param itemSaveListener A listener that will be invoked when the save terminates.
+     * @param <T> The type of the item being stored
      */
     <T extends Model> void save(
-            @NonNull T model,
-            @NonNull ResultListener<MutationEvent<T>> listener);
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener);
 
     /**
-     * Query the storage adapter for models of a given type.
-     * @param modelClass The class type of models for which to query
-     * @param listener A listener who will be notified of the result of the query
-     * @param <T> The type object for which the query is being performed
+     * Query the storage for items of a given type.
+     * @param itemClass Items that have this class will be solicited
+     * @param queryResultsListener A listener that will be notified when the query terminates
+     * @param <T> Type type of the items that are being queried
      */
     <T extends Model> void query(
-            @NonNull Class<T> modelClass,
-            @NonNull ResultListener<Iterator<T>> listener);
+            @NonNull Class<T> itemClass,
+            @NonNull ResultListener<Iterator<T>> queryResultsListener);
 
     /**
      * Deletes an item from storage.
      * @param item Item to delete
-     * @param listener Listener to callback with result
-     * @param <T> The class type of the item being deleted
+     * @param initiator An identification of the actor who initiated this deletion
+     * @param itemDeletionListener Listener that will be callback-ed when deletion terminates
+     * @param <T> The type of item being deleted
      */
     <T extends Model> void delete(
             @NonNull T item,
-            @NonNull ResultListener<MutationEvent<T>> listener);
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull ResultListener<StorageItemChange.Record> itemDeletionListener);
 
     /**
-     * Observe all mutations that occur on objects in the storage layer.
-     * @return An observable which emits a {@link MutationEvent} every time
-     *         any object managed by the storage adapter is mutated.
+     * Observe all changes to that occur to any/all objects in the storage.
+     * @return An observable which emits an {@link StorageItemChange} notification every time
+     *         any object managed by the storage adapter is changed in any way.
      */
-    Observable<MutationEvent<? extends Model>> observe();
+    Observable<StorageItemChange.Record> observe();
 
     /**
-     * Release all resources created by the storage engine.
+     * Terminate use of the local storage.
+     * This should release all resources used by the implementation.
      */
     void terminate();
 }
