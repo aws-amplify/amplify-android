@@ -39,7 +39,7 @@ public final class LatchedSingleResponseListener<T> implements ResultListener<Gr
      * @param waitTimeMs Latch will timeout after this many milliseconds
      */
     public LatchedSingleResponseListener(long waitTimeMs) {
-        this.latchedResultListener = new LatchedResultListener<>(waitTimeMs);
+        this.latchedResultListener = LatchedResultListener.waitFor(waitTimeMs);
     }
 
     /**
@@ -82,12 +82,23 @@ public final class LatchedSingleResponseListener<T> implements ResultListener<Gr
     }
 
     /**
+     * Asserts that this listener received a response.
+     * It is an usage error to call this before calling {@link #awaitTerminalEvent()}.
+     * @return Current {@link LatchedSingleResponseListener} instance for fluent call chaining
+     */
+    @NonNull
+    public LatchedSingleResponseListener<T> assertResponse() {
+        latchedResultListener.assertResult();
+        return this;
+    }
+
+    /**
      * Gets the value of the response, if present, as it had been received in
      * {@link #onResult(GraphQLResponse)}.
      * It is a usage error to call this before {@link #awaitTerminalEvent()}.
      * @return the value of the response that was received in the result callback.
      */
-    @Nullable
+    @NonNull
     public GraphQLResponse<T> getResponse() {
         return latchedResultListener.getResult();
     }

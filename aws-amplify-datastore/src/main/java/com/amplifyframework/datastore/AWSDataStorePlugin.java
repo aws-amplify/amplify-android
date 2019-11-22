@@ -16,8 +16,12 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
+import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
@@ -25,8 +29,12 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.datastore.network.SyncEngine;
+import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
@@ -39,6 +47,8 @@ import io.reactivex.Observable;
  */
 public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
 
+    private static final String TAG = AWSDataStorePlugin.class.getSimpleName();
+
     // Singleton instance
     private static AWSDataStorePlugin singleton;
 
@@ -46,8 +56,20 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     // manages the persistence of data on-device.
     private final SQLiteStorageAdapter sqliteStorageAdapter;
 
+    // A utility to convert between StorageItemChange.Record and StorageItemChange
+    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+
+    // Configuration for the plugin.
+    private AWSDataStorePluginConfiguration pluginConfiguration;
+
+    // A component which synchronizes data state between the
+    // local storage adapter, and a remote API
+    private SyncEngine syncEngine;
+
     private AWSDataStorePlugin() {
-        sqliteStorageAdapter = SQLiteStorageAdapter.defaultInstance();
+        this.sqliteStorageAdapter = SQLiteStorageAdapter.create();
+        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
+        this.syncEngine = null;
     }
 
     /**
@@ -55,6 +77,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * and return.
      * @return the singleton instance.
      */
+    @SuppressWarnings("WeakerAccess")
     public static synchronized AWSDataStorePlugin singleton() {
         if (singleton == null) {
             singleton = new AWSDataStorePlugin();
@@ -74,9 +97,14 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration,
-                          Context context) throws PluginException {
-
+    public void configure(
+            @NonNull JSONObject pluginConfiguration,
+            @NonNull Context context) throws PluginException {
+        try {
+            this.pluginConfiguration = AWSDataStorePluginConfiguration.fromJson(pluginConfiguration);
+        } catch (JSONException badConfigException) {
+            throw new PluginException.PluginConfigurationException(badConfigException);
+        }
     }
 
     /**
@@ -102,70 +130,171 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     public synchronized void initialize(
             @NonNull Context context,
             @NonNull ModelProvider modelProvider,
-            @NonNull ResultListener<List<ModelSchema>> listener) {
-        sqliteStorageAdapter.initialize(context, modelProvider, listener);
+            @Nullable ResultListener<List<ModelSchema>> initializationResultListener) {
+        sqliteStorageAdapter.initialize(context, modelProvider, new ResultListener<List<ModelSchema>>() {
+            @Override
+            public void onResult(List<ModelSchema> modelSchema) {
+                startModelSynchronization(modelSchema);
+                if (initializationResultListener != null) {
+                    initializationResultListener.onResult(modelSchema);
+                } else {
+                    Log.i(TAG, "AWSDataStoragePlugin initialized successfully.");
+                }
+            }
+
+            @Override
+            public void onError(Throwable error) {
+                if (initializationResultListener != null) {
+                    initializationResultListener.onError(error);
+                } else {
+                    Log.e(TAG, "Failed to initialize AWSDataStorePlugin.", error);
+                }
+            }
+        });
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void save(@NonNull T object,
-                                       ResultListener<MutationEvent<T>> resultListener) {
-        sqliteStorageAdapter.save(object, resultListener);
+    public <T extends Model> void save(
+            @NonNull T item,
+            ResultListener<DataStoreItemChange<T>> saveItemListener) {
+        sqliteStorageAdapter.save(
+            item,
+            StorageItemChange.Initiator.DATA_STORE_API,
+            new ResultListener<StorageItemChange.Record>() {
+                @Override
+                public void onResult(StorageItemChange.Record result) {
+                    StorageItemChange<T> storageItemChange =
+                        result.toStorageItemChange(storageItemChangeConverter);
+                    saveItemListener.onResult(DataStoreItemChange.<T>builder()
+                        .uuid(storageItemChange.changeId().toString())
+                        .initiator(toDataStoreItemChangeInitiator(storageItemChange.initiator()))
+                        .item(storageItemChange.item())
+                        .itemClass(storageItemChange.itemClass())
+                        .type(toDataStoreItemChangeType(storageItemChange.type()))
+                        .build());
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    saveItemListener.onError(error);
+                }
+            }
+        );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void delete(@NonNull T object,
-                                         ResultListener<MutationEvent<T>> resultListener) {
-        sqliteStorageAdapter.delete(object, resultListener);
+    public <T extends Model> void delete(@NonNull T item,
+                                         ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+        sqliteStorageAdapter.delete(
+            item,
+            StorageItemChange.Initiator.DATA_STORE_API,
+            new ResultListener<StorageItemChange.Record>() {
+                @Override
+                public void onResult(StorageItemChange.Record result) {
+                    StorageItemChange<T> storageItemChange =
+                        result.toStorageItemChange(storageItemChangeConverter);
+                    deleteItemListener.onResult(DataStoreItemChange.<T>builder()
+                        .uuid(storageItemChange.changeId().toString())
+                        .type(toDataStoreItemChangeType(storageItemChange.type()))
+                        .initiator(toDataStoreItemChangeInitiator(storageItemChange.initiator()))
+                        .item(storageItemChange.item())
+                        .itemClass(storageItemChange.itemClass())
+                        .build());
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    deleteItemListener.onError(error);
+                }
+            }
+        );
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> objectType,
-                                        ResultListener<Iterator<T>> resultListener) {
-        sqliteStorageAdapter.query(objectType, resultListener);
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            ResultListener<Iterator<T>> queryResultsListener) {
+        sqliteStorageAdapter.query(itemClass, queryResultsListener);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public Observable<MutationEvent<? extends Model>> observe() {
-        return sqliteStorageAdapter.observe();
+    public Observable<DataStoreItemChange<? extends Model>> observe() {
+        return sqliteStorageAdapter.observe()
+            .map(record -> record.toStorageItemChange(storageItemChangeConverter))
+            .map(storageItemChange -> DataStoreItemChange.builder()
+                .initiator(toDataStoreItemChangeInitiator(storageItemChange.initiator()))
+                .item(storageItemChange.item())
+                .itemClass(storageItemChange.itemClass())
+                .type(toDataStoreItemChangeType(storageItemChange.type()))
+                .uuid(storageItemChange.changeId().toString())
+                .build());
+    }
+
+    private DataStoreItemChange.Initiator toDataStoreItemChangeInitiator(
+            StorageItemChange.Initiator storageItemChangeInitiator) {
+        switch (storageItemChangeInitiator) {
+            case SYNC_ENGINE:
+                return DataStoreItemChange.Initiator.REMOTE;
+            case DATA_STORE_API:
+                return DataStoreItemChange.Initiator.LOCAL;
+            default:
+                throw new DataStoreException("Unknown initiator of storage change: " + storageItemChangeInitiator);
+        }
+    }
+
+    private DataStoreItemChange.Type toDataStoreItemChangeType(
+            StorageItemChange.Type storageItemChangeType) {
+        switch (storageItemChangeType) {
+            case DELETE:
+                return DataStoreItemChange.Type.SAVE;
+            case SAVE:
+                return DataStoreItemChange.Type.DELETE;
+            default:
+                throw new DataStoreException("Unknown type of storage change: " + storageItemChangeType);
+        }
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> Observable<MutationEvent<T>> observe(Class<T> modelClass) {
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> Observable<MutationEvent<T>> observe(
-            Class<T> modelClass,
-            String uniqueId) {
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+            @NonNull Class<T> itemClass,
+            @NonNull String uniqueId) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> Observable<MutationEvent<T>> observe(
-            Class<T> modelClass,
-            QueryPredicate queryPredicate) {
+    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate selectionCriteria) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
     }
 
@@ -175,5 +304,15 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public synchronized void terminate() {
         sqliteStorageAdapter.terminate();
+    }
+
+    private void startModelSynchronization(
+            @SuppressWarnings("unused" /* oh , it will be! */) final List<ModelSchema> schema) {
+        if (AWSDataStorePluginConfiguration.SyncMode.SYNC_WITH_API.equals(pluginConfiguration.getSyncMode())) {
+            final ApiCategoryBehavior api = Amplify.API;
+            final String apiName = pluginConfiguration.getApiName();
+            this.syncEngine = new SyncEngine(/* use schema, shortly ... */ api, apiName, sqliteStorageAdapter);
+            this.syncEngine.start();
+        }
     }
 }

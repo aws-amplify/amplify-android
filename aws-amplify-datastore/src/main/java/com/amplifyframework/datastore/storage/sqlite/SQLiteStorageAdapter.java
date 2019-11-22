@@ -34,8 +34,9 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.MutationEvent;
+import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.util.FieldFinder;
 
 import com.google.gson.Gson;
@@ -64,16 +65,14 @@ import io.reactivex.subjects.PublishSubject;
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
+    // LogCat Tag
+    private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
+
     // Database Version
-    @VisibleForTesting
-    static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 1;
 
     // Name of the database
-    @VisibleForTesting
-    static final String DATABASE_NAME = "AmplifyDatastore.db";
-
-    // LogCat Tag.
-    private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
+    private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     // ModelSchemaRegistry instance that gives the ModelSchema and Model objects
     // based on Model class name lookup mechanism.
@@ -85,12 +84,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Factory that produces SQL commands.
     private final SQLCommandFactory sqlCommandFactory;
 
-    // Using Gson for deserializing data read from SQLite
+    // Data is read from SQLite and de-serialized using GSON
     // into a strongly typed Java object.
     private final Gson gson;
 
     // Used to publish events to the observables subscribed.
-    private final PublishSubject<MutationEvent<? extends Model>> mutationEventSubject;
+    private final PublishSubject<StorageItemChange.Record> itemChangeSubject;
 
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
@@ -104,6 +103,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // and opening connection to database.
     private SQLiteOpenHelper sqLiteOpenHelper;
 
+    // A utility to convert StorageItemChange to StorageItemChange.Record
+    // and vice-versa
+    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param modelSchemaRegistry modelSchemaRegistry that hosts the models and their schema.
@@ -114,25 +117,38 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
         this.gson = new Gson();
-        this.mutationEventSubject = PublishSubject.create();
+        this.itemChangeSubject = PublishSubject.create();
+        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
 
     /**
-     * Return the default instance of the SQLiteStorageAdapter.
-     * @return the default instance of the SQLiteStorageAdapter.
+     * Create a new instance of a SQLiteStorageAdapter.
+     * @return A new instance of a SQLiteStorageAdapter
      */
-    public static SQLiteStorageAdapter defaultInstance() {
+    public static SQLiteStorageAdapter create() {
         return new SQLiteStorageAdapter(ModelSchemaRegistry.singleton());
     }
 
-    /** {@inheritDoc} */
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public synchronized void initialize(@NonNull Context context,
-                           @NonNull ModelProvider modelProvider,
-                           @NonNull final ResultListener<List<ModelSchema>> listener) {
+    public synchronized void initialize(
+            @NonNull Context context,
+            @NonNull ModelProvider modelProvider,
+            @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {
-                final Set<Class<? extends Model>> models = modelProvider.models();
+                final Set<Class<? extends Model>> models = new HashSet<>();
+                // StorageItemChange.Record.class is an internal system event
+                // it is used to journal local storage changes
+                models.add(StorageItemChange.Record.class);
+                models.addAll(modelProvider.models());
+
+                /*
+                 * Start with a fresh registry.
+                 */
+                modelSchemaRegistry.clear();
                 /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes
@@ -195,39 +211,41 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      */
     @Override
     @SuppressWarnings("unchecked") // model.getClass() has Class<?>, but we assume Class<T>
-    public <T extends Model> void save(@NonNull T model,
-                                       @NonNull ResultListener<MutationEvent<T>> listener) {
+    public <T extends Model> void save(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener) {
         threadPool.submit(() -> {
             try {
-                final ModelSchema modelSchema = modelSchemaRegistry
-                        .getModelSchemaForModelClass(model.getClass().getSimpleName());
+                final ModelSchema modelSchema =
+                    modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
                 final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                 if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
-                    throw new DataStoreException("No insert statement " +
-                            "found for the Model: " + modelSchema.getName());
+                    throw new DataStoreException("No insert statement found for the Model: " + modelSchema.getName());
                 }
 
-                Log.d(TAG, "Writing data to table for: " + model.toString());
+                Log.d(TAG, "Writing item to table for: " + item.toString());
 
                 final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
                 preCompiledInsertStatement.clearBindings();
-                bindPreparedInsertSQLStatementWithValues(model, sqlCommand);
+                bindPreparedInsertSQLStatementWithValues(item, sqlCommand);
                 preCompiledInsertStatement.executeInsert();
                 preCompiledInsertStatement.clearBindings();
 
-                Log.d(TAG, "Successfully written data to table for: " + model.toString());
+                Log.d(TAG, "Successfully wrote item to table for: " + item.toString());
 
-                final MutationEvent<T> mutationEvent = MutationEvent.<T>builder()
-                        .data(model)
-                        .dataClass((Class<T>) model.getClass())
-                        .mutationType(MutationEvent.MutationType.INSERT)
-                        .source(MutationEvent.Source.DATA_STORE)
-                        .build();
-                mutationEventSubject.onNext(mutationEvent);
-                listener.onResult(mutationEvent);
+                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                    .item(item)
+                    .itemClass((Class<T>) item.getClass())
+                    .type(StorageItemChange.Type.SAVE)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+                itemChangeSubject.onNext(record);
+                itemSaveListener.onResult(record);
             } catch (Exception exception) {
-                mutationEventSubject.onError(exception);
-                listener.onError(new DataStoreException("Error in saving the model.", exception));
+                itemChangeSubject.onError(exception);
+                itemSaveListener.onError(new DataStoreException("Error in saving the model.", exception));
             }
         });
     }
@@ -236,37 +254,37 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> modelClass,
-                                        @NonNull ResultListener<Iterator<T>> listener) {
+    public <T extends Model> void query(@NonNull Class<T> itemClass,
+                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         threadPool.submit(() -> {
             try {
-                Log.d(TAG, "Querying data for: " + modelClass.getSimpleName());
+                Log.d(TAG, "Querying item for: " + itemClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
-                final ModelSchema modelSchema = modelSchemaRegistry
-                        .getModelSchemaForModelClass(modelClass.getSimpleName());
+                final ModelSchema modelSchema =
+                    modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 
-                final Cursor cursor = getQueryAllCursor(modelClass.getSimpleName());
+                final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName());
                 if (cursor == null) {
                     throw new DataStoreException("Error in getting a cursor to the " +
-                            "table for class: " + modelClass.getSimpleName());
+                            "table for class: " + itemClass.getSimpleName());
                 }
 
                 if (cursor.moveToFirst()) {
                     do {
                         final Map<String, Object> mapForModel = buildMapForModel(
-                                modelClass, modelSchema, cursor);
+                            itemClass, modelSchema, cursor);
                         final String modelInJsonFormat = gson.toJson(mapForModel);
-                        models.add(gson.getAdapter(modelClass).fromJson(modelInJsonFormat));
+                        models.add(gson.getAdapter(itemClass).fromJson(modelInJsonFormat));
                     } while (cursor.moveToNext());
                 }
                 if (!cursor.isClosed()) {
                     cursor.close();
                 }
 
-                listener.onResult(models.iterator());
+                queryResultsListener.onResult(models.iterator());
             } catch (Exception exception) {
-                listener.onError(new DataStoreException("Error in querying the model.", exception));
+                queryResultsListener.onError(new DataStoreException("Error in querying the model.", exception));
             }
         });
     }
@@ -275,8 +293,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void delete(@NonNull T item,
-                                         @NonNull ResultListener<MutationEvent<T>> listener) {
+    public <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull ResultListener<StorageItemChange.Record> listener) {
         /* TODO */
     }
 
@@ -284,8 +304,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public Observable<MutationEvent<? extends Model>> observe() {
-        return mutationEventSubject;
+    public Observable<StorageItemChange.Record> observe() {
+        return itemChangeSubject;
     }
 
     /**
@@ -296,8 +316,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         try {
             insertSqlPreparedStatements = null;
 
-            if (mutationEventSubject != null) {
-                mutationEventSubject.onComplete();
+            if (itemChangeSubject != null) {
+                itemChangeSubject.onComplete();
             }
             if (threadPool != null) {
                 threadPool.shutdown();
@@ -474,7 +494,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
                 }
             } catch (Exception exception) {
-                Log.e(TAG, "Error in reading data for field: " + fieldName, exception);
+                Log.e(TAG, "Error in reading value for field: " + fieldName, exception);
                 mapForModel.put(fieldName, null);
             }
         }
