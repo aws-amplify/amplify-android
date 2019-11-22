@@ -55,9 +55,6 @@ public final class ModelField {
     // Type of foreign key model that this field identifies.
     private final String belongsTo;
 
-    // Name of the Model that this field is connecting to.
-    private final ModelConnection connection;
-
     /**
      * Construct the ModelField object from the builder.
      */
@@ -71,7 +68,6 @@ public final class ModelField {
         this.isEnum = builder.isEnum;
         this.isPrimaryKey = builder.isPrimaryKey;
         this.belongsTo = builder.belongsTo;
-        this.connection = builder.connection;
     }
 
     /**
@@ -158,22 +154,6 @@ public final class ModelField {
         return belongsTo;
     }
 
-    /**
-     * Returns the Model Connection metadata of this field.
-     * @return The Model Connection metadata of this field.
-     */
-    public ModelConnection getConnection() {
-        return connection;
-    }
-
-    /**
-     * Returns true if this ModelField is connected to an other Model.
-     * @return True if this ModelField is connected to an other Model.
-     */
-    public boolean isConnected() {
-        return connection != null;
-    }
-
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -212,7 +192,7 @@ public final class ModelField {
         if (!ObjectsCompat.equals(belongsTo, that.belongsTo)) {
             return false;
         }
-        return ObjectsCompat.equals(connection, that.connection);
+        return true;
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
@@ -227,7 +207,6 @@ public final class ModelField {
         result = 31 * result + (isEnum ? 1 : 0);
         result = 31 * result + (isPrimaryKey ? 1 : 0);
         result = 31 * result + (belongsTo != null ? belongsTo.hashCode() : 0);
-        result = 31 * result + (connection != null ? connection.hashCode() : 0);
         return result;
     }
 
@@ -243,7 +222,6 @@ public final class ModelField {
             ", isEnum=" + isEnum +
             ", isPrimaryKey=" + isPrimaryKey +
             ", belongsTo='" + belongsTo + '\'' +
-            ", connection=" + connection +
             '}';
     }
 
@@ -281,9 +259,6 @@ public final class ModelField {
 
         // Name of the model that this field identifies.
         private String belongsTo;
-
-        // The Model Connection metadata of this field.
-        private ModelConnection connection;
 
         /**
          * Set the name of the field.
@@ -375,16 +350,6 @@ public final class ModelField {
          */
         public ModelFieldBuilder belongsTo(String belongsTo) {
             this.belongsTo = belongsTo;
-            return this;
-        }
-
-        /**
-         * Set the Model Connection metadata of this field.
-         * @param connection The Model Connection metadata of this field.
-         * @return the builder object
-         */
-        public ModelFieldBuilder connection(ModelConnection connection) {
-            this.connection = connection;
             return this;
         }
 
