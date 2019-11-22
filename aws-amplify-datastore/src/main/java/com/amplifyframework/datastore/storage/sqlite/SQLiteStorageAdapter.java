@@ -456,6 +456,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
                         break;
                     case MODEL:
+                        // This is not populated with models at the moment mainly for
+                        // performance reasons as we do not know how much memory this would occupy.
+                        // May be featured in future releases based on customer feedback
+                        // in the form of streaming or size-based data fetch.
                         mapForModel.put(fieldName, null);
                         break;
                     case ENUM:
