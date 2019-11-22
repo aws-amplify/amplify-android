@@ -144,6 +144,26 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Assert that save updates data in the SQLite database correctly.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelUpdatesData() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+        assertEquals(person, saveModel(person));
+
+        
+    }
+
+    /**
      * Test querying the saved data in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.

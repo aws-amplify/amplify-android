@@ -170,9 +170,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                                 @NonNull ModelSchema modelSchema,
                                 @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("UPDATE ");
-        stringBuilder.append(tableName);
-        stringBuilder.append(" SET ");
+        stringBuilder
+                .append("UPDATE ")
+                .append(tableName)
+                .append(" SET ");
         final Map<String, ModelField> fields = modelSchema.getFields();
         final Iterator<Map.Entry<String, ModelField>> fieldsIterator = fields.entrySet().iterator();
         while (fieldsIterator.hasNext()) {

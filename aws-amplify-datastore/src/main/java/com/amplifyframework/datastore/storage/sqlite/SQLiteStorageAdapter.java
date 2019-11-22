@@ -201,12 +201,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 final ModelSchema modelSchema = modelSchemaRegistry
                         .getModelSchemaForModelClass(model.getClass().getSimpleName());
-
                 final String tableName = modelSchema.getName();
 
                 MutationEvent<T> mutationEvent;
-                if (dataExistsInSQLiteTable(tableName, "id", model.getId())) {
-                    // update
+                if (dataExistsInSQLiteTable(
+                        tableName,
+                        modelSchema.getPrimaryKey().getName(),
+                        model.getId())) {
+                    // update model stored in SQLite
                     final SqlCommand sqlCommand = sqlCommandFactory.updateFor(
                             tableName, modelSchema, databaseConnectionHandle);
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
@@ -214,7 +216,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "found for the Model: " + modelSchema.getName());
                     }
 
-                    insertModel(model, modelSchema, sqlCommand);
+                    saveModel(model, modelSchema, sqlCommand);
                     mutationEvent = MutationEvent.<T>builder()
                             .data(model)
                             .dataClass((Class<T>) model.getClass())
@@ -222,14 +224,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             .source(MutationEvent.Source.DATA_STORE)
                             .build();
                 } else {
-                    // insert
+                    // insert model in SQLite
                     final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
                         throw new DataStoreException("Error in saving the model. No insert statement " +
                                 "found for the Model: " + modelSchema.getName());
                     }
 
-                    insertModel(model, modelSchema, sqlCommand);
+                    saveModel(model, modelSchema, sqlCommand);
                     mutationEvent = MutationEvent.<T>builder()
                             .data(model)
                             .dataClass((Class<T>) model.getClass())
@@ -247,17 +249,28 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         });
     }
 
-    private <T extends Model> void insertModel(
+    // Extract the values of the fields of a model and bind the values to the SQLiteStatement
+    // and execute the statement.
+    private <T extends Model> void saveModel(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
-            SqlCommand sqlCommand) throws IllegalAccessException {
-        Log.d(TAG, "Writing data to table for: " + model.toString());
+            @NonNull SqlCommand sqlCommand) throws IllegalAccessException {
+        Objects.requireNonNull(model);
+        Objects.requireNonNull(modelSchema);
+        Objects.requireNonNull(sqlCommand);
+        Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
 
-        final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        preCompiledInsertStatement.clearBindings();
-        bindPreparedSQLStatementWithValues(model, sqlCommand);
-        preCompiledInsertStatement.executeInsert();
-        preCompiledInsertStatement.clearBindings();
+        Log.d(TAG, "Writing data to table for : " + model.toString());
+
+        // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
+        // are not thread-safe. Adding a synchronization barrier to access it.
+        synchronized (sqlCommand.getCompiledSqlStatement()) {
+            final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
+            preCompiledInsertStatement.clearBindings();
+            bindPreparedSQLStatementWithValues(model, sqlCommand);
+            preCompiledInsertStatement.executeInsert();
+            preCompiledInsertStatement.clearBindings();
+        }
 
         Log.d(TAG, "Successfully written data to table for: " + model.toString());
     }
@@ -519,7 +532,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull String columnValue) {
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(tableName, columnName, columnValue);
         final Cursor cursor = databaseConnectionHandle.rawQuery(sqlCommand.sqlStatement(), null);
-        if(cursor.getCount() <= 0){
+        if (cursor.getCount() <= 0) {
             cursor.close();
             return false;
         }

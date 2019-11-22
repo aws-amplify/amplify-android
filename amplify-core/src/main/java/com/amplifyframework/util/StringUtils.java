@@ -15,10 +15,7 @@
 
 package com.amplifyframework.util;
 
-import androidx.annotation.NonNull;
-
 import java.util.Locale;
-import java.util.Objects;
 
 /**
  * Utility for common String operations which are not otherwise available.
@@ -55,5 +52,18 @@ public final class StringUtils {
             return original;
         }
         return "'" + original + "'";
+    }
+
+    /**
+     * Returns original string wrapped with double quotes.
+     * @param original Original string to modify
+     * @return Original string wrapped with double quotes.
+     *         If original string is null or empty, it just returns the original.
+     */
+    public static String doubleQuote(String original) {
+        if (original == null || original.length() == 0) {
+            return original;
+        }
+        return "\"" + original + "\"";
     }
 }
