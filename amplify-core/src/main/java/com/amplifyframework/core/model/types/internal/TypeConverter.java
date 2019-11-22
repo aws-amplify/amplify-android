@@ -46,7 +46,6 @@ public final class TypeConverter {
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.INT, JavaFieldType.INTEGER);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.FLOAT, JavaFieldType.FLOAT);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.BOOLEAN, JavaFieldType.BOOLEAN);
-        // AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.ENUM, JavaFieldType.ENUM);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE, JavaFieldType.DATE);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIME, JavaFieldType.TIME);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE_TIME, JavaFieldType.DATE);

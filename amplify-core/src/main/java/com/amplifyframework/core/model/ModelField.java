@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * Represents a field of the {@link Model} class.
@@ -25,6 +26,10 @@ public final class ModelField {
     // Name of the field is the name of the instance variable
     // of the Model class.
     private final String name;
+
+    // Type of the field is the data type of the instance variables
+    // of the Model class.
+    private final String type;
 
     // Name of the field in the target. For example: name of the
     // field in the GraphQL target.
@@ -41,6 +46,9 @@ public final class ModelField {
     // targetType and True if it is an array targetType.
     private final boolean isArray;
 
+    // True if the field is an enumeration type.
+    private final boolean isEnum;
+
     // True if the field is a primary key in the Model.
     private final boolean isPrimaryKey;
 
@@ -55,10 +63,12 @@ public final class ModelField {
      */
     private ModelField(@NonNull ModelFieldBuilder builder) {
         this.name = builder.name;
+        this.type = builder.type;
         this.targetName = builder.targetName;
         this.targetType = builder.targetType;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
+        this.isEnum = builder.isEnum;
         this.isPrimaryKey = builder.isPrimaryKey;
         this.belongsTo = builder.belongsTo;
         this.connection = builder.connection;
@@ -116,6 +126,15 @@ public final class ModelField {
     }
 
     /**
+     * Returns true if the field's target type is Enum.
+     *
+     * @return true if the field's target type is Enum.
+     */
+    public boolean isEnum() {
+        return isEnum;
+    }
+
+    /**
      * Returns true if the field is a primary key in the Model.
      * @return True if the field is a primary key in the Model.
      */
@@ -155,6 +174,79 @@ public final class ModelField {
         return connection != null;
     }
 
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ModelField that = (ModelField) thatObject;
+
+        if (isRequired != that.isRequired) {
+            return false;
+        }
+        if (isArray != that.isArray) {
+            return false;
+        }
+        if (isEnum != that.isEnum) {
+            return false;
+        }
+        if (isPrimaryKey != that.isPrimaryKey) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(name, that.name)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(type, that.type)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(targetName, that.targetName)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(targetType, that.targetType)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(belongsTo, that.belongsTo)) {
+            return false;
+        }
+        return ObjectsCompat.equals(connection, that.connection);
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Override
+    public int hashCode() {
+        int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (type != null ? type.hashCode() : 0);
+        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
+        result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
+        result = 31 * result + (isRequired ? 1 : 0);
+        result = 31 * result + (isArray ? 1 : 0);
+        result = 31 * result + (isEnum ? 1 : 0);
+        result = 31 * result + (isPrimaryKey ? 1 : 0);
+        result = 31 * result + (belongsTo != null ? belongsTo.hashCode() : 0);
+        result = 31 * result + (connection != null ? connection.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "ModelField{" +
+            "name='" + name + '\'' +
+            ", type='" + type + '\'' +
+            ", targetName='" + targetName + '\'' +
+            ", targetType='" + targetType + '\'' +
+            ", isRequired=" + isRequired +
+            ", isArray=" + isArray +
+            ", isEnum=" + isEnum +
+            ", isPrimaryKey=" + isPrimaryKey +
+            ", belongsTo='" + belongsTo + '\'' +
+            ", connection=" + connection +
+            '}';
+    }
+
     /**
      * Builder class for {@link ModelField}.
      */
@@ -162,6 +254,10 @@ public final class ModelField {
         // Name of the field is the name of the instance variable
         // of the Model class.
         private String name;
+
+        // Type of the field is the data type of the instance variables
+        // of the Model class.
+        private String type;
 
         // Name of the field in the target. For example: name of the
         // field in the GraphQL targetType.
@@ -176,6 +272,9 @@ public final class ModelField {
         // If the field is an array targetType. False if it is a primitive
         // targetType and True if it is an array targetType.
         private boolean isArray = false;
+
+        // True if the field's target type is Enum.
+        private boolean isEnum = false;
 
         // True if the field is a primary key in the Model.
         private boolean isPrimaryKey = false;
@@ -193,6 +292,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        /**
+         * Set the type of the field.
+         * @param type Type of the field is the type of the instance variable of the Model class.
+         * @return the builder object
+         */
+        public ModelFieldBuilder type(String type) {
+            this.type = type;
             return this;
         }
 
@@ -236,6 +345,16 @@ public final class ModelField {
          */
         public ModelFieldBuilder isArray(boolean isArray) {
             this.isArray = isArray;
+            return this;
+        }
+
+        /**
+         * Sets a flag indicating whether or not the field's target type is an Enum.
+         * @param isEnum flag indicating if the field is an enum targetType
+         * @return the builder object
+         */
+        public ModelFieldBuilder isEnum(boolean isEnum) {
+            this.isEnum = isEnum;
             return this;
         }
 

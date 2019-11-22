@@ -17,11 +17,13 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.StrictMode;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -42,6 +44,19 @@ public class SQLiteStorageHelperInstrumentedTest {
     private SQLiteStorageHelper sqLiteStorageHelper;
     private SQLiteDatabase sqLiteDatabase;
     private Set<SqlCommand> createTableCommands;
+
+    /**
+     * Enable strict mode for catching SQLite leaks.
+     */
+    @BeforeClass
+    public static void enableStrictMode() {
+        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
+                .detectLeakedSqlLiteObjects()
+                .detectLeakedClosableObjects()
+                .penaltyLog()
+                .penaltyDeath()
+                .build());
+    }
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
@@ -66,7 +81,7 @@ public class SQLiteStorageHelperInstrumentedTest {
     }
 
     /**
-     * Drop all tables and database, close and delete the database.
+     * Drop all tables and database, terminate and delete the database.
      */
     @After
     public void tearDown() {

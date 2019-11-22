@@ -23,12 +23,23 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
+import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
+import com.amplifyframework.core.model.query.predicate.ContainsQueryOperator;
 import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.util.StringUtils;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -102,6 +113,8 @@ final class AppSyncGraphQLRequestFactory {
                         .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
                         .append(getModelFields(schema))
                         .append("} nextToken }}");
+
+                variables.put("filter", parsePredicate(predicate));
                 break;
             default:
         }
@@ -163,6 +176,110 @@ final class AppSyncGraphQLRequestFactory {
             SubscriptionType type
     ) throws AmplifyException {
         return null;
+    }
+
+    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws AmplifyException {
+        if (queryPredicate instanceof QueryPredicateOperation) {
+            QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
+            QueryOperator op = qpo.operator();
+            return Collections.singletonMap(
+                    qpo.field(),
+                    Collections.singletonMap(appSyncOpType(op.type()), appSyncOpValue(op))
+            );
+        } else if (queryPredicate instanceof QueryPredicateGroup) {
+            QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
+
+            if (qpg.type().equals(QueryPredicateGroup.Type.NOT)) {
+                try {
+                    return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
+                } catch (IndexOutOfBoundsException exception) {
+                    throw new AmplifyException(
+                            "Predicate group of type NOT must include a value to negate.",
+                            exception,
+                            "Check if you created a NOT condition in your Predicate with no included value.",
+                            false
+                    );
+                }
+            } else {
+                List<Map<String, Object>> predicates = new ArrayList<>();
+
+                for (QueryPredicate predicate : qpg.predicates()) {
+                    predicates.add(parsePredicate(predicate));
+                }
+
+                return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
+            }
+        } else {
+            throw new AmplifyException(
+                    "Tried to parse an unsupported QueryPredicate",
+                    null,
+                    "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup.",
+                    false
+            );
+        }
+    }
+
+    private static String appSyncOpType(QueryOperator.Type type) throws AmplifyException {
+        switch (type) {
+            case NOT_EQUAL:
+                return "ne";
+            case EQUAL:
+                return "eq";
+            case LESS_OR_EQUAL:
+                return "le";
+            case LESS_THAN:
+                return "lt";
+            case GREATER_OR_EQUAL:
+                return "ge";
+            case GREATER_THAN:
+                return "gt";
+            case CONTAINS:
+                return "contains";
+            case BETWEEN:
+                return "between";
+            case BEGINS_WITH:
+                return "beginsWith";
+            default:
+                throw new AmplifyException(
+                        "Tried to parse an unsupported QueryOperator type",
+                        null,
+                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                        "in the AppSyncGraphQLRequestFactory.",
+                        false
+                );
+        }
+    }
+
+    private static Object appSyncOpValue(QueryOperator qOp) throws AmplifyException {
+        switch (qOp.type()) {
+            case NOT_EQUAL:
+                return ((NotEqualQueryOperator) qOp).value();
+            case EQUAL:
+                return ((EqualQueryOperator) qOp).value();
+            case LESS_OR_EQUAL:
+                return ((LessOrEqualQueryOperator) qOp).value();
+            case LESS_THAN:
+                return ((LessThanQueryOperator) qOp).value();
+            case GREATER_OR_EQUAL:
+                return ((GreaterOrEqualQueryOperator) qOp).value();
+            case GREATER_THAN:
+                return ((GreaterThanQueryOperator) qOp).value();
+            case CONTAINS:
+                return ((ContainsQueryOperator) qOp).value();
+            case BETWEEN:
+                BetweenQueryOperator betweenOp = (BetweenQueryOperator) qOp;
+                return Arrays.asList(betweenOp.start(), betweenOp.end());
+            case BEGINS_WITH:
+                return ((BeginsWithQueryOperator) qOp).value();
+            default:
+                throw new AmplifyException(
+                        "Tried to parse an unsupported QueryOperator type",
+                        null,
+                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                                "in the AppSyncGraphQLRequestFactory.",
+                        false
+                );
+        }
     }
 
     private static String getModelFields(ModelSchema schema) {
