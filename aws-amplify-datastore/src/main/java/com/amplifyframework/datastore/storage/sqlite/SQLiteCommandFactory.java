@@ -173,9 +173,15 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final ModelField field = fieldsIterator.next();
             final String fieldName = field.getName();
 
-            SqliteDataType sqliteDataType = field.isEnum()
-                    ? TypeConverter.getSqlTypeForJavaType(JavaFieldType.ENUM.stringValue())
-                    : TypeConverter.getSqlTypeForGraphQLType(field.getTargetType());
+            final SqliteDataType sqliteDataType;
+            if (field.isModel()) {
+                sqliteDataType = TypeConverter.getSqlTypeForJavaType(JavaFieldType.MODEL.stringValue());
+            } else if (field.isEnum()) {
+                sqliteDataType = TypeConverter.getSqlTypeForJavaType(JavaFieldType.ENUM.stringValue());
+            } else {
+                sqliteDataType = TypeConverter.getSqlTypeForGraphQLType(field.getTargetType());
+            }
+
             stringBuilder.append(fieldName)
                     .append(SQLITE_COMMAND_DELIMITER)
                     .append(sqliteDataType.getSqliteDataType());
