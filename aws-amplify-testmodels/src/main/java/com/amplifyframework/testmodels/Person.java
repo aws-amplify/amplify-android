@@ -25,7 +25,6 @@ import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import java.util.Date;
-import java.util.Objects;
 import java.util.UUID;
 
 /**
