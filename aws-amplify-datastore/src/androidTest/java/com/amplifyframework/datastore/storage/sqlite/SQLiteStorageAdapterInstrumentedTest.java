@@ -204,6 +204,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                     cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
             assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("age")));
             assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("dob")));
+            assertTrue(cursor.isNull(cursor.getColumnIndexOrThrow("relationship")));
         }
         cursor.close();
     }

@@ -356,7 +356,7 @@ public final class Person implements Model {
             try {
                 super.id(id);
             } catch (AmplifyException exception) {
-                throw new RuntimeException("");
+                throw new RuntimeException("Unexpected Error", exception);
             }
             super.firstName(first_name)
                     .lastName(last_name)
