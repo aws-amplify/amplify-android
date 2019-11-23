@@ -149,6 +149,9 @@ public final class GsonGraphQLResponseFactoryTest {
                 responseFactory.buildSingleItemResponse(partialResponseJson.toString(), String.class);
 
         // Assert that the response data is just the data block as a JSON string
-        assertEquals(partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(), response.getData());
+        assertEquals(
+                partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(),
+                response.getData()
+        );
     }
 }
