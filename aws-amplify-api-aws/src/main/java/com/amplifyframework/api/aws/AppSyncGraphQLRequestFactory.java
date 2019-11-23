@@ -18,7 +18,6 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
@@ -57,67 +56,56 @@ final class AppSyncGraphQLRequestFactory {
 
     public static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
-            QueryPredicate predicate,
-            QueryType type
+            String objectId
+    ) {
+        StringBuilder doc = new StringBuilder();
+        Map<String, Object> variables = new HashMap<>();
+        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+        String modelName = schema.getTargetModelName();
+
+        doc.append("query ")
+            .append("Get")
+            .append(StringUtils.capitalize(modelName))
+            .append("(")
+            .append("$id: ID!) { get")
+            .append(StringUtils.capitalize(modelName))
+            .append("(id: $id) { ")
+            .append(getModelFields(schema))
+            .append("}}");
+
+        variables.put("id", objectId);
+
+        return new GraphQLRequest<>(
+                doc.toString(),
+                variables,
+                modelClass,
+                new GsonVariablesSerializer()
+        );
+    }
+
+    public static <T extends Model> GraphQLRequest<T> buildQuery(
+            Class<T> modelClass,
+            QueryPredicate predicate
     ) throws AmplifyException {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String typeStr = type.toString();
         String modelName = schema.getTargetModelName();
 
         doc.append("query ")
-                .append(StringUtils.capitalize(typeStr))
-                .append(StringUtils.capitalize(modelName))
-                .append("(");
+            .append("List")
+            .append(StringUtils.capitalize(modelName))
+            .append("(")
+            .append("$filter: Model")
+            .append(StringUtils.capitalize(modelName))
+            .append("FilterInput ")
+            .append("$limit: Int $nextToken: String) { list")
+            .append(StringUtils.capitalize(modelName))
+            .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
+            .append(getModelFields(schema))
+            .append("} nextToken }}");
 
-        switch (type) {
-            case GET:
-                doc.append("$id: ID!) { get")
-                        .append(StringUtils.capitalize(modelName))
-                        .append("(id: $id) { ")
-                        .append(getModelFields(schema))
-                        .append("}}");
-
-                try {
-                    QueryPredicateOperation operation = (QueryPredicateOperation) predicate;
-                    if (
-                            schema.getFields().get(operation.field()).getTargetName().equals("id") &&
-                                    operation.operator().type().equals(QueryOperator.Type.EQUAL)
-                    ) {
-                        variables.put("id", ((EqualQueryOperator) operation.operator()).value());
-                    } else {
-                        throw new AmplifyException(
-                                "Invalid predicate supplied for GET query",
-                                null,
-                                "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
-                                false
-                        );
-                    }
-                } catch (ClassCastException | NullPointerException exception) {
-                    throw new AmplifyException(
-                            "Invalid predicate supplied for GET query",
-                            exception,
-                            "When calling a GET query, the predicate must be in the format of Model.ID.eq('value')",
-                            false
-                    );
-                }
-                
-                break;
-            case LIST:
-                doc.append("$filter: Model")
-                        .append(StringUtils.capitalize(modelName))
-                        .append("FilterInput ")
-                        .append("$limit: Int $nextToken: String) { list")
-                        .append(StringUtils.capitalize(modelName))
-                        .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
-                        .append(getModelFields(schema))
-                        .append("} nextToken }}");
-
-                variables.put("filter", parsePredicate(predicate));
-                break;
-            default:
-        }
+        variables.put("filter", parsePredicate(predicate));
 
         return new GraphQLRequest<>(
                 doc.toString(),

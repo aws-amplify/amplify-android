@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -37,16 +38,16 @@ import okhttp3.ResponseBody;
 
 /**
  * An operation to enqueue a GraphQL request to OkHttp client,
- * with the goal of obtaining a single response. Games aside,
- * this means a query or a mutation, and *NOT* a subscription.
+ * with the goal of obtaining a list of responses. For example,
+ * this is used for a LIST query vs. a GET query or most mutations.
  * @param <T> Casted type of GraphQL result data
  */
-public final class SingleResultOperation<T> extends GraphQLOperation<T> {
+public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<GraphQLResponse<T>> responseListener;
+    private final ResultListener<GraphQLResponse<List<T>>> responseListener;
 
     private Call ongoingCall;
 
@@ -59,12 +60,12 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
      * @param responseListener
      *        listener to be invoked when response is available, or if
      */
-    private SingleResultOperation(
+    private SingleArrayResultOperation(
             String endpoint,
             OkHttpClient client,
             GraphQLRequest<T> request,
             GraphQLResponse.Factory responseFactory,
-            ResultListener<GraphQLResponse<T>> responseListener) {
+            ResultListener<GraphQLResponse<List<T>>> responseListener) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -125,7 +126,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
                 jsonResponse = responseBody.string();
             }
 
-            GraphQLResponse<T> wrappedResponse = wrapResponse(jsonResponse);
+            GraphQLResponse<List<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
 
             if (responseListener != null) {
                 responseListener.onResult(wrappedResponse);
@@ -148,7 +149,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
         private OkHttpClient client;
         private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
-        private ResultListener<GraphQLResponse<T>> responseListener;
+        private ResultListener<GraphQLResponse<List<T>>> responseListener;
 
         Builder<T> endpoint(final String endpoint) {
             this.endpoint = endpoint;
@@ -170,13 +171,13 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        Builder<T> responseListener(final ResultListener<GraphQLResponse<T>> responseListener) {
+        Builder<T> responseListener(final ResultListener<GraphQLResponse<List<T>>> responseListener) {
             this.responseListener = responseListener;
             return this;
         }
 
-        SingleResultOperation<T> build() {
-            return new SingleResultOperation<>(
+        SingleArrayResultOperation<T> build() {
+            return new SingleArrayResultOperation<>(
                     endpoint,
                     client,
                     request,

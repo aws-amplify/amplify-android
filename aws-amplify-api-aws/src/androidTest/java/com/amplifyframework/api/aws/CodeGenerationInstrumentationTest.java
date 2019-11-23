@@ -21,7 +21,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -31,6 +30,8 @@ import com.amplifyframework.testmodels.Person;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -91,13 +92,12 @@ public final class CodeGenerationInstrumentationTest {
         Amplify.API.query(
             API_NAME,
             Person.class,
-            Person.ID.eq(mutationResponse.getData().getId()),
-            QueryType.GET,
+            mutationResponse.getData().getId(),
             queryListener
         );
 
         GraphQLResponse<Person> queryResponse = queryListener.awaitTerminalEvent().getResponse();
-        assertEquals(queryResponse.getData().getId(), queryResponse.getData().getId());
+        assertEquals(mutationResponse.getData(), queryResponse.getData());
     }
 
     /**
@@ -105,7 +105,7 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void queryList() {
-        LatchedSingleResponseListener<Person> queryListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<List<Person>> queryListener = new LatchedSingleResponseListener<>();
 
         QueryPredicate predicate = Person.LAST_NAME.eq("Daudelin")
                 .and(Person.FIRST_NAME.eq("David").or(Person.FIRST_NAME.eq("Sarah")));
@@ -114,12 +114,16 @@ public final class CodeGenerationInstrumentationTest {
                 API_NAME,
                 Person.class,
                 predicate,
-                QueryType.LIST,
                 queryListener
         );
 
-        GraphQLResponse<Person> queryResponse = queryListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<List<Person>> queryResponse = queryListener.awaitTerminalEvent().getResponse();
         assertTrue(queryResponse.hasData());
         assertFalse(queryResponse.hasErrors());
+
+        for (Person p : queryResponse.getData()) {
+            assertTrue(p.getFirstName().equals("David") || p.getFirstName().equals("Sarah"));
+            assertTrue(p.getLastName().equals("Daudelin"));
+        }
     }
 }
