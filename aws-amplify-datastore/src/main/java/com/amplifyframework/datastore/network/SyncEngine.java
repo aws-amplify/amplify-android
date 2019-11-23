@@ -188,7 +188,7 @@ public final class SyncEngine {
      * Stop synchronizing state between the local storage adapter
      * and a remote GraphQL endpoint.
      */
-    void stop() {
+    public void stop() {
         observationsToDispose.clear();
     }
 }

@@ -74,6 +74,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Name of the database
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
+    // Provider of the Models that will be warehouse-able by the DataStore
+    private final ModelProvider modelProvider;
+
     // ModelSchemaRegistry instance that gives the ModelSchema and Model objects
     // based on Model class name lookup mechanism.
     private final ModelSchemaRegistry modelSchemaRegistry;
@@ -109,10 +112,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Construct the SQLiteStorageAdapter object.
-     * @param modelSchemaRegistry modelSchemaRegistry that hosts the models and their schema.
+     * @param modelProvider Provides the models that will be usable by the DataStore
      */
-    public SQLiteStorageAdapter(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
-        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
+    public SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
+        this.modelProvider = Objects.requireNonNull(modelProvider);
+        this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
@@ -122,11 +126,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     /**
-     * Create a new instance of a SQLiteStorageAdapter.
-     * @return A new instance of a SQLiteStorageAdapter
+     * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
+     * @param modelProvider A provider of models that will be represented in SQL
+     * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
      */
-    public static SQLiteStorageAdapter create() {
-        return new SQLiteStorageAdapter(ModelSchemaRegistry.singleton());
+    public static SQLiteStorageAdapter forModels(ModelProvider modelProvider) {
+        return new SQLiteStorageAdapter(modelProvider);
     }
 
     /**
@@ -135,7 +140,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public synchronized void initialize(
             @NonNull Context context,
-            @NonNull ModelProvider modelProvider,
             @NonNull final ResultListener<List<ModelSchema>> listener) {
         threadPool.submit(() -> {
             try {

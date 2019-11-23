@@ -15,46 +15,33 @@
 
 package com.amplifyframework.api.aws;
 
-import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
-
-import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.List;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
- * TODO: document howto configure a remote endpoint that can accomodate this test.
+ * TODO: document how to configure a remote endpoint that can accomodate this test.
  */
-@Ignore("This test is used for development, only.")
 public final class CodeGenerationInstrumentationTest {
-    private static final String API_NAME = GraphQLInstrumentationTest.class.getSimpleName();
+    private static final String API_NAME = "personApi";
 
     /**
-     * Before any test is run, configure Amplify to use an
-     * {@link AWSApiPlugin} to satisfy the Api category.
+     * Configure Amplify for API tests, if it has not been configured, yet.
      */
     @BeforeClass
-    public static void configureAmplify() {
-        Context context = ApplicationProvider.getApplicationContext();
-        AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
-        Amplify.addPlugin(new AWSApiPlugin());
-        Amplify.configure(configuration, context);
+    public static void onceBeforeTests() {
+        AmplifyTestConfigurator.configureIfNotConfigured();
     }
 
     /**
@@ -105,25 +92,25 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void queryList() {
-        LatchedSingleResponseListener<List<Person>> queryListener = new LatchedSingleResponseListener<>();
-
-        QueryPredicate predicate = Person.LAST_NAME.eq("Daudelin")
-                .and(Person.FIRST_NAME.eq("David").or(Person.FIRST_NAME.eq("Sarah")));
+        LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
 
         Amplify.API.query(
-                API_NAME,
-                Person.class,
-                predicate,
-                queryListener
+            API_NAME,
+            Person.class,
+            Person.LAST_NAME.eq("Daudelin")
+                .and(Person.FIRST_NAME.eq("David")
+                    .or(Person.FIRST_NAME.eq("Sarah"))),
+            queryListener
         );
 
-        GraphQLResponse<List<Person>> queryResponse = queryListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<Iterable<Person>> queryResponse =
+            queryListener.awaitTerminalEvent().assertNoError().assertResponse().getResponse();
         assertTrue(queryResponse.hasData());
         assertFalse(queryResponse.hasErrors());
 
-        for (Person p : queryResponse.getData()) {
-            assertTrue(p.getFirstName().equals("David") || p.getFirstName().equals("Sarah"));
-            assertTrue(p.getLastName().equals("Daudelin"));
+        for (Person person : queryResponse.getData()) {
+            assertTrue(Arrays.asList("David", "Sarah").contains(person.getFirstName()));
+            assertEquals("Daudelin", person.getLastName());
         }
     }
 }

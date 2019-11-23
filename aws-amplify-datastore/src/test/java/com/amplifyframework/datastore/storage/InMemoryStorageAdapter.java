@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 
 import java.util.ArrayList;
@@ -56,9 +55,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     @Override
     public void initialize(
-            @NonNull Context context,
-            @NonNull ModelProvider modelProvider,
-            @NonNull ResultListener<List<ModelSchema>> listener) {
+            @NonNull Context context, @NonNull ResultListener<List<ModelSchema>> listener) {
     }
 
     @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
