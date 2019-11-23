@@ -20,6 +20,8 @@ import android.os.Build;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.testutils.Resources;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -129,5 +131,24 @@ public final class GsonGraphQLResponseFactoryTest {
         final List<GraphQLResponse.Error> actualErrors = response.getErrors();
 
         assertEquals(expectedErrors, actualErrors);
+    }
+
+    /**
+     * It is possible to cast the response data as a string, instead of as the strongly
+     * modeled type, if you choose to do so.
+     * @throws JSONException Shouldn't, but might while arranging test input
+     */
+    @Test
+    public void partialResponseCanBeRenderedAsStringType() throws JSONException {
+        // Arrange some known JSON response
+        final JSONObject partialResponseJson =
+                new JSONObject(Resources.readAsString("partial-gql-response.json"));
+
+        // Act! Parse it into a String data type.
+        final GraphQLResponse<String> response =
+                responseFactory.buildSingleItemResponse(partialResponseJson.toString(), String.class);
+
+        // Assert that the response data is just the data block as a JSON string
+        assertEquals(partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(), response.getData());
     }
 }

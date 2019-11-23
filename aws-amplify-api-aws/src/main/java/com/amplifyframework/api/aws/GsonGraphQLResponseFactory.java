@@ -144,7 +144,14 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         return data.get(data.keySet().iterator().next());
     }
 
+    @SuppressWarnings("unchecked") // (T) jsonData.toString() *is* checked via isAssignableFrom().
     private <T> T parseData(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+        if (jsonData == null || jsonData.isJsonNull()) {
+            return null;
+        } else if (String.class.isAssignableFrom(classToCast)) {
+            return (T) jsonData.toString();
+        }
+
         try {
             return gson.fromJson(jsonData, classToCast);
         } catch (ClassCastException classCastException) {
