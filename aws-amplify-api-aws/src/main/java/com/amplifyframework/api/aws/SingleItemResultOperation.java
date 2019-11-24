@@ -41,7 +41,7 @@ import okhttp3.ResponseBody;
  * this means a query or a mutation, and *NOT* a subscription.
  * @param <T> Casted type of GraphQL result data
  */
-public final class SingleResultOperation<T> extends GraphQLOperation<T> {
+public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
@@ -59,7 +59,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
      * @param responseListener
      *        listener to be invoked when response is available, or if
      */
-    private SingleResultOperation(
+    private SingleItemResultOperation(
             String endpoint,
             OkHttpClient client,
             GraphQLRequest<T> request,
@@ -125,7 +125,7 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
                 jsonResponse = responseBody.string();
             }
 
-            GraphQLResponse<T> wrappedResponse = wrapResponse(jsonResponse);
+            GraphQLResponse<T> wrappedResponse = wrapSingleResultResponse(jsonResponse);
 
             if (responseListener != null) {
                 responseListener.onResult(wrappedResponse);
@@ -175,8 +175,8 @@ public final class SingleResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        SingleResultOperation<T> build() {
-            return new SingleResultOperation<>(
+        SingleItemResultOperation<T> build() {
+            return new SingleItemResultOperation<>(
                     endpoint,
                     client,
                     request,

@@ -22,7 +22,6 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
@@ -47,18 +46,27 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
-            @NonNull QueryType queryType,
+            @NonNull String objectId,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
-        return getSelectedPlugin().query(apiName, modelClass, predicate, queryType, responseListener);
+        return getSelectedPlugin().query(apiName, modelClass, objectId, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull QueryPredicate predicate,
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        return getSelectedPlugin().query(apiName, modelClass, predicate, responseListener);
     }
 
     @Override
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         return getSelectedPlugin().query(apiName, graphQlRequest, responseListener);
     }
