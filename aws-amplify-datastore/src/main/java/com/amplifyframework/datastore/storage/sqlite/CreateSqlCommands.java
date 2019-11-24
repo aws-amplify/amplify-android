@@ -25,7 +25,7 @@ final class CreateSqlCommands {
     private final Set<SqlCommand> createIndexCommands;
 
     CreateSqlCommands(Set<SqlCommand> createTableCommands,
-                             Set<SqlCommand> createIndexCommands) {
+                      Set<SqlCommand> createIndexCommands) {
         this.createTableCommands = createTableCommands;
         this.createIndexCommands = createIndexCommands;
     }

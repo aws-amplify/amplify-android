@@ -15,19 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
-import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
-
-import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.testutils.TestAssets;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -43,8 +37,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Validates the functionality of the {@link AWSApiPlugin}.
  *
- * Note: for the time-being, this test is not run by default. The expectation is that
- * a developer can run this, after performing some configuration steps.
+ * To configure an endpoint for this:
  *
  * 1. Create a new "Event App" AppSync endpoint via "Create with Wizard" at
  *    https://us-west-2.console.aws.amazon.com/appsync/home?region=us-west-2#/create
@@ -54,25 +47,17 @@ import static org.junit.Assert.assertTrue;
  *    src/androidTest/res/raw/amplifyconfiguration.json.
  *    Name the API "GraphQLInstrumentationTest". Ensure the region is set correctly.
  *
- * 3. Remove @Ignore from this test.
- *
- * 4. Run the test. From the command line, you can do ./gradlew aws-amplify-api-aws:connectedAndroidTest
+ * 3. Run the test. From the command line, you can do ./gradlew aws-amplify-api-aws:connectedAndroidTest
  */
-@Ignore("This is a developer-only test, requiring some backend configuration. See Javadoc for details.")
 public final class GraphQLInstrumentationTest {
-    private static final String API_NAME = GraphQLInstrumentationTest.class.getSimpleName();
+    private static final String API_NAME = "eventsApi";
 
     /**
-     * Before any test is run, configure Amplify to use an
-     * {@link AWSApiPlugin} to satisfy the Api category.
+     * Configure the Amplify framework, if that hasn't already happened in this process instance.
      */
     @BeforeClass
-    public static void configureAmplify() {
-        Context context = ApplicationProvider.getApplicationContext();
-        AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
-        Amplify.addPlugin(new AWSApiPlugin());
-        Amplify.configure(configuration, context);
+    public static void onceBeforeTests() {
+        AmplifyTestConfigurator.configureIfNotConfigured();
     }
 
     /**

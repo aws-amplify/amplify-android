@@ -4,7 +4,8 @@
   "API": {
     "plugins": {
       "AWSAPIPlugin": {
-        "GraphQLInstrumentationTest": {
+        "personApi": {
+          "__comment": "This is in David's developer account, right now.",
           "Endpoint": "https://bb2xm5ttqvbfdeu5oi5gw7cvma.appsync-api.us-east-1.amazonaws.com/graphql",
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
@@ -15,7 +16,10 @@
   },
   "DataStore": {
     "plugins": {
-      "AWSDataStorePlugin": {}
+      "AWSDataStorePlugin": {
+        "syncMode": "api",
+        "apiName": "personApi"
+      }
     }
   }
 }

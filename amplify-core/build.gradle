@@ -65,7 +65,7 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(':aws-amplify-testmodels')
+    testImplementation project(path: ':aws-amplify-testmodels')
 
     // Required for instrumented tests
     androidTestImplementation 'androidx.annotation:annotation:1.1.0'

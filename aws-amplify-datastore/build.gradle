@@ -51,6 +51,7 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation "io.reactivex.rxjava2:rxjava:$rxJava2Version"
     implementation project(':amplify-core')
 
@@ -67,8 +68,8 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(':aws-amplify-testutils')
-    testImplementation project(':aws-amplify-testmodels')
+    testImplementation project(path: ':aws-amplify-testmodels')
+    testImplementation project(path: ':aws-amplify-testutils')
 
     // Required for instrumented tests
     androidTestImplementation 'androidx.annotation:annotation:1.1.0'
@@ -76,7 +77,8 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
     androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    androidTestImplementation project(':aws-amplify-testutils')
-    androidTestImplementation project(':aws-amplify-testmodels')
+    androidTestImplementation project(path: ':aws-amplify-api-aws')
+    androidTestImplementation project(path: ':aws-amplify-testmodels')
+    androidTestImplementation project(path: ':aws-amplify-testutils')
 }
 
