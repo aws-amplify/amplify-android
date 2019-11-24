@@ -15,10 +15,9 @@
 
 package com.amplifyframework.datastore;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.core.Amplify;
@@ -41,14 +40,14 @@ import java.util.Iterator;
 import java.util.List;
 
 import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
-
-    private static final String TAG = AWSDataStorePlugin.class.getSimpleName();
-
     // Singleton instance
     private static AWSDataStorePlugin singleton;
 
@@ -66,8 +65,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     // local storage adapter, and a remote API
     private SyncEngine syncEngine;
 
-    private AWSDataStorePlugin() {
-        this.sqliteStorageAdapter = SQLiteStorageAdapter.create();
+    private AWSDataStorePlugin(@NonNull final ModelProvider modelProvider) {
+        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.syncEngine = null;
     }
@@ -75,12 +74,13 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * Return the singleton instance if it exists, otherwise create, assign
      * and return.
+     * @param modelProvider Provider of models to be usable by plugin
      * @return the singleton instance.
      */
     @SuppressWarnings("WeakerAccess")
-    public static synchronized AWSDataStorePlugin singleton() {
+    public static synchronized AWSDataStorePlugin singleton(@NonNull final ModelProvider modelProvider) {
         if (singleton == null) {
-            singleton = new AWSDataStorePlugin();
+            singleton = new AWSDataStorePlugin(modelProvider);
         }
         return singleton;
     }
@@ -96,6 +96,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    @SuppressLint("CheckResult")
     @Override
     public void configure(
             @NonNull JSONObject pluginConfiguration,
@@ -105,6 +107,31 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
         } catch (JSONException badConfigException) {
             throw new PluginException.PluginConfigurationException(badConfigException);
         }
+
+        Single.<List<ModelSchema>>create(emitter ->
+            sqliteStorageAdapter.initialize(context, new ResultListener<List<ModelSchema>>() {
+                @Override
+                public void onResult(List<ModelSchema> modelSchema) {
+                    emitter.onSuccess(modelSchema);
+                }
+
+                @Override
+                public void onError(Throwable error) {
+                    emitter.onError(error);
+                }
+            }))
+            .doOnSuccess(this::startModelSynchronization)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .blockingGet();
+    }
+
+    /**
+     * Terminate use of the plugin.
+     */
+    synchronized void terminate() {
+        syncEngine.stop();
+        sqliteStorageAdapter.terminate();
     }
 
     /**
@@ -121,36 +148,6 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.DATASTORE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void initialize(
-            @NonNull Context context,
-            @NonNull ModelProvider modelProvider,
-            @Nullable ResultListener<List<ModelSchema>> initializationResultListener) {
-        sqliteStorageAdapter.initialize(context, modelProvider, new ResultListener<List<ModelSchema>>() {
-            @Override
-            public void onResult(List<ModelSchema> modelSchema) {
-                startModelSynchronization(modelSchema);
-                if (initializationResultListener != null) {
-                    initializationResultListener.onResult(modelSchema);
-                } else {
-                    Log.i(TAG, "AWSDataStoragePlugin initialized successfully.");
-                }
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                if (initializationResultListener != null) {
-                    initializationResultListener.onError(error);
-                } else {
-                    Log.e(TAG, "Failed to initialize AWSDataStorePlugin.", error);
-                }
-            }
-        });
     }
 
     /**
@@ -296,14 +293,6 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!"));
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public synchronized void terminate() {
-        sqliteStorageAdapter.terminate();
     }
 
     private void startModelSynchronization(

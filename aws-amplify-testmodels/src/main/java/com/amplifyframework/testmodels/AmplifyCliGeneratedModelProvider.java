@@ -19,7 +19,6 @@ import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -53,10 +52,9 @@ public final class AmplifyCliGeneratedModelProvider implements ModelProvider {
      */
     @Override
     public Set<Class<? extends Model>> models() {
-        final Set<Class<? extends Model>> modifiableSet = new HashSet<>(
-                Arrays.asList(Person.class, Car.class)
-        );
-
+        final Set<Class<? extends Model>> modifiableSet = new HashSet<>();
+        modifiableSet.add(Person.class);
+        modifiableSet.add(Car.class);
         return Immutable.of(modifiableSet);
     }
 

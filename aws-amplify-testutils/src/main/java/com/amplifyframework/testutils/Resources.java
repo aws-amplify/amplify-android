@@ -15,6 +15,9 @@
 
 package com.amplifyframework.testutils;
 
+import android.content.Context;
+import androidx.annotation.RawRes;
+
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -47,6 +50,14 @@ public final class Resources {
         try {
             final String pathWithResourceBase = RESOURCE_BASE + "/" + path;
             final InputStream inputStream = new FileInputStream(pathWithResourceBase);
+            return stringFromStream(inputStream);
+        } catch (final IOException ioException) {
+            throw new RuntimeException("Failed to load resource " + path, ioException);
+        }
+    }
+
+    private static String stringFromStream(InputStream inputStream) {
+        try {
             final BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
             final StringBuilder stringBuilder = new StringBuilder();
 
@@ -57,10 +68,18 @@ public final class Resources {
             }
 
             return stringBuilder.toString();
-
-        } catch (final IOException ioException) {
-            throw new RuntimeException("Failed to load resource " + path, ioException);
+        } catch (IOException ioException) {
+            throw new RuntimeException(ioException);
         }
     }
-}
 
+    /**
+     * Reads the content of a raw resource, as a string.
+     * @param context An Android Context
+     * @param rawResourceId ID of a raw resource
+     * @return String content of the raw resource
+     */
+    public static String readAsString(Context context, @RawRes int rawResourceId) {
+        return stringFromStream(context.getResources().openRawResource(rawResourceId));
+    }
+}
