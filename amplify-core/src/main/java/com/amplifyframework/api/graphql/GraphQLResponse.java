@@ -148,12 +148,12 @@ public final class GraphQLResponse<T> {
     }
 
     /**
-     * A factory generate strongly-typed response
-     * objects from a string that was returned from a GraphQL API.
+     * A factory which generates a strongly-typed response
+     * object from a string that was returned from a GraphQL API.
      */
     public interface Factory {
         /**
-         * Builds a response object from a string response from a API.
+         * Builds a response containing a single data object from JSON returned by an API.
          * @param apiResponseJson
          *        Response from the endpoint, containing a string response
          * @param classToCast
@@ -163,6 +163,19 @@ public final class GraphQLResponse<T> {
          * @return An instance of the casting class which models the data
          *         provided in the response JSON string
          */
-        <T> GraphQLResponse<T> buildResponse(String apiResponseJson, Class<T> classToCast);
+        <T> GraphQLResponse<T> buildSingleItemResponse(String apiResponseJson, Class<T> classToCast);
+
+        /**
+         * Builds a response containing a list of data objects from JSON returned by an API.
+         * @param apiResponseJson
+         *        Response from the endpoint, containing a string response
+         * @param classToCast
+         *        The class type to which the JSON string should be
+         *        interpreted
+         * @param <T> The type of the elements in the data field list in the response object
+         * @return An instance of the casting class which models the data
+         *         provided in the response JSON string
+         */
+        <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast);
     }
 }

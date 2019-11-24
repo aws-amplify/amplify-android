@@ -339,7 +339,7 @@ final class SubscriptionEndpoint {
         }
 
         void dispatchNextMessage(String message) {
-            responseListener.onNext(responseFactory.buildResponse(message, classToCast));
+            responseListener.onNext(responseFactory.buildSingleItemResponse(message, classToCast));
         }
 
         void dispatchError(Throwable error) {

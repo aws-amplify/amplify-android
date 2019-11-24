@@ -43,14 +43,28 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
     }
 
     /**
-     * Converts a response json string to formatted {@link
-     * GraphQLResponse} object that a response listener can receive.
+     * Converts a response json string containing a single object to a formatted
+     * {@link GraphQLResponse} object that a response listener can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
      */
-    protected final GraphQLResponse<T> wrapResponse(String jsonResponse) {
+    protected final GraphQLResponse<T> wrapSingleResultResponse(String jsonResponse) {
         try {
-            return responseFactory.buildResponse(jsonResponse, classToCast);
+            return responseFactory.buildSingleItemResponse(jsonResponse, classToCast);
+        } catch (ClassCastException cce) {
+            throw new ApiException.ObjectSerializationException();
+        }
+    }
+
+    /**
+     * Converts a response json string containing a list of objects to a formatted
+     * {@link GraphQLResponse} object that a response listener can receive.
+     * @param jsonResponse json response from API to be converted
+     * @return wrapped response object
+     */
+    protected final GraphQLResponse<Iterable<T>> wrapMultiResultResponse(String jsonResponse) {
+        try {
+            return responseFactory.buildSingleArrayResponse(jsonResponse, classToCast);
         } catch (ClassCastException cce) {
             throw new ApiException.ObjectSerializationException();
         }
