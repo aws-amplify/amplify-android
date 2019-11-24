@@ -30,8 +30,6 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
-import java.util.List;
-
 /**
  * The API category provides methods for interacting with remote systems
  * using REST and GraphQL constructs. The category is implemented by
@@ -59,7 +57,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         return getSelectedPlugin().query(apiName, modelClass, predicate, responseListener);
     }
@@ -68,7 +66,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         return getSelectedPlugin().query(apiName, graphQlRequest, responseListener);
     }

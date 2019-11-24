@@ -25,7 +25,6 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 
 import java.io.IOException;
-import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -47,7 +46,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<GraphQLResponse<List<T>>> responseListener;
+    private final ResultListener<GraphQLResponse<Iterable<T>>> responseListener;
 
     private Call ongoingCall;
 
@@ -65,7 +64,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
             OkHttpClient client,
             GraphQLRequest<T> request,
             GraphQLResponse.Factory responseFactory,
-            ResultListener<GraphQLResponse<List<T>>> responseListener) {
+            ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -126,7 +125,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
                 jsonResponse = responseBody.string();
             }
 
-            GraphQLResponse<List<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
+            GraphQLResponse<Iterable<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
 
             if (responseListener != null) {
                 responseListener.onResult(wrappedResponse);
@@ -149,7 +148,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         private OkHttpClient client;
         private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
-        private ResultListener<GraphQLResponse<List<T>>> responseListener;
+        private ResultListener<GraphQLResponse<Iterable<T>>> responseListener;
 
         Builder<T> endpoint(final String endpoint) {
             this.endpoint = endpoint;
@@ -171,7 +170,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        Builder<T> responseListener(final ResultListener<GraphQLResponse<List<T>>> responseListener) {
+        Builder<T> responseListener(final ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
             this.responseListener = responseListener;
             return this;
         }

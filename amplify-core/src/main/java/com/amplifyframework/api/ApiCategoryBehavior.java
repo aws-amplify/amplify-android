@@ -27,8 +27,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-
-import java.util.List;
+import com.amplifyframework.hub.HubCategory;
 
 /**
  * API category behaviors include REST and GraphQL operations. These
@@ -43,9 +42,9 @@ public interface ApiCategoryBehavior {
      *
      * Perform a GraphQL query against a configured GraphQL endpoint.
      * This operation is asynchronous and may be canceled by calling
-     * cancel on the returned operation. The response will be provided
-     * to the response listener, and via Hub.  If there is data present
-     * in the response, it will be cast as the requested class type.
+     * cancel on the returned operation. The response will be provided to
+     * the response listener, and via {@link HubCategory}.  If there is data
+     * present in the response, it will be cast as the requested class type.
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are querying on
      * @param objectId The unique ID of the object you want to get
@@ -85,7 +84,7 @@ public interface ApiCategoryBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener);
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
 
     /**
      * Perform a GraphQL query against a configured GraphQL endpoint.
@@ -105,7 +104,7 @@ public interface ApiCategoryBehavior {
     <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener);
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
 
     /**
      * This is a special helper method for easily performing Mutations

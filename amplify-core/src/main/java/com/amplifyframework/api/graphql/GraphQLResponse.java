@@ -176,6 +176,6 @@ public final class GraphQLResponse<T> {
          * @return An instance of the casting class which models the data
          *         provided in the response JSON string
          */
-        <T> GraphQLResponse<List<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast);
+        <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast);
     }
 }

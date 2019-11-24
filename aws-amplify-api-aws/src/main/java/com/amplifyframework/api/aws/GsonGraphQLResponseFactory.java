@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
-
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
@@ -88,7 +86,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
     }
 
-    public <T> GraphQLResponse<List<T>> buildSingleArrayResponse(
+    public <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(
             String responseJson,
             Class<T> classToCast
     ) throws ApiException {
@@ -109,15 +107,13 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
 
-        Log.i("TESTAPP", jsonData.toString());
-
         if (jsonData == null || jsonData.isJsonNull()) {
             return new GraphQLResponse<>(null, errors);
         } else if (
                 jsonData.isJsonObject() &&
                 jsonData.getAsJsonObject().has("items")
         ) {
-            List<T> data = parseDataAsList(jsonData.getAsJsonObject().get("items"), classToCast);
+            Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get("items"), classToCast);
             return new GraphQLResponse<>(data, errors);
         } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || classToCast.equals(JsonElement.class)) {
             T data = parseData(jsonData, classToCast);
@@ -161,7 +157,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     // Cannot use the same TypeToken trick used in parseErrors due to type erasure
-    private <T> List<T> parseDataAsList(JsonElement jsonData, Class<T> classToCast) throws ApiException {
+    private <T> Iterable<T> parseDataAsList(JsonElement jsonData, Class<T> classToCast) throws ApiException {
         try {
             ArrayList<T> dataAsList = new ArrayList<>();
             Iterator<JsonElement> iterator = jsonData.getAsJsonArray().iterator();

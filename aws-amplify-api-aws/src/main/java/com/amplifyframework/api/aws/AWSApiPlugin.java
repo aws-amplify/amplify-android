@@ -38,7 +38,6 @@ import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import okhttp3.OkHttpClient;
@@ -130,7 +129,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
@@ -145,7 +144,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener) {
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
         final GraphQLOperation<T> operation =
                 buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
         operation.start();
@@ -236,7 +235,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private <T> SingleArrayResultOperation<T> buildMultiResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @Nullable ResultListener<GraphQLResponse<List<T>>> responseListener) {
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {

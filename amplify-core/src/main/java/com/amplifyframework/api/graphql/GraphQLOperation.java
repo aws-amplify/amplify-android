@@ -20,8 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;
 
-import java.util.List;
-
 /**
  * A GraphQLOperation is an API operation which returns a GraphQLResponse.
  * @param <T> The type of data contained in the GraphQLResponse.
@@ -64,7 +62,7 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
      */
-    protected final GraphQLResponse<List<T>> wrapMultiResultResponse(String jsonResponse) {
+    protected final GraphQLResponse<Iterable<T>> wrapMultiResultResponse(String jsonResponse) {
         try {
             return responseFactory.buildSingleArrayResponse(jsonResponse, classToCast);
         } catch (ClassCastException cce) {
