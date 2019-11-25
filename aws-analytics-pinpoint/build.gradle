@@ -14,8 +14,10 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
 
 android {
     compileSdkVersion 29
@@ -42,7 +44,21 @@ android {
 
 dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation project(path: ':amplify-core')
+    implementation project(path: ':core')
     implementation "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion"
 }
 
+project.afterEvaluate {
+    // TODO: Refactor to create a generic publishing snippet that takes input
+    // a POM artifact and publishes it
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'aws-analytics-pinpoint'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
+}
