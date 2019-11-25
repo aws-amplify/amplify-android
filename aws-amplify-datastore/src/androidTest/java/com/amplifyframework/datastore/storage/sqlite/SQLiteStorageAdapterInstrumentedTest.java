@@ -132,20 +132,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         while (iterator.hasNext()) {
             Person p = iterator.next();
             Log.d(TAG, p.toString());
+            assertEquals("Raph", p.getFirstName());
+            assertEquals("Kim", p.getLastName());
+            assertEquals(23, p.getAge().intValue());
         }
-
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
-        assertNotNull(cursor);
-        assertEquals(1, cursor.getCount());
-        if (cursor.moveToFirst()) {
-            assertEquals("Raph",
-                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
-            assertEquals("Kim",
-                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
-            assertEquals(23,
-                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
-        }
-        cursor.close();
     }
 
     /**
@@ -313,7 +303,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithInvalidForeignKey() throws ParseException, InterruptedException {
+    public void saveModelWithInvalidForeignKey() throws ParseException {
         final String expectedError = "FOREIGN KEY constraint failed";
 
         final Person person = Person.builder()
