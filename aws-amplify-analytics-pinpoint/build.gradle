@@ -14,8 +14,10 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
 
 android {
     compileSdkVersion 29
@@ -46,3 +48,15 @@ dependencies {
     implementation "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion"
 }
 
+project.afterEvaluate {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'aws-amplify-analytics-pinpoint'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
+}

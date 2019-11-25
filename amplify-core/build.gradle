@@ -14,8 +14,10 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
 
 android {
     compileSdkVersion 29
@@ -74,3 +76,15 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
 }
 
+project.afterEvaluate {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'amplify-core'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
+}
