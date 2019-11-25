@@ -63,15 +63,15 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(path: ':aws-testutils')
-    testImplementation project(path: ':aws-testmodels')
+    testImplementation project(path: ':testutils')
+    testImplementation project(path: ':testmodels')
 
     // Instrumentation test dependencies
     androidTestImplementation "androidx.test:core:1.2.0" // Core Library
     androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
     androidTestImplementation "androidx.test.ext:junit:1.1.1"
-    androidTestImplementation project(path: ':aws-testutils')
-    androidTestImplementation project(path: ':aws-testmodels')
+    androidTestImplementation project(path: ':testutils')
+    androidTestImplementation project(path: ':testmodels')
 }
 
 project.afterEvaluate {

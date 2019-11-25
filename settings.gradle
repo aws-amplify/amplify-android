@@ -22,6 +22,6 @@ include ':aws-storage-s3'
 include ':aws-datastore'
 
 // Test Utilities and assets
-include ':aws-testutils'
-include ':aws-testmodels'
+include ':testutils'
+include ':testmodels'
 
