@@ -14,8 +14,10 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
 
 android {
     compileSdkVersion 29
@@ -53,7 +55,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
     implementation "io.reactivex.rxjava2:rxjava:$rxJava2Version"
-    implementation project(':amplify-core')
+    implementation project(':core')
 
     /**
      * The following Gson dependencies are used for converting
@@ -68,8 +70,8 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(path: ':aws-amplify-testmodels')
-    testImplementation project(path: ':aws-amplify-testutils')
+    testImplementation project(path: ':testmodels')
+    testImplementation project(path: ':testutils')
 
     // Required for instrumented tests
     androidTestImplementation 'androidx.annotation:annotation:1.1.0'
@@ -77,8 +79,22 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
     androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    androidTestImplementation project(path: ':aws-amplify-api-aws')
-    androidTestImplementation project(path: ':aws-amplify-testmodels')
-    androidTestImplementation project(path: ':aws-amplify-testutils')
+    androidTestImplementation project(path: ':aws-api')
+    androidTestImplementation project(path: ':testmodels')
+    androidTestImplementation project(path: ':testutils')
 }
 
+project.afterEvaluate {
+    // TODO: Refactor to create a generic publishing snippet that takes input
+    // a POM artifact and publishes it
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'aws-datastore'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
+}

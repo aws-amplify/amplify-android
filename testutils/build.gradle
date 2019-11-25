@@ -25,11 +25,7 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        consumerProguardFiles 'consumer-rules.pro'
     }
 
     buildTypes {
@@ -38,13 +34,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
+    }
 }
 
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation project(path: ':amplify-core')
-
-    implementation "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion"
-    implementation ("com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion") { transitive = true }
+    implementation "junit:junit:4.12"
+    implementation 'androidx.test:core:1.2.0'
+    implementation project(path: ':core')
 }
-

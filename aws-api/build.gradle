@@ -13,9 +13,11 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: "com.android.library"
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
 
 android {
     compileSdkVersion 29
@@ -44,7 +46,7 @@ android {
 }
 
 dependencies {
-    api project(":amplify-core")
+    api project(':core')
 
     implementation "androidx.appcompat:appcompat:1.1.0"
     implementation "com.squareup.okhttp3:okhttp:4.2.2"
@@ -61,14 +63,28 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(path: ':aws-amplify-testutils')
-    testImplementation project(path: ':aws-amplify-testmodels')
+    testImplementation project(path: ':testutils')
+    testImplementation project(path: ':testmodels')
 
     // Instrumentation test dependencies
     androidTestImplementation "androidx.test:core:1.2.0" // Core Library
     androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
     androidTestImplementation "androidx.test.ext:junit:1.1.1"
-    androidTestImplementation project(path: ':aws-amplify-testutils')
-    androidTestImplementation project(path: ':aws-amplify-testmodels')
+    androidTestImplementation project(path: ':testutils')
+    androidTestImplementation project(path: ':testmodels')
 }
 
+project.afterEvaluate {
+    // TODO: Refactor to create a generic publishing snippet that takes input
+    // a POM artifact and publishes it
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'aws-api'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
+}
