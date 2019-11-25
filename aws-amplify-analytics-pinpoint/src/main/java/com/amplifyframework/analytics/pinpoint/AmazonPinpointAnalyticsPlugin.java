@@ -28,6 +28,9 @@ import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
@@ -49,6 +52,11 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     }
 
     @Override
+    public void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile) {
+
+    }
+
+    @Override
     public void disable() {
 
     }
@@ -66,8 +74,17 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile)
-            throws AnalyticsException, ConfigurationException {
+    public void registerGlobalProperties(Map<String, Object> properties) {
+
+    }
+
+    @Override
+    public void unregisterGlobalProperties(Collection<String> keys) {
+
+    }
+
+    @Override
+    public void flushEvents() {
 
     }
 
