@@ -187,7 +187,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
     ) {
-        return null;
+        return subscribe(
+                apiName,
+                AppSyncGraphQLRequestFactory.buildSubscription(
+                        modelClass,
+                        subscriptionType
+                ),
+                subscriptionListener
+        );
     }
 
     @Override
