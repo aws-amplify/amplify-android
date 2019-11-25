@@ -52,12 +52,6 @@ public final class ModelField {
     // True if the field is an instance of model.
     private final boolean isModel;
 
-    // True if the field is a primary key in the Model.
-    private final boolean isPrimaryKey;
-
-    // Type of foreign key model that this field identifies.
-    private final String belongsTo;
-
     /**
      * Construct the ModelField object from the builder.
      */
@@ -70,8 +64,6 @@ public final class ModelField {
         this.isArray = builder.isArray;
         this.isEnum = builder.isEnum;
         this.isModel = builder.isModel;
-        this.isPrimaryKey = builder.isPrimaryKey;
-        this.belongsTo = builder.belongsTo;
     }
 
     /**
@@ -115,18 +107,26 @@ public final class ModelField {
     }
 
     /**
-     * Returns if the field is a required or an optional field.
-     * @return If the field is a required or an optional field.
+     * Returns true if the field represents a unique ID.
+     * @return True if the field represents a unique ID.
+     */
+    public boolean isId() {
+        return PrimaryKey.matches(name);
+    }
+
+    /**
+     * Returns true if the field is a required field.
+     * @return True if the field is a required field.
      */
     public boolean isRequired() {
         return isRequired;
     }
 
     /**
-     * Returns if the field is an array targetType. False if it is a primitive targetType and True if it
+     * Returns whether the field is an array targetType. False if it is a primitive targetType and True if it
      * is an array targetType.
      *
-     * @return If the field is an array targetType. False if it is a primitive targetType and True if it
+     * @return Whether the field is an array targetType. False if it is a primitive targetType and True if it
      *         is an array targetType.
      */
     public boolean isArray() {
@@ -136,7 +136,7 @@ public final class ModelField {
     /**
      * Returns true if the field's target type is Enum.
      *
-     * @return true if the field's target type is Enum.
+     * @return True if the field's target type is Enum.
      */
     public boolean isEnum() {
         return isEnum;
@@ -145,34 +145,10 @@ public final class ModelField {
     /**
      * Returns true if the field's target type is Model.
      *
-     * @return true if the field's target type is Model.
+     * @return True if the field's target type is Model.
      */
     public boolean isModel() {
         return isModel;
-    }
-
-    /**
-     * Returns true if the field is a primary key in the Model.
-     * @return True if the field is a primary key in the Model.
-     */
-    public boolean isPrimaryKey() {
-        return isPrimaryKey;
-    }
-
-    /**
-     * Returns true if the field is a foreign key in the Model.
-     * @return True if the field is a foreign key in the Model.
-     */
-    public boolean isForeignKey() {
-        return belongsTo != null;
-    }
-
-    /**
-     * Returns the name of model that this field belongs to.
-     * @return the name of model that this field belongs to.
-     */
-    public String belongsTo() {
-        return belongsTo;
     }
 
     @Override
@@ -198,9 +174,6 @@ public final class ModelField {
         if (isModel != that.isModel) {
             return false;
         }
-        if (isPrimaryKey != that.isPrimaryKey) {
-            return false;
-        }
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
@@ -211,9 +184,6 @@ public final class ModelField {
             return false;
         }
         if (!ObjectsCompat.equals(targetType, that.targetType)) {
-            return false;
-        }
-        if (!ObjectsCompat.equals(belongsTo, that.belongsTo)) {
             return false;
         }
         return true;
@@ -230,8 +200,6 @@ public final class ModelField {
         result = 31 * result + (isArray ? 1 : 0);
         result = 31 * result + (isEnum ? 1 : 0);
         result = 31 * result + (isModel ? 1 : 0);
-        result = 31 * result + (isPrimaryKey ? 1 : 0);
-        result = 31 * result + (belongsTo != null ? belongsTo.hashCode() : 0);
         return result;
     }
 
@@ -246,8 +214,6 @@ public final class ModelField {
             ", isArray=" + isArray +
             ", isEnum=" + isEnum +
             ", isModel=" + isModel +
-            ", isPrimaryKey=" + isPrimaryKey +
-            ", belongsTo='" + belongsTo + '\'' +
             '}';
     }
 
@@ -282,12 +248,6 @@ public final class ModelField {
 
         // True if the field's target type is Model.
         private boolean isModel = false;
-
-        // True if the field is a primary key in the Model.
-        private boolean isPrimaryKey = false;
-
-        // Name of the model that this field identifies.
-        private String belongsTo;
 
         /**
          * Set the name of the field.
@@ -369,26 +329,6 @@ public final class ModelField {
          */
         public ModelFieldBuilder isModel(boolean isModel) {
             this.isModel = isModel;
-            return this;
-        }
-
-        /**
-         * Set the flag indicating if the field is a primary key.
-         * @param isPrimaryKey  True if the field is a primary key in the Model
-         * @return the builder object
-         */
-        public ModelFieldBuilder isPrimaryKey(boolean isPrimaryKey) {
-            this.isPrimaryKey = isPrimaryKey;
-            return this;
-        }
-
-        /**
-         * Set the name of model that this field identifies as foreign key.
-         * @param belongsTo  name of model that acts as foreign key
-         * @return the builder object
-         */
-        public ModelFieldBuilder belongsTo(String belongsTo) {
-            this.belongsTo = belongsTo;
             return this;
         }
 

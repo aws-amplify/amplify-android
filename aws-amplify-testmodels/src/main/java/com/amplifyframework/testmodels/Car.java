@@ -40,7 +40,7 @@ public final class Car implements Model {
     private String vehicle_model;
 
     @BelongsTo(type = Person.class)
-    @ModelField(isRequired = true)
+    @ModelField
     private Person owner;
 
     private Car(String id,
