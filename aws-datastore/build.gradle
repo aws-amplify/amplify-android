@@ -85,6 +85,8 @@ dependencies {
 }
 
 project.afterEvaluate {
+    // TODO: Refactor to create a generic publishing snippet that takes input
+    // a POM artifact and publishes it
     publishing {
         publications {
             library(MavenPublication) {
