@@ -46,6 +46,15 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        return getSelectedPlugin().query(apiName, modelClass, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
             @NonNull String objectId,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
@@ -56,7 +65,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
+            QueryPredicate predicate,
             @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         return getSelectedPlugin().query(apiName, modelClass, predicate, responseListener);
@@ -75,7 +84,17 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
-            @NonNull QueryPredicate predicate,
+            @NonNull MutationType mutationType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().mutate(apiName, model, mutationType, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull T model,
+            QueryPredicate predicate,
             @NonNull MutationType mutationType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {

@@ -81,7 +81,6 @@ public class SyncEngineTest {
             any(),
             any(),
             any(),
-            any(),
             any()
         );
 

@@ -27,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -66,11 +67,9 @@ public final class CodeGenerationInstrumentationTest {
             .relationship(MaritalStatus.married)
             .build();
 
-        //noinspection ConstantConditions TODO: predicate isn't supposed to be null...
         Amplify.API.mutate(
             API_NAME,
             person,
-            null,
             MutationType.CREATE,
             mutationListener
         );
@@ -94,7 +93,7 @@ public final class CodeGenerationInstrumentationTest {
      * Tests the code generation for LIST query with a predicate.
      */
     @Test
-    public void queryList() {
+    public void queryListWithPredicate() {
         LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
 
         Amplify.API.query(
@@ -115,6 +114,36 @@ public final class CodeGenerationInstrumentationTest {
             assertTrue(Arrays.asList("David", "Sarah").contains(person.getFirstName()));
             assertEquals("Daudelin", person.getLastName());
         }
+    }
+
+    /**
+     * Tests the code generation for LIST query without a predicate.
+     */
+    @SuppressWarnings("checkstyle:MagicNumber") // test table configured to have at least 3 items
+    @Test
+    public void queryListWithoutPredicate() {
+        LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
+
+        Amplify.API.query(
+                API_NAME,
+                Person.class,
+                queryListener
+        );
+
+        GraphQLResponse<Iterable<Person>> queryResponse =
+                queryListener.awaitTerminalEvent().assertNoError().assertResponse().getResponse();
+        assertTrue(queryResponse.hasData());
+        assertFalse(queryResponse.hasErrors());
+
+        // Test table should always have at least three items
+        int count = 0;
+        Iterator<Person> iterator = queryResponse.getData().iterator();
+        while (iterator.hasNext() && count < 3) {
+            iterator.next();
+            count++;
+        }
+
+        assertEquals(3, count);
     }
 
     /**
@@ -157,5 +186,61 @@ public final class CodeGenerationInstrumentationTest {
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
         streamListener.awaitCompletion();
+    }
+
+    /**
+     * Creates an object and tries to update it with a false condition on the existing data which should fail to
+     * ensure mutation condition filtering works. Then it sends a correct condition to delete which should succeed.
+     */
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Test
+    public void mutationFailsWrongPassesCorrectCondition() {
+        LatchedSingleResponseListener<Person> createListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Person> updateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Person> deleteListener = new LatchedSingleResponseListener<>();
+
+        Person person = Person
+                .builder()
+                .firstName("David")
+                .lastName("Daudelin")
+                .age(29)
+                .relationship(MaritalStatus.married)
+                .build();
+
+        Amplify.API.mutate(
+                API_NAME,
+                person,
+                MutationType.CREATE,
+                createListener
+        );
+
+        GraphQLResponse<Person> createResponse = createListener.awaitTerminalEvent().getResponse();
+        assertFalse(createResponse.hasErrors());
+        assertTrue(createResponse.hasData());
+
+        Person updated = person.newBuilder().age(30).build();
+
+        Amplify.API.mutate(
+                API_NAME,
+                updated,
+                Person.LAST_NAME.eq("Dandelion"),
+                MutationType.UPDATE,
+                updateListener
+        );
+
+        GraphQLResponse<Person> updateResponse = updateListener.awaitTerminalEvent().getResponse();
+        assertTrue(updateResponse.hasErrors());
+        assertTrue(updateResponse.getErrors().get(0).getMessage().contains("ConditionalCheckFailedException"));
+
+        Amplify.API.mutate(
+                API_NAME,
+                person,
+                MutationType.DELETE,
+                deleteListener
+        );
+
+        GraphQLResponse<Person> deleteResponse = deleteListener.awaitTerminalEvent().getResponse();
+        assertFalse(deleteResponse.hasErrors());
+        assertTrue(deleteResponse.hasData());
     }
 }
