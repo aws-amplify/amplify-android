@@ -203,7 +203,6 @@ public final class ModelSchema {
             return ModelAssociation.builder()
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
-                    .relationship(RelationalModel.ONE_TO_ONE)
                     .build();
         }
         if (field.isAnnotationPresent(HasMany.class)) {
@@ -211,7 +210,6 @@ public final class ModelSchema {
             return ModelAssociation.builder()
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
-                    .relationship(RelationalModel.ONE_TO_MANY)
                     .build();
         }
         return null;

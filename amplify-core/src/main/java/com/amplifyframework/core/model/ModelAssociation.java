@@ -35,10 +35,6 @@ public final class ModelAssociation {
     // For example, foreign key is an owner
     private final boolean isOwner;
 
-    // Type of relationship between models
-    private final RelationalModel relationship;
-
-
     /**
      * Construct the ModelAssociation object from the builder.
      */
@@ -47,7 +43,6 @@ public final class ModelAssociation {
         this.associatedName = builder.associatedName;
         this.associatedType = builder.associatedType;
         this.isOwner = builder.isOwner;
-        this.relationship = builder.relationship;
     }
 
     /**
@@ -92,14 +87,6 @@ public final class ModelAssociation {
         return isOwner;
     }
 
-    /**
-     * Gets the relationship to the associated field.
-     * @return the relationship to the associated field.
-     */
-    public RelationalModel getRelationship() {
-        return relationship;
-    }
-
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -122,9 +109,6 @@ public final class ModelAssociation {
         if (isOwner ^ that.isOwner) {
             return false;
         }
-        if (relationship != that.relationship) {
-            return false;
-        }
         return true;
     }
 
@@ -135,7 +119,6 @@ public final class ModelAssociation {
         result = 31 * result + (associatedName != null ? associatedName.hashCode() : 0);
         result = 31 * result + (associatedType != null ? associatedType.hashCode() : 0);
         result = 31 * result + (isOwner ? 1 : 0);
-        result = 31 * result + (relationship != null ? relationship.hashCode() : 0);
         return result;
     }
 
@@ -146,7 +129,6 @@ public final class ModelAssociation {
                 ", associatedName=\'" + associatedName + "\'" +
                 ", associatedType=" + associatedType +
                 ", isOwner=" + isOwner +
-                ", relationship=" + relationship +
                 '}';
     }
 
@@ -158,7 +140,6 @@ public final class ModelAssociation {
         private String associatedName;
         private String associatedType;
         private boolean isOwner = false;
-        private RelationalModel relationship;
 
         /**
          * Sets the name of association model.
@@ -197,16 +178,6 @@ public final class ModelAssociation {
          */
         public Builder isOwner(boolean isOwner) {
             this.isOwner = isOwner;
-            return this;
-        }
-
-        /**
-         * Sets the relational model for this field.
-         * @param relationship relationship of the associated model.
-         * @return the association model with given relationship
-         */
-        public Builder relationship(RelationalModel relationship) {
-            this.relationship = relationship;
             return this;
         }
 
