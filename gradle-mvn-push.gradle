@@ -204,21 +204,14 @@ afterEvaluate { project ->
             classifier = 'sources'
             from sourceSets.main.allSource
         }
-
-        task javadocJar(type: Jar, dependsOn: javadoc) {
-            classifier = 'javadoc'
-            from javadoc.destinationDir
-        }
     }
 
     artifacts {
         if (project.getPlugins().hasPlugin('com.android.application') ||
             project.getPlugins().hasPlugin('com.android.library')) {
             archives androidSourcesJar
-            archives androidJavadocsJar
         } else {
             archives sourcesJar
-            archives javadocJar
         }
     }
 }
