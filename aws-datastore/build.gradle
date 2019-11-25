@@ -1,0 +1,98 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+apply from: rootProject.file("configuration/checkstyle.gradle")
+apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
+
+android {
+    compileSdkVersion 29
+
+    defaultConfig {
+        minSdkVersion 15
+        targetSdkVersion 29
+        versionCode 1
+        versionName "1.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
+    implementation "io.reactivex.rxjava2:rxjava:$rxJava2Version"
+    implementation project(':core')
+
+    /**
+     * The following Gson dependencies are used for converting
+     * raw item read from SQLite tables into strongly typed Java
+     * objects by the DataStore.
+     */
+    implementation "com.google.code.gson:gson:2.8.6"
+
+    testImplementation 'junit:junit:4.12'
+    testImplementation'org.mockito:mockito-core:3.1.0'
+    testImplementation('org.robolectric:robolectric:4.3.1') {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+    }
+    testImplementation project(path: ':aws-testmodels')
+    testImplementation project(path: ':aws-testutils')
+
+    // Required for instrumented tests
+    androidTestImplementation 'androidx.annotation:annotation:1.1.0'
+    androidTestImplementation 'androidx.test:core:1.2.0' // Core Library
+    androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+    androidTestImplementation project(path: ':aws-api')
+    androidTestImplementation project(path: ':aws-testmodels')
+    androidTestImplementation project(path: ':aws-testutils')
+}
+
+project.afterEvaluate {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'aws-datastore'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
+}

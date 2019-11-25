@@ -27,9 +27,6 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-
-        // Specifies the fully-qualified class name of the test instrumentation runner.
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -40,38 +37,17 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
 }
 
 dependencies {
-    api project(":amplify-core")
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation project(path: ':core')
 
-    implementation "androidx.appcompat:appcompat:1.1.0"
-    implementation "com.squareup.okhttp3:okhttp:4.2.2"
-    implementation "com.google.code.gson:gson:2.8.6"
-
-    // AWS dependencies
-    implementation "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion"
+    implementation "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion"
     implementation ("com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion") { transitive = true }
-
-    // Unit test dependencies
-    testImplementation "junit:junit:4.12"
-    testImplementation'org.mockito:mockito-core:3.1.0'
-    testImplementation('org.robolectric:robolectric:4.3.1') {
-        // https://github.com/robolectric/robolectric/issues/5245
-        exclude group: 'com.google.auto.service', module: 'auto-service'
-    }
-    testImplementation project(path: ':aws-amplify-testutils')
-    testImplementation project(path: ':aws-amplify-testmodels')
-
-    // Instrumentation test dependencies
-    androidTestImplementation "androidx.test:core:1.2.0" // Core Library
-    androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
-    androidTestImplementation "androidx.test.ext:junit:1.1.1"
-    androidTestImplementation project(path: ':aws-amplify-testutils')
-    androidTestImplementation project(path: ':aws-amplify-testmodels')
 }
 
 project.afterEvaluate {
@@ -79,7 +55,7 @@ project.afterEvaluate {
         publications {
             library(MavenPublication) {
                 groupId 'com.amplifyframework'
-                artifactId 'aws-amplify-api-aws'
+                artifactId 'aws-storage-s3'
                 version VERSION_NAME
                 artifact(bundleReleaseAar)
             }

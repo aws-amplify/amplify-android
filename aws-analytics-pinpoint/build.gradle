@@ -14,8 +14,10 @@
  */
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
+apply from: rootProject.file('gradle-mvn-push.gradle')
 
 android {
     compileSdkVersion 29
@@ -25,7 +27,11 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -34,15 +40,23 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
-    compileOptions {
-        sourceCompatibility 1.8
-        targetCompatibility 1.8
-    }
 }
 
 dependencies {
-    implementation "junit:junit:4.12"
-    implementation 'androidx.test:core:1.2.0'
-    implementation project(path: ':amplify-core')
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation project(path: ':core')
+    implementation "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion"
+}
+
+project.afterEvaluate {
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId 'com.amplifyframework'
+                artifactId 'aws-analytics-pinpoint'
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
 }
