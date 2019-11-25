@@ -15,20 +15,15 @@
 
 package com.amplifyframework.datastore;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
-import java.util.List;
 
 import io.reactivex.Observable;
 
@@ -49,16 +44,6 @@ public class DataStoreCategory
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.DATASTORE;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void initialize(@NonNull Context context,
-                           @NonNull ModelProvider modelProvider,
-                           @Nullable ResultListener<List<ModelSchema>> initializationResultListener) {
-        getSelectedPlugin().initialize(context, modelProvider, initializationResultListener);
     }
 
     /**
@@ -126,13 +111,5 @@ public class DataStoreCategory
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria) {
         return getSelectedPlugin().observe(itemClass, selectionCriteria);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void terminate() {
-        getSelectedPlugin().terminate();
     }
 }

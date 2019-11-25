@@ -27,7 +27,6 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.QueryType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
@@ -115,12 +114,25 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
-            @NonNull QueryType queryType,
+            @NonNull String objectId,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
+        GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
+        final GraphQLOperation<T> operation =
+                buildSingleResponseOperation(apiName, request, responseListener);
+        operation.start();
+        return operation;
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull QueryPredicate predicate,
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
         try {
-            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate, queryType);
+            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
             return query(apiName, request, responseListener);
         } catch (AmplifyException exception) {
             responseListener.onError(exception);
@@ -132,9 +144,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
         final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
+                buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
         operation.start();
         return operation;
     }
@@ -201,7 +213,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return operation;
     }
 
-    private <T> SingleResultOperation<T> buildSingleResponseOperation(
+    private <T> SingleItemResultOperation<T> buildSingleResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
@@ -211,7 +223,26 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             throw new ApiException("No client information for API named " + apiName);
         }
 
-        return SingleResultOperation.<T>builder()
+        return SingleItemResultOperation.<T>builder()
+                .endpoint(clientDetails.apiConfiguration().getEndpoint())
+                .client(clientDetails.okHttpClient())
+                .request(graphQLRequest)
+                .responseFactory(gqlResponseFactory)
+                .responseListener(responseListener)
+                .build();
+    }
+
+    private <T> SingleArrayResultOperation<T> buildMultiResponseOperation(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+
+        final ClientDetails clientDetails = apiDetails.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException("No client information for API named " + apiName);
+        }
+
+        return SingleArrayResultOperation.<T>builder()
                 .endpoint(clientDetails.apiConfiguration().getEndpoint())
                 .client(clientDetails.okHttpClient())
                 .request(graphQLRequest)

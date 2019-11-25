@@ -53,13 +53,11 @@ public interface LocalStorageAdapter {
      * any model type that has not been initialized by this call.
      *
      * @param context An Android Context
-     * @param modelProvider Provides a collection of all Model classes used by the DataStore system
-     * @param initializationListener A listener to be invoked upon completion of the initialization
+     * @param listener A listener to be invoked upon completion of the initialization
      */
     void initialize(
             @NonNull Context context,
-            @NonNull ModelProvider modelProvider,
-            @NonNull ResultListener<List<ModelSchema>> initializationListener);
+            @NonNull ResultListener<List<ModelSchema>> listener);
 
     /**
      * Save an item into local storage. The {@link ResultListener} will be invoked when the

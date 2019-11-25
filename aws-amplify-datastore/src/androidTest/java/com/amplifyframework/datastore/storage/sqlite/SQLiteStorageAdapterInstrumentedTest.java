@@ -24,6 +24,7 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
@@ -58,9 +59,9 @@ import static org.junit.Assert.assertTrue;
  * {@link DataStoreCategoryBehavior#save(Model, ResultListener)} operation.
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
-
     private static final String TAG = "sqlite-instrumented-test";
     private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private Context context;
     private SQLiteStorageAdapter sqLiteStorageAdapter;
@@ -71,11 +72,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+            .detectLeakedSqlLiteObjects()
+            .detectLeakedClosableObjects()
+            .penaltyLog()
+            .penaltyDeath()
+            .build());
     }
 
     /**
@@ -84,18 +85,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @Before
     public void setUp() {
         context = ApplicationProvider.getApplicationContext();
-        deleteDatabase();
+        context.deleteDatabase(DATABASE_NAME);
 
-        sqLiteStorageAdapter = SQLiteStorageAdapter.create();
+        ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
+        sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
 
         LatchedResultListener<List<ModelSchema>> setupListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
 
-        sqLiteStorageAdapter.initialize(
-            context,
-            AmplifyCliGeneratedModelProvider.singletonInstance(),
-            setupListener
-        );
+        sqLiteStorageAdapter.initialize(context, setupListener);
+
         List<ModelSchema> modelSchemaList =
             setupListener.awaitTerminalEvent().assertNoError().getResult();
         assertNotNull(modelSchemaList);
@@ -108,7 +107,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @After
     public void tearDown() {
         sqLiteStorageAdapter.terminate();
-        deleteDatabase();
+        context.deleteDatabase(DATABASE_NAME);
     }
 
     /**
@@ -354,9 +353,5 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
         sqLiteStorageAdapter.query(modelClass, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
-    }
-
-    private void deleteDatabase() {
-        context.deleteDatabase("AmplifyDatastore.db");
     }
 }

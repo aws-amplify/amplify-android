@@ -62,6 +62,7 @@ dependencies {
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
     testImplementation project(path: ':aws-amplify-testutils')
+    testImplementation project(path: ':aws-amplify-testmodels')
 
     // Instrumentation test dependencies
     androidTestImplementation "androidx.test:core:1.2.0" // Core Library

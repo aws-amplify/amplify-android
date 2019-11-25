@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore;
 
-import android.content.Context;
 import androidx.core.util.ObjectsCompat;
 import androidx.test.core.app.ApplicationProvider;
 
@@ -53,6 +52,7 @@ import static org.junit.Assert.assertEquals;
  */
 @SuppressWarnings("rawtypes")
 public final class StorageItemChangeRecordIntegrationTest {
+    private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private GsonStorageItemChangeConverter storageItemChangeConverter;
     private LocalStorageAdapter localStorageAdapter;
@@ -66,12 +66,10 @@ public final class StorageItemChangeRecordIntegrationTest {
     @Before
     public void obtainLocalStorageAndValidateModelSchema() {
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        ApplicationProvider.getApplicationContext()
-            .deleteDatabase("AmplifyDatastore.db");
+        ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
 
-        // Setup dependencies for an LocalStorageAdapter instance.
-        Context context = ApplicationProvider.getApplicationContext();
-        ModelProvider modelProvider = new ModelProvider() {
+        LatchedResultListener<List<ModelSchema>> schemaListener = LatchedResultListener.instance();
+        this.localStorageAdapter = SQLiteStorageAdapter.forModels(new ModelProvider() {
             @Override
             public Set<Class<? extends Model>> models() {
                 // StorageItemChange.Record.class is expressly *NOT* added here,
@@ -86,10 +84,8 @@ public final class StorageItemChangeRecordIntegrationTest {
                 // test class and won't change across test runs.
                 return StorageItemChangeRecordIntegrationTest.class.getSimpleName();
             }
-        };
-        LatchedResultListener<List<ModelSchema>> schemaListener = LatchedResultListener.instance();
-        this.localStorageAdapter = SQLiteStorageAdapter.create();
-        this.localStorageAdapter.initialize(context, modelProvider, schemaListener);
+        });
+        localStorageAdapter.initialize(ApplicationProvider.getApplicationContext(), schemaListener);
 
         // Evaluate the returned set of ModelSchema. Make sure that there is one
         // for the StorageItemChange.Record system class.

@@ -66,7 +66,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildResponse(nullResponseJson, ListTodosResult.class);
+            responseFactory.buildSingleItemResponse(nullResponseJson, ListTodosResult.class);
 
         // Assert that the model is constructed without content
         assertNotNull(response);
@@ -87,7 +87,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildResponse(partialResponseJson, ListTodosResult.class);
+            responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
 
         // Assert that the model contained things...
         assertNotNull(response);
@@ -142,13 +142,16 @@ public final class GsonGraphQLResponseFactoryTest {
     public void partialResponseCanBeRenderedAsStringType() throws JSONException {
         // Arrange some known JSON response
         final JSONObject partialResponseJson =
-            new JSONObject(Resources.readAsString("partial-gql-response.json"));
+                new JSONObject(Resources.readAsString("partial-gql-response.json"));
 
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
-            responseFactory.buildResponse(partialResponseJson.toString(), String.class);
+                responseFactory.buildSingleItemResponse(partialResponseJson.toString(), String.class);
 
         // Assert that the response data is just the data block as a JSON string
-        assertEquals(partialResponseJson.getJSONObject("data").toString(), response.getData());
+        assertEquals(
+                partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(),
+                response.getData()
+        );
     }
 }

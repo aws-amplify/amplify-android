@@ -34,11 +34,19 @@
   "API": {
     "plugins": {
       "AWSAPIPlugin": {
-        "GraphQLInstrumentationTest": {
+        "eventsApi": {
+          "__comment": "This is in Jameson's developer account, right now.",
           "Endpoint": "https://57qnjcavhbdatfveg5dccboqji.appsync-api.us-west-2.amazonaws.com/graphql",
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
           "ApiKey": "da2-2gvk5ltfync4linsd2mhxx35my"
+        },
+        "personApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://bb2xm5ttqvbfdeu5oi5gw7cvma.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-og4mnlou65dm5d6hs2itesgkzm"
         }
       }
     }

@@ -60,3 +60,4 @@ public class PredicateTest {
         Assert.assertEquals(expected, op);
     }
 }
+
