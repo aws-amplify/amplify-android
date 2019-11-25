@@ -90,17 +90,17 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String modelName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getTargetModelName();
 
         doc.append("query ")
             .append("List")
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(graphQlTypeName))
             .append("(")
             .append("$filter: Model")
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(graphQlTypeName))
             .append("FilterInput ")
             .append("$limit: Int $nextToken: String) { list")
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(graphQlTypeName))
             .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
             .append(getModelFields(schema))
             .append("} nextToken }}");
@@ -127,17 +127,17 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
-        String modelName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getTargetModelName();
 
         doc.append("mutation ")
             .append(StringUtils.capitalize(typeStr))
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(graphQlTypeName))
             .append("($input: ")
             .append(StringUtils.capitalize(typeStr))
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(graphQlTypeName))
             .append("Input!) { ")
             .append(typeStr.toLowerCase(Locale.getDefault()))
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalize(graphQlTypeName))
             .append("(input: $input) { ")
             .append(getModelFields(schema))
             .append("}}");
@@ -165,14 +165,14 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
-        String modelName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getTargetModelName();
 
         doc.append("subscription ")
                 .append(StringUtils.allCapsToPascalCase(typeStr))
-                .append(StringUtils.capitalize(modelName))
+                .append(StringUtils.capitalize(graphQlTypeName))
                 .append("{")
                 .append(StringUtils.allCapsToCamelCase(typeStr))
-                .append(StringUtils.capitalize(modelName))
+                .append(StringUtils.capitalize(graphQlTypeName))
                 .append("{")
                 .append(getModelFields(schema))
                 .append("}}");

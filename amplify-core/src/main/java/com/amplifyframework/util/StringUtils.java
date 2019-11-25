@@ -33,6 +33,10 @@ public final class StringUtils {
      * @return camelCaseFormat formatted version of that string
      */
     public static String allCapsToCamelCase(String original) {
+        if (original == null || original.length() == 0) {
+            return original;
+        }
+
         String pascalCase = allCapsToPascalCase(original);
 
         return pascalCase.substring(0, 1).toLowerCase(Locale.getDefault()) +
@@ -45,6 +49,10 @@ public final class StringUtils {
      * @return PascalCaseFormat formatted version of that string
      */
     public static String allCapsToPascalCase(String original) {
+        if (original == null || original.length() == 0) {
+            return original;
+        }
+
         String[] parts = original.split("_");
         StringBuilder camelCaseString = new StringBuilder();
         for (String part : parts) {
@@ -63,6 +71,7 @@ public final class StringUtils {
         if (original == null || original.length() == 0) {
             return original;
         }
+
         return original.substring(0, 1).toUpperCase(Locale.getDefault()) +
                 original.substring(1).toLowerCase(Locale.getDefault());
     }
