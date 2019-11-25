@@ -114,6 +114,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
+            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        return query(apiName, modelClass, null, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
             @NonNull String objectId,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
@@ -128,7 +137,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
+            QueryPredicate predicate,
             @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         try {
@@ -155,7 +164,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
-            @NonNull QueryPredicate predicate,
+            @NonNull MutationType mutationType,
+            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return mutate(
+                apiName,
+                model,
+                null,
+                mutationType,
+                responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull String apiName,
+            @NonNull T model,
+            QueryPredicate predicate,
             @NonNull MutationType mutationType,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {

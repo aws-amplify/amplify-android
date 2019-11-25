@@ -26,7 +26,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.model.query.predicate.QueryPredicates;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -154,7 +153,6 @@ public final class SyncEngine {
             api.mutate(
                 apiName,
                 storageItemChange.item(),
-                QueryPredicates.matchAll(),
                 selectMutationType(storageItemChange),
                 new ResultListener<GraphQLResponse<MODEL>>() {
                     @Override
