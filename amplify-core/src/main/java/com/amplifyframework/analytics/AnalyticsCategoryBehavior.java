@@ -19,12 +19,24 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
 
+import java.util.Collection;
+import java.util.Map;
+
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
  * events.
  */
 public interface AnalyticsCategoryBehavior {
+
+    /**
+     * Allows you to tie a user to their actions and record traits about them. It includes
+     * an unique User ID and any optional traits you know about them like their email, name, etc.
+     *
+     * @param id The unique identifier for the user
+     * @param profile User specific data (e.g. plan, accountType, email, age, location, etc)
+     */
+    void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile);
 
     /**
      * Disable collection and sending of Analytics Events.
@@ -56,13 +68,30 @@ public interface AnalyticsCategoryBehavior {
     void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
 
     /**
-     * Update the profile of the end-user/device for whom/which you are
-     * collecting analytics.
-     * @param analyticsProfile the profile of the end-user/device for whom/which you are
-     *                         collecting analytics.
-     * @throws AnalyticsException when there is an error updating the
-     *                            profile with the registered/chosen {@link AnalyticsPlugin}
-     * @throws ConfigurationException If the category is badly/not yet configured
+     * Register properties that will be recorded by all the subsequent `recordEvent` call.
+     * Properties registered here can be overridden by the ones with the same
+     * name when calling `recordEvent`.
+     *
+     * Examples of global properties would be `selectedPlan`, `campaignSource`
      */
-    void updateProfile(@NonNull AnalyticsProfile analyticsProfile) throws AnalyticsException, ConfigurationException;
+    void registerGlobalProperties(Map<String, Object> properties );
+
+    /**
+     * Registered global properties can be unregistered though this method.
+     *
+     * **Note:** In case no keys are provided, *all* registered global properties will
+     * be unregistered.
+     *
+     * @param keys a collection of property names to unregister
+     */
+    void unregisterGlobalProperties(Collection<String> keys);
+
+    /**
+     * Attempts to submit the locally stored events to the underlying service.
+     *
+     * **Note:** Implementations do not guarantee that all the stored data will be sent in one
+     * request. Some analytics services have hard limits on how much data you can send at once.
+     * What is the behavior in this case? Naming ??
+     */
+    void flushEvents();
 }
