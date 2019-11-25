@@ -81,7 +81,7 @@ project.afterEvaluate {
         publications {
             library(MavenPublication) {
                 groupId 'com.amplifyframework'
-                artifactId 'amplify-core'
+                artifactId 'core'
                 version VERSION_NAME
                 artifact(bundleReleaseAar)
             }
