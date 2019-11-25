@@ -105,7 +105,9 @@ final class AppSyncGraphQLRequestFactory {
             .append(getModelFields(schema))
             .append("} nextToken }}");
 
-        variables.put("filter", parsePredicate(predicate));
+        if (!predicateIsEmpty(predicate)) {
+            variables.put("filter", parsePredicate(predicate));
+        }
 
         return new GraphQLRequest<>(
                 doc.toString(),
@@ -135,24 +137,42 @@ final class AppSyncGraphQLRequestFactory {
             .append("($input: ")
             .append(StringUtils.capitalize(typeStr))
             .append(StringUtils.capitalize(graphQlTypeName))
-            .append("Input!) { ")
+            .append("Input!");
+
+        if (!predicateIsEmpty(predicate)) {
+            doc.append(", $condition: Model")
+                    .append(StringUtils.capitalize(graphQlTypeName))
+                    .append("ConditionInput");
+        }
+
+        doc.append("){ ")
             .append(typeStr.toLowerCase(Locale.getDefault()))
             .append(StringUtils.capitalize(graphQlTypeName))
-            .append("(input: $input) { ")
+            .append("(input: $input");
+
+        if (!predicateIsEmpty(predicate)) {
+            doc.append(", condition: $condition");
+        }
+
+        doc.append(") { ")
             .append(getModelFields(schema))
             .append("}}");
 
-        Map<String, Object> input = new HashMap<>();
+        Map<String, Object> variables = new HashMap<>();
 
         if (type.equals(MutationType.DELETE)) {
-            input.put("input", Collections.singletonMap("id", model.getId()));
+            variables.put("input", Collections.singletonMap("id", model.getId()));
         } else {
-            input.put("input", schema.getMapOfFieldNameAndValues(model));
+            variables.put("input", schema.getMapOfFieldNameAndValues(model));
+        }
+
+        if (!predicateIsEmpty(predicate)) {
+            variables.put("condition", parsePredicate(predicate));
         }
 
         return new GraphQLRequest<>(
                 doc.toString(),
-                input,
+                variables,
                 modelClass,
                 new GsonVariablesSerializer()
         );
@@ -309,5 +329,10 @@ final class AppSyncGraphQLRequestFactory {
         }
 
         return result.toString();
+    }
+
+    // While this is currently a simple null check, in the future it could possibly be more complex
+    private static boolean predicateIsEmpty(QueryPredicate predicate) {
+        return predicate == null;
     }
 }
