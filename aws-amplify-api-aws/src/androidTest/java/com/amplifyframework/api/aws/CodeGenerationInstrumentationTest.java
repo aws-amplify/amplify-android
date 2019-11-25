@@ -15,8 +15,10 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
@@ -25,6 +27,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -112,5 +115,47 @@ public final class CodeGenerationInstrumentationTest {
             assertTrue(Arrays.asList("David", "Sarah").contains(person.getFirstName()));
             assertEquals("Daudelin", person.getLastName());
         }
+    }
+
+    /**
+     * Tests that a subscription can receive an event when a create mutation takes place.
+     * @throws Throwable If we timeout while talking to the endpoint,
+     *                   or if any response comes back invalid
+     */
+    @Test
+    public void subscribeReceivesMutationEvent() throws Throwable {
+        Person person = Person.builder().firstName("John").lastName("Doe").build();
+        LatchedResponseStreamListener<Person> streamListener = new LatchedResponseStreamListener<>(1);
+
+        GraphQLOperation<Person> operation = Amplify.API.subscribe(
+                API_NAME,
+                Person.class,
+                null,
+                SubscriptionType.ON_CREATE,
+                streamListener
+        );
+
+        Amplify.API.mutate(
+                API_NAME,
+                person,
+                null,
+                MutationType.CREATE,
+                null
+        );
+
+        // Validate that subscription received the newly created person.
+        List<GraphQLResponse<Person>> subscriptionResponses = streamListener.awaitItems();
+        assertEquals(1, subscriptionResponses.size());
+        assertFalse(subscriptionResponses.get(0).hasErrors());
+        Person responsePerson = subscriptionResponses.get(0).getData();
+        assertEquals(person.getFirstName(), responsePerson.getFirstName());
+        assertEquals(person.getLastName(), responsePerson.getLastName());
+
+        // Cancel the subscription.
+        operation.cancel();
+
+        // Ensure that onComplete() is called as a response to canceling
+        // the operation.
+        streamListener.awaitCompletion();
     }
 }

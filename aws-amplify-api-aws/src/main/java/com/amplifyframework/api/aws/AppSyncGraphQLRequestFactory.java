@@ -160,6 +160,32 @@ final class AppSyncGraphQLRequestFactory {
 
     public static <T extends Model> GraphQLRequest<T> buildSubscription(
             Class<T> modelClass,
+            SubscriptionType type
+    ) {
+        StringBuilder doc = new StringBuilder();
+        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+        String typeStr = type.toString();
+        String modelName = schema.getTargetModelName();
+
+        doc.append("subscription ")
+                .append(StringUtils.allCapsToPascalCase(typeStr))
+                .append(StringUtils.capitalize(modelName))
+                .append("{")
+                .append(StringUtils.allCapsToCamelCase(typeStr))
+                .append(StringUtils.capitalize(modelName))
+                .append("{")
+                .append(getModelFields(schema))
+                .append("}}");
+
+        return new GraphQLRequest<>(
+                doc.toString(),
+                modelClass,
+                new GsonVariablesSerializer()
+        );
+    }
+
+    public static <T extends Model> GraphQLRequest<T> buildSubscription(
+            Class<T> modelClass,
             QueryPredicate predicate,
             SubscriptionType type
     ) throws AmplifyException {
