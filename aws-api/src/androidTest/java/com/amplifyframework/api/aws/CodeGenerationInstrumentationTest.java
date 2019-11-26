@@ -237,7 +237,7 @@ public final class CodeGenerationInstrumentationTest {
 
         Amplify.API.mutate(
                 PERSON_API_NAME,
-                Person.fromId(person.getId()),
+                Person.justId(person.getId()),
                 MutationType.DELETE,
                 deleteListener
         );
@@ -283,7 +283,7 @@ public final class CodeGenerationInstrumentationTest {
         Project project = Project
                 .builder()
                 .name("API Codegen")
-                .team(Team.fromId(teamMutationResponse.getData().getId()))
+                .team(Team.justId(teamMutationResponse.getData().getId()))
                 .build();
 
         Amplify.API.mutate(

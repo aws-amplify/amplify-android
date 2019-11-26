@@ -77,7 +77,7 @@ public final class Team implements Model {
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
      */
-    public static Team fromId(String id) {
+    public static Team justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {

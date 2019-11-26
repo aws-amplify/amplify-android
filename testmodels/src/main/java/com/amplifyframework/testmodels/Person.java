@@ -92,7 +92,7 @@ public final class Person implements Model {
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      */
-    public static Person fromId(String id) {
+    public static Person justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
