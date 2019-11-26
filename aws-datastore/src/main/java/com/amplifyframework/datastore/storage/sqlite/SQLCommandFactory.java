@@ -55,8 +55,21 @@ interface SQLCommandFactory {
      * prepared statement that can be bound later with inputs.
      *
      * @param modelSchema schema of the model
+     * @param item the model instance
+     * @param <T> type of the model
      * @return the SQL command that encapsulates the UPDATE command
      */
     <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                           @NonNull T item);
+
+    /**
+     * Generates the DELETE command in a raw string representation.
+     *
+     * @param modelSchema schema of the model
+     * @param item the model instance
+     * @param <T> type of the model
+     * @return the SQL command that encapsulates the DELETE command
+     */
+    <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
                                            @NonNull T item);
 }

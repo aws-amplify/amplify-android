@@ -199,6 +199,25 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return new SqlCommand(table.getName(), preparedUpdateStatement, compiledUpdateStatement);
     }
 
+    /**
+     * {@inheritDoc}.
+     */
+    @Override
+    public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
+                                                  @NonNull T item) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder
+                .append("DELETE FROM ")
+                .append(table.getName())
+                .append(" WHERE ")
+                .append(PrimaryKey.fieldName())
+                .append(" = ")
+                .append(StringUtils.doubleQuote(item.getId()))
+                .append(";");
+        return new SqlCommand(table.getName(), stringBuilder.toString());
+    }
+
     // Utility method to append columns in CREATE TABLE
     private void appendColumns(StringBuilder stringBuilder, SQLiteTable table) {
         final Iterator<SQLiteColumn> columnsIterator = table.getSortedColumns().iterator();
