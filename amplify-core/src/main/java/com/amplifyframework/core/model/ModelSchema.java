@@ -128,7 +128,6 @@ public final class ModelSchema {
                     .name(clazz.getSimpleName())
                     .targetModelName(targetModelName)
                     .fields(fields)
-                    .connections(connections)
                     .associations(associations)
                     .modelIndex(modelIndex)
                     .build();
