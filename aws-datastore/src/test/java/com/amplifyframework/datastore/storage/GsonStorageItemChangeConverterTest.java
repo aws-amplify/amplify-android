@@ -62,7 +62,7 @@ public class GsonStorageItemChangeConverterTest {
         assertEquals(expectedChangeId, record.getId());
 
         // Now, try to convert it back...
-        StorageItemChange<Person> reconstructedItemChange = converter.fromRecord(record, Person.class);
+        StorageItemChange<Person> reconstructedItemChange = converter.fromRecord(record);
         assertEquals(expectedChangeId, reconstructedItemChange.changeId().toString());
         assertEquals(originalItemChange, reconstructedItemChange);
     }
