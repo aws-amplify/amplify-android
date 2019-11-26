@@ -47,7 +47,23 @@ public final class SQLiteTable {
 
     /**
      * Static method to convert an instance of {@link ModelSchema}
-     * into a SQLite table representation.
+     * into a SQLite table representation. This representation will
+     * be useful for storage engine when interacting with SQLite database.
+     *
+     * Instances of {@link ModelField} inside the schema will be converted
+     * to {@link SQLiteColumn} if they meet the following conditions:
+     *
+     *      1) field is NOT a associated with another model OR,
+     *      2) field is the foreign key of relationship
+     *
+     * The generated SQLite column will encapsulate additional information
+     * that is not contained inside {@link ModelField}, such as
+     *
+     *      1) which table (model) does this field belong to?,
+     *      2) what is the corresponding SQLite data type for field type,
+     *      3) whether the field represents a foreign key, AND
+     *      4) IF it is a foreign key, then which model does it it identify?
+     *
      * @param modelSchema An instance of {@link ModelSchema}
      * @return Adapted SQLite table
      */

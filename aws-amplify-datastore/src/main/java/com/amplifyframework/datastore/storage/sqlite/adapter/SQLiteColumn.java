@@ -74,7 +74,9 @@ public final class SQLiteColumn {
 
     /**
      * Returns the name of model that this column is foreign key to.
+     * Null if the column is not a foreign key.
      * @return the name of model that this column is foreign key to
+     *         and null if this column is not a foreign key
      */
     public String getOwnedType() {
         return ownedType;
@@ -134,8 +136,8 @@ public final class SQLiteColumn {
         }
 
         /**
-         * Sets the name of this column's table.
-         * @param tableName the name of this column's table
+         * Sets the name of the table to which this column belongs.
+         * @param tableName the name of the table to which this column belongs
          * @return builder instance with given table name
          */
         public Builder tableName(String tableName) {
@@ -145,6 +147,7 @@ public final class SQLiteColumn {
 
         /**
          * Sets the name of table that this foreign key refers to.
+         * This should be null if this is column is not a foreign key.
          * @param ownedType the name of table that this foreign key refers to
          * @return builder instance with given type
          */

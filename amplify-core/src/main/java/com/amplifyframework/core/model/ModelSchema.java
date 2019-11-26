@@ -21,7 +21,6 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.annotations.BelongsTo;
-import com.amplifyframework.core.model.annotations.Connection;
 import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.Index;
@@ -61,11 +60,6 @@ public final class ModelSchema {
     // The value is the ModelField object that encapsulates all the information about the instance variable.
     private final Map<String, ModelField> fields;
 
-    // A map that contains the connections of a Model.
-    // The key is the name of the instance variable in the Java class that represents one of Model's connections
-    // The value is the ModelConnection object that encapsulates all the information about the instance variable.
-    private final Map<String, ModelConnection> connections;
-
     // A map that contains the associations of a Model.
     // The key is the name of the instance variable in the Java class that represents one of Model's associations
     private final Map<String, ModelAssociation> associations;
@@ -81,13 +75,11 @@ public final class ModelSchema {
     private ModelSchema(String name,
                         String targetModelName,
                         Map<String, ModelField> fields,
-                        Map<String, ModelConnection> connections,
                         Map<String, ModelAssociation> associations,
                         ModelIndex modelIndex) {
         this.name = name;
         this.targetModelName = targetModelName;
         this.fields = fields;
-        this.connections = connections;
         this.associations = associations;
         this.modelIndex = modelIndex;
         this.sortedFields = sortModelFields();
@@ -111,7 +103,6 @@ public final class ModelSchema {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
-            final TreeMap<String, ModelConnection> connections = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
@@ -126,10 +117,6 @@ public final class ModelSchema {
                 final ModelField modelField = createModelField(field);
                 if (modelField != null) {
                     fields.put(field.getName(), modelField);
-                }
-                final ModelConnection modelConnection = createModelConnection(field);
-                if (modelConnection != null) {
-                    connections.put(field.getName(), modelConnection);
                 }
                 final ModelAssociation modelAssociation = createModelAssociation(field);
                 if (modelAssociation != null) {
@@ -168,22 +155,6 @@ public final class ModelSchema {
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
-                    .build();
-        }
-        return null;
-    }
-
-    // Utility method to extract connection metadata from a field
-    private static ModelConnection createModelConnection(Field field) {
-        Connection connection = field.getAnnotation(Connection.class);
-        if (connection != null) {
-            return ModelConnection.builder()
-                    .name(connection.name())
-                    .keyField(connection.keyField())
-                    .sortField(connection.sortField())
-                    .limit(connection.limit())
-                    .keyName(connection.keyName())
-                    .fields(Arrays.asList(connection.fields()))
                     .build();
         }
         return null;
@@ -262,15 +233,6 @@ public final class ModelSchema {
      */
     public ModelIndex getModelIndex() {
         return modelIndex;
-    }
-
-    /**
-     * Returns a map of field to connection of the model.
-     *
-     * @return a map of field to connection of the model.
-     */
-    public Map<String, ModelConnection> getConnections() {
-        return Immutable.of(connections);
     }
 
     /**
@@ -353,6 +315,12 @@ public final class ModelSchema {
             if (fieldOther.isId()) {
                 return 1;
             }
+            if (associations.containsKey(fieldOne.getName()) && !associations.containsKey(fieldOther.getName())) {
+                return 1;
+            }
+            if (associations.containsKey(fieldOther.getName()) && !associations.containsKey(fieldOne.getName())) {
+                return -1;
+            }
             return fieldOne.getName().compareTo(fieldOther.getName());
         });
 
@@ -379,9 +347,6 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(fields, that.fields)) {
             return false;
         }
-        if (!ObjectsCompat.equals(connections, that.connections)) {
-            return false;
-        }
         if (!ObjectsCompat.equals(associations, that.associations)) {
             return false;
         }
@@ -397,7 +362,6 @@ public final class ModelSchema {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
-        result = 31 * result + (connections != null ? connections.hashCode() : 0);
         result = 31 * result + (associations != null ? associations.hashCode() : 0);
         result = 31 * result + (modelIndex != null ? modelIndex.hashCode() : 0);
         return result;
@@ -409,7 +373,6 @@ public final class ModelSchema {
             "name='" + name + '\'' +
             ", targetModelName='" + targetModelName + '\'' +
             ", fields=" + fields +
-            ", connections" + connections +
             ", associations" + associations +
             ", modelIndex=" + modelIndex +
             '}';
@@ -422,7 +385,6 @@ public final class ModelSchema {
         private String name;
         private String targetModelName;
         private Map<String, ModelField> fields = new TreeMap<>();
-        private Map<String, ModelConnection> connections = new TreeMap<>();
         private Map<String, ModelAssociation> associations = new TreeMap<>();
         private ModelIndex modelIndex;
 
@@ -460,17 +422,6 @@ public final class ModelSchema {
         }
 
         /**
-         * Set the map of fieldName and the connectionObject of all the connection fields of the model.
-         * @param connections the map of fieldName and the connectionObjects.
-         * @return the builder object.
-         */
-        public Builder connections(@NonNull Map<String, ModelConnection> connections) {
-            Objects.requireNonNull(connections);
-            this.connections = connections;
-            return this;
-        }
-
-        /**
          * Set the map of fieldName and the association of all the associated fields of the model.
          * @param associations the map of fieldName and the association metadata.
          * @return the builder object.
@@ -499,7 +450,6 @@ public final class ModelSchema {
             return new ModelSchema(name,
                     targetModelName,
                     fields,
-                    connections,
                     associations,
                     modelIndex);
         }

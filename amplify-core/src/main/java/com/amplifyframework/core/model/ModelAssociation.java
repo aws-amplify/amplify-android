@@ -20,6 +20,14 @@ import androidx.core.util.ObjectsCompat;
 
 /**
  * Represents an association of the {@link Model} class.
+ * This class encapsulates the information provided by the
+ * following annotations on model fields:
+ *
+ *  - {@link com.amplifyframework.core.model.annotations.BelongsTo}
+ *  - {@link com.amplifyframework.core.model.annotations.HasOne}
+ *  - {@link com.amplifyframework.core.model.annotations.HasMany}
+ *
+ *  Only @BelongsTo tag implies that the field is a foreign key.
  */
 public final class ModelAssociation {
     // Name of the association to identify the relationship.

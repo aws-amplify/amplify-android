@@ -31,8 +31,6 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.annotations.HasMany;
-import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
@@ -381,18 +379,19 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         while (fieldIterator.hasNext()) {
             final Field field = fieldIterator.next();
 
-            // Skip the connection fields that are not foreign keys
-            if (field.isAnnotationPresent(HasOne.class) ||
-                    field.isAnnotationPresent(HasMany.class)) {
-                continue;
-            }
-
             field.setAccessible(true);
             final String fieldName = field.getName();
             final Object fieldValue = field.get(object);
 
-            // Move the columns index to 1-based index.
-            final int columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
+            final int columnIndex;
+            try {
+                // Move the columns index to 1-based index.
+                columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
+            } catch (IllegalArgumentException exception) {
+                // Ignore field if there is no corresponding column
+                continue;
+            }
+
             if (fieldValue == null) {
                 preCompiledInsertStatement.bindNull(columnIndex);
                 continue;

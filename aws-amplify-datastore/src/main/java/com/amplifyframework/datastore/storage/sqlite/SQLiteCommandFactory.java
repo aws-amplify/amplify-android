@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.util.CollectionUtils;
 
 import java.util.Iterator;
 import java.util.List;
@@ -70,7 +71,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append("CREATE TABLE IF NOT EXISTS ")
             .append(table.getName())
             .append(SQLITE_COMMAND_DELIMITER);
-        if (table.getColumns() == null || table.getColumns().isEmpty()) {
+        if (CollectionUtils.isNullOrEmpty(table.getColumns())) {
             return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 
