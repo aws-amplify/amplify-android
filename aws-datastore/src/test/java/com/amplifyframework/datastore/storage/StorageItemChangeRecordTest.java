@@ -64,16 +64,18 @@ public class StorageItemChangeRecordTest {
             .targetName("itemClass")
             .build());
 
+        final ModelIndex index = ModelIndex.builder()
+                .indexFieldNames(Collections.singletonList("itemClass"))
+                .indexName("itemClassBasedIndex")
+                .build();
+
         assertEquals(
             // Expected
             ModelSchema.builder()
-                .modelIndex(ModelIndex.builder()
-                    .indexFieldNames(Collections.singletonList("itemClass"))
-                    .indexName("itemClassBasedIndex")
-                    .build())
+                .name("Record")
                 .targetModelName("StorageItemChangeRecord")
                 .fields(expectedFields)
-                .name("Record")
+                .indexes(Collections.singletonMap("itemClassBasedIndex", index))
                 .build(),
             // Actual
             ModelSchema.fromModelClass(StorageItemChange.Record.class)
