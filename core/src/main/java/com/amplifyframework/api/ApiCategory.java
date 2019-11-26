@@ -16,12 +16,16 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.api.rest.RestOperation;
+import com.amplifyframework.api.rest.RestOptions;
+import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.category.Category;
@@ -125,6 +129,59 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
             @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener
     ) {
         return getSelectedPlugin().subscribe(apiName, graphQlRequest, subscriptionListener);
+    }
+
+    @Override
+    public RestOperation get(@NonNull String apiName,
+                             @NonNull RestOptions request,
+                             @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().get(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation put(
+            @NonNull String apiName,
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().put(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation post(
+            @NonNull String apiName,
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().post(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation delete(
+            @NonNull String apiName,
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().delete(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation head(
+            @NonNull String apiName,
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().head(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation patch(
+            @NonNull String apiName,
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().patch(apiName, request, responseListener);
     }
 }
 

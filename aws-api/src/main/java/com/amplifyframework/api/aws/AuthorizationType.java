@@ -50,7 +50,12 @@ public enum AuthorizationType {
      * permissions pools.
      * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/security.html#amazon-cognito-user-pools-authorization">Amazon Cognito User Pools</a>
      */
-    AMAZON_COGNITO_USER_POOLS;
+    AMAZON_COGNITO_USER_POOLS,
+
+    /**
+     * No authorization.
+     */
+    NONE;
 
     /**
      * Look up an AuthorizationType by its String name.
