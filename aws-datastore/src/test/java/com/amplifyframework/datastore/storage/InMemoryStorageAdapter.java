@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;

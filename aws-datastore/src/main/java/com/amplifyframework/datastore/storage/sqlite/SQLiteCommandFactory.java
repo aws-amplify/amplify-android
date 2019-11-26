@@ -34,7 +34,6 @@ import com.amplifyframework.util.StringUtils;
 
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -51,7 +50,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * Default constructor.
      */
-    public SQLiteCommandFactory() {
+    SQLiteCommandFactory() {
         this.databaseConnectionHandle = null;
     }
 
@@ -59,7 +58,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * Constructor with databaseConnectionHandle.
      * @param databaseConnectionHandle connection to a SQLiteDatabase.
      */
-    public SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
+    SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
         this.databaseConnectionHandle = databaseConnectionHandle;
     }
 

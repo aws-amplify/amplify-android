@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 
 import com.amplifyframework.core.model.ModelField;
@@ -26,8 +25,6 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -45,14 +42,14 @@ import static org.junit.Assert.assertEquals;
 @RunWith(RobolectricTestRunner.class)
 public class SqlCommandTest {
 
-    @Mock
-    private SQLiteDatabase sqliteDatabase;
     private SQLCommandFactory sqlCommandFactory;
 
+    /**
+     * Setup before each test.
+     */
     @Before
-    public void setUpBeforeClass() {
-        MockitoAnnotations.initMocks(this);
-        sqlCommandFactory = SQLiteCommandFactory.getInstance(sqliteDatabase);
+    public void createSqlCommandFactory() {
+        sqlCommandFactory = new SQLiteCommandFactory();
     }
 
     /**
@@ -113,6 +110,24 @@ public class SqlCommandTest {
                 createIndexSqlCommand.sqlStatement());
     }
 
+    /**
+     * Tests that a CREATE index command is correctly constructs for the
+     * {@link StorageItemChange.Record}.
+     */
+    @Test
+    public void createIndexForStorageItemChangeRecord() {
+        assertEquals(
+            // expected
+            new SqlCommand(
+                "Record",
+                "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
+            ),
+            // actual
+            sqlCommandFactory
+                .createIndexFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+        );
+    }
+
     private static SortedMap<String, ModelField> getFieldsMap() {
         final SortedMap<String, ModelField> fields = new TreeMap<>();
         fields.put("id", ModelField.builder()
@@ -139,23 +154,5 @@ public class SqlCommandTest {
                 .targetType("Int")
                 .build());
         return fields;
-    }
-
-    /**
-     * Tests that a CREATE index command is correctly constructs for the
-     * {@link StorageItemChange.Record}.
-     */
-    @Test
-    public void createIndexForStorageItemChangeRecord() {
-        assertEquals(
-            // expected
-            new SqlCommand(
-                "Record",
-                "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
-            ),
-            // actual
-            sqlCommandFactory
-                .createIndexFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
-        );
     }
 }

@@ -40,8 +40,8 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.FieldFinder;
-
 import com.amplifyframework.util.StringUtils;
+
 import com.google.gson.Gson;
 
 import java.lang.reflect.Field;
@@ -293,6 +293,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 case THROW_EXCEPTION:
                     compiledSqlStatement.executeInsert();
                     break;
+                default:
+                    throw new UnsupportedTypeException("ModelConflictStrategy " +
+                            modelConflictStrategy + " is not supported.");
             }
             compiledSqlStatement.clearBindings();
         }

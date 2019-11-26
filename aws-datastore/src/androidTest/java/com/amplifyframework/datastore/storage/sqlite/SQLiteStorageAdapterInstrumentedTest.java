@@ -58,7 +58,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);;
+    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private Context context;
