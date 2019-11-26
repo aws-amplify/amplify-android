@@ -21,6 +21,7 @@ import com.amplifyframework.testmodels.Person;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -82,13 +83,15 @@ public final class ModelSchemaTest {
             .isEnum(true)
             .build());
 
-        ModelSchema expectedModelSchema = ModelSchema.builder()
-            .modelIndex(ModelIndex.builder()
+        ModelIndex expectedModelIndex = ModelIndex.builder()
                 .indexName("first_name_and_age_based_index")
                 .indexFieldNames(Arrays.asList("first_name", "age"))
-                .build())
+                .build();
+
+        ModelSchema expectedModelSchema = ModelSchema.builder()
             .targetModelName("Person")
             .fields(expectedFields)
+            .indexes(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
             .name("Person")
             .build();
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);
