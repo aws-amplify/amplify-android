@@ -65,8 +65,8 @@ public final class ModelSchema {
     // The key is the name of the instance variable in the Java class that represents one of Model's associations
     private final Map<String, ModelAssociation> associations;
 
-    // Specifies the indices of a Model.
-    private final Map<String, ModelIndex> indices;
+    // Specifies the indexes of a Model.
+    private final Map<String, ModelIndex> indexes;
 
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
@@ -77,12 +77,12 @@ public final class ModelSchema {
                         String targetModelName,
                         Map<String, ModelField> fields,
                         Map<String, ModelAssociation> associations,
-                        Map<String, ModelIndex> indices) {
+                        Map<String, ModelIndex> indexes) {
         this.name = name;
         this.targetModelName = targetModelName;
         this.fields = fields;
         this.associations = associations;
-        this.indices = indices;
+        this.indexes = indexes;
         this.sortedFields = sortModelFields();
     }
 
@@ -105,12 +105,12 @@ public final class ModelSchema {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
-            final TreeMap<String, ModelIndex> indices = new TreeMap<>();
+            final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
 
             for (Annotation annotation : clazz.getAnnotations()) {
                 ModelIndex modelIndex = createModelIndex(annotation);
                 if (modelIndex != null) {
-                    indices.put(modelIndex.getIndexName(), modelIndex);
+                    indexes.put(modelIndex.getIndexName(), modelIndex);
                 }
             }
 
@@ -138,7 +138,7 @@ public final class ModelSchema {
                     .targetModelName(targetModelName)
                     .fields(fields)
                     .associations(associations)
-                    .indices(indices)
+                    .indexes(indexes)
                     .build();
         } catch (Exception exception) {
             throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
@@ -246,12 +246,12 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the map of indices of a {@link Model}.
+     * Returns the map of indexes of a {@link Model}.
      *
-     * @return the map of indices of a {@link Model}.
+     * @return the map of indexes of a {@link Model}.
      */
-    public Map<String, ModelIndex> getIndices() {
-        return indices;
+    public Map<String, ModelIndex> getIndexes() {
+        return indexes;
     }
 
     /**
@@ -357,7 +357,7 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(associations, that.associations)) {
             return false;
         }
-        if (!ObjectsCompat.equals(indices, that.indices)) {
+        if (!ObjectsCompat.equals(indexes, that.indexes)) {
             return false;
         }
         return true;
@@ -370,7 +370,7 @@ public final class ModelSchema {
         result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
         result = 31 * result + (associations != null ? associations.hashCode() : 0);
-        result = 31 * result + (indices != null ? indices.hashCode() : 0);
+        result = 31 * result + (indexes != null ? indexes.hashCode() : 0);
         return result;
     }
 
@@ -381,7 +381,7 @@ public final class ModelSchema {
             ", targetModelName='" + targetModelName + '\'' +
             ", fields=" + fields +
             ", associations" + associations +
-            ", indices=" + indices +
+            ", indexes=" + indexes +
             '}';
     }
 
@@ -393,7 +393,7 @@ public final class ModelSchema {
         private String targetModelName;
         private Map<String, ModelField> fields = new TreeMap<>();
         private Map<String, ModelAssociation> associations = new TreeMap<>();
-        private Map<String, ModelIndex> indices = new TreeMap<>();
+        private Map<String, ModelIndex> indexes = new TreeMap<>();
 
         /**
          * Set the the name of the Model class.
@@ -440,12 +440,12 @@ public final class ModelSchema {
         }
 
         /**
-         * Set the map of indices of a model.
-         * @param indices the indices of the model.
+         * Set the map of indexes of a model.
+         * @param indexes the indexes of the model.
          * @return the builder object.
          */
-        public Builder indices(@NonNull Map<String, ModelIndex> indices) {
-            this.indices = indices;
+        public Builder indexes(@NonNull Map<String, ModelIndex> indexes) {
+            this.indexes = indexes;
             return this;
         }
 
@@ -458,7 +458,7 @@ public final class ModelSchema {
                     targetModelName,
                     fields,
                     associations,
-                    indices);
+                    indexes);
         }
     }
 }

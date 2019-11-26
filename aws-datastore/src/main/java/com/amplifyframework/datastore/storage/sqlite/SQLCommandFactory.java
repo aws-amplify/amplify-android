@@ -39,9 +39,9 @@ interface SQLCommandFactory {
      * Generates the set of CREATE INDEX SQL commands from the {@link ModelSchema}.
      * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
      *                    for which a CREATE INDEX SQL command needs to be generated.
-     * @return the CREATE INDEX SQL command
+     * @return the set of CREATE INDEX SQL commands
      */
-    Set<SqlCommand> createIndicesFor(@NonNull ModelSchema modelSchema);
+    Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
 
     /**
      * Generates the INSERT INTO command in a raw string representation and a compiled

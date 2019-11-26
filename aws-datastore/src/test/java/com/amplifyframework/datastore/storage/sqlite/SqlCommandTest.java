@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests {@link SQLiteCommandFactory#createTableFor(ModelSchema)}
- * and {@link SQLiteCommandFactory#createIndicesFor(ModelSchema)}.
+ * and {@link SQLiteCommandFactory#createIndexesFor(ModelSchema)}.
  */
 @Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
@@ -105,11 +105,11 @@ public class SqlCommandTest {
 
         final ModelSchema modelSchema = ModelSchema.builder()
                 .name("Person")
-                .indices(Collections.singletonMap("idBasedIndex", index))
+                .indexes(Collections.singletonMap("idBasedIndex", index))
                 .build();
 
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
-                .createIndicesFor(modelSchema)
+                .createIndexesFor(modelSchema)
                 .iterator();
         assertTrue(sqlCommandIterator.hasNext());
 
@@ -126,7 +126,7 @@ public class SqlCommandTest {
     @Test
     public void createIndexForStorageItemChangeRecord() {
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
-                .createIndicesFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+                .createIndexesFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
                 .iterator();
         assertTrue(sqlCommandIterator.hasNext());
         assertEquals(

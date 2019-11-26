@@ -75,7 +75,7 @@ public class StorageItemChangeRecordTest {
                 .name("Record")
                 .targetModelName("StorageItemChangeRecord")
                 .fields(expectedFields)
-                .indices(Collections.singletonMap("itemClassBasedIndex", index))
+                .indexes(Collections.singletonMap("itemClassBasedIndex", index))
                 .build(),
             // Actual
             ModelSchema.fromModelClass(StorageItemChange.Record.class)

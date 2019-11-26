@@ -91,7 +91,7 @@ public final class ModelSchemaTest {
         ModelSchema expectedModelSchema = ModelSchema.builder()
             .targetModelName("Person")
             .fields(expectedFields)
-            .indices(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
+            .indexes(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
             .name("Person")
             .build();
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);

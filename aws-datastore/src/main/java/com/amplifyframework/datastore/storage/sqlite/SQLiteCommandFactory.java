@@ -93,11 +93,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * {@inheritDoc}
      */
     @Override
-    public Set<SqlCommand> createIndicesFor(@NonNull ModelSchema modelSchema) {
+    public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         Set<SqlCommand> indexCommands = new HashSet<>();
 
-        for (ModelIndex modelIndex : modelSchema.getIndices().values()) {
+        for (ModelIndex modelIndex : modelSchema.getIndexes().values()) {
             final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
                     .append(modelIndex.getIndexName()).append(" ON ")
