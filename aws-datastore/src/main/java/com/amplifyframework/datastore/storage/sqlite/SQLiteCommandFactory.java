@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
@@ -32,8 +31,10 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.CollectionUtils;
 import com.amplifyframework.util.StringUtils;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -92,33 +93,31 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * {@inheritDoc}
      */
     @Override
-    public SqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
+    public Set<SqlCommand> createIndicesFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
-        final ModelIndex modelIndex = modelSchema.getModelIndex();
-        if (modelIndex == null ||
-            TextUtils.isEmpty(modelIndex.getIndexName()) ||
-            modelIndex.getIndexFieldNames() == null ||
-            modelIndex.getIndexFieldNames().isEmpty()) {
-            return null;
-        }
+        Set<SqlCommand> indexCommands = new HashSet<>();
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
-            .append(modelIndex.getIndexName()).append(" ON ")
-            .append(table.getName())
-            .append(SQLITE_COMMAND_DELIMITER);
+        for (ModelIndex modelIndex : modelSchema.getIndices().values()) {
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
+                    .append(modelIndex.getIndexName()).append(" ON ")
+                    .append(table.getName())
+                    .append(SQLITE_COMMAND_DELIMITER);
 
-        stringBuilder.append("(");
-        Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
-        while (iterator.hasNext()) {
-            final String indexColumnName = iterator.next();
-            stringBuilder.append(indexColumnName);
-            if (iterator.hasNext()) {
-                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            stringBuilder.append("(");
+            Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
+            while (iterator.hasNext()) {
+                final String indexColumnName = iterator.next();
+                stringBuilder.append(indexColumnName);
+                if (iterator.hasNext()) {
+                    stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+                }
             }
+            stringBuilder.append(");");
+            indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
         }
-        stringBuilder.append(");");
-        return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
+
+        return indexCommands;
     }
 
     /**

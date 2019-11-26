@@ -29,14 +29,16 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests {@link SQLiteCommandFactory#createTableFor(ModelSchema)}
- * and {@link SQLiteCommandFactory#createIndexFor(ModelSchema)}.
+ * and {@link SQLiteCommandFactory#createIndicesFor(ModelSchema)}.
  */
 @Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
@@ -96,15 +98,22 @@ public class SqlCommandTest {
      */
     @Test
     public void modelWithIndexReturnsExpectedCreateIndexCommand() {
-        final ModelSchema modelSchema = ModelSchema.builder()
-                .name("Person")
-                .modelIndex(ModelIndex.builder()
-                        .indexName("idBasedIndex")
-                        .indexFieldNames(Collections.singletonList("id"))
-                        .build())
+        final ModelIndex index = ModelIndex.builder()
+                .indexName("idBasedIndex")
+                .indexFieldNames(Collections.singletonList("id"))
                 .build();
 
-        final SqlCommand createIndexSqlCommand = sqlCommandFactory.createIndexFor(modelSchema);
+        final ModelSchema modelSchema = ModelSchema.builder()
+                .name("Person")
+                .indices(Collections.singletonMap("idBasedIndex", index))
+                .build();
+
+        final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
+                .createIndicesFor(modelSchema)
+                .iterator();
+        assertTrue(sqlCommandIterator.hasNext());
+
+        final SqlCommand createIndexSqlCommand = sqlCommandIterator.next();
         assertEquals("Person", createIndexSqlCommand.tableName());
         assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);",
                 createIndexSqlCommand.sqlStatement());
@@ -116,6 +125,10 @@ public class SqlCommandTest {
      */
     @Test
     public void createIndexForStorageItemChangeRecord() {
+        final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
+                .createIndicesFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+                .iterator();
+        assertTrue(sqlCommandIterator.hasNext());
         assertEquals(
             // expected
             new SqlCommand(
@@ -123,8 +136,7 @@ public class SqlCommandTest {
                 "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
             ),
             // actual
-            sqlCommandFactory
-                .createIndexFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+            sqlCommandIterator.next()
         );
     }
 
