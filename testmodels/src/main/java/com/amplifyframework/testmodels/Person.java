@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
+import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -81,6 +82,36 @@ public final class Person implements Model {
      */
     public static FirstNameStep builder() {
         return new Builder();
+    }
+
+    /**
+     * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
+     *
+     * This is a convenience method to return an instance of the object with only its ID populated
+     * to be used in the context of a parameter in a delete mutation or referencing a foreign key
+     * in a relationship.
+     * @param id the id of the existing item this instance will represent
+     * @return an instance of this model with only ID populated
+     */
+    public static Person fromId(String id) {
+        try {
+            UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
+        } catch (Exception exception) {
+            throw new InvalidParameterException(
+                    "Model IDs must be unique in the format of UUID. This method is for creating instances " +
+                    "of an existing object with only its ID field for sending as a mutation parameter. When " +
+                    "creating a new object, use the standard builder method and leave the ID field blank."
+            );
+        }
+
+        return new Person(
+                id,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
     }
 
     /**

@@ -47,6 +47,13 @@
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
           "ApiKey": "da2-om5d5cekffb65agcin76nszxa4"
+        },
+        "relationshipsApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://yfztylfvg5bxxhjgjc7u7czmmq.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-rke4gdhdabgg7jutjbspfdrple"
         }
       }
     }

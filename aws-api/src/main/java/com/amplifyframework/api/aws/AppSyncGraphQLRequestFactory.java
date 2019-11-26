@@ -20,7 +20,6 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -35,15 +34,19 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Converts provided model or class type into a request container
@@ -70,7 +73,7 @@ final class AppSyncGraphQLRequestFactory {
             .append("$id: ID!) { get")
             .append(StringUtils.capitalize(modelName))
             .append("(id: $id) { ")
-            .append(getModelFields(schema))
+            .append(getModelFields(modelClass))
             .append("}}");
 
         variables.put("id", objectId);
@@ -102,7 +105,7 @@ final class AppSyncGraphQLRequestFactory {
             .append("$limit: Int $nextToken: String) { list")
             .append(StringUtils.capitalize(graphQlTypeName))
             .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
-            .append(getModelFields(schema))
+            .append(getModelFields(modelClass))
             .append("} nextToken }}");
 
         if (!predicateIsEmpty(predicate)) {
@@ -155,7 +158,7 @@ final class AppSyncGraphQLRequestFactory {
         }
 
         doc.append(") { ")
-            .append(getModelFields(schema))
+            .append(getModelFields(modelClass))
             .append("}}");
 
         Map<String, Object> variables = new HashMap<>();
@@ -194,7 +197,7 @@ final class AppSyncGraphQLRequestFactory {
                 .append(StringUtils.allCapsToCamelCase(typeStr))
                 .append(StringUtils.capitalize(graphQlTypeName))
                 .append("{")
-                .append(getModelFields(schema))
+                .append(getModelFields(modelClass))
                 .append("}}");
 
         return new GraphQLRequest<>(
@@ -316,14 +319,23 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    private static String getModelFields(ModelSchema schema) {
+    @SuppressWarnings("unchecked")
+    private static String getModelFields(Class<? extends Model> clazz) {
         StringBuilder result = new StringBuilder();
-        List<ModelField> sortedFields = schema.getSortedFields();
+        final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
+        Iterator<Field> iterator = classFields.iterator();
 
-        for (int i = 0; i < sortedFields.size(); i++) {
-            result.append(sortedFields.get(i).getTargetName());
+        while (iterator.hasNext()) {
+            Field field = iterator.next();
+            result.append(field.getName());
 
-            if (i < sortedFields.size() - 1) {
+            if (Model.class.isAssignableFrom(field.getType())) {
+                result.append("{")
+                    .append(getModelFields((Class<Model>) field.getType())) // cast checked above
+                    .append("}");
+            }
+
+            if (iterator.hasNext()) {
                 result.append(" ");
             }
         }
