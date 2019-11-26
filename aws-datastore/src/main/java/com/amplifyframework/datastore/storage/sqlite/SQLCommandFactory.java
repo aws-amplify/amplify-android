@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 
+import java.util.Set;
+
 /**
  * A factory that produces the SQLite commands from the
  * {@link ModelSchema} and the {@link com.amplifyframework.core.model.Model}.
@@ -34,12 +36,12 @@ interface SQLCommandFactory {
     SqlCommand createTableFor(@NonNull ModelSchema modelSchema);
 
     /**
-     * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
+     * Generates the set of CREATE INDEX SQL commands from the {@link ModelSchema}.
      * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
      *                    for which a CREATE INDEX SQL command needs to be generated.
-     * @return the CREATE INDEX SQL command
+     * @return the set of CREATE INDEX SQL commands
      */
-    SqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
+    Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
 
     /**
      * Generates the INSERT INTO command in a raw string representation and a compiled

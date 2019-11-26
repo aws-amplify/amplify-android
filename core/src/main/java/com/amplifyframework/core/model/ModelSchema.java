@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
@@ -64,8 +65,8 @@ public final class ModelSchema {
     // The key is the name of the instance variable in the Java class that represents one of Model's associations
     private final Map<String, ModelAssociation> associations;
 
-    // Specifies the index of a Model.
-    private final ModelIndex modelIndex;
+    // Specifies the indexes of a Model.
+    private final Map<String, ModelIndex> indexes;
 
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
@@ -76,12 +77,12 @@ public final class ModelSchema {
                         String targetModelName,
                         Map<String, ModelField> fields,
                         Map<String, ModelAssociation> associations,
-                        ModelIndex modelIndex) {
+                        Map<String, ModelIndex> indexes) {
         this.name = name;
         this.targetModelName = targetModelName;
         this.fields = fields;
         this.associations = associations;
-        this.modelIndex = modelIndex;
+        this.indexes = indexes;
         this.sortedFields = sortModelFields();
     }
 
@@ -104,7 +105,15 @@ public final class ModelSchema {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
-            final ModelIndex modelIndex = getModelIndex(clazz);
+            final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
+
+            for (Annotation annotation : clazz.getAnnotations()) {
+                ModelIndex modelIndex = createModelIndex(annotation);
+                if (modelIndex != null) {
+                    indexes.put(modelIndex.getIndexName(), modelIndex);
+                }
+            }
+
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
                 targetModelName = clazz.getAnnotation(ModelConfig.class).targetName();
@@ -129,7 +138,7 @@ public final class ModelSchema {
                     .targetModelName(targetModelName)
                     .fields(fields)
                     .associations(associations)
-                    .modelIndex(modelIndex)
+                    .indexes(indexes)
                     .build();
         } catch (Exception exception) {
             throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
@@ -185,6 +194,18 @@ public final class ModelSchema {
         return null;
     }
 
+    // Utility method to extract model index metadata
+    private static ModelIndex createModelIndex(Annotation annotation) {
+        if (annotation.annotationType().isAssignableFrom(Index.class)) {
+            Index indexAnnotation = (Index) annotation;
+            return ModelIndex.builder()
+                    .indexName(indexAnnotation.name())
+                    .indexFieldNames(Arrays.asList(indexAnnotation.fields()))
+                    .build();
+        }
+        return null;
+    }
+
     /**
      * Returns the name of the Model class.
      *
@@ -216,6 +237,24 @@ public final class ModelSchema {
     }
 
     /**
+     * Returns a map of field to associations of the model.
+     *
+     * @return a map of field to associations of the model.
+     */
+    public Map<String, ModelAssociation> getAssociations() {
+        return Immutable.of(associations);
+    }
+
+    /**
+     * Returns the map of indexes of a {@link Model}.
+     *
+     * @return the map of indexes of a {@link Model}.
+     */
+    public Map<String, ModelIndex> getIndexes() {
+        return indexes;
+    }
+
+    /**
      * Returns a sorted copy of all the fields of a Model.
      *
      * @return list of fieldName and the fieldObject of all
@@ -223,24 +262,6 @@ public final class ModelSchema {
      */
     public List<ModelField> getSortedFields() {
         return Immutable.of(sortedFields);
-    }
-
-    /**
-     * Returns the attributes of a {@link Model}.
-     *
-     * @return the attributes of a {@link Model}.
-     */
-    public ModelIndex getModelIndex() {
-        return modelIndex;
-    }
-
-    /**
-     * Returns a map of field to associations of the model.
-     *
-     * @return a map of field to associations of the model.
-     */
-    public Map<String, ModelAssociation> getAssociations() {
-        return Immutable.of(associations);
     }
 
     /**
@@ -276,19 +297,6 @@ public final class ModelSchema {
         }
 
         return result;
-    }
-
-    private static ModelIndex getModelIndex(@NonNull Class<? extends Model> clazz) {
-        final ModelIndex.Builder builder = ModelIndex.builder();
-
-        if (clazz.isAnnotationPresent(Index.class)) {
-            Index indexAnnotation = clazz.getAnnotation(Index.class);
-            if (indexAnnotation != null) {
-                builder.indexName(indexAnnotation.name());
-                builder.indexFieldNames(Arrays.asList(indexAnnotation.fields()));
-            }
-        }
-        return builder.build();
     }
 
     private List<ModelField> sortModelFields() {
@@ -349,7 +357,7 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(associations, that.associations)) {
             return false;
         }
-        if (!ObjectsCompat.equals(modelIndex, that.modelIndex)) {
+        if (!ObjectsCompat.equals(indexes, that.indexes)) {
             return false;
         }
         return true;
@@ -362,7 +370,7 @@ public final class ModelSchema {
         result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
         result = 31 * result + (associations != null ? associations.hashCode() : 0);
-        result = 31 * result + (modelIndex != null ? modelIndex.hashCode() : 0);
+        result = 31 * result + (indexes != null ? indexes.hashCode() : 0);
         return result;
     }
 
@@ -373,7 +381,7 @@ public final class ModelSchema {
             ", targetModelName='" + targetModelName + '\'' +
             ", fields=" + fields +
             ", associations" + associations +
-            ", modelIndex=" + modelIndex +
+            ", indexes=" + indexes +
             '}';
     }
 
@@ -385,7 +393,7 @@ public final class ModelSchema {
         private String targetModelName;
         private Map<String, ModelField> fields = new TreeMap<>();
         private Map<String, ModelAssociation> associations = new TreeMap<>();
-        private ModelIndex modelIndex;
+        private Map<String, ModelIndex> indexes = new TreeMap<>();
 
         /**
          * Set the the name of the Model class.
@@ -432,12 +440,12 @@ public final class ModelSchema {
         }
 
         /**
-         * Set the index of a model.
-         * @param modelIndex the index of the model.
+         * Set the map of indexes of a model.
+         * @param indexes the indexes of the model.
          * @return the builder object.
          */
-        public Builder modelIndex(ModelIndex modelIndex) {
-            this.modelIndex = modelIndex;
+        public Builder indexes(@NonNull Map<String, ModelIndex> indexes) {
+            this.indexes = indexes;
             return this;
         }
 
@@ -450,7 +458,7 @@ public final class ModelSchema {
                     targetModelName,
                     fields,
                     associations,
-                    modelIndex);
+                    indexes);
         }
     }
 }
