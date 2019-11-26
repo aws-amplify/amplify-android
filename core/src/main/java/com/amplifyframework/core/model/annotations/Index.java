@@ -34,11 +34,7 @@ import java.lang.annotation.Target;
  * {@link ElementType#TYPE} annotation is added to indicate
  * {@link Index} annotation can be used only on types (class, interface, enum).
  */
-<<<<<<< HEAD
-@Repeatable(Indices.class)
-=======
 @Repeatable(Indexes.class)
->>>>>>> temp
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Index {
