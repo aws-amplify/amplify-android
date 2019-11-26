@@ -41,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
-    private static final String RELATIONSHIPS_API_NAME = "relationshipsApi";
+    private static final String PROJECT_API_NAME = "projectApi";
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -71,7 +71,7 @@ public final class CodeGenerationInstrumentationTest {
             .build();
 
         Amplify.API.mutate(
-                PERSON_API_NAME,
+            PERSON_API_NAME,
             person,
             MutationType.CREATE,
             mutationListener
@@ -82,7 +82,7 @@ public final class CodeGenerationInstrumentationTest {
         assertTrue(mutationResponse.hasData());
 
         Amplify.API.query(
-                PERSON_API_NAME,
+            PERSON_API_NAME,
             Person.class,
             mutationResponse.getData().getId(),
             queryListener
@@ -100,7 +100,7 @@ public final class CodeGenerationInstrumentationTest {
         LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
 
         Amplify.API.query(
-                PERSON_API_NAME,
+            PERSON_API_NAME,
             Person.class,
             Person.LAST_NAME.eq("Daudelin")
                 .and(Person.FIRST_NAME.eq("David")
@@ -257,20 +257,20 @@ public final class CodeGenerationInstrumentationTest {
         LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Project> projectMutationListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Project> projectQueryListener = new LatchedSingleResponseListener<>();
-        LatchedResponseStreamListener<Project> streamListener = new LatchedResponseStreamListener<>(1);
+        LatchedResponseStreamListener<Project> projectSubscriptionListener = new LatchedResponseStreamListener<>(1);
 
         GraphQLOperation<Project> operation = Amplify.API.subscribe(
-                RELATIONSHIPS_API_NAME,
+                PROJECT_API_NAME,
                 Project.class,
                 null,
                 SubscriptionType.ON_CREATE,
-                streamListener
+                projectSubscriptionListener
         );
 
         Team team = Team.builder().name("AWS Mobile SDK").build();
 
         Amplify.API.mutate(
-                RELATIONSHIPS_API_NAME,
+                PROJECT_API_NAME,
                 team,
                 MutationType.CREATE,
                 teamMutationListener
@@ -287,7 +287,7 @@ public final class CodeGenerationInstrumentationTest {
                 .build();
 
         Amplify.API.mutate(
-                RELATIONSHIPS_API_NAME,
+                PROJECT_API_NAME,
                 project,
                 MutationType.CREATE,
                 projectMutationListener
@@ -298,7 +298,7 @@ public final class CodeGenerationInstrumentationTest {
         assertTrue(projectMutationResponse.hasData());
 
         Amplify.API.query(
-                RELATIONSHIPS_API_NAME,
+                PROJECT_API_NAME,
                 Project.class,
                 projectMutationResponse.getData().getId(),
                 projectQueryListener
@@ -308,7 +308,7 @@ public final class CodeGenerationInstrumentationTest {
         assertEquals(team, projectQueryResponse.getData().getTeam());
 
         // Validate that subscription received the newly created person.
-        List<GraphQLResponse<Project>> subscriptionResponses = streamListener.awaitItems();
+        List<GraphQLResponse<Project>> subscriptionResponses = projectSubscriptionListener.awaitItems();
         assertEquals(1, subscriptionResponses.size());
         assertFalse(subscriptionResponses.get(0).hasErrors());
         Project responseProject = subscriptionResponses.get(0).getData();
@@ -320,6 +320,6 @@ public final class CodeGenerationInstrumentationTest {
 
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
-        streamListener.awaitCompletion();
+        projectSubscriptionListener.awaitCompletion();
     }
 }
