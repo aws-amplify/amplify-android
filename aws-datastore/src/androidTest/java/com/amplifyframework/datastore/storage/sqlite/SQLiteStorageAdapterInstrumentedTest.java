@@ -22,11 +22,9 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
@@ -38,16 +36,17 @@ import com.amplifyframework.testutils.LatchedResultListener;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -55,12 +54,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test the functionality of
- * {@link DataStoreCategoryBehavior#save(Model, ResultListener)} operation.
+ * Test the functionality of {@link SQLiteStorageAdapter} operations.
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private Context context;
@@ -91,7 +89,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
 
         LatchedResultListener<List<ModelSchema>> setupListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
 
         sqLiteStorageAdapter.initialize(context, setupListener);
 
@@ -116,32 +114,31 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    @Ignore("Update is not implemented yet.")
     public void saveModelUpdatesData() {
-        final Person person = Person.builder()
+        // Triggers an insert
+        final Person raphael = Person.builder()
                 .firstName("Raphael")
                 .lastName("Kim")
                 .age(23)
                 .build();
-        assertEquals(person, saveModel(person));
+        saveModel(raphael);
 
-        final Person newPerson = person.newBuilder()
+        // Triggers an update
+        final Person realRaph = raphael.newBuilder()
                 .firstName("Raph")
                 .build();
-        assertEquals(newPerson, saveModel(newPerson));
+        saveModel(realRaph);
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
-        assertNotNull(cursor);
-        assertEquals(1, cursor.getCount());
-        if (cursor.moveToFirst()) {
-            assertEquals("Raph",
-                    cursor.getString(cursor.getColumnIndexOrThrow("first_name")));
-            assertEquals("Kim",
-                    cursor.getString(cursor.getColumnIndexOrThrow("last_name")));
-            assertEquals(23,
-                    cursor.getInt(cursor.getColumnIndexOrThrow("age")));
+        // Get the person record from the database
+        List<Person> people = new ArrayList<>();
+        Iterator<Person> iterator = queryModel(Person.class);
+        while (iterator.hasNext()) {
+            people.add(iterator.next());
         }
-        cursor.close();
+        assertEquals(1, people.size());
+        Person possiblyRaph = people.get(0);
+
+        assertEquals(realRaph, possiblyRaph);
     }
 
     /**
@@ -328,7 +325,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
 
         LatchedResultListener<StorageItemChange.Record> carSaveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
 
         Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
@@ -340,7 +337,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     private <T extends Model> T saveModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
         return saveListener.awaitTerminalEvent().assertNoError().getResult()
             .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
@@ -350,7 +347,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @SuppressWarnings("SameParameterValue")
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
         LatchedResultListener<Iterator<T>> queryResultListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS);
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.query(modelClass, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
     }

@@ -29,6 +29,7 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.Person;
 import com.amplifyframework.testutils.LatchedResultListener;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -95,6 +96,15 @@ public final class StorageItemChangeRecordIntegrationTest {
             2, schema.size()
         );
         findSchemaByTargetName(schema, "StorageItemChangeRecord"); // Assert: doesn't throw
+    }
+
+    /**
+     * Drop all tables and database, terminate and delete the database.
+     */
+    @After
+    public void terminateLocalStorageAdapter() {
+        localStorageAdapter.terminate();
+        ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
     }
 
     /**
