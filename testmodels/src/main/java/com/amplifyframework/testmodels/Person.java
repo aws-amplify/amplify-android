@@ -58,7 +58,7 @@ public final class Person implements Model {
     @ModelField(targetType = "AWSDate")
     private final Date dob;
 
-    @ModelField()
+    @ModelField
     private final MaritalStatus relationship;
 
     private Person(String id,

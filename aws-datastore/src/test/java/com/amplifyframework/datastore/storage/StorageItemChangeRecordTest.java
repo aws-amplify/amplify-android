@@ -43,7 +43,6 @@ public class StorageItemChangeRecordTest {
     public void modelSchemaGenerationSucceeds() {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
-            .isPrimaryKey(true)
             .name("id")
             .targetType("ID")
             .isRequired(true)
