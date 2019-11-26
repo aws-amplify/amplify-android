@@ -267,10 +267,20 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @NonNull
     @Override
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass) {
-        return Observable.error(new DataStoreException("Not implemented yet, buster!"));
+        return sqliteStorageAdapter.observe()
+                .map(record -> record.toStorageItemChange(storageItemChangeConverter))
+                .filter(storageItemChange -> itemClass.equals(storageItemChange.itemClass()))
+                .map(storageItemChange -> DataStoreItemChange.<T>builder()
+                        .initiator(toDataStoreItemChangeInitiator(storageItemChange.initiator()))
+                        .item((T) storageItemChange.item())
+                        .itemClass((Class<T>) storageItemChange.itemClass())
+                        .type(toDataStoreItemChangeType(storageItemChange.type()))
+                        .uuid(storageItemChange.changeId().toString())
+                        .build());
     }
 
     /**
@@ -281,7 +291,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(
             @NonNull Class<T> itemClass,
             @NonNull String uniqueId) {
-        return Observable.error(new DataStoreException("Not implemented yet, buster!"));
+        return observe(itemClass)
+                .filter(dataStoreItemChange -> uniqueId.equals(dataStoreItemChange.item().getId()));
     }
 
     /**

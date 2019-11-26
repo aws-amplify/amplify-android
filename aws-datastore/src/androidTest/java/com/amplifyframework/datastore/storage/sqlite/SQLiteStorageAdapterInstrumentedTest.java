@@ -335,6 +335,29 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertTrue(actualError.getCause().getMessage().contains(expectedError));
     }
 
+    /**
+     * Assert that save stores item in the SQLite database correctly.
+     *
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void deleteModelDeletesData() {
+        // Triggers an insert
+        final Person raphael = Person.builder()
+                .firstName("Raphael")
+                .lastName("Kim")
+                .age(23)
+                .build();
+        saveModel(raphael);
+
+        // Triggers a delete
+        deleteModel(raphael);
+
+        // Get the person record from the database
+        Iterator<Person> iterator = queryModel(Person.class);
+        assertFalse(iterator.hasNext());
+    }
+
     private <T extends Model> T saveModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
@@ -350,5 +373,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.query(modelClass, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
+    }
+
+    private <T extends Model> T deleteModel(@NonNull T model) {
+        LatchedResultListener<StorageItemChange.Record> deleteListener =
+            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        sqLiteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
+        return deleteListener.awaitTerminalEvent().assertNoError().getResult()
+                .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
+                .item();
     }
 }
