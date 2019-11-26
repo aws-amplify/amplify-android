@@ -33,6 +33,7 @@ import com.amplifyframework.util.StringUtils;
 
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -46,16 +47,23 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     // Delimiter used in the SQLite commands.
     private static final String SQLITE_COMMAND_DELIMITER = " ";
 
-    private SQLiteCommandFactory() {
+    // Connection handle to a Sqlite Database.
+    private final SQLiteDatabase databaseConnectionHandle;
+
+    private SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
+        this.databaseConnectionHandle = databaseConnectionHandle;
     }
 
     /**
      * Retrieves the singleton instance of the SQLiteCommandFactory.
      * @return the singleton instance of the SQLiteCommandFactory.
      */
-    public static synchronized SQLiteCommandFactory getInstance() {
+    public static synchronized SQLiteCommandFactory getInstance(
+            @NonNull SQLiteDatabase databaseConnectionHandle) {
+        Objects.requireNonNull(databaseConnectionHandle);
+
         if (singletonInstance == null) {
-            singletonInstance = new SQLiteCommandFactory();
+            singletonInstance = new SQLiteCommandFactory(databaseConnectionHandle);
         }
         return singletonInstance;
     }
@@ -65,6 +73,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
+        final String tableName = tableNameForModelSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("CREATE TABLE IF NOT EXISTS ")
             .append(modelSchema.getName())
@@ -90,6 +99,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @Override
     public SqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
+        final String tableName = tableNameForModelSchema(modelSchema);
         final ModelIndex modelIndex = modelSchema.getModelIndex();
         if (modelIndex == null ||
             TextUtils.isEmpty(modelIndex.getIndexName()) ||
@@ -125,9 +135,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @WorkerThread
     @Override
-    public SqlCommand insertFor(@NonNull String tableName,
-                                @NonNull ModelSchema modelSchema,
-                                @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
+    public SqlCommand insertFor(@NonNull ModelSchema modelSchema) {
+        final String tableName = tableNameForModelSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("INSERT INTO ");
         stringBuilder.append(tableName);
@@ -155,7 +164,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(")");
         final String preparedInsertStatement = stringBuilder.toString();
         final SQLiteStatement compiledInsertStatement =
-                writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
+                databaseConnectionHandle.compileStatement(preparedInsertStatement);
         return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
     }
 
@@ -167,10 +176,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @WorkerThread
     @Override
-    public <T extends Model> SqlCommand updateFor(@NonNull String tableName,
-                                @NonNull ModelSchema modelSchema,
-                                @NonNull T item,
-                                @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
+    public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                                  @NonNull T item) {
+        final String tableName = tableNameForModelSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder
                 .append("UPDATE ")
@@ -193,25 +201,18 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append(";");
         final String preparedUpdateStatement = stringBuilder.toString();
         final SQLiteStatement compiledUpdateStatement =
-                writableDatabaseConnectionHandle.compileStatement(preparedUpdateStatement);
+                databaseConnectionHandle.compileStatement(preparedUpdateStatement);
         return new SqlCommand(tableName, preparedUpdateStatement, compiledUpdateStatement);
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public SqlCommand queryFor(@NonNull String tableName,
-                               @NonNull String columnName,
-                               @NonNull String columnValue) {
-        return new SqlCommand(
-                tableName,
-                "SELECT * FROM " + tableName + " WHERE " +
-                        columnName + " = " + StringUtils.singleQuote(columnValue));
+    private static String tableNameForModelSchema(@NonNull ModelSchema modelSchema) {
+        Objects.requireNonNull(modelSchema);
+        return modelSchema.getName();
     }
 
     // Utility method to append columns in CREATE TABLE
-    private void appendColumns(StringBuilder stringBuilder, ModelSchema modelSchema) {
+    private void appendColumns(@NonNull StringBuilder stringBuilder,
+                               @NonNull ModelSchema modelSchema) {
         final Iterator<ModelField> fieldsIterator = modelSchema.getSortedFields().iterator();
         while (fieldsIterator.hasNext()) {
             final ModelField field = fieldsIterator.next();

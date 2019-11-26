@@ -15,6 +15,8 @@
 
 package com.amplifyframework.util;
 
+import android.text.TextUtils;
+
 import java.util.Locale;
 
 /**
@@ -33,7 +35,7 @@ public final class StringUtils {
      * @return camelCaseFormat formatted version of that string
      */
     public static String allCapsToCamelCase(String original) {
-        if (original == null || original.length() == 0) {
+        if (TextUtils.isEmpty(original)) {
             return original;
         }
 
@@ -49,7 +51,7 @@ public final class StringUtils {
      * @return PascalCaseFormat formatted version of that string
      */
     public static String allCapsToPascalCase(String original) {
-        if (original == null || original.length() == 0) {
+        if (TextUtils.isEmpty(original)) {
             return original;
         }
 
@@ -68,7 +70,7 @@ public final class StringUtils {
      *          If original string is null or empty, it just returns the original.
      */
     public static String capitalize(String original) {
-        if (original == null || original.length() == 0) {
+        if (TextUtils.isEmpty(original)) {
             return original;
         }
 
@@ -83,8 +85,8 @@ public final class StringUtils {
      *         If original string is null or empty, it just returns the original.
      */
     public static String singleQuote(String original) {
-        if (original == null || original.length() == 0) {
-            return original;
+        if (original == null) {
+            return null;
         }
         return "'" + original + "'";
     }
@@ -96,8 +98,8 @@ public final class StringUtils {
      *         If original string is null or empty, it just returns the original.
      */
     public static String doubleQuote(String original) {
-        if (original == null || original.length() == 0) {
-            return original;
+        if (original == null) {
+            return null;
         }
         return "\"" + original + "\"";
     }

@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
@@ -46,38 +45,18 @@ interface SQLCommandFactory {
      * Generates the INSERT INTO command in a raw string representation and a compiled
      * prepared statement that can be bound later with inputs.
      *
-     * @param tableName name of the table
      * @param modelSchema schema of the model
-     * @param writableDatabaseConnectionHandle connection handle to writable database
      * @return the SQL command that encapsulates the INSERT INTO command
      */
-    SqlCommand insertFor(@NonNull String tableName,
-                         @NonNull ModelSchema modelSchema,
-                         @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
+    SqlCommand insertFor(@NonNull ModelSchema modelSchema);
 
     /**
      * Generates the UPDATE command in a raw string representation and a compiled
      * prepared statement that can be bound later with inputs.
      *
-     * @param tableName name of the table
      * @param modelSchema schema of the model
-     * @param writableDatabaseConnectionHandle connection handle to writable database
      * @return the SQL command that encapsulates the UPDATE command
      */
-    <T extends Model> SqlCommand updateFor(@NonNull String tableName,
-                                           @NonNull ModelSchema modelSchema,
-                                           @NonNull T item,
-                                           @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
-
-    /**
-     * Generates the SELECT * FROM command in a raw string representation.
-     *
-     * @param tableName name of the table
-     * @param columnName name of the column
-     * @param columnValue value of the column
-     * @return the SQL command that encapsulates the SELECT * FROM command
-     */
-    SqlCommand queryFor(@NonNull String tableName,
-                        @NonNull String columnName,
-                        @NonNull String columnValue);
+    <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                           @NonNull T item);
 }

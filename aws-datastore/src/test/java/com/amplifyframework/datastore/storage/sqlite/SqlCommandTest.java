@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 
 import com.amplifyframework.core.model.ModelField;
@@ -22,8 +23,12 @@ import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
@@ -41,6 +46,16 @@ import static org.junit.Assert.assertEquals;
 @RunWith(RobolectricTestRunner.class)
 public class SqlCommandTest {
 
+    @Mock
+    private SQLiteDatabase sqliteDatabase;
+    private SQLCommandFactory sqlCommandFactory;
+
+    @Before
+    public void setUpBeforeClass() {
+        MockitoAnnotations.initMocks(this);
+        sqlCommandFactory = SQLiteCommandFactory.getInstance(sqliteDatabase);
+    }
+
     /**
      * Test if a valid {@link ModelSchema} returns an expected
      * CREATE TABLE SQL command.
@@ -54,8 +69,7 @@ public class SqlCommandTest {
                 .fields(fields)
                 .build();
 
-        final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
-                .createTableFor(personSchema);
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS Person (" +
                 "id TEXT PRIMARY KEY NOT NULL, " +
@@ -75,9 +89,7 @@ public class SqlCommandTest {
                 .name("Guitar")
                 .build();
 
-        final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
-                .createTableFor(modelSchema);
-
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(modelSchema);
         assertEquals("Guitar", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", sqlCommand.sqlStatement());
     }
@@ -96,9 +108,7 @@ public class SqlCommandTest {
                         .build())
                 .build();
 
-        final SqlCommand createIndexSqlCommand = SQLiteCommandFactory.getInstance()
-                .createIndexFor(modelSchema);
-
+        final SqlCommand createIndexSqlCommand = sqlCommandFactory.createIndexFor(modelSchema);
         assertEquals("Person", createIndexSqlCommand.tableName());
         assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);",
                 createIndexSqlCommand.sqlStatement());
@@ -146,7 +156,7 @@ public class SqlCommandTest {
                 "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
             ),
             // actual
-            SQLiteCommandFactory.getInstance()
+            sqlCommandFactory
                 .createIndexFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
         );
     }

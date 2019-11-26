@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 public class SQLiteCommandFactoryInstrumentedTest {
 
     private static final String TAG = SQLiteCommandFactoryInstrumentedTest.class.getSimpleName();
-    private static final long SQLITE_OPERATION_TIMEOUT_IN_MILLISECONDS = 1000;
+    private static final long SQLITE_OPERATION_TIMEOUT_MS = 1000;
 
     private static Context context;
     private static SQLiteStorageAdapter sqLiteStorageAdapter;
@@ -96,22 +96,13 @@ public class SQLiteCommandFactoryInstrumentedTest {
                 sqLiteDatabase);
         assertEquals("Person", sqlCommand.tableName());
         assertTrue(sqlCommand.hasCompiledSqlStatement());
-        Log.d(TAG, sqlCommand.toString());
     }
 
     @Test
     public void queryForReturnsExpectedQueryStatement() {
-        SqlCommand sqlCommand = sqLiteCommandFactory.queryFor(
-                "Person", "id", "dummy-id");
-        assertEquals("SELECT * FROM Person WHERE id = 'dummy-id'",
-                sqlCommand.sqlStatement());
-    }
-
-    @Test
-    public void queryForReturnsValidQueryStatement() {
-        SqlCommand sqlCommand = sqLiteCommandFactory.queryFor(
-                "Person", "id", "dummy-id");
-
+        assertEquals(
+                new SqlCommand("Person", "SELECT * FROM Person WHERE id = 'dummy-id'"),
+                sqLiteCommandFactory.queryFor("Person", "id", "dummy-id"));
     }
 
     private static void deleteDatabase() {
