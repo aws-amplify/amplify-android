@@ -613,19 +613,4 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 null,
                 null);
     }
-
-    @VisibleForTesting
-    SQLCommandFactory getSqlCommandFactory() {
-        return sqlCommandFactory;
-    }
-
-    @VisibleForTesting
-    SQLiteDatabase getDatabaseConnectionHandle() {
-        return databaseConnectionHandle;
-    }
-
-    @VisibleForTesting
-    SQLiteOpenHelper getSqliteOpenHelper() {
-        return sqliteOpenHelper;
-    }
 }
