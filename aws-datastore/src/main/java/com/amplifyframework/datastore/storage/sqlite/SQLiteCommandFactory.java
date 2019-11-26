@@ -20,6 +20,7 @@ import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
@@ -117,7 +118,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
         }
 
-        return indexCommands;
+        return Immutable.of(indexCommands);
     }
 
     /**
