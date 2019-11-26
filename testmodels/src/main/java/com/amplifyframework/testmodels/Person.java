@@ -24,7 +24,6 @@ import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.security.InvalidParameterException;
 import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
@@ -97,7 +96,7 @@ public final class Person implements Model {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
-            throw new InvalidParameterException(
+            throw new IllegalArgumentException(
                     "Model IDs must be unique in the format of UUID. This method is for creating instances " +
                     "of an existing object with only its ID field for sending as a mutation parameter. When " +
                     "creating a new object, use the standard builder method and leave the ID field blank."
