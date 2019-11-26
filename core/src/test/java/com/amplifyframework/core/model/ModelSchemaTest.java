@@ -47,7 +47,6 @@ public final class ModelSchemaTest {
             .name("id")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
-            .isPrimaryKey(true)
             .build());
         expectedFields.put("first_name", ModelField.builder()
             .targetName("first_name")

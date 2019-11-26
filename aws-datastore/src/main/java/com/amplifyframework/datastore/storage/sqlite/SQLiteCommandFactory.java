@@ -21,13 +21,12 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.core.model.types.SqliteDataType;
-import com.amplifyframework.core.model.types.internal.TypeConverter;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.util.CollectionUtils;
 
 import java.util.Iterator;
 import java.util.List;
@@ -67,24 +66,25 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      */
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("CREATE TABLE IF NOT EXISTS ")
-            .append(modelSchema.getName())
+            .append(table.getName())
             .append(SQLITE_COMMAND_DELIMITER);
-        if (modelSchema.getFields() == null || modelSchema.getFields().isEmpty()) {
-            return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
+        if (CollectionUtils.isNullOrEmpty(table.getColumns())) {
+            return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 
         stringBuilder.append("(");
-        appendColumns(stringBuilder, modelSchema);
-        if (!modelSchema.getForeignKeys().isEmpty()) {
+        appendColumns(stringBuilder, table);
+        if (!table.getForeignKeys().isEmpty()) {
             stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
-            appendForeignKeys(stringBuilder, modelSchema);
+            appendForeignKeys(stringBuilder, table);
         }
         stringBuilder.append(");");
 
         final String createSqlStatement = stringBuilder.toString();
-        return new SqlCommand(modelSchema.getName(), createSqlStatement);
+        return new SqlCommand(table.getName(), createSqlStatement);
     }
 
     /**
@@ -135,16 +135,17 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     public SqlCommand insertFor(@NonNull String tableName,
                                 @NonNull ModelSchema modelSchema,
                                 @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("INSERT INTO ");
         stringBuilder.append(tableName);
         stringBuilder.append(" (");
-        final List<ModelField> fields = modelSchema.getSortedFields();
-        final Iterator<ModelField> fieldsIterator = fields.iterator();
-        while (fieldsIterator.hasNext()) {
-            final String fieldName = fieldsIterator.next().getName();
-            stringBuilder.append(fieldName);
-            if (fieldsIterator.hasNext()) {
+        final List<SQLiteColumn> columns = table.getSortedColumns();
+        final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
+        while (columnsIterator.hasNext()) {
+            final String columnName = columnsIterator.next().getName();
+            stringBuilder.append(columnName);
+            if (columnsIterator.hasNext()) {
                 stringBuilder.append(", ");
             } else {
                 stringBuilder.append(")");
@@ -152,8 +153,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
         stringBuilder.append(" VALUES ");
         stringBuilder.append("(");
-        for (int i = 0; i < fields.size(); i++) {
-            if (i == fields.size() - 1) {
+        for (int i = 0; i < columns.size(); i++) {
+            if (i == columns.size() - 1) {
                 stringBuilder.append("?");
             } else {
                 stringBuilder.append("?, ");
@@ -167,59 +168,49 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to append columns in CREATE TABLE
-    private void appendColumns(StringBuilder stringBuilder, ModelSchema modelSchema) {
-        final Iterator<ModelField> fieldsIterator = modelSchema.getSortedFields().iterator();
-        while (fieldsIterator.hasNext()) {
-            final ModelField field = fieldsIterator.next();
-            final String fieldName = field.getName();
+    private void appendColumns(StringBuilder stringBuilder, SQLiteTable table) {
+        final Iterator<SQLiteColumn> columnsIterator = table.getSortedColumns().iterator();
+        while (columnsIterator.hasNext()) {
+            final SQLiteColumn column = columnsIterator.next();
+            final String columnName = column.getName();
 
-            final SqliteDataType sqliteDataType;
-            if (field.isModel()) {
-                sqliteDataType = TypeConverter.getSqlTypeForJavaType(JavaFieldType.MODEL.stringValue());
-            } else if (field.isEnum()) {
-                sqliteDataType = TypeConverter.getSqlTypeForJavaType(JavaFieldType.ENUM.stringValue());
-            } else {
-                sqliteDataType = TypeConverter.getSqlTypeForGraphQLType(field.getTargetType());
-            }
-
-            stringBuilder.append(fieldName)
+            stringBuilder.append(columnName)
                     .append(SQLITE_COMMAND_DELIMITER)
-                    .append(sqliteDataType.getSqliteDataType());
+                    .append(column.getColumnType());
 
-            if (field.isPrimaryKey()) {
+            if (column.isPrimaryKey()) {
                 stringBuilder.append(SQLITE_COMMAND_DELIMITER + "PRIMARY KEY");
             }
 
-            if (field.isRequired()) {
+            if (column.isNonNull()) {
                 stringBuilder.append(SQLITE_COMMAND_DELIMITER + "NOT NULL");
             }
 
-            if (fieldsIterator.hasNext()) {
+            if (columnsIterator.hasNext()) {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
             }
         }
     }
 
     // Utility method to append foreign key references in CREATE TABLE
-    private void appendForeignKeys(StringBuilder stringBuilder, ModelSchema modelSchema) {
-        final Iterator<ModelField> foreignKeyIterator = modelSchema.getForeignKeys().iterator();
+    private void appendForeignKeys(StringBuilder stringBuilder, SQLiteTable table) {
+        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
         while (foreignKeyIterator.hasNext()) {
-            final ModelField foreignKey = foreignKeyIterator.next();
-
-            String connectionName = foreignKey.getName();
-            String connectionTarget = foreignKey.belongsTo();
-            String connectionId = ModelSchemaRegistry.singleton()
-                    .getModelSchemaForModelClass(connectionTarget)
+            final SQLiteColumn foreignKey = foreignKeyIterator.next();
+            String connectedName = foreignKey.getName();
+            String connectedType = foreignKey.getOwnedType();
+            final ModelSchema connectedSchema = ModelSchemaRegistry.singleton()
+                    .getModelSchemaForModelClass(connectedType);
+            String connectedId = SQLiteTable.fromSchema(connectedSchema)
                     .getPrimaryKey()
                     .getName();
 
             stringBuilder
                 .append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
-                .append("(")
-                .append(connectionName)
-                .append(")")
+                .append("(" + connectedName + ")")
                 .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
-                .append(connectionTarget).append("(").append(connectionId).append(")");
+                .append(connectedType)
+                .append("(" + connectedId + ")");
 
             if (foreignKeyIterator.hasNext()) {
                 stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
