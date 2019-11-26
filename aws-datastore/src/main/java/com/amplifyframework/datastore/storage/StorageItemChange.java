@@ -360,13 +360,7 @@ public final class StorageItemChange<T extends Model> {
          */
         public <T extends Model> StorageItemChange<T> toStorageItemChange(
                 @NonNull StorageItemChangeFactory factory) {
-            Class<?> className;
-            try {
-                className = Class.forName(this.getItemClass());
-            } catch (ClassNotFoundException classNotFoundException) {
-                throw new IllegalStateException(classNotFoundException);
-            }
-            return Objects.requireNonNull(factory).fromRecord(this, className);
+            return Objects.requireNonNull(factory).fromRecord(this);
         }
 
         /**
@@ -514,15 +508,6 @@ public final class StorageItemChange<T extends Model> {
      * instances of {@link Record} into {@link StorageItemChange}.
      */
     public interface StorageItemChangeFactory {
-        /**
-         * De-serializes a {@link Record} into a {@link StorageItemChange<T>} with
-         * a parameterized type of T.
-         * @param record Record to deserialize
-         * @param itemClass The class of the item in the StorageItemChange.
-         * @param <T> Type of item represented inside the change record
-         * @return A {@link StorageItemChange<T>} representation of the provided record
-         */
-        <T extends Model> StorageItemChange<T> fromRecord(Record record, Class<?> itemClass);
 
         /**
          * De-serializes a {@link Record} into a {@link StorageItemChange} with

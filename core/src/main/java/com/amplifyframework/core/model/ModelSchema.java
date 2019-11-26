@@ -21,7 +21,8 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.annotations.BelongsTo;
-import com.amplifyframework.core.model.annotations.Connection;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
@@ -34,6 +35,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 
@@ -58,28 +60,27 @@ public final class ModelSchema {
     // The value is the ModelField object that encapsulates all the information about the instance variable.
     private final Map<String, ModelField> fields;
 
-    // A map that contains the connections of a Model.
-    // The key is the name of the instance variable in the Java class that represents one of Model's connections
-    // The value is the ModelConnection object that encapsulates all the information about the instance variable.
-    private final Map<String, ModelConnection> connections;
+    // A map that contains the associations of a Model.
+    // The key is the name of the instance variable in the Java class that represents one of Model's associations
+    private final Map<String, ModelAssociation> associations;
+
+    // Specifies the index of a Model.
+    private final ModelIndex modelIndex;
 
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
     // persistence-related operations guarantee that the results are always consistent.
     private final List<ModelField> sortedFields;
 
-    // Specifies the index of a Model.
-    private final ModelIndex modelIndex;
-
     private ModelSchema(String name,
                         String targetModelName,
                         Map<String, ModelField> fields,
-                        Map<String, ModelConnection> connections,
+                        Map<String, ModelAssociation> associations,
                         ModelIndex modelIndex) {
         this.name = name;
         this.targetModelName = targetModelName;
         this.fields = fields;
-        this.connections = connections;
+        this.associations = associations;
         this.modelIndex = modelIndex;
         this.sortedFields = sortModelFields();
     }
@@ -102,7 +103,7 @@ public final class ModelSchema {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
-            final TreeMap<String, ModelConnection> connections = new TreeMap<>();
+            final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final ModelIndex modelIndex = getModelIndex(clazz);
             String targetModelName = null;
             if (clazz.isAnnotationPresent(ModelConfig.class)) {
@@ -113,44 +114,26 @@ public final class ModelSchema {
             }
 
             for (Field field : classFields) {
-                final ModelConnection modelConnection = createModelConnection(field);
-                if (modelConnection != null) {
-                    connections.put(field.getName(), modelConnection);
-                }
-
                 final ModelField modelField = createModelField(field);
                 if (modelField != null) {
                     fields.put(field.getName(), modelField);
                 }
+                final ModelAssociation modelAssociation = createModelAssociation(field);
+                if (modelAssociation != null) {
+                    associations.put(field.getName(), modelAssociation);
+                }
             }
+
             return ModelSchema.builder()
                     .name(clazz.getSimpleName())
                     .targetModelName(targetModelName)
                     .fields(fields)
-                    .connections(connections)
+                    .associations(associations)
                     .modelIndex(modelIndex)
                     .build();
         } catch (Exception exception) {
             throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
         }
-    }
-
-    // Utility method to extract connection metadata from a field
-    private static ModelConnection createModelConnection(Field field) {
-        Connection connection = field.getAnnotation(Connection.class);
-        if (connection != null) {
-            return ModelConnection.builder()
-                    .name(connection.name())
-                    .keyField(connection.keyField())
-                    .sortField(connection.sortField())
-                    .limit(connection.limit())
-                    .keyName(connection.keyName())
-                    .fields(Arrays.asList(connection.fields()))
-                    .relationship(RelationalModel.valueOf(connection.relationship()))
-                    .connectionTarget(field.getType().getName())
-                    .build();
-        }
-        return null;
     }
 
     // Utility method to extract field metadata
@@ -171,10 +154,32 @@ public final class ModelSchema {
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))
                     .isModel(Model.class.isAssignableFrom(field.getType()))
-                    .isPrimaryKey(PrimaryKey.matches(fieldName))
-                    .belongsTo(field.isAnnotationPresent(BelongsTo.class)
-                            ? field.getAnnotation(BelongsTo.class).type().getSimpleName()
-                            : null)
+                    .build();
+        }
+        return null;
+    }
+
+    // Utility method to extract association metadata from a field
+    private static ModelAssociation createModelAssociation(Field field) {
+        if (field.isAnnotationPresent(BelongsTo.class)) {
+            BelongsTo association = field.getAnnotation(BelongsTo.class);
+            return ModelAssociation.builder()
+                    .associatedType(association.type().getSimpleName())
+                    .isOwner(true)
+                    .build();
+        }
+        if (field.isAnnotationPresent(HasOne.class)) {
+            HasOne association = field.getAnnotation(HasOne.class);
+            return ModelAssociation.builder()
+                    .associatedName(association.associatedWith())
+                    .associatedType(association.type().getSimpleName())
+                    .build();
+        }
+        if (field.isAnnotationPresent(HasMany.class)) {
+            HasMany association = field.getAnnotation(HasMany.class);
+            return ModelAssociation.builder()
+                    .associatedName(association.associatedWith())
+                    .associatedType(association.type().getSimpleName())
                     .build();
         }
         return null;
@@ -217,7 +222,7 @@ public final class ModelSchema {
      *          the fields of the model in sorted order.
      */
     public List<ModelField> getSortedFields() {
-        return sortedFields;
+        return Immutable.of(sortedFields);
     }
 
     /**
@@ -230,41 +235,12 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the primary key of the Model.
+     * Returns a map of field to associations of the model.
      *
-     * @return the primary key of the Model.
+     * @return a map of field to associations of the model.
      */
-    public ModelField getPrimaryKey() {
-        for (ModelField field: sortedFields) {
-            if (field.isPrimaryKey()) {
-                return field;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the list of foreign keys of the Model.
-     *
-     * @return the list of foreign keys of the Model.
-     */
-    public List<ModelField> getForeignKeys() {
-        List<ModelField> foreignKeys = new LinkedList<>();
-        for (ModelField field: sortedFields) {
-            if (field.isForeignKey()) {
-                foreignKeys.add(field);
-            }
-        }
-        return Immutable.of(foreignKeys);
-    }
-
-    /**
-     * Returns a map of field to connection of the model.
-     *
-     * @return a map of field to connection of the model.
-     */
-    public Map<String, ModelConnection> getConnections() {
-        return Immutable.of(connections);
+    public Map<String, ModelAssociation> getAssociations() {
+        return Immutable.of(associations);
     }
 
     /**
@@ -283,7 +259,7 @@ public final class ModelSchema {
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
         }
 
-        for (ModelField field : this.getSortedFields()) {
+        for (ModelField field : this.fields.values()) {
             try {
                 Field privateField = instance.getClass().getDeclaredField(field.getName());
                 privateField.setAccessible(true);
@@ -325,24 +301,23 @@ public final class ModelSchema {
 
         // Returns an array of the values sorted by some pre-defined rules:
         //
-        // 1. primary key comes always first
-        // 2. foreign keys come always at the end
-        // 3. the other sortedFields are sorted alphabetically
+        // 1. ID comes always first
+        // 2. The other sortedFields are sorted alphabetically
         //
         // This is useful so code that uses the sortedFields to generate queries and other
         // persistence-related operations guarantee that the results are always consistent.
         Collections.sort(modelFieldEntries, (fieldOne, fieldOther) -> {
 
-            if (fieldOne.isPrimaryKey()) {
+            if (fieldOne.isId()) {
                 return -1;
             }
-            if (fieldOther.isPrimaryKey()) {
+            if (fieldOther.isId()) {
                 return 1;
             }
-            if (fieldOne.isForeignKey() && !fieldOther.isForeignKey()) {
+            if (associations.containsKey(fieldOne.getName()) && !associations.containsKey(fieldOther.getName())) {
                 return 1;
             }
-            if (!fieldOne.isForeignKey() && fieldOther.isForeignKey()) {
+            if (associations.containsKey(fieldOther.getName()) && !associations.containsKey(fieldOne.getName())) {
                 return -1;
             }
             return fieldOne.getName().compareTo(fieldOther.getName());
@@ -371,10 +346,13 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(fields, that.fields)) {
             return false;
         }
-        if (!ObjectsCompat.equals(sortedFields, that.sortedFields)) {
+        if (!ObjectsCompat.equals(associations, that.associations)) {
             return false;
         }
-        return ObjectsCompat.equals(modelIndex, that.modelIndex);
+        if (!ObjectsCompat.equals(modelIndex, that.modelIndex)) {
+            return false;
+        }
+        return true;
     }
 
     @SuppressWarnings("checkstyle:MagicNumber") // 31 is auto-generated by IDE
@@ -383,8 +361,7 @@ public final class ModelSchema {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
-        result = 31 * result + (connections != null ? connections.hashCode() : 0);
-        result = 31 * result + (sortedFields != null ? sortedFields.hashCode() : 0);
+        result = 31 * result + (associations != null ? associations.hashCode() : 0);
         result = 31 * result + (modelIndex != null ? modelIndex.hashCode() : 0);
         return result;
     }
@@ -395,8 +372,7 @@ public final class ModelSchema {
             "name='" + name + '\'' +
             ", targetModelName='" + targetModelName + '\'' +
             ", fields=" + fields +
-            ", connections" + connections +
-            ", sortedFields=" + sortedFields +
+            ", associations" + associations +
             ", modelIndex=" + modelIndex +
             '}';
     }
@@ -405,14 +381,10 @@ public final class ModelSchema {
      * The Builder to build the {@link ModelSchema} object.
      */
     public static final class Builder {
-        // the name of the Model class.
         private String name;
-
-        // the name of the Model in the target. For example: the name of the
-        // model in the GraphQL Schema.
         private String targetModelName;
-        private Map<String, ModelField> fields;
-        private Map<String, ModelConnection> connections;
+        private Map<String, ModelField> fields = new TreeMap<>();
+        private Map<String, ModelAssociation> associations = new TreeMap<>();
         private ModelIndex modelIndex;
 
         /**
@@ -442,18 +414,20 @@ public final class ModelSchema {
          * @param fields the map of fieldName and the fieldObject of all the fields of the model.
          * @return the builder object.
          */
-        public Builder fields(Map<String, ModelField> fields) {
+        public Builder fields(@NonNull Map<String, ModelField> fields) {
+            Objects.requireNonNull(fields);
             this.fields = fields;
             return this;
         }
 
         /**
-         * Set the map of fieldName and the connectionObject of all the connection fields of the model.
-         * @param connections the map of fieldName and the connectionObjects.
+         * Set the map of fieldName and the association of all the associated fields of the model.
+         * @param associations the map of fieldName and the association metadata.
          * @return the builder object.
          */
-        public Builder connections(Map<String, ModelConnection> connections) {
-            this.connections = connections;
+        public Builder associations(@NonNull Map<String, ModelAssociation> associations) {
+            Objects.requireNonNull(associations);
+            this.associations = associations;
             return this;
         }
 
@@ -475,7 +449,7 @@ public final class ModelSchema {
             return new ModelSchema(name,
                     targetModelName,
                     fields,
-                    connections,
+                    associations,
                     modelIndex);
         }
     }

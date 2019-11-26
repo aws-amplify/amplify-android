@@ -55,16 +55,16 @@ public final class GsonStorageItemChangeConverter implements
     }
 
     @Override
-    public <T extends Model> StorageItemChange<T> fromRecord(StorageItemChange.Record record, Class<?> itemClass) {
-        Type storageItemChangeType =
-            TypeToken.getParameterized(StorageItemChange.class, itemClass).getType();
-        return gson.fromJson(record.getEntry(), storageItemChangeType);
-    }
-
-    @SuppressWarnings("checkstyle:WhitespaceAround") // {} after new TypeToken<...> - it looks good.
-    @Override
     public <T extends Model> StorageItemChange<T> fromRecord(StorageItemChange.Record record) {
-        return gson.fromJson(record.getEntry(), (new TypeToken<StorageItemChange<T>>() {}).getType());
+        Class<?> itemClass;
+        try {
+            itemClass = Class.forName(record.getItemClass());
+        } catch (ClassNotFoundException classNotFoundException) {
+            throw new IllegalStateException(classNotFoundException);
+        }
+        final Type itemType =
+            TypeToken.getParameterized(StorageItemChange.class, itemClass).getType();
+        return gson.fromJson(record.getEntry(), itemType);
     }
 
     /**

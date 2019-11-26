@@ -119,7 +119,6 @@ public class SqlCommandTest {
         fields.put("id", ModelField.builder()
                 .name("id")
                 .targetName("id")
-                .isPrimaryKey(true)
                 .isRequired(true)
                 .targetType("String")
                 .build());
