@@ -31,12 +31,14 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.FieldFinder;
 
 import com.amplifyframework.util.StringUtils;
@@ -166,6 +168,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
+                this.sqlCommandFactory = new SQLiteCommandFactory();
                 CreateSqlCommands createSqlCommands = getCreateCommands(models);
                 sqliteOpenHelper = SQLiteStorageHelper.getInstance(
                         context,
@@ -188,7 +191,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * All database operations will happen through this handle.
                  */
                 databaseConnectionHandle = sqliteOpenHelper.getWritableDatabase();
-                sqlCommandFactory = SQLiteCommandFactory.getInstance(databaseConnectionHandle);
+                this.sqlCommandFactory = new SQLiteCommandFactory(databaseConnectionHandle);
 
                 /*
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
@@ -224,11 +227,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
-                final String tableName = item.getClass().getSimpleName();
+                final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
 
                 if (dataExistsInSQLiteTable(
-                        tableName,
-                        modelSchema.getPrimaryKey().getName(),
+                        sqLiteTable.getName(),
+                        PrimaryKey.fieldName(),
                         item.getId())) {
                     // update model stored in SQLite
                     final SqlCommand sqlCommand = sqlCommandFactory.updateFor(modelSchema, item);
@@ -508,23 +511,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     private <T extends Model> Map<String, Object> buildMapForModel(
-            Class<T> modelClass,
-            ModelSchema modelSchema,
-            Cursor cursor) {
+            @NonNull Class<T> modelClass,
+            @NonNull ModelSchema modelSchema,
+            @NonNull Cursor cursor) {
         final Map<String, Object> mapForModel = new HashMap<>();
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
             try {
                 final ModelField modelField = entry.getValue();
-                final String fieldGraphQLType = entry.getValue().getTargetType();
+                final String fieldGraphQlType = entry.getValue().getTargetType();
                 final JavaFieldType fieldJavaType;
                 if (modelField.isModel()) {
                     fieldJavaType = JavaFieldType.MODEL;
                 } else if (modelField.isEnum()) {
                     fieldJavaType = JavaFieldType.ENUM;
                 } else {
-                    fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+                    fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQlType);
                 }
 
                 final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
@@ -541,11 +544,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         break;
                     case ENUM:
                         String stringValueFromCursor = cursor.getString(columnIndex);
-                        if (stringValueFromCursor != null) {
-                            Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
-                            Object enumValue = gson.getAdapter(enumType).fromJson(stringValueFromCursor);
-                            mapForModel.put(fieldName, enumValue);
-                        }
+                        Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
+                        Object enumValue = gson.getAdapter(enumType).fromJson(stringValueFromCursor);
+                        mapForModel.put(fieldName, enumValue);
                         break;
                     case INTEGER:
                         mapForModel.put(fieldName, cursor.getInt(columnIndex));
@@ -576,7 +577,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
                 }
             } catch (Exception exception) {
-                Log.e(TAG, "Error in reading value for field: " + fieldName, exception);
                 mapForModel.put(fieldName, null);
             }
         }

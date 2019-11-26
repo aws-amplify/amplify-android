@@ -42,31 +42,25 @@ import java.util.Objects;
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
 
-    // the singleton instance.
-    private static SQLiteCommandFactory singletonInstance;
-
     // Delimiter used in the SQLite commands.
     private static final String SQLITE_COMMAND_DELIMITER = " ";
 
     // Connection handle to a Sqlite Database.
     private final SQLiteDatabase databaseConnectionHandle;
 
-    private SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
-        this.databaseConnectionHandle = databaseConnectionHandle;
+    /**
+     * Default constructor.
+     */
+    public SQLiteCommandFactory() {
+        this.databaseConnectionHandle = null;
     }
 
     /**
-     * Retrieves the singleton instance of the SQLiteCommandFactory.
-     * @return the singleton instance of the SQLiteCommandFactory.
+     * Constructor with databaseConnectionHandle.
+     * @param databaseConnectionHandle connection to a SQLiteDatabase.
      */
-    static synchronized SQLiteCommandFactory getInstance(
-            @NonNull SQLiteDatabase databaseConnectionHandle) {
-        Objects.requireNonNull(databaseConnectionHandle);
-
-        if (singletonInstance == null) {
-            singletonInstance = new SQLiteCommandFactory(databaseConnectionHandle);
-        }
-        return singletonInstance;
+    public SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
+        this.databaseConnectionHandle = databaseConnectionHandle;
     }
 
     /**
