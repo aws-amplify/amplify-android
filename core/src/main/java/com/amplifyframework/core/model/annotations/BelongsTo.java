@@ -42,4 +42,10 @@ public @interface BelongsTo {
      *         with this field.
      */
     Class<? extends Model> type();
+
+    /**
+     * Returns the name of the field used for the connection.
+     * @return the name of field used for the connection
+     */
+    String targetName();
 }

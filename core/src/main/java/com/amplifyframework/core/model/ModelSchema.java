@@ -173,6 +173,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(BelongsTo.class)) {
             BelongsTo association = field.getAnnotation(BelongsTo.class);
             return ModelAssociation.builder()
+                    .associatedName(association.targetName())
                     .associatedType(association.type().getSimpleName())
                     .isOwner(true)
                     .build();
@@ -280,14 +281,22 @@ public final class ModelSchema {
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
         }
 
-        for (ModelField field : this.fields.values()) {
+        for (ModelField modelField : this.fields.values()) {
             try {
-                Field privateField = instance.getClass().getDeclaredField(field.getName());
+                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
                 privateField.setAccessible(true);
-                result.put(field.getTargetName(), privateField.get(instance));
+
+                if (getAssociations().containsKey(modelField.getName())) {
+                    ModelAssociation association = getAssociations().get(modelField.getName());
+                    // All ModelAssociation targets are required to be instances of Model so this is a safe cast
+                    Model target = (Model) privateField.get(instance);
+                    result.put(association.getAssociatedName(), target.getId());
+                } else {
+                    result.put(modelField.getTargetName(), privateField.get(instance));
+                }
             } catch (Exception exception) {
                 throw new AmplifyException("An invalid field was provided - " +
-                        field.getName() +
+                        modelField.getName() +
                         " is not present in " +
                         instance.getClass().getSimpleName(),
                         exception,
