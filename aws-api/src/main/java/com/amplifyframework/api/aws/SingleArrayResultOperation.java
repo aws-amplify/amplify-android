@@ -42,6 +42,7 @@ import okhttp3.ResponseBody;
  * @param <T> Casted type of GraphQL result data
  */
 public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
+    private static final String TAG = SingleArrayResultOperation.class.getSimpleName();
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
@@ -79,7 +80,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         }
 
         try {
-            Log.d("graphql", getRequest().getContent());
+            Log.d(TAG, "Request: " + getRequest().getContent());
             ongoingCall = client.newCall(new Request.Builder()
                     .url(endpoint)
                     .addHeader("accept", CONTENT_TYPE)
