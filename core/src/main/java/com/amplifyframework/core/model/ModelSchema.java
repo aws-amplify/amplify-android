@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model;
 
+import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -110,7 +112,7 @@ public final class ModelSchema {
             // Set the model name and plural name (null if not provided)
             ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
             final String modelName = clazz.getSimpleName();
-            final String modelPluralName = modelConfig != null && !modelConfig.pluralName().isEmpty()
+            final String modelPluralName = modelConfig != null && !TextUtils.isEmpty(modelConfig.pluralName())
                     ? modelConfig.pluralName()
                     : null;
 
@@ -264,12 +266,11 @@ public final class ModelSchema {
 
     /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
-     * @param <T> Type of instance that extends {@link Model}
      * @param instance An instance of this model populated with values to map
      * @return a map of the target fields in the schema to the actual values in the provided object
      * @throws AmplifyException if the object does not match the fields in this schema
      */
-    public <T extends Model> Map<String, Object> getMapOfFieldNameAndValues(T instance) throws AmplifyException {
+    public Map<String, Object> getMapOfFieldNameAndValues(Model instance) throws AmplifyException {
         HashMap<String, Object> result = new HashMap<>();
 
         if (!instance.getClass().getSimpleName().equals(this.getName())) {
