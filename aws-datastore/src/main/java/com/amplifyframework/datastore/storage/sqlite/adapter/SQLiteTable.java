@@ -72,23 +72,26 @@ public final class SQLiteTable {
         Map<String, SQLiteColumn> sqlColumns = new TreeMap<>();
         for (ModelField modelField : modelSchema.getFields().values()) {
             final ModelAssociation association = associations.get(modelField.getName());
-
+            final boolean isAssociated = association != null;
             // Skip if the field represents an association
             // and is NOT the foreign key
-            if (association != null && !association.isOwner()) {
+            if (isAssociated && !association.isOwner()) {
                 continue;
             }
 
+            // All associated fields are also foreign keys at this point
             SQLiteColumn column = SQLiteColumn.builder()
-                    .name(modelField.getName())
+                    .name(isAssociated
+                            ? association.getTargetName()
+                            : modelField.getName())
                     .tableName(modelSchema.getName())
-                    .ownerOf(association != null && association.isOwner()
+                    .ownerOf(isAssociated
                             ? association.getAssociatedType()
                             : null)
                     .isNonNull(modelField.isRequired())
                     .dataType(sqlTypeFromModelField(modelField))
                     .build();
-            sqlColumns.put(column.getName(), column);
+            sqlColumns.put(modelField.getName(), column);
         }
 
         return SQLiteTable.builder()
@@ -151,8 +154,8 @@ public final class SQLiteTable {
     }
 
     /**
-     * Returns the map of column names to columns of this table.
-     * @return the map of column names to columns of this table
+     * Returns the map of field names to columns of this table.
+     * @return the map of field names to columns of this table
      */
     public Map<String, SQLiteColumn> getColumns() {
         return Immutable.of(columns);

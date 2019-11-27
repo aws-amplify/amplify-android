@@ -63,7 +63,6 @@ public class SqlCommandTest {
         final SortedMap<String, ModelField> fields = getFieldsMap();
         final ModelSchema personSchema = ModelSchema.builder()
                 .name("Person")
-                .targetModelName(null)
                 .fields(fields)
                 .build();
 
@@ -144,25 +143,21 @@ public class SqlCommandTest {
         final SortedMap<String, ModelField> fields = new TreeMap<>();
         fields.put("id", ModelField.builder()
                 .name("id")
-                .targetName("id")
                 .isRequired(true)
                 .targetType("String")
                 .build());
         fields.put("firstName", ModelField.builder()
                 .name("firstName")
-                .targetName("first_name")
                 .isRequired(true)
                 .targetType("String")
                 .build());
         fields.put("lastName", ModelField.builder()
                 .name("lastName")
-                .targetName("last_name")
                 .isRequired(true)
                 .targetType("String")
                 .build());
         fields.put("age", ModelField.builder()
                 .name("age")
-                .targetName("age")
                 .targetType("Int")
                 .build());
         return fields;

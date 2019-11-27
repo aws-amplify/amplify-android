@@ -66,7 +66,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("query ")
             .append("Get")
@@ -95,7 +95,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("query ")
             .append("List")
@@ -135,7 +135,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("mutation ")
             .append(StringUtils.capitalize(typeStr))
@@ -191,7 +191,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("subscription ")
                 .append(StringUtils.allCapsToPascalCase(typeStr))

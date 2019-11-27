@@ -259,16 +259,16 @@ public final class StorageItemChange<T extends Model> {
      * This is the type which the {@link LocalStorageAdapter} deals with directly.
      */
     @SuppressWarnings("unused")
-    @ModelConfig(targetName = "StorageItemChangeRecord")
+    @ModelConfig(pluralName = "Records")
     @Index(fields = {"itemClass"}, name = "itemClassBasedIndex")
     public static final class Record implements Model {
-        @ModelField(targetName = "id", targetType = "ID", isRequired = true)
+        @ModelField(targetType = "ID", isRequired = true)
         private final String id;
 
-        @ModelField(targetName = "entry", targetType = "String", isRequired = true)
+        @ModelField(targetType = "String", isRequired = true)
         private final String entry;
 
-        @ModelField(targetName = "itemClass", targetType = "String", isRequired = true)
+        @ModelField(targetType = "String", isRequired = true)
         private final String itemClass;
 
         /**

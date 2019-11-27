@@ -36,10 +36,8 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 public @interface ModelConfig {
     /**
-     * Specifies the name of the Model in the target.
-     * @return the name of the Model in the target.
-     *         For example: the name of the Model in
-     *         the GraphQL schema.
+     * Specifies the plural version of the model name.
+     * @return the plural version of the name.
      */
-    String targetName() default "";
+    String pluralName() default "";
 }

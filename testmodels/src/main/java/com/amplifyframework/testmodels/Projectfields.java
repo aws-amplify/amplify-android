@@ -27,14 +27,14 @@ import java.util.UUID;
 
 /** This is an auto generated class representing the projectfields type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(targetName = "projectfields")
+@ModelConfig
 public final class Projectfields implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField NAME = QueryField.field("name");
     public static final QueryField TEAM = QueryField.field("team");
-    private final @ModelField(targetName="id", targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetName="name", targetType="String") String name;
-    private final @ModelField(targetName="team", targetType="Team") @BelongsTo(targetName = "teamID", type = Team.class) Team team;
+    private final @ModelField(targetType="ID", isRequired = true) String id;
+    private final @ModelField(targetType="String") String name;
+    private final @ModelField(targetType="Team") @BelongsTo(targetName = "teamID", type = Team.class) Team team;
     public String getId() {
         return id;
     }
