@@ -19,7 +19,7 @@ public class AmazonPinpointAnalyticsPluginConfiguration {
 
     // Pinpoint plugin configuration options
     private String appId;
-    private boolean trackAppLifecycleEvents;
+    private boolean trackAppLifecycleEvents = false;
     private String region;
     private long autoFlushEventsInterval = 30L;
     private long autoSessionTrackingInterval = 30L;
