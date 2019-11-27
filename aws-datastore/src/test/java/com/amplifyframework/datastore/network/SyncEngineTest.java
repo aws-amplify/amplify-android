@@ -19,6 +19,7 @@ import android.os.Build;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -62,7 +63,8 @@ public class SyncEngineTest {
         ApiCategoryBehavior api = mock(ApiCategoryBehavior.class);
         String apiName = RandomString.string();
         LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
-        SyncEngine syncEngine = new SyncEngine(api, apiName, localStorageAdapter);
+        ModelProvider modelProvider = mock(ModelProvider.class);
+        SyncEngine syncEngine = new SyncEngine(api, () -> apiName, modelProvider, localStorageAdapter);
 
         // Arrange: storage engine is running
         syncEngine.start();

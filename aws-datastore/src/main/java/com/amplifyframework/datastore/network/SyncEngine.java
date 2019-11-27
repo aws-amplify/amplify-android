@@ -25,7 +25,9 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -56,35 +58,39 @@ import io.reactivex.schedulers.Schedulers;
 // The generics get intense, so we use MODEL and SIC instead of just M and S.
 @SuppressWarnings("checkstyle:MethodTypeParameterName")
 public final class SyncEngine {
-    private static final String TAG = SyncEngine.class.getName();
+    private static final String TAG = SyncEngine.class.getSimpleName();
 
     private final ApiCategoryBehavior api;
-    private final String apiName;
+    private final ConfiguredApiProvider apiNameProvider;
+    private final RemoteModelMutations remoteModelMutations;
     private final LocalStorageAdapter storageAdapter;
     private final StorageItemChangeJournal storageItemChangeJournal;
-    private final CompositeDisposable observationsToDispose;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
+    private final CompositeDisposable observationsToDispose;
 
     /**
      * Constructs a new SyncEngine. This sync engine will
      * synchronize data between the provided API and the provided
      * {@link LocalStorageAdapter}.
      * @param api Interface to a remote GraphQL endpoint
-     * @param apiName The name of the configured GraphQL endpoint API
+     * @param apiNameProvider Provides the name of the configured GraphQL endpoint API
+     * @param modelProvider A provider of the models to be synchronized
      * @param storageAdapter Interface to local storage, used to
      *                       durably store offline changes until
      *                       then can be written to the network
      */
     public SyncEngine(
-        @NonNull ApiCategoryBehavior api,
-        @NonNull String apiName,
-        @NonNull final LocalStorageAdapter storageAdapter) {
+            @NonNull final ApiCategoryBehavior api,
+            @NonNull final ConfiguredApiProvider apiNameProvider,
+            @NonNull final ModelProvider modelProvider,
+            @NonNull final LocalStorageAdapter storageAdapter) {
         this.api = Objects.requireNonNull((api));
-        this.apiName = Objects.requireNonNull(apiName);
+        this.apiNameProvider = Objects.requireNonNull(apiNameProvider);
+        this.remoteModelMutations = new RemoteModelMutations(api, apiNameProvider, modelProvider);
         this.storageAdapter = Objects.requireNonNull(storageAdapter);
         this.storageItemChangeJournal = new StorageItemChangeJournal(storageAdapter);
-        this.observationsToDispose = new CompositeDisposable();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
+        this.observationsToDispose = new CompositeDisposable();
     }
 
     /**
@@ -92,8 +98,53 @@ public final class SyncEngine {
      * and the remote GraphQL endpoint.
      */
     public void start() {
+        startModelSubscriptions();
         startDrainingChangeJournal();
         startObservingStorageChanges();
+    }
+
+    private void startModelSubscriptions() {
+        observationsToDispose.add(
+            remoteModelMutations.observe()
+                .subscribeOn(Schedulers.io())
+                .observeOn(Schedulers.io())
+                .flatMapSingle(this::applyMutationToLocalStorage)
+                .subscribe(
+                    savedMutation -> Log.i(TAG, "Successfully applied remote mutation, locally:"),
+                    error -> Log.w(TAG, "Error applying mutation to local storage.", error),
+                    () -> Log.i(TAG, "Subscription to remote model mutations is completed.")
+                )
+        );
+    }
+
+    private Single<Mutation<? extends Model>> applyMutationToLocalStorage(Mutation<? extends Model> mutation) {
+        final StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
+        return Single.defer(() -> Single.create(emitter -> {
+            final ResultListener<StorageItemChange.Record> storageResultListener =
+                new ResultListener<StorageItemChange.Record>() {
+                    @Override
+                    public void onResult(StorageItemChange.Record result) {
+                        emitter.onSuccess(mutation);
+                    }
+
+                    @Override
+                    public void onError(Throwable error) {
+                        emitter.onError(error);
+                    }
+                };
+
+            switch (mutation.type()) {
+                case UPDATE:
+                case CREATE:
+                    storageAdapter.save(mutation.model(), initiator, storageResultListener);
+                    break;
+                case DELETE:
+                    storageAdapter.delete(mutation.model(), initiator, storageResultListener);
+                    break;
+                default:
+                    throw new DataStoreException("Unknown mutation type = " + mutation.type());
+            }
+        }));
     }
 
     /**
@@ -151,7 +202,7 @@ public final class SyncEngine {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
             api.mutate(
-                apiName,
+                apiNameProvider.getDataStoreApiName(),
                 storageItemChange.item(),
                 selectMutationType(storageItemChange),
                 new ResultListener<GraphQLResponse<MODEL>>() {
@@ -177,7 +228,8 @@ public final class SyncEngine {
      * @param storageItemChange A {@link StorageItemChange} to be published to network
      * @return An appropriate {@link MutationType} for this storage item change
      */
-    private static <T extends Model> MutationType selectMutationType(StorageItemChange<T> storageItemChange) {
+    private static <T extends Model> MutationType selectMutationType(
+            @SuppressWarnings("unused" /* one sec ... */) StorageItemChange<T> storageItemChange) {
         // TODO: add business logic here, this should be update/delete sometimes.
         return MutationType.CREATE;
     }
