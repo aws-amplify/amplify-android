@@ -65,7 +65,7 @@ public interface AnalyticsCategoryBehavior {
      *                            storing the event in the local database.
      * @throws ConfigurationException If the category is badly/not yet configured
      */
-    void recordEvent(@NonNull GeneralAnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
 
     /**
      * Register properties that will be recorded by all the subsequent `recordEvent` call.
