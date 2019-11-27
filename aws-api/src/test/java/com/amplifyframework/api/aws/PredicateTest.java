@@ -29,7 +29,7 @@ import java.util.Arrays;
 /**
  * Tests predicate creation.
  */
-public class PredicateTest {
+public final class PredicateTest {
     /**
      * Tests the creation of a simple single operation predicate.
      */
