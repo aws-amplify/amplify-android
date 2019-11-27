@@ -27,12 +27,12 @@ import java.util.UUID;
 
 /** This is an auto generated class representing the Team type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(targetName = "Team")
+@ModelConfig
 public final class Team implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField NAME = QueryField.field("name");
-    private final @ModelField(targetName="id", targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetName="name", targetType="String", isRequired = true) String name;
+    private final @ModelField(targetType="ID", isRequired = true) String id;
+    private final @ModelField(targetType="String", isRequired = true) String name;
     public String getId() {
         return id;
     }
