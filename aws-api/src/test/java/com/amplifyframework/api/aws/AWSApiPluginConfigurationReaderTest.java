@@ -16,11 +16,13 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.ConfigurationException;
-import com.amplifyframework.testutils.TestAssets;
+import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -29,7 +31,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the {@link AWSApiPluginConfigurationReader} JSON parser utility.
  */
-public class AWSApiPluginConfigurationReaderInstrumentationTest {
+@RunWith(RobolectricTestRunner.class)
+public final class AWSApiPluginConfigurationReaderTest {
 
     /**
      * An attempt to read a null JSON object should result in a
@@ -60,7 +63,7 @@ public class AWSApiPluginConfigurationReaderInstrumentationTest {
     public void readFromWellFormedJsonObjectProducesValidConfig() throws JSONException {
 
         // Arrange an input JSONObject
-        final JSONObject json = new JSONObject(TestAssets.readAsString("single-api.config"));
+        final JSONObject json = new JSONObject(Resources.readAsString("single-api.config"));
 
         // Act: try to parse it to a modeled configuration object
         final AWSApiPluginConfiguration config = AWSApiPluginConfigurationReader.readFrom(json);
