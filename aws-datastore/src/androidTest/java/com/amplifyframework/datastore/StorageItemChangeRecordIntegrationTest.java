@@ -36,11 +36,9 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
@@ -70,22 +68,8 @@ public final class StorageItemChangeRecordIntegrationTest {
         ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         LatchedResultListener<List<ModelSchema>> schemaListener = LatchedResultListener.instance();
-        this.localStorageAdapter = SQLiteStorageAdapter.forModels(new ModelProvider() {
-            @Override
-            public Set<Class<? extends Model>> models() {
-                // StorageItemChange.Record.class is expressly *NOT* added here,
-                // because it always added, internally, without user exposed configuration/choice.
-                return Collections.singleton(Person.class);
-            }
-
-            @Override
-            public String version() {
-                // A stable version name for what we're doing here...
-                // Nothing meaningful about this choice, other than that it is 1:1 with the
-                // test class and won't change across test runs.
-                return StorageItemChangeRecordIntegrationTest.class.getSimpleName();
-            }
-        });
+        ModelProvider personProvider = ModelProviderFactory.createProviderOf(Person.class);
+        this.localStorageAdapter = SQLiteStorageAdapter.forModels(personProvider);
         localStorageAdapter.initialize(ApplicationProvider.getApplicationContext(), schemaListener);
 
         // Evaluate the returned set of ModelSchema. Make sure that there is one
