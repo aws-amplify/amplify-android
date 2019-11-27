@@ -25,16 +25,16 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 
 import java.util.UUID;
 
-/** This is an auto generated class representing the Project type in your schema. */
+/** This is an auto generated class representing the projectfields type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig
-public final class Project implements Model {
+public final class Projectfields implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField NAME = QueryField.field("name");
     public static final QueryField TEAM = QueryField.field("team");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String") String name;
-    private final @ModelField(targetType="Team") @BelongsTo(type = Team.class, targetName = "projectTeamId") Team team;
+    private final @ModelField(targetType="Team") @BelongsTo(targetName = "teamID", type = Team.class) Team team;
     public String getId() {
         return id;
     }
@@ -47,7 +47,7 @@ public final class Project implements Model {
         return team;
     }
 
-    private Project(String id, String name, Team team) {
+    private Projectfields(String id, String name, Team team) {
         this.id = id;
         this.name = name;
         this.team = team;
@@ -60,10 +60,10 @@ public final class Project implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Project project = (Project) obj;
-            return ObjectsCompat.equals(getId(), project.getId()) &&
-                    ObjectsCompat.equals(getName(), project.getName()) &&
-                    ObjectsCompat.equals(getTeam(), project.getTeam());
+            Projectfields projectfields = (Projectfields) obj;
+            return ObjectsCompat.equals(getId(), projectfields.getId()) &&
+                    ObjectsCompat.equals(getName(), projectfields.getName()) &&
+                    ObjectsCompat.equals(getTeam(), projectfields.getTeam());
         }
     }
 
@@ -76,16 +76,20 @@ public final class Project implements Model {
                 .hashCode();
     }
 
+    public static BuildStep builder() {
+        return new Builder();
+    }
+
     /**
      * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
-     *
      * This is a convenience method to return an instance of the object with only its ID populated
      * to be used in the context of a parameter in a delete mutation or referencing a foreign key
      * in a relationship.
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
+     * @throws IllegalArgumentException Checks that ID is in the proper format
      */
-    public static Project justId(String id) {
+    public static Projectfields justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -95,25 +99,20 @@ public final class Project implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-
-        return new Project(
+        return new Projectfields(
                 id,
                 null,
                 null
         );
     }
 
-    public static BuildStep builder() {
-        return new Builder();
-    }
-
-    public NewBuilder newBuilder() {
-        return new NewBuilder(id,
+    public CopyOfBuilder copyOfBuilder() {
+        return new CopyOfBuilder(id,
                 name,
                 team);
     }
     public interface BuildStep {
-        Project build();
+        Projectfields build();
         BuildStep id(String id) throws IllegalArgumentException;
         BuildStep name(String name);
         BuildStep team(Team team);
@@ -125,10 +124,10 @@ public final class Project implements Model {
         private String name;
         private Team team;
         @Override
-        public Project build() {
+        public Projectfields build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Project(
+            return new Projectfields(
                     id,
                     name,
                     team);
@@ -152,7 +151,7 @@ public final class Project implements Model {
          * @param id id
          * @return Current Builder instance, for fluent method chaining
          * @throws IllegalArgumentException Checks that ID is in the proper format
-         **/
+         */
         public BuildStep id(String id) throws IllegalArgumentException {
             this.id = id;
 
@@ -168,21 +167,21 @@ public final class Project implements Model {
     }
 
 
-    public final class NewBuilder extends Builder {
-        private NewBuilder(String id, String name, Team team) {
+    public final class CopyOfBuilder extends Builder {
+        private CopyOfBuilder(String id, String name, Team team) {
             super.id(id);
             super.name(name)
                     .team(team);
         }
 
         @Override
-        public NewBuilder name(String name) {
-            return (NewBuilder) super.name(name);
+        public CopyOfBuilder name(String name) {
+            return (CopyOfBuilder) super.name(name);
         }
 
         @Override
-        public NewBuilder team(Team team) {
-            return (NewBuilder) super.team(team);
+        public CopyOfBuilder team(Team team) {
+            return (CopyOfBuilder) super.team(team);
         }
     }
 

@@ -15,8 +15,6 @@
 
 package com.amplifyframework.core.model;
 
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -112,7 +110,8 @@ public final class ModelSchema {
             // Set the model name and plural name (null if not provided)
             ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
             final String modelName = clazz.getSimpleName();
-            final String modelPluralName = modelConfig != null && !TextUtils.isEmpty(modelConfig.pluralName())
+            final String modelPluralName = modelConfig != null && modelConfig.pluralName() != null
+                    && !modelConfig.pluralName().isEmpty()
                     ? modelConfig.pluralName()
                     : null;
 

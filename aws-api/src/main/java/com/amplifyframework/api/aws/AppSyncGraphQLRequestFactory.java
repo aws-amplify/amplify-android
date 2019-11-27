@@ -54,6 +54,8 @@ import java.util.Set;
  * AppSync specifications.
  */
 final class AppSyncGraphQLRequestFactory {
+    private static final int FIXED_QUERY_LIMIT = 1000;
+
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
 
@@ -64,14 +66,14 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String modelName = schema.getName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("query ")
             .append("Get")
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("(")
             .append("$id: ID!) { get")
-            .append(StringUtils.capitalize(modelName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("(id: $id) { ")
             .append(getModelFields(modelClass))
             .append("}}");
@@ -97,19 +99,20 @@ final class AppSyncGraphQLRequestFactory {
 
         doc.append("query ")
             .append("List")
-            .append(StringUtils.capitalize(graphQlTypeName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("(")
             .append("$filter: Model")
-            .append(StringUtils.capitalize(graphQlTypeName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("FilterInput ")
             .append("$limit: Int $nextToken: String) { list")
-            .append(StringUtils.capitalize(graphQlTypeName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
             .append(getModelFields(modelClass))
             .append("} nextToken }}");
 
         if (!predicateIsEmpty(predicate)) {
             variables.put("filter", parsePredicate(predicate));
+            variables.put("limit", FIXED_QUERY_LIMIT);
         }
 
         return new GraphQLRequest<>(
@@ -136,21 +139,21 @@ final class AppSyncGraphQLRequestFactory {
 
         doc.append("mutation ")
             .append(StringUtils.capitalize(typeStr))
-            .append(StringUtils.capitalize(graphQlTypeName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("($input: ")
             .append(StringUtils.capitalize(typeStr))
-            .append(StringUtils.capitalize(graphQlTypeName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("Input!");
 
         if (!predicateIsEmpty(predicate)) {
             doc.append(", $condition: Model")
-                    .append(StringUtils.capitalize(graphQlTypeName))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
                     .append("ConditionInput");
         }
 
         doc.append("){ ")
             .append(typeStr.toLowerCase(Locale.getDefault()))
-            .append(StringUtils.capitalize(graphQlTypeName))
+            .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("(input: $input");
 
         if (!predicateIsEmpty(predicate)) {
@@ -192,10 +195,10 @@ final class AppSyncGraphQLRequestFactory {
 
         doc.append("subscription ")
                 .append(StringUtils.allCapsToPascalCase(typeStr))
-                .append(StringUtils.capitalize(graphQlTypeName))
+                .append(StringUtils.capitalizeFirst(graphQlTypeName))
                 .append("{")
                 .append(StringUtils.allCapsToCamelCase(typeStr))
-                .append(StringUtils.capitalize(graphQlTypeName))
+                .append(StringUtils.capitalizeFirst(graphQlTypeName))
                 .append("{")
                 .append(getModelFields(modelClass))
                 .append("}}");

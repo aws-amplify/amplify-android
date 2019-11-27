@@ -19,7 +19,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowLooper;
 
 import java.util.concurrent.TimeUnit;
@@ -32,8 +31,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
  * Tests the {@link TimeoutWatchdog}.
  */
 @RunWith(RobolectricTestRunner.class)
-@Config(manifest = Config.NONE)
-public class TimeoutWatchdogTest {
+public final class TimeoutWatchdogTest {
     private static final int DEFAULT_TIMEOUT_MS = 100;
 
     private TimeoutWatchdog watchdog;
