@@ -79,6 +79,19 @@ public final class StringUtils {
     }
 
     /**
+     * Returns original string with first character capitalized and remaining string left unchanged.
+     * @param original Original string to modify
+     * @return Original string but with first character capitalized (if it already was, String is unchanged)
+     */
+    public static String capitalizeFirst(String original) {
+        if (TextUtils.isEmpty(original)) {
+            return original;
+        }
+
+        return original.substring(0, 1).toUpperCase(Locale.getDefault()) + original.substring(1);
+    }
+
+    /**
      * Returns original string wrapped with single quotes.
      * @param original Original string to modify
      * @return Original string wrapped with single quotes.

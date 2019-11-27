@@ -22,7 +22,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
-import com.amplifyframework.testmodels.Project;
+import com.amplifyframework.testmodels.Projectfields;
 import com.amplifyframework.testmodels.Team;
 
 import org.junit.BeforeClass;
@@ -255,13 +255,16 @@ public final class CodeGenerationInstrumentationTest {
     @Test
     public void belongsToCreateQuerySubscribe() throws Throwable {
         LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<Project> projectMutationListener = new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<Project> projectQueryListener = new LatchedSingleResponseListener<>();
-        LatchedResponseStreamListener<Project> projectSubscriptionListener = new LatchedResponseStreamListener<>(1);
+        LatchedSingleResponseListener<Projectfields> projectMutationListener =
+                new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Projectfields> projectQueryListener =
+                new LatchedSingleResponseListener<>();
+        LatchedResponseStreamListener<Projectfields> projectSubscriptionListener =
+                new LatchedResponseStreamListener<>(1);
 
-        GraphQLOperation<Project> operation = Amplify.API.subscribe(
+        GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
                 PROJECT_API_NAME,
-                Project.class,
+                Projectfields.class,
                 null,
                 SubscriptionType.ON_CREATE,
                 projectSubscriptionListener
@@ -280,7 +283,7 @@ public final class CodeGenerationInstrumentationTest {
         assertFalse(teamMutationResponse.hasErrors());
         assertTrue(teamMutationResponse.hasData());
 
-        Project project = Project
+        Projectfields projectfields = Projectfields
                 .builder()
                 .name("API Codegen")
                 .team(Team.justId(teamMutationResponse.getData().getId()))
@@ -288,32 +291,34 @@ public final class CodeGenerationInstrumentationTest {
 
         Amplify.API.mutate(
                 PROJECT_API_NAME,
-                project,
+                projectfields,
                 MutationType.CREATE,
                 projectMutationListener
         );
 
-        GraphQLResponse<Project> projectMutationResponse = projectMutationListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<Projectfields> projectMutationResponse =
+                projectMutationListener.awaitTerminalEvent().getResponse();
         assertFalse(projectMutationResponse.hasErrors());
         assertTrue(projectMutationResponse.hasData());
 
         Amplify.API.query(
                 PROJECT_API_NAME,
-                Project.class,
+                Projectfields.class,
                 projectMutationResponse.getData().getId(),
                 projectQueryListener
         );
 
-        GraphQLResponse<Project> projectQueryResponse = projectQueryListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<Projectfields> projectQueryResponse =
+                projectQueryListener.awaitTerminalEvent().getResponse();
         assertEquals(team, projectQueryResponse.getData().getTeam());
 
         // Validate that subscription received the newly created person.
-        List<GraphQLResponse<Project>> subscriptionResponses = projectSubscriptionListener.awaitItems();
+        List<GraphQLResponse<Projectfields>> subscriptionResponses = projectSubscriptionListener.awaitItems();
         assertEquals(1, subscriptionResponses.size());
         assertFalse(subscriptionResponses.get(0).hasErrors());
-        Project responseProject = subscriptionResponses.get(0).getData();
-        assertEquals(project.getName(), responseProject.getName());
-        assertEquals(team, responseProject.getTeam());
+        Projectfields responseProjectfields = subscriptionResponses.get(0).getData();
+        assertEquals(projectfields.getName(), responseProjectfields.getName());
+        assertEquals(team, responseProjectfields.getTeam());
 
         // Cancel the subscription.
         operation.cancel();
