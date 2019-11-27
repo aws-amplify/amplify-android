@@ -53,7 +53,8 @@ import static org.junit.Assert.assertEquals;
  */
 public final class AWSDataStorePluginInstrumentedTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long DATA_STORE_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
+    private static final long NETWORK_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
     private static String apiName;
@@ -113,7 +114,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         saveLocal(localCharley);
 
         // Wait a bit. TODO: this is lame; how to tell deterministically when sync engine has sync'd?
-        Sleep.milliseconds(OPERATION_TIMEOUT_MS);
+        Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
 
         // Try to get Charley from the backend.
         Person remoteCharley = getRemote(Person.class, localCharley.getId());
@@ -151,7 +152,7 @@ public final class AWSDataStorePluginInstrumentedTest {
             .build());
 
         // Wait for sync. TODO: super lame. Get a deterministic event-driven hook for this.
-        Sleep.milliseconds(OPERATION_TIMEOUT_MS);
+        Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
 
         // Hank should be in the local DataStore, and we should see that he's married, now.
         Person localHank = getLocal(Person.class, remoteHank.getId());
@@ -169,7 +170,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     private <T extends Model> void saveLocal(T item) {
         LatchedResultListener<DataStoreItemChange<T>> saveListener =
-            LatchedResultListener.waitFor(OPERATION_TIMEOUT_MS);
+            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
         Amplify.DataStore.save(item, saveListener);
         saveListener.awaitTerminalEvent().assertResult().assertNoError();
     }
@@ -186,7 +187,8 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     private <T extends Model> T getLocal(
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedResultListener<Iterator<T>> queryResultsListener = LatchedResultListener.waitFor(OPERATION_TIMEOUT_MS);
+        LatchedResultListener<Iterator<T>> queryResultsListener =
+            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
         Amplify.DataStore.query(clazz, queryResultsListener);
 
         final Iterator<T> iterator = queryResultsListener
@@ -207,19 +209,22 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     private <T extends Model> T getRemote(
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedResultListener<GraphQLResponse<T>> queryListener = LatchedResultListener.waitFor(OPERATION_TIMEOUT_MS);
+        LatchedResultListener<GraphQLResponse<T>> queryListener =
+            LatchedResultListener.waitFor(NETWORK_OP_TIMEOUT_MS);
         Amplify.API.query(apiName, clazz, itemId, queryListener);
         return queryListener.awaitTerminalEvent().assertNoError().assertResult().getResult().getData();
     }
 
     private <T extends Model> void createRemote(T item) {
-        LatchedResultListener<GraphQLResponse<T>> createListener = LatchedResultListener.waitFor(OPERATION_TIMEOUT_MS);
+        LatchedResultListener<GraphQLResponse<T>> createListener =
+            LatchedResultListener.waitFor(NETWORK_OP_TIMEOUT_MS);
         Amplify.API.mutate(apiName, item, MutationType.CREATE, createListener);
         createListener.awaitTerminalEvent().assertNoError().assertResult();
     }
 
     private <T extends Model> void updateRemote(T item) {
-        LatchedResultListener<GraphQLResponse<T>> updateListener = LatchedResultListener.waitFor(OPERATION_TIMEOUT_MS);
+        LatchedResultListener<GraphQLResponse<T>> updateListener =
+            LatchedResultListener.waitFor(NETWORK_OP_TIMEOUT_MS);
         Amplify.API.mutate(apiName, item, MutationType.UPDATE, updateListener);
         updateListener.awaitTerminalEvent().assertNoError().assertResult();
     }
