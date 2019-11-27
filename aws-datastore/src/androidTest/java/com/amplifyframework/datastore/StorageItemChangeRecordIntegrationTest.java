@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore;
 
-import androidx.core.util.ObjectsCompat;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.ResultListener;
@@ -35,11 +34,9 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import io.reactivex.Observable;
@@ -95,7 +92,6 @@ public final class StorageItemChangeRecordIntegrationTest {
             "Wanted 2 schema, but got " + schema,
             2, schema.size()
         );
-        findSchemaByTargetName(schema, "StorageItemChangeRecord"); // Assert: doesn't throw
     }
 
     /**
@@ -361,22 +357,5 @@ public final class StorageItemChangeRecordIntegrationTest {
 
         // The record of the record itself has type DELETE, corresponding to our call to delete().
         assertEquals(StorageItemChange.Type.DELETE, recordOfDeletion.type());
-    }
-
-    /**
-     * Search for a schema with a target model name, inside of a collection of model schema.
-     * @param modelSchema A collection of model schema in which to search
-     * @param searchName  The target model name to search for, in each of the schema
-     * @return A ModelSchema whose target model name is the search name
-     * @throws IllegalArgumentException If there is no matching model schema in collection
-     */
-    @SuppressWarnings({"UnusedReturnValue", "SameParameterValue"})
-    private static ModelSchema findSchemaByTargetName(Collection<ModelSchema> modelSchema, String searchName) {
-        for (ModelSchema aSchema : modelSchema) {
-            if (ObjectsCompat.equals(aSchema.getTargetModelName(), Objects.requireNonNull(searchName))) {
-                return aSchema;
-            }
-        }
-        throw new IllegalArgumentException("Could not find ModelSchema with target model name = " + searchName);
     }
 }

@@ -293,7 +293,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             assertEquals("Lamborghini",
                     cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
             assertEquals(person.getId(),
-                    cursor.getString(cursor.getColumnIndexOrThrow("owner")));
+                    cursor.getString(cursor.getColumnIndexOrThrow("owner_id")));
         }
         cursor.close();
     }

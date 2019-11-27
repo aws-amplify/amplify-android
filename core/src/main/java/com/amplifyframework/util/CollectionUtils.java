@@ -23,11 +23,7 @@ import java.util.Map;
  */
 public final class CollectionUtils {
 
-    /**
-     * Dis-allows instantiation of this class.
-     */
-    private CollectionUtils() {
-    }
+    @SuppressWarnings("checkstyle:all") private CollectionUtils() {}
 
     /**
      * Returns true if collection is null, or if it is instantiated but not populated.

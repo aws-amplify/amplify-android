@@ -38,6 +38,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
@@ -416,16 +417,22 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private <T> void bindPreparedSQLStatementWithValues(@NonNull final T object,
                                                         @NonNull final SqlCommand sqlCommand)
             throws IllegalAccessException {
+        final String tableName = sqlCommand.tableName();
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
         final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
         final Iterator<Field> fieldIterator = classFields.iterator();
 
-        final Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
+        final Cursor cursor = getQueryAllCursor(tableName);
         if (cursor == null) {
             throw new IllegalAccessException("Error in getting a cursor to table: " +
-                    sqlCommand.tableName());
+                    tableName);
         }
         cursor.moveToFirst();
+
+        final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
+                .getModelSchemaForModelClass(tableName);
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
 
         while (fieldIterator.hasNext()) {
             final Field field = fieldIterator.next();
@@ -434,19 +441,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final String fieldName = field.getName();
             final Object fieldValue = field.get(object);
 
-            final int columnIndex;
-            try {
-                // Move the columns index to 1-based index.
-                columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
-            } catch (IllegalArgumentException exception) {
-                // Ignore field if there is no corresponding column
+            // Skip if there is no equivalent column for field in object
+            final SQLiteColumn column = columns.get(fieldName);
+            if (column == null) {
                 continue;
             }
-
-            if (fieldValue == null) {
-                preCompiledInsertStatement.bindNull(columnIndex);
-                continue;
-            }
+            final String columnName = column.getName();
 
             final JavaFieldType javaFieldType;
             if (Model.class.isAssignableFrom(field.getType())) {
@@ -455,6 +455,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 javaFieldType = JavaFieldType.ENUM;
             } else {
                 javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
+            }
+
+            // Move the columns index to 1-based index.
+            final int columnIndex = cursor.getColumnIndexOrThrow(columnName) + 1;
+
+            if (fieldValue == null) {
+                preCompiledInsertStatement.bindNull(columnIndex);
+                continue;
             }
 
             bindPreCompiledInsertStatementWithJavaFields(

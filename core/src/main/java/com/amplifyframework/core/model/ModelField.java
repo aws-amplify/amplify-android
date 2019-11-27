@@ -31,10 +31,6 @@ public final class ModelField {
     // of the Model class.
     private final String type;
 
-    // Name of the field in the target. For example: name of the
-    // field in the GraphQL target.
-    private final String targetName;
-
     // The type of the field in the target. For example: type of the
     // field in the GraphQL target.
     private final String targetType;
@@ -58,7 +54,6 @@ public final class ModelField {
     private ModelField(@NonNull ModelFieldBuilder builder) {
         this.name = builder.name;
         this.type = builder.type;
-        this.targetName = builder.targetName;
         this.targetType = builder.targetType;
         this.isRequired = builder.isRequired;
         this.isArray = builder.isArray;
@@ -88,14 +83,6 @@ public final class ModelField {
      */
     public String getType() {
         return type;
-    }
-
-    /**
-     * Returns the name of the field in the target. For example: name of the field in the GraphQL targetType.
-     * @return Name of the field in the target. For example: name of the field in the GraphQL targetType.
-     */
-    public String getTargetName() {
-        return targetName;
     }
 
     /**
@@ -180,9 +167,6 @@ public final class ModelField {
         if (!ObjectsCompat.equals(type, that.type)) {
             return false;
         }
-        if (!ObjectsCompat.equals(targetName, that.targetName)) {
-            return false;
-        }
         if (!ObjectsCompat.equals(targetType, that.targetType)) {
             return false;
         }
@@ -194,7 +178,6 @@ public final class ModelField {
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
         result = 31 * result + (type != null ? type.hashCode() : 0);
-        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
         result = 31 * result + (targetType != null ? targetType.hashCode() : 0);
         result = 31 * result + (isRequired ? 1 : 0);
         result = 31 * result + (isArray ? 1 : 0);
@@ -208,7 +191,6 @@ public final class ModelField {
         return "ModelField{" +
             "name='" + name + '\'' +
             ", type='" + type + '\'' +
-            ", targetName='" + targetName + '\'' +
             ", targetType='" + targetType + '\'' +
             ", isRequired=" + isRequired +
             ", isArray=" + isArray +
@@ -228,10 +210,6 @@ public final class ModelField {
         // Type of the field is the data type of the instance variables
         // of the Model class.
         private String type;
-
-        // Name of the field in the target. For example: name of the
-        // field in the GraphQL targetType.
-        private String targetName;
 
         // The data targetType of the field.
         private String targetType;
@@ -266,17 +244,6 @@ public final class ModelField {
          */
         public ModelFieldBuilder type(String type) {
             this.type = type;
-            return this;
-        }
-
-        /**
-         * Set the name of the field in the target. For example: name of the
-         * field in the GraphQL targetType.
-         * @param targetName the name of the field in the target
-         * @return the builder object
-         */
-        public ModelFieldBuilder targetName(String targetName) {
-            this.targetName = targetName;
             return this;
         }
 

@@ -61,7 +61,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String modelName = schema.getTargetModelName();
+        String modelName = schema.getName();
 
         doc.append("query ")
             .append("Get")
@@ -90,7 +90,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("query ")
             .append("List")
@@ -129,7 +129,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("mutation ")
             .append(StringUtils.capitalize(typeStr))
@@ -185,7 +185,7 @@ final class AppSyncGraphQLRequestFactory {
         StringBuilder doc = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
         String typeStr = type.toString();
-        String graphQlTypeName = schema.getTargetModelName();
+        String graphQlTypeName = schema.getName();
 
         doc.append("subscription ")
                 .append(StringUtils.allCapsToPascalCase(typeStr))
@@ -321,7 +321,7 @@ final class AppSyncGraphQLRequestFactory {
         List<ModelField> sortedFields = schema.getSortedFields();
 
         for (int i = 0; i < sortedFields.size(); i++) {
-            result.append(sortedFields.get(i).getTargetName());
+            result.append(sortedFields.get(i).getName());
 
             if (i < sortedFields.size() - 1) {
                 result.append(" ");
