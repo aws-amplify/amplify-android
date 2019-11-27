@@ -245,8 +245,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // insert model in SQLite
                     final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
-                        throw new DataStoreException("Error in saving the model. No insert statement " +
-                                "found for the Model: " + modelSchema.getName());
+                        throw new DataStoreException("No insert statement found for the Model: " +
+                                modelSchema.getName());
                     }
                     saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
                 }
@@ -265,43 +265,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 itemSaveListener.onError(new DataStoreException("Error in saving the model.", exception));
             }
         });
-    }
-
-    // Extract the values of the fields of a model and bind the values to the SQLiteStatement
-    // and execute the statement.
-    private <T extends Model> void saveModel(
-            @NonNull T model,
-            @NonNull ModelSchema modelSchema,
-            @NonNull SqlCommand sqlCommand,
-            ModelConflictStrategy modelConflictStrategy) throws IllegalAccessException {
-        Objects.requireNonNull(model);
-        Objects.requireNonNull(modelSchema);
-        Objects.requireNonNull(sqlCommand);
-        Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
-
-        Log.d(TAG, "Writing data to table for: " + model.toString());
-
-        // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
-        // are not thread-safe. Adding a synchronization barrier to access it.
-        synchronized (sqlCommand.getCompiledSqlStatement()) {
-            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
-            compiledSqlStatement.clearBindings();
-            bindPreparedSQLStatementWithValues(model, sqlCommand);
-            switch (modelConflictStrategy) {
-                case OVERWRITE_EXISTING:
-                    compiledSqlStatement.executeUpdateDelete();
-                    break;
-                case THROW_EXCEPTION:
-                    compiledSqlStatement.executeInsert();
-                    break;
-                default:
-                    throw new UnsupportedTypeException("ModelConflictStrategy " +
-                            modelConflictStrategy + " is not supported.");
-            }
-            compiledSqlStatement.clearBindings();
-        }
-
-        Log.d(TAG, "Successfully written data to table for: " + model.toString());
     }
 
     /**
@@ -346,12 +309,47 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> listener) {
-        /* TODO */
+            @NonNull ResultListener<StorageItemChange.Record> itemDeleteListener) {
+        threadPool.submit(() -> {
+            try {
+                final ModelSchema modelSchema =
+                        modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
+                final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
+
+                Log.d(TAG, "Deleting item in table: " + sqLiteTable.getName() +
+                        " identified by ID: " + item.getId());
+
+                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item);
+                if (sqlCommand == null || sqlCommand.sqlStatement() == null) {
+                    throw new DataStoreException("No delete statement found for the Model: " +
+                            modelSchema.getName());
+                }
+
+                databaseConnectionHandle.beginTransaction();
+                databaseConnectionHandle.execSQL(sqlCommand.sqlStatement());
+                databaseConnectionHandle.setTransactionSuccessful();
+                databaseConnectionHandle.endTransaction();
+
+                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                        .item(item)
+                        .itemClass((Class<T>) item.getClass())
+                        .type(StorageItemChange.Type.DELETE)
+                        .initiator(initiator)
+                        .build()
+                        .toRecord(storageItemChangeConverter);
+                itemChangeSubject.onNext(record);
+                itemDeleteListener.onResult(record);
+            } catch (Exception exception) {
+                itemChangeSubject.onError(exception);
+                itemDeleteListener.onError(
+                        new DataStoreException("Error in deleting the model.", exception));
+            }
+        });
     }
 
     /**
@@ -592,6 +590,43 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             }
         }
         return mapForModel;
+    }
+
+    // Extract the values of the fields of a model and bind the values to the SQLiteStatement
+    // and execute the statement.
+    private <T extends Model> void saveModel(
+            @NonNull T model,
+            @NonNull ModelSchema modelSchema,
+            @NonNull SqlCommand sqlCommand,
+            ModelConflictStrategy modelConflictStrategy) throws IllegalAccessException {
+        Objects.requireNonNull(model);
+        Objects.requireNonNull(modelSchema);
+        Objects.requireNonNull(sqlCommand);
+        Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
+
+        Log.d(TAG, "Writing data to table for: " + model.toString());
+
+        // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
+        // are not thread-safe. Adding a synchronization barrier to access it.
+        synchronized (sqlCommand.getCompiledSqlStatement()) {
+            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
+            compiledSqlStatement.clearBindings();
+            bindPreparedSQLStatementWithValues(model, sqlCommand);
+            switch (modelConflictStrategy) {
+                case OVERWRITE_EXISTING:
+                    compiledSqlStatement.executeUpdateDelete();
+                    break;
+                case THROW_EXCEPTION:
+                    compiledSqlStatement.executeInsert();
+                    break;
+                default:
+                    throw new UnsupportedTypeException("ModelConflictStrategy " +
+                            modelConflictStrategy + " is not supported.");
+            }
+            compiledSqlStatement.clearBindings();
+        }
+
+        Log.d(TAG, "Successfully written data to table for: " + model.toString());
     }
 
     private boolean dataExistsInSQLiteTable(

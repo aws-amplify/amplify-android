@@ -264,11 +264,12 @@ public final class ModelSchema {
 
     /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
+     * @param <T> Type of instance that extends {@link Model}
      * @param instance An instance of this model populated with values to map
      * @return a map of the target fields in the schema to the actual values in the provided object
      * @throws AmplifyException if the object does not match the fields in this schema
      */
-    public Map<String, Object> getMapOfFieldNameAndValues(Model instance) throws AmplifyException {
+    public <T extends Model> Map<String, Object> getMapOfFieldNameAndValues(T instance) throws AmplifyException {
         HashMap<String, Object> result = new HashMap<>();
 
         if (!instance.getClass().getSimpleName().equals(this.getName())) {
@@ -277,14 +278,23 @@ public final class ModelSchema {
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
         }
 
-        for (ModelField field : this.fields.values()) {
+        for (ModelField modelField : this.fields.values()) {
             try {
-                Field privateField = instance.getClass().getDeclaredField(field.getName());
+                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
                 privateField.setAccessible(true);
-                result.put(field.getName(), privateField.get(instance));
+
+                final ModelAssociation association = associations.get(modelField.getName());
+                if (association == null) {
+                    result.put(modelField.getName(), privateField.get(instance));
+                } else if (association.isOwner()) {
+                    // All ModelAssociation targets are required to be instances of Model so this is a safe cast
+                    Model target = (Model) privateField.get(instance);
+                    result.put(association.getTargetName(), target.getId());
+                }
+                // Ignore if field is associated, but is not a "belongsTo" relationship
             } catch (Exception exception) {
                 throw new AmplifyException("An invalid field was provided - " +
-                        field.getName() +
+                        modelField.getName() +
                         " is not present in " +
                         instance.getClass().getSimpleName(),
                         exception,
@@ -292,7 +302,6 @@ public final class ModelSchema {
                         false);
             }
         }
-
         return result;
     }
 

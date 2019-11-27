@@ -84,6 +84,36 @@ public final class Person implements Model {
     }
 
     /**
+     * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
+     *
+     * This is a convenience method to return an instance of the object with only its ID populated
+     * to be used in the context of a parameter in a delete mutation or referencing a foreign key
+     * in a relationship.
+     * @param id the id of the existing item this instance will represent
+     * @return an instance of this model with only ID populated
+     */
+    public static Person justId(String id) {
+        try {
+            UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
+        } catch (Exception exception) {
+            throw new IllegalArgumentException(
+                    "Model IDs must be unique in the format of UUID. This method is for creating instances " +
+                    "of an existing object with only its ID field for sending as a mutation parameter. When " +
+                    "creating a new object, use the standard builder method and leave the ID field blank."
+            );
+        }
+
+        return new Person(
+                id,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+    }
+
+    /**
      * Returns an instance of the pre-set builder to update values with.
      * @return an instance of the pre-set builder to update values with.
      */

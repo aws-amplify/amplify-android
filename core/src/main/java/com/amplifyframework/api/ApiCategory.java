@@ -122,6 +122,15 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull SubscriptionType subscriptionType,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
+        return getSelectedPlugin().subscribe(apiName, modelClass, subscriptionType, subscriptionListener);
+    }
+
+    @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
