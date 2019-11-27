@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.os.Build;
-
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.testutils.Resources;
 
@@ -26,7 +24,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
 
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +35,6 @@ import static org.junit.Assert.assertNotNull;
 /**
  * Unit test for implementation of ResponseFactory.
  */
-@Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
 public final class GsonGraphQLResponseFactoryTest {
 
