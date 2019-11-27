@@ -19,8 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Defines the client behavior (client API) consumed
@@ -68,13 +68,13 @@ public interface AnalyticsCategoryBehavior {
     void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
 
     /**
-     * Register properties that will be recorded by all the subsequent `recordEvent` call.
+     * Register properties that will be recorded by all the subsequent calls to {@link #recordEvent(AnalyticsEvent)}.
      * Properties registered here can be overridden by the ones with the same
      * name when calling `recordEvent`.
      *
      * Examples of global properties would be `selectedPlan`, `campaignSource`
      */
-    void registerGlobalProperties(Map<String, Object> properties );
+    void registerGlobalProperties(Map<String, Object> properties);
 
     /**
      * Registered global properties can be unregistered though this method.
@@ -84,7 +84,7 @@ public interface AnalyticsCategoryBehavior {
      *
      * @param keys a collection of property names to unregister
      */
-    void unregisterGlobalProperties(Collection<String> keys);
+    void unregisterGlobalProperties(Set<String> keys);
 
     /**
      * Attempts to submit the locally stored events to the underlying service.
