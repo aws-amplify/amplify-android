@@ -21,8 +21,8 @@ import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Defines the Client API consumed by the application.
@@ -102,7 +102,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void unregisterGlobalProperties(Collection<String> keys) {
+    public void unregisterGlobalProperties(Set<String> keys) {
 
     }
 

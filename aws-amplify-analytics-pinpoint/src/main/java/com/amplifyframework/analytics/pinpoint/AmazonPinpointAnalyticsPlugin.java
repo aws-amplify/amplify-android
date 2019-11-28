@@ -39,8 +39,8 @@ import com.amplifyframework.core.plugin.PluginException;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -105,22 +105,34 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         return this.pinpointManager;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void enable() {
         autoEventSubmitter.start(pinpointManager.getAnalyticsClient(),
                 pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile) {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void disable() {
         autoEventSubmitter.stop();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void recordEvent(@NonNull String eventName)
             throws AnalyticsException, ConfigurationException {
@@ -130,6 +142,9 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         pinpointManager.getAnalyticsClient().recordEvent(pinpointEvent);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void recordEvent(@NonNull GeneralAnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
@@ -144,26 +159,41 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         pinpointManager.getAnalyticsClient().recordEvent(pinpointEvent);
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void registerGlobalProperties(Map<String, Object> properties) {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void unregisterGlobalProperties(Collection<String> keys) {
+    public void unregisterGlobalProperties(Set<String> keys) {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void flushEvents() {
         pinpointManager.getAnalyticsClient().submitEvents();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getPluginKey() {
         return "AmazonPinpointAnalyticsPlugin";
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
 
@@ -205,6 +235,9 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                 pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getEscapeHatch() {
         return null;
