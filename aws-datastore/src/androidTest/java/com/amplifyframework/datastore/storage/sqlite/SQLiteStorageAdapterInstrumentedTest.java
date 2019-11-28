@@ -31,6 +31,7 @@ import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.Car;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.RandomVersionModelProvider;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
@@ -106,6 +107,43 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     public void tearDown() {
         sqLiteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
+    }
+
+    /**
+     * Asserts if the expected model version is stored on disk.
+     */
+    @Test
+    public void modelVersionStoredCorrectly() {
+        sqLiteStorageAdapter.terminate();
+
+        ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
+        String expectedVersion = modelProvider.version();
+
+        PersistentModelVersion persistentModelVersion =
+                PersistentModelVersion.fromLocalStorage(sqLiteStorageAdapter);
+        String actualVersion = persistentModelVersion.getVersion();
+
+        assertEquals(expectedVersion, actualVersion);
+    }
+
+    /**
+     * Asserts if the model version change drops existing tables and creates
+     * new tables.
+     */
+    @Test
+    public void modelVersionChangeDropsAllTablesAndCreatesNewTables() {
+        ModelProvider modelProvider = RandomVersionModelProvider.singletonInstance();
+        sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+
+        LatchedResultListener<List<ModelSchema>> setupListener =
+                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+
+        sqLiteStorageAdapter.initialize(context, setupListener);
+
+        List<ModelSchema> modelSchemaList =
+                setupListener.awaitTerminalEvent().assertNoError().getResult();
+        assertNotNull(modelSchemaList);
+        assertFalse(modelSchemaList.isEmpty());
     }
 
     /**

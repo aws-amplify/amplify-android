@@ -18,11 +18,11 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
@@ -104,7 +104,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     // The helper object controls the lifecycle of database creation, upgrade
     // and opening connection to database.
-    private SQLiteOpenHelper sqliteOpenHelper;
+    private SQLiteStorageHelper sqliteStorageHelper;
 
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
@@ -120,7 +120,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
-        this.threadPool = Executors.newCachedThreadPool();
+        this.threadPool = Executors.newFixedThreadPool(10);
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.create();
@@ -149,6 +149,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 // StorageItemChange.Record.class is an internal system event
                 // it is used to journal local storage changes
                 models.add(StorageItemChange.Record.class);
+                // PersistentModelVersion.class is an internal system event
+                // it is used to store the version of the ModelProvider
+                models.add(PersistentModelVersion.class);
                 models.addAll(modelProvider.models());
 
                 /*
@@ -170,7 +173,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  */
                 this.sqlCommandFactory = new SQLiteCommandFactory();
                 CreateSqlCommands createSqlCommands = getCreateCommands(models);
-                sqliteOpenHelper = SQLiteStorageHelper.getInstance(
+                sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
                         DATABASE_NAME,
                         DATABASE_VERSION,
@@ -190,7 +193,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * databaseConnectionHandle represents a connection handle to the database.
                  * All database operations will happen through this handle.
                  */
-                databaseConnectionHandle = sqliteOpenHelper.getWritableDatabase();
+                databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
                 this.sqlCommandFactory = new SQLiteCommandFactory(databaseConnectionHandle);
 
                 /*
@@ -203,6 +206,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * This is done to improve performance of database write operations.
                  */
                 this.insertSqlPreparedStatements = getInsertSqlPreparedStatements();
+
+                /*
+                 * Detect if the version of the models stored in SQLite is different
+                 * from the version passed in through {@link ModelProvider#version()}.
+                 * Delete the database if there is a version change.
+                 */
+                upgradeModels();
 
                 listener.onResult(
                         new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())
@@ -218,7 +228,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked") // model.getClass() has Class<?>, but we assume Class<T>
+    @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
@@ -308,7 +318,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
@@ -376,8 +386,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             if (databaseConnectionHandle != null) {
                 databaseConnectionHandle.close();
             }
-            if (sqliteOpenHelper != null) {
-                sqliteOpenHelper.close();
+            if (sqliteStorageHelper != null) {
+                sqliteStorageHelper.close();
             }
         } catch (Exception exception) {
             throw new DataStoreException("Error in terminating the SQLiteStorageAdapter.", exception);
@@ -635,6 +645,30 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
         cursor.close();
         return true;
+    }
+
+    /*
+     * Detect if the version of the models stored in SQLite is different
+     * from the version passed in through {@link ModelProvider#version()}.
+     * Delete the database if there is a version change.
+     */
+    private void upgradeModels() {
+        PersistentModelVersion persistentModelVersion = PersistentModelVersion.fromLocalStorage(this);
+        if (persistentModelVersion != null) {
+            String oldVersion = persistentModelVersion.getVersion();
+            String newVersion = modelProvider.version();
+            if (!ObjectsCompat.equals(oldVersion, newVersion)) {
+                Objects.requireNonNull(sqliteStorageHelper);
+                Objects.requireNonNull(databaseConnectionHandle);
+                sqliteStorageHelper
+                        .onModelUpgrade(databaseConnectionHandle, oldVersion, newVersion);
+            }
+        } else {
+            persistentModelVersion = new PersistentModelVersion(
+                    modelProvider.version(),
+                    modelProvider.version());
+        }
+        PersistentModelVersion.saveToLocalStorage(this, persistentModelVersion);
     }
 
     @VisibleForTesting
