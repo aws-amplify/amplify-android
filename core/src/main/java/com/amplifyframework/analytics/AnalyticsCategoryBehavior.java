@@ -33,10 +33,10 @@ public interface AnalyticsCategoryBehavior {
      * Allows you to tie a user to their actions and record traits about them. It includes
      * an unique User ID and any optional traits you know about them like their email, name, etc.
      *
-     * @param id The unique identifier for the user
+     * @param userId The unique identifier for the user
      * @param profile User specific data (e.g. plan, accountType, email, age, location, etc)
      */
-    void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile);
+    void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile);
 
     /**
      * Disable collection and sending of Analytics Events.
@@ -73,6 +73,8 @@ public interface AnalyticsCategoryBehavior {
      * name when calling `recordEvent`.
      *
      * Examples of global properties would be `selectedPlan`, `campaignSource`
+     *
+     * @param properties Map of global properties
      */
     void registerGlobalProperties(Map<String, Object> properties);
 

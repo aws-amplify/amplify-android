@@ -57,7 +57,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile) {
+    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
 
     }
 
