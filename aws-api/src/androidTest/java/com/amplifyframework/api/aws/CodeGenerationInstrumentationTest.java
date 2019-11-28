@@ -20,12 +20,14 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.testmodels.Blog;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
 import com.amplifyframework.testmodels.Projectfields;
 import com.amplifyframework.testmodels.Team;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -42,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
+    private static final String RELATIONSHIPS_API_NAME = "relationshipsApi";
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -248,12 +251,13 @@ public final class CodeGenerationInstrumentationTest {
     }
 
     /**
-     * Creates a Team object, then creates a Project object with a belongsTo relationship with that Team and ensures
-     * that Query and Subscription on the Project both get the original Team object.
+     * The primary purpose of this test is to ensure that an all lower case model name works.
+     * TODO: Add mutate with condition and list with predicate since those are the ones that actually use the original
+     *       model name
      * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
      */
     @Test
-    public void belongsToCreateQuerySubscribe() throws Throwable {
+    public void belongsToCreateQuerySubscribeWithAllLowercaseModel() throws Throwable {
         LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Projectfields> projectMutationListener =
                 new LatchedSingleResponseListener<>();
@@ -326,5 +330,29 @@ public final class CodeGenerationInstrumentationTest {
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
         projectSubscriptionListener.awaitCompletion();
+    }
+
+    /**
+     * Tests the code generation for HAS_MANY relationship.
+     */
+    @Test
+    @Ignore("WIP - currently bombing out on the response parsing because we can't handle lists of foreign keys yet")
+    public void hasManyRelationship() {
+        LatchedSingleResponseListener<Blog> blogMutationListener = new LatchedSingleResponseListener<>();
+
+        Blog blog = Blog.builder()
+                .name("All Things Amplify")
+                .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
+                .build();
+
+        Amplify.API.mutate(
+                RELATIONSHIPS_API_NAME,
+                blog,
+                MutationType.CREATE,
+                blogMutationListener
+        );
+
+        GraphQLResponse<Blog> queryResponse = blogMutationListener.awaitTerminalEvent().getResponse();
+        assertEquals(blog, queryResponse.getData());
     }
 }
