@@ -29,7 +29,8 @@ jobs:
       - run:
           name: Build the project
           command: bash gradlew build
+      - run:
+          name: Publish the project to local maven
+          command: bash gradlew publishToMavenLocal
       - store_test_results:
           path: test-results
-
-
