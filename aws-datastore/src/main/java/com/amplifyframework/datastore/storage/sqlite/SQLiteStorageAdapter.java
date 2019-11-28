@@ -45,6 +45,7 @@ import com.amplifyframework.util.StringUtils;
 
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -54,6 +55,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -291,8 +293,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     do {
                         final Map<String, Object> mapForModel = buildMapForModel(
                             itemClass, modelSchema, cursor);
-                        final String modelInJsonFormat = gson.toJson(mapForModel);
-                        models.add(gson.getAdapter(itemClass).fromJson(modelInJsonFormat));
+                        models.add(getModelFromMap(mapForModel, itemClass));
                     } while (cursor.moveToNext());
                 }
                 if (!cursor.isClosed()) {
@@ -444,7 +445,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             if (column == null) {
                 continue;
             }
-            final String columnName = column.getName();
+            final String columnName = column.isPrimaryKey()
+                    ? column.getAliasedName()
+                    : column.getName();
 
             final JavaFieldType javaFieldType;
             if (Model.class.isAssignableFrom(field.getType())) {
@@ -524,10 +527,21 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull ModelSchema modelSchema,
             @NonNull Cursor cursor) {
         final Map<String, Object> mapForModel = new HashMap<>();
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
             try {
+                // Skip if there is no equivalent column for field in object
+                final SQLiteColumn column = columns.get(fieldName);
+                if (column == null) {
+                    continue;
+                }
+                final String columnName = column.isPrimaryKey()
+                        ? column.getAliasedName()
+                        : column.getName();
+
                 final ModelField modelField = entry.getValue();
                 final String fieldGraphQlType = entry.getValue().getTargetType();
                 final JavaFieldType fieldJavaType;
@@ -539,20 +553,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQlType);
                 }
 
-                final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
+                final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
+
+                final String stringValueFromCursor;
                 switch (fieldJavaType) {
                     case STRING:
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
                         break;
                     case MODEL:
-                        // This is not populated with models at the moment mainly for
-                        // performance reasons as we do not know how much memory this would occupy.
-                        // May be featured in future releases based on customer feedback
-                        // in the form of streaming or size-based data fetch.
-                        mapForModel.put(fieldName, null);
+                        // Eager load model if the necessary columns are present inside the cursor.
+                        // At the time of implementation, cursor should have been joined with these
+                        // columns IF AND ONLY IF the model is a foreign key to the inner model.
+                        Class<?> classType = modelClass.getDeclaredField(fieldName).getType();
+                        @SuppressWarnings("unchecked") // Safe type casting since foreign key is always a model
+                        Class<? extends Model> innerModelType = (Class<? extends Model>) classType;
+                        String className = innerModelType.getSimpleName();
+                        ModelSchema innerModelSchema = ModelSchemaRegistry.singleton()
+                                .getModelSchemaForModelClass(className);
+                        Map<String, Object> mapForInnerModel = buildMapForModel(
+                                innerModelType,
+                                innerModelSchema,
+                                cursor);
+                        mapForModel.put(fieldName, getModelFromMap(mapForInnerModel, innerModelType));
                         break;
                     case ENUM:
-                        String stringValueFromCursor = cursor.getString(columnIndex);
+                        stringValueFromCursor = cursor.getString(columnIndex);
                         Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
                         Object enumValue = gson.getAdapter(enumType).fromJson(stringValueFromCursor);
                         mapForModel.put(fieldName, enumValue);
@@ -635,8 +660,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull String columnValue) {
         final Cursor cursor = databaseConnectionHandle.rawQuery(
                 "SELECT * FROM " + StringUtils.singleQuote(tableName) +
-                    " WHERE " + columnName + " = " +
-                    StringUtils.singleQuote(columnValue), null);
+                        " WHERE " + columnName + " = " +
+                        StringUtils.singleQuote(columnValue), null);
         if (cursor.getCount() <= 0) {
             cursor.close();
             return false;
@@ -645,15 +670,106 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return true;
     }
 
+    private <T extends Model> T getModelFromMap(Map<String, Object> mapForModel,
+                                                 Class<T> itemClass) throws IOException {
+        final String modelInJsonFormat = gson.toJson(mapForModel);
+        return gson.getAdapter(itemClass).fromJson(modelInJsonFormat);
+    }
+
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) {
-        // Query all rows in table.
-        return this.databaseConnectionHandle.query(tableName,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+        StringBuilder rawQuery = new StringBuilder();
+        StringBuilder selectColumns = new StringBuilder();
+        StringBuilder joinStatement = new StringBuilder();
+        StringBuilder condition = new StringBuilder();
+
+        final ModelSchema schema = ModelSchemaRegistry.singleton()
+                .getModelSchemaForModelClass(tableName);
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(schema);
+
+        // Track the list of columns to return
+        List<SQLiteColumn> columns = new LinkedList<>(sqliteTable.getSortedColumns());
+
+        // Joins the foreign keys
+        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
+        final Iterator<SQLiteColumn> foreignKeyIterator = sqliteTable.getForeignKeys().iterator();
+        while (foreignKeyIterator.hasNext()) {
+            final SQLiteColumn foreignKey = foreignKeyIterator.next();
+            final String ownedTableName = foreignKey.getOwnedType();
+            final ModelSchema ownedSchema = ModelSchemaRegistry.singleton()
+                    .getModelSchemaForModelClass(ownedTableName);
+            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
+
+            columns.addAll(ownedTable.getSortedColumns());
+
+            String joinType = foreignKey.isNonNull()
+                    ? SqlCommand.INNER_JOIN_CLAUSE
+                    : SqlCommand.LEFT_JOIN_CLAUSE;
+
+            joinStatement.append(joinType)
+                    .append(SqlCommand.DELIMITER)
+                    .append(ownedTableName)
+                    .append(SqlCommand.DELIMITER)
+                    .append(SqlCommand.ON_CLAUSE)
+                    .append(SqlCommand.DELIMITER)
+                    .append(foreignKey.getColumnName())
+                    .append("=")
+                    .append(ownedTable.getPrimaryKey().getColumnName());
+
+            if (foreignKeyIterator.hasNext()) {
+                joinStatement.append(SqlCommand.DELIMITER);
+            }
+        }
+
+        // Convert columns to comma-separated column names
+        Iterator<SQLiteColumn> columnsIterator = columns.iterator();
+        while (columnsIterator.hasNext()) {
+            final SQLiteColumn column = columnsIterator.next();
+            selectColumns.append(column.getColumnName());
+
+            // Alias primary keys to avoid duplicate column names
+            if (column.isPrimaryKey()) {
+                selectColumns.append(SqlCommand.DELIMITER)
+                        .append(SqlCommand.AS_CLAUSE)
+                        .append(SqlCommand.DELIMITER)
+                        .append(column.getAliasedName());
+            }
+
+            if (columnsIterator.hasNext()) {
+                selectColumns.append(",").append(SqlCommand.DELIMITER);
+            }
+        }
+
+        // Start SELECT statement.
+        // SELECT columns FROM tableName
+        rawQuery.append(SqlCommand.SELECT_STATEMENT)
+                .append(SqlCommand.DELIMITER)
+                .append(selectColumns.toString())
+                .append(SqlCommand.DELIMITER)
+                .append(SqlCommand.FROM_CLAUSE)
+                .append(SqlCommand.DELIMITER)
+                .append(tableName);
+
+        // Append join statements.
+        // INNER JOIN tableOne ON tableName.id=tableOne.foreignKey
+        // LEFT JOIN tableTwo ON tableName.id=tableTwo.foreignKey
+        if (!joinStatement.toString().isEmpty()) {
+            rawQuery.append(SqlCommand.DELIMITER)
+                    .append(joinStatement.toString());
+        }
+
+        // Append predicates.
+        // WHERE condition
+        if (!condition.toString().isEmpty()) {
+            rawQuery.append(SqlCommand.DELIMITER)
+                    .append(SqlCommand.WHERE_STATEMENT)
+                    .append(SqlCommand.DELIMITER)
+                    .append(condition.toString());
+        }
+
+        rawQuery.append(";");
+        final String queryString = rawQuery.toString();
+        Log.d(TAG, queryString);
+        return this.databaseConnectionHandle.rawQuery(queryString, null);
     }
 }

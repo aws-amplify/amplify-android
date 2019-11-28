@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.types.SqliteDataType;
  */
 public final class SQLiteColumn {
     private static final String SQLITE_NAME_DELIMITER = ".";
+    private static final String CUSTOM_ALIAS_DELIMITER = "_";
 
     private String name;
     private String tableName;
@@ -70,6 +71,14 @@ public final class SQLiteColumn {
      */
     public String getColumnName() {
         return tableName + SQLITE_NAME_DELIMITER + name;
+    }
+
+    /**
+     * Returns the aliased name of column.
+     * @return the aliased name of column
+     */
+    public String getAliasedName() {
+        return tableName + CUSTOM_ALIAS_DELIMITER + name;
     }
 
     /**

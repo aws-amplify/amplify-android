@@ -204,66 +204,6 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Test querying the saved item in the SQLite database.
-     *
-     * @throws ParseException when the date cannot be parsed.
-     */
-    @SuppressWarnings("magicnumber")
-    @Test
-    public void querySavedDataWithSingleItem() throws ParseException {
-        final Person person = Person.builder()
-                .firstName("Alan")
-                .lastName("Turing")
-                .age(41)
-                .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
-                .relationship(MaritalStatus.single)
-                .build();
-        assertEquals(person, saveModel(person));
-
-        Iterator<Person> result = queryModel(Person.class);
-        assertNotNull(result);
-        assertTrue(result.hasNext());
-        Person queriedPerson = result.next();
-        assertNotNull(queriedPerson);
-        Log.d(TAG, queriedPerson.toString());
-        assertEquals(person, queriedPerson);
-    }
-
-    /**
-     * Test querying the saved item in the SQLite database.
-     *
-     * @throws ParseException when the date cannot be parsed.
-     */
-    @SuppressWarnings("magicnumber")
-    @Test
-    public void querySavedDataWithMultipleItems() throws ParseException {
-        final Set<Person> savedModels = new HashSet<>();
-        final int numModels = 10;
-        for (int counter = 0; counter < numModels; counter++) {
-            final Person person = Person.builder()
-                    .firstName("firstNamePrefix:" + counter)
-                    .lastName("lastNamePrefix:" + counter)
-                    .age(counter)
-                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
-                    .relationship(MaritalStatus.single)
-                    .build();
-            saveModel(person);
-            savedModels.add(person);
-        }
-
-        Iterator<Person> result = queryModel(Person.class);
-        int count = 0;
-        while (result.hasNext()) {
-            final Person person = result.next();
-            assertNotNull(person);
-            assertTrue("Unable to find expected item in the storage adapter.",
-                    savedModels.contains(person));
-            count++;
-        }
-        assertEquals(numModels, count);
-    }
-
-    /**
      * Assert that save stores foreign key in the SQLite database correctly.
      *
      * @throws ParseException when the date cannot be parsed.
@@ -325,7 +265,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
 
         LatchedResultListener<StorageItemChange.Record> carSaveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
 
         Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
@@ -333,6 +273,104 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertNotNull(actualError.getCause());
         assertNotNull(actualError.getCause().getMessage());
         assertTrue(actualError.getCause().getMessage().contains(expectedError));
+    }
+
+    /**
+     * Test querying the saved item in the SQLite database.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithSingleItem() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+        assertEquals(person, saveModel(person));
+
+        Iterator<Person> result = queryModel(Person.class);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+        Person queriedPerson = result.next();
+        assertNotNull(queriedPerson);
+        Log.d(TAG, queriedPerson.toString());
+        assertEquals(person, queriedPerson);
+    }
+
+    /**
+     * Test querying the saved item in the SQLite database.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithMultipleItems() throws ParseException {
+        final Set<Person> savedModels = new HashSet<>();
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Person person = Person.builder()
+                    .firstName("firstNamePrefix:" + counter)
+                    .lastName("lastNamePrefix:" + counter)
+                    .age(counter)
+                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.single)
+                    .build();
+            saveModel(person);
+            savedModels.add(person);
+        }
+
+        Iterator<Person> result = queryModel(Person.class);
+        int count = 0;
+        while (result.hasNext()) {
+            final Person person = result.next();
+            assertNotNull(person);
+            assertTrue("Unable to find expected item in the storage adapter.",
+                    savedModels.contains(person));
+            count++;
+        }
+        assertEquals(numModels, count);
+    }
+
+    /**
+     * Test that querying the saved item with a foreign key
+     * also populates that instance variable with object.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithForeignKey() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+
+        final Car car = Car.builder()
+                .vehicleModel("Lamborghini")
+                .owner(person)
+                .build();
+
+        saveModel(person);
+        saveModel(car);
+
+        Iterator<Car> result = queryModel(Car.class);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+        final Person queriedCarOwner = result.next().getOwner();
+        assertNotNull(queriedCarOwner);
+        assertEquals(person.getId(), queriedCarOwner.getId());
+        assertEquals(person.getFirstName(), queriedCarOwner.getFirstName());
+        assertEquals(person.getLastName(), queriedCarOwner.getLastName());
+        assertEquals(person.getAge(), queriedCarOwner.getAge());
+        assertEquals(person.getDob(), queriedCarOwner.getDob());
+        assertEquals(person.getRelationship(), queriedCarOwner.getRelationship());
     }
 
     /**
