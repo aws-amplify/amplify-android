@@ -292,7 +292,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     do {
                         final Map<String, Object> mapForModel = buildMapForModel(
                             itemClass, modelSchema, cursor);
-                        models.add(getModelFromMap(mapForModel, itemClass));
+                        models.add(deserializeModelFromRawMap(mapForModel, itemClass));
                     } while (cursor.moveToNext());
                 }
                 if (!cursor.isClosed()) {
@@ -573,7 +573,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 innerModelType,
                                 innerModelSchema,
                                 cursor);
-                        mapForModel.put(fieldName, getModelFromMap(mapForInnerModel, innerModelType));
+                        mapForModel.put(fieldName, deserializeModelFromRawMap(mapForInnerModel, innerModelType));
                         break;
                     case ENUM:
                         stringValueFromCursor = cursor.getString(columnIndex);
@@ -669,8 +669,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return true;
     }
 
-    private <T extends Model> T getModelFromMap(Map<String, Object> mapForModel,
-                                                 Class<T> itemClass) throws IOException {
+    private <T extends Model> T deserializeModelFromRawMap(Map<String, Object> mapForModel,
+                                                           Class<T> itemClass) throws IOException {
         final String modelInJsonFormat = gson.toJson(mapForModel);
         return gson.getAdapter(itemClass).fromJson(modelInJsonFormat);
     }
@@ -680,7 +680,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final ModelSchema schema = ModelSchemaRegistry.singleton()
                 .getModelSchemaForModelClass(tableName);
         final String rawQuery = sqlCommandFactory.queryFor(schema).sqlStatement();
-        Log.d(TAG, rawQuery);
         return this.databaseConnectionHandle.rawQuery(rawQuery, null);
     }
 }

@@ -221,7 +221,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(person);
 
         final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
+                .vehicleModel("1940 Packard Six")
                 .owner(person)
                 .build();
         saveModel(car);
@@ -230,7 +230,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
-            assertEquals("Lamborghini",
+            assertEquals("1940 Packard Six",
                     cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
             assertEquals(person.getId(),
                     cursor.getString(cursor.getColumnIndexOrThrow("carOwnerId")));
@@ -257,7 +257,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(person);
 
         final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
+                .vehicleModel("1940 Packard Six")
                 .owner(Person.builder()
                         .firstName("Jane")
                         .lastName("Doe")
@@ -353,7 +353,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
 
         final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
+                .vehicleModel("1940 Packard Six")
                 .owner(person)
                 .build();
 
@@ -363,6 +363,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         Iterator<Car> result = queryModel(Car.class);
         assertNotNull(result);
         assertTrue(result.hasNext());
+
         final Person queriedCarOwner = result.next().getOwner();
         assertNotNull(queriedCarOwner);
         assertEquals(person.getId(), queriedCarOwner.getId());
