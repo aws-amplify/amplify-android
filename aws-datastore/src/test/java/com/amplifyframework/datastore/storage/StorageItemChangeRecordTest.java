@@ -47,33 +47,32 @@ public class StorageItemChangeRecordTest {
             .targetType("ID")
             .isRequired(true)
             .type("String")
-            .targetName("id")
             .build());
         expectedFields.put("entry", ModelField.builder()
             .name("entry")
             .targetType("String")
             .isRequired(true)
             .type("String")
-            .targetName("entry")
             .build());
         expectedFields.put("itemClass", ModelField.builder()
             .name("itemClass")
             .targetType("String")
             .isRequired(true)
             .type("String")
-            .targetName("itemClass")
             .build());
+
+        final ModelIndex index = ModelIndex.builder()
+                .indexFieldNames(Collections.singletonList("itemClass"))
+                .indexName("itemClassBasedIndex")
+                .build();
 
         assertEquals(
             // Expected
             ModelSchema.builder()
-                .modelIndex(ModelIndex.builder()
-                    .indexFieldNames(Collections.singletonList("itemClass"))
-                    .indexName("itemClassBasedIndex")
-                    .build())
-                .targetModelName("StorageItemChangeRecord")
-                .fields(expectedFields)
                 .name("Record")
+                .pluralName("Records")
+                .fields(expectedFields)
+                .indexes(Collections.singletonMap("itemClassBasedIndex", index))
                 .build(),
             // Actual
             ModelSchema.fromModelClass(StorageItemChange.Record.class)

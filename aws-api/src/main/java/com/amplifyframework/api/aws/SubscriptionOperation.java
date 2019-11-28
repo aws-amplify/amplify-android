@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -28,6 +29,8 @@ import java.util.Objects;
 import okhttp3.OkHttpClient;
 
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
+    private static final String TAG = SubscriptionOperation.class.getSimpleName();
+
     private final String endpoint;
     private final OkHttpClient client;
     private final SubscriptionEndpoint subscriptionEndpoint;
@@ -80,6 +83,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     @Override
     public void start() {
+        Log.d(TAG, "Request " + getRequest().getContent());
         subscriptionId = subscriptionEndpoint.requestSubscription(
             getRequest(), subscriptionListener);
     }

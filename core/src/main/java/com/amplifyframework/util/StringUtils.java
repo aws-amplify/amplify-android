@@ -15,6 +15,8 @@
 
 package com.amplifyframework.util;
 
+import android.text.TextUtils;
+
 import java.util.Locale;
 
 /**
@@ -33,7 +35,7 @@ public final class StringUtils {
      * @return camelCaseFormat formatted version of that string
      */
     public static String allCapsToCamelCase(String original) {
-        if (original == null || original.length() == 0) {
+        if (TextUtils.isEmpty(original)) {
             return original;
         }
 
@@ -49,7 +51,7 @@ public final class StringUtils {
      * @return PascalCaseFormat formatted version of that string
      */
     public static String allCapsToPascalCase(String original) {
-        if (original == null || original.length() == 0) {
+        if (TextUtils.isEmpty(original)) {
             return original;
         }
 
@@ -68,11 +70,50 @@ public final class StringUtils {
      *          If original string is null or empty, it just returns the original.
      */
     public static String capitalize(String original) {
-        if (original == null || original.length() == 0) {
+        if (TextUtils.isEmpty(original)) {
             return original;
         }
 
         return original.substring(0, 1).toUpperCase(Locale.getDefault()) +
                 original.substring(1).toLowerCase(Locale.getDefault());
+    }
+
+    /**
+     * Returns original string with first character capitalized and remaining string left unchanged.
+     * @param original Original string to modify
+     * @return Original string but with first character capitalized (if it already was, String is unchanged)
+     */
+    public static String capitalizeFirst(String original) {
+        if (TextUtils.isEmpty(original)) {
+            return original;
+        }
+
+        return original.substring(0, 1).toUpperCase(Locale.getDefault()) + original.substring(1);
+    }
+
+    /**
+     * Returns original string wrapped with single quotes.
+     * @param original Original string to modify
+     * @return Original string wrapped with single quotes.
+     *         If original string is null or empty, it just returns the original.
+     */
+    public static String singleQuote(String original) {
+        if (original == null) {
+            return null;
+        }
+        return "'" + original + "'";
+    }
+
+    /**
+     * Returns original string wrapped with double quotes.
+     * @param original Original string to modify
+     * @return Original string wrapped with double quotes.
+     *         If original string is null or empty, it just returns the original.
+     */
+    public static String doubleQuote(String original) {
+        if (original == null) {
+            return null;
+        }
+        return "\"" + original + "\"";
     }
 }

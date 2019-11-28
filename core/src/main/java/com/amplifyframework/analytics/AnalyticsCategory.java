@@ -62,8 +62,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile) {
-
+    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
     }
 
     @Override
@@ -89,7 +88,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void recordEvent(@NonNull final GeneralAnalyticsEvent analyticsEvent)
+    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
@@ -98,16 +97,13 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
 
     @Override
     public void registerGlobalProperties(Map<String, Object> properties) {
-
     }
 
     @Override
     public void unregisterGlobalProperties(Set<String> keys) {
-
     }
 
     @Override
     public void flushEvents() {
-
     }
 }

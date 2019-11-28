@@ -21,6 +21,7 @@ import com.amplifyframework.testmodels.Person;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -42,34 +43,29 @@ public final class ModelSchemaTest {
     public void modelSchemaIsGeneratedForPersonModel() {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
-            .targetName("id")
             .targetType("ID")
             .name("id")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
             .build());
         expectedFields.put("first_name", ModelField.builder()
-            .targetName("first_name")
             .targetType("String")
             .name("first_name")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
             .build());
         expectedFields.put("last_name", ModelField.builder()
-            .targetName("last_name")
             .targetType("String")
             .name("last_name")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
             .build());
         expectedFields.put("dob", ModelField.builder()
-            .targetName("dob")
             .targetType("AWSDate")
             .name("dob")
             .type(JavaFieldType.DATE.stringValue())
             .build());
         expectedFields.put("age", ModelField.builder()
-            .targetName("age")
             .targetType("Int")
             .name("age")
             .type(JavaFieldType.INTEGER.stringValue())
@@ -78,17 +74,17 @@ public final class ModelSchemaTest {
             .name("relationship")
             .type("MaritalStatus")
             .targetType("MaritalStatus")
-            .targetName("relationship")
             .isEnum(true)
             .build());
 
-        ModelSchema expectedModelSchema = ModelSchema.builder()
-            .modelIndex(ModelIndex.builder()
+        ModelIndex expectedModelIndex = ModelIndex.builder()
                 .indexName("first_name_and_age_based_index")
                 .indexFieldNames(Arrays.asList("first_name", "age"))
-                .build())
-            .targetModelName("Person")
+                .build();
+
+        ModelSchema expectedModelSchema = ModelSchema.builder()
             .fields(expectedFields)
+            .indexes(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
             .name("Person")
             .build();
         ModelSchema actualModelSchema = ModelSchema.fromModelClass(Person.class);

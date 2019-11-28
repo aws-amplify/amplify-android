@@ -44,14 +44,6 @@ public @interface ModelField {
     boolean isRequired() default false;
 
     /**
-     * Returns the target name of the field.
-     * @return the name of the field in the target.
-     *          For example: the name of the field
-     *          in the GraphQL schema.
-     */
-    String targetName() default "";
-
-    /**
      * Returns the target type of the field.
      * @return the data type of the field in the target.
      *         For example: the data type of the field

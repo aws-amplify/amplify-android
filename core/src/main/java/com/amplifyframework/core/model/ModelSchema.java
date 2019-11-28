@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.util.FieldFinder;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,12 +49,12 @@ public final class ModelSchema {
     // Logcat Tag.
     private static final String TAG = ModelSchema.class.getSimpleName();
 
-    // Name of the Java Class of the Model.
+    // Name of the Model.
     private final String name;
 
-    // the name of the Model in the target. For example: the name of the
-    // model in the GraphQL Schema.
-    private final String targetModelName;
+    // The plural version of the name of the model.
+    // Useful for generating GraphQL list query names.
+    private final String pluralName;
 
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
@@ -64,8 +65,8 @@ public final class ModelSchema {
     // The key is the name of the instance variable in the Java class that represents one of Model's associations
     private final Map<String, ModelAssociation> associations;
 
-    // Specifies the index of a Model.
-    private final ModelIndex modelIndex;
+    // Specifies the indexes of a Model.
+    private final Map<String, ModelIndex> indexes;
 
     // Maintain a sorted copy of all the fields of a Model
     // This is useful so code that uses the sortedFields to generate queries and other
@@ -73,15 +74,15 @@ public final class ModelSchema {
     private final List<ModelField> sortedFields;
 
     private ModelSchema(String name,
-                        String targetModelName,
+                        String pluralName,
                         Map<String, ModelField> fields,
                         Map<String, ModelAssociation> associations,
-                        ModelIndex modelIndex) {
+                        Map<String, ModelIndex> indexes) {
         this.name = name;
-        this.targetModelName = targetModelName;
+        this.pluralName = pluralName;
         this.fields = fields;
         this.associations = associations;
-        this.modelIndex = modelIndex;
+        this.indexes = indexes;
         this.sortedFields = sortModelFields();
     }
 
@@ -104,12 +105,20 @@ public final class ModelSchema {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
-            final ModelIndex modelIndex = getModelIndex(clazz);
-            String targetModelName = null;
-            if (clazz.isAnnotationPresent(ModelConfig.class)) {
-                targetModelName = clazz.getAnnotation(ModelConfig.class).targetName();
-                if (targetModelName.isEmpty()) {
-                    targetModelName = clazz.getSimpleName();
+            final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
+
+            // Set the model name and plural name (null if not provided)
+            ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
+            final String modelName = clazz.getSimpleName();
+            final String modelPluralName = modelConfig != null && modelConfig.pluralName() != null
+                    && !modelConfig.pluralName().isEmpty()
+                    ? modelConfig.pluralName()
+                    : null;
+
+            for (Annotation annotation : clazz.getAnnotations()) {
+                ModelIndex modelIndex = createModelIndex(annotation);
+                if (modelIndex != null) {
+                    indexes.put(modelIndex.getIndexName(), modelIndex);
                 }
             }
 
@@ -125,11 +134,11 @@ public final class ModelSchema {
             }
 
             return ModelSchema.builder()
-                    .name(clazz.getSimpleName())
-                    .targetModelName(targetModelName)
+                    .name(modelName)
+                    .pluralName(modelPluralName)
                     .fields(fields)
                     .associations(associations)
-                    .modelIndex(modelIndex)
+                    .indexes(indexes)
                     .build();
         } catch (Exception exception) {
             throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
@@ -143,12 +152,10 @@ public final class ModelSchema {
         if (annotation != null) {
             final String fieldName = field.getName();
             final String fieldType = field.getType().getSimpleName();
-            final String targetName = annotation.targetName();
             final String targetType = annotation.targetType();
             return ModelField.builder()
                     .name(fieldName)
                     .type(fieldType)
-                    .targetName(targetName.isEmpty() ? fieldName : targetName)
                     .targetType(targetType.isEmpty() ? fieldType : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
@@ -164,8 +171,8 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(BelongsTo.class)) {
             BelongsTo association = field.getAnnotation(BelongsTo.class);
             return ModelAssociation.builder()
+                    .targetName(association.targetName())
                     .associatedType(association.type().getSimpleName())
-                    .isOwner(true)
                     .build();
         }
         if (field.isAnnotationPresent(HasOne.class)) {
@@ -185,6 +192,18 @@ public final class ModelSchema {
         return null;
     }
 
+    // Utility method to extract model index metadata
+    private static ModelIndex createModelIndex(Annotation annotation) {
+        if (annotation.annotationType().isAssignableFrom(Index.class)) {
+            Index indexAnnotation = (Index) annotation;
+            return ModelIndex.builder()
+                    .indexName(indexAnnotation.name())
+                    .indexFieldNames(Arrays.asList(indexAnnotation.fields()))
+                    .build();
+        }
+        return null;
+    }
+
     /**
      * Returns the name of the Model class.
      *
@@ -195,13 +214,14 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the name of the Model in the target. For example: the name of the
-     * model in the GraphQL Schema.
-     * @return the name of the Model in the target. For example: the name of the
-     *         model in the GraphQL Schema.
+     * Returns the plural name of the Model in the target.
+     * Null if not explicitly annotated in ModelConfig.
+     *
+     * @return the plural name of the Model in the target
+     *         if explicitly provided.
      */
-    public String getTargetModelName() {
-        return targetModelName;
+    public String getPluralName() {
+        return pluralName;
     }
 
     /**
@@ -216,6 +236,24 @@ public final class ModelSchema {
     }
 
     /**
+     * Returns a map of field to associations of the model.
+     *
+     * @return a map of field to associations of the model.
+     */
+    public Map<String, ModelAssociation> getAssociations() {
+        return Immutable.of(associations);
+    }
+
+    /**
+     * Returns the map of indexes of a {@link Model}.
+     *
+     * @return the map of indexes of a {@link Model}.
+     */
+    public Map<String, ModelIndex> getIndexes() {
+        return indexes;
+    }
+
+    /**
      * Returns a sorted copy of all the fields of a Model.
      *
      * @return list of fieldName and the fieldObject of all
@@ -226,26 +264,7 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the attributes of a {@link Model}.
-     *
-     * @return the attributes of a {@link Model}.
-     */
-    public ModelIndex getModelIndex() {
-        return modelIndex;
-    }
-
-    /**
-     * Returns a map of field to associations of the model.
-     *
-     * @return a map of field to associations of the model.
-     */
-    public Map<String, ModelAssociation> getAssociations() {
-        return Immutable.of(associations);
-    }
-
-    /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
-     * NOTE: This uses the schema target names as the keys, not the local Java field names.
      * @param instance An instance of this model populated with values to map
      * @return a map of the target fields in the schema to the actual values in the provided object
      * @throws AmplifyException if the object does not match the fields in this schema
@@ -259,14 +278,23 @@ public final class ModelSchema {
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
         }
 
-        for (ModelField field : this.fields.values()) {
+        for (ModelField modelField : this.fields.values()) {
             try {
-                Field privateField = instance.getClass().getDeclaredField(field.getName());
+                Field privateField = instance.getClass().getDeclaredField(modelField.getName());
                 privateField.setAccessible(true);
-                result.put(field.getTargetName(), privateField.get(instance));
+
+                final ModelAssociation association = associations.get(modelField.getName());
+                if (association == null) {
+                    result.put(modelField.getName(), privateField.get(instance));
+                } else if (association.isOwner()) {
+                    // All ModelAssociation targets are required to be instances of Model so this is a safe cast
+                    Model target = (Model) privateField.get(instance);
+                    result.put(association.getTargetName(), target.getId());
+                }
+                // Ignore if field is associated, but is not a "belongsTo" relationship
             } catch (Exception exception) {
                 throw new AmplifyException("An invalid field was provided - " +
-                        field.getName() +
+                        modelField.getName() +
                         " is not present in " +
                         instance.getClass().getSimpleName(),
                         exception,
@@ -274,21 +302,7 @@ public final class ModelSchema {
                         false);
             }
         }
-
         return result;
-    }
-
-    private static ModelIndex getModelIndex(@NonNull Class<? extends Model> clazz) {
-        final ModelIndex.Builder builder = ModelIndex.builder();
-
-        if (clazz.isAnnotationPresent(Index.class)) {
-            Index indexAnnotation = clazz.getAnnotation(Index.class);
-            if (indexAnnotation != null) {
-                builder.indexName(indexAnnotation.name());
-                builder.indexFieldNames(Arrays.asList(indexAnnotation.fields()));
-            }
-        }
-        return builder.build();
     }
 
     private List<ModelField> sortModelFields() {
@@ -340,7 +354,7 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
-        if (!ObjectsCompat.equals(targetModelName, that.targetModelName)) {
+        if (!ObjectsCompat.equals(pluralName, that.pluralName)) {
             return false;
         }
         if (!ObjectsCompat.equals(fields, that.fields)) {
@@ -349,7 +363,7 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(associations, that.associations)) {
             return false;
         }
-        if (!ObjectsCompat.equals(modelIndex, that.modelIndex)) {
+        if (!ObjectsCompat.equals(indexes, that.indexes)) {
             return false;
         }
         return true;
@@ -359,10 +373,10 @@ public final class ModelSchema {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
+        result = 31 * result + (pluralName != null ? pluralName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
         result = 31 * result + (associations != null ? associations.hashCode() : 0);
-        result = 31 * result + (modelIndex != null ? modelIndex.hashCode() : 0);
+        result = 31 * result + (indexes != null ? indexes.hashCode() : 0);
         return result;
     }
 
@@ -370,10 +384,10 @@ public final class ModelSchema {
     public String toString() {
         return "ModelSchema{" +
             "name='" + name + '\'' +
-            ", targetModelName='" + targetModelName + '\'' +
+            ", pluralName='" + pluralName + '\'' +
             ", fields=" + fields +
             ", associations" + associations +
-            ", modelIndex=" + modelIndex +
+            ", indexes=" + indexes +
             '}';
     }
 
@@ -382,10 +396,10 @@ public final class ModelSchema {
      */
     public static final class Builder {
         private String name;
-        private String targetModelName;
+        private String pluralName;
         private Map<String, ModelField> fields = new TreeMap<>();
         private Map<String, ModelAssociation> associations = new TreeMap<>();
-        private ModelIndex modelIndex;
+        private Map<String, ModelIndex> indexes = new TreeMap<>();
 
         /**
          * Set the the name of the Model class.
@@ -398,14 +412,12 @@ public final class ModelSchema {
         }
 
         /**
-         * the name of the Model in the target. For example: the name of the
-         * model in the GraphQL Schema.
-         * @param targetModelName the name of the Model in the target. For example: the name of the
-         *                        model in the GraphQL Schema.
+         * the plural version of the name of the Model.
+         * @param pluralName the plural version of model name.
          * @return the builder object
          */
-        public Builder targetModelName(String targetModelName) {
-            this.targetModelName = targetModelName;
+        public Builder pluralName(String pluralName) {
+            this.pluralName = pluralName;
             return this;
         }
 
@@ -432,12 +444,12 @@ public final class ModelSchema {
         }
 
         /**
-         * Set the index of a model.
-         * @param modelIndex the index of the model.
+         * Set the map of indexes of a model.
+         * @param indexes the indexes of the model.
          * @return the builder object.
          */
-        public Builder modelIndex(ModelIndex modelIndex) {
-            this.modelIndex = modelIndex;
+        public Builder indexes(@NonNull Map<String, ModelIndex> indexes) {
+            this.indexes = indexes;
             return this;
         }
 
@@ -447,10 +459,10 @@ public final class ModelSchema {
          */
         public ModelSchema build() {
             return new ModelSchema(name,
-                    targetModelName,
+                    pluralName,
                     fields,
                     associations,
-                    modelIndex);
+                    indexes);
         }
     }
 }

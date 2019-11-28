@@ -31,13 +31,17 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.util.StringUtils;
 
 import com.google.gson.Gson;
 
@@ -84,9 +88,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // ThreadPool for SQLite operations.
     private final ExecutorService threadPool;
 
-    // Factory that produces SQL commands.
-    private final SQLCommandFactory sqlCommandFactory;
-
     // Data is read from SQLite and de-serialized using GSON
     // into a strongly typed Java object.
     private final Gson gson;
@@ -104,7 +105,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     // The helper object controls the lifecycle of database creation, upgrade
     // and opening connection to database.
-    private SQLiteOpenHelper sqLiteOpenHelper;
+    private SQLiteOpenHelper sqliteOpenHelper;
+
+    // Factory that produces SQL commands.
+    private SQLCommandFactory sqlCommandFactory;
 
     // A utility to convert StorageItemChange to StorageItemChange.Record
     // and vice-versa
@@ -119,7 +123,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
-        this.sqlCommandFactory = SQLiteCommandFactory.getInstance();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
@@ -166,8 +169,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
+                this.sqlCommandFactory = new SQLiteCommandFactory();
                 CreateSqlCommands createSqlCommands = getCreateCommands(models);
-                sqLiteOpenHelper = SQLiteStorageHelper.getInstance(
+                sqliteOpenHelper = SQLiteStorageHelper.getInstance(
                         context,
                         DATABASE_NAME,
                         DATABASE_VERSION,
@@ -187,7 +191,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * databaseConnectionHandle represents a connection handle to the database.
                  * All database operations will happen through this handle.
                  */
-                databaseConnectionHandle = sqLiteOpenHelper.getWritableDatabase();
+                databaseConnectionHandle = sqliteOpenHelper.getWritableDatabase();
+                this.sqlCommandFactory = new SQLiteCommandFactory(databaseConnectionHandle);
 
                 /*
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
@@ -223,28 +228,36 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
-                final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
-                if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
-                    throw new DataStoreException("No insert statement found for the Model: " + modelSchema.getName());
+                final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
+
+                if (dataExistsInSQLiteTable(
+                        sqLiteTable.getName(),
+                        PrimaryKey.fieldName(),
+                        item.getId())) {
+                    // update model stored in SQLite
+                    final SqlCommand sqlCommand = sqlCommandFactory.updateFor(modelSchema, item);
+                    if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
+                        throw new DataStoreException("Error in saving the model. No update statement " +
+                                "found for the Model: " + modelSchema.getName());
+                    }
+                    saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.OVERWRITE_EXISTING);
+                } else {
+                    // insert model in SQLite
+                    final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
+                    if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
+                        throw new DataStoreException("No insert statement found for the Model: " +
+                                modelSchema.getName());
+                    }
+                    saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
                 }
 
-                Log.d(TAG, "Writing item to table for: " + item.toString());
-
-                final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-                preCompiledInsertStatement.clearBindings();
-                bindPreparedInsertSQLStatementWithValues(item, sqlCommand);
-                preCompiledInsertStatement.executeInsert();
-                preCompiledInsertStatement.clearBindings();
-
-                Log.d(TAG, "Successfully wrote item to table for: " + item.toString());
-
                 final StorageItemChange.Record record = StorageItemChange.<T>builder()
-                    .item(item)
-                    .itemClass((Class<T>) item.getClass())
-                    .type(StorageItemChange.Type.SAVE)
-                    .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
+                        .item(item)
+                        .itemClass((Class<T>) item.getClass())
+                        .type(StorageItemChange.Type.SAVE)
+                        .initiator(initiator)
+                        .build()
+                        .toRecord(storageItemChangeConverter);
                 itemChangeSubject.onNext(record);
                 itemSaveListener.onResult(record);
             } catch (Exception exception) {
@@ -296,12 +309,47 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
+    @SuppressWarnings("unchecked")
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> listener) {
-        /* TODO */
+            @NonNull ResultListener<StorageItemChange.Record> itemDeleteListener) {
+        threadPool.submit(() -> {
+            try {
+                final ModelSchema modelSchema =
+                        modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
+                final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
+
+                Log.d(TAG, "Deleting item in table: " + sqLiteTable.getName() +
+                        " identified by ID: " + item.getId());
+
+                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item);
+                if (sqlCommand == null || sqlCommand.sqlStatement() == null) {
+                    throw new DataStoreException("No delete statement found for the Model: " +
+                            modelSchema.getName());
+                }
+
+                databaseConnectionHandle.beginTransaction();
+                databaseConnectionHandle.execSQL(sqlCommand.sqlStatement());
+                databaseConnectionHandle.setTransactionSuccessful();
+                databaseConnectionHandle.endTransaction();
+
+                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                        .item(item)
+                        .itemClass((Class<T>) item.getClass())
+                        .type(StorageItemChange.Type.DELETE)
+                        .initiator(initiator)
+                        .build()
+                        .toRecord(storageItemChangeConverter);
+                itemChangeSubject.onNext(record);
+                itemDeleteListener.onResult(record);
+            } catch (Exception exception) {
+                itemChangeSubject.onError(exception);
+                itemDeleteListener.onError(
+                        new DataStoreException("Error in deleting the model.", exception));
+            }
+        });
     }
 
     /**
@@ -329,8 +377,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             if (databaseConnectionHandle != null) {
                 databaseConnectionHandle.close();
             }
-            if (sqLiteOpenHelper != null) {
-                sqLiteOpenHelper.close();
+            if (sqliteOpenHelper != null) {
+                sqliteOpenHelper.close();
             }
         } catch (Exception exception) {
             throw new DataStoreException("Error in terminating the SQLiteStorageAdapter.", exception);
@@ -344,7 +392,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final ModelSchema modelSchema =
                 modelSchemaRegistry.getModelSchemaForModelClass(model.getSimpleName());
             createTableCommands.add(sqlCommandFactory.createTableFor(modelSchema));
-            createIndexCommands.add(sqlCommandFactory.createIndexFor(modelSchema));
+            createIndexCommands.addAll(sqlCommandFactory.createIndexesFor(modelSchema));
         }
         return new CreateSqlCommands(createTableCommands, createIndexCommands);
     }
@@ -358,23 +406,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final ModelSchema modelSchema = entry.getValue();
             modifiableMap.put(
                     tableName,
-                    sqlCommandFactory.insertFor(tableName, modelSchema, databaseConnectionHandle)
+                    sqlCommandFactory.insertFor(modelSchema)
             );
         }
         return Immutable.of(modifiableMap);
     }
 
-    private <T> void bindPreparedInsertSQLStatementWithValues(@NonNull final T object,
-                                                              @NonNull final SqlCommand sqlCommand)
+    private <T> void bindPreparedSQLStatementWithValues(@NonNull final T object,
+                                                        @NonNull final SqlCommand sqlCommand)
             throws IllegalAccessException {
+        final String tableName = sqlCommand.tableName();
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
         final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
         final Iterator<Field> fieldIterator = classFields.iterator();
 
-        final Cursor cursor = getQueryAllCursor(sqlCommand.tableName());
-        if (cursor != null) {
-            cursor.moveToFirst();
+        final Cursor cursor = getQueryAllCursor(tableName);
+        if (cursor == null) {
+            throw new IllegalAccessException("Error in getting a cursor to table: " +
+                    tableName);
         }
+        cursor.moveToFirst();
+
+        final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
+                .getModelSchemaForModelClass(tableName);
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
 
         while (fieldIterator.hasNext()) {
             final Field field = fieldIterator.next();
@@ -383,19 +439,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final String fieldName = field.getName();
             final Object fieldValue = field.get(object);
 
-            final int columnIndex;
-            try {
-                // Move the columns index to 1-based index.
-                columnIndex = cursor.getColumnIndexOrThrow(fieldName) + 1;
-            } catch (IllegalArgumentException exception) {
-                // Ignore field if there is no corresponding column
+            // Skip if there is no equivalent column for field in object
+            final SQLiteColumn column = columns.get(fieldName);
+            if (column == null) {
                 continue;
             }
-
-            if (fieldValue == null) {
-                preCompiledInsertStatement.bindNull(columnIndex);
-                continue;
-            }
+            final String columnName = column.getName();
 
             final JavaFieldType javaFieldType;
             if (Model.class.isAssignableFrom(field.getType())) {
@@ -406,6 +455,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
             }
 
+            // Move the columns index to 1-based index.
+            final int columnIndex = cursor.getColumnIndexOrThrow(columnName) + 1;
+
+            if (fieldValue == null) {
+                preCompiledInsertStatement.bindNull(columnIndex);
+                continue;
+            }
+
             bindPreCompiledInsertStatementWithJavaFields(
                     preCompiledInsertStatement,
                     fieldValue,
@@ -413,14 +470,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     javaFieldType);
         }
 
-        if (cursor != null && !cursor.isClosed()) {
+        if (!cursor.isClosed()) {
             cursor.close();
         }
     }
 
     private void bindPreCompiledInsertStatementWithJavaFields(
-            SQLiteStatement preCompiledInsertStatement,
-            Object fieldValue,
+            @NonNull SQLiteStatement preCompiledInsertStatement,
+            @NonNull Object fieldValue,
             int columnIndex,
             JavaFieldType javaFieldType) {
         switch (javaFieldType) {
@@ -463,23 +520,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     }
 
     private <T extends Model> Map<String, Object> buildMapForModel(
-            Class<T> modelClass,
-            ModelSchema modelSchema,
-            Cursor cursor) {
+            @NonNull Class<T> modelClass,
+            @NonNull ModelSchema modelSchema,
+            @NonNull Cursor cursor) {
         final Map<String, Object> mapForModel = new HashMap<>();
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
             try {
                 final ModelField modelField = entry.getValue();
-                final String fieldGraphQLType = entry.getValue().getTargetType();
+                final String fieldGraphQlType = entry.getValue().getTargetType();
                 final JavaFieldType fieldJavaType;
                 if (modelField.isModel()) {
                     fieldJavaType = JavaFieldType.MODEL;
                 } else if (modelField.isEnum()) {
                     fieldJavaType = JavaFieldType.ENUM;
                 } else {
-                    fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQLType);
+                    fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQlType);
                 }
 
                 final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
@@ -514,10 +571,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         break;
                     case DATE:
                         final String dateInStringFormat = cursor.getString(columnIndex);
-                        final Date dateInDateFormat = SimpleDateFormat
-                                .getDateInstance()
-                                .parse(dateInStringFormat);
-                        mapForModel.put(fieldName, dateInDateFormat);
+                        if (dateInStringFormat != null) {
+                            final Date dateInDateFormat = SimpleDateFormat
+                                    .getDateInstance()
+                                    .parse(dateInStringFormat);
+                            mapForModel.put(fieldName, dateInDateFormat);
+                        }
                         break;
                     case TIME:
                         final long timeInLongFormat = cursor.getLong(columnIndex);
@@ -527,11 +586,63 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         throw new UnsupportedTypeException(fieldJavaType + " is not supported.");
                 }
             } catch (Exception exception) {
-                Log.e(TAG, "Error in reading value for field: " + fieldName, exception);
                 mapForModel.put(fieldName, null);
             }
         }
         return mapForModel;
+    }
+
+    // Extract the values of the fields of a model and bind the values to the SQLiteStatement
+    // and execute the statement.
+    private <T extends Model> void saveModel(
+            @NonNull T model,
+            @NonNull ModelSchema modelSchema,
+            @NonNull SqlCommand sqlCommand,
+            ModelConflictStrategy modelConflictStrategy) throws IllegalAccessException {
+        Objects.requireNonNull(model);
+        Objects.requireNonNull(modelSchema);
+        Objects.requireNonNull(sqlCommand);
+        Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
+
+        Log.d(TAG, "Writing data to table for: " + model.toString());
+
+        // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
+        // are not thread-safe. Adding a synchronization barrier to access it.
+        synchronized (sqlCommand.getCompiledSqlStatement()) {
+            final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
+            compiledSqlStatement.clearBindings();
+            bindPreparedSQLStatementWithValues(model, sqlCommand);
+            switch (modelConflictStrategy) {
+                case OVERWRITE_EXISTING:
+                    compiledSqlStatement.executeUpdateDelete();
+                    break;
+                case THROW_EXCEPTION:
+                    compiledSqlStatement.executeInsert();
+                    break;
+                default:
+                    throw new UnsupportedTypeException("ModelConflictStrategy " +
+                            modelConflictStrategy + " is not supported.");
+            }
+            compiledSqlStatement.clearBindings();
+        }
+
+        Log.d(TAG, "Successfully written data to table for: " + model.toString());
+    }
+
+    private boolean dataExistsInSQLiteTable(
+            @NonNull String tableName,
+            @NonNull String columnName,
+            @NonNull String columnValue) {
+        final Cursor cursor = databaseConnectionHandle.rawQuery(
+                "SELECT * FROM " + StringUtils.singleQuote(tableName) +
+                    " WHERE " + columnName + " = " +
+                    StringUtils.singleQuote(columnValue), null);
+        if (cursor.getCount() <= 0) {
+            cursor.close();
+            return false;
+        }
+        cursor.close();
+        return true;
     }
 
     @VisibleForTesting

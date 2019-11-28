@@ -22,24 +22,37 @@ import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests {@link SQLiteCommandFactory#createTableFor(ModelSchema)}
- * and {@link SQLiteCommandFactory#createIndexFor(ModelSchema)}.
+ * and {@link SQLiteCommandFactory#createIndexesFor(ModelSchema)}.
  */
 @Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
 public class SqlCommandTest {
+
+    private SQLCommandFactory sqlCommandFactory;
+
+    /**
+     * Setup before each test.
+     */
+    @Before
+    public void createSqlCommandFactory() {
+        sqlCommandFactory = new SQLiteCommandFactory();
+    }
 
     /**
      * Test if a valid {@link ModelSchema} returns an expected
@@ -50,12 +63,10 @@ public class SqlCommandTest {
         final SortedMap<String, ModelField> fields = getFieldsMap();
         final ModelSchema personSchema = ModelSchema.builder()
                 .name("Person")
-                .targetModelName(null)
                 .fields(fields)
                 .build();
 
-        final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
-                .createTableFor(personSchema);
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS Person (" +
                 "id TEXT PRIMARY KEY NOT NULL, " +
@@ -75,9 +86,7 @@ public class SqlCommandTest {
                 .name("Guitar")
                 .build();
 
-        final SqlCommand sqlCommand = SQLiteCommandFactory.getInstance()
-                .createTableFor(modelSchema);
-
+        final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(modelSchema);
         assertEquals("Guitar", sqlCommand.tableName());
         assertEquals("CREATE TABLE IF NOT EXISTS Guitar ", sqlCommand.sqlStatement());
     }
@@ -88,48 +97,25 @@ public class SqlCommandTest {
      */
     @Test
     public void modelWithIndexReturnsExpectedCreateIndexCommand() {
-        final ModelSchema modelSchema = ModelSchema.builder()
-                .name("Person")
-                .modelIndex(ModelIndex.builder()
-                        .indexName("idBasedIndex")
-                        .indexFieldNames(Collections.singletonList("id"))
-                        .build())
+        final ModelIndex index = ModelIndex.builder()
+                .indexName("idBasedIndex")
+                .indexFieldNames(Collections.singletonList("id"))
                 .build();
 
-        final SqlCommand createIndexSqlCommand = SQLiteCommandFactory.getInstance()
-                .createIndexFor(modelSchema);
+        final ModelSchema modelSchema = ModelSchema.builder()
+                .name("Person")
+                .indexes(Collections.singletonMap("idBasedIndex", index))
+                .build();
 
+        final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
+                .createIndexesFor(modelSchema)
+                .iterator();
+        assertTrue(sqlCommandIterator.hasNext());
+
+        final SqlCommand createIndexSqlCommand = sqlCommandIterator.next();
         assertEquals("Person", createIndexSqlCommand.tableName());
         assertEquals("CREATE INDEX IF NOT EXISTS idBasedIndex ON Person (id);",
                 createIndexSqlCommand.sqlStatement());
-    }
-
-    private static SortedMap<String, ModelField> getFieldsMap() {
-        final SortedMap<String, ModelField> fields = new TreeMap<>();
-        fields.put("id", ModelField.builder()
-                .name("id")
-                .targetName("id")
-                .isRequired(true)
-                .targetType("String")
-                .build());
-        fields.put("firstName", ModelField.builder()
-                .name("firstName")
-                .targetName("first_name")
-                .isRequired(true)
-                .targetType("String")
-                .build());
-        fields.put("lastName", ModelField.builder()
-                .name("lastName")
-                .targetName("last_name")
-                .isRequired(true)
-                .targetType("String")
-                .build());
-        fields.put("age", ModelField.builder()
-                .name("age")
-                .targetName("age")
-                .targetType("Int")
-                .build());
-        return fields;
     }
 
     /**
@@ -138,6 +124,10 @@ public class SqlCommandTest {
      */
     @Test
     public void createIndexForStorageItemChangeRecord() {
+        final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
+                .createIndexesFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+                .iterator();
+        assertTrue(sqlCommandIterator.hasNext());
         assertEquals(
             // expected
             new SqlCommand(
@@ -145,8 +135,31 @@ public class SqlCommandTest {
                 "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
             ),
             // actual
-            SQLiteCommandFactory.getInstance()
-                .createIndexFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+            sqlCommandIterator.next()
         );
+    }
+
+    private static SortedMap<String, ModelField> getFieldsMap() {
+        final SortedMap<String, ModelField> fields = new TreeMap<>();
+        fields.put("id", ModelField.builder()
+                .name("id")
+                .isRequired(true)
+                .targetType("String")
+                .build());
+        fields.put("firstName", ModelField.builder()
+                .name("firstName")
+                .isRequired(true)
+                .targetType("String")
+                .build());
+        fields.put("lastName", ModelField.builder()
+                .name("lastName")
+                .isRequired(true)
+                .targetType("String")
+                .build());
+        fields.put("age", ModelField.builder()
+                .name("age")
+                .targetType("Int")
+                .build());
+        return fields;
     }
 }

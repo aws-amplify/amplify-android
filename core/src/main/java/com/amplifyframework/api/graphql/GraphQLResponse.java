@@ -138,12 +138,17 @@ public final class GraphQLResponse<T> {
 
             Error error = (Error) thatObject;
 
-            return ObjectsCompat.equals(message, error.message);
+            return message.equals(error.message);
         }
 
         @Override
         public int hashCode() {
-            return message != null ? message.hashCode() : 0;
+            return message.hashCode();
+        }
+
+        @Override
+        public String toString() {
+            return String.valueOf(message);
         }
     }
 

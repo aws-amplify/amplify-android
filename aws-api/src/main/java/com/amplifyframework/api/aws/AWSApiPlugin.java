@@ -221,6 +221,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         );
     }
 
+    @SuppressWarnings("checkstyle:WhitespaceAround") // {} inline block for new QueryPredicate {}
+    @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull String apiName,
+            @NonNull Class<T> modelClass,
+            @NonNull SubscriptionType subscriptionType,
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
+        return subscribe(apiName, modelClass, new QueryPredicate() {}, subscriptionType, subscriptionListener);
+    }
+
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,

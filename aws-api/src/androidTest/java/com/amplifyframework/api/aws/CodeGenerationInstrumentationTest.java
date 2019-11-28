@@ -22,6 +22,8 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.Projectfields;
+import com.amplifyframework.testmodels.Team;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,7 +40,8 @@ import static org.junit.Assert.assertTrue;
  * TODO: document how to configure a remote endpoint that can accomodate this test.
  */
 public final class CodeGenerationInstrumentationTest {
-    private static final String API_NAME = "personApi";
+    private static final String PERSON_API_NAME = "personApi";
+    private static final String PROJECT_API_NAME = "projectApi";
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -68,7 +71,7 @@ public final class CodeGenerationInstrumentationTest {
             .build();
 
         Amplify.API.mutate(
-            API_NAME,
+            PERSON_API_NAME,
             person,
             MutationType.CREATE,
             mutationListener
@@ -79,7 +82,7 @@ public final class CodeGenerationInstrumentationTest {
         assertTrue(mutationResponse.hasData());
 
         Amplify.API.query(
-            API_NAME,
+            PERSON_API_NAME,
             Person.class,
             mutationResponse.getData().getId(),
             queryListener
@@ -97,7 +100,7 @@ public final class CodeGenerationInstrumentationTest {
         LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
 
         Amplify.API.query(
-            API_NAME,
+            PERSON_API_NAME,
             Person.class,
             Person.LAST_NAME.eq("Daudelin")
                 .and(Person.FIRST_NAME.eq("David")
@@ -125,7 +128,7 @@ public final class CodeGenerationInstrumentationTest {
         LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
 
         Amplify.API.query(
-                API_NAME,
+                PERSON_API_NAME,
                 Person.class,
                 queryListener
         );
@@ -157,7 +160,7 @@ public final class CodeGenerationInstrumentationTest {
         LatchedResponseStreamListener<Person> streamListener = new LatchedResponseStreamListener<>(1);
 
         GraphQLOperation<Person> operation = Amplify.API.subscribe(
-                API_NAME,
+                PERSON_API_NAME,
                 Person.class,
                 null,
                 SubscriptionType.ON_CREATE,
@@ -165,7 +168,7 @@ public final class CodeGenerationInstrumentationTest {
         );
 
         Amplify.API.mutate(
-                API_NAME,
+                PERSON_API_NAME,
                 person,
                 null,
                 MutationType.CREATE,
@@ -194,7 +197,7 @@ public final class CodeGenerationInstrumentationTest {
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void mutationFailsWrongPassesCorrectCondition() {
+    public void mutationFailsInvalidConditionAndPassesCorrectCondition() {
         LatchedSingleResponseListener<Person> createListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Person> updateListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Person> deleteListener = new LatchedSingleResponseListener<>();
@@ -208,7 +211,7 @@ public final class CodeGenerationInstrumentationTest {
                 .build();
 
         Amplify.API.mutate(
-                API_NAME,
+                PERSON_API_NAME,
                 person,
                 MutationType.CREATE,
                 createListener
@@ -221,7 +224,7 @@ public final class CodeGenerationInstrumentationTest {
         Person updated = person.newBuilder().age(30).build();
 
         Amplify.API.mutate(
-                API_NAME,
+                PERSON_API_NAME,
                 updated,
                 Person.LAST_NAME.eq("Dandelion"),
                 MutationType.UPDATE,
@@ -233,8 +236,8 @@ public final class CodeGenerationInstrumentationTest {
         assertTrue(updateResponse.getErrors().get(0).getMessage().contains("ConditionalCheckFailedException"));
 
         Amplify.API.mutate(
-                API_NAME,
-                person,
+                PERSON_API_NAME,
+                Person.justId(person.getId()),
                 MutationType.DELETE,
                 deleteListener
         );
@@ -242,5 +245,86 @@ public final class CodeGenerationInstrumentationTest {
         GraphQLResponse<Person> deleteResponse = deleteListener.awaitTerminalEvent().getResponse();
         assertFalse(deleteResponse.hasErrors());
         assertTrue(deleteResponse.hasData());
+    }
+
+    /**
+     * Creates a Team object, then creates a Project object with a belongsTo relationship with that Team and ensures
+     * that Query and Subscription on the Project both get the original Team object.
+     * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
+     */
+    @Test
+    public void belongsToCreateQuerySubscribe() throws Throwable {
+        LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Projectfields> projectMutationListener =
+                new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Projectfields> projectQueryListener =
+                new LatchedSingleResponseListener<>();
+        LatchedResponseStreamListener<Projectfields> projectSubscriptionListener =
+                new LatchedResponseStreamListener<>(1);
+
+        GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
+                PROJECT_API_NAME,
+                Projectfields.class,
+                null,
+                SubscriptionType.ON_CREATE,
+                projectSubscriptionListener
+        );
+
+        Team team = Team.builder().name("AWS Mobile SDK").build();
+
+        Amplify.API.mutate(
+                PROJECT_API_NAME,
+                team,
+                MutationType.CREATE,
+                teamMutationListener
+        );
+
+        GraphQLResponse<Team> teamMutationResponse = teamMutationListener.awaitTerminalEvent().getResponse();
+        assertFalse(teamMutationResponse.hasErrors());
+        assertTrue(teamMutationResponse.hasData());
+
+        Projectfields projectfields = Projectfields
+                .builder()
+                .name("API Codegen")
+                .team(Team.justId(teamMutationResponse.getData().getId()))
+                .build();
+
+        Amplify.API.mutate(
+                PROJECT_API_NAME,
+                projectfields,
+                MutationType.CREATE,
+                projectMutationListener
+        );
+
+        GraphQLResponse<Projectfields> projectMutationResponse =
+                projectMutationListener.awaitTerminalEvent().getResponse();
+        assertFalse(projectMutationResponse.hasErrors());
+        assertTrue(projectMutationResponse.hasData());
+
+        Amplify.API.query(
+                PROJECT_API_NAME,
+                Projectfields.class,
+                projectMutationResponse.getData().getId(),
+                projectQueryListener
+        );
+
+        GraphQLResponse<Projectfields> projectQueryResponse =
+                projectQueryListener.awaitTerminalEvent().getResponse();
+        assertEquals(team, projectQueryResponse.getData().getTeam());
+
+        // Validate that subscription received the newly created person.
+        List<GraphQLResponse<Projectfields>> subscriptionResponses = projectSubscriptionListener.awaitItems();
+        assertEquals(1, subscriptionResponses.size());
+        assertFalse(subscriptionResponses.get(0).hasErrors());
+        Projectfields responseProjectfields = subscriptionResponses.get(0).getData();
+        assertEquals(projectfields.getName(), responseProjectfields.getName());
+        assertEquals(team, responseProjectfields.getTeam());
+
+        // Cancel the subscription.
+        operation.cancel();
+
+        // Ensure that onComplete() is called as a response to canceling
+        // the operation.
+        projectSubscriptionListener.awaitCompletion();
     }
 }

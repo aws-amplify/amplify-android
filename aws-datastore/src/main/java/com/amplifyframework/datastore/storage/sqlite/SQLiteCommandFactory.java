@@ -17,19 +17,25 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.StringUtils;
 
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A factory that produces the SQLite commands for a given
@@ -37,32 +43,29 @@ import java.util.List;
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
 
-    // the singleton instance.
-    private static SQLiteCommandFactory singletonInstance;
-
     // Delimiter used in the SQLite commands.
     private static final String SQLITE_COMMAND_DELIMITER = " ";
 
-    private SQLiteCommandFactory() {
-    }
+    // Connection handle to a Sqlite Database.
+    private final SQLiteDatabase databaseConnectionHandle;
 
     /**
-     * Retrieves the singleton instance of the SQLiteCommandFactory.
-     * @return the singleton instance of the SQLiteCommandFactory.
+     * Default constructor.
      */
-    public static synchronized SQLiteCommandFactory getInstance() {
-        if (singletonInstance == null) {
-            singletonInstance = new SQLiteCommandFactory();
-        }
-        return singletonInstance;
+    SQLiteCommandFactory() {
+        this.databaseConnectionHandle = null;
     }
 
     /**
-     * Generates the CREATE TABLE SQL command from the {@link ModelSchema}.
-     *
-     * @param modelSchema the schema of a {@link Model}
-     *                    for which a CREATE TABLE SQL command needs to be generated.
-     * @return the CREATE TABLE SQL command
+     * Constructor with databaseConnectionHandle.
+     * @param databaseConnectionHandle connection to a SQLiteDatabase.
+     */
+    SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
+        this.databaseConnectionHandle = databaseConnectionHandle;
+    }
+
+    /**
+     * {@inheritDoc}
      */
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
@@ -88,57 +91,49 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     /**
-     * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
-     *
-     * @param modelSchema the schema of a {@link Model}
-     *                    for which a CREATE INDEX SQL command needs to be generated.
-     * @return the CREATE INDEX SQL command
+     * {@inheritDoc}
      */
     @Override
-    public SqlCommand createIndexFor(@NonNull ModelSchema modelSchema) {
-        final ModelIndex modelIndex = modelSchema.getModelIndex();
-        if (modelIndex == null ||
-            TextUtils.isEmpty(modelIndex.getIndexName()) ||
-            modelIndex.getIndexFieldNames() == null ||
-            modelIndex.getIndexFieldNames().isEmpty()) {
-            return null;
-        }
+    public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        Set<SqlCommand> indexCommands = new HashSet<>();
 
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
-            .append(modelIndex.getIndexName()).append(" ON ")
-            .append(modelSchema.getName())
-            .append(SQLITE_COMMAND_DELIMITER);
+        for (ModelIndex modelIndex : modelSchema.getIndexes().values()) {
+            final StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
+                    .append(modelIndex.getIndexName()).append(" ON ")
+                    .append(table.getName())
+                    .append(SQLITE_COMMAND_DELIMITER);
 
-        stringBuilder.append("(");
-        Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
-        while (iterator.hasNext()) {
-            final String indexColumnName = iterator.next();
-            stringBuilder.append(indexColumnName);
-            if (iterator.hasNext()) {
-                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+            stringBuilder.append("(");
+            Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
+            while (iterator.hasNext()) {
+                final String indexColumnName = iterator.next();
+                stringBuilder.append(indexColumnName);
+                if (iterator.hasNext()) {
+                    stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+                }
             }
+            stringBuilder.append(");");
+            indexCommands.add(new SqlCommand(table.getName(), stringBuilder.toString()));
         }
-        stringBuilder.append(");");
-        return new SqlCommand(modelSchema.getName(), stringBuilder.toString());
+
+        return Immutable.of(indexCommands);
     }
 
     /**
-     * Generates the INSERT INTO command in a raw string representation and a compiled
-     * prepared statement that can be bound later with inputs.
+     * {@inheritDoc}
      *
-     * @param tableName   name of the table
-     * @param modelSchema schema of the model
-     * @return the SQL command that encapsulates the INSERT INTO command
+     * This method should be invoked from a worker thread and not from the main thread
+     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @WorkerThread
     @Override
-    public SqlCommand insertFor(@NonNull String tableName,
-                                @NonNull ModelSchema modelSchema,
-                                @NonNull SQLiteDatabase writableDatabaseConnectionHandle) {
+    public SqlCommand insertFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("INSERT INTO ");
-        stringBuilder.append(tableName);
+        stringBuilder.append(table.getName());
         stringBuilder.append(" (");
         final List<SQLiteColumn> columns = table.getSortedColumns();
         final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
@@ -163,8 +158,64 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         stringBuilder.append(")");
         final String preparedInsertStatement = stringBuilder.toString();
         final SQLiteStatement compiledInsertStatement =
-                writableDatabaseConnectionHandle.compileStatement(preparedInsertStatement);
-        return new SqlCommand(tableName, preparedInsertStatement, compiledInsertStatement);
+                databaseConnectionHandle.compileStatement(preparedInsertStatement);
+        return new SqlCommand(table.getName(), preparedInsertStatement, compiledInsertStatement);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * This method should be invoked from a worker thread and not from the main thread
+     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
+     */
+    @WorkerThread
+    @Override
+    public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                                  @NonNull T item) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder
+                .append("UPDATE ")
+                .append(table.getName())
+                .append(" SET ");
+        final List<ModelField> fields = modelSchema.getSortedFields();
+        final Iterator<ModelField> fieldsIterator = fields.iterator();
+        while (fieldsIterator.hasNext()) {
+            final ModelField field = fieldsIterator.next();
+            stringBuilder.append(field.getName()).append(" = ?");
+            if (fieldsIterator.hasNext()) {
+                stringBuilder.append(", ");
+            }
+        }
+
+        stringBuilder.append(" WHERE ")
+                .append(PrimaryKey.fieldName())
+                .append(" = ")
+                .append(StringUtils.doubleQuote(item.getId()))
+                .append(";");
+        final String preparedUpdateStatement = stringBuilder.toString();
+        final SQLiteStatement compiledUpdateStatement =
+                databaseConnectionHandle.compileStatement(preparedUpdateStatement);
+        return new SqlCommand(table.getName(), preparedUpdateStatement, compiledUpdateStatement);
+    }
+
+    /**
+     * {@inheritDoc}.
+     */
+    @Override
+    public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
+                                                  @NonNull T item) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        final StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder
+                .append("DELETE FROM ")
+                .append(table.getName())
+                .append(" WHERE ")
+                .append(PrimaryKey.fieldName())
+                .append(" = ")
+                .append(StringUtils.doubleQuote(item.getId()))
+                .append(";");
+        return new SqlCommand(table.getName(), stringBuilder.toString());
     }
 
     // Utility method to append columns in CREATE TABLE

@@ -15,10 +15,12 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.database.sqlite.SQLiteDatabase;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+
+import java.util.Set;
 
 /**
  * A factory that produces the SQLite commands from the
@@ -34,23 +36,42 @@ interface SQLCommandFactory {
     SqlCommand createTableFor(@NonNull ModelSchema modelSchema);
 
     /**
-     * Generates the CREATE INDEX SQL command from the {@link ModelSchema}.
+     * Generates the set of CREATE INDEX SQL commands from the {@link ModelSchema}.
      * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
      *                    for which a CREATE INDEX SQL command needs to be generated.
-     * @return the CREATE INDEX SQL command
+     * @return the set of CREATE INDEX SQL commands
      */
-    SqlCommand createIndexFor(@NonNull ModelSchema modelSchema);
+    Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
 
     /**
      * Generates the INSERT INTO command in a raw string representation and a compiled
      * prepared statement that can be bound later with inputs.
      *
-     * @param tableName name of the table
      * @param modelSchema schema of the model
-     * @param writableDatabaseConnectionHandle connection handle to writable database
      * @return the SQL command that encapsulates the INSERT INTO command
      */
-    SqlCommand insertFor(@NonNull String tableName,
-                         @NonNull ModelSchema modelSchema,
-                         @NonNull SQLiteDatabase writableDatabaseConnectionHandle);
+    SqlCommand insertFor(@NonNull ModelSchema modelSchema);
+
+    /**
+     * Generates the UPDATE command in a raw string representation and a compiled
+     * prepared statement that can be bound later with inputs.
+     *
+     * @param modelSchema schema of the model
+     * @param item the model instance
+     * @param <T> type of the model
+     * @return the SQL command that encapsulates the UPDATE command
+     */
+    <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
+                                           @NonNull T item);
+
+    /**
+     * Generates the DELETE command in a raw string representation.
+     *
+     * @param modelSchema schema of the model
+     * @param item the model instance
+     * @param <T> type of the model
+     * @return the SQL command that encapsulates the DELETE command
+     */
+    <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
+                                           @NonNull T item);
 }

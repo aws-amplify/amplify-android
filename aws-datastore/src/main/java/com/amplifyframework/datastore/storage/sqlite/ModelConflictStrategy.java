@@ -13,14 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics;
+package com.amplifyframework.datastore.storage.sqlite;
 
-import java.util.Map;
+/**
+ * The strategy to be used when there is an existing model with the same ID.
+ */
+enum ModelConflictStrategy {
+    /**
+     * Ignore the existing model. Just overwrite (update) it.
+     * This may be the appropriate strategy for an update to an existing item.
+     */
+    OVERWRITE_EXISTING,
 
-public class GeneralAnalyticsEvent extends AnalyticsEventType{
-
-    public GeneralAnalyticsEvent(String eventType, Map<String, String> properties) {
-        this.eventType = eventType;
-        this.properties = properties;
-    }
+    /**
+     * This situation constitutes an error, so we should throw an exception.
+     * This may be the appropriate strategy when inserting a newly created model instance.
+     */
+    THROW_EXCEPTION
 }

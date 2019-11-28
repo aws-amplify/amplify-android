@@ -42,4 +42,11 @@ public @interface BelongsTo {
      *         with this field.
      */
     Class<? extends Model> type();
+
+    /**
+     * Returns the target name of foreign key.
+     * This is the name that will be used to store foreign key.
+     * @return the target name of foreign key.
+     */
+    String targetName();
 }

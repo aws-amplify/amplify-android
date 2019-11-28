@@ -27,7 +27,6 @@ android {
         targetSdkVersion 29
         versionCode 1
         versionName "1.0"
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     compileOptions {
@@ -47,12 +46,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation project(path: ':core')
     implementation "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion"
-    implementation ("com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion") { transitive = true }
-
-    testImplementation "junit:junit:4.12"
-    androidTestImplementation "androidx.test:core:1.2.0" // Core Library
-    androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
-    androidTestImplementation "androidx.test.ext:junit:1.1.1"
 }
 
 project.afterEvaluate {

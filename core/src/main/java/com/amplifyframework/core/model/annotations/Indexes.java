@@ -16,38 +16,27 @@
 package com.amplifyframework.core.model.annotations;
 
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * {@link Index} annotates any {@link com.amplifyframework.core.model.Model}
- * with the index that will be configured in the persistence layer. For example,
- * this will dictate the indexes that will be created when a {@link com.amplifyframework.core.model.Model}
- * is stored in the Android {@link android.database.sqlite.SQLiteDatabase}.
+ * {@link Indexes} allows an instance of {@link com.amplifyframework.core.model.Model}
+ * to be annotated with multiple {@link Index}.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
- * retain {@link Index} at runtime for the reflection capabilities to work
+ * retain {@link Indexes} at runtime for the reflection capabilities to work
  * in order to check if this annotation is present for a field of a Model.
  *
  * {@link ElementType#TYPE} annotation is added to indicate
- * {@link Index} annotation can be used only on types (class, interface, enum).
+ * {@link Indexes} annotation can be used only on types (class, interface, enum).
  */
-@Repeatable(Indexes.class)
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
-public @interface Index {
+public @interface Indexes {
     /**
-     * Specify the array of fields of a {@link com.amplifyframework.core.model.Model}
-     * for which indexes need to be created in the persistent store.
-     * @return array of fields
+     * Specify the array of indexes of a {@link com.amplifyframework.core.model.Model}.
+     * @return array of indexes
      */
-    String[] fields();
-
-    /**
-     * Return the name of the index.
-     * @return the name of the index.
-     */
-    String name();
+    Index[] value();
 }
