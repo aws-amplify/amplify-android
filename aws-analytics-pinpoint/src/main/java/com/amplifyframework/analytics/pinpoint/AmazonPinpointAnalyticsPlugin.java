@@ -30,12 +30,13 @@ import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.pinpoint.model.ChannelType;
 import com.amplifyframework.ConfigurationException;
-import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
+import com.amplifyframework.analytics.GeneralAnalyticsEvent;
 import com.amplifyframework.core.plugin.PluginException;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -117,7 +118,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
+    public void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile) {
 
     }
 
@@ -145,7 +146,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent)
+    public void recordEvent(@NonNull GeneralAnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
 
         // TODO Distinguish between metrics and attributes
@@ -179,7 +180,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void flushEvents() {
-
+        pinpointManager.getAnalyticsClient().submitEvents();
     }
 
     /**
@@ -187,7 +188,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public String getPluginKey() {
-        return null;
+        return "AmazonPinpointAnalyticsPlugin";
     }
 
     /**
@@ -240,5 +241,56 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @Override
     public Object getEscapeHatch() {
         return null;
+    }
+
+    /**
+     * Pinpoint Analytics configuration in amplifyconfiguration.json contains following values
+     */
+    public enum PinpointConfigurationKeys {
+        /**
+         * The Pinpoint Application Id.
+         */
+        APP_ID("appId"),
+
+        /**
+         * the AWS {@link Regions} for the Pinpoint service.
+         */
+        REGION("region"),
+
+        /**
+         * Time interval after which the events are automatically submitted to pinpoint
+         */
+        AUTO_FLUSH_INTERVAL("autoFlushEventsInterval"),
+
+        /**
+         * Time interval after which to track lifecycle events.
+         */
+        AUTO_SESSION_TRACKING_INTERVAL("autoSessionTrackingInterval"),
+
+        /**
+         * Whether to track app lifecycle events automatically.
+         */
+        TRACK_APP_LIFECYCLE_EVENTS("trackAppLifecycleEvents");
+
+        /**
+         * The key this property is listed under in the config JSON.
+         */
+        private final String configurationKey;
+
+        /**
+         * Construct the enum with the config key.
+         * @param configurationKey The key this property is listed under in the config JSON.
+         */
+        PinpointConfigurationKeys(final String configurationKey) {
+            this.configurationKey = configurationKey;
+        }
+
+        /**
+         * Returns the key this property is listed under in the config JSON.
+         * @return The key as a string
+         */
+        public String getConfigurationKey() {
+            return configurationKey;
+        }
     }
 }

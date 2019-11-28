@@ -1,0 +1,22 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "Storage": {
+    "plugins": {
+      "AWSS3StoragePlugin": {
+        "Bucket": "my-s3-bucket",
+        "Region": "us-west-2",
+        "TransferAcceleration": true
+      }
+    }
+  },
+  "Analytics": {
+    "plugins": {
+      "AmazonPinpointAnalyticsPlugin": {
+        "AppId": "3d052968a8514a778b5a87891a98a4b7",
+        "Region": "us-west-2"
+      }
+    }
+  }
+}
+
