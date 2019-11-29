@@ -386,7 +386,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @SuppressWarnings("magicnumber")
     @Test
     public void querySavedDataWithNumericalPredicates() throws ParseException {
-        final Set<Person> savedModels = new HashSet<>();
+        final List<Person> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final Person person = Person.builder()
@@ -404,19 +404,23 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         QueryPredicate predicate = Person.AGE.ge(4).and(Person.AGE.lt(7))
                 .or(Person.AGE.eq(1).and(Person.AGE.ne(7)));
         Iterator<Person> result = queryModel(Person.class, predicate);
-        Set<Integer> ages = new HashSet<>();
+
+        Set<Person> expectedPersons = new HashSet<>();
+        expectedPersons.add(savedModels.get(1));
+        expectedPersons.add(savedModels.get(4));
+        expectedPersons.add(savedModels.get(5));
+        expectedPersons.add(savedModels.get(6));
+
+        Set<Person> actualPersons = new HashSet<>();
         while (result.hasNext()) {
             final Person person = result.next();
             assertNotNull(person);
             assertTrue("Unable to find expected item in the storage adapter.",
                     savedModels.contains(person));
-            ages.add(person.getAge());
+            actualPersons.add(person);
         }
-        assertEquals(4, ages.size());
-        assertTrue(ages.contains(1));
-        assertTrue(ages.contains(4));
-        assertTrue(ages.contains(5));
-        assertTrue(ages.contains(6));
+
+        assertEquals(expectedPersons, actualPersons);
     }
 
     /**
