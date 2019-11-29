@@ -22,6 +22,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Immutable;
@@ -32,6 +33,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
@@ -274,6 +276,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public <T extends Model> void query(@NonNull Class<T> itemClass,
                                         @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+        query(itemClass, null, queryResultsListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void query(@NonNull Class<T> itemClass,
+                                        @Nullable QueryPredicate predicate,
+                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         threadPool.submit(() -> {
             try {
                 Log.d(TAG, "Querying item for: " + itemClass.getSimpleName());
@@ -282,7 +294,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 
-                final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName());
+                final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), predicate);
                 if (cursor == null) {
                     throw new DataStoreException("Error in getting a cursor to the " +
                             "table for class: " + itemClass.getSimpleName());
@@ -420,7 +432,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
         final Iterator<Field> fieldIterator = classFields.iterator();
 
-        final Cursor cursor = getQueryAllCursor(tableName);
+        final Cursor cursor = getQueryAllCursor(tableName, null);
         if (cursor == null) {
             throw new IllegalAccessException("Error in getting a cursor to table: " +
                     tableName);
@@ -677,9 +689,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) {
+        return getQueryAllCursor(tableName, null);
+    }
+
+    @VisibleForTesting
+    Cursor getQueryAllCursor(@NonNull String tableName,
+                             @Nullable QueryPredicate predicate) {
         final ModelSchema schema = ModelSchemaRegistry.singleton()
                 .getModelSchemaForModelClass(tableName);
-        final String rawQuery = sqlCommandFactory.queryFor(schema).sqlStatement();
+        final String rawQuery = sqlCommandFactory.queryFor(schema, predicate).sqlStatement();
         return this.databaseConnectionHandle.rawQuery(rawQuery, null);
     }
 }

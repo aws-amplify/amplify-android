@@ -17,10 +17,12 @@ package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -76,10 +78,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         itemSaveListener.onResult(save);
     }
 
+    @Override
+    public <T extends Model> void query(
+            @NonNull final Class<T> itemClass,
+            @NonNull final ResultListener<Iterator<T>> queryResultsListener) {
+
+        query(itemClass, null, queryResultsListener);
+    }
+
     @SuppressWarnings("unchecked") // (T) item *is* checked, via isAssignableFrom().
     @Override
     public <T extends Model> void query(
             @NonNull final Class<T> itemClass,
+            @Nullable final QueryPredicate predicate,
             @NonNull final ResultListener<Iterator<T>> queryResultsListener) {
 
         List<T> result = new ArrayList<>();
