@@ -170,6 +170,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(BelongsTo.class)) {
             BelongsTo association = field.getAnnotation(BelongsTo.class);
             return ModelAssociation.builder()
+                    .name(BelongsTo.class.getSimpleName())
                     .targetName(association.targetName())
                     .associatedType(association.type().getSimpleName())
                     .build();
@@ -177,6 +178,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(HasOne.class)) {
             HasOne association = field.getAnnotation(HasOne.class);
             return ModelAssociation.builder()
+                    .name(HasOne.class.getSimpleName())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
@@ -184,6 +186,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(HasMany.class)) {
             HasMany association = field.getAnnotation(HasMany.class);
             return ModelAssociation.builder()
+                    .name(HasMany.class.getSimpleName())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
