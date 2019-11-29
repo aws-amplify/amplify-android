@@ -37,7 +37,7 @@ public class AnalyticsPinpointInstrumentedTest {
     private static final String TAG = AnalyticsPinpointInstrumentedTest.class.getSimpleName();
 
     /**
-     * Configure the Amplify framework, if that hasn't already happened in this process instance.
+     * Configure the Amplify framework.
      */
     @BeforeClass
     public static void setUp() {
@@ -62,5 +62,6 @@ public class AnalyticsPinpointInstrumentedTest {
                 .add("DemoDoubleProperty2", 2.0)
                 .build());
         Amplify.Analytics.recordEvent(event);
+        // TODO Add verifications
     }
 }

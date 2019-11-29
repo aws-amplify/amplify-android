@@ -21,19 +21,16 @@ abstract class AnalyticsEventType {
 
     private Properties properties = null;
 
+    AnalyticsEventType(String eventType, Properties properties) {
+        this.eventType = eventType;
+        this.properties = properties;
+    }
+
     public String getEventType() {
         return eventType;
     }
 
-    public void setEventType(String eventType) {
-        this.eventType = eventType;
-    }
-
     public Properties getProperties() {
         return properties;
-    }
-
-    public void setProperties(Properties properties) {
-        this.properties = properties;
     }
 }

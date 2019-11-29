@@ -27,7 +27,6 @@ public class GeneralAnalyticsEvent extends AnalyticsEventType {
      * @param properties event properties.
      */
     public GeneralAnalyticsEvent(String eventType, Properties properties) {
-        setEventType(eventType);
-        setProperties(properties);
+        super(eventType, properties);
     }
 }
