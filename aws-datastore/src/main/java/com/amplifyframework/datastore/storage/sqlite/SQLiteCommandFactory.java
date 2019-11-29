@@ -58,9 +58,6 @@ import java.util.Set;
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
 
-    // Delimiter used in the SQLite commands.
-    private static final String SQLITE_COMMAND_DELIMITER = " ";
-
     // Connection handle to a Sqlite Database.
     private final SQLiteDatabase databaseConnectionHandle;
 
@@ -86,18 +83,19 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("CREATE TABLE IF NOT EXISTS ")
-            .append(table.getName())
-            .append(SQLITE_COMMAND_DELIMITER);
+        stringBuilder.append("CREATE TABLE IF NOT EXISTS")
+                .append(SqlKeyword.DELIMITER)
+                .append(table.getName())
+                .append(SqlKeyword.DELIMITER);
         if (CollectionUtils.isNullOrEmpty(table.getColumns())) {
             return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 
-        stringBuilder.append("(");
-        appendColumns(stringBuilder, table);
+        stringBuilder.append("(").append(parseColumns(table));
         if (!table.getForeignKeys().isEmpty()) {
-            stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
-            appendForeignKeys(stringBuilder, table);
+            stringBuilder.append(",")
+                    .append(SqlKeyword.DELIMITER)
+                    .append(parseForeignKeys(table));
         }
         stringBuilder.append(");");
 
@@ -115,10 +113,14 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         for (ModelIndex modelIndex : modelSchema.getIndexes().values()) {
             final StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("CREATE INDEX IF NOT EXISTS ")
-                    .append(modelIndex.getIndexName()).append(" ON ")
+            stringBuilder.append("CREATE INDEX IF NOT EXISTS")
+                    .append(SqlKeyword.DELIMITER)
+                    .append(modelIndex.getIndexName())
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.ON)
+                    .append(SqlKeyword.DELIMITER)
                     .append(table.getName())
-                    .append(SQLITE_COMMAND_DELIMITER);
+                    .append(SqlKeyword.DELIMITER);
 
             stringBuilder.append("(");
             Iterator<String> iterator = modelIndex.getIndexFieldNames().iterator();
@@ -126,7 +128,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 final String indexColumnName = iterator.next();
                 stringBuilder.append(indexColumnName);
                 if (iterator.hasNext()) {
-                    stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+                    stringBuilder.append(",").append(SqlKeyword.DELIMITER);
                 }
             }
             stringBuilder.append(");");
@@ -167,22 +169,22 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
             columns.addAll(ownedTable.getSortedColumns());
 
-            String joinType = foreignKey.isNonNull()
-                    ? SqlCommand.INNER_JOIN_CLAUSE
-                    : SqlCommand.LEFT_JOIN_CLAUSE;
+            SqlKeyword joinType = foreignKey.isNonNull()
+                    ? SqlKeyword.INNER_JOIN
+                    : SqlKeyword.LEFT_JOIN;
 
             joinStatement.append(joinType)
-                    .append(SqlCommand.DELIMITER)
+                    .append(SqlKeyword.DELIMITER)
                     .append(ownedTableName)
-                    .append(SqlCommand.DELIMITER)
-                    .append(SqlCommand.ON_CLAUSE)
-                    .append(SqlCommand.DELIMITER)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.ON)
+                    .append(SqlKeyword.DELIMITER)
                     .append(foreignKey.getColumnName())
-                    .append("=")
+                    .append(SqlKeyword.EQUAL)
                     .append(ownedTable.getPrimaryKey().getColumnName());
 
             if (foreignKeyIterator.hasNext()) {
-                joinStatement.append(SqlCommand.DELIMITER);
+                joinStatement.append(SqlKeyword.DELIMITER);
             }
         }
 
@@ -194,41 +196,41 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
             // Alias primary keys to avoid duplicate column names
             if (column.isPrimaryKey()) {
-                selectColumns.append(SqlCommand.DELIMITER)
-                        .append(SqlCommand.AS_CLAUSE)
-                        .append(SqlCommand.DELIMITER)
+                selectColumns.append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.AS)
+                        .append(SqlKeyword.DELIMITER)
                         .append(column.getAliasedName());
             }
 
             if (columnsIterator.hasNext()) {
-                selectColumns.append(",").append(SqlCommand.DELIMITER);
+                selectColumns.append(",").append(SqlKeyword.DELIMITER);
             }
         }
 
         // Start SELECT statement.
         // SELECT columns FROM tableName
-        rawQuery.append(SqlCommand.SELECT_STATEMENT)
-                .append(SqlCommand.DELIMITER)
+        rawQuery.append(SqlKeyword.SELECT)
+                .append(SqlKeyword.DELIMITER)
                 .append(selectColumns.toString())
-                .append(SqlCommand.DELIMITER)
-                .append(SqlCommand.FROM_CLAUSE)
-                .append(SqlCommand.DELIMITER)
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.FROM)
+                .append(SqlKeyword.DELIMITER)
                 .append(tableName);
 
         // Append join statements.
         // INNER JOIN tableOne ON tableName.id=tableOne.foreignKey
         // LEFT JOIN tableTwo ON tableName.id=tableTwo.foreignKey
         if (!joinStatement.toString().isEmpty()) {
-            rawQuery.append(SqlCommand.DELIMITER)
+            rawQuery.append(SqlKeyword.DELIMITER)
                     .append(joinStatement.toString());
         }
 
         // Append predicates.
         // WHERE condition
         if (predicate != null) {
-            rawQuery.append(SqlCommand.DELIMITER)
-                    .append(SqlCommand.WHERE_STATEMENT)
-                    .append(SqlCommand.DELIMITER)
+            rawQuery.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.WHERE)
+                    .append(SqlKeyword.DELIMITER)
                     .append(parsePredicate(predicate));
         }
 
@@ -248,22 +250,25 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     public SqlCommand insertFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("INSERT INTO ");
-        stringBuilder.append(table.getName());
-        stringBuilder.append(" (");
+        stringBuilder.append("INSERT INTO")
+                .append(SqlKeyword.DELIMITER)
+                .append(table.getName())
+                .append(SqlKeyword.DELIMITER)
+                .append("(");
         final List<SQLiteColumn> columns = table.getSortedColumns();
         final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
         while (columnsIterator.hasNext()) {
             final String columnName = columnsIterator.next().getName();
             stringBuilder.append(columnName);
             if (columnsIterator.hasNext()) {
-                stringBuilder.append(", ");
-            } else {
-                stringBuilder.append(")");
+                stringBuilder.append(",").append(SqlKeyword.DELIMITER);
             }
         }
-        stringBuilder.append(" VALUES ");
-        stringBuilder.append("(");
+        stringBuilder.append(")")
+                .append(SqlKeyword.DELIMITER)
+                .append("VALUES")
+                .append(SqlKeyword.DELIMITER)
+                .append("(");
         for (int i = 0; i < columns.size(); i++) {
             if (i == columns.size() - 1) {
                 stringBuilder.append("?");
@@ -334,33 +339,36 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         return new SqlCommand(table.getName(), stringBuilder.toString());
     }
 
-    // Utility method to append columns in CREATE TABLE
-    private void appendColumns(StringBuilder stringBuilder, SQLiteTable table) {
+    // Utility method to parse columns in CREATE TABLE
+    private StringBuilder parseColumns(SQLiteTable table) {
+        final StringBuilder builder = new StringBuilder();
         final Iterator<SQLiteColumn> columnsIterator = table.getSortedColumns().iterator();
         while (columnsIterator.hasNext()) {
             final SQLiteColumn column = columnsIterator.next();
             final String columnName = column.getName();
 
-            stringBuilder.append(columnName)
-                    .append(SQLITE_COMMAND_DELIMITER)
+            builder.append(columnName)
+                    .append(SqlKeyword.DELIMITER)
                     .append(column.getColumnType());
 
             if (column.isPrimaryKey()) {
-                stringBuilder.append(SQLITE_COMMAND_DELIMITER + "PRIMARY KEY");
+                builder.append(SqlKeyword.DELIMITER).append("PRIMARY KEY");
             }
 
             if (column.isNonNull()) {
-                stringBuilder.append(SQLITE_COMMAND_DELIMITER + "NOT NULL");
+                builder.append(SqlKeyword.DELIMITER).append("NOT NULL");
             }
 
             if (columnsIterator.hasNext()) {
-                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+                builder.append(",").append(SqlKeyword.DELIMITER);
             }
         }
+        return builder;
     }
 
-    // Utility method to append foreign key references in CREATE TABLE
-    private void appendForeignKeys(StringBuilder stringBuilder, SQLiteTable table) {
+    // Utility method to parse foreign key references in CREATE TABLE
+    private StringBuilder parseForeignKeys(SQLiteTable table) {
+        final StringBuilder builder = new StringBuilder();
         final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
         while (foreignKeyIterator.hasNext()) {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
@@ -372,126 +380,30 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .getPrimaryKey()
                     .getName();
 
-            stringBuilder
-                .append("FOREIGN KEY" + SQLITE_COMMAND_DELIMITER)
-                .append("(" + connectedName + ")")
-                .append(SQLITE_COMMAND_DELIMITER + "REFERENCES" + SQLITE_COMMAND_DELIMITER)
-                .append(connectedType)
-                .append("(" + connectedId + ")");
+            builder.append("FOREIGN KEY")
+                    .append(SqlKeyword.DELIMITER)
+                    .append("(" + connectedName + ")")
+                    .append(SqlKeyword.DELIMITER)
+                    .append("REFERENCES")
+                    .append(SqlKeyword.DELIMITER)
+                    .append(connectedType)
+                    .append("(" + connectedId + ")");
 
             if (foreignKeyIterator.hasNext()) {
-                stringBuilder.append("," + SQLITE_COMMAND_DELIMITER);
+                builder.append(",").append(SqlKeyword.DELIMITER);
             }
         }
+        return builder;
     }
 
-    //TODO: Just... FIX THIS HORROR PLEASE
-    private String parsePredicate(QueryPredicate queryPredicate) {
-        StringBuilder builder = new StringBuilder();
+    // Utility method to recursively parse a given predicate.
+    private StringBuilder parsePredicate(QueryPredicate queryPredicate) {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
-            final String field = qpo.field();
-            final QueryOperator op = qpo.operator();
-            String opString;
-            Object value;
-            switch (op.type()) {
-                case BETWEEN:
-                    BetweenQueryOperator betweenOp = (BetweenQueryOperator) op;
-                    Object start = betweenOp.start();
-                    Object end = betweenOp.end();
-                    QueryPredicateOperation gt = new QueryPredicateOperation(field,
-                            new GreaterThanQueryOperator(start));
-                    QueryPredicateOperation lt = new QueryPredicateOperation(field,
-                            new LessThanQueryOperator(end));
-                    return parsePredicate(gt.and(lt));
-                case CONTAINS:
-                    opString = "IN";
-                    value = ((ContainsQueryOperator) op).value();
-                    return builder.append(value.toString())
-                            .append(SqlCommand.DELIMITER)
-                            .append(opString) //TODO: Properly deal with type
-                            .append(SqlCommand.DELIMITER)
-                            .append(field) //TODO: TEST
-                            .toString();
-                case BEGINS_WITH:
-                    opString = "LIKE";
-                    value = ((BeginsWithQueryOperator) op).value();
-                    return builder.append(field)
-                            .append(SqlCommand.DELIMITER)
-                            .append(opString) //TODO: Properly deal with type
-                            .append(SqlCommand.DELIMITER)
-                            .append("\'")
-                            .append(value.toString()) //TODO: TEST
-                            .append("%\'")
-                            .toString();
-                case EQUAL:
-                    value = ((EqualQueryOperator) op).value();
-                    opString = "=";
-                    break;
-                case NOT_EQUAL:
-                    value = ((NotEqualQueryOperator) op).value();
-                    opString = "!=";
-                    break;
-                case LESS_THAN:
-                    value = ((LessThanQueryOperator) op).value();
-                    opString = "<";
-                    break;
-                case GREATER_THAN:
-                    value = ((GreaterThanQueryOperator) op).value();
-                    opString = ">";
-                    break;
-                case LESS_OR_EQUAL:
-                    value = ((LessOrEqualQueryOperator) op).value();
-                    opString = "<=";
-                    break;
-                case GREATER_OR_EQUAL:
-                    value = ((GreaterOrEqualQueryOperator) op).value();
-                    opString = ">=";
-                    break;
-                default:
-                    throw new UnsupportedTypeException(
-                            "Tried to parse an unsupported QueryPredicateOperation",
-                            null,
-                            "Try changing to one of the supported values from " +
-                                    "QueryPredicateOperation.Type enum.",
-                            false
-                    );
-            }
-            return builder.append(field)
-                    .append(SqlCommand.DELIMITER)
-                    .append(opString) //TODO: Properly deal with type
-                    .append(SqlCommand.DELIMITER)
-                    .append(value.toString()) //TODO: TEST
-                    .toString();
+            return parsePredicateOperation(qpo);
         } else if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
-            switch (qpg.type()) {
-                case NOT:
-                    return builder.append("NOT")
-                            .append(SqlCommand.DELIMITER)
-                            .append(parsePredicate(qpg.predicates().get(0)))
-                            .toString();
-                case OR:
-                case AND:
-                    Iterator<QueryPredicate> predicateIterator = qpg.predicates().iterator();
-                    while (predicateIterator.hasNext()) {
-                        builder.append(parsePredicate(predicateIterator.next()));
-                        if (predicateIterator.hasNext()) {
-                            builder.append(SqlCommand.DELIMITER)
-                                    .append(qpg.type().toString())
-                                    .append(SqlCommand.DELIMITER);
-                        }
-                    }
-                    return "(" + builder.toString() + ")";
-                default:
-                    throw new UnsupportedTypeException(
-                            "Tried to parse an unsupported QueryPredicateGroup",
-                            null,
-                            "Try changing to one of the supported values from " +
-                                    "QueryPredicateGroup.Type enum.",
-                            false
-                    );
-            }
+            return parsePredicateGroup(qpg);
         } else {
             throw new UnsupportedTypeException(
                     "Tried to parse an unsupported QueryPredicate",
@@ -500,6 +412,117 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                             "QueryPredicateOperation, QueryPredicateGroup.",
                     false
             );
+        }
+    }
+
+    // Utility method to recursively parse a given predicate operation.
+    private StringBuilder parsePredicateOperation(QueryPredicateOperation operation) {
+        final StringBuilder builder = new StringBuilder();
+        final String field = operation.field();
+        final QueryOperator op = operation.operator();
+        switch (op.type()) {
+            case BETWEEN:
+                BetweenQueryOperator betweenOp = (BetweenQueryOperator) op;
+                Object start = betweenOp.start();
+                Object end = betweenOp.end();
+                QueryPredicateOperation gt = new QueryPredicateOperation(field,
+                        new GreaterThanQueryOperator(start));
+                QueryPredicateOperation lt = new QueryPredicateOperation(field,
+                        new LessThanQueryOperator(end));
+                return parsePredicate(gt.and(lt));
+            case CONTAINS:
+                ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
+                return builder.append(containsOp.value())
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.IN)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(field);
+            case BEGINS_WITH:
+                BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
+                return builder.append(field)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.LIKE)
+                        .append(SqlKeyword.DELIMITER)
+                        .append("\'")
+                        .append(beginsWithOp.value().toString() + "%")
+                        .append("\'");
+            case EQUAL:
+            case NOT_EQUAL:
+            case LESS_THAN:
+            case GREATER_THAN:
+            case LESS_OR_EQUAL:
+            case GREATER_OR_EQUAL:
+                return builder.append(field)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.fromQueryOperator(op.type()))
+                        .append(SqlKeyword.DELIMITER)
+                        .append(getOperatorValue(op));
+            default:
+                throw new UnsupportedTypeException(
+                        "Tried to parse an unsupported QueryPredicateOperation",
+                        null,
+                        "Try changing to one of the supported values from " +
+                                "QueryPredicateOperation.Type enum.",
+                        false
+                );
+        }
+    }
+
+    // Utility method to recursively parse a given predicate group.
+    private StringBuilder parsePredicateGroup(QueryPredicateGroup group) {
+        final StringBuilder builder = new StringBuilder();
+        switch (group.type()) {
+            case NOT:
+                return builder.append(SqlKeyword.fromQueryPredicateGroup(group.type()))
+                        .append(SqlKeyword.DELIMITER)
+                        .append(parsePredicate(group.predicates().get(0)));
+            case OR:
+            case AND:
+                builder.append("(");
+                Iterator<QueryPredicate> predicateIterator = group.predicates().iterator();
+                while (predicateIterator.hasNext()) {
+                    builder.append(parsePredicate(predicateIterator.next()));
+                    if (predicateIterator.hasNext()) {
+                        builder.append(SqlKeyword.DELIMITER)
+                                .append(SqlKeyword.fromQueryPredicateGroup(group.type()))
+                                .append(SqlKeyword.DELIMITER);
+                    }
+                }
+                return builder.append(")");
+            default:
+                throw new UnsupportedTypeException(
+                        "Tried to parse an unsupported QueryPredicateGroup",
+                        null,
+                        "Try changing to one of the supported values from " +
+                                "QueryPredicateGroup.Type enum.",
+                        false
+                );
+        }
+    }
+
+    // Utility method to extract the parameter value from a given operator.
+    private Object getOperatorValue(QueryOperator qOp) throws UnsupportedTypeException {
+        switch (qOp.type()) {
+            case NOT_EQUAL:
+                return ((NotEqualQueryOperator) qOp).value();
+            case EQUAL:
+                return ((EqualQueryOperator) qOp).value();
+            case LESS_OR_EQUAL:
+                return ((LessOrEqualQueryOperator) qOp).value();
+            case LESS_THAN:
+                return ((LessThanQueryOperator) qOp).value();
+            case GREATER_OR_EQUAL:
+                return ((GreaterOrEqualQueryOperator) qOp).value();
+            case GREATER_THAN:
+                return ((GreaterThanQueryOperator) qOp).value();
+            default:
+                throw new UnsupportedTypeException(
+                        "Tried to parse an unsupported QueryOperator type",
+                        null,
+                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                                "in the AppSyncGraphQLRequestFactory.",
+                        false
+                );
         }
     }
 }
