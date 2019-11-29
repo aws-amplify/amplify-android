@@ -50,10 +50,17 @@
         },
         "projectApi": {
           "__comment": "This is in David's developer account, right now.",
-          "Endpoint": "https://yfztylfvg5bxxhjgjc7u7czmmq.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Endpoint": "https://xsbadeypwbgozoy6hpffr2utom.appsync-api.us-east-1.amazonaws.com/graphql",
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-rke4gdhdabgg7jutjbspfdrple"
+          "ApiKey": "da2-66qwellewfcjfefzjww56luqs4"
+        },
+        "blogApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://pzoz25f54fbqxobwew5opcxbkm.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-3eha7ayvijdolcak6bmjqxxiie"
         }
       }
     }

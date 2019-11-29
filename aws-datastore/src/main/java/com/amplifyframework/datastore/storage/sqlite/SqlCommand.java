@@ -27,7 +27,6 @@ import java.util.Objects;
  * create a SQL table.
  */
 final class SqlCommand {
-
     // The name of the SQL table
     private final String tableName;
 

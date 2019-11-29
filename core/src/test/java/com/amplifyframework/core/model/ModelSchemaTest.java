@@ -43,34 +43,29 @@ public final class ModelSchemaTest {
     public void modelSchemaIsGeneratedForPersonModel() {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
-            .targetName("id")
             .targetType("ID")
             .name("id")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
             .build());
         expectedFields.put("first_name", ModelField.builder()
-            .targetName("first_name")
             .targetType("String")
             .name("first_name")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
             .build());
         expectedFields.put("last_name", ModelField.builder()
-            .targetName("last_name")
             .targetType("String")
             .name("last_name")
             .type(JavaFieldType.STRING.stringValue())
             .isRequired(true)
             .build());
         expectedFields.put("dob", ModelField.builder()
-            .targetName("dob")
             .targetType("AWSDate")
             .name("dob")
             .type(JavaFieldType.DATE.stringValue())
             .build());
         expectedFields.put("age", ModelField.builder()
-            .targetName("age")
             .targetType("Int")
             .name("age")
             .type(JavaFieldType.INTEGER.stringValue())
@@ -79,7 +74,6 @@ public final class ModelSchemaTest {
             .name("relationship")
             .type("MaritalStatus")
             .targetType("MaritalStatus")
-            .targetName("relationship")
             .isEnum(true)
             .build());
 
@@ -89,7 +83,6 @@ public final class ModelSchemaTest {
                 .build();
 
         ModelSchema expectedModelSchema = ModelSchema.builder()
-            .targetModelName("Person")
             .fields(expectedFields)
             .indexes(Collections.singletonMap("first_name_and_age_based_index", expectedModelIndex))
             .name("Person")

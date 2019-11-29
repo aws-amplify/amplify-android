@@ -18,21 +18,23 @@ package com.amplifyframework.testmodels;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the Team type in your schema. */
+/** This is an auto generated class representing the projectfields type in your schema. */
 @SuppressWarnings("all")
 @ModelConfig
-public final class Team implements Model {
+public final class Projectfields implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField NAME = QueryField.field("name");
+    public static final QueryField TEAM = QueryField.field("team");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String name;
+    private final @ModelField(targetType="String") String name;
+    private final @ModelField(targetType="Team") @BelongsTo(targetName = "teamID", type = Team.class) Team team;
     public String getId() {
         return id;
     }
@@ -41,9 +43,14 @@ public final class Team implements Model {
         return name;
     }
 
-    private Team(String id, String name) {
+    public Team getTeam() {
+        return team;
+    }
+
+    private Projectfields(String id, String name, Team team) {
         this.id = id;
         this.name = name;
+        this.team = team;
     }
 
     @Override
@@ -53,9 +60,10 @@ public final class Team implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Team team = (Team) obj;
-            return ObjectsCompat.equals(getId(), team.getId()) &&
-                    ObjectsCompat.equals(getName(), team.getName());
+            Projectfields projectfields = (Projectfields) obj;
+            return ObjectsCompat.equals(getId(), projectfields.getId()) &&
+                    ObjectsCompat.equals(getName(), projectfields.getName()) &&
+                    ObjectsCompat.equals(getTeam(), projectfields.getTeam());
         }
     }
 
@@ -64,12 +72,16 @@ public final class Team implements Model {
         return new StringBuilder()
                 .append(getId())
                 .append(getName())
+                .append(getTeam())
                 .hashCode();
+    }
+
+    public static BuildStep builder() {
+        return new Builder();
     }
 
     /**
      * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
-     *
      * This is a convenience method to return an instance of the object with only its ID populated
      * to be used in the context of a parameter in a delete mutation or referencing a foreign key
      * in a relationship.
@@ -77,7 +89,7 @@ public final class Team implements Model {
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
      */
-    public static Team justId(String id) {
+    public static Projectfields justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -87,48 +99,49 @@ public final class Team implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-
-        return new Team(
+        return new Projectfields(
                 id,
+                null,
                 null
         );
     }
 
-    public static NameStep builder() {
-        return new Builder();
+    public CopyOfBuilder copyOfBuilder() {
+        return new CopyOfBuilder(id,
+                name,
+                team);
     }
-
-    public NewBuilder newBuilder() {
-        return new NewBuilder(id,
-                name);
-    }
-    public interface NameStep {
-        BuildStep name(String name);
-    }
-
-
     public interface BuildStep {
-        Team build();
+        Projectfields build();
         BuildStep id(String id) throws IllegalArgumentException;
+        BuildStep name(String name);
+        BuildStep team(Team team);
     }
 
 
-    public static class Builder implements NameStep, BuildStep {
+    public static class Builder implements BuildStep {
         private String id;
         private String name;
+        private Team team;
         @Override
-        public Team build() {
+        public Projectfields build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Team(
+            return new Projectfields(
                     id,
-                    name);
+                    name,
+                    team);
         }
 
         @Override
         public BuildStep name(String name) {
-            Objects.requireNonNull(name);
             this.name = name;
+            return this;
+        }
+
+        @Override
+        public BuildStep team(Team team) {
+            this.team = team;
             return this;
         }
 
@@ -138,7 +151,7 @@ public final class Team implements Model {
          * @param id id
          * @return Current Builder instance, for fluent method chaining
          * @throws IllegalArgumentException Checks that ID is in the proper format
-         **/
+         */
         public BuildStep id(String id) throws IllegalArgumentException {
             this.id = id;
 
@@ -154,15 +167,21 @@ public final class Team implements Model {
     }
 
 
-    public final class NewBuilder extends Builder {
-        private NewBuilder(String id, String name) {
+    public final class CopyOfBuilder extends Builder {
+        private CopyOfBuilder(String id, String name, Team team) {
             super.id(id);
-            super.name(name);
+            super.name(name)
+                    .team(team);
         }
 
         @Override
-        public NewBuilder name(String name) {
-            return (NewBuilder) super.name(name);
+        public CopyOfBuilder name(String name) {
+            return (CopyOfBuilder) super.name(name);
+        }
+
+        @Override
+        public CopyOfBuilder team(Team team) {
+            return (CopyOfBuilder) super.team(team);
         }
     }
 

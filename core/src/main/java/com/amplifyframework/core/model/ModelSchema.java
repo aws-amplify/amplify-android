@@ -49,12 +49,12 @@ public final class ModelSchema {
     // Logcat Tag.
     private static final String TAG = ModelSchema.class.getSimpleName();
 
-    // Name of the Java Class of the Model.
+    // Name of the Model.
     private final String name;
 
-    // the name of the Model in the target. For example: the name of the
-    // model in the GraphQL Schema.
-    private final String targetModelName;
+    // The plural version of the name of the model.
+    // Useful for generating GraphQL list query names.
+    private final String pluralName;
 
     // A map that contains the fields of a Model.
     // The key is the name of the instance variable in the Java class that represents the Model
@@ -74,12 +74,12 @@ public final class ModelSchema {
     private final List<ModelField> sortedFields;
 
     private ModelSchema(String name,
-                        String targetModelName,
+                        String pluralName,
                         Map<String, ModelField> fields,
                         Map<String, ModelAssociation> associations,
                         Map<String, ModelIndex> indexes) {
         this.name = name;
-        this.targetModelName = targetModelName;
+        this.pluralName = pluralName;
         this.fields = fields;
         this.associations = associations;
         this.indexes = indexes;
@@ -107,18 +107,17 @@ public final class ModelSchema {
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
 
+            // Set the model name and plural name (null if not provided)
+            ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
+            final String modelName = clazz.getSimpleName();
+            final String modelPluralName = modelConfig != null && !modelConfig.pluralName().isEmpty()
+                    ? modelConfig.pluralName()
+                    : null;
+
             for (Annotation annotation : clazz.getAnnotations()) {
                 ModelIndex modelIndex = createModelIndex(annotation);
                 if (modelIndex != null) {
                     indexes.put(modelIndex.getIndexName(), modelIndex);
-                }
-            }
-
-            String targetModelName = null;
-            if (clazz.isAnnotationPresent(ModelConfig.class)) {
-                targetModelName = clazz.getAnnotation(ModelConfig.class).targetName();
-                if (targetModelName.isEmpty()) {
-                    targetModelName = clazz.getSimpleName();
                 }
             }
 
@@ -134,8 +133,8 @@ public final class ModelSchema {
             }
 
             return ModelSchema.builder()
-                    .name(clazz.getSimpleName())
-                    .targetModelName(targetModelName)
+                    .name(modelName)
+                    .pluralName(modelPluralName)
                     .fields(fields)
                     .associations(associations)
                     .indexes(indexes)
@@ -152,12 +151,10 @@ public final class ModelSchema {
         if (annotation != null) {
             final String fieldName = field.getName();
             final String fieldType = field.getType().getSimpleName();
-            final String targetName = annotation.targetName();
             final String targetType = annotation.targetType();
             return ModelField.builder()
                     .name(fieldName)
                     .type(fieldType)
-                    .targetName(targetName.isEmpty() ? fieldName : targetName)
                     .targetType(targetType.isEmpty() ? fieldType : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
@@ -173,14 +170,15 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(BelongsTo.class)) {
             BelongsTo association = field.getAnnotation(BelongsTo.class);
             return ModelAssociation.builder()
-                    .associatedName(association.targetName())
+                    .name(BelongsTo.class.getSimpleName())
+                    .targetName(association.targetName())
                     .associatedType(association.type().getSimpleName())
-                    .isOwner(true)
                     .build();
         }
         if (field.isAnnotationPresent(HasOne.class)) {
             HasOne association = field.getAnnotation(HasOne.class);
             return ModelAssociation.builder()
+                    .name(HasOne.class.getSimpleName())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
@@ -188,6 +186,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(HasMany.class)) {
             HasMany association = field.getAnnotation(HasMany.class);
             return ModelAssociation.builder()
+                    .name(HasMany.class.getSimpleName())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
@@ -217,13 +216,14 @@ public final class ModelSchema {
     }
 
     /**
-     * Returns the name of the Model in the target. For example: the name of the
-     * model in the GraphQL Schema.
-     * @return the name of the Model in the target. For example: the name of the
-     *         model in the GraphQL Schema.
+     * Returns the plural name of the Model in the target.
+     * Null if not explicitly annotated in ModelConfig.
+     *
+     * @return the plural name of the Model in the target
+     *         if explicitly provided.
      */
-    public String getTargetModelName() {
-        return targetModelName;
+    public String getPluralName() {
+        return pluralName;
     }
 
     /**
@@ -267,7 +267,6 @@ public final class ModelSchema {
 
     /**
      * Creates a map of the fields in this schema to the actual values in the provided object.
-     * NOTE: This uses the schema target names as the keys, not the local Java field names.
      * @param instance An instance of this model populated with values to map
      * @return a map of the target fields in the schema to the actual values in the provided object
      * @throws AmplifyException if the object does not match the fields in this schema
@@ -286,14 +285,15 @@ public final class ModelSchema {
                 Field privateField = instance.getClass().getDeclaredField(modelField.getName());
                 privateField.setAccessible(true);
 
-                if (getAssociations().containsKey(modelField.getName())) {
-                    ModelAssociation association = getAssociations().get(modelField.getName());
+                final ModelAssociation association = associations.get(modelField.getName());
+                if (association == null) {
+                    result.put(modelField.getName(), privateField.get(instance));
+                } else if (association.isOwner()) {
                     // All ModelAssociation targets are required to be instances of Model so this is a safe cast
                     Model target = (Model) privateField.get(instance);
-                    result.put(association.getAssociatedName(), target.getId());
-                } else {
-                    result.put(modelField.getTargetName(), privateField.get(instance));
+                    result.put(association.getTargetName(), target.getId());
                 }
+                // Ignore if field is associated, but is not a "belongsTo" relationship
             } catch (Exception exception) {
                 throw new AmplifyException("An invalid field was provided - " +
                         modelField.getName() +
@@ -304,7 +304,6 @@ public final class ModelSchema {
                         false);
             }
         }
-
         return result;
     }
 
@@ -357,7 +356,7 @@ public final class ModelSchema {
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
-        if (!ObjectsCompat.equals(targetModelName, that.targetModelName)) {
+        if (!ObjectsCompat.equals(pluralName, that.pluralName)) {
             return false;
         }
         if (!ObjectsCompat.equals(fields, that.fields)) {
@@ -376,7 +375,7 @@ public final class ModelSchema {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
-        result = 31 * result + (targetModelName != null ? targetModelName.hashCode() : 0);
+        result = 31 * result + (pluralName != null ? pluralName.hashCode() : 0);
         result = 31 * result + (fields != null ? fields.hashCode() : 0);
         result = 31 * result + (associations != null ? associations.hashCode() : 0);
         result = 31 * result + (indexes != null ? indexes.hashCode() : 0);
@@ -387,7 +386,7 @@ public final class ModelSchema {
     public String toString() {
         return "ModelSchema{" +
             "name='" + name + '\'' +
-            ", targetModelName='" + targetModelName + '\'' +
+            ", pluralName='" + pluralName + '\'' +
             ", fields=" + fields +
             ", associations" + associations +
             ", indexes=" + indexes +
@@ -399,7 +398,7 @@ public final class ModelSchema {
      */
     public static final class Builder {
         private String name;
-        private String targetModelName;
+        private String pluralName;
         private Map<String, ModelField> fields = new TreeMap<>();
         private Map<String, ModelAssociation> associations = new TreeMap<>();
         private Map<String, ModelIndex> indexes = new TreeMap<>();
@@ -415,14 +414,12 @@ public final class ModelSchema {
         }
 
         /**
-         * the name of the Model in the target. For example: the name of the
-         * model in the GraphQL Schema.
-         * @param targetModelName the name of the Model in the target. For example: the name of the
-         *                        model in the GraphQL Schema.
+         * the plural version of the name of the Model.
+         * @param pluralName the plural version of model name.
          * @return the builder object
          */
-        public Builder targetModelName(String targetModelName) {
-            this.targetModelName = targetModelName;
+        public Builder pluralName(String pluralName) {
+            this.pluralName = pluralName;
             return this;
         }
 
@@ -464,7 +461,7 @@ public final class ModelSchema {
          */
         public ModelSchema build() {
             return new ModelSchema(name,
-                    targetModelName,
+                    pluralName,
                     fields,
                     associations,
                     indexes);

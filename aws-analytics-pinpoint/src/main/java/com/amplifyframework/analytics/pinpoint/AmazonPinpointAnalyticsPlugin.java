@@ -28,6 +28,9 @@ import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
@@ -37,50 +40,96 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
-     * @param context An Android Context
      */
-    public AmazonPinpointAnalyticsPlugin(@NonNull Context context) {
+    public AmazonPinpointAnalyticsPlugin() {
         Log.d(TAG, "Amazon Pinpoint Analytics Plugin is initialized.");
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void enable() {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void disable() {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void recordEvent(@NonNull String eventName)
             throws AnalyticsException, ConfigurationException {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void recordEvent(@NonNull AnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile)
-            throws AnalyticsException, ConfigurationException {
+    public void registerGlobalProperties(Map<String, Object> properties) {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void unregisterGlobalProperties(Set<String> keys) {
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void flushEvents() {
+
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public String getPluginKey() {
         return null;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
 
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public Object getEscapeHatch() {
         return null;

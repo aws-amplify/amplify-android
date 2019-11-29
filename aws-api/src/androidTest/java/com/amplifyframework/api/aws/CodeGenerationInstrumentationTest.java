@@ -20,9 +20,11 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.testmodels.Blog;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
-import com.amplifyframework.testmodels.Project;
+import com.amplifyframework.testmodels.Post;
+import com.amplifyframework.testmodels.Projectfields;
 import com.amplifyframework.testmodels.Team;
 
 import org.junit.BeforeClass;
@@ -42,6 +44,7 @@ import static org.junit.Assert.assertTrue;
 public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
+    private static final String BLOG_API_NAME = "blogApi";
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -248,20 +251,24 @@ public final class CodeGenerationInstrumentationTest {
     }
 
     /**
-     * Creates a Team object, then creates a Project object with a belongsTo relationship with that Team and ensures
-     * that Query and Subscription on the Project both get the original Team object.
+     * The primary purpose of this test is to ensure that an all lower case model name works.
+     * TODO: Add mutate with condition and list with predicate since those are the ones that actually use the original
+     *       model name
      * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
      */
     @Test
-    public void belongsToCreateQuerySubscribe() throws Throwable {
+    public void belongsToRelationship() throws Throwable {
         LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<Project> projectMutationListener = new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<Project> projectQueryListener = new LatchedSingleResponseListener<>();
-        LatchedResponseStreamListener<Project> projectSubscriptionListener = new LatchedResponseStreamListener<>(1);
+        LatchedSingleResponseListener<Projectfields> projectMutationListener =
+                new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Projectfields> projectQueryListener =
+                new LatchedSingleResponseListener<>();
+        LatchedResponseStreamListener<Projectfields> projectSubscriptionListener =
+                new LatchedResponseStreamListener<>(1);
 
-        GraphQLOperation<Project> operation = Amplify.API.subscribe(
+        GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
                 PROJECT_API_NAME,
-                Project.class,
+                Projectfields.class,
                 null,
                 SubscriptionType.ON_CREATE,
                 projectSubscriptionListener
@@ -280,7 +287,7 @@ public final class CodeGenerationInstrumentationTest {
         assertFalse(teamMutationResponse.hasErrors());
         assertTrue(teamMutationResponse.hasData());
 
-        Project project = Project
+        Projectfields projectfields = Projectfields
                 .builder()
                 .name("API Codegen")
                 .team(Team.justId(teamMutationResponse.getData().getId()))
@@ -288,32 +295,34 @@ public final class CodeGenerationInstrumentationTest {
 
         Amplify.API.mutate(
                 PROJECT_API_NAME,
-                project,
+                projectfields,
                 MutationType.CREATE,
                 projectMutationListener
         );
 
-        GraphQLResponse<Project> projectMutationResponse = projectMutationListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<Projectfields> projectMutationResponse =
+                projectMutationListener.awaitTerminalEvent().getResponse();
         assertFalse(projectMutationResponse.hasErrors());
         assertTrue(projectMutationResponse.hasData());
 
         Amplify.API.query(
                 PROJECT_API_NAME,
-                Project.class,
+                Projectfields.class,
                 projectMutationResponse.getData().getId(),
                 projectQueryListener
         );
 
-        GraphQLResponse<Project> projectQueryResponse = projectQueryListener.awaitTerminalEvent().getResponse();
+        GraphQLResponse<Projectfields> projectQueryResponse =
+                projectQueryListener.awaitTerminalEvent().getResponse();
         assertEquals(team, projectQueryResponse.getData().getTeam());
 
         // Validate that subscription received the newly created person.
-        List<GraphQLResponse<Project>> subscriptionResponses = projectSubscriptionListener.awaitItems();
+        List<GraphQLResponse<Projectfields>> subscriptionResponses = projectSubscriptionListener.awaitItems();
         assertEquals(1, subscriptionResponses.size());
         assertFalse(subscriptionResponses.get(0).hasErrors());
-        Project responseProject = subscriptionResponses.get(0).getData();
-        assertEquals(project.getName(), responseProject.getName());
-        assertEquals(team, responseProject.getTeam());
+        Projectfields responseProjectfields = subscriptionResponses.get(0).getData();
+        assertEquals(projectfields.getName(), responseProjectfields.getName());
+        assertEquals(team, responseProjectfields.getTeam());
 
         // Cancel the subscription.
         operation.cancel();
@@ -321,5 +330,54 @@ public final class CodeGenerationInstrumentationTest {
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
         projectSubscriptionListener.awaitCompletion();
+    }
+
+    /**
+     * Tests the code generation for HAS_MANY relationship.
+     */
+    @Test
+    public void hasManyRelationship() {
+        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Blog> blogGetListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
+
+        Blog blog = Blog.builder()
+                .name("All Things Amplify")
+                .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
+                .build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                blog,
+                MutationType.CREATE,
+                blogCreateListener
+        );
+
+        Blog blogCreateResult = blogCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(blog, blogCreateResult);
+
+        Post post = Post.builder().title("Test 1").blog(blog).build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                post,
+                MutationType.CREATE,
+                postCreateListener
+        );
+
+        Post postCreateResult = postCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(post, postCreateResult);
+
+        Amplify.API.query(
+                BLOG_API_NAME,
+                Blog.class,
+                blog.getId(),
+                blogGetListener
+        );
+
+        Blog blogGetResult = blogGetListener.awaitTerminalEvent().getResponse().getData();
+        Post blogGetResultPost = blogGetResult.getPosts().get(0);
+        assertEquals(post.getId(), blogGetResultPost.getId());
+        assertEquals(post.getTitle(), blogGetResultPost.getTitle());
     }
 }

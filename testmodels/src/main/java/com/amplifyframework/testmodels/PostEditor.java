@@ -18,6 +18,8 @@ package com.amplifyframework.testmodels;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -25,25 +27,34 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the Team type in your schema. */
+/** This is an auto generated class representing the PostEditor type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig
-public final class Team implements Model {
+@ModelConfig(pluralName = "PostEditors")
+@Index(name = "byPost", fields = {"postID","editorID"})
+@Index(name = "byEditor", fields = {"editorID","postID"})
+public final class PostEditor implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField NAME = QueryField.field("name");
+    public static final QueryField POST = QueryField.field("post");
+    public static final QueryField EDITOR = QueryField.field("editor");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String name;
+    private final @ModelField(targetType="Post", isRequired = true) @BelongsTo(targetName = "postID", type = Post.class) Post post;
+    private final @ModelField(targetType="User", isRequired = true) @BelongsTo(targetName = "editorID", type = User.class) User editor;
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public Post getPost() {
+        return post;
     }
 
-    private Team(String id, String name) {
+    public User getEditor() {
+        return editor;
+    }
+
+    private PostEditor(String id, Post post, User editor) {
         this.id = id;
-        this.name = name;
+        this.post = post;
+        this.editor = editor;
     }
 
     @Override
@@ -53,9 +64,10 @@ public final class Team implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Team team = (Team) obj;
-            return ObjectsCompat.equals(getId(), team.getId()) &&
-                    ObjectsCompat.equals(getName(), team.getName());
+            PostEditor postEditor = (PostEditor) obj;
+            return ObjectsCompat.equals(getId(), postEditor.getId()) &&
+                    ObjectsCompat.equals(getPost(), postEditor.getPost()) &&
+                    ObjectsCompat.equals(getEditor(), postEditor.getEditor());
         }
     }
 
@@ -63,21 +75,25 @@ public final class Team implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getName())
+                .append(getPost())
+                .append(getEditor())
                 .hashCode();
+    }
+
+    public static PostStep builder() {
+        return new Builder();
     }
 
     /**
      * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
-     *
      * This is a convenience method to return an instance of the object with only its ID populated
      * to be used in the context of a parameter in a delete mutation or referencing a foreign key
      * in a relationship.
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     */
-    public static Team justId(String id) {
+     **/
+    public static PostEditor justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -87,48 +103,59 @@ public final class Team implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-
-        return new Team(
+        return new PostEditor(
                 id,
+                null,
                 null
         );
     }
 
-    public static NameStep builder() {
-        return new Builder();
+    public CopyOfBuilder copyOfBuilder() {
+        return new CopyOfBuilder(id,
+                post,
+                editor);
+    }
+    public interface PostStep {
+        EditorStep post(Post post);
     }
 
-    public NewBuilder newBuilder() {
-        return new NewBuilder(id,
-                name);
-    }
-    public interface NameStep {
-        BuildStep name(String name);
+
+    public interface EditorStep {
+        BuildStep editor(User editor);
     }
 
 
     public interface BuildStep {
-        Team build();
+        PostEditor build();
         BuildStep id(String id) throws IllegalArgumentException;
     }
 
 
-    public static class Builder implements NameStep, BuildStep {
+    public static class Builder implements PostStep, EditorStep, BuildStep {
         private String id;
-        private String name;
+        private Post post;
+        private User editor;
         @Override
-        public Team build() {
+        public PostEditor build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Team(
+            return new PostEditor(
                     id,
-                    name);
+                    post,
+                    editor);
         }
 
         @Override
-        public BuildStep name(String name) {
-            Objects.requireNonNull(name);
-            this.name = name;
+        public EditorStep post(Post post) {
+            Objects.requireNonNull(post);
+            this.post = post;
+            return this;
+        }
+
+        @Override
+        public BuildStep editor(User editor) {
+            Objects.requireNonNull(editor);
+            this.editor = editor;
             return this;
         }
 
@@ -154,16 +181,23 @@ public final class Team implements Model {
     }
 
 
-    public final class NewBuilder extends Builder {
-        private NewBuilder(String id, String name) {
+    public final class CopyOfBuilder extends Builder {
+        private CopyOfBuilder(String id, Post post, User editor) {
             super.id(id);
-            super.name(name);
+            super.post(post)
+                    .editor(editor);
         }
 
         @Override
-        public NewBuilder name(String name) {
-            return (NewBuilder) super.name(name);
+        public CopyOfBuilder post(Post post) {
+            return (CopyOfBuilder) super.post(post);
+        }
+
+        @Override
+        public CopyOfBuilder editor(User editor) {
+            return (CopyOfBuilder) super.editor(editor);
         }
     }
 
 }
+

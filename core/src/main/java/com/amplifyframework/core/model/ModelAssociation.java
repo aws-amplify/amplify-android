@@ -18,6 +18,10 @@ package com.amplifyframework.core.model;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.annotations.BelongsTo;
+
+import java.util.Objects;
+
 /**
  * Represents an association of the {@link Model} class.
  * This class encapsulates the information provided by the
@@ -33,24 +37,23 @@ public final class ModelAssociation {
     // Name of the association to identify the relationship.
     private final String name;
 
+    // Name of the field within same model that references foreign key
+    private final String targetName;
+
     // Name of the field in the associated model
     private final String associatedName;
 
     // Name of the model associated with this field
     private final String associatedType;
 
-    // True if field identifies a dependent entity
-    // For example, foreign key is an owner
-    private final boolean isOwner;
-
     /**
      * Construct the ModelAssociation object from the builder.
      */
     private ModelAssociation(@NonNull Builder builder) {
-        this.name = builder.name;
+        this.name = Objects.requireNonNull(builder.name);
+        this.targetName = builder.targetName;
         this.associatedName = builder.associatedName;
         this.associatedType = builder.associatedType;
-        this.isOwner = builder.isOwner;
     }
 
     /**
@@ -67,6 +70,15 @@ public final class ModelAssociation {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Gets the target name of foreign key.
+     * Null if field holding this association is not a foreign key.
+     * @return The name of field within same model that references foreign key.
+     */
+    public String getTargetName() {
+        return targetName;
     }
 
     /**
@@ -92,7 +104,11 @@ public final class ModelAssociation {
      * @return True if this field owns the identity of another model
      */
     public boolean isOwner() {
-        return isOwner;
+        if (getName().equals(BelongsTo.class.getSimpleName())) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -108,13 +124,13 @@ public final class ModelAssociation {
         if (!ObjectsCompat.equals(name, that.name)) {
             return false;
         }
-        if (associatedName != that.associatedName) {
+        if (!ObjectsCompat.equals(targetName, that.targetName)) {
             return false;
         }
-        if (associatedType != that.associatedType) {
+        if (!ObjectsCompat.equals(associatedName, that.associatedName)) {
             return false;
         }
-        if (isOwner ^ that.isOwner) {
+        if (!ObjectsCompat.equals(associatedType, that.associatedType)) {
             return false;
         }
         return true;
@@ -124,9 +140,9 @@ public final class ModelAssociation {
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
+        result = 31 * result + (targetName != null ? targetName.hashCode() : 0);
         result = 31 * result + (associatedName != null ? associatedName.hashCode() : 0);
         result = 31 * result + (associatedType != null ? associatedType.hashCode() : 0);
-        result = 31 * result + (isOwner ? 1 : 0);
         return result;
     }
 
@@ -134,9 +150,9 @@ public final class ModelAssociation {
     public String toString() {
         return "ModelAssociation{" +
                 "name=\'" + name + "\'" +
+                ", targetName=\'" + targetName + "\'" +
                 ", associatedName=\'" + associatedName + "\'" +
-                ", associatedType=" + associatedType +
-                ", isOwner=" + isOwner +
+                ", associatedType=\'" + associatedType + "\'" +
                 '}';
     }
 
@@ -145,17 +161,27 @@ public final class ModelAssociation {
      */
     public static final class Builder {
         private String name;
+        private String targetName;
         private String associatedName;
         private String associatedType;
-        private boolean isOwner = false;
 
         /**
          * Sets the name of association model.
          * @param name name of the association model
          * @return the association model with given name
          */
-        public Builder name(String name) {
-            this.name = name;
+        public Builder name(@NonNull String name) {
+            this.name = Objects.requireNonNull(name);
+            return this;
+        }
+
+        /**
+         * Sets the name of the field referring to the foreign key.
+         * @param targetName name of the field referring to the foreign key.
+         * @return the association model with give target name
+         */
+        public Builder targetName(String targetName) {
+            this.targetName = targetName;
             return this;
         }
 
@@ -176,16 +202,6 @@ public final class ModelAssociation {
          */
         public Builder associatedType(String associatedType) {
             this.associatedType = associatedType;
-            return this;
-        }
-
-        /**
-         * Sets the flag whether this field owns the identity of another model.
-         * @param isOwner True if field owns the identity of another model
-         * @return the association model with given flag
-         */
-        public Builder isOwner(boolean isOwner) {
-            this.isOwner = isOwner;
             return this;
         }
 

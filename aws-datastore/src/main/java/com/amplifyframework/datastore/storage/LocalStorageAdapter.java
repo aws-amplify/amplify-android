@@ -17,11 +17,13 @@ package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
 import java.util.List;
@@ -80,6 +82,18 @@ public interface LocalStorageAdapter {
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
+            @NonNull ResultListener<Iterator<T>> queryResultsListener);
+
+    /**
+     * Query the storage for items of a given type with specific conditions.
+     * @param itemClass Items that have this class will be solicited
+     * @param predicate Predicate condition to apply to query
+     * @param queryResultsListener A listener that will be notified when the query terminates
+     * @param <T> Type type of the items that are being queried
+     */
+    <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @Nullable QueryPredicate predicate,
             @NonNull ResultListener<Iterator<T>> queryResultsListener);
 
     /**

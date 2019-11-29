@@ -21,6 +21,9 @@ import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Analytics CategoryType
@@ -59,6 +62,10 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
+    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
+    }
+
+    @Override
     public void disable() {
         synchronized (LOCK) {
             enabled = false;
@@ -89,10 +96,14 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void updateProfile(@NonNull AnalyticsProfile analyticsProfile)
-            throws AnalyticsException, ConfigurationException {
-        if (enabled) {
-            getSelectedPlugin().updateProfile(analyticsProfile);
-        }
+    public void registerGlobalProperties(Map<String, Object> properties) {
+    }
+
+    @Override
+    public void unregisterGlobalProperties(Set<String> keys) {
+    }
+
+    @Override
+    public void flushEvents() {
     }
 }
