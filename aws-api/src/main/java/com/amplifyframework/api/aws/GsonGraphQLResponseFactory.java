@@ -19,6 +19,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -42,7 +43,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
      * Default constructor using default Gson object.
      */
     GsonGraphQLResponseFactory() {
-        this(new Gson());
+        this(
+                new GsonBuilder()
+                .registerTypeAdapter(List.class, new GsonListDeserializer())
+                .create()
+        );
     }
 
     /**

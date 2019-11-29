@@ -23,11 +23,11 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.testmodels.Blog;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.Post;
 import com.amplifyframework.testmodels.Projectfields;
 import com.amplifyframework.testmodels.Team;
 
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -336,9 +336,10 @@ public final class CodeGenerationInstrumentationTest {
      * Tests the code generation for HAS_MANY relationship.
      */
     @Test
-    @Ignore("WIP - currently bombing out on the response parsing because we can't handle lists of foreign keys yet")
     public void hasManyRelationship() {
-        LatchedSingleResponseListener<Blog> blogMutationListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Blog> blogGetListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
 
         Blog blog = Blog.builder()
                 .name("All Things Amplify")
@@ -349,10 +350,34 @@ public final class CodeGenerationInstrumentationTest {
                 RELATIONSHIPS_API_NAME,
                 blog,
                 MutationType.CREATE,
-                blogMutationListener
+                blogCreateListener
         );
 
-        GraphQLResponse<Blog> queryResponse = blogMutationListener.awaitTerminalEvent().getResponse();
-        assertEquals(blog, queryResponse.getData());
+        Blog blogCreateResult = blogCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(blog, blogCreateResult);
+
+        Post post = Post.builder().title("Test 1").blog(blog).build();
+
+        Amplify.API.mutate(
+                RELATIONSHIPS_API_NAME,
+                post,
+                MutationType.CREATE,
+                postCreateListener
+        );
+
+        Post postCreateResult = postCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(post, postCreateResult);
+
+        Amplify.API.query(
+                RELATIONSHIPS_API_NAME,
+                Blog.class,
+                blog.getId(),
+                blogGetListener
+        );
+
+        Blog blogGetResult = blogGetListener.awaitTerminalEvent().getResponse().getData();
+        Post blogGetResultPost = blogGetResult.getPosts().get(0);
+        assertEquals(post.getId(), blogGetResultPost.getId());
+        assertEquals(post.getTitle(), blogGetResultPost.getTitle());
     }
 }
