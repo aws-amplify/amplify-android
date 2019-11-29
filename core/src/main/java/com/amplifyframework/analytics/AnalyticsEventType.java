@@ -15,13 +15,11 @@
 
 package com.amplifyframework.analytics;
 
-import java.util.Map;
-
 abstract class AnalyticsEventType {
 
     private String eventType = null;
 
-    private Map<String, String> properties = null;
+    private Properties properties = null;
 
     public String getEventType() {
         return eventType;
@@ -31,11 +29,11 @@ abstract class AnalyticsEventType {
         this.eventType = eventType;
     }
 
-    public Map<String, String> getProperties() {
+    public Properties getProperties() {
         return properties;
     }
 
-    public void setProperties(Map<String, String> properties) {
+    public void setProperties(Properties properties) {
         this.properties = properties;
     }
 }

@@ -74,9 +74,9 @@ public interface AnalyticsCategoryBehavior {
      *
      * Examples of global properties would be `selectedPlan`, `campaignSource`
      *
-     * @param properties Map of global properties
+     * @param properties Map of global properties wrapped as an instance of {@link Properties}
      */
-    void registerGlobalProperties(@NonNull Map<String, Object> properties);
+    void registerGlobalProperties(@NonNull Properties properties);
 
     /**
      * Registered global properties can be unregistered though this method.

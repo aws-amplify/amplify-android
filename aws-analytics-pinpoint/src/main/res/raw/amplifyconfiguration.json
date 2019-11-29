@@ -13,8 +13,8 @@
   "Analytics": {
     "plugins": {
       "AmazonPinpointAnalyticsPlugin": {
-        "AppId": "3d052968a8514a778b5a87891a98a4b7",
-        "Region": "us-west-2"
+        "appId": "3d052968a8514a778b5a87891a98a4b7",
+        "region": "us-west-2"
       }
     }
   }

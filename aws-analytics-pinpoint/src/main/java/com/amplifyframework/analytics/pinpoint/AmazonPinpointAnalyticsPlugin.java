@@ -24,6 +24,8 @@ import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.analytics.GeneralAnalyticsEvent;
+import com.amplifyframework.analytics.Properties;
+import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.plugin.PluginException;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -157,12 +159,17 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     public void recordEvent(@NonNull GeneralAnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
 
-        // TODO Distinguish between metrics and attributes
         final AnalyticsEvent pinpointEvent =
                 pinpointManager.getAnalyticsClient().createEvent(analyticsEvent.getEventType());
 
-        for (Map.Entry<String, String> property : analyticsEvent.getProperties().entrySet()) {
-            pinpointEvent.addAttribute(property.getKey(), property.getValue());
+        for(Map.Entry<String, Property<?>> entry: analyticsEvent.getProperties().get().entrySet()) {
+            if (entry.getValue() instanceof StringProperty) {
+                pinpointEvent.addAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
+            } else if (entry.getValue() instanceof DoubleProperty) {
+                pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
+            } else {
+                throw new RuntimeException("Invalid property type detected.");
+            }
         }
         pinpointManager.getAnalyticsClient().recordEvent(pinpointEvent);
     }
@@ -171,7 +178,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void registerGlobalProperties(Map<String, Object> properties) {
+    public void registerGlobalProperties(Properties properties) {
         throw new UnsupportedOperationException("This operation has not been implemented yet.");
     }
 

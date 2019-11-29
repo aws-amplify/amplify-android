@@ -96,7 +96,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void registerGlobalProperties(Map<String, Object> properties) {
+    public void registerGlobalProperties(Properties properties) {
     }
 
     @Override

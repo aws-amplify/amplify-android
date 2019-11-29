@@ -20,6 +20,7 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.analytics.GeneralAnalyticsEvent;
+import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 
@@ -59,10 +60,12 @@ public class AnalyticsPinpointInstrumentedTest {
     public void testRecordEvent() {
         assert true;
         Log.i(TAG, "Test configuration invoked");
-        Map<String, String> properties = new HashMap<>();
-        properties.put("DemoProperty1", "DemoValue1");
-        properties.put("DemoProperty2", "DemoValue2");
-        GeneralAnalyticsEvent event = new GeneralAnalyticsEvent("Amplify-event", properties);
+
+        GeneralAnalyticsEvent event = new GeneralAnalyticsEvent("Amplify-event-double",
+                PinpointProperties.builder()
+                .add("DemoProperty1", "DemoValue1")
+        .add("DemoDoubleProperty2", 2.0)
+        .build());
         Amplify.Analytics.recordEvent(event);
     }
 }
