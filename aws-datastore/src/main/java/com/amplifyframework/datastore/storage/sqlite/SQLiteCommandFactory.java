@@ -34,6 +34,7 @@ import com.amplifyframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -119,6 +120,107 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         }
 
         return Immutable.of(indexCommands);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * This method should be invoked from a worker thread and not from the main thread
+     * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
+     */
+    @WorkerThread
+    @Override
+    public SqlCommand queryFor(@NonNull ModelSchema modelSchema) {
+        final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
+        final String tableName = table.getName();
+        StringBuilder rawQuery = new StringBuilder();
+        StringBuilder selectColumns = new StringBuilder();
+        StringBuilder joinStatement = new StringBuilder();
+        StringBuilder condition = new StringBuilder();
+
+        // Track the list of columns to return
+        List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
+
+        // Joins the foreign keys
+        // LEFT JOIN if foreign key is optional, INNER JOIN otherwise.
+        final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();
+        while (foreignKeyIterator.hasNext()) {
+            final SQLiteColumn foreignKey = foreignKeyIterator.next();
+            final String ownedTableName = foreignKey.getOwnedType();
+            final ModelSchema ownedSchema = ModelSchemaRegistry.singleton()
+                    .getModelSchemaForModelClass(ownedTableName);
+            final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
+
+            columns.addAll(ownedTable.getSortedColumns());
+
+            String joinType = foreignKey.isNonNull()
+                    ? SqlCommand.INNER_JOIN_CLAUSE
+                    : SqlCommand.LEFT_JOIN_CLAUSE;
+
+            joinStatement.append(joinType)
+                    .append(SqlCommand.DELIMITER)
+                    .append(ownedTableName)
+                    .append(SqlCommand.DELIMITER)
+                    .append(SqlCommand.ON_CLAUSE)
+                    .append(SqlCommand.DELIMITER)
+                    .append(foreignKey.getColumnName())
+                    .append("=")
+                    .append(ownedTable.getPrimaryKey().getColumnName());
+
+            if (foreignKeyIterator.hasNext()) {
+                joinStatement.append(SqlCommand.DELIMITER);
+            }
+        }
+
+        // Convert columns to comma-separated column names
+        Iterator<SQLiteColumn> columnsIterator = columns.iterator();
+        while (columnsIterator.hasNext()) {
+            final SQLiteColumn column = columnsIterator.next();
+            selectColumns.append(column.getColumnName());
+
+            // Alias primary keys to avoid duplicate column names
+            if (column.isPrimaryKey()) {
+                selectColumns.append(SqlCommand.DELIMITER)
+                        .append(SqlCommand.AS_CLAUSE)
+                        .append(SqlCommand.DELIMITER)
+                        .append(column.getAliasedName());
+            }
+
+            if (columnsIterator.hasNext()) {
+                selectColumns.append(",").append(SqlCommand.DELIMITER);
+            }
+        }
+
+        // Start SELECT statement.
+        // SELECT columns FROM tableName
+        rawQuery.append(SqlCommand.SELECT_STATEMENT)
+                .append(SqlCommand.DELIMITER)
+                .append(selectColumns.toString())
+                .append(SqlCommand.DELIMITER)
+                .append(SqlCommand.FROM_CLAUSE)
+                .append(SqlCommand.DELIMITER)
+                .append(tableName);
+
+        // Append join statements.
+        // INNER JOIN tableOne ON tableName.id=tableOne.foreignKey
+        // LEFT JOIN tableTwo ON tableName.id=tableTwo.foreignKey
+        if (!joinStatement.toString().isEmpty()) {
+            rawQuery.append(SqlCommand.DELIMITER)
+                    .append(joinStatement.toString());
+        }
+
+        // Append predicates.
+        // WHERE condition
+        if (!condition.toString().isEmpty()) {
+            rawQuery.append(SqlCommand.DELIMITER)
+                    .append(SqlCommand.WHERE_STATEMENT)
+                    .append(SqlCommand.DELIMITER)
+                    .append(condition.toString());
+        }
+
+        rawQuery.append(";");
+        final String queryString = rawQuery.toString();
+        return new SqlCommand(table.getName(), queryString);
     }
 
     /**

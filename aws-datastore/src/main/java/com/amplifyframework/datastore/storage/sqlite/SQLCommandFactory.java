@@ -44,6 +44,15 @@ interface SQLCommandFactory {
     Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
 
     /**
+     * Generates the QUERY command in a raw string representation from
+     * the {@link ModelSchema}.
+     *
+     * @param modelSchema schema of the model
+     * @return the QUERY SQL command
+     */
+    SqlCommand queryFor(@NonNull ModelSchema modelSchema);
+
+    /**
      * Generates the INSERT INTO command in a raw string representation and a compiled
      * prepared statement that can be bound later with inputs.
      *

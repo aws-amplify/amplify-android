@@ -204,6 +204,78 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Assert that save stores foreign key in the SQLite database correctly.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithValidForeignKey() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("1940 Packard Six")
+                .owner(person)
+                .build();
+        saveModel(car);
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("1940 Packard Six",
+                    cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
+            assertEquals(person.getId(),
+                    cursor.getString(cursor.getColumnIndexOrThrow("carOwnerId")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Assert that foreign key constraint is enforced.
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithInvalidForeignKey() throws ParseException {
+        final String expectedError = "FOREIGN KEY constraint failed";
+
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("1940 Packard Six")
+                .owner(Person.builder()
+                        .firstName("Jane")
+                        .lastName("Doe")
+                        .build())
+                .build();
+
+        LatchedResultListener<StorageItemChange.Record> carSaveListener =
+                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
+
+        Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
+        assertNotNull(actualError);
+        assertNotNull(actualError.getCause());
+        assertNotNull(actualError.getCause().getMessage());
+        assertTrue(actualError.getCause().getMessage().contains(expectedError));
+    }
+
+    /**
      * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
@@ -264,13 +336,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert that save stores foreign key in the SQLite database correctly.
+     * Test that querying the saved item with a foreign key
+     * also populates that instance variable with object.
      *
      * @throws ParseException when the date cannot be parsed.
      */
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("magicnumber")
     @Test
-    public void saveModelWithValidForeignKey() throws ParseException {
+    public void querySavedDataWithForeignKey() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -278,61 +351,27 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
                 .relationship(MaritalStatus.single)
                 .build();
-        saveModel(person);
 
         final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
+                .vehicleModel("1940 Packard Six")
                 .owner(person)
                 .build();
+
+        saveModel(person);
         saveModel(car);
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
-        assertNotNull(cursor);
-        assertEquals(1, cursor.getCount());
-        if (cursor.moveToFirst()) {
-            assertEquals("Lamborghini",
-                    cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
-            assertEquals(person.getId(),
-                    cursor.getString(cursor.getColumnIndexOrThrow("carOwnerId")));
-        }
-        cursor.close();
-    }
+        Iterator<Car> result = queryModel(Car.class);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
 
-    /**
-     * Assert that foreign key constraint is enforced.
-     * @throws ParseException when the date cannot be parsed.
-     */
-    @SuppressWarnings("MagicNumber")
-    @Test
-    public void saveModelWithInvalidForeignKey() throws ParseException {
-        final String expectedError = "FOREIGN KEY constraint failed";
-
-        final Person person = Person.builder()
-                .firstName("Alan")
-                .lastName("Turing")
-                .age(41)
-                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .relationship(MaritalStatus.single)
-                .build();
-        saveModel(person);
-
-        final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
-                .owner(Person.builder()
-                        .firstName("Jane")
-                        .lastName("Doe")
-                        .build())
-                .build();
-
-        LatchedResultListener<StorageItemChange.Record> carSaveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
-
-        Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
-        assertNotNull(actualError);
-        assertNotNull(actualError.getCause());
-        assertNotNull(actualError.getCause().getMessage());
-        assertTrue(actualError.getCause().getMessage().contains(expectedError));
+        final Person queriedCarOwner = result.next().getOwner();
+        assertNotNull(queriedCarOwner);
+        assertEquals(person.getId(), queriedCarOwner.getId());
+        assertEquals(person.getFirstName(), queriedCarOwner.getFirstName());
+        assertEquals(person.getLastName(), queriedCarOwner.getLastName());
+        assertEquals(person.getAge(), queriedCarOwner.getAge());
+        assertEquals(person.getDob(), queriedCarOwner.getDob());
+        assertEquals(person.getRelationship(), queriedCarOwner.getRelationship());
     }
 
     /**
