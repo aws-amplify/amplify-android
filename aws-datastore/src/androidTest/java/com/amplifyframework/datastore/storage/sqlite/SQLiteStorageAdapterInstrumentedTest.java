@@ -20,11 +20,13 @@ import android.database.Cursor;
 import android.os.StrictMode;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
@@ -48,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -375,6 +378,94 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Test querying the saved item in the SQLite database with
+     * predicate conditions.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithNumericalPredicates() throws ParseException {
+        final List<Person> savedModels = new ArrayList<>();
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Person person = Person.builder()
+                    .firstName("firstNamePrefix:" + counter)
+                    .lastName("lastNamePrefix:" + counter)
+                    .age(counter)
+                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.single)
+                    .build();
+            saveModel(person);
+            savedModels.add(person);
+        }
+
+        // 1, 4, 5, 6
+        QueryPredicate predicate = Person.AGE.ge(4).and(Person.AGE.lt(7))
+                .or(Person.AGE.eq(1).and(Person.AGE.ne(7)));
+        Iterator<Person> result = queryModel(Person.class, predicate);
+
+        Set<Person> expectedPersons = new HashSet<>();
+        expectedPersons.add(savedModels.get(1));
+        expectedPersons.add(savedModels.get(4));
+        expectedPersons.add(savedModels.get(5));
+        expectedPersons.add(savedModels.get(6));
+
+        Set<Person> actualPersons = new HashSet<>();
+        while (result.hasNext()) {
+            final Person person = result.next();
+            assertNotNull(person);
+            assertTrue("Unable to find expected item in the storage adapter.",
+                    savedModels.contains(person));
+            actualPersons.add(person);
+        }
+
+        assertEquals(expectedPersons, actualPersons);
+    }
+
+    /**
+     * Test querying the saved item in the SQLite database with
+     * predicate conditions.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithStringPredicates() throws ParseException {
+        final Set<Person> savedModels = new HashSet<>();
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Person person = Person.builder()
+                    .firstName(counter + "-first")
+                    .lastName(counter + "-last")
+                    .age(counter)
+                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.single)
+                    .build();
+            saveModel(person);
+            savedModels.add(person);
+        }
+
+        // 4, 7
+        QueryPredicate predicate = Person.FIRST_NAME.beginsWith("4")
+                .or(Person.LAST_NAME.beginsWith("7"))
+                .or(Person.LAST_NAME.beginsWith("9"))
+                .and(not(Person.AGE.gt(8)));
+        Iterator<Person> result = queryModel(Person.class, predicate);
+        Set<Integer> ages = new HashSet<>();
+        while (result.hasNext()) {
+            final Person person = result.next();
+            assertNotNull(person);
+            assertTrue("Unable to find expected item in the storage adapter.",
+                    savedModels.contains(person));
+            ages.add(person.getAge());
+        }
+        assertEquals(2, ages.size());
+        assertTrue(ages.contains(4));
+        assertTrue(ages.contains(7));
+    }
+
+    /**
      * Assert that save stores item in the SQLite database correctly.
      *
      */
@@ -406,11 +497,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .item();
     }
 
-    @SuppressWarnings("SameParameterValue")
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
+        return queryModel(modelClass, null);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass,
+                                                     @Nullable QueryPredicate predicate) {
         LatchedResultListener<Iterator<T>> queryResultListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.query(modelClass, queryResultListener);
+        sqLiteStorageAdapter.query(modelClass, predicate, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
     }
 

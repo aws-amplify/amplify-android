@@ -27,16 +27,6 @@ import java.util.Objects;
  * create a SQL table.
  */
 final class SqlCommand {
-
-    static final String DELIMITER = " ";
-    static final String SELECT_STATEMENT = "SELECT";
-    static final String FROM_CLAUSE = "FROM";
-    static final String WHERE_STATEMENT = "WHERE";
-    static final String INNER_JOIN_CLAUSE = "INNER JOIN";
-    static final String LEFT_JOIN_CLAUSE = "LEFT JOIN";
-    static final String ON_CLAUSE = "ON";
-    static final String AS_CLAUSE = "AS";
-
     // The name of the SQL table
     private final String tableName;
 
