@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
 
-import java.util.Map;
 import java.util.Set;
 
 /**

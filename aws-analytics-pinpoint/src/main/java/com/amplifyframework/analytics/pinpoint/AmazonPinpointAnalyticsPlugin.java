@@ -162,7 +162,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         final AnalyticsEvent pinpointEvent =
                 pinpointManager.getAnalyticsClient().createEvent(analyticsEvent.getEventType());
 
-        for(Map.Entry<String, Property<?>> entry: analyticsEvent.getProperties().get().entrySet()) {
+        for (Map.Entry<String, Property<?>> entry: analyticsEvent.getProperties().get().entrySet()) {
             if (entry.getValue() instanceof StringProperty) {
                 pinpointEvent.addAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
             } else if (entry.getValue() instanceof DoubleProperty) {

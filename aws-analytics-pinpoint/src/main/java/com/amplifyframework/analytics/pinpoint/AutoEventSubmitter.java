@@ -41,10 +41,11 @@ class AutoEventSubmitter {
         submitRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.d(TAG, String.format("Auto submitting events after %l seconds", autoFlushInterval));
+                Log.d(TAG, String.format("Auto submitting events after %d seconds", autoFlushInterval));
                 analyticsClient.submitEvents();
             }
         };
+        handler.postDelayed(submitRunnable, autoFlushInterval);
     }
 
     void stop() {

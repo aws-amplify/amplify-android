@@ -15,8 +15,6 @@
 
 package com.amplifyframework.analytics;
 
-import java.util.Map;
-
 /**
  * Represents event in its most general form and can have different properties.
  */

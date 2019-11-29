@@ -21,7 +21,6 @@ import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
-import java.util.Map;
 import java.util.Set;
 
 /**

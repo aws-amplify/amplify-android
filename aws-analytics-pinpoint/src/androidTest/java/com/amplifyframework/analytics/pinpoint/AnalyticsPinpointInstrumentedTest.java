@@ -20,15 +20,11 @@ import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.analytics.GeneralAnalyticsEvent;
-import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
@@ -58,14 +54,13 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     @Test
     public void testRecordEvent() {
-        assert true;
         Log.i(TAG, "Test configuration invoked");
 
         GeneralAnalyticsEvent event = new GeneralAnalyticsEvent("Amplify-event-double",
                 PinpointProperties.builder()
                 .add("DemoProperty1", "DemoValue1")
-        .add("DemoDoubleProperty2", 2.0)
-        .build());
+                .add("DemoDoubleProperty2", 2.0)
+                .build());
         Amplify.Analytics.recordEvent(event);
     }
 }
