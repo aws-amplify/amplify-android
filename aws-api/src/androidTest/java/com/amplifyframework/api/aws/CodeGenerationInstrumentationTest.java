@@ -44,7 +44,7 @@ import static org.junit.Assert.assertTrue;
 public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
-    private static final String RELATIONSHIPS_API_NAME = "relationshipsApi";
+    private static final String BLOG_API_NAME = "blogApi";
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -257,7 +257,7 @@ public final class CodeGenerationInstrumentationTest {
      * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
      */
     @Test
-    public void belongsToCreateQuerySubscribeWithAllLowercaseModel() throws Throwable {
+    public void belongsToRelationship() throws Throwable {
         LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Projectfields> projectMutationListener =
                 new LatchedSingleResponseListener<>();
@@ -347,7 +347,7 @@ public final class CodeGenerationInstrumentationTest {
                 .build();
 
         Amplify.API.mutate(
-                RELATIONSHIPS_API_NAME,
+                BLOG_API_NAME,
                 blog,
                 MutationType.CREATE,
                 blogCreateListener
@@ -359,7 +359,7 @@ public final class CodeGenerationInstrumentationTest {
         Post post = Post.builder().title("Test 1").blog(blog).build();
 
         Amplify.API.mutate(
-                RELATIONSHIPS_API_NAME,
+                BLOG_API_NAME,
                 post,
                 MutationType.CREATE,
                 postCreateListener
@@ -369,7 +369,7 @@ public final class CodeGenerationInstrumentationTest {
         assertEquals(post, postCreateResult);
 
         Amplify.API.query(
-                RELATIONSHIPS_API_NAME,
+                BLOG_API_NAME,
                 Blog.class,
                 blog.getId(),
                 blogGetListener

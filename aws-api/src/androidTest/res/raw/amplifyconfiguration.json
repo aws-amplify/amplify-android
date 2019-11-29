@@ -55,7 +55,7 @@
           "AuthorizationType": "API_KEY",
           "ApiKey": "da2-66qwellewfcjfefzjww56luqs4"
         },
-        "relationshipsApi": {
+        "blogApi": {
           "__comment": "This is in David's developer account, right now.",
           "Endpoint": "https://pzoz25f54fbqxobwew5opcxbkm.appsync-api.us-east-1.amazonaws.com/graphql",
           "Region": "us-east-1",
