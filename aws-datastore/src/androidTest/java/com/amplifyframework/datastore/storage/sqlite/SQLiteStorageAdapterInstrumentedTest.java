@@ -20,11 +20,13 @@ import android.database.Cursor;
 import android.os.StrictMode;
 import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
@@ -48,6 +50,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -204,6 +207,78 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Assert that save stores foreign key in the SQLite database correctly.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithValidForeignKey() throws ParseException {
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("1940 Packard Six")
+                .owner(person)
+                .build();
+        saveModel(car);
+
+        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
+        assertNotNull(cursor);
+        assertEquals(1, cursor.getCount());
+        if (cursor.moveToFirst()) {
+            assertEquals("1940 Packard Six",
+                    cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
+            assertEquals(person.getId(),
+                    cursor.getString(cursor.getColumnIndexOrThrow("carOwnerId")));
+        }
+        cursor.close();
+    }
+
+    /**
+     * Assert that foreign key constraint is enforced.
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("MagicNumber")
+    @Test
+    public void saveModelWithInvalidForeignKey() throws ParseException {
+        final String expectedError = "FOREIGN KEY constraint failed";
+
+        final Person person = Person.builder()
+                .firstName("Alan")
+                .lastName("Turing")
+                .age(41)
+                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
+                .relationship(MaritalStatus.single)
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("1940 Packard Six")
+                .owner(Person.builder()
+                        .firstName("Jane")
+                        .lastName("Doe")
+                        .build())
+                .build();
+
+        LatchedResultListener<StorageItemChange.Record> carSaveListener =
+                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
+
+        Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
+        assertNotNull(actualError);
+        assertNotNull(actualError.getCause());
+        assertNotNull(actualError.getCause().getMessage());
+        assertTrue(actualError.getCause().getMessage().contains(expectedError));
+    }
+
+    /**
      * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
@@ -264,13 +339,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert that save stores foreign key in the SQLite database correctly.
+     * Test that querying the saved item with a foreign key
+     * also populates that instance variable with object.
      *
      * @throws ParseException when the date cannot be parsed.
      */
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("magicnumber")
     @Test
-    public void saveModelWithValidForeignKey() throws ParseException {
+    public void querySavedDataWithForeignKey() throws ParseException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -278,61 +354,115 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
                 .relationship(MaritalStatus.single)
                 .build();
-        saveModel(person);
 
         final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
+                .vehicleModel("1940 Packard Six")
                 .owner(person)
                 .build();
+
+        saveModel(person);
         saveModel(car);
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
-        assertNotNull(cursor);
-        assertEquals(1, cursor.getCount());
-        if (cursor.moveToFirst()) {
-            assertEquals("Lamborghini",
-                    cursor.getString(cursor.getColumnIndexOrThrow("vehicle_model")));
-            assertEquals(person.getId(),
-                    cursor.getString(cursor.getColumnIndexOrThrow("carOwnerId")));
-        }
-        cursor.close();
+        Iterator<Car> result = queryModel(Car.class);
+        assertNotNull(result);
+        assertTrue(result.hasNext());
+
+        final Person queriedCarOwner = result.next().getOwner();
+        assertNotNull(queriedCarOwner);
+        assertEquals(person.getId(), queriedCarOwner.getId());
+        assertEquals(person.getFirstName(), queriedCarOwner.getFirstName());
+        assertEquals(person.getLastName(), queriedCarOwner.getLastName());
+        assertEquals(person.getAge(), queriedCarOwner.getAge());
+        assertEquals(person.getDob(), queriedCarOwner.getDob());
+        assertEquals(person.getRelationship(), queriedCarOwner.getRelationship());
     }
 
     /**
-     * Assert that foreign key constraint is enforced.
+     * Test querying the saved item in the SQLite database with
+     * predicate conditions.
+     *
      * @throws ParseException when the date cannot be parsed.
      */
-    @SuppressWarnings("MagicNumber")
+    @SuppressWarnings("magicnumber")
     @Test
-    public void saveModelWithInvalidForeignKey() throws ParseException {
-        final String expectedError = "FOREIGN KEY constraint failed";
+    public void querySavedDataWithNumericalPredicates() throws ParseException {
+        final List<Person> savedModels = new ArrayList<>();
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Person person = Person.builder()
+                    .firstName("firstNamePrefix:" + counter)
+                    .lastName("lastNamePrefix:" + counter)
+                    .age(counter)
+                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.single)
+                    .build();
+            saveModel(person);
+            savedModels.add(person);
+        }
 
-        final Person person = Person.builder()
-                .firstName("Alan")
-                .lastName("Turing")
-                .age(41)
-                .dob(SimpleDateFormat.getDateInstance(DateFormat.SHORT).parse("06/23/1912"))
-                .relationship(MaritalStatus.single)
-                .build();
-        saveModel(person);
+        // 1, 4, 5, 6
+        QueryPredicate predicate = Person.AGE.ge(4).and(Person.AGE.lt(7))
+                .or(Person.AGE.eq(1).and(Person.AGE.ne(7)));
+        Iterator<Person> result = queryModel(Person.class, predicate);
 
-        final Car car = Car.builder()
-                .vehicleModel("Lamborghini")
-                .owner(Person.builder()
-                        .firstName("Jane")
-                        .lastName("Doe")
-                        .build())
-                .build();
+        Set<Person> expectedPersons = new HashSet<>();
+        expectedPersons.add(savedModels.get(1));
+        expectedPersons.add(savedModels.get(4));
+        expectedPersons.add(savedModels.get(5));
+        expectedPersons.add(savedModels.get(6));
 
-        LatchedResultListener<StorageItemChange.Record> carSaveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
+        Set<Person> actualPersons = new HashSet<>();
+        while (result.hasNext()) {
+            final Person person = result.next();
+            assertNotNull(person);
+            assertTrue("Unable to find expected item in the storage adapter.",
+                    savedModels.contains(person));
+            actualPersons.add(person);
+        }
 
-        Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
-        assertNotNull(actualError);
-        assertNotNull(actualError.getCause());
-        assertNotNull(actualError.getCause().getMessage());
-        assertTrue(actualError.getCause().getMessage().contains(expectedError));
+        assertEquals(expectedPersons, actualPersons);
+    }
+
+    /**
+     * Test querying the saved item in the SQLite database with
+     * predicate conditions.
+     *
+     * @throws ParseException when the date cannot be parsed.
+     */
+    @SuppressWarnings("magicnumber")
+    @Test
+    public void querySavedDataWithStringPredicates() throws ParseException {
+        final Set<Person> savedModels = new HashSet<>();
+        final int numModels = 10;
+        for (int counter = 0; counter < numModels; counter++) {
+            final Person person = Person.builder()
+                    .firstName(counter + "-first")
+                    .lastName(counter + "-last")
+                    .age(counter)
+                    .dob(SimpleDateFormat.getDateInstance().parse("Jun 23, 1912"))
+                    .relationship(MaritalStatus.single)
+                    .build();
+            saveModel(person);
+            savedModels.add(person);
+        }
+
+        // 4, 7
+        QueryPredicate predicate = Person.FIRST_NAME.beginsWith("4")
+                .or(Person.LAST_NAME.beginsWith("7"))
+                .or(Person.LAST_NAME.beginsWith("9"))
+                .and(not(Person.AGE.gt(8)));
+        Iterator<Person> result = queryModel(Person.class, predicate);
+        Set<Integer> ages = new HashSet<>();
+        while (result.hasNext()) {
+            final Person person = result.next();
+            assertNotNull(person);
+            assertTrue("Unable to find expected item in the storage adapter.",
+                    savedModels.contains(person));
+            ages.add(person.getAge());
+        }
+        assertEquals(2, ages.size());
+        assertTrue(ages.contains(4));
+        assertTrue(ages.contains(7));
     }
 
     /**
@@ -367,11 +497,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .item();
     }
 
-    @SuppressWarnings("SameParameterValue")
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
+        return queryModel(modelClass, null);
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass,
+                                                     @Nullable QueryPredicate predicate) {
         LatchedResultListener<Iterator<T>> queryResultListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.query(modelClass, queryResultListener);
+        sqLiteStorageAdapter.query(modelClass, predicate, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
     }
 

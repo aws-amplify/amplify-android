@@ -110,8 +110,7 @@ public final class ModelSchema {
             // Set the model name and plural name (null if not provided)
             ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
             final String modelName = clazz.getSimpleName();
-            final String modelPluralName = modelConfig != null && modelConfig.pluralName() != null
-                    && !modelConfig.pluralName().isEmpty()
+            final String modelPluralName = modelConfig != null && !modelConfig.pluralName().isEmpty()
                     ? modelConfig.pluralName()
                     : null;
 

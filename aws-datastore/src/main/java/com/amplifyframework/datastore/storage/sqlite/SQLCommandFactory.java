@@ -16,9 +16,11 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Set;
 
@@ -42,6 +44,16 @@ interface SQLCommandFactory {
      * @return the set of CREATE INDEX SQL commands
      */
     Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
+
+    /**
+     * Generates the QUERY command in a raw string representation from
+     * the {@link ModelSchema}.
+     *
+     * @param modelSchema schema of the model
+     * @return the QUERY SQL command
+     */
+    SqlCommand queryFor(@NonNull ModelSchema modelSchema,
+                        @Nullable QueryPredicate predicate);
 
     /**
      * Generates the INSERT INTO command in a raw string representation and a compiled
