@@ -34,8 +34,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @param type the type to apply to the elements of this group
      */
     public QueryPredicateGroup(Type type) {
-        this.type = type;
-        predicates = new ArrayList<>();
+        this(type, null);
     }
 
     /**
@@ -45,7 +44,10 @@ public final class QueryPredicateGroup implements QueryPredicate {
      */
     public QueryPredicateGroup(Type type, List<QueryPredicate> predicates) {
         this.type = type;
-        this.predicates = predicates;
+        this.predicates = new ArrayList<>();
+        if (predicates != null) {
+            this.predicates.addAll(predicates);
+        }
     }
 
     /**
