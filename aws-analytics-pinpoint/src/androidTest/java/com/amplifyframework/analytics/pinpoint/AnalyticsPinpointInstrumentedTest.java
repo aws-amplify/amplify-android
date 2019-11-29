@@ -17,7 +17,6 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
 import android.util.Log;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.analytics.GeneralAnalyticsEvent;
@@ -30,10 +29,19 @@ import org.junit.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
+ */
 public class AnalyticsPinpointInstrumentedTest {
 
+    /**
+     * Log tag for the test class.
+     */
     private static final String TAG = AnalyticsPinpointInstrumentedTest.class.getSimpleName();
 
+    /**
+     * Configure the Amplify framework, if that hasn't already happened in this process instance.
+     */
     @BeforeClass
     public static void setUp() {
         Context context = ApplicationProvider.getApplicationContext();
@@ -43,6 +51,10 @@ public class AnalyticsPinpointInstrumentedTest {
         Amplify.configure(configuration, context);
     }
 
+    /**
+     * Record a general analytics event and verify that it has been recorded using Analytics
+     * pinpoint client.
+     */
     @Test
     public void testRecordEvent() {
         assert true;

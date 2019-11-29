@@ -19,9 +19,9 @@ import java.util.Map;
 
 abstract class AnalyticsEventType {
 
-    String eventType = null;
+    private String eventType = null;
 
-    Map<String, String> properties = null;
+    private Map<String, String> properties = null;
 
     public String getEventType() {
         return eventType;

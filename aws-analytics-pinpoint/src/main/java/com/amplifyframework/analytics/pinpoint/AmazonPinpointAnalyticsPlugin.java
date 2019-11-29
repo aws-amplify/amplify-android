@@ -19,6 +19,13 @@ import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.analytics.AnalyticsPlugin;
+import com.amplifyframework.analytics.AnalyticsProfile;
+import com.amplifyframework.analytics.GeneralAnalyticsEvent;
+import com.amplifyframework.core.plugin.PluginException;
+
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.UserStateDetails;
@@ -29,13 +36,6 @@ import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.pinpoint.model.ChannelType;
-import com.amplifyframework.ConfigurationException;
-import com.amplifyframework.analytics.AnalyticsException;
-import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.analytics.GeneralAnalyticsEvent;
-import com.amplifyframework.core.plugin.PluginException;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -49,10 +49,10 @@ import java.util.concurrent.CountDownLatch;
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
+    private final AutoEventSubmitter autoEventSubmitter;
     private PinpointManager pinpointManager;
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
-    private final AutoEventSubmitter autoEventSubmitter;
-    protected AnalyticsClient analyticsClient;
+    private AnalyticsClient analyticsClient;
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
@@ -62,32 +62,40 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         autoEventSubmitter = new AutoEventSubmitter();
     }
 
+    /**
+     * Accessor method for pinpoint analytics client.
+     * @return returns pinpoint analytics client.
+     */
+    protected AnalyticsClient getAnalyticsClient() {
+        return analyticsClient;
+    }
+
     private PinpointManager getPinpointManager(Context context) {
         if (this.pinpointManager == null) {
             PinpointManager pinpointManager;
             final AWSConfiguration awsConfiguration = new AWSConfiguration(context);
 
-            CountDownLatch mobileClientlatch = new CountDownLatch(1);
+            CountDownLatch mobileClientLatch = new CountDownLatch(1);
             // Initialize the AWSMobileClient
             AWSMobileClient.getInstance().initialize(context, awsConfiguration,
                     new Callback<UserStateDetails>() {
                         @Override
                         public void onResult(UserStateDetails userStateDetails) {
                             Log.i(TAG, "Mobile client initialized");
-                            mobileClientlatch.countDown();
+                            mobileClientLatch.countDown();
                         }
 
                         @Override
                         public void onError(Exception exception) {
                             Log.e(TAG, "Error initializing AWS Mobile Client", exception);
-                            mobileClientlatch.countDown();
+                            mobileClientLatch.countDown();
                         }
                     });
 
             try {
-                mobileClientlatch.await();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
+                mobileClientLatch.await();
+            } catch (InterruptedException exception) {
+                throw new RuntimeException("Failed to initialize mobile client: " + exception.getLocalizedMessage());
             }
 
             // Construct configuration using information from the configure method
@@ -118,8 +126,8 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void identifyUser(@NonNull String id, @NonNull AnalyticsProfile profile) {
-
+    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
+        throw new UnsupportedOperationException("This operation has not been implemented yet.");
     }
 
     /**
@@ -153,7 +161,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         final AnalyticsEvent pinpointEvent =
                 pinpointManager.getAnalyticsClient().createEvent(analyticsEvent.getEventType());
 
-        for(Map.Entry<String, String> property : analyticsEvent.getProperties().entrySet()) {
+        for (Map.Entry<String, String> property : analyticsEvent.getProperties().entrySet()) {
             pinpointEvent.addAttribute(property.getKey(), property.getValue());
         }
         pinpointManager.getAnalyticsClient().recordEvent(pinpointEvent);
@@ -164,7 +172,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void registerGlobalProperties(Map<String, Object> properties) {
-
+        throw new UnsupportedOperationException("This operation has not been implemented yet.");
     }
 
     /**
@@ -172,7 +180,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void unregisterGlobalProperties(Set<String> keys) {
-
+        throw new UnsupportedOperationException("This operation has not been implemented yet.");
     }
 
     /**
@@ -213,18 +221,22 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                                 .getLong(PinpointConfigurationKeys.AUTO_FLUSH_INTERVAL.getConfigurationKey()));
             }
 
-            if (pluginConfiguration.has(PinpointConfigurationKeys.AUTO_SESSION_TRACKING_INTERVAL.getConfigurationKey())) {
+            if (pluginConfiguration
+                    .has(PinpointConfigurationKeys.AUTO_SESSION_TRACKING_INTERVAL.getConfigurationKey())) {
                 pinpointAnalyticsPluginConfiguration
                         .setAutoSessionTrackingInterval(pluginConfiguration
-                                .getLong(PinpointConfigurationKeys.AUTO_SESSION_TRACKING_INTERVAL.getConfigurationKey()));
+                                .getLong(PinpointConfigurationKeys.AUTO_SESSION_TRACKING_INTERVAL
+                                        .getConfigurationKey()));
             }
 
-            if (pluginConfiguration.has(PinpointConfigurationKeys.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey())) {
+            if (pluginConfiguration.has(PinpointConfigurationKeys.TRACK_APP_LIFECYCLE_EVENTS
+                    .getConfigurationKey())) {
                 pinpointAnalyticsPluginConfiguration
                         .setTrackAppLifecycleEvents(pluginConfiguration
-                                .getBoolean(PinpointConfigurationKeys.TRACK_APP_LIFECYCLE_EVENTS.getConfigurationKey()));
+                                .getBoolean(PinpointConfigurationKeys.TRACK_APP_LIFECYCLE_EVENTS
+                                        .getConfigurationKey()));
             }
-        } catch (JSONException e) {
+        } catch (JSONException exception) {
             throw new RuntimeException("Unable to read appId or region from the amplify configuration json");
         }
         pinpointManager = getPinpointManager(context);
@@ -244,7 +256,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     }
 
     /**
-     * Pinpoint Analytics configuration in amplifyconfiguration.json contains following values
+     * Pinpoint Analytics configuration in amplifyconfiguration.json contains following values.
      */
     public enum PinpointConfigurationKeys {
         /**
@@ -258,7 +270,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         REGION("region"),
 
         /**
-         * Time interval after which the events are automatically submitted to pinpoint
+         * Time interval after which the events are automatically submitted to pinpoint.
          */
         AUTO_FLUSH_INTERVAL("autoFlushEventsInterval"),
 

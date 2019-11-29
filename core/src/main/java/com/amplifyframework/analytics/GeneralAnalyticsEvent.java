@@ -17,10 +17,19 @@ package com.amplifyframework.analytics;
 
 import java.util.Map;
 
-public class GeneralAnalyticsEvent extends AnalyticsEventType{
+/**
+ * Represents event in its most general form and can have different properties.
+ */
+public class GeneralAnalyticsEvent extends AnalyticsEventType {
 
+    /**
+     * Construct a general analytics event.
+     *
+     * @param eventType name for the event.
+     * @param properties event properties.
+     */
     public GeneralAnalyticsEvent(String eventType, Map<String, String> properties) {
-        this.eventType = eventType;
-        this.properties = properties;
+        setEventType(eventType);
+        setProperties(properties);
     }
 }
