@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.testutils.Resources;
 
@@ -55,7 +56,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * an empty list of errors.
      */
     @Test
-    public void nullDataNullErrorsReturnsEmptyResponseObject() {
+    public void nullDataNullErrorsReturnsEmptyResponseObject() throws ApiException {
         // Arrange some JSON string from a "server"
         final String nullResponseJson =
             Resources.readAsString("null-gql-response.json");
@@ -76,7 +77,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * data, but also a list of errors.
      */
     @Test
-    public void partialResponseRendersWithTodoDataAndErrors() {
+    public void partialResponseRendersWithTodoDataAndErrors() throws ApiException {
         // Arrange some JSON string from a "server"
         final String partialResponseJson =
             Resources.readAsString("partial-gql-response.json");
@@ -135,7 +136,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * @throws JSONException Shouldn't, but might while arranging test input
      */
     @Test
-    public void partialResponseCanBeRenderedAsStringType() throws JSONException {
+    public void partialResponseCanBeRenderedAsStringType() throws JSONException, ApiException {
         // Arrange some known JSON response
         final JSONObject partialResponseJson =
                 new JSONObject(Resources.readAsString("partial-gql-response.json"));

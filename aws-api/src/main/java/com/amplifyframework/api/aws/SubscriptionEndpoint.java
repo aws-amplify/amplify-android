@@ -20,6 +20,7 @@ import android.util.Base64;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -74,11 +75,32 @@ final class SubscriptionEndpoint {
             @NonNull StreamListener<GraphQLResponse<T>> responseListener) {
 
         if (webSocket == null) {
-            webSocket = createWebSocket();
+            try {
+                webSocket = createWebSocket();
+            } catch (ApiException exception) {
+                if (responseListener != null) {
+                    responseListener.onError(new ApiException(
+                            "Failed to create websocket for subscription",
+                            exception,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                } else {
+                    //TODO: Dispatch error on Hub
+                }
+            }
+
             try {
                 connectionAcknowledgement.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
             } catch (InterruptedException interruptedException) {
-                throw new ApiException(interruptedException);
+                if (responseListener != null) {
+                    responseListener.onError(new ApiException(
+                            "Subscription timed out waiting for acknowledgement",
+                            interruptedException,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                } else {
+                    //TODO: Dispatch error on Hub
+                }
             }
         }
 
@@ -88,13 +110,21 @@ final class SubscriptionEndpoint {
                 .put("id", subscriptionId)
                 .put("type", "start")
                 .put("payload", new JSONObject()
-                    .put("data", request.getContent())
-                    .put("extensions", new JSONObject()
-                        .put("authorization", SubscriptionAuthorizationHeader.from(apiConfiguration))))
+                .put("data", request.getContent())
+                .put("extensions", new JSONObject()
+                .put("authorization", SubscriptionAuthorizationHeader.from(apiConfiguration))))
                 .toString()
             );
-        } catch (JSONException jsonException) {
-            throw new RuntimeException("Failed to construct subscription registration message.", jsonException);
+        } catch (JSONException | ApiException exception) {
+            if (responseListener != null) {
+                responseListener.onError(new ApiException(
+                        "Failed to construct subscription registration message.",
+                        exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                ));
+            } else {
+                // TODO: Dispatch error on Hub
+            }
         }
 
         Subscription<T> subscription = new Subscription<>(responseListener, responseFactory, request.getModelClass());
@@ -104,7 +134,7 @@ final class SubscriptionEndpoint {
         return subscriptionId;
     }
 
-    private WebSocket createWebSocket() {
+    private WebSocket createWebSocket() throws ApiException {
         Request request = new Request.Builder()
             .url(buildConnectionRequestUrl())
             .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
@@ -152,61 +182,78 @@ final class SubscriptionEndpoint {
     private void processMessage(WebSocket webSocket, String message) {
         try {
             processJsonMessage(webSocket, message);
-        } catch (JSONException jsonException) {
-            notifyError(jsonException);
+        } catch (ApiException exception) {
+            notifyError(exception);
         }
     }
 
-    private void processJsonMessage(WebSocket webSocket, String message) throws JSONException {
-        final JSONObject jsonMessage = new JSONObject(message);
-        final SubscriptionMessageType subscriptionMessageType =
-            SubscriptionMessageType.from(jsonMessage.getString("type"));
+    private void processJsonMessage(WebSocket webSocket, String message) throws ApiException {
+        try {
+            final JSONObject jsonMessage = new JSONObject(message);
+            final SubscriptionMessageType subscriptionMessageType =
+                    SubscriptionMessageType.from(jsonMessage.getString("type"));
 
-        switch (subscriptionMessageType) {
-            case CONNECTION_ACK:
-                timeoutWatchdog.start(() -> webSocket.close(NORMAL_CLOSURE_STATUS, "WebSocket closed due to timeout."),
-                    Integer.parseInt(jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")));
-                connectionAcknowledgement.countDown();
-                break;
-            case SUBSCRIPTION_ACK:
-                notifySubscriptionAcknowledged(jsonMessage.getString("id"));
-                break;
-            case SUBSCRIPTION_COMPLETE:
-                notifySubscriptionCompleted(jsonMessage.getString("id"));
-                break;
-            case CONNECTION_KEEP_ALIVE:
-                timeoutWatchdog.reset();
-                break;
-            case SUBSCRIPTION_ERROR:
-            case SUBSCRIPTION_DATA:
-                notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
-                break;
-            default:
-                notifyError(new ApiException("Got unknown message type: " + subscriptionMessageType));
+            switch (subscriptionMessageType) {
+                case CONNECTION_ACK:
+                    timeoutWatchdog.start(() -> webSocket.close(NORMAL_CLOSURE_STATUS, "WebSocket closed due to timeout."),
+                            Integer.parseInt(jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")));
+                    connectionAcknowledgement.countDown();
+                    break;
+                case SUBSCRIPTION_ACK:
+                    notifySubscriptionAcknowledged(jsonMessage.getString("id"));
+                    break;
+                case SUBSCRIPTION_COMPLETE:
+                    notifySubscriptionCompleted(jsonMessage.getString("id"));
+                    break;
+                case CONNECTION_KEEP_ALIVE:
+                    timeoutWatchdog.reset();
+                    break;
+                case SUBSCRIPTION_ERROR:
+                case SUBSCRIPTION_DATA:
+                    notifySubscriptionData(jsonMessage.getString("id"), jsonMessage.getString("payload"));
+                    break;
+                default:
+                    notifyError(new ApiException(
+                            "Got unknown message type: " + subscriptionMessageType,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+            }
+        } catch (JSONException | ApiException exception) {
+            throw new ApiException(
+                    "Error processing Json message in subscription endpoint",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
-    private void notifySubscriptionAcknowledged(final String subscriptionId) {
+    private void notifySubscriptionAcknowledged(final String subscriptionId) throws ApiException {
         Subscription<?> subscription = subscriptions.get(subscriptionId);
         if (subscription != null) {
             subscription.acknowledgeSubscriptionReady();
         } else {
-            throw new ApiException("Acknowledgement for unknown subscription: " + subscriptionId);
+            throw new ApiException(
+                "Acknowledgement for unknown subscription: " + subscriptionId,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
     private void notifyAllSubscriptionsCompleted() {
         // TODO: if the connection closes, but our subscription didn't ask for that,
-        // is that a failure, from its standpoint? Or not?
+        //  is that a failure, from its standpoint? Or not?
         for (Subscription<?> dispatcher : new HashSet<>(subscriptions.values())) {
             dispatcher.dispatchCompleted();
         }
     }
 
-    private void notifySubscriptionCompleted(String subscriptionId) {
+    private void notifySubscriptionCompleted(String subscriptionId) throws ApiException {
         final Subscription<?> dispatcher = subscriptions.get(subscriptionId);
         if (dispatcher == null) {
-            throw new ApiException("Got subscription completion for unknown subscription:" + subscriptionId);
+            throw new ApiException(
+                "Got subscription completion for unknown subscription:" + subscriptionId,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
 
         dispatcher.dispatchCompleted();
@@ -215,22 +262,32 @@ final class SubscriptionEndpoint {
 
     private void notifyError(Throwable error) {
         for (Subscription<?> dispatcher : new HashSet<>(subscriptions.values())) {
-            dispatcher.dispatchError(new ApiException("Subscription failed.", error));
+            dispatcher.dispatchError(new ApiException(
+                    "Subscription failed.",
+                    error,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
         }
     }
 
-    private void notifySubscriptionData(String subscriptionId, String data) {
+    private void notifySubscriptionData(String subscriptionId, String data) throws ApiException {
         final Subscription<?> dispatcher = subscriptions.get(subscriptionId);
         if (dispatcher == null) {
-            throw new ApiException("Got subscription data for unknown subscription ID: " + subscriptionId);
+            throw new ApiException(
+                "Got subscription data for unknown subscription ID: " + subscriptionId,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
         dispatcher.dispatchNextMessage(data);
     }
 
-    synchronized void releaseSubscription(String subscriptionId) {
+    synchronized void releaseSubscription(String subscriptionId) throws ApiException {
         final Subscription<?> subscription = subscriptions.get(subscriptionId);
         if (subscription == null) {
-            throw new IllegalArgumentException("No existing subscription with the given id.");
+            throw new ApiException(
+                "No existing subscription with the given id.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
 
         try {
@@ -239,7 +296,11 @@ final class SubscriptionEndpoint {
                 .put("id", subscriptionId)
                 .toString());
         } catch (JSONException jsonException) {
-            throw new RuntimeException("Failed to construct subscription release message.", jsonException);
+            throw new ApiException(
+                "Failed to construct subscription release message.",
+                jsonException,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
 
         subscription.awaitSubscriptionCompleted();
@@ -257,7 +318,7 @@ final class SubscriptionEndpoint {
      * AppSync endpoint : https://xxxxxxxxxxxx.appsync-api.ap-southeast-2.amazonaws.com/graphql
      * Discovered WebSocket endpoint : wss:// xxxxxxxxxxxx.appsync-realtime-api.ap-southeast-2.amazonaws.com/graphql
      */
-    private String buildConnectionRequestUrl() {
+    private String buildConnectionRequestUrl() throws ApiException {
         // Construct the authorization header for connection request
         final byte[] rawHeader = SubscriptionAuthorizationHeader.from(apiConfiguration)
             .toString()
@@ -311,12 +372,16 @@ final class SubscriptionEndpoint {
         void awaitSubscriptionReady() {
             try {
                 if (!subscriptionReadyAcknowledgment.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    dispatchError(new ApiException("Subscription not acknowledged."));
+                    dispatchError(new ApiException(
+                        "Subscription not acknowledged.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
                 }
             } catch (InterruptedException interruptedException) {
                 dispatchError(new ApiException(
                     "Failure awaiting subscription acknowledgement.",
-                    interruptedException
+                    interruptedException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
             }
         }
@@ -328,18 +393,27 @@ final class SubscriptionEndpoint {
         void awaitSubscriptionCompleted() {
             try {
                 if (!subscriptionCompletionAcknowledgement.await(ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS)) {
-                    dispatchError(new ApiException("Subscription completion not acknowledged."));
+                    dispatchError(new ApiException(
+                        "Subscription completion not acknowledged.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
                 }
             } catch (InterruptedException interruptedException) {
                 dispatchError(new ApiException(
                     "Failure awaiting acknowledgement of subscription completion.",
-                    interruptedException
+                    interruptedException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
             }
         }
 
         void dispatchNextMessage(String message) {
-            responseListener.onNext(responseFactory.buildSingleItemResponse(message, classToCast));
+            try {
+                GraphQLResponse response = responseFactory.buildSingleItemResponse(message, classToCast);
+                responseListener.onNext(response);
+            } catch (ApiException exception) {
+                dispatchError(exception);
+            }
         }
 
         void dispatchError(Throwable error) {

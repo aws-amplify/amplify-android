@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -93,7 +94,7 @@ final class AppSyncGraphQLRequestFactory {
     public static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
-    ) throws AmplifyException {
+    ) throws ApiException {
         StringBuilder doc = new StringBuilder();
         Map<String, Object> variables = new HashMap<>();
         ModelSchema schema = ModelSchema.fromModelClass(modelClass);
@@ -130,7 +131,7 @@ final class AppSyncGraphQLRequestFactory {
             T model,
             QueryPredicate predicate,
             MutationType type
-    ) throws AmplifyException {
+    ) throws ApiException {
         // model is of type T so this is a safe cast - hence the warning suppression
         Class<T> modelClass = (Class<T>) model.getClass();
 
@@ -171,7 +172,15 @@ final class AppSyncGraphQLRequestFactory {
         if (type.equals(MutationType.DELETE)) {
             variables.put("input", Collections.singletonMap("id", model.getId()));
         } else {
-            variables.put("input", schema.getMapOfFieldNameAndValues(model));
+            try {
+                variables.put("input", schema.getMapOfFieldNameAndValues(model));
+            } catch (AmplifyException exception) {
+                throw new ApiException(
+                    "Failed to build the map of variables for this mutation.",
+                    exception,
+                    "See included AmplifyException for more details and a recovery suggestion."
+                );
+            }
         }
 
         if (!predicateIsEmpty(predicate)) {
@@ -216,11 +225,11 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate,
             SubscriptionType type
-    ) throws AmplifyException {
+    ) throws ApiException {
         return null;
     }
 
-    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws AmplifyException {
+    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws ApiException {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
             QueryOperator op = qpo.operator();
@@ -235,11 +244,10 @@ final class AppSyncGraphQLRequestFactory {
                 try {
                     return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
                 } catch (IndexOutOfBoundsException exception) {
-                    throw new AmplifyException(
-                            "Predicate group of type NOT must include a value to negate.",
-                            exception,
-                            "Check if you created a NOT condition in your Predicate with no included value.",
-                            false
+                    throw new ApiException(
+                        "Predicate group of type NOT must include a value to negate.",
+                        exception,
+                        "Check if you created a NOT condition in your Predicate with no included value."
                     );
                 }
             } else {
@@ -252,16 +260,14 @@ final class AppSyncGraphQLRequestFactory {
                 return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
             }
         } else {
-            throw new AmplifyException(
-                    "Tried to parse an unsupported QueryPredicate",
-                    null,
-                    "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup.",
-                    false
+            throw new ApiException(
+                "Tried to parse an unsupported QueryPredicate",
+                "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup."
             );
         }
     }
 
-    private static String appSyncOpType(QueryOperator.Type type) throws AmplifyException {
+    private static String appSyncOpType(QueryOperator.Type type) throws ApiException {
         switch (type) {
             case NOT_EQUAL:
                 return "ne";
@@ -282,17 +288,15 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return "beginsWith";
             default:
-                throw new AmplifyException(
-                        "Tried to parse an unsupported QueryOperator type",
-                        null,
-                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
-                        "in the AppSyncGraphQLRequestFactory.",
-                        false
+                throw new ApiException(
+                    "Tried to parse an unsupported QueryOperator type",
+                    "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                    "in the AppSyncGraphQLRequestFactory."
                 );
         }
     }
 
-    private static Object appSyncOpValue(QueryOperator qOp) throws AmplifyException {
+    private static Object appSyncOpValue(QueryOperator qOp) throws ApiException {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
@@ -314,12 +318,10 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();
             default:
-                throw new AmplifyException(
-                        "Tried to parse an unsupported QueryOperator type",
-                        null,
-                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
-                                "in the AppSyncGraphQLRequestFactory.",
-                        false
+                throw new ApiException(
+                    "Tried to parse an unsupported QueryOperator type",
+                    "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                    "in the AppSyncGraphQLRequestFactory."
                 );
         }
     }

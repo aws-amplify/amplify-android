@@ -21,8 +21,6 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.plugin.PluginException;
-
 import org.json.JSONObject;
 
 import java.util.HashMap;

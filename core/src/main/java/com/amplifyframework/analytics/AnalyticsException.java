@@ -15,39 +15,40 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.AmplifyRuntimeException;
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.AmplifyException;
 
 /**
  * Exception thrown by Analytics category plugins.
  */
-public class AnalyticsException extends AmplifyRuntimeException {
+public class AnalyticsException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
     /**
-     * Creates a new AmazonClientException with the specified message, and root
-     * cause.
-     * @param message An error message describing why this exception was thrown.
-     * @param throwable The underlying cause of this exception.
+     * Creates a new exception with a message, root cause, and recovery suggestion.
+     * @param message An error message describing why this exception was thrown
+     * @param throwable The underlying cause of this exception
+     * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AnalyticsException(final String message, final Throwable throwable) {
-        super(message, throwable, null, true);
+    public AnalyticsException(
+        @NonNull final String message,
+        final Throwable throwable,
+        @NonNull final String recoverySuggestion
+    ) {
+        super(message, throwable, recoverySuggestion);
     }
 
     /**
-     * Creates a new AmazonClientException with the specified message.
-     * @param message An error message describing why this exception was thrown.
+     * Constructs a new exception using a provided message and an associated error.
+     * @param message Explains the reason for the exception
+     * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AnalyticsException(final String message) {
-        this(message, null);
-    }
-
-    /**
-     * Create an AmazonClientException with an exception cause.
-     * @param throwable the cause of the exception.
-     */
-    public AnalyticsException(final Throwable throwable) {
-        this(null, throwable);
+    public AnalyticsException(
+            @NonNull final String message,
+            @NonNull final String recoverySuggestion
+    ) {
+        super(message, recoverySuggestion);
     }
 }
-

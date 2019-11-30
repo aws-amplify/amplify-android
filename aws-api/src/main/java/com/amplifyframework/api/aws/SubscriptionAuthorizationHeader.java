@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.net.Uri;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 
 import org.json.JSONException;
@@ -28,7 +29,7 @@ final class SubscriptionAuthorizationHeader {
     /**
      * Return authorization json to be used for connection and subscription registration.
      */
-    static JSONObject from(ApiConfiguration apiConfiguration) {
+    static JSONObject from(ApiConfiguration apiConfiguration) throws ApiException{
         final String host = Uri.parse(apiConfiguration.getEndpoint()).getHost();
         final String apiKey = apiConfiguration.getApiKey();
         try {
@@ -37,7 +38,11 @@ final class SubscriptionAuthorizationHeader {
                 .put("x-amz-date", Iso8601Timestamp.now())
                 .put("x-api-key", apiKey);
         } catch (JSONException jsonException) {
-            throw new ApiException("Error constructing the authorization json for Api key. ", jsonException);
+            throw new ApiException(
+                    "Error constructing the authorization json for Api key. ",
+                    jsonException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 }

@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -32,7 +31,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
 
@@ -82,7 +80,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfigurationJson, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfigurationJson, Context context) throws ApiException {
         AWSApiPluginConfiguration pluginConfig =
                 AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
@@ -143,7 +141,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
             return query(apiName, request, responseListener);
-        } catch (AmplifyException exception) {
+        } catch (ApiException exception) {
             responseListener.onError(exception);
             return null;
         }
@@ -186,7 +184,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildMutation(model, predicate, mutationType);
             return mutate(apiName, request, responseListener);
-        } catch (AmplifyException exception) {
+        } catch (ApiException exception) {
             responseListener.onError(exception);
             return null;
         }
@@ -239,7 +237,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            if(subscriptionListener != null) {
+                subscriptionListener.onError(
+                    new ApiException(
+                        "No client information for API named " + apiName,
+                        "Check your amplify configuration to make sure there is a correctly configured section for " + apiName
+                    )
+                );
+            } else {
+                // TODO: Dispatch on Hub
+            }
+
+            return null;
         }
 
         SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
@@ -261,7 +270,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            if(responseListener != null) {
+                responseListener.onError(
+                    new ApiException(
+                            "No client information for API named " + apiName,
+                            "Check your amplify configuration to make sure there is a correctly configured section for " + apiName
+                    )
+                );
+            } else {
+                // TODO: Dispatch on Hub
+            }
+
+            return null;
         }
 
         return SingleItemResultOperation.<T>builder()
@@ -280,7 +300,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            if(responseListener != null) {
+                responseListener.onError(
+                        new ApiException(
+                                "No client information for API named " + apiName,
+                                "Check your amplify configuration to make sure there is a correctly configured section for " + apiName
+                        )
+                );
+            } else {
+                // TODO: Dispatch on Hub
+            }
+
+            return null;
         }
 
         return SingleArrayResultOperation.<T>builder()

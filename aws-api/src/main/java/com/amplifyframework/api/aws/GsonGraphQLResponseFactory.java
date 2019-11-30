@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
@@ -75,7 +76,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                 jsonErrors = toJson.get("errors");
             }
         } catch (JsonParseException jsonParseException) {
-            throw new ApiException.ObjectSerializationException(jsonParseException);
+            throw new ApiException(
+                "Amplify encountered an error while serializing/deserializing an object.",
+                jsonParseException,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
 
         List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
@@ -86,8 +91,10 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(data, errors);
         } else {
-            throw new ApiException("Tried to build a single item GraphQL response object but " +
-                    "the JSON data was in the wrong format");
+            throw new ApiException(
+                "Tried to build a single item GraphQL response object but the JSON data was in the wrong format",
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
@@ -107,7 +114,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                 jsonErrors = toJson.get("errors");
             }
         } catch (JsonParseException jsonParseException) {
-            throw new ApiException.ObjectSerializationException(jsonParseException);
+            throw new ApiException(
+                    "Amplify encountered an error while serializing/deserializing an object.",
+                    jsonParseException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
 
         List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
@@ -124,8 +135,10 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(Collections.singletonList(data), errors);
         } else {
-            throw new ApiException("Tried to build a multi item GraphQL response object but " +
-                    "the JSON data was in the wrong format");
+            throw new ApiException(
+                    "Tried to build a multi item GraphQL response object but the JSON data was in the wrong format",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
@@ -137,9 +150,15 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         JsonObject data = jsonData.getAsJsonObject();
         if (data.size() == 0) {
-            throw new ApiException("Please add a single top level field in your query.");
+            throw new ApiException(
+                    "Amplify encountered an error while serializing/deserializing an object.",
+                    "Please add a single top level field in your query."
+            );
         } else if (data.size() > 1) {
-            throw new ApiException("Please reduce your query to a single top level field.");
+            throw new ApiException(
+                    "Amplify encountered an error while serializing/deserializing an object.",
+                    "Please reduce your query to a single top level field."
+            );
         }
 
         return data.get(data.keySet().iterator().next());
@@ -156,8 +175,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         try {
             return gson.fromJson(jsonData, classToCast);
         } catch (ClassCastException classCastException) {
-            throw new ApiException.ObjectSerializationException(
-                    "Failed to parse GraphQL data portion.", classCastException);
+            throw new ApiException(
+                "Failed to parse GraphQL data portion.",
+                classCastException,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
@@ -173,8 +195,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             }
             return dataAsList;
         } catch (ClassCastException classCastException) {
-            throw new ApiException.ObjectSerializationException(
-                    "Failed to parse GraphQL data portion.", classCastException);
+            throw new ApiException(
+                    "Failed to parse GraphQL data portion.",
+                    classCastException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
@@ -190,8 +215,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         try {
             return gson.fromJson(errors, listType);
         } catch (ClassCastException classCastException) {
-            throw new ApiException.ObjectSerializationException(
-                "Failed to parse GraphQL errors.", classCastException);
+            throw new ApiException(
+                    "Failed to parse GraphQL errors.",
+                    classCastException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 }

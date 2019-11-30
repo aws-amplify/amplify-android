@@ -13,16 +13,16 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.storage;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 
 /**
- * Exception thrown by API category plugins.
+ * Exception thrown by Storage category plugins.
  */
-public class ApiException extends AmplifyException {
+public class StorageException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -32,7 +32,7 @@ public class ApiException extends AmplifyException {
      * @param throwable The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public ApiException(
+    public StorageException(
             @NonNull final String message,
             final Throwable throwable,
             @NonNull final String recoverySuggestion
@@ -45,7 +45,7 @@ public class ApiException extends AmplifyException {
      * @param message Explains the reason for the exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public ApiException(
+    public StorageException(
             @NonNull final String message,
             @NonNull final String recoverySuggestion
     ) {

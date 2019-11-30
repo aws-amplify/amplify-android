@@ -15,82 +15,40 @@
 
 package com.amplifyframework.hub;
 
-import com.amplifyframework.AmplifyRuntimeException;
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.AmplifyException;
 
 /**
- * Base exception type for errors in the Hub category/plugin(s).
+ * Exception thrown by Hub category plugins.
  */
-public class HubException extends AmplifyRuntimeException {
+public class HubException extends AmplifyException {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 1L;
 
     /**
-     * The Hub category has not been configured.
+     * Creates a new exception with a message, root cause, and recovery suggestion.
+     * @param message An error message describing why this exception was thrown
+     * @param throwable The underlying cause of this exception
+     * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public static class HubNotConfiguredException extends AmplifyRuntimeException {
-
-        private static final long serialVersionUID = 3L;
-
-        /**
-         * Constructs a new HubNotConfiguredException using a default error message.
-         */
-        public HubNotConfiguredException() {
-            super("Hub category is not configured. " +
-                    "Please configure it through Amplify.configure(context)");
-        }
-
-        /**
-         * Constructs a new HubNotConfiguredException using a provided error message.
-         * @param message Explains that the Hub is not configured, so can't be used
-         */
-        public HubNotConfiguredException(String message) {
-            super(message);
-        }
-
-        /**
-         * Constructs a new HubNotConfiguredException associated to a provided error.
-         * @param throwable An associated error, perhaps the reason why the Hub
-         *                  is not configured
-         */
-        public HubNotConfiguredException(Throwable throwable) {
-            super(throwable);
-        }
-
-        /**
-         * Constructs a new HubNotConfiguredException using a provided error message,
-         * and associated to a provided error.
-         * @param message Explains that Hub is not configured so can't be used
-         * @param throwable An associated error, perhaps the reason why
-         *                  Hub is not configured
-         */
-        public HubNotConfiguredException(String message, Throwable throwable) {
-            super(message, throwable);
-        }
+    public HubException(
+            @NonNull final String message,
+            final Throwable throwable,
+            @NonNull final String recoverySuggestion
+    ) {
+        super(message, throwable, recoverySuggestion);
     }
 
     /**
-     * Creates a new ConfigurationException with the specified message, and root
-     * cause.
-     * @param message An error message describing why this exception was thrown.
-     * @param throwable The underlying cause of this exception.
+     * Constructs a new exception using a provided message and an associated error.
+     * @param message Explains the reason for the exception
+     * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public HubException(String message, Throwable throwable) {
-        super(message, throwable);
-    }
-
-    /**
-     * Creates a new ConfigurationException with the specified message.
-     * @param message An error message describing why this exception was thrown.
-     */
-    public HubException(String message) {
-        super(message);
-    }
-
-    /**
-     * Create an ConfigurationException with an exception cause.
-     * @param throwable the cause of the exception.
-     */
-    public HubException(Throwable throwable) {
-        super(throwable);
+    public HubException(
+            @NonNull final String message,
+            @NonNull final String recoverySuggestion
+    ) {
+        super(message, recoverySuggestion);
     }
 }

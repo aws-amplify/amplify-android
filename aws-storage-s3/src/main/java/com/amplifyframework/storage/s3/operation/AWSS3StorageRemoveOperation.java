@@ -16,7 +16,7 @@
 package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.storage.exception.StorageException;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
@@ -53,43 +53,47 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     }
 
     @Override
-    public void start() throws StorageException {
+    public void start() {
         executorService.submit(() -> {
             String identityId;
 
             try {
                 identityId = AWSMobileClient.getInstance().getIdentityId();
+
+                try {
+                    storageService.deleteObject(
+                            S3RequestUtils.getServiceKey(
+                                    getRequest().getAccessLevel(),
+                                    identityId,
+                                    getRequest().getKey(),
+                                    getRequest().getTargetIdentityId()
+                            )
+                    );
+
+                    if (resultListener != null) {
+                        resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
+                    }
+                } catch (Exception exception) {
+                    if (resultListener != null) {
+                        resultListener.onError(new StorageException(
+                                "Something went wrong with your AWS S3 Storage remove operation",
+                                exception,
+                                "See attached exception for more information and suggestions"
+                        ));
+                    } else {
+                        // TODO: Dispatch on Hub
+                    }
+                }
             } catch (Exception exception) {
-                StorageException storageException = new StorageException(
-                        "AWSMobileClient could not get user id." +
-                                "Check whether you configured it properly before calling this method.",
-                        exception
-                );
-
                 if (resultListener != null) {
-                    resultListener.onError(storageException);
+                    resultListener.onError(new StorageException(
+                            "Something went wrong with your AWS S3 Storage remove operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
+                    ));
+                } else {
+                    // TODO: Dispatch on Hub
                 }
-                throw storageException;
-            }
-
-            try {
-                storageService.deleteObject(
-                        S3RequestUtils.getServiceKey(
-                                getRequest().getAccessLevel(),
-                                identityId,
-                                getRequest().getKey(),
-                                getRequest().getTargetIdentityId()
-                        )
-                );
-
-                if (resultListener != null) {
-                    resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
-                }
-            } catch (Exception error) {
-                if (resultListener != null) {
-                    resultListener.onError(error);
-                }
-                throw error;
             }
         });
     }

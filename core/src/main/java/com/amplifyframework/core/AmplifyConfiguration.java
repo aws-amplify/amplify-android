@@ -23,7 +23,6 @@ import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;

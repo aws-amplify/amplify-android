@@ -15,7 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -38,8 +38,8 @@ public final class AWSApiPluginConfigurationReaderTest {
      * An attempt to read a null JSON object should result in a
      * configuration exception.
      */
-    @Test(expected = ConfigurationException.class)
-    public void readFromNullJsonObjectThrowsConfigurationException() {
+    @Test(expected = ApiException.class)
+    public void readFromNullJsonObjectThrowsConfigurationException() throws ApiException {
         AWSApiPluginConfigurationReader.readFrom(null);
     }
 
@@ -48,8 +48,8 @@ public final class AWSApiPluginConfigurationReaderTest {
      * exception.
      * @throws JSONException On failure to arrange test inputs
      */
-    @Test(expected = ConfigurationException.class)
-    public void readFromApiWithNoSpecThrowsConfigurationException() throws JSONException {
+    @Test(expected = ApiException.class)
+    public void readFromApiWithNoSpecThrowsConfigurationException() throws JSONException, ApiException {
         final JSONObject emptyApiSpec = new JSONObject().put("api1", new JSONObject());
         AWSApiPluginConfigurationReader.readFrom(emptyApiSpec);
     }
@@ -60,7 +60,7 @@ public final class AWSApiPluginConfigurationReaderTest {
      * @throws JSONException On failure to arrange the test input
      */
     @Test
-    public void readFromWellFormedJsonObjectProducesValidConfig() throws JSONException {
+    public void readFromWellFormedJsonObjectProducesValidConfig() throws JSONException, ApiException {
 
         // Arrange an input JSONObject
         final JSONObject json = new JSONObject(Resources.readAsString("single-api.config"));

@@ -26,7 +26,6 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;

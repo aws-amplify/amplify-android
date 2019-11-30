@@ -19,12 +19,10 @@ import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
 
@@ -74,7 +72,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void recordEvent(@NonNull String eventName)
-            throws AnalyticsException, ConfigurationException {
+            throws AnalyticsException {
 
     }
 
@@ -83,7 +81,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void recordEvent(@NonNull AnalyticsEvent analyticsEvent)
-            throws AnalyticsException, ConfigurationException {
+            throws AnalyticsException {
 
     }
 
@@ -123,7 +121,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws AnalyticsException {
 
     }
 

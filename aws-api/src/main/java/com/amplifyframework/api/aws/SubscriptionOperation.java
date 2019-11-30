@@ -19,6 +19,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -90,7 +91,15 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     @Override
     public void cancel() {
-        subscriptionEndpoint.releaseSubscription(subscriptionId);
+        try {
+            subscriptionEndpoint.releaseSubscription(subscriptionId);
+        } catch (ApiException exception) {
+            if (subscriptionListener != null) {
+                subscriptionListener.onError(exception);
+            } else {
+                // TODO: Dispatch on Hub
+            }
+        }
     }
 
     static final class Builder<T> implements

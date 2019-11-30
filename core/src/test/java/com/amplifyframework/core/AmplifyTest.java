@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.logging.LoggingPlugin;
 
 import org.json.JSONObject;

@@ -17,13 +17,13 @@ package com.amplifyframework.api.aws;
 
 import android.content.Context;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
 import com.amplifyframework.api.aws.sigv4.BasicCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
-import com.amplifyframework.core.plugin.PluginException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -71,7 +71,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
      *         authorization mode specified in API configuration
      */
     @Override
-    public AppSyncSigV4SignerInterceptor create(ApiConfiguration config) {
+    public AppSyncSigV4SignerInterceptor create(ApiConfiguration config) throws ApiException {
         switch (config.getAuthorizationType()) {
             case API_KEY:
                 // API key provider is configured per API, not per plugin.
@@ -108,19 +108,23 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 OidcAuthProvider oidcProvider = apiAuthProviders.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     oidcProvider = () -> {
-                        throw new ApiException.AuthorizationTypeNotConfiguredException(
-                            "OidcAuthProvider interface is not implemented.");
+                        throw new ApiException(
+                            "OidcAuthProvider interface is not implemented.",
+                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                        );
                     };
                 }
                 return new AppSyncSigV4SignerInterceptor(oidcProvider);
             default:
-                throw new PluginException.PluginConfigurationException(
-                        "Unsupported authorization mode.");
+                throw new ApiException(
+                        "Unsupported authorization mode.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                );
         }
     }
 
     // Helper method to initialize AWS Mobile Client.
-    private AWSCredentialsProvider getCredProvider(Context context) {
+    private AWSCredentialsProvider getCredProvider(Context context) throws ApiException {
         final Semaphore semaphore = new Semaphore(0);
         AWSMobileClient.getInstance().initialize(context, new Callback<UserStateDetails>() {
             @Override
@@ -137,9 +141,17 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
         try {
             semaphore.acquire();
         } catch (InterruptedException exception) {
-            throw new ApiException("Interrupted signing into mobile client.", exception);
+            throw new ApiException(
+                    "Interrupted signing into mobile client.",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         } catch (Exception error) {
-            throw new ApiException(error.getLocalizedMessage(), error);
+            throw new ApiException(
+                "Failed to obtain a credential provider.",
+                error,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
         return AWSMobileClient.getInstance();
     }

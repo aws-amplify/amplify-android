@@ -107,6 +107,6 @@ enum SubscriptionMessageType {
             }
         }
 
-        throw new ApiException("No such subscription message type: " + value);
+        throw new IllegalArgumentException("No such subscription message type: " + value);
     }
 }

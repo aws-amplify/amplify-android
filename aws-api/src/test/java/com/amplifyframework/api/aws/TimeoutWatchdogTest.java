@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.ApiException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -51,7 +53,7 @@ public final class TimeoutWatchdogTest {
      * allowed, then the timeout action should be run.
      */
     @Test
-    public void timeoutActionIsInvokedAfterTimeElapsesFromStart() {
+    public void timeoutActionIsInvokedAfterTimeElapsesFromStart() throws ApiException {
         // When watchdog is started,
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
 
@@ -82,7 +84,7 @@ public final class TimeoutWatchdogTest {
      * then the timeout action is not run (yet).
      */
     @Test
-    public void timeoutActionNotRunAfterResetBeforeNewTimeout() {
+    public void timeoutActionNotRunAfterResetBeforeNewTimeout() throws ApiException {
         // Arrange: timer is started and almost counted down.
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
         ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
@@ -100,7 +102,7 @@ public final class TimeoutWatchdogTest {
      * even the newly set timeout, then the timeout action will run.
      */
     @Test
-    public void timeoutActionIsRunEvenAfterResetTimePeriod() {
+    public void timeoutActionIsRunEvenAfterResetTimePeriod() throws ApiException {
         // Arrange: started watchdog, time has gone by.
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
         ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
@@ -118,7 +120,7 @@ public final class TimeoutWatchdogTest {
      * doesn't get run.
      */
     @Test
-    public void timeoutActionIsRunIfWatchdogStoppedBeforeTimeout() {
+    public void timeoutActionIsRunIfWatchdogStoppedBeforeTimeout() throws ApiException {
         // Arrange: timer is started, and almost out of time
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
         ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);

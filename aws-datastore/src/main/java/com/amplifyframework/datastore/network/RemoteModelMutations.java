@@ -26,7 +26,6 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.HashSet;
 import java.util.Set;

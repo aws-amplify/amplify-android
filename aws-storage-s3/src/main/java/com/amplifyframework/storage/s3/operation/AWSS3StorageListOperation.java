@@ -16,7 +16,7 @@
 package com.amplifyframework.storage.s3.operation;
 
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.storage.exception.StorageException;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
@@ -54,43 +54,48 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
     }
 
     @Override
-    public void start() throws StorageException {
+    public void start() {
         executorService.submit(() -> {
             String identityId;
 
             try {
                 identityId = AWSMobileClient.getInstance().getIdentityId();
+
+                try {
+                    StorageListResult result = storageService.listFiles(
+                            S3RequestUtils.getServiceKey(
+                                    getRequest().getAccessLevel(),
+                                    identityId,
+                                    getRequest().getPath(),
+                                    getRequest().getTargetIdentityId()
+                            )
+                    );
+
+                    if (resultListener != null) {
+                        resultListener.onResult(result);
+                    }
+                } catch (Exception exception) {
+                    if (resultListener != null) {
+                        resultListener.onError(new StorageException(
+                                "Something went wrong with your AWS S3 Storage list operation",
+                                exception,
+                                "See attached exception for more information and suggestions"
+                        ));
+                    } else {
+                        // TODO: Dispatch on Hub
+                    }
+                }
             } catch (Exception exception) {
-                StorageException storageException = new StorageException(
-                        "AWSMobileClient could not get user id." +
-                                "Check whether you configured it properly before calling this method.",
-                        exception
-                );
-
                 if (resultListener != null) {
-                    resultListener.onError(storageException);
+                    resultListener.onError(new StorageException(
+                            "AWSMobileClient could not get user id.",
+                            exception,
+                            "Check whether you initialized AWSMobileClient and waited for its success callback " +
+                                    "before calling Amplify config."
+                    ));
+                } else {
+                    // TODO: Dispatch on Hub
                 }
-                throw storageException;
-            }
-
-            try {
-                StorageListResult result = storageService.listFiles(
-                        S3RequestUtils.getServiceKey(
-                                getRequest().getAccessLevel(),
-                                identityId,
-                                getRequest().getPath(),
-                                getRequest().getTargetIdentityId()
-                        )
-                );
-
-                if (resultListener != null) {
-                    resultListener.onResult(result);
-                }
-            } catch (Exception error) {
-                if (resultListener != null) {
-                    resultListener.onError(error);
-                }
-                throw error;
             }
         });
     }

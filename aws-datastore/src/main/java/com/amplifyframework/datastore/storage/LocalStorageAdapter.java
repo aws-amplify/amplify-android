@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Iterator;
 import java.util.List;
@@ -119,5 +120,5 @@ public interface LocalStorageAdapter {
      * Terminate use of the local storage.
      * This should release all resources used by the implementation.
      */
-    void terminate();
+    void terminate() throws DataStoreException;
 }
