@@ -169,7 +169,6 @@ public final class CodeGenerationInstrumentationTest {
         GraphQLOperation<Person> operation = Amplify.API.subscribe(
                 PERSON_API_NAME,
                 Person.class,
-                null,
                 SubscriptionType.ON_CREATE,
                 streamListener
         );
