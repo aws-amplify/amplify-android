@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -29,8 +28,6 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import java.util.Iterator;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Single;
 
@@ -45,7 +42,7 @@ final class PersistentModelVersion implements Model {
     private static final String TAG = PersistentModelVersion.class.getSimpleName();
 
     // A static identifier that is used to store the version of model.
-    private static final String IDENTIFIER_FOR_VERSION = "version-in-local-storage";
+    private static final String STATIC_IDENTIFIER_FOR_VERSION = "version-in-local-storage";
 
     @ModelField(targetType = "ID", isRequired = true)
     private final String id;
@@ -59,25 +56,23 @@ final class PersistentModelVersion implements Model {
      */
     PersistentModelVersion(@NonNull String version) {
         Objects.requireNonNull(version);
-        this.id = IDENTIFIER_FOR_VERSION;
+        this.id = STATIC_IDENTIFIER_FOR_VERSION;
         this.version = version;
     }
 
     /**
      * Read the PersistentModelVersion stored by the LocalStorageAdapter on disk.
      * @param localStorageAdapter storage adapter that is used to query the data from disk.
-     * @return a Single that emits the PersistentModelVersion read from disk upon success` and
+     * @return a Single that emits the PersistentModelVersion read from disk upon success and
      *         error upon failure
      */
-    static Single<PersistentModelVersion> fromLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter) {
+    static Single<Iterator<PersistentModelVersion>> fromLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter) {
         return Single.create(emitter -> {
             final ResultListener<Iterator<PersistentModelVersion>> queryListener =
                     new ResultListener<Iterator<PersistentModelVersion>>() {
                 @Override
                 public void onResult(Iterator<PersistentModelVersion> result) {
-                    if (result.hasNext()) {
-                        emitter.onSuccess(result.next());
-                    }
+                    emitter.onSuccess(result);
                 }
 
                 @Override
@@ -93,10 +88,12 @@ final class PersistentModelVersion implements Model {
      * Persist the version object through the localStorageAdapter.
      * @param localStorageAdapter persists the version object
      * @param persistentModelVersion the object to be persisted
+     * return a Single that emits the PersistentModelVersion read from disk upon success and
+     *        error upon failure
      */
-    static Single<PersistentModelVersion> saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
+    static PersistentModelVersion saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
                                                              @NonNull PersistentModelVersion persistentModelVersion) {
-        return Single.create(emitter -> {
+        return Single.<PersistentModelVersion>create(emitter -> {
             final ResultListener<StorageItemChange.Record> saveListener =
                     new ResultListener<StorageItemChange.Record>() {
                         @Override
@@ -113,7 +110,7 @@ final class PersistentModelVersion implements Model {
                     persistentModelVersion,
                     StorageItemChange.Initiator.DATA_STORE_API,
                     saveListener);
-        });
+        }).blockingGet();
     }
 
     /** {@inheritDoc}. */

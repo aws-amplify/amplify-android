@@ -25,8 +25,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.model.ModelProvider;
-
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -34,7 +32,7 @@ import java.util.Set;
 /**
  * A helper class to manage database creation and version management.
  */
-final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade<SQLiteDatabase, String> {
+final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgradeStrategy<SQLiteDatabase, String> {
 
     // Logcat tag
     private static final String TAG = SQLiteStorageHelper.class.getSimpleName();
@@ -158,21 +156,13 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
     }
 
     /**
-     * Called when the model version has changed.
-     * This method will only be called if a table already exists on disk which
-     * contains the {@link ModelProvider#version()} and the version stored on disk
-     * differs from the version passed in.
-     *
-     * When the version change is detected, we will drop all the tables.
-     *
-     * @param sqliteDatabase the connection handle to the database.
-     * @param oldVersion older version number
-     * @param newVersion newer version number
+     * {@inheritDoc}.
      */
     @Override
-    public synchronized void onModelUpgrade(@NonNull SQLiteDatabase sqliteDatabase,
-                                            @NonNull String oldVersion,
-                                            @NonNull String newVersion) {
+    public synchronized void upgrade(
+            @NonNull SQLiteDatabase sqliteDatabase,
+            @NonNull String oldVersion,
+            @NonNull String newVersion) {
         Objects.requireNonNull(sqliteDatabase);
         Objects.requireNonNull(oldVersion);
         Objects.requireNonNull(newVersion);

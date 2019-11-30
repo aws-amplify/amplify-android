@@ -121,7 +121,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         String expectedVersion = modelProvider.version();
 
         PersistentModelVersion persistentModelVersion =
-                PersistentModelVersion.fromLocalStorage(sqliteStorageAdapter).blockingGet();
+                PersistentModelVersion
+                        .fromLocalStorage(sqliteStorageAdapter)
+                        .blockingGet()
+                        .next();
         String actualVersion = persistentModelVersion.getVersion();
 
         assertEquals(expectedVersion, actualVersion);
@@ -145,7 +148,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         setupListener.awaitTerminalEvent().assertNoError();
 
         PersistentModelVersion persistentModelVersion =
-                PersistentModelVersion.fromLocalStorage(sqliteStorageAdapter).blockingGet();
+                PersistentModelVersion
+                        .fromLocalStorage(sqliteStorageAdapter)
+                        .blockingGet()
+                        .next();
         String actualVersion = persistentModelVersion.getVersion();
 
         assertEquals(expectedVersion, actualVersion);
