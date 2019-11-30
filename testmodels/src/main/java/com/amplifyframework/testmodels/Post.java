@@ -36,13 +36,11 @@ public final class Post implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField TITLE = QueryField.field("title");
     public static final QueryField BLOG = QueryField.field("blog");
-    public static final QueryField RATING = QueryField.field("rating");
-    public static final QueryField EDITORS = QueryField.field("editors");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String title;
     private final @ModelField(targetType="Blog", isRequired = true) @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;
-    private final @ModelField(targetType="Rating") @HasOne(associatedWith = "post", type = Rating.class) Rating rating;
-    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "post", type = PostEditor.class) List<PostEditor> editors;
+    private final @ModelField(targetType="Rating") @HasOne(associatedWith = "post", type = Rating.class) Rating rating = null;
+    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "post", type = PostEditor.class) List<PostEditor> editors = null;
     public String getId() {
         return id;
     }
@@ -63,12 +61,10 @@ public final class Post implements Model {
         return editors;
     }
 
-    private Post(String id, String title, Blog blog, Rating rating, List<PostEditor> editors) {
+    private Post(String id, String title, Blog blog) {
         this.id = id;
         this.title = title;
         this.blog = blog;
-        this.rating = rating;
-        this.editors = editors;
     }
 
     @Override
@@ -81,9 +77,7 @@ public final class Post implements Model {
             Post post = (Post) obj;
             return ObjectsCompat.equals(getId(), post.getId()) &&
                     ObjectsCompat.equals(getTitle(), post.getTitle()) &&
-                    ObjectsCompat.equals(getBlog(), post.getBlog()) &&
-                    ObjectsCompat.equals(getRating(), post.getRating()) &&
-                    ObjectsCompat.equals(getEditors(), post.getEditors());
+                    ObjectsCompat.equals(getBlog(), post.getBlog());
         }
     }
 
@@ -93,8 +87,6 @@ public final class Post implements Model {
                 .append(getId())
                 .append(getTitle())
                 .append(getBlog())
-                .append(getRating())
-                .append(getEditors())
                 .hashCode();
     }
 
@@ -124,8 +116,6 @@ public final class Post implements Model {
         return new Post(
                 id,
                 null,
-                null,
-                null,
                 null
         );
     }
@@ -133,9 +123,7 @@ public final class Post implements Model {
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
                 title,
-                blog,
-                rating,
-                editors);
+                blog);
     }
     public interface TitleStep {
         BlogStep title(String title);
@@ -150,8 +138,6 @@ public final class Post implements Model {
     public interface BuildStep {
         Post build();
         BuildStep id(String id) throws IllegalArgumentException;
-        BuildStep rating(Rating rating);
-        BuildStep editors(List<PostEditor> editors);
     }
 
 
@@ -159,8 +145,6 @@ public final class Post implements Model {
         private String id;
         private String title;
         private Blog blog;
-        private Rating rating;
-        private List<PostEditor> editors;
         @Override
         public Post build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -168,9 +152,7 @@ public final class Post implements Model {
             return new Post(
                     id,
                     title,
-                    blog,
-                    rating,
-                    editors);
+                    blog);
         }
 
         @Override
@@ -184,18 +166,6 @@ public final class Post implements Model {
         public BuildStep blog(Blog blog) {
             Objects.requireNonNull(blog);
             this.blog = blog;
-            return this;
-        }
-
-        @Override
-        public BuildStep rating(Rating rating) {
-            this.rating = rating;
-            return this;
-        }
-
-        @Override
-        public BuildStep editors(List<PostEditor> editors) {
-            this.editors = editors;
             return this;
         }
 
@@ -222,12 +192,10 @@ public final class Post implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String title, Blog blog, Rating rating, List<PostEditor> editors) {
+        private CopyOfBuilder(String id, String title, Blog blog) {
             super.id(id);
             super.title(title)
-                    .blog(blog)
-                    .rating(rating)
-                    .editors(editors);
+                    .blog(blog);
         }
 
         @Override
@@ -239,17 +207,6 @@ public final class Post implements Model {
         public CopyOfBuilder blog(Blog blog) {
             return (CopyOfBuilder) super.blog(blog);
         }
-
-        @Override
-        public CopyOfBuilder rating(Rating rating) {
-            return (CopyOfBuilder) super.rating(rating);
-        }
-
-        @Override
-        public CopyOfBuilder editors(List<PostEditor> editors) {
-            return (CopyOfBuilder) super.editors(editors);
-        }
     }
 
 }
-
