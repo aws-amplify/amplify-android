@@ -32,7 +32,7 @@ import java.util.UUID;
 public final class Rating implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField STARS = QueryField.field("stars");
-    public static final QueryField POST = QueryField.field("post");
+    public static final QueryField POST = QueryField.field("ratingPostId");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="Int", isRequired = true) Integer stars;
     private final @ModelField(targetType="Post", isRequired = true) @BelongsTo(targetName = "ratingPostId", type = Post.class) Post post;
