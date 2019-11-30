@@ -35,7 +35,7 @@ import java.util.UUID;
 public final class Post implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField TITLE = QueryField.field("title");
-    public static final QueryField BLOG = QueryField.field("blog");
+    public static final QueryField BLOG = QueryField.field("postBlogId");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String title;
     private final @ModelField(targetType="Blog", isRequired = true) @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;
