@@ -74,12 +74,18 @@ dependencies {
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
     testImplementation project(path: ':testmodels')
+    testImplementation(project(path: ':testutils')) {
+        transitive = false
+    }
 
     // Required for instrumented tests
     androidTestImplementation 'androidx.annotation:annotation:1.1.0'
     androidTestImplementation 'androidx.test:core:1.2.0' // Core Library
     androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
     androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
+    androidTestImplementation(project(path: ':testutils')) {
+        transitive = false
+    }
 }
 
 project.afterEvaluate {
