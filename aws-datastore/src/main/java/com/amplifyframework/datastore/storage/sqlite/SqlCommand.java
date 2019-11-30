@@ -38,6 +38,9 @@ final class SqlCommand {
     // threads can operate on the same SQLiteStatement object.
     private final SQLiteStatement compiledSqlStatement;
 
+    // An array of arguments to be used as selection arguments
+    private final String[] selectionArgs;
+
     /**
      * Construct a SqlCommand object.
      *
@@ -46,7 +49,7 @@ final class SqlCommand {
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement) {
-        this(tableName, sqlStatement, null);
+        this(tableName, sqlStatement, null, null);
     }
 
     /**
@@ -60,9 +63,39 @@ final class SqlCommand {
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
                @Nullable SQLiteStatement compiledSqlStatement) {
+        this(tableName, sqlStatement, compiledSqlStatement, null);
+    }
+
+    /**
+     * Construct a SqlCommand object.
+     *
+     * @param tableName name of the SQL table
+     * @param sqlStatement create table command in string representation
+     * @param selectionArgs an array of arguments for selection
+     */
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement,
+               @Nullable String[] selectionArgs) {
+        this(tableName, sqlStatement, null, selectionArgs);
+    }
+
+    /**
+     * Construct a SqlCommand object.
+     *
+     * @param tableName name of the SQL table
+     * @param sqlStatement create table command in string representation
+     * @param compiledSqlStatement a compiled Sql statement that can be bound with
+     *                             inputs later and executed.
+     * @param selectionArgs an array of arguments for selection
+     */
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement,
+               @Nullable SQLiteStatement compiledSqlStatement,
+               @Nullable String[] selectionArgs) {
         this.tableName = Objects.requireNonNull(tableName);
         this.sqlStatement = Objects.requireNonNull(sqlStatement);
         this.compiledSqlStatement = compiledSqlStatement;
+        this.selectionArgs = selectionArgs;
     }
 
     /**
@@ -92,6 +125,14 @@ final class SqlCommand {
     }
 
     /**
+     * Return the array of arguments for selection.
+     * @return the array of arguments for selection
+     */
+    String[] getSelectionArgs() {
+        return selectionArgs;
+    }
+
+    /**
      * Return true if compiledSqlStatement is not null
      * and false otherwise.
      * @return true if compiledSqlStatement is not null,
@@ -118,7 +159,13 @@ final class SqlCommand {
         if (!ObjectsCompat.equals(sqlStatement, that.sqlStatement)) {
             return false;
         }
-        return ObjectsCompat.equals(compiledSqlStatement, that.compiledSqlStatement);
+        if (!ObjectsCompat.equals(compiledSqlStatement, that.compiledSqlStatement)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(selectionArgs, that.selectionArgs)) {
+            return false;
+        }
+        return true;
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")
@@ -127,15 +174,17 @@ final class SqlCommand {
         int result = tableName != null ? tableName.hashCode() : 0;
         result = 31 * result + (sqlStatement != null ? sqlStatement.hashCode() : 0);
         result = 31 * result + (compiledSqlStatement != null ? compiledSqlStatement.hashCode() : 0);
+        result = 31 * result + (selectionArgs != null ? selectionArgs.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
         return "SqlCommand{" +
-            "tableName='" + tableName + '\'' +
-            ", sqlStatement='" + sqlStatement + '\'' +
-            ", compiledSqlStatement=" + compiledSqlStatement +
-            '}';
+                "tableName='" + tableName + '\'' +
+                ", sqlStatement='" + sqlStatement + '\'' +
+                ", compiledSqlStatement=" + compiledSqlStatement +
+                ", selectionArgs=" + selectionArgs +
+                '}';
     }
 }

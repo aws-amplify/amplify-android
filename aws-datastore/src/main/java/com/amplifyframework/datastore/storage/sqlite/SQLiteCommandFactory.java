@@ -153,6 +153,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
+        String[] selectionArgs = null;
 
         // Track the list of columns to return
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
@@ -228,15 +229,17 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // Append predicates.
         // WHERE condition
         if (predicate != null) {
+            List<String> args = new LinkedList<>();
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
-                    .append(parsePredicate(predicate));
+                    .append(parsePredicate(predicate, args));
+            selectionArgs = args.toArray(new String[0]);
         }
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        return new SqlCommand(table.getName(), queryString);
+        return new SqlCommand(table.getName(), queryString, selectionArgs);
     }
 
     /**
@@ -397,13 +400,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to recursively parse a given predicate.
-    private StringBuilder parsePredicate(QueryPredicate queryPredicate) {
+    private StringBuilder parsePredicate(QueryPredicate queryPredicate, List<String> args) {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
-            return parsePredicateOperation(qpo);
+            return parsePredicateOperation(qpo, args);
         } else if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
-            return parsePredicateGroup(qpg);
+            return parsePredicateGroup(qpg, args);
         } else {
             throw new UnsupportedTypeException(
                     "Tried to parse an unsupported QueryPredicate",
@@ -416,7 +419,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to recursively parse a given predicate operation.
-    private StringBuilder parsePredicateOperation(QueryPredicateOperation operation) {
+    private StringBuilder parsePredicateOperation(QueryPredicateOperation operation, List<String> args) {
         final StringBuilder builder = new StringBuilder();
         final String field = operation.field();
         final QueryOperator op = operation.operator();
@@ -429,34 +432,35 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                         new GreaterThanQueryOperator(start));
                 QueryPredicateOperation lt = new QueryPredicateOperation(field,
                         new LessThanQueryOperator(end));
-                return parsePredicate(gt.and(lt));
+                return parsePredicate(gt.and(lt), args);
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
-                return builder.append(containsOp.value())
+                args.add(containsOp.value().toString());
+                return builder.append("?")
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.IN)
                         .append(SqlKeyword.DELIMITER)
                         .append(field);
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
+                args.add(beginsWithOp.value() + "%");
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.LIKE)
                         .append(SqlKeyword.DELIMITER)
-                        .append("\'")
-                        .append(beginsWithOp.value().toString() + "%")
-                        .append("\'");
+                        .append("?");
             case EQUAL:
             case NOT_EQUAL:
             case LESS_THAN:
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
+                args.add(getOperatorValue(op).toString());
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
                         .append(SqlKeyword.DELIMITER)
-                        .append(getOperatorValue(op));
+                        .append("?");
             default:
                 throw new UnsupportedTypeException(
                         "Tried to parse an unsupported QueryPredicateOperation",
@@ -469,19 +473,19 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to recursively parse a given predicate group.
-    private StringBuilder parsePredicateGroup(QueryPredicateGroup group) {
+    private StringBuilder parsePredicateGroup(QueryPredicateGroup group, List<String> args) {
         final StringBuilder builder = new StringBuilder();
         switch (group.type()) {
             case NOT:
                 return builder.append(SqlKeyword.fromQueryPredicateGroup(group.type()))
                         .append(SqlKeyword.DELIMITER)
-                        .append(parsePredicate(group.predicates().get(0)));
+                        .append(parsePredicate(group.predicates().get(0), args));
             case OR:
             case AND:
                 builder.append("(");
                 Iterator<QueryPredicate> predicateIterator = group.predicates().iterator();
                 while (predicateIterator.hasNext()) {
-                    builder.append(parsePredicate(predicateIterator.next()));
+                    builder.append(parsePredicate(predicateIterator.next(), args));
                     if (predicateIterator.hasNext()) {
                         builder.append(SqlKeyword.DELIMITER)
                                 .append(SqlKeyword.fromQueryPredicateGroup(group.type()))
