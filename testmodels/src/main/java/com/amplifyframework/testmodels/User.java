@@ -33,10 +33,9 @@ import java.util.UUID;
 public final class User implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField USERNAME = QueryField.field("username");
-    public static final QueryField POSTS = QueryField.field("posts");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String username;
-    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "editor", type = PostEditor.class) List<PostEditor> posts;
+    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "editor", type = PostEditor.class) List<PostEditor> posts = null;
     public String getId() {
         return id;
     }
@@ -49,10 +48,9 @@ public final class User implements Model {
         return posts;
     }
 
-    private User(String id, String username, List<PostEditor> posts) {
+    private User(String id, String username) {
         this.id = id;
         this.username = username;
-        this.posts = posts;
     }
 
     @Override
@@ -64,8 +62,7 @@ public final class User implements Model {
         } else {
             User user = (User) obj;
             return ObjectsCompat.equals(getId(), user.getId()) &&
-                    ObjectsCompat.equals(getUsername(), user.getUsername()) &&
-                    ObjectsCompat.equals(getPosts(), user.getPosts());
+                    ObjectsCompat.equals(getUsername(), user.getUsername());
         }
     }
 
@@ -74,7 +71,6 @@ public final class User implements Model {
         return new StringBuilder()
                 .append(getId())
                 .append(getUsername())
-                .append(getPosts())
                 .hashCode();
     }
 
@@ -103,15 +99,13 @@ public final class User implements Model {
         }
         return new User(
                 id,
-                null,
                 null
         );
     }
 
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
-                username,
-                posts);
+                username);
     }
     public interface UsernameStep {
         BuildStep username(String username);
@@ -121,34 +115,25 @@ public final class User implements Model {
     public interface BuildStep {
         User build();
         BuildStep id(String id) throws IllegalArgumentException;
-        BuildStep posts(List<PostEditor> posts);
     }
 
 
     public static class Builder implements UsernameStep, BuildStep {
         private String id;
         private String username;
-        private List<PostEditor> posts;
         @Override
         public User build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
             return new User(
                     id,
-                    username,
-                    posts);
+                    username);
         }
 
         @Override
         public BuildStep username(String username) {
             Objects.requireNonNull(username);
             this.username = username;
-            return this;
-        }
-
-        @Override
-        public BuildStep posts(List<PostEditor> posts) {
-            this.posts = posts;
             return this;
         }
 
@@ -175,20 +160,14 @@ public final class User implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String username, List<PostEditor> posts) {
+        private CopyOfBuilder(String id, String username) {
             super.id(id);
-            super.username(username)
-                    .posts(posts);
+            super.username(username);
         }
 
         @Override
         public CopyOfBuilder username(String username) {
             return (CopyOfBuilder) super.username(username);
-        }
-
-        @Override
-        public CopyOfBuilder posts(List<PostEditor> posts) {
-            return (CopyOfBuilder) super.posts(posts);
         }
     }
 

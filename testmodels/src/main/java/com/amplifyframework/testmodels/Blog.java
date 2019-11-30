@@ -34,11 +34,10 @@ public final class Blog implements Model {
     public static final QueryField ID = QueryField.field("id");
     public static final QueryField NAME = QueryField.field("name");
     public static final QueryField TAGS = QueryField.field("tags");
-    public static final QueryField POSTS = QueryField.field("posts");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String name;
     private final @ModelField(targetType="String") List<String> tags;
-    private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts;
+    private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
     public String getId() {
         return id;
     }
@@ -55,11 +54,10 @@ public final class Blog implements Model {
         return posts;
     }
 
-    private Blog(String id, String name, List<String> tags, List<Post> posts) {
+    private Blog(String id, String name, List<String> tags) {
         this.id = id;
         this.name = name;
         this.tags = tags;
-        this.posts = posts;
     }
 
     @Override
@@ -72,8 +70,7 @@ public final class Blog implements Model {
             Blog blog = (Blog) obj;
             return ObjectsCompat.equals(getId(), blog.getId()) &&
                     ObjectsCompat.equals(getName(), blog.getName()) &&
-                    ObjectsCompat.equals(getTags(), blog.getTags()) &&
-                    ObjectsCompat.equals(getPosts(), blog.getPosts());
+                    ObjectsCompat.equals(getTags(), blog.getTags());
         }
     }
 
@@ -83,7 +80,6 @@ public final class Blog implements Model {
                 .append(getId())
                 .append(getName())
                 .append(getTags())
-                .append(getPosts())
                 .hashCode();
     }
 
@@ -113,7 +109,6 @@ public final class Blog implements Model {
         return new Blog(
                 id,
                 null,
-                null,
                 null
         );
     }
@@ -121,8 +116,7 @@ public final class Blog implements Model {
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
                 name,
-                tags,
-                posts);
+                tags);
     }
     public interface NameStep {
         BuildStep name(String name);
@@ -133,7 +127,6 @@ public final class Blog implements Model {
         Blog build();
         BuildStep id(String id) throws IllegalArgumentException;
         BuildStep tags(List<String> tags);
-        BuildStep posts(List<Post> posts);
     }
 
 
@@ -141,7 +134,6 @@ public final class Blog implements Model {
         private String id;
         private String name;
         private List<String> tags;
-        private List<Post> posts;
         @Override
         public Blog build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -149,8 +141,7 @@ public final class Blog implements Model {
             return new Blog(
                     id,
                     name,
-                    tags,
-                    posts);
+                    tags);
         }
 
         @Override
@@ -163,12 +154,6 @@ public final class Blog implements Model {
         @Override
         public BuildStep tags(List<String> tags) {
             this.tags = tags;
-            return this;
-        }
-
-        @Override
-        public BuildStep posts(List<Post> posts) {
-            this.posts = posts;
             return this;
         }
 
@@ -195,11 +180,10 @@ public final class Blog implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String name, List<String> tags, List<Post> posts) {
+        private CopyOfBuilder(String id, String name, List<String> tags) {
             super.id(id);
             super.name(name)
-                    .tags(tags)
-                    .posts(posts);
+                    .tags(tags);
         }
 
         @Override
@@ -210,11 +194,6 @@ public final class Blog implements Model {
         @Override
         public CopyOfBuilder tags(List<String> tags) {
             return (CopyOfBuilder) super.tags(tags);
-        }
-
-        @Override
-        public CopyOfBuilder posts(List<Post> posts) {
-            return (CopyOfBuilder) super.posts(posts);
         }
     }
 

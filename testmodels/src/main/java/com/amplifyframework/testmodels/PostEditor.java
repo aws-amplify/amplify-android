@@ -200,4 +200,3 @@ public final class PostEditor implements Model {
     }
 
 }
-
