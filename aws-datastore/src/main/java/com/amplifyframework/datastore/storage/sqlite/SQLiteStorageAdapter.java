@@ -64,7 +64,10 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
 /**
@@ -117,6 +120,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // and vice-versa
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
+    private final Set<Disposable> toBeDisposed;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param modelProvider Provides the models that will be usable by the DataStore
@@ -124,11 +129,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
-        this.threadPool = Executors.newFixedThreadPool(10);
+        this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
+        this.toBeDisposed = new HashSet<>();
     }
 
     /**
@@ -216,11 +222,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * from the version passed in through {@link ModelProvider#version()}.
                  * Delete the database if there is a version change.
                  */
-                upgradeModels();
-
-                listener.onResult(
-                        new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())
-                );
+                Disposable upgradeModelsDisposable = upgradeModels().subscribe(() -> {
+                    listener.onResult(
+                            new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())
+                    );
+                }, throwable -> {
+                    listener.onError(new DataStoreException("Error in initializing the " +
+                            "SQLiteStorageAdapter"));
+                });
+                toBeDisposed.add(upgradeModelsDisposable);
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in initializing the " +
                         "SQLiteStorageAdapter", exception));
@@ -390,6 +400,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         try {
             insertSqlPreparedStatements = null;
 
+            if (toBeDisposed != null) {
+                for (Disposable disposable: toBeDisposed) {
+                    disposable.dispose();
+                }
+            }
             if (itemChangeSubject != null) {
                 itemChangeSubject.onComplete();
             }
@@ -694,25 +709,33 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /*
      * Detect if the version of the models stored in SQLite is different
      * from the version passed in through {@link ModelProvider#version()}.
-     * Delete the database if there is a version change.
+     * Drop all tables if the version has changed.
      */
-    private void upgradeModels() {
-        PersistentModelVersion persistentModelVersion = PersistentModelVersion.fromLocalStorage(this);
-        if (persistentModelVersion != null) {
-            String oldVersion = persistentModelVersion.getVersion();
-            String newVersion = modelProvider.version();
-            if (!ObjectsCompat.equals(oldVersion, newVersion)) {
-                Objects.requireNonNull(sqliteStorageHelper);
-                Objects.requireNonNull(databaseConnectionHandle);
-                sqliteStorageHelper
-                        .onModelUpgrade(databaseConnectionHandle, oldVersion, newVersion);
+    private Completable upgradeModels() {
+        Single<PersistentModelVersion> single = PersistentModelVersion.fromLocalStorage(this);
+        return single.doOnSuccess(persistentModelVersion -> {
+            if (persistentModelVersion != null) {
+                String oldVersion = persistentModelVersion.getVersion();
+                String newVersion = modelProvider.version();
+                if (!ObjectsCompat.equals(oldVersion, newVersion)) {
+                    Objects.requireNonNull(sqliteStorageHelper);
+                    Objects.requireNonNull(databaseConnectionHandle);
+                    sqliteStorageHelper.onModelUpgrade(
+                            databaseConnectionHandle,
+                            oldVersion,
+                            newVersion);
+                    PersistentModelVersion.saveToLocalStorage(
+                            this,
+                            persistentModelVersion);
+                }
             }
-        } else {
-            persistentModelVersion = new PersistentModelVersion(
-                    modelProvider.version(),
-                    modelProvider.version());
-        }
-        PersistentModelVersion.saveToLocalStorage(this, persistentModelVersion);
+        }).doOnError(error -> {
+            PersistentModelVersion persistentModelVersion =
+                    new PersistentModelVersion(modelProvider.version());
+            PersistentModelVersion.saveToLocalStorage(
+                    this,
+                    persistentModelVersion);
+        }).ignoreElement();
     }
 
     private <T extends Model> T deserializeModelFromRawMap(

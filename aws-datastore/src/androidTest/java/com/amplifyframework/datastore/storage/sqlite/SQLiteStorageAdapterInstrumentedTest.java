@@ -62,11 +62,11 @@ import static org.junit.Assert.assertTrue;
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
     private static final String TAG = "sqlite-instrumented-test";
-    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1 * 1000);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private Context context;
-    private SQLiteStorageAdapter sqLiteStorageAdapter;
+    private SQLiteStorageAdapter sqliteStorageAdapter;
 
     /**
      * Enable strict mode for catching SQLite leaks.
@@ -90,12 +90,12 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         context.deleteDatabase(DATABASE_NAME);
 
         ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
-        sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
 
         LatchedResultListener<List<ModelSchema>> setupListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
 
-        sqLiteStorageAdapter.initialize(context, setupListener);
+        sqliteStorageAdapter.initialize(context, setupListener);
 
         List<ModelSchema> modelSchemaList =
             setupListener.awaitTerminalEvent().assertNoError().getResult();
@@ -108,7 +108,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @After
     public void tearDown() {
-        sqLiteStorageAdapter.terminate();
+        sqliteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
     }
 
@@ -117,13 +117,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @Test
     public void modelVersionStoredCorrectly() {
-        sqLiteStorageAdapter.terminate();
-
         ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
         String expectedVersion = modelProvider.version();
 
         PersistentModelVersion persistentModelVersion =
-                PersistentModelVersion.fromLocalStorage(sqLiteStorageAdapter);
+                PersistentModelVersion.fromLocalStorage(sqliteStorageAdapter).blockingGet();
         String actualVersion = persistentModelVersion.getVersion();
 
         assertEquals(expectedVersion, actualVersion);
@@ -135,18 +133,22 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @Test
     public void modelVersionChangeDropsAllTablesAndCreatesNewTables() {
+        sqliteStorageAdapter.terminate();
+
         ModelProvider modelProvider = RandomVersionModelProvider.singletonInstance();
-        sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        String expectedVersion = modelProvider.version();
 
         LatchedResultListener<List<ModelSchema>> setupListener =
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        sqliteStorageAdapter.initialize(context, setupListener);
+        setupListener.awaitTerminalEvent().assertNoError();
 
-        sqLiteStorageAdapter.initialize(context, setupListener);
+        PersistentModelVersion persistentModelVersion =
+                PersistentModelVersion.fromLocalStorage(sqliteStorageAdapter).blockingGet();
+        String actualVersion = persistentModelVersion.getVersion();
 
-        List<ModelSchema> modelSchemaList =
-                setupListener.awaitTerminalEvent().assertNoError().getResult();
-        assertNotNull(modelSchemaList);
-        assertFalse(modelSchemaList.isEmpty());
+        assertEquals(expectedVersion, actualVersion);
     }
 
     /**
@@ -199,7 +201,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         assertEquals(person, saveModel(person));
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("Person");
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
@@ -229,7 +231,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         assertEquals(person, saveModel(person));
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("Person");
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
@@ -267,7 +269,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         saveModel(car);
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
+        final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("Car");
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
@@ -307,7 +309,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         LatchedResultListener<StorageItemChange.Record> carSaveListener =
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
+        sqliteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
 
         Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
         assertNotNull(actualError);
@@ -529,7 +531,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private <T extends Model> T saveModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
+        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
         return saveListener.awaitTerminalEvent().assertNoError().getResult()
             .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
             .item();
@@ -544,14 +546,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                                                      @Nullable QueryPredicate predicate) {
         LatchedResultListener<Iterator<T>> queryResultListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.query(modelClass, predicate, queryResultListener);
+        sqliteStorageAdapter.query(modelClass, predicate, queryResultListener);
         return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
     }
 
     private <T extends Model> T deleteModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
+        sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
         return deleteListener.awaitTerminalEvent().assertNoError().getResult()
                 .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
                 .item();

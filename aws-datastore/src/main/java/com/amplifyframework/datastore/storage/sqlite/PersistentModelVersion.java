@@ -23,6 +23,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
@@ -30,6 +31,8 @@ import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
+
+import io.reactivex.Single;
 
 /**
  * A {@link Model} that will encapsulate the {@link ModelProvider#version()}
@@ -41,63 +44,49 @@ final class PersistentModelVersion implements Model {
 
     private static final String TAG = PersistentModelVersion.class.getSimpleName();
 
-    @ModelField(targetName = "id", targetType = "ID", isRequired = true)
-    private String id;
+    // A static identifier that is used to store the version of model.
+    private static final String IDENTIFIER_FOR_VERSION = "version-in-local-storage";
 
-    @ModelField(targetName = "version", targetType = "String", isRequired = true)
-    private String version;
+    @ModelField(targetType = "ID", isRequired = true)
+    private final String id;
+
+    @ModelField(targetType = "String", isRequired = true)
+    private final String version;
 
     /**
      * Construct the PersistentModelVersion object.
-     * @param uniqueId the unique identifier
      * @param version version of the {@link com.amplifyframework.core.model.ModelProvider}
      */
-    PersistentModelVersion(@NonNull String uniqueId, @NonNull String version) {
-        Objects.requireNonNull(uniqueId);
+    PersistentModelVersion(@NonNull String version) {
         Objects.requireNonNull(version);
-        this.id = uniqueId;
+        this.id = IDENTIFIER_FOR_VERSION;
         this.version = version;
     }
 
     /**
      * Read the PersistentModelVersion stored by the LocalStorageAdapter on disk.
      * @param localStorageAdapter storage adapter that is used to query the data from disk.
-     * @return PersistentModelVersion object
+     * @return a Single that emits the PersistentModelVersion read from disk upon success` and
+     *         error upon failure
      */
-    static PersistentModelVersion fromLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter) {
-        final AtomicReference<PersistentModelVersion> resultRef = new AtomicReference<>();
-        final AtomicReference<Throwable> errorRef = new AtomicReference<>();
-        final CountDownLatch waitForQuery = new CountDownLatch(1);
-
-        localStorageAdapter.query(
-                PersistentModelVersion.class,
-                new ResultListener<Iterator<PersistentModelVersion>>() {
-                    @Override
-                    public void onResult(Iterator<PersistentModelVersion> result) {
-                        if (result.hasNext()) {
-                            resultRef.set(result.next());
-                        }
-                        waitForQuery.countDown();
+    static Single<PersistentModelVersion> fromLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter) {
+        return Single.create(emitter -> {
+            final ResultListener<Iterator<PersistentModelVersion>> queryListener =
+                    new ResultListener<Iterator<PersistentModelVersion>>() {
+                @Override
+                public void onResult(Iterator<PersistentModelVersion> result) {
+                    if (result.hasNext()) {
+                        emitter.onSuccess(result.next());
                     }
+                }
 
-                    @Override
-                    public void onError(Throwable error) {
-                        errorRef.set(error);
-                        waitForQuery.countDown();
-                    }
-                });
-        try {
-            waitForQuery.await();
-        } catch (InterruptedException latchInterruptedException) {
-            Log.e(TAG, "Waiting to query " + PersistentModelVersion.class.getSimpleName() +
-                    " is interrupted.", latchInterruptedException);
-        }
-
-        if (resultRef.get() != null) {
-            return resultRef.get();
-        }
-
-        return null;
+                @Override
+                public void onError(Throwable error) {
+                    emitter.onError(error);
+                }
+            };
+            localStorageAdapter.query(PersistentModelVersion.class, queryListener);
+        });
     }
 
     /**
@@ -105,22 +94,26 @@ final class PersistentModelVersion implements Model {
      * @param localStorageAdapter persists the version object
      * @param persistentModelVersion the object to be persisted
      */
-    static void saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
-                                   @NonNull PersistentModelVersion persistentModelVersion) {
-        localStorageAdapter.save(
-                persistentModelVersion,
-                StorageItemChange.Initiator.DATA_STORE_API,
-                new ResultListener<StorageItemChange.Record>() {
-                    @Override
-                    public void onResult(StorageItemChange.Record result) {
-                        Log.v(TAG, "Successfully written the model version: " + result);
-                    }
+    static Single<PersistentModelVersion> saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
+                                                             @NonNull PersistentModelVersion persistentModelVersion) {
+        return Single.create(emitter -> {
+            final ResultListener<StorageItemChange.Record> saveListener =
+                    new ResultListener<StorageItemChange.Record>() {
+                        @Override
+                        public void onResult(StorageItemChange.Record record) {
+                            emitter.onSuccess(persistentModelVersion);
+                        }
 
-                    @Override
-                    public void onError(Throwable error) {
-                        Log.e(TAG, "Error in writing the model version", error);
-                    }
-                });
+                        @Override
+                        public void onError(Throwable error) {
+                            emitter.onError(error);
+                        }
+                    };
+            localStorageAdapter.save(
+                    persistentModelVersion,
+                    StorageItemChange.Initiator.DATA_STORE_API,
+                    saveListener);
+        });
     }
 
     /** {@inheritDoc}. */
