@@ -22,7 +22,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.annotations.ModelField;
-import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
@@ -96,16 +95,16 @@ final class PersistentModelVersion implements Model {
         return Single.<PersistentModelVersion>create(emitter -> {
             final ResultListener<StorageItemChange.Record> saveListener =
                     new ResultListener<StorageItemChange.Record>() {
-                        @Override
-                        public void onResult(StorageItemChange.Record record) {
-                            emitter.onSuccess(persistentModelVersion);
-                        }
+                @Override
+                public void onResult(StorageItemChange.Record record) {
+                    emitter.onSuccess(persistentModelVersion);
+                }
 
-                        @Override
-                        public void onError(Throwable error) {
-                            emitter.onError(error);
-                        }
-                    };
+                @Override
+                public void onError(Throwable error) {
+                    emitter.onError(error);
+                }
+            };
             localStorageAdapter.save(
                     persistentModelVersion,
                     StorageItemChange.Initiator.DATA_STORE_API,

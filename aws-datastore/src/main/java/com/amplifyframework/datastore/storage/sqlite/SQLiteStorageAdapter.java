@@ -224,13 +224,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Delete the database if there is a version change.
                  */
                 Disposable upgradeModelsDisposable = upgradeModels().subscribe(() -> {
-                    listener.onResult(
-                            new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())
-                    );
+                    listener.onResult(new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values()));
                 }, throwable -> {
-                    listener.onError(new DataStoreException("Error in initializing the " +
-                            "SQLiteStorageAdapter", throwable));
-                });
+                        listener.onError(new DataStoreException("Error in initializing the " +
+                                "SQLiteStorageAdapter", throwable));
+                    });
                 toBeDisposed.add(upgradeModelsDisposable);
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in initializing the " +
