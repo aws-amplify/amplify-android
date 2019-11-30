@@ -73,6 +73,7 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
+    testImplementation "androidx.test:core:1.2.0"
     testImplementation project(path: ':testmodels')
 
     // Required for instrumented tests

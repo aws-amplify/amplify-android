@@ -18,8 +18,10 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.StrictMode;
-import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
+
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
 
 import org.junit.After;
 import org.junit.Before;
@@ -27,7 +29,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +41,7 @@ import static org.junit.Assert.assertTrue;
  * Test the functions of {@link SQLiteStorageHelper}.
  */
 public class SQLiteStorageHelperInstrumentedTest {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
 
     private SQLiteStorageHelper sqLiteStorageHelper;
     private SQLiteDatabase sqLiteDatabase;
@@ -115,7 +117,7 @@ public class SQLiteStorageHelperInstrumentedTest {
         // Getting an instance to the writable database
         // invokes onCreate on the SQLiteStorageHelper.
         final List<String> tableNamesFromDatabase = getTableNames(sqLiteDatabase);
-        Log.d("onCreateCreatesTables", Arrays.toString(tableNamesFromDatabase.toArray()));
+        LOG.debug(tableNamesFromDatabase.toString());
         for (SqlCommand sqlCommand : createTableCommands) {
             assertTrue(
                     sqlCommand.tableName() + " was not in the list: " + tableNamesFromDatabase,

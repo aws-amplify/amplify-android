@@ -16,7 +16,6 @@
 package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
@@ -24,7 +23,9 @@ import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -35,14 +36,12 @@ import java.util.Set;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
-
-    private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("ampilfy:aws-pinpoint-analytics");
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
      */
     public AmazonPinpointAnalyticsPlugin() {
-        Log.d(TAG, "Amazon Pinpoint Analytics Plugin is initialized.");
     }
 
     /**
@@ -124,7 +123,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
-
+        LOG.info("Amazon Pinpoint Analytics Plugin is initialized.");
     }
 
     /**

@@ -20,16 +20,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
 
 /**
  * A helper class to manage database creation and version management.
  */
 final class SQLiteStorageHelper extends SQLiteOpenHelper {
-
-    // Logcat tag
-    private static final String TAG = SQLiteStorageHelper.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     // The singleton instance.
     private static SQLiteStorageHelper sQLiteStorageHelperInstance;
@@ -152,12 +152,12 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
         sqLiteDatabase.beginTransaction();
         try {
             for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
-                Log.i(TAG, "Creating table: " + sqlCommand.tableName());
+                LOG.info("Creating table: " + sqlCommand.tableName());
                 sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
             }
 
             for (final SqlCommand sqlCommand : createSqlCommands.getCreateIndexCommands()) {
-                Log.i(TAG, "Creating index for table: " + sqlCommand.tableName());
+                LOG.info("Creating index for table: " + sqlCommand.tableName());
                 sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
             }
             sqLiteDatabase.setTransactionSuccessful();
