@@ -40,7 +40,13 @@ final class PersistentModelVersion implements Model {
 
     private static final String TAG = PersistentModelVersion.class.getSimpleName();
 
-    // A static identifier that is used to store the version of model.
+    // A static identifier that is used to store the version of model. Currently there can be
+    // only ONE version of ONE ModelProvider be stored in the local storage at any time. This
+    // limitation can be addressed in the future by an identifier that is long-lived than the version
+    // and can be used to identify a ModelProvider.
+    // 
+    // Once the limitation is addressed, remove this static identifier and provide an appropriate
+    // upgrade strategy for the PersistentModelVersion to move to the new architecture.
     private static final String STATIC_IDENTIFIER_FOR_VERSION = "version-in-local-storage";
 
     @ModelField(targetType = "ID", isRequired = true)

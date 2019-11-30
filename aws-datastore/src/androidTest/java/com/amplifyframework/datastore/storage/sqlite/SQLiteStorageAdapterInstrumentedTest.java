@@ -135,7 +135,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * new tables.
      */
     @Test
-    public void modelVersionChangeDropsAllTablesAndCreatesNewTables() {
+    public void modelVersionChangeIsDetectedAndUpdatedInLocalStorage() {
         sqliteStorageAdapter.terminate();
 
         ModelProvider modelProvider = RandomVersionModelProvider.singletonInstance();
