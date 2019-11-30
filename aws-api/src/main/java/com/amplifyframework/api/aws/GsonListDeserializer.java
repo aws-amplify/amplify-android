@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -37,13 +38,15 @@ public final class GsonListDeserializer implements JsonDeserializer<List<Object>
     @SuppressWarnings("unchecked")
     public List<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
             throws JsonParseException {
-        Gson gson = new Gson();
 
         // If the json we got is not really a List and this List has a generics type...
         if (json.isJsonObject() && typeOfT instanceof ParameterizedType) {
             // Because this is a list and typeOfT is ParameterizedType we can be sure this is a safe cast.
             Class<Object> clazz = (Class<Object>) ((ParameterizedType) typeOfT).getActualTypeArguments()[0];
             JsonObject jsonObject = json.getAsJsonObject();
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(List.class, new GsonListDeserializer())
+                    .create();
 
             // ...and it is in the format we expect from AppSync for a list of objects in a relationship
             if (jsonObject.has("items") && jsonObject.get("items").isJsonArray()) {
@@ -67,6 +70,6 @@ public final class GsonListDeserializer implements JsonDeserializer<List<Object>
             }
         }
 
-        return gson.fromJson(json, typeOfT);
+        return new Gson().fromJson(json, typeOfT);
     }
 }
