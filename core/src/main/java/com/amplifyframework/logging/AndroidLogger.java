@@ -1,0 +1,113 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.logging;
+
+import android.annotation.SuppressLint;
+import android.util.Log;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
+import java.util.Objects;
+
+final class AndroidLogger implements Logger {
+    private static final String DEFAULT_NAMESPACE = "amplify";
+    private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.INFO;
+
+    private final LogLevel threshold;
+    private final String namespace;
+
+    AndroidLogger(@NonNull LogLevel threshold) {
+        this(DEFAULT_NAMESPACE, threshold);
+    }
+
+    AndroidLogger(@NonNull String namespace, @NonNull LogLevel threshold) {
+        this.threshold = Objects.requireNonNull(threshold);
+        this.namespace = Objects.requireNonNull(namespace);
+    }
+
+    AndroidLogger(@NonNull String namespace) {
+        this(namespace, DEFAULT_LOG_LEVEL);
+    }
+
+    AndroidLogger() {
+        this(DEFAULT_NAMESPACE, DEFAULT_LOG_LEVEL);
+    }
+
+    @NonNull
+    @Override
+    public LogLevel getThresholdLevel() {
+        return threshold;
+    }
+
+    @Override
+    public void error(@Nullable String message) {
+        if (threshold.above(LogLevel.ERROR)) {
+            return;
+        }
+        Log.e(namespace, String.valueOf(message));
+    }
+
+    @Override
+    public void error(@Nullable String message, @Nullable Throwable error) {
+        if (threshold.above(LogLevel.ERROR)) {
+            return;
+        }
+        Log.e(namespace, message, error);
+    }
+
+    @Override
+    public void warn(@Nullable String message) {
+        if (threshold.above(LogLevel.WARN)) {
+            return;
+        }
+        Log.w(namespace, String.valueOf(message));
+    }
+
+    @Override
+    public void warn(@Nullable String message, @Nullable Throwable issue) {
+        if (threshold.above(LogLevel.WARN)) {
+            return;
+        }
+        Log.w(namespace, message, issue);
+    }
+
+    @SuppressLint("LogConditional") // We guard with our own LogLevel.
+    @Override
+    public void info(@Nullable String message) {
+        if (threshold.above(LogLevel.INFO)) {
+            return;
+        }
+        Log.i(namespace, String.valueOf(message));
+    }
+
+    @SuppressLint("LogConditional") // We guard with our own LogLevel.
+    @Override
+    public void debug(@Nullable String message) {
+        if (threshold.above(LogLevel.DEBUG)) {
+            return;
+        }
+        Log.d(namespace, String.valueOf(message));
+    }
+
+    @SuppressLint("LogConditional") // We guard with our own LogLevel.
+    @Override
+    public void verbose(@Nullable String message) {
+        if (threshold.above(LogLevel.VERBOSE)) {
+            return;
+        }
+        Log.v(namespace, String.valueOf(message));
+    }
+}
