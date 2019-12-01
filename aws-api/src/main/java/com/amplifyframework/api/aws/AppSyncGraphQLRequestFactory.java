@@ -216,8 +216,8 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate,
             SubscriptionType type
-    ) throws AmplifyException {
-        return null;
+    ) {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws AmplifyException {
