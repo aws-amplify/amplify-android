@@ -24,12 +24,12 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
+
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 
 /**
  * A helper class to manage database creation and version management.
