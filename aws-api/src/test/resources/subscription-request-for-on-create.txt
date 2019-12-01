@@ -1,0 +1,1 @@
+{"query":"subscription OnCreatePerson{onCreatePerson{dob age first_name relationship id last_name }}","variables":null}
