@@ -87,7 +87,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
         final InterceptorFactory interceptorFactory =
-                new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
+                new AppSyncSigV4SignerInterceptorFactory(authProvider);
 
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
