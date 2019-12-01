@@ -19,12 +19,18 @@ import android.content.Context;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amplifyframework.analytics.GeneralAnalyticsEvent;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
+
+import static java.lang.Thread.sleep;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
@@ -56,12 +62,37 @@ public class AnalyticsPinpointInstrumentedTest {
     public void testRecordEvent() {
         Log.i(TAG, "Test configuration invoked");
 
+        AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify
+                .Analytics
+                .getPlugin("AmazonPinpointAnalyticsPlugin");
+        AnalyticsClient analyticsClient = plugin.getAnalyticsClient();
+
         GeneralAnalyticsEvent event = new GeneralAnalyticsEvent("Amplify-event-double",
                 PinpointProperties.builder()
                 .add("DemoProperty1", "DemoValue1")
                 .add("DemoDoubleProperty2", 2.0)
                 .build());
+
         Amplify.Analytics.recordEvent(event);
-        // TODO Add verifications
+
+        assertEquals(1, analyticsClient.getAllEvents().size());
+
+        long timeSleptSoFar = 0;
+        while (timeSleptSoFar < TimeUnit.SECONDS.toMillis(60)) {
+            try {
+                sleep(TimeUnit.SECONDS.toMillis(5));
+            } catch (InterruptedException ie) {
+                ie.printStackTrace();
+            }
+            timeSleptSoFar += TimeUnit.SECONDS.toMillis(5);
+            if (analyticsClient.getAllEvents().size() == 0) {
+                break;
+            }
+        }
+
+        Log.d(TAG, "Events in database after calling submitEvents() after submitting: " +
+                analyticsClient.getAllEvents().size());
+
+        assertEquals(0, analyticsClient.getAllEvents().size());
     }
 }
