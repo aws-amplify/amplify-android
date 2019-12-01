@@ -20,7 +20,6 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.aws.AWSApiPlugin;
-import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -33,6 +32,7 @@ import com.amplifyframework.testmodels.personcar.Car;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.LatchedResultListener;
+import com.amplifyframework.testutils.LatchedSingleResponseListener;
 import com.amplifyframework.testutils.Sleep;
 
 import org.junit.AfterClass;
@@ -106,10 +106,10 @@ public final class AWSDataStorePluginInstrumentedTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void personSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() {
-        // Save Charley Crocket the the DataStore.
+        // Save Charley Crockett to the DataStore.
         Person localCharley = Person.builder()
             .firstName("Charley")
-            .lastName("Crocket")
+            .lastName("Crockett")
             .build();
         saveLocal(localCharley);
 
@@ -172,7 +172,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         LatchedResultListener<DataStoreItemChange<T>> saveListener =
             LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
         Amplify.DataStore.save(item, saveListener);
-        saveListener.awaitTerminalEvent().assertResult().assertNoError();
+        saveListener.awaitResult();
     }
 
     /**
@@ -191,12 +191,7 @@ public final class AWSDataStorePluginInstrumentedTest {
             LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
         Amplify.DataStore.query(clazz, queryResultsListener);
 
-        final Iterator<T> iterator = queryResultsListener
-            .awaitTerminalEvent()
-            .assertNoError()
-            .assertResult()
-            .getResult();
-
+        final Iterator<T> iterator = queryResultsListener.awaitResult();
         while (iterator.hasNext()) {
             T value = iterator.next();
             if (value.getId().equals(itemId)) {
@@ -209,23 +204,23 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     private <T extends Model> T getRemote(
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedResultListener<GraphQLResponse<T>> queryListener =
-            LatchedResultListener.waitFor(NETWORK_OP_TIMEOUT_MS);
+        LatchedSingleResponseListener<T> queryListener =
+            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
         Amplify.API.query(apiName, clazz, itemId, queryListener);
-        return queryListener.awaitTerminalEvent().assertNoError().assertResult().getResult().getData();
+        return queryListener.awaitSuccessResponse();
     }
 
     private <T extends Model> void createRemote(T item) {
-        LatchedResultListener<GraphQLResponse<T>> createListener =
-            LatchedResultListener.waitFor(NETWORK_OP_TIMEOUT_MS);
+        LatchedSingleResponseListener<T> createListener =
+            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
         Amplify.API.mutate(apiName, item, MutationType.CREATE, createListener);
-        createListener.awaitTerminalEvent().assertNoError().assertResult();
+        createListener.awaitSuccessResponse();
     }
 
     private <T extends Model> void updateRemote(T item) {
-        LatchedResultListener<GraphQLResponse<T>> updateListener =
-            LatchedResultListener.waitFor(NETWORK_OP_TIMEOUT_MS);
+        LatchedSingleResponseListener<T> updateListener =
+            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
         Amplify.API.mutate(apiName, item, MutationType.UPDATE, updateListener);
-        updateListener.awaitTerminalEvent().assertNoError().assertResult();
+        updateListener.awaitSuccessResponse();
     }
 }
