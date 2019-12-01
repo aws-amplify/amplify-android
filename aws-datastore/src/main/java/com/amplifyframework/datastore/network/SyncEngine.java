@@ -15,13 +15,13 @@
 
 package com.amplifyframework.datastore.network;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
@@ -31,6 +31,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
@@ -58,7 +59,7 @@ import io.reactivex.schedulers.Schedulers;
 // The generics get intense, so we use MODEL and SIC instead of just M and S.
 @SuppressWarnings("checkstyle:MethodTypeParameterName")
 public final class SyncEngine {
-    private static final String TAG = SyncEngine.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final ApiCategoryBehavior api;
     private final ConfiguredApiProvider apiNameProvider;
@@ -110,9 +111,9 @@ public final class SyncEngine {
                 .observeOn(Schedulers.io())
                 .flatMapSingle(this::applyMutationToLocalStorage)
                 .subscribe(
-                    savedMutation -> Log.i(TAG, "Successfully applied remote mutation, locally:"),
-                    error -> Log.w(TAG, "Error applying mutation to local storage.", error),
-                    () -> Log.i(TAG, "Subscription to remote model mutations is completed.")
+                    savedMutation -> LOG.info("Successfully applied remote mutation, locally:"),
+                    error -> LOG.warn("Error applying mutation to local storage.", error),
+                    () -> LOG.warn("Subscription to remote model mutations is completed.")
                 )
         );
     }
@@ -158,9 +159,9 @@ public final class SyncEngine {
                 .flatMapSingle(this::publishToNetwork)
                 .flatMapSingle(storageItemChangeJournal::remove)
                 .subscribe(
-                    processedChange -> Log.i(TAG, "Change processed successfully! " + processedChange),
-                    error -> Log.w(TAG, "Error ended journal subscription: ", error),
-                    () -> Log.w(TAG, "Change journal subscription was completed.")
+                    processedChange -> LOG.info("Change processed successfully! " + processedChange),
+                    error -> LOG.warn("Error ended journal subscription: ", error),
+                    () -> LOG.warn("Change journal subscription was completed.")
                 )
         );
     }
@@ -181,9 +182,9 @@ public final class SyncEngine {
                 .observeOn(Schedulers.io())
                 .flatMapSingle(storageItemChangeJournal::enqueue)
                 .subscribe(
-                    pendingChange -> Log.i(TAG, "Successfully enqueued " + pendingChange),
-                    error -> Log.w(TAG, "Storage adapter subscription ended in error", error),
-                    () -> Log.w(TAG, "Storage adapter subscription terminated with completion.")
+                    pendingChange -> LOG.info("Successfully enqueued " + pendingChange),
+                    error -> LOG.warn("Storage adapter subscription ended in error", error),
+                    () -> LOG.warn("Storage adapter subscription terminated with completion.")
                 )
         );
     }

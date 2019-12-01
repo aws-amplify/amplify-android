@@ -15,6 +15,8 @@
 
 package com.amplifyframework.logging;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -26,9 +28,9 @@ import com.amplifyframework.core.plugin.Plugin;
  *            low-level, implementation-specific logging operations
  */
 public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugin<E> {
+    @NonNull
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.LOGGING;
     }
 }
-

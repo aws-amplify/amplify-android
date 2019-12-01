@@ -18,17 +18,18 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.StrictMode;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.Car;
 import com.amplifyframework.testmodels.MaritalStatus;
@@ -60,7 +61,7 @@ import static org.junit.Assert.assertTrue;
  * Test the functionality of {@link SQLiteStorageAdapter} operations.
  */
 public final class SQLiteStorageAdapterInstrumentedTest {
-    private static final String TAG = "sqlite-instrumented-test";
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
     private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
@@ -300,7 +301,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertTrue(result.hasNext());
         Person queriedPerson = result.next();
         assertNotNull(queriedPerson);
-        Log.d(TAG, queriedPerson.toString());
+        LOG.debug(queriedPerson.toString());
         assertEquals(person, queriedPerson);
     }
 
