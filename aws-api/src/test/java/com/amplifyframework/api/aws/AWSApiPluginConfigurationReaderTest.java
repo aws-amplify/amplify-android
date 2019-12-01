@@ -63,7 +63,7 @@ public final class AWSApiPluginConfigurationReaderTest {
     public void readFromWellFormedJsonObjectProducesValidConfig() throws JSONException {
 
         // Arrange an input JSONObject
-        final JSONObject json = new JSONObject(Resources.readAsString("single-api.config"));
+        final JSONObject json = Resources.readAsJson("single-api.config");
 
         // Act: try to parse it to a modeled configuration object
         final AWSApiPluginConfiguration config = AWSApiPluginConfigurationReader.readFrom(json);
