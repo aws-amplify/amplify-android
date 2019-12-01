@@ -273,7 +273,6 @@ public final class CodeGenerationInstrumentationTest {
         GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
                 PROJECT_API_NAME,
                 Projectfields.class,
-                null,
                 SubscriptionType.ON_CREATE,
                 projectSubscriptionListener
         );
