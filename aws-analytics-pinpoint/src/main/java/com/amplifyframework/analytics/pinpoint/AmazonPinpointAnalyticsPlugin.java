@@ -108,13 +108,15 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         final AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(analyticsEvent.getEventType());
 
-        for (Map.Entry<String, Property<?>> entry: analyticsEvent.getProperties().get().entrySet()) {
-            if (entry.getValue() instanceof StringProperty) {
-                pinpointEvent.addAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
-            } else if (entry.getValue() instanceof DoubleProperty) {
-                pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
-            } else {
-                throw new AnalyticsException("Invalid property type detected.");
+        if (analyticsEvent.getProperties() != null) {
+            for (Map.Entry<String, Property<?>> entry : analyticsEvent.getProperties().get().entrySet()) {
+                if (entry.getValue() instanceof StringProperty) {
+                    pinpointEvent.addAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
+                } else if (entry.getValue() instanceof DoubleProperty) {
+                    pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
+                } else {
+                    throw new AnalyticsException("Invalid property type detected.");
+                }
             }
         }
         analyticsClient.recordEvent(pinpointEvent);

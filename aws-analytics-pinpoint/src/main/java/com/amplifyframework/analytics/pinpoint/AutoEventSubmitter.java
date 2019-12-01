@@ -44,11 +44,11 @@ final class AutoEventSubmitter {
         };
     }
 
-    void start() {
+    synchronized void start() {
         handler.postDelayed(submitRunnable, autoFlushInterval);
     }
 
-    void stop() {
+    synchronized void stop() {
         if (submitRunnable != null) {
             handler.removeCallbacksAndMessages(null);
             handlerThread.quit();

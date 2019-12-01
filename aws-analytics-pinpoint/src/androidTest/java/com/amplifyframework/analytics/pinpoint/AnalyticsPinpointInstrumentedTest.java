@@ -27,6 +27,7 @@ import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static java.lang.Thread.sleep;
@@ -42,7 +43,7 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     private static final String TAG = AnalyticsPinpointInstrumentedTest.class.getSimpleName();
     private static final int EVENT_FLUSH_TIMEOUT = 60;
-    private static final int EVENT_FLUSH_WAIT = 30;
+    private static final int EVENT_FLUSH_WAIT = 5;
 
     /**
      * Configure the Amplify framework.
@@ -67,7 +68,11 @@ public class AnalyticsPinpointInstrumentedTest {
                 .getPlugin("AmazonPinpointAnalyticsPlugin");
         AnalyticsClient analyticsClient = plugin.getAnalyticsClient();
 
-        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event-double",
+        // Flush any events from previous tests.
+        Amplify.Analytics.flushEvents();
+        waitForAutoFlush(analyticsClient.getAllEvents().size());
+
+        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
                 PinpointProperties.builder()
                 .add("DemoProperty1", "DemoValue1")
                 .add("DemoDoubleProperty2", 2.0)
@@ -94,7 +99,7 @@ public class AnalyticsPinpointInstrumentedTest {
         Amplify.Analytics.flushEvents();
         waitForAutoFlush(analyticsClient.getAllEvents().size());
 
-        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event-double",
+        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
                 PinpointProperties.builder()
                         .add("DemoProperty1", "DemoValue1")
                         .add("DemoDoubleProperty2", 2.0)
@@ -111,10 +116,10 @@ public class AnalyticsPinpointInstrumentedTest {
 
         assertEquals(0, analyticsClient.getAllEvents().size());
 
-        BasicAnalyticsEvent event2 = new BasicAnalyticsEvent("Amplify-event-double-2",
+        BasicAnalyticsEvent event2 = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
                 PinpointProperties.builder()
                         .add("DemoProperty1", "DemoValue1")
-                        .add("DemoDoubleProperty2", 2.0)
+                        .add("DemoProperty2", 2.0)
                         .build());
 
         Amplify.Analytics.recordEvent(event2);
