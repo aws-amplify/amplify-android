@@ -26,7 +26,6 @@ import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.plugin.PluginException;
-import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
