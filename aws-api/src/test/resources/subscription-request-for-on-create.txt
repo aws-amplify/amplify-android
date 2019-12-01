@@ -1,1 +1,1 @@
-{"query":"subscription OnCreatePerson{onCreatePerson{dob age first_name relationship id last_name }}","variables":null}
+{"query":"subscription OnCreatePerson{onCreatePerson{age dob first_name id last_name relationship }}","variables":null}
