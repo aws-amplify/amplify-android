@@ -37,7 +37,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.TreeMap;
 
 /**
@@ -102,7 +101,7 @@ public final class ModelSchema {
      */
     public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
         try {
-            final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
+            final List<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
             final TreeMap<String, ModelAssociation> associations = new TreeMap<>();
             final TreeMap<String, ModelIndex> indexes = new TreeMap<>();
