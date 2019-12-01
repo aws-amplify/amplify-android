@@ -28,10 +28,10 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.test.R;
-import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testmodels.Car;
-import com.amplifyframework.testmodels.MaritalStatus;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.personcar.Car;
+import com.amplifyframework.testmodels.personcar.MaritalStatus;
+import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.LatchedResultListener;
 import com.amplifyframework.testutils.Sleep;
 

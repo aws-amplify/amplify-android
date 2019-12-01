@@ -30,10 +30,10 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testmodels.Car;
-import com.amplifyframework.testmodels.MaritalStatus;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.personcar.Car;
+import com.amplifyframework.testmodels.personcar.MaritalStatus;
+import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
