@@ -13,10 +13,15 @@
  * permissions and limitations under the License.
  */
 
-include ':amplify-core'
+include ':core'
 
 // Plugin Modules
-include ':aws-amplify-analytics-pinpoint'
-include ':aws-amplify-api-aws'
-include ':aws-amplify-storage-s3'
-include ':aws-amplify-datastore'
+include ':aws-analytics-pinpoint'
+include ':aws-api'
+include ':aws-storage-s3'
+include ':aws-datastore'
+
+// Test Utilities and assets
+include ':testutils'
+include ':testmodels'
+

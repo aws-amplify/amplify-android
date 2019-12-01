@@ -1,7 +1,0 @@
-query getWithVariable($myId: ID!) {
-    getTodo(id: $myId) {
-        id
-        name
-        description
-    }
-}

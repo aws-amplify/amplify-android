@@ -1,0 +1,69 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "Storage": {
+    "plugins": {
+      "AWSS3StoragePlugin": {
+        "Bucket": "my-s3-bucket",
+        "Region": "us-west-2",
+        "TransferAcceleration": true
+      }
+    }
+  },
+  "Analytics": {
+    "plugins": {
+      "AmazonPinpointAnalyticsPlugin": {
+        "AppId": "xx113344",
+        "Region": "us-east-1",
+        "optOut": "ALL",
+        "globalUserAttributes": {
+          "interests": [
+            "football",
+            "basketball",
+            "AWS"
+          ]
+        }
+      },
+      "AmazonKinesisAnalyticsPlugin": {
+        "Stream": "my-kinesis-stream",
+        "PartitionKey": "my-kinesis-partition-key",
+        "Region": "us-east-1"
+      }
+    }
+  },
+  "API": {
+    "plugins": {
+      "AWSAPIPlugin": {
+        "eventsApi": {
+          "__comment": "This is in Jameson's developer account, right now.",
+          "Endpoint": "https://57qnjcavhbdatfveg5dccboqji.appsync-api.us-west-2.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-b6dnxr7f5fchzgpi7vl5ftxogm"
+        },
+        "personApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://ek6uzvzttffmlczragsv6ipsdu.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-om5d5cekffb65agcin76nszxa4"
+        },
+        "projectApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://xsbadeypwbgozoy6hpffr2utom.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-66qwellewfcjfefzjww56luqs4"
+        },
+        "blogApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://pzoz25f54fbqxobwew5opcxbkm.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-3eha7ayvijdolcak6bmjqxxiie"
+        }
+      }
+    }
+  }
+}
+
