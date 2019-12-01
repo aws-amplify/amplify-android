@@ -16,11 +16,11 @@
 package com.amplifyframework.hub;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.amplify.core.test.R;
 import org.junit.BeforeClass;
@@ -41,8 +41,7 @@ import static org.junit.Assert.assertTrue;
  * Validates the functionality of the {@link BackgroundExecutorHubPlugin}.
  */
 public final class HubInstrumentedTest {
-
-    private static final String TAG = HubInstrumentedTest.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core:test");
 
     private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS = 100;
 
@@ -91,7 +90,7 @@ public final class HubInstrumentedTest {
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
             if (event.getData() instanceof String) {
-                Log.d(TAG, "String: => " + event.getName() + ":" + event.getData());
+                LOG.debug("String: => " + event.getName() + ":" + event.getData());
                 waitUntilSubscriptionIsReceived.countDown();
             }
         });
@@ -117,7 +116,7 @@ public final class HubInstrumentedTest {
         final CountDownLatch subscriptionReceived = new CountDownLatch(1);
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
-            Log.e(TAG, "Not expecting a subscription to be received after unsubscribe.");
+            LOG.error("Not expecting a subscription to be received after unsubscribe.");
             subscriptionReceived.countDown();
         });
 
@@ -145,7 +144,7 @@ public final class HubInstrumentedTest {
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
             if (event.getData() instanceof Integer) {
-                Log.d(TAG, "Integer: => " + event.getName() + ":" + event.getData());
+                LOG.debug("Integer: => " + event.getName() + ":" + event.getData());
                 subscriptionsReceived.add((Integer) event.getData());
                 allSubscriptionsReceived.countDown();
             }
@@ -187,11 +186,11 @@ public final class HubInstrumentedTest {
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
             if (event.getData() instanceof Integer) {
-                Log.d(TAG, "Integer: => " + event.getName() + ":" + event.getData());
+                LOG.debug("Integer: => " + event.getName() + ":" + event.getData());
                 integerSubscriptionsReceived.add((Integer) event.getData());
                 allSubscriptionsReceived.countDown();
             } else if (event.getData() instanceof String) {
-                Log.d(TAG, "String: => " + event.getName() + ":" + event.getData());
+                LOG.debug("String: => " + event.getName() + ":" + event.getData());
                 stringSubscriptionsReceived.add((String) event.getData());
                 allSubscriptionsReceived.countDown();
             }

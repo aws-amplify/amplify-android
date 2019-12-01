@@ -38,6 +38,7 @@ import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,7 +55,8 @@ import java.util.Set;
  * AppSync specifications.
  */
 final class AppSyncGraphQLRequestFactory {
-    private static final int FIXED_QUERY_LIMIT = 1000;
+    private static final int DEFAULT_QUERY_LIMIT = 1000;
+    private static final int DEFAULT_LEVEL_DEPTH = 2;
 
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
@@ -75,7 +77,7 @@ final class AppSyncGraphQLRequestFactory {
             .append("$id: ID!) { get")
             .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("(id: $id) { ")
-            .append(getModelFields(modelClass))
+            .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
             .append("}}");
 
         variables.put("id", objectId);
@@ -102,17 +104,17 @@ final class AppSyncGraphQLRequestFactory {
             .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("(")
             .append("$filter: Model")
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
+            .append(graphQlTypeName)
             .append("FilterInput ")
             .append("$limit: Int $nextToken: String) { list")
             .append(StringUtils.capitalizeFirst(graphQlTypeName))
             .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
-            .append(getModelFields(modelClass))
+            .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
             .append("} nextToken }}");
 
         if (!predicateIsEmpty(predicate)) {
             variables.put("filter", parsePredicate(predicate));
-            variables.put("limit", FIXED_QUERY_LIMIT);
+            variables.put("limit", DEFAULT_QUERY_LIMIT);
         }
 
         return new GraphQLRequest<>(
@@ -147,7 +149,7 @@ final class AppSyncGraphQLRequestFactory {
 
         if (!predicateIsEmpty(predicate)) {
             doc.append(", $condition: Model")
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(graphQlTypeName)
                     .append("ConditionInput");
         }
 
@@ -161,7 +163,7 @@ final class AppSyncGraphQLRequestFactory {
         }
 
         doc.append(") { ")
-            .append(getModelFields(modelClass))
+            .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
             .append("}}");
 
         Map<String, Object> variables = new HashMap<>();
@@ -200,7 +202,7 @@ final class AppSyncGraphQLRequestFactory {
                 .append(StringUtils.allCapsToCamelCase(typeStr))
                 .append(StringUtils.capitalizeFirst(graphQlTypeName))
                 .append("{")
-                .append(getModelFields(modelClass))
+                .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
                 .append("}}");
 
         return new GraphQLRequest<>(
@@ -323,23 +325,41 @@ final class AppSyncGraphQLRequestFactory {
     }
 
     @SuppressWarnings("unchecked")
-    private static String getModelFields(Class<? extends Model> clazz) {
+    private static String getModelFields(Class<? extends Model> clazz, int levelsDeepToGo) {
+        if (levelsDeepToGo < 0) {
+            return "";
+        }
+
         StringBuilder result = new StringBuilder();
+        ModelSchema schema = ModelSchema.fromModelClass(clazz);
         final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
         Iterator<Field> iterator = classFields.iterator();
 
         while (iterator.hasNext()) {
             Field field = iterator.next();
-            result.append(field.getName());
+            String fieldName = field.getName();
 
-            if (Model.class.isAssignableFrom(field.getType())) {
-                result.append("{")
-                    .append(getModelFields((Class<Model>) field.getType())) // cast checked above
-                    .append("}");
-            }
+            if (schema.getAssociations().containsKey(fieldName)) {
+                if (List.class.isAssignableFrom(field.getType())) {
+                    if (levelsDeepToGo >= 1) {
+                        result.append(fieldName).append(" ");
 
-            if (iterator.hasNext()) {
-                result.append(" ");
+                        ParameterizedType listType = (ParameterizedType) field.getGenericType();
+                        Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
+
+                        result.append("{ items {")
+                                .append(getModelFields(listTypeClass, levelsDeepToGo - 1)) // cast checked above
+                                .append("} nextToken }");
+                    }
+                } else if (levelsDeepToGo >= 1) {
+                    result.append(fieldName).append(" ");
+
+                    result.append("{")
+                            .append(getModelFields((Class<Model>) field.getType(), levelsDeepToGo - 1))
+                            .append("}");
+                }
+            } else {
+                result.append(fieldName).append(" ");
             }
         }
 

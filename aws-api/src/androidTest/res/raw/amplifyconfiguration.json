@@ -39,7 +39,7 @@
           "Endpoint": "https://57qnjcavhbdatfveg5dccboqji.appsync-api.us-west-2.amazonaws.com/graphql",
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-2gvk5ltfync4linsd2mhxx35my"
+          "ApiKey": "da2-b6dnxr7f5fchzgpi7vl5ftxogm"
         },
         "personApi": {
           "__comment": "This is in David's developer account, right now.",
@@ -54,6 +54,13 @@
           "Region": "us-east-1",
           "AuthorizationType": "API_KEY",
           "ApiKey": "da2-66qwellewfcjfefzjww56luqs4"
+        },
+        "blogApi": {
+          "__comment": "This is in David's developer account, right now.",
+          "Endpoint": "https://pzoz25f54fbqxobwew5opcxbkm.appsync-api.us-east-1.amazonaws.com/graphql",
+          "Region": "us-east-1",
+          "AuthorizationType": "API_KEY",
+          "ApiKey": "da2-3eha7ayvijdolcak6bmjqxxiie"
         }
       }
     }

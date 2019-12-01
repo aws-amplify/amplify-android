@@ -87,7 +87,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
         final InterceptorFactory interceptorFactory =
-                new AppSyncSigV4SignerInterceptorFactory(context, authProvider);
+                new AppSyncSigV4SignerInterceptorFactory(authProvider);
 
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
@@ -207,10 +207,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
             @NonNull SubscriptionType subscriptionType,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
-    ) {
+            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
         return subscribe(
                 apiName,
                 AppSyncGraphQLRequestFactory.buildSubscription(
@@ -219,16 +217,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 ),
                 subscriptionListener
         );
-    }
-
-    @SuppressWarnings("checkstyle:WhitespaceAround") // {} inline block for new QueryPredicate {}
-    @Override
-    public <T extends Model> GraphQLOperation<T> subscribe(
-            @NonNull String apiName,
-            @NonNull Class<T> modelClass,
-            @NonNull SubscriptionType subscriptionType,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
-        return subscribe(apiName, modelClass, new QueryPredicate() {}, subscriptionType, subscriptionListener);
     }
 
     @Override

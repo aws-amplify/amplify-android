@@ -19,38 +19,52 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the ProjectWithoutFields type in your schema. */
+/** This is an auto generated class representing the Post type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig
-public final class ProjectWithoutFields implements Model {
+@ModelConfig(pluralName = "Posts")
+public final class Post implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField NAME = QueryField.field("name");
-    public static final QueryField TEAM = QueryField.field("team");
+    public static final QueryField TITLE = QueryField.field("title");
+    public static final QueryField BLOG = QueryField.field("postBlogId");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String") String name;
-    private final @ModelField(targetType="Team") @BelongsTo(targetName = "projectWithoutFieldsTeamId", type = Team.class) Team team;
+    private final @ModelField(targetType="String", isRequired = true) String title;
+    private final @ModelField(targetType="Blog", isRequired = true) @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;
+    private final @ModelField(targetType="Rating") @HasOne(associatedWith = "post", type = Rating.class) Rating rating = null;
+    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "post", type = PostEditor.class) List<PostEditor> editors = null;
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    public Team getTeam() {
-        return team;
+    public Blog getBlog() {
+        return blog;
     }
 
-    private ProjectWithoutFields(String id, String name, Team team) {
+    public Rating getRating() {
+        return rating;
+    }
+
+    public List<PostEditor> getEditors() {
+        return editors;
+    }
+
+    private Post(String id, String title, Blog blog) {
         this.id = id;
-        this.name = name;
-        this.team = team;
+        this.title = title;
+        this.blog = blog;
     }
 
     @Override
@@ -60,10 +74,10 @@ public final class ProjectWithoutFields implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            ProjectWithoutFields projectWithoutFields = (ProjectWithoutFields) obj;
-            return ObjectsCompat.equals(getId(), projectWithoutFields.getId()) &&
-                    ObjectsCompat.equals(getName(), projectWithoutFields.getName()) &&
-                    ObjectsCompat.equals(getTeam(), projectWithoutFields.getTeam());
+            Post post = (Post) obj;
+            return ObjectsCompat.equals(getId(), post.getId()) &&
+                    ObjectsCompat.equals(getTitle(), post.getTitle()) &&
+                    ObjectsCompat.equals(getBlog(), post.getBlog());
         }
     }
 
@@ -71,12 +85,12 @@ public final class ProjectWithoutFields implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getName())
-                .append(getTeam())
+                .append(getTitle())
+                .append(getBlog())
                 .hashCode();
     }
 
-    public static BuildStep builder() {
+    public static TitleStep builder() {
         return new Builder();
     }
 
@@ -88,8 +102,8 @@ public final class ProjectWithoutFields implements Model {
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     */
-    public static ProjectWithoutFields justId(String id) {
+     **/
+    public static Post justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -99,7 +113,7 @@ public final class ProjectWithoutFields implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-        return new ProjectWithoutFields(
+        return new Post(
                 id,
                 null,
                 null
@@ -108,40 +122,50 @@ public final class ProjectWithoutFields implements Model {
 
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
-                name,
-                team);
+                title,
+                blog);
     }
+    public interface TitleStep {
+        BlogStep title(String title);
+    }
+
+
+    public interface BlogStep {
+        BuildStep blog(Blog blog);
+    }
+
+
     public interface BuildStep {
-        ProjectWithoutFields build();
+        Post build();
         BuildStep id(String id) throws IllegalArgumentException;
-        BuildStep name(String name);
-        BuildStep team(Team team);
     }
 
 
-    public static class Builder implements BuildStep {
+    public static class Builder implements TitleStep, BlogStep, BuildStep {
         private String id;
-        private String name;
-        private Team team;
+        private String title;
+        private Blog blog;
         @Override
-        public ProjectWithoutFields build() {
+        public Post build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new ProjectWithoutFields(
+            return new Post(
                     id,
-                    name,
-                    team);
+                    title,
+                    blog);
         }
 
         @Override
-        public BuildStep name(String name) {
-            this.name = name;
+        public BlogStep title(String title) {
+            Objects.requireNonNull(title);
+            this.title = title;
             return this;
         }
 
         @Override
-        public BuildStep team(Team team) {
-            this.team = team;
+        public BuildStep blog(Blog blog) {
+            Objects.requireNonNull(blog);
+            this.blog = blog;
             return this;
         }
 
@@ -151,7 +175,7 @@ public final class ProjectWithoutFields implements Model {
          * @param id id
          * @return Current Builder instance, for fluent method chaining
          * @throws IllegalArgumentException Checks that ID is in the proper format
-         */
+         **/
         public BuildStep id(String id) throws IllegalArgumentException {
             this.id = id;
 
@@ -168,20 +192,20 @@ public final class ProjectWithoutFields implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String name, Team team) {
+        private CopyOfBuilder(String id, String title, Blog blog) {
             super.id(id);
-            super.name(name)
-                    .team(team);
+            super.title(title)
+                    .blog(blog);
         }
 
         @Override
-        public CopyOfBuilder name(String name) {
-            return (CopyOfBuilder) super.name(name);
+        public CopyOfBuilder title(String title) {
+            return (CopyOfBuilder) super.title(title);
         }
 
         @Override
-        public CopyOfBuilder team(Team team) {
-            return (CopyOfBuilder) super.team(team);
+        public CopyOfBuilder blog(Blog blog) {
+            return (CopyOfBuilder) super.blog(blog);
         }
     }
 

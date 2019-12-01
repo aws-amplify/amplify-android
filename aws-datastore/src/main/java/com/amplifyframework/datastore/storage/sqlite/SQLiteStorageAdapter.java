@@ -20,10 +20,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -32,6 +33,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
@@ -40,11 +42,13 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
 
 import com.google.gson.Gson;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.sql.Time;
 import java.text.SimpleDateFormat;
@@ -68,9 +72,7 @@ import io.reactivex.subjects.PublishSubject;
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
-
-    // LogCat Tag
-    private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     // Database Version
     private static final int DATABASE_VERSION = 1;
@@ -273,15 +275,25 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public <T extends Model> void query(@NonNull Class<T> itemClass,
                                         @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+        query(itemClass, null, queryResultsListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void query(@NonNull Class<T> itemClass,
+                                        @Nullable QueryPredicate predicate,
+                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         threadPool.submit(() -> {
             try {
-                Log.d(TAG, "Querying item for: " + itemClass.getSimpleName());
+                LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 
-                final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName());
+                final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), predicate);
                 if (cursor == null) {
                     throw new DataStoreException("Error in getting a cursor to the " +
                             "table for class: " + itemClass.getSimpleName());
@@ -291,8 +303,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     do {
                         final Map<String, Object> mapForModel = buildMapForModel(
                             itemClass, modelSchema, cursor);
-                        final String modelInJsonFormat = gson.toJson(mapForModel);
-                        models.add(gson.getAdapter(itemClass).fromJson(modelInJsonFormat));
+                        models.add(deserializeModelFromRawMap(mapForModel, itemClass));
                     } while (cursor.moveToNext());
                 }
                 if (!cursor.isClosed()) {
@@ -321,7 +332,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
                 final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
 
-                Log.d(TAG, "Deleting item in table: " + sqLiteTable.getName() +
+                LOG.debug("Deleting item in table: " + sqLiteTable.getName() +
                         " identified by ID: " + item.getId());
 
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item);
@@ -420,7 +431,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
         final Iterator<Field> fieldIterator = classFields.iterator();
 
-        final Cursor cursor = getQueryAllCursor(tableName);
+        final Cursor cursor = getQueryAllCursor(tableName, null);
         if (cursor == null) {
             throw new IllegalAccessException("Error in getting a cursor to table: " +
                     tableName);
@@ -444,7 +455,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             if (column == null) {
                 continue;
             }
-            final String columnName = column.getName();
+            final String columnName = column.isPrimaryKey()
+                    ? column.getAliasedName()
+                    : column.getName();
 
             final JavaFieldType javaFieldType;
             if (Model.class.isAssignableFrom(field.getType())) {
@@ -524,10 +537,21 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull ModelSchema modelSchema,
             @NonNull Cursor cursor) {
         final Map<String, Object> mapForModel = new HashMap<>();
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
             try {
+                // Skip if there is no equivalent column for field in object
+                final SQLiteColumn column = columns.get(fieldName);
+                if (column == null) {
+                    continue;
+                }
+                final String columnName = column.isPrimaryKey()
+                        ? column.getAliasedName()
+                        : column.getName();
+
                 final ModelField modelField = entry.getValue();
                 final String fieldGraphQlType = entry.getValue().getTargetType();
                 final JavaFieldType fieldJavaType;
@@ -539,20 +563,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQlType);
                 }
 
-                final int columnIndex = cursor.getColumnIndexOrThrow(fieldName);
+                final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
+
+                final String stringValueFromCursor;
                 switch (fieldJavaType) {
                     case STRING:
                         mapForModel.put(fieldName, cursor.getString(columnIndex));
                         break;
                     case MODEL:
-                        // This is not populated with models at the moment mainly for
-                        // performance reasons as we do not know how much memory this would occupy.
-                        // May be featured in future releases based on customer feedback
-                        // in the form of streaming or size-based data fetch.
-                        mapForModel.put(fieldName, null);
+                        // Eager load model if the necessary columns are present inside the cursor.
+                        // At the time of implementation, cursor should have been joined with these
+                        // columns IF AND ONLY IF the model is a foreign key to the inner model.
+                        Class<?> classType = modelClass.getDeclaredField(fieldName).getType();
+                        @SuppressWarnings("unchecked") // Safe type casting since foreign key is always a model
+                        Class<? extends Model> innerModelType = (Class<? extends Model>) classType;
+                        String className = innerModelType.getSimpleName();
+                        ModelSchema innerModelSchema = ModelSchemaRegistry.singleton()
+                                .getModelSchemaForModelClass(className);
+                        Map<String, Object> mapForInnerModel = buildMapForModel(
+                                innerModelType,
+                                innerModelSchema,
+                                cursor);
+                        mapForModel.put(fieldName, deserializeModelFromRawMap(mapForInnerModel, innerModelType));
                         break;
                     case ENUM:
-                        String stringValueFromCursor = cursor.getString(columnIndex);
+                        stringValueFromCursor = cursor.getString(columnIndex);
                         Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
                         Object enumValue = gson.getAdapter(enumType).fromJson(stringValueFromCursor);
                         mapForModel.put(fieldName, enumValue);
@@ -604,7 +639,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(sqlCommand);
         Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
 
-        Log.d(TAG, "Writing data to table for: " + model.toString());
+        LOG.debug("Writing data to table for: " + model.toString());
 
         // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
         // are not thread-safe. Adding a synchronization barrier to access it.
@@ -626,7 +661,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             compiledSqlStatement.clearBindings();
         }
 
-        Log.d(TAG, "Successfully written data to table for: " + model.toString());
+        LOG.debug("Successfully written data to table for: " + model.toString());
     }
 
     private boolean dataExistsInSQLiteTable(
@@ -635,8 +670,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull String columnValue) {
         final Cursor cursor = databaseConnectionHandle.rawQuery(
                 "SELECT * FROM " + StringUtils.singleQuote(tableName) +
-                    " WHERE " + columnName + " = " +
-                    StringUtils.singleQuote(columnValue), null);
+                        " WHERE " + columnName + " = " +
+                        StringUtils.singleQuote(columnValue), null);
         if (cursor.getCount() <= 0) {
             cursor.close();
             return false;
@@ -645,15 +680,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return true;
     }
 
+    private <T extends Model> T deserializeModelFromRawMap(Map<String, Object> mapForModel,
+                                                           Class<T> itemClass) throws IOException {
+        final String modelInJsonFormat = gson.toJson(mapForModel);
+        return gson.getAdapter(itemClass).fromJson(modelInJsonFormat);
+    }
+
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) {
-        // Query all rows in table.
-        return this.databaseConnectionHandle.query(tableName,
-                null,
-                null,
-                null,
-                null,
-                null,
-                null);
+        return getQueryAllCursor(tableName, null);
+    }
+
+    @VisibleForTesting
+    Cursor getQueryAllCursor(@NonNull String tableName,
+                             @Nullable QueryPredicate predicate) {
+        final ModelSchema schema = ModelSchemaRegistry.singleton()
+                .getModelSchemaForModelClass(tableName);
+        final String rawQuery = sqlCommandFactory.queryFor(schema, predicate).sqlStatement();
+        return this.databaseConnectionHandle.rawQuery(rawQuery, null);
     }
 }

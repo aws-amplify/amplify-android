@@ -16,7 +16,6 @@
 package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
@@ -27,6 +26,7 @@ import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
@@ -51,7 +51,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * Constructs a new AmazonPinpointAnalyticsPlugin.
      */
     public AmazonPinpointAnalyticsPlugin() {
-        Log.d(TAG, "Amazon Pinpoint Analytics Plugin is initialized.");
     }
 
     /**

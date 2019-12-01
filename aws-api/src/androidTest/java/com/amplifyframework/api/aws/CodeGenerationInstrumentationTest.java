@@ -20,10 +20,16 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.testmodels.Blog;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.Post;
+import com.amplifyframework.testmodels.PostEditor;
 import com.amplifyframework.testmodels.Projectfields;
+import com.amplifyframework.testmodels.Rating;
 import com.amplifyframework.testmodels.Team;
+import com.amplifyframework.testmodels.User;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -42,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
+    private static final String BLOG_API_NAME = "blogApi";
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -162,7 +169,6 @@ public final class CodeGenerationInstrumentationTest {
         GraphQLOperation<Person> operation = Amplify.API.subscribe(
                 PERSON_API_NAME,
                 Person.class,
-                null,
                 SubscriptionType.ON_CREATE,
                 streamListener
         );
@@ -248,12 +254,14 @@ public final class CodeGenerationInstrumentationTest {
     }
 
     /**
-     * Creates a Team object, then creates a Project object with a belongsTo relationship with that Team and ensures
-     * that Query and Subscription on the Project both get the original Team object.
+     * For a model having an {@link BelongsTo} relationship to another model, validate
+     * successful query, mutations, subscription.
+     * TODO: Add mutate with condition and list with predicate since those are the ones
+     *       that actually use the original model name
      * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
      */
     @Test
-    public void belongsToCreateQuerySubscribe() throws Throwable {
+    public void belongsToRelationship() throws Throwable {
         LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
         LatchedSingleResponseListener<Projectfields> projectMutationListener =
                 new LatchedSingleResponseListener<>();
@@ -326,5 +334,205 @@ public final class CodeGenerationInstrumentationTest {
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
         projectSubscriptionListener.awaitCompletion();
+    }
+
+    /**
+     * Tests the code generation for HAS_MANY relationship.
+     */
+    @Test
+    public void hasManyRelationship() {
+        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Blog> blogGetListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
+
+        Blog blog = Blog.builder()
+                .name("All Things Amplify")
+                .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
+                .build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                blog,
+                MutationType.CREATE,
+                blogCreateListener
+        );
+
+        Blog blogCreateResult = blogCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(blog, blogCreateResult);
+
+        Post post = Post.builder().title("Test 1").blog(blog).build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                post,
+                MutationType.CREATE,
+                postCreateListener
+        );
+
+        Post postCreateResult = postCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(post.getId(), postCreateResult.getId());
+        assertEquals(post.getTitle(), postCreateResult.getTitle());
+        assertEquals(post.getBlog().getId(), postCreateResult.getBlog().getId());
+        assertEquals(post.getBlog().getName(), postCreateResult.getBlog().getName());
+        assertEquals(post.getBlog().getTags(), postCreateResult.getBlog().getTags());
+
+        Amplify.API.query(
+                BLOG_API_NAME,
+                Blog.class,
+                blog.getId(),
+                blogGetListener
+        );
+
+        Blog blogGetResult = blogGetListener.awaitTerminalEvent().getResponse().getData();
+        Post blogGetResultPost = blogGetResult.getPosts().get(0);
+        assertEquals(post.getId(), blogGetResultPost.getId());
+        assertEquals(post.getTitle(), blogGetResultPost.getTitle());
+    }
+
+    /**
+     * Tests the code generation for HAS_ONE relationship.
+     */
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Test
+    public void hasOneRelationship() {
+        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Rating> ratingCreateListener = new LatchedSingleResponseListener<>();
+
+        Blog blog = Blog.builder()
+                .name("Necessary blog for post")
+                .build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                blog,
+                MutationType.CREATE,
+                blogCreateListener
+        );
+
+        blogCreateListener.awaitTerminalEvent();
+
+        Post post = Post.builder().title("Test post").blog(blog).build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                post,
+                MutationType.CREATE,
+                postCreateListener
+        );
+
+        postCreateListener.awaitTerminalEvent();
+
+        Rating rating = Rating.builder().stars(5).post(post).build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                rating,
+                MutationType.CREATE,
+                ratingCreateListener
+        );
+
+        Rating ratingCreateResult = ratingCreateListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(post, ratingCreateResult.getPost());
+
+        /*
+        TODO: This condition should work. However there is a bug on the AppSync transformer side which
+            sets up the HasOne / BelongsTo relationship as two independent BelongsTo relationships so it fails.
+            Once the AppSync transformer bug is fixed, we can uncomment this part of the test.
+
+        LatchedSingleResponseListener<Post> postGetListener = new LatchedSingleResponseListener<>();
+
+        Amplify.API.query(
+                BLOG_API_NAME,
+                Post.class,
+                post.getId(),
+                postGetListener
+        );
+
+        Post postGetResult = postGetListener.awaitTerminalEvent().getResponse().getData();
+        assertEquals(rating, postGetResult.getRating());
+         */
+    }
+
+    /**
+     * Tests the code generation for a Many to Many relationship simulated through two HasMany relationships.
+     */
+    @Test
+    public void manyToManyRelationship() {
+        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<User> userCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<PostEditor> editorCreateListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<Post> postGetListener = new LatchedSingleResponseListener<>();
+        LatchedSingleResponseListener<User> userGetListener = new LatchedSingleResponseListener<>();
+
+        Blog blog = Blog.builder()
+                .name("Necessary blog for post")
+                .build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                blog,
+                MutationType.CREATE,
+                blogCreateListener
+        );
+
+        blogCreateListener.awaitTerminalEvent();
+
+        Post post = Post.builder().title("Test post").blog(blog).build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                post,
+                MutationType.CREATE,
+                postCreateListener
+        );
+
+        postCreateListener.awaitTerminalEvent();
+
+        User user = User.builder().username("Patches46").build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                user,
+                MutationType.CREATE,
+                userCreateListener
+        );
+
+        userCreateListener.awaitTerminalEvent();
+
+        PostEditor editor = PostEditor.builder().post(post).editor(user).build();
+
+        Amplify.API.mutate(
+                BLOG_API_NAME,
+                editor,
+                MutationType.CREATE,
+                editorCreateListener
+        );
+
+        editorCreateListener.awaitTerminalEvent();
+
+        Amplify.API.query(
+                BLOG_API_NAME,
+                Post.class,
+                post.getId(),
+                postGetListener
+        );
+
+        Amplify.API.query(
+                BLOG_API_NAME,
+                User.class,
+                user.getId(),
+                userGetListener
+        );
+
+        Post postGetResult = postGetListener.awaitTerminalEvent().getResponse().getData();
+        User userGetResult = userGetListener.awaitTerminalEvent().getResponse().getData();
+
+        assertEquals(1, postGetResult.getEditors().size());
+        assertEquals(user, postGetResult.getEditors().get(0).getEditor());
+        assertEquals(1, userGetResult.getPosts().size());
+        assertEquals(post.getTitle(), userGetResult.getPosts().get(0).getPost().getTitle());
+        assertEquals(post.getId(), userGetResult.getPosts().get(0).getPost().getId());
     }
 }

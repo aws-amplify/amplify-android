@@ -18,6 +18,10 @@ package com.amplifyframework.core.model;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.annotations.BelongsTo;
+
+import java.util.Objects;
+
 /**
  * Represents an association of the {@link Model} class.
  * This class encapsulates the information provided by the
@@ -46,7 +50,7 @@ public final class ModelAssociation {
      * Construct the ModelAssociation object from the builder.
      */
     private ModelAssociation(@NonNull Builder builder) {
-        this.name = builder.name;
+        this.name = Objects.requireNonNull(builder.name);
         this.targetName = builder.targetName;
         this.associatedName = builder.associatedName;
         this.associatedType = builder.associatedType;
@@ -100,7 +104,11 @@ public final class ModelAssociation {
      * @return True if this field owns the identity of another model
      */
     public boolean isOwner() {
-        return targetName != null;
+        if (getName().equals(BelongsTo.class.getSimpleName())) {
+            return true;
+        }
+
+        return false;
     }
 
     @Override
@@ -162,8 +170,8 @@ public final class ModelAssociation {
          * @param name name of the association model
          * @return the association model with given name
          */
-        public Builder name(String name) {
-            this.name = name;
+        public Builder name(@NonNull String name) {
+            this.name = Objects.requireNonNull(name);
             return this;
         }
 

@@ -110,8 +110,7 @@ public final class ModelSchema {
             // Set the model name and plural name (null if not provided)
             ModelConfig modelConfig = clazz.getAnnotation(ModelConfig.class);
             final String modelName = clazz.getSimpleName();
-            final String modelPluralName = modelConfig != null && modelConfig.pluralName() != null
-                    && !modelConfig.pluralName().isEmpty()
+            final String modelPluralName = modelConfig != null && !modelConfig.pluralName().isEmpty()
                     ? modelConfig.pluralName()
                     : null;
 
@@ -171,6 +170,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(BelongsTo.class)) {
             BelongsTo association = field.getAnnotation(BelongsTo.class);
             return ModelAssociation.builder()
+                    .name(BelongsTo.class.getSimpleName())
                     .targetName(association.targetName())
                     .associatedType(association.type().getSimpleName())
                     .build();
@@ -178,6 +178,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(HasOne.class)) {
             HasOne association = field.getAnnotation(HasOne.class);
             return ModelAssociation.builder()
+                    .name(HasOne.class.getSimpleName())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
@@ -185,6 +186,7 @@ public final class ModelSchema {
         if (field.isAnnotationPresent(HasMany.class)) {
             HasMany association = field.getAnnotation(HasMany.class);
             return ModelAssociation.builder()
+                    .name(HasMany.class.getSimpleName())
                     .associatedName(association.associatedWith())
                     .associatedType(association.type().getSimpleName())
                     .build();
