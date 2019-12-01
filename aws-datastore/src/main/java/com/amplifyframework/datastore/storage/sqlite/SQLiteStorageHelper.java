@@ -173,11 +173,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
         // the changes to the existing schema of the SQLite tables.
         if (!ObjectsCompat.equals(oldVersion, newVersion)) {
             dropAllTables(sqliteDatabase);
-        }
 
-        // After the existing tables are dropped, call onCreate(SQLiteDatabase) to re-create
-        // the required tables.
-        onCreate(sqliteDatabase);
+            // After the existing tables are dropped, call onCreate(SQLiteDatabase) to re-create
+            // the required tables.
+            onCreate(sqliteDatabase);
+        }
     }
 
     private void createTablesAndIndexes(SQLiteDatabase sqliteDatabase) {

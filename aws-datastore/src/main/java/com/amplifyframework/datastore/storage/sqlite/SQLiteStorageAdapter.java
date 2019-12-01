@@ -707,8 +707,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * Drop all tables if the version has changed.
      */
     private Completable upgradeModels() {
-        Single<Iterator<PersistentModelVersion>> single = PersistentModelVersion.fromLocalStorage(this);
-        return single.doOnSuccess(iterator -> {
+        return PersistentModelVersion.fromLocalStorage(this).doOnSuccess(iterator -> {
             if (iterator.hasNext()) {
                 LOG.verbose("Successfully read model version from local storage. " +
                         "Checking if the models need to be upgraded...");
