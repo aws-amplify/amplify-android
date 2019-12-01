@@ -428,8 +428,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             throws IllegalAccessException {
         final String tableName = sqlCommand.tableName();
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
-        final Iterator<Field> fieldIterator = classFields.iterator();
+        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(object.getClass()).iterator();
 
         final Cursor cursor = getQueryAllCursor(tableName, null);
         if (cursor == null) {
