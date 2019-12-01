@@ -1,0 +1,1 @@
+{"query":"query GetPerson($id: ID!) { getPerson(id: $id) { dob age first_name relationship id last_name }}","variables":{"id":"9a1bee5c-248f-4746-a7da-58f703ec572d"}}

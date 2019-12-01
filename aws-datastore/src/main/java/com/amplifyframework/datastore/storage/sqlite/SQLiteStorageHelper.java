@@ -21,7 +21,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
@@ -29,13 +28,15 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
+
 /**
  * A helper class to manage database creation and version management.
  */
 final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgradeStrategy<SQLiteDatabase, String> {
 
-    // Logcat tag
-    private static final String TAG = SQLiteStorageHelper.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     // SQLiteDatabase Metadata is stored in tables prefixed by this prefix.
     private static final String SQLITE_SYSTEM_TABLE_PREFIX = "sqlite_";
@@ -187,12 +188,12 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
         sqliteDatabase.beginTransaction();
         try {
             for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
-                Log.i(TAG, "Creating table: " + sqlCommand.tableName());
+                LOG.info("Creating table: " + sqlCommand.tableName());
                 sqliteDatabase.execSQL(sqlCommand.sqlStatement());
             }
 
             for (final SqlCommand sqlCommand : createSqlCommands.getCreateIndexCommands()) {
-                Log.i(TAG, "Creating index for table: " + sqlCommand.tableName());
+                LOG.info("Creating index for table: " + sqlCommand.tableName());
                 sqliteDatabase.execSQL(sqlCommand.sqlStatement());
             }
             sqliteDatabase.setTransactionSuccessful();
@@ -223,7 +224,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
                     continue;
                 }
                 sqliteDatabase.execSQL("DROP TABLE IF EXISTS " + table);
-                Log.v(TAG, "Dropped table: " + table);
+                LOG.verbose("Dropped table: " + table);
             }
             sqliteDatabase.setTransactionSuccessful();
             sqliteDatabase.endTransaction();

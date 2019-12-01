@@ -216,8 +216,8 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate,
             SubscriptionType type
-    ) throws AmplifyException {
-        return null;
+    ) {
+        throw new UnsupportedOperationException("Not implemented yet.");
     }
 
     private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws AmplifyException {
@@ -341,14 +341,14 @@ final class AppSyncGraphQLRequestFactory {
 
             if (schema.getAssociations().containsKey(fieldName)) {
                 if (List.class.isAssignableFrom(field.getType())) {
-                    if (levelsDeepToGo >= 2) {
+                    if (levelsDeepToGo >= 1) {
                         result.append(fieldName).append(" ");
 
                         ParameterizedType listType = (ParameterizedType) field.getGenericType();
                         Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
 
                         result.append("{ items {")
-                                .append(getModelFields(listTypeClass, levelsDeepToGo - 2)) // cast checked above
+                                .append(getModelFields(listTypeClass, levelsDeepToGo - 1)) // cast checked above
                                 .append("} nextToken }");
                     }
                 } else if (levelsDeepToGo >= 1) {

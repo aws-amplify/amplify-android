@@ -114,17 +114,6 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
-            @NonNull SubscriptionType subscriptionType,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
-    ) {
-        return getSelectedPlugin().subscribe(apiName, modelClass, predicate, subscriptionType, subscriptionListener);
-    }
-
-    @Override
-    public <T extends Model> GraphQLOperation<T> subscribe(
-            @NonNull String apiName,
-            @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
         return getSelectedPlugin().subscribe(apiName, modelClass, subscriptionType, subscriptionListener);

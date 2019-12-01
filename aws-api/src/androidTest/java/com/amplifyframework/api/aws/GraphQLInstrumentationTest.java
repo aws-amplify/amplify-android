@@ -31,8 +31,8 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
  * Validates the functionality of the {@link AWSApiPlugin}.
@@ -129,7 +129,9 @@ public final class GraphQLInstrumentationTest {
         );
         GraphQLResponse<Comment> response =
             creationListener.awaitTerminalEvent().assertResponse().getResponse();
-        assertFalse(response.hasErrors());
+        if (response.hasErrors()) {
+            fail(response.getErrors().iterator().next().getMessage());
+        }
         assertTrue(response.hasData());
         Comment comment = response.getData();
         assertEquals("It's going to be fun!", comment.content());
@@ -144,8 +146,11 @@ public final class GraphQLInstrumentationTest {
     private void validateSubscribedComments(List<GraphQLResponse<Comment>> subscriptionResponses) {
         // Validate that the subscription received data.
         assertEquals(1, subscriptionResponses.size());
-        assertFalse(subscriptionResponses.get(0).hasErrors());
-        Comment subscriptionComment = subscriptionResponses.get(0).getData();
+        GraphQLResponse<Comment> commentResponse = subscriptionResponses.get(0);
+        if (commentResponse.hasErrors()) {
+            fail(commentResponse.getErrors().iterator().next().getMessage());
+        }
+        Comment subscriptionComment = commentResponse.getData();
         assertEquals("It's going to be fun!", subscriptionComment.content());
     }
 
@@ -179,7 +184,9 @@ public final class GraphQLInstrumentationTest {
 
         // Validate the response. No errors are expected.
         GraphQLResponse<Event> creationResponse = creationListener.awaitTerminalEvent().getResponse();
-        assertFalse(creationResponse.hasErrors());
+        if (creationResponse.hasErrors()) {
+            fail(creationResponse.getErrors().iterator().next().getMessage());
+        }
 
         // The echo-d response mimics what we provided.
         Event createdEvent = creationResponse.getData();

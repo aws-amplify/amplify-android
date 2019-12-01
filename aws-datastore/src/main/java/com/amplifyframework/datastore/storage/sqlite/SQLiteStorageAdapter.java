@@ -19,12 +19,12 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -42,6 +42,7 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
 
@@ -67,16 +68,14 @@ import java.util.concurrent.Executors;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.disposables.Disposable;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.subjects.PublishSubject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
-
-    // LogCat Tag
-    private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     // Database Version
     private static final int DATABASE_VERSION = 1;
@@ -121,7 +120,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     // Stores the reference to disposable objects for cleanup
-    private final Set<Disposable> toBeDisposed;
+    private final CompositeDisposable toBeDisposed;
 
     /**
      * Construct the SQLiteStorageAdapter object.
@@ -135,7 +134,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.toBeDisposed = new HashSet<>();
+        this.toBeDisposed = new CompositeDisposable();
     }
 
     /**
@@ -223,13 +222,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * from the version passed in through {@link ModelProvider#version()}.
                  * Delete the database if there is a version change.
                  */
-                Disposable upgradeModelsDisposable = upgradeModels().subscribe(() -> {
+                toBeDisposed.add(upgradeModels().subscribe(() -> {
                     listener.onResult(new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values()));
                 }, throwable -> {
                         listener.onError(new DataStoreException("Error in initializing the " +
                                 "SQLiteStorageAdapter", throwable));
-                    });
-                toBeDisposed.add(upgradeModelsDisposable);
+                    }));
             } catch (Exception exception) {
                 listener.onError(new DataStoreException("Error in initializing the " +
                         "SQLiteStorageAdapter", exception));
@@ -307,7 +305,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                         @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         threadPool.submit(() -> {
             try {
-                Log.d(TAG, "Querying item for: " + itemClass.getSimpleName());
+                LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
                 final ModelSchema modelSchema =
@@ -352,7 +350,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
                 final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
 
-                Log.d(TAG, "Deleting item in table: " + sqLiteTable.getName() +
+                LOG.debug("Deleting item in table: " + sqLiteTable.getName() +
                         " identified by ID: " + item.getId());
 
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item);
@@ -400,9 +398,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             insertSqlPreparedStatements = null;
 
             if (toBeDisposed != null) {
-                for (Disposable disposable: toBeDisposed) {
-                    disposable.dispose();
-                }
+                toBeDisposed.dispose();
             }
             if (itemChangeSubject != null) {
                 itemChangeSubject.onComplete();
@@ -664,7 +660,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(sqlCommand);
         Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
 
-        Log.d(TAG, "Writing data to table for: " + model.toString());
+        LOG.debug("Writing data to table for: " + model.toString());
 
         // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
         // are not thread-safe. Adding a synchronization barrier to access it.
@@ -686,7 +682,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             compiledSqlStatement.clearBindings();
         }
 
-        Log.d(TAG, "Successfully written data to table for: " + model.toString());
+        LOG.debug("Successfully written data to table for: " + model.toString());
     }
 
     private boolean dataExistsInSQLiteTable(
@@ -714,13 +710,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Single<Iterator<PersistentModelVersion>> single = PersistentModelVersion.fromLocalStorage(this);
         return single.doOnSuccess(iterator -> {
             if (iterator.hasNext()) {
-                Log.v(TAG, "Successfully read model version from local storage. " +
+                LOG.verbose("Successfully read model version from local storage. " +
                         "Checking if the models need to be upgraded...");
                 PersistentModelVersion persistentModelVersion = iterator.next();
                 String oldVersion = persistentModelVersion.getVersion();
                 String newVersion = modelProvider.version();
                 if (!ObjectsCompat.equals(oldVersion, newVersion)) {
-                    Log.d(TAG, "Upgrading models as the version of models changed from " +
+                    LOG.debug("Upgrading models as the version of models changed from " +
                             oldVersion + " to " + newVersion);
                     Objects.requireNonNull(sqliteStorageHelper);
                     Objects.requireNonNull(databaseConnectionHandle);
@@ -734,7 +730,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     this,
                     new PersistentModelVersion(modelProvider.version()));
         }).doOnError(error -> {
-            Log.e(TAG, "Error in reading model version from local storage.", error);
+            LOG.error("Error in reading model version from local storage.", error);
             PersistentModelVersion.saveToLocalStorage(
                         this,
                         new PersistentModelVersion(modelProvider.version()));
