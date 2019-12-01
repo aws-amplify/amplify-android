@@ -15,21 +15,22 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
-    private static final String TAG = SubscriptionOperation.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
 
     private final String endpoint;
     private final OkHttpClient client;
@@ -83,7 +84,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     @Override
     public void start() {
-        Log.d(TAG, "Request " + getRequest().getContent());
+        LOG.debug("Request " + getRequest().getContent());
         subscriptionId = subscriptionEndpoint.requestSubscription(
             getRequest(), subscriptionListener);
     }

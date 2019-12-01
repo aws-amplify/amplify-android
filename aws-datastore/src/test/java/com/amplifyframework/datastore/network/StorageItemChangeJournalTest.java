@@ -19,7 +19,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Before;
 import org.junit.Test;

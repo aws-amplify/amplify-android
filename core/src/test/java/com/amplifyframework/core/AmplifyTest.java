@@ -18,10 +18,13 @@ package com.amplifyframework.core;
 import android.content.Context;
 import android.os.Build;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.core.plugin.PluginException;
+import com.amplifyframework.logging.LogLevel;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingPlugin;
 
 import org.json.JSONObject;
@@ -65,6 +68,7 @@ public class AmplifyTest {
      * to test the functionality of {@link Amplify#addPlugin(Plugin)}
      * and {@link Amplify#removePlugin(Plugin)}.
      */
+    @SuppressWarnings("ConstantConditions") // null returns on @NonNull; this is only a stub.
     static final class SimpleLoggingPlugin extends LoggingPlugin<Void> {
         private final String uuid;
 
@@ -107,6 +111,24 @@ public class AmplifyTest {
         @Override
         public Void getEscapeHatch() {
             // No escape hatch, either. Sweet.
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public Logger getDefaultLogger() {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold) {
+            return null;
+        }
+
+        @NonNull
+        @Override
+        public Logger forNamespace(@Nullable String namespace) {
             return null;
         }
     }

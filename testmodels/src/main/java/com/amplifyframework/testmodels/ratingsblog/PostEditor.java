@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.ratingsblog;
 
 import androidx.core.util.ObjectsCompat;
 
@@ -34,8 +34,8 @@ import java.util.UUID;
 @Index(name = "byEditor", fields = {"editorID","postID"})
 public final class PostEditor implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField POST = QueryField.field("post");
-    public static final QueryField EDITOR = QueryField.field("editor");
+    public static final QueryField POST = QueryField.field("postID");
+    public static final QueryField EDITOR = QueryField.field("editorID");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="Post", isRequired = true) @BelongsTo(targetName = "postID", type = Post.class) Post post;
     private final @ModelField(targetType="User", isRequired = true) @BelongsTo(targetName = "editorID", type = User.class) User editor;

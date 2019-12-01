@@ -15,8 +15,8 @@
 
 package com.amplifyframework.datastore.storage;
 
-import com.amplifyframework.testmodels.MaritalStatus;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.MaritalStatus;
+import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Test;
 

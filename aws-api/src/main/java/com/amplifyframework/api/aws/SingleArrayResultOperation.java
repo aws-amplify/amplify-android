@@ -15,14 +15,15 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
 
@@ -42,7 +43,7 @@ import okhttp3.ResponseBody;
  * @param <T> Casted type of GraphQL result data
  */
 public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
-    private static final String TAG = SingleArrayResultOperation.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
@@ -80,7 +81,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         }
 
         try {
-            Log.d(TAG, "Request: " + getRequest().getContent());
+            LOG.debug("Request: " + getRequest().getContent());
             ongoingCall = client.newCall(new Request.Builder()
                     .url(endpoint)
                     .addHeader("accept", CONTENT_TYPE)

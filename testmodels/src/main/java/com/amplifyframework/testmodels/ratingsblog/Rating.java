@@ -13,51 +13,45 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.ratingsblog;
 
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the Blog type in your schema. */
+/** This is an auto generated class representing the Rating type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Blogs")
-public final class Blog implements Model {
+@ModelConfig(pluralName = "Ratings")
+public final class Rating implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField NAME = QueryField.field("name");
-    public static final QueryField TAGS = QueryField.field("tags");
+    public static final QueryField STARS = QueryField.field("stars");
+    public static final QueryField POST = QueryField.field("ratingPostId");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String name;
-    private final @ModelField(targetType="String") List<String> tags;
-    private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
+    private final @ModelField(targetType="Int", isRequired = true) Integer stars;
+    private final @ModelField(targetType="Post", isRequired = true) @BelongsTo(targetName = "ratingPostId", type = Post.class) Post post;
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public Integer getStars() {
+        return stars;
     }
 
-    public List<String> getTags() {
-        return tags;
+    public Post getPost() {
+        return post;
     }
 
-    public List<Post> getPosts() {
-        return posts;
-    }
-
-    private Blog(String id, String name, List<String> tags) {
+    private Rating(String id, Integer stars, Post post) {
         this.id = id;
-        this.name = name;
-        this.tags = tags;
+        this.stars = stars;
+        this.post = post;
     }
 
     @Override
@@ -67,10 +61,10 @@ public final class Blog implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Blog blog = (Blog) obj;
-            return ObjectsCompat.equals(getId(), blog.getId()) &&
-                    ObjectsCompat.equals(getName(), blog.getName()) &&
-                    ObjectsCompat.equals(getTags(), blog.getTags());
+            Rating rating = (Rating) obj;
+            return ObjectsCompat.equals(getId(), rating.getId()) &&
+                    ObjectsCompat.equals(getStars(), rating.getStars()) &&
+                    ObjectsCompat.equals(getPost(), rating.getPost());
         }
     }
 
@@ -78,12 +72,12 @@ public final class Blog implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getName())
-                .append(getTags())
+                .append(getStars())
+                .append(getPost())
                 .hashCode();
     }
 
-    public static NameStep builder() {
+    public static StarsStep builder() {
         return new Builder();
     }
 
@@ -96,7 +90,7 @@ public final class Blog implements Model {
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
      **/
-    public static Blog justId(String id) {
+    public static Rating justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -106,7 +100,7 @@ public final class Blog implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-        return new Blog(
+        return new Rating(
                 id,
                 null,
                 null
@@ -115,45 +109,50 @@ public final class Blog implements Model {
 
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
-                name,
-                tags);
+                stars,
+                post);
     }
-    public interface NameStep {
-        BuildStep name(String name);
+    public interface StarsStep {
+        PostStep stars(Integer stars);
+    }
+
+
+    public interface PostStep {
+        BuildStep post(Post post);
     }
 
 
     public interface BuildStep {
-        Blog build();
+        Rating build();
         BuildStep id(String id) throws IllegalArgumentException;
-        BuildStep tags(List<String> tags);
     }
 
 
-    public static class Builder implements NameStep, BuildStep {
+    public static class Builder implements StarsStep, PostStep, BuildStep {
         private String id;
-        private String name;
-        private List<String> tags;
+        private Integer stars;
+        private Post post;
         @Override
-        public Blog build() {
+        public Rating build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Blog(
+            return new Rating(
                     id,
-                    name,
-                    tags);
+                    stars,
+                    post);
         }
 
         @Override
-        public BuildStep name(String name) {
-            Objects.requireNonNull(name);
-            this.name = name;
+        public PostStep stars(Integer stars) {
+            Objects.requireNonNull(stars);
+            this.stars = stars;
             return this;
         }
 
         @Override
-        public BuildStep tags(List<String> tags) {
-            this.tags = tags;
+        public BuildStep post(Post post) {
+            Objects.requireNonNull(post);
+            this.post = post;
             return this;
         }
 
@@ -180,20 +179,20 @@ public final class Blog implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String name, List<String> tags) {
+        private CopyOfBuilder(String id, Integer stars, Post post) {
             super.id(id);
-            super.name(name)
-                    .tags(tags);
+            super.stars(stars)
+                    .post(post);
         }
 
         @Override
-        public CopyOfBuilder name(String name) {
-            return (CopyOfBuilder) super.name(name);
+        public CopyOfBuilder stars(Integer stars) {
+            return (CopyOfBuilder) super.stars(stars);
         }
 
         @Override
-        public CopyOfBuilder tags(List<String> tags) {
-            return (CopyOfBuilder) super.tags(tags);
+        public CopyOfBuilder post(Post post) {
+            return (CopyOfBuilder) super.post(post);
         }
     }
 

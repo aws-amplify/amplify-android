@@ -13,37 +13,58 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.ratingsblog;
 
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the Team type in your schema. */
+/** This is an auto generated class representing the Post type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig
-public final class Team implements Model {
+@ModelConfig(pluralName = "Posts")
+public final class Post implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField NAME = QueryField.field("name");
+    public static final QueryField TITLE = QueryField.field("title");
+    public static final QueryField BLOG = QueryField.field("postBlogId");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String name;
+    private final @ModelField(targetType="String", isRequired = true) String title;
+    private final @ModelField(targetType="Blog", isRequired = true) @BelongsTo(targetName = "postBlogId", type = Blog.class) Blog blog;
+    private final @ModelField(targetType="Rating") @HasOne(associatedWith = "post", type = Rating.class) Rating rating = null;
+    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "post", type = PostEditor.class) List<PostEditor> editors = null;
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public String getTitle() {
+        return title;
     }
 
-    private Team(String id, String name) {
+    public Blog getBlog() {
+        return blog;
+    }
+
+    public Rating getRating() {
+        return rating;
+    }
+
+    public List<PostEditor> getEditors() {
+        return editors;
+    }
+
+    private Post(String id, String title, Blog blog) {
         this.id = id;
-        this.name = name;
+        this.title = title;
+        this.blog = blog;
     }
 
     @Override
@@ -53,9 +74,10 @@ public final class Team implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Team team = (Team) obj;
-            return ObjectsCompat.equals(getId(), team.getId()) &&
-                    ObjectsCompat.equals(getName(), team.getName());
+            Post post = (Post) obj;
+            return ObjectsCompat.equals(getId(), post.getId()) &&
+                    ObjectsCompat.equals(getTitle(), post.getTitle()) &&
+                    ObjectsCompat.equals(getBlog(), post.getBlog());
         }
     }
 
@@ -63,21 +85,25 @@ public final class Team implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getName())
+                .append(getTitle())
+                .append(getBlog())
                 .hashCode();
+    }
+
+    public static TitleStep builder() {
+        return new Builder();
     }
 
     /**
      * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
-     *
      * This is a convenience method to return an instance of the object with only its ID populated
      * to be used in the context of a parameter in a delete mutation or referencing a foreign key
      * in a relationship.
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     */
-    public static Team justId(String id) {
+     **/
+    public static Post justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -87,48 +113,59 @@ public final class Team implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-
-        return new Team(
+        return new Post(
                 id,
+                null,
                 null
         );
     }
 
-    public static NameStep builder() {
-        return new Builder();
+    public CopyOfBuilder copyOfBuilder() {
+        return new CopyOfBuilder(id,
+                title,
+                blog);
+    }
+    public interface TitleStep {
+        BlogStep title(String title);
     }
 
-    public NewBuilder newBuilder() {
-        return new NewBuilder(id,
-                name);
-    }
-    public interface NameStep {
-        BuildStep name(String name);
+
+    public interface BlogStep {
+        BuildStep blog(Blog blog);
     }
 
 
     public interface BuildStep {
-        Team build();
+        Post build();
         BuildStep id(String id) throws IllegalArgumentException;
     }
 
 
-    public static class Builder implements NameStep, BuildStep {
+    public static class Builder implements TitleStep, BlogStep, BuildStep {
         private String id;
-        private String name;
+        private String title;
+        private Blog blog;
         @Override
-        public Team build() {
+        public Post build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Team(
+            return new Post(
                     id,
-                    name);
+                    title,
+                    blog);
         }
 
         @Override
-        public BuildStep name(String name) {
-            Objects.requireNonNull(name);
-            this.name = name;
+        public BlogStep title(String title) {
+            Objects.requireNonNull(title);
+            this.title = title;
+            return this;
+        }
+
+        @Override
+        public BuildStep blog(Blog blog) {
+            Objects.requireNonNull(blog);
+            this.blog = blog;
             return this;
         }
 
@@ -154,15 +191,21 @@ public final class Team implements Model {
     }
 
 
-    public final class NewBuilder extends Builder {
-        private NewBuilder(String id, String name) {
+    public final class CopyOfBuilder extends Builder {
+        private CopyOfBuilder(String id, String title, Blog blog) {
             super.id(id);
-            super.name(name);
+            super.title(title)
+                    .blog(blog);
         }
 
         @Override
-        public NewBuilder name(String name) {
-            return (NewBuilder) super.name(name);
+        public CopyOfBuilder title(String title) {
+            return (CopyOfBuilder) super.title(title);
+        }
+
+        @Override
+        public CopyOfBuilder blog(Blog blog) {
+            return (CopyOfBuilder) super.blog(blog);
         }
     }
 

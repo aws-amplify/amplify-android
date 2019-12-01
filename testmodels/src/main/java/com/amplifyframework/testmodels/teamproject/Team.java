@@ -13,44 +13,37 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.teamproject;
 
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the User type in your schema. */
+/** This is an auto generated class representing the Team type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Users")
-public final class User implements Model {
+@ModelConfig
+public final class Team implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField USERNAME = QueryField.field("username");
+    public static final QueryField NAME = QueryField.field("name");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String username;
-    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "editor", type = PostEditor.class) List<PostEditor> posts = null;
+    private final @ModelField(targetType="String", isRequired = true) String name;
     public String getId() {
         return id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getName() {
+        return name;
     }
 
-    public List<PostEditor> getPosts() {
-        return posts;
-    }
-
-    private User(String id, String username) {
+    private Team(String id, String name) {
         this.id = id;
-        this.username = username;
+        this.name = name;
     }
 
     @Override
@@ -60,9 +53,9 @@ public final class User implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            User user = (User) obj;
-            return ObjectsCompat.equals(getId(), user.getId()) &&
-                    ObjectsCompat.equals(getUsername(), user.getUsername());
+            Team team = (Team) obj;
+            return ObjectsCompat.equals(getId(), team.getId()) &&
+                    ObjectsCompat.equals(getName(), team.getName());
         }
     }
 
@@ -70,24 +63,21 @@ public final class User implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getUsername())
+                .append(getName())
                 .hashCode();
-    }
-
-    public static UsernameStep builder() {
-        return new Builder();
     }
 
     /**
      * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
+     *
      * This is a convenience method to return an instance of the object with only its ID populated
      * to be used in the context of a parameter in a delete mutation or referencing a foreign key
      * in a relationship.
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
-    public static User justId(String id) {
+     */
+    public static Team justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -97,43 +87,48 @@ public final class User implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-        return new User(
+
+        return new Team(
                 id,
                 null
         );
     }
 
-    public CopyOfBuilder copyOfBuilder() {
-        return new CopyOfBuilder(id,
-                username);
+    public static NameStep builder() {
+        return new Builder();
     }
-    public interface UsernameStep {
-        BuildStep username(String username);
+
+    public NewBuilder newBuilder() {
+        return new NewBuilder(id,
+                name);
+    }
+    public interface NameStep {
+        BuildStep name(String name);
     }
 
 
     public interface BuildStep {
-        User build();
+        Team build();
         BuildStep id(String id) throws IllegalArgumentException;
     }
 
 
-    public static class Builder implements UsernameStep, BuildStep {
+    public static class Builder implements NameStep, BuildStep {
         private String id;
-        private String username;
+        private String name;
         @Override
-        public User build() {
+        public Team build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new User(
+            return new Team(
                     id,
-                    username);
+                    name);
         }
 
         @Override
-        public BuildStep username(String username) {
-            Objects.requireNonNull(username);
-            this.username = username;
+        public BuildStep name(String name) {
+            Objects.requireNonNull(name);
+            this.name = name;
             return this;
         }
 
@@ -159,15 +154,15 @@ public final class User implements Model {
     }
 
 
-    public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String username) {
+    public final class NewBuilder extends Builder {
+        private NewBuilder(String id, String name) {
             super.id(id);
-            super.username(username);
+            super.name(name);
         }
 
         @Override
-        public CopyOfBuilder username(String username) {
-            return (CopyOfBuilder) super.username(username);
+        public NewBuilder name(String name) {
+            return (NewBuilder) super.name(name);
         }
     }
 

@@ -20,11 +20,11 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
-import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -42,6 +42,7 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
 
@@ -71,9 +72,7 @@ import io.reactivex.subjects.PublishSubject;
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
-
-    // LogCat Tag
-    private static final String TAG = SQLiteStorageAdapter.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     // Database Version
     private static final int DATABASE_VERSION = 1;
@@ -288,7 +287,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                         @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         threadPool.submit(() -> {
             try {
-                Log.d(TAG, "Querying item for: " + itemClass.getSimpleName());
+                LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
                 final ModelSchema modelSchema =
@@ -333,7 +332,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
                 final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
 
-                Log.d(TAG, "Deleting item in table: " + sqLiteTable.getName() +
+                LOG.debug("Deleting item in table: " + sqLiteTable.getName() +
                         " identified by ID: " + item.getId());
 
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item);
@@ -429,8 +428,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             throws IllegalAccessException {
         final String tableName = sqlCommand.tableName();
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        final Set<Field> classFields = FieldFinder.findFieldsIn(object.getClass());
-        final Iterator<Field> fieldIterator = classFields.iterator();
+        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(object.getClass()).iterator();
 
         final Cursor cursor = getQueryAllCursor(tableName, null);
         if (cursor == null) {
@@ -645,7 +643,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(sqlCommand);
         Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
 
-        Log.d(TAG, "Writing data to table for: " + model.toString());
+        LOG.debug("Writing data to table for: " + model.toString());
 
         // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
         // are not thread-safe. Adding a synchronization barrier to access it.
@@ -667,7 +665,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             compiledSqlStatement.clearBindings();
         }
 
-        Log.d(TAG, "Successfully written data to table for: " + model.toString());
+        LOG.debug("Successfully written data to table for: " + model.toString());
     }
 
     private boolean dataExistsInSQLiteTable(

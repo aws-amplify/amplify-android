@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.network;
 
-import android.util.Log;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
@@ -23,10 +22,12 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.logging.Logger;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -35,7 +36,7 @@ import io.reactivex.Emitter;
 import io.reactivex.Observable;
 
 class RemoteModelMutations {
-    private static final String TAG = RemoteModelMutations.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final ApiCategoryBehavior api;
     private final ConfiguredApiProvider apiNameProvider;
@@ -182,7 +183,7 @@ class RemoteModelMutations {
 
             @Override
             public void onComplete() {
-                Log.i(TAG, String.format(
+                LOG.info(String.format(
                     "Subscription to %s:%s is completed.",
                     modelClazz.getSimpleName(), subscriptionType
                 ));
