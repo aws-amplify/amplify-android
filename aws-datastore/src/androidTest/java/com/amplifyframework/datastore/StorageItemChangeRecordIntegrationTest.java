@@ -25,7 +25,7 @@ import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;

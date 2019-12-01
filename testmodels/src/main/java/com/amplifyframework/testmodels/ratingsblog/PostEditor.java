@@ -13,51 +13,48 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.ratingsblog;
 
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the Blog type in your schema. */
+/** This is an auto generated class representing the PostEditor type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Blogs")
-public final class Blog implements Model {
+@ModelConfig(pluralName = "PostEditors")
+@Index(name = "byPost", fields = {"postID","editorID"})
+@Index(name = "byEditor", fields = {"editorID","postID"})
+public final class PostEditor implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField NAME = QueryField.field("name");
-    public static final QueryField TAGS = QueryField.field("tags");
+    public static final QueryField POST = QueryField.field("postID");
+    public static final QueryField EDITOR = QueryField.field("editorID");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String name;
-    private final @ModelField(targetType="String") List<String> tags;
-    private final @ModelField(targetType="Post") @HasMany(associatedWith = "blog", type = Post.class) List<Post> posts = null;
+    private final @ModelField(targetType="Post", isRequired = true) @BelongsTo(targetName = "postID", type = Post.class) Post post;
+    private final @ModelField(targetType="User", isRequired = true) @BelongsTo(targetName = "editorID", type = User.class) User editor;
     public String getId() {
         return id;
     }
 
-    public String getName() {
-        return name;
+    public Post getPost() {
+        return post;
     }
 
-    public List<String> getTags() {
-        return tags;
+    public User getEditor() {
+        return editor;
     }
 
-    public List<Post> getPosts() {
-        return posts;
-    }
-
-    private Blog(String id, String name, List<String> tags) {
+    private PostEditor(String id, Post post, User editor) {
         this.id = id;
-        this.name = name;
-        this.tags = tags;
+        this.post = post;
+        this.editor = editor;
     }
 
     @Override
@@ -67,10 +64,10 @@ public final class Blog implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Blog blog = (Blog) obj;
-            return ObjectsCompat.equals(getId(), blog.getId()) &&
-                    ObjectsCompat.equals(getName(), blog.getName()) &&
-                    ObjectsCompat.equals(getTags(), blog.getTags());
+            PostEditor postEditor = (PostEditor) obj;
+            return ObjectsCompat.equals(getId(), postEditor.getId()) &&
+                    ObjectsCompat.equals(getPost(), postEditor.getPost()) &&
+                    ObjectsCompat.equals(getEditor(), postEditor.getEditor());
         }
     }
 
@@ -78,12 +75,12 @@ public final class Blog implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getName())
-                .append(getTags())
+                .append(getPost())
+                .append(getEditor())
                 .hashCode();
     }
 
-    public static NameStep builder() {
+    public static PostStep builder() {
         return new Builder();
     }
 
@@ -96,7 +93,7 @@ public final class Blog implements Model {
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
      **/
-    public static Blog justId(String id) {
+    public static PostEditor justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -106,7 +103,7 @@ public final class Blog implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-        return new Blog(
+        return new PostEditor(
                 id,
                 null,
                 null
@@ -115,45 +112,50 @@ public final class Blog implements Model {
 
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
-                name,
-                tags);
+                post,
+                editor);
     }
-    public interface NameStep {
-        BuildStep name(String name);
+    public interface PostStep {
+        EditorStep post(Post post);
+    }
+
+
+    public interface EditorStep {
+        BuildStep editor(User editor);
     }
 
 
     public interface BuildStep {
-        Blog build();
+        PostEditor build();
         BuildStep id(String id) throws IllegalArgumentException;
-        BuildStep tags(List<String> tags);
     }
 
 
-    public static class Builder implements NameStep, BuildStep {
+    public static class Builder implements PostStep, EditorStep, BuildStep {
         private String id;
-        private String name;
-        private List<String> tags;
+        private Post post;
+        private User editor;
         @Override
-        public Blog build() {
+        public PostEditor build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Blog(
+            return new PostEditor(
                     id,
-                    name,
-                    tags);
+                    post,
+                    editor);
         }
 
         @Override
-        public BuildStep name(String name) {
-            Objects.requireNonNull(name);
-            this.name = name;
+        public EditorStep post(Post post) {
+            Objects.requireNonNull(post);
+            this.post = post;
             return this;
         }
 
         @Override
-        public BuildStep tags(List<String> tags) {
-            this.tags = tags;
+        public BuildStep editor(User editor) {
+            Objects.requireNonNull(editor);
+            this.editor = editor;
             return this;
         }
 
@@ -180,20 +182,20 @@ public final class Blog implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String name, List<String> tags) {
+        private CopyOfBuilder(String id, Post post, User editor) {
             super.id(id);
-            super.name(name)
-                    .tags(tags);
+            super.post(post)
+                    .editor(editor);
         }
 
         @Override
-        public CopyOfBuilder name(String name) {
-            return (CopyOfBuilder) super.name(name);
+        public CopyOfBuilder post(Post post) {
+            return (CopyOfBuilder) super.post(post);
         }
 
         @Override
-        public CopyOfBuilder tags(List<String> tags) {
-            return (CopyOfBuilder) super.tags(tags);
+        public CopyOfBuilder editor(User editor) {
+            return (CopyOfBuilder) super.editor(editor);
         }
     }
 

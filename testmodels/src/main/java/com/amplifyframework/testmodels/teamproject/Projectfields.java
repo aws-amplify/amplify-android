@@ -13,44 +13,44 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.teamproject;
 
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.HasMany;
+import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the User type in your schema. */
+/** This is an auto generated class representing the projectfields type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Users")
-public final class User implements Model {
+@ModelConfig
+public final class Projectfields implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField USERNAME = QueryField.field("username");
+    public static final QueryField NAME = QueryField.field("name");
+    public static final QueryField TEAM = QueryField.field("team");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="String", isRequired = true) String username;
-    private final @ModelField(targetType="PostEditor") @HasMany(associatedWith = "editor", type = PostEditor.class) List<PostEditor> posts = null;
+    private final @ModelField(targetType="String") String name;
+    private final @ModelField(targetType="Team") @BelongsTo(targetName = "teamID", type = Team.class) Team team;
     public String getId() {
         return id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getName() {
+        return name;
     }
 
-    public List<PostEditor> getPosts() {
-        return posts;
+    public Team getTeam() {
+        return team;
     }
 
-    private User(String id, String username) {
+    private Projectfields(String id, String name, Team team) {
         this.id = id;
-        this.username = username;
+        this.name = name;
+        this.team = team;
     }
 
     @Override
@@ -60,9 +60,10 @@ public final class User implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            User user = (User) obj;
-            return ObjectsCompat.equals(getId(), user.getId()) &&
-                    ObjectsCompat.equals(getUsername(), user.getUsername());
+            Projectfields projectfields = (Projectfields) obj;
+            return ObjectsCompat.equals(getId(), projectfields.getId()) &&
+                    ObjectsCompat.equals(getName(), projectfields.getName()) &&
+                    ObjectsCompat.equals(getTeam(), projectfields.getTeam());
         }
     }
 
@@ -70,11 +71,12 @@ public final class User implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getUsername())
+                .append(getName())
+                .append(getTeam())
                 .hashCode();
     }
 
-    public static UsernameStep builder() {
+    public static BuildStep builder() {
         return new Builder();
     }
 
@@ -86,8 +88,8 @@ public final class User implements Model {
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
-    public static User justId(String id) {
+     */
+    public static Projectfields justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -97,43 +99,49 @@ public final class User implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-        return new User(
+        return new Projectfields(
                 id,
+                null,
                 null
         );
     }
 
     public CopyOfBuilder copyOfBuilder() {
         return new CopyOfBuilder(id,
-                username);
+                name,
+                team);
     }
-    public interface UsernameStep {
-        BuildStep username(String username);
-    }
-
-
     public interface BuildStep {
-        User build();
+        Projectfields build();
         BuildStep id(String id) throws IllegalArgumentException;
+        BuildStep name(String name);
+        BuildStep team(Team team);
     }
 
 
-    public static class Builder implements UsernameStep, BuildStep {
+    public static class Builder implements BuildStep {
         private String id;
-        private String username;
+        private String name;
+        private Team team;
         @Override
-        public User build() {
+        public Projectfields build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new User(
+            return new Projectfields(
                     id,
-                    username);
+                    name,
+                    team);
         }
 
         @Override
-        public BuildStep username(String username) {
-            Objects.requireNonNull(username);
-            this.username = username;
+        public BuildStep name(String name) {
+            this.name = name;
+            return this;
+        }
+
+        @Override
+        public BuildStep team(Team team) {
+            this.team = team;
             return this;
         }
 
@@ -143,7 +151,7 @@ public final class User implements Model {
          * @param id id
          * @return Current Builder instance, for fluent method chaining
          * @throws IllegalArgumentException Checks that ID is in the proper format
-         **/
+         */
         public BuildStep id(String id) throws IllegalArgumentException {
             this.id = id;
 
@@ -160,14 +168,20 @@ public final class User implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String username) {
+        private CopyOfBuilder(String id, String name, Team team) {
             super.id(id);
-            super.username(username);
+            super.name(name)
+                    .team(team);
         }
 
         @Override
-        public CopyOfBuilder username(String username) {
-            return (CopyOfBuilder) super.username(username);
+        public CopyOfBuilder name(String name) {
+            return (CopyOfBuilder) super.name(name);
+        }
+
+        @Override
+        public CopyOfBuilder team(Team team) {
+            return (CopyOfBuilder) super.team(team);
         }
     }
 

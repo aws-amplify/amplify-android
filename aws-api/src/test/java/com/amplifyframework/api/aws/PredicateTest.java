@@ -19,7 +19,7 @@ import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
 import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Assert;
 import org.junit.Test;
