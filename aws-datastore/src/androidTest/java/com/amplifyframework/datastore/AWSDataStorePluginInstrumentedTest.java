@@ -106,7 +106,7 @@ public final class AWSDataStorePluginInstrumentedTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void personSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() {
-        // Save Charley Crockett the the DataStore.
+        // Save Charley Crockett to the DataStore.
         Person localCharley = Person.builder()
             .firstName("Charley")
             .lastName("Crockett")
