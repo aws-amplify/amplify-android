@@ -16,7 +16,7 @@
 package com.amplifyframework.analytics.pinpoint;
 
 import android.os.Handler;
-import android.os.Looper;
+import android.os.HandlerThread;
 import android.util.Log;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
@@ -24,30 +24,34 @@ import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 /**
  * Submits all the recorded event periodically.
  */
-class AutoEventSubmitter {
+final class AutoEventSubmitter {
     private static final String TAG = AutoEventSubmitter.class.getSimpleName();
 
     private final Handler handler;
+    private final HandlerThread handlerThread;
     private Runnable submitRunnable;
     private long autoFlushInterval;
 
-    AutoEventSubmitter() {
-        this.handler = new Handler(Looper.getMainLooper());
-        this.submitRunnable = null;
-    }
-
-    void start(final AnalyticsClient analyticsClient, long autoFlushInterval) {
+    AutoEventSubmitter(final AnalyticsClient analyticsClient, final long autoFlushInterval) {
+        this.handlerThread = new HandlerThread("AutoEventSubmitter");
+        this.handlerThread.start();
+        this.handler = new Handler(handlerThread.getLooper());
         this.autoFlushInterval = autoFlushInterval;
-        submitRunnable = () -> {
+        this.submitRunnable = () -> {
             Log.d(TAG, String.format("Auto submitting events after %d seconds", autoFlushInterval));
             analyticsClient.submitEvents();
+            handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };
+    }
+
+    void start() {
         handler.postDelayed(submitRunnable, autoFlushInterval);
     }
 
     void stop() {
         if (submitRunnable != null) {
-            handler.removeCallbacks(submitRunnable);
+            handler.removeCallbacksAndMessages(null);
+            handlerThread.quit();
         }
 
         submitRunnable = null;

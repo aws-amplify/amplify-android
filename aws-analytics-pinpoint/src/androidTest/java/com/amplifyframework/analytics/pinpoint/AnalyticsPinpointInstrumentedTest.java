@@ -19,11 +19,11 @@ import android.content.Context;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-import com.amplifyframework.analytics.GeneralAnalyticsEvent;
+import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 
+import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,6 +41,8 @@ public class AnalyticsPinpointInstrumentedTest {
      * Log tag for the test class.
      */
     private static final String TAG = AnalyticsPinpointInstrumentedTest.class.getSimpleName();
+    private static final int EVENT_FLUSH_TIMEOUT = 60;
+    private static final int EVENT_FLUSH_WAIT = 30;
 
     /**
      * Configure the Amplify framework.
@@ -55,19 +57,17 @@ public class AnalyticsPinpointInstrumentedTest {
     }
 
     /**
-     * Record a general analytics event and verify that it has been recorded using Analytics
+     * Record a basic analytics event and verify that it has been recorded using Analytics
      * pinpoint client.
      */
     @Test
     public void testRecordEvent() {
-        Log.i(TAG, "Test configuration invoked");
-
         AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify
                 .Analytics
                 .getPlugin("AmazonPinpointAnalyticsPlugin");
         AnalyticsClient analyticsClient = plugin.getAnalyticsClient();
 
-        GeneralAnalyticsEvent event = new GeneralAnalyticsEvent("Amplify-event-double",
+        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event-double",
                 PinpointProperties.builder()
                 .add("DemoProperty1", "DemoValue1")
                 .add("DemoDoubleProperty2", 2.0)
@@ -76,23 +76,71 @@ public class AnalyticsPinpointInstrumentedTest {
         Amplify.Analytics.recordEvent(event);
 
         assertEquals(1, analyticsClient.getAllEvents().size());
+    }
 
-        long timeSleptSoFar = 0;
-        while (timeSleptSoFar < TimeUnit.SECONDS.toMillis(60)) {
-            try {
-                sleep(TimeUnit.SECONDS.toMillis(5));
-            } catch (InterruptedException ie) {
-                ie.printStackTrace();
-            }
-            timeSleptSoFar += TimeUnit.SECONDS.toMillis(5);
-            if (analyticsClient.getAllEvents().size() == 0) {
-                break;
-            }
-        }
+    /**
+     * Record a basic analytic event and test that events are flushed from local database periodically.
+     */
+    @Test
+    public void testAutoFlush() {
+        Log.i(TAG, "Test configuration invoked");
+
+        AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify
+                .Analytics
+                .getPlugin("AmazonPinpointAnalyticsPlugin");
+        AnalyticsClient analyticsClient = plugin.getAnalyticsClient();
+
+        // Flush any events from previous tests.
+        Amplify.Analytics.flushEvents();
+        waitForAutoFlush(analyticsClient.getAllEvents().size());
+
+        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event-double",
+                PinpointProperties.builder()
+                        .add("DemoProperty1", "DemoValue1")
+                        .add("DemoDoubleProperty2", 2.0)
+                        .build());
+
+        Amplify.Analytics.recordEvent(event);
+
+        assertEquals(1, analyticsClient.getAllEvents().size());
+
+        waitForAutoFlush(analyticsClient.getAllEvents().size());
 
         Log.d(TAG, "Events in database after calling submitEvents() after submitting: " +
                 analyticsClient.getAllEvents().size());
 
         assertEquals(0, analyticsClient.getAllEvents().size());
+
+        BasicAnalyticsEvent event2 = new BasicAnalyticsEvent("Amplify-event-double-2",
+                PinpointProperties.builder()
+                        .add("DemoProperty1", "DemoValue1")
+                        .add("DemoDoubleProperty2", 2.0)
+                        .build());
+
+        Amplify.Analytics.recordEvent(event2);
+
+        assertEquals(1, analyticsClient.getAllEvents().size());
+
+        waitForAutoFlush(analyticsClient.getAllEvents().size());
+
+        Log.d(TAG, "Events in database after calling submitEvents() after submitting: " +
+                analyticsClient.getAllEvents().size());
+
+        assertEquals(0, analyticsClient.getAllEvents().size());
+    }
+
+    private void waitForAutoFlush(int numOfEvents) {
+        long timeSleptSoFar = 0;
+        while (timeSleptSoFar < TimeUnit.SECONDS.toMillis(EVENT_FLUSH_TIMEOUT)) {
+            try {
+                sleep(TimeUnit.SECONDS.toMillis(EVENT_FLUSH_WAIT));
+            } catch (InterruptedException interruptedException) {
+                interruptedException.printStackTrace();
+            }
+            timeSleptSoFar += TimeUnit.SECONDS.toMillis(EVENT_FLUSH_WAIT);
+            if (numOfEvents == 0) {
+                break;
+            }
+        }
     }
 }

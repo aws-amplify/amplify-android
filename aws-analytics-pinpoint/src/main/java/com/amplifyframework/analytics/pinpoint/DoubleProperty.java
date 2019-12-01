@@ -21,9 +21,9 @@ import com.amplifyframework.analytics.Property;
  * Represents pinpoint metrics.
  */
 public final class DoubleProperty implements Property<Double> {
-    private Double value;
+    private final Double value;
 
-    DoubleProperty(Double value) {
+    private DoubleProperty(Double value) {
         this.value = value;
     }
 
@@ -33,11 +33,11 @@ public final class DoubleProperty implements Property<Double> {
     }
 
     /**
-     * Instantiate {@link DoubleProperty} from a {@link Double} value.
+     * Factory method to instantiate {@link DoubleProperty} from a {@link Double} value.
      * @param value a floating point number.
      * @return an instance of {@link DoubleProperty}
      */
-    public DoubleProperty of(Double value) {
+    public static DoubleProperty of(Double value) {
         return new DoubleProperty(value);
     }
 }

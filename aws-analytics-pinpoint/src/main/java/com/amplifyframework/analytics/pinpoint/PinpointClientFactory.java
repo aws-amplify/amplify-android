@@ -38,7 +38,6 @@ final class PinpointClientFactory {
     private static final String TAG = PinpointClientFactory.class.getSimpleName();
 
     private PinpointClientFactory() {
-
     }
 
     static AnalyticsClient create(Context context,

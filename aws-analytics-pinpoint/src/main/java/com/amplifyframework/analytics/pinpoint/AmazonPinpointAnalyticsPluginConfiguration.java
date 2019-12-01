@@ -24,11 +24,19 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
     private static final long DEFAULT_AUTO_SESSION_TRACKING_INTERVAL = 30L;
 
     // Pinpoint plugin configuration options
-    private String appId;
-    private boolean trackAppLifecycleEvents = false;
-    private String region;
-    private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
-    private long autoSessionTrackingInterval = DEFAULT_AUTO_SESSION_TRACKING_INTERVAL;
+    private final String appId;
+    private final boolean trackAppLifecycleEvents;
+    private final String region;
+    private final long autoFlushEventsInterval;
+    private final long autoSessionTrackingInterval;
+
+    AmazonPinpointAnalyticsPluginConfiguration(Builder builder) {
+        this.appId = builder.appId;
+        this.region = builder.region;
+        this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
+        this.autoFlushEventsInterval = builder.autoFlushEventsInterval;
+        this.autoSessionTrackingInterval = builder.autoSessionTrackingInterval;
+    }
 
     /**
      * AppId getter.
@@ -37,15 +45,6 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
      */
     public String getAppId() {
         return appId;
-    }
-
-    /**
-     *  AppId setter.
-     *
-     * @param appId pinpoint app id.
-     */
-    public void setAppId(String appId) {
-        this.appId = appId;
     }
 
     /**
@@ -58,30 +57,12 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
     }
 
     /**
-     * Mutator for pinpoint region.
-     *
-     * @param region pinpoint region.
-     */
-    public void setRegion(String region) {
-        this.region = region;
-    }
-
-    /**
      * Accessor for auto event flush interval.
      *
      * @return auto event flush interval.
      */
     public long getAutoFlushEventsInterval() {
         return autoFlushEventsInterval;
-    }
-
-    /**
-     * Mutator for auto event flush interval.
-     *
-     * @param autoFlushEventsInterval auto event flush interval.
-     */
-    public void setAutoFlushEventsInterval(long autoFlushEventsInterval) {
-        this.autoFlushEventsInterval = autoFlushEventsInterval;
     }
 
     /**
@@ -94,15 +75,6 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
     }
 
     /**
-     * Mutator for auto session tracking interval.
-     *
-     * @param autoSessionTrackingInterval auto session tracking interval.
-     */
-    public void setAutoSessionTrackingInterval(long autoSessionTrackingInterval) {
-        this.autoSessionTrackingInterval = autoSessionTrackingInterval;
-    }
-
-    /**
      * Is auto session tracking enabled.
      * @return Is auto session tracking enabled.
      */
@@ -111,10 +83,51 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
     }
 
     /**
-     * Set auto session tracking flag.
-     * @param trackAppLifecycleEvents auto session tracking flag.
+     * Return a builder that can be used to construct a new instance of
+     * {@link AmazonPinpointAnalyticsPluginConfiguration}.
+     * @return An {@link PinpointProperties.Builder} instance
      */
-    public void setTrackAppLifecycleEvents(boolean trackAppLifecycleEvents) {
-        this.trackAppLifecycleEvents = trackAppLifecycleEvents;
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    /**
+     * Used for fluent construction of an immutable {@link AmazonPinpointAnalyticsPluginConfiguration} object.
+     */
+    public static final class Builder {
+        private String appId;
+        private boolean trackAppLifecycleEvents = false;
+        private String region;
+        private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
+        private long autoSessionTrackingInterval = DEFAULT_AUTO_SESSION_TRACKING_INTERVAL;
+
+        Builder withAppId(final String appId) {
+            this.appId = appId;
+            return this;
+        }
+
+        Builder withRegion(final String region) {
+            this.region = region;
+            return this;
+        }
+
+        Builder withAutoFlushEventsInterval(final long autoFlushEventsInterval) {
+            this.autoFlushEventsInterval = autoFlushEventsInterval;
+            return this;
+        }
+
+        Builder withAutoSessionTrackingInterval(final long autoSessionTrackingInterval) {
+            this.autoFlushEventsInterval = autoSessionTrackingInterval;
+            return this;
+        }
+
+        Builder withTrackAppLifecycleEvents(final boolean trackAppLifecycleEvents) {
+            this.trackAppLifecycleEvents = trackAppLifecycleEvents;
+            return this;
+        }
+
+        AmazonPinpointAnalyticsPluginConfiguration build() {
+            return new AmazonPinpointAnalyticsPluginConfiguration(this);
+        }
     }
 }

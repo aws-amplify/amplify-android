@@ -28,33 +28,13 @@ public final class PinpointProperties extends Properties {
     PinpointProperties(Builder builder) {
         // Populate the attributes
         for (Map.Entry<String, String> entry: builder.attributes.entrySet()) {
-            add(entry.getKey(), entry.getValue());
+            this.properties.put(entry.getKey(), StringProperty.of(entry.getValue()));
         }
 
         // Populate the metrics
         for (Map.Entry<String, Double> entry: builder.metrics.entrySet()) {
-            add(entry.getKey(), entry.getValue());
+            this.properties.put(entry.getKey(), DoubleProperty.of(entry.getValue()));
         }
-    }
-
-    /**
-     * Adds an attribute.
-     *
-     * @param name attribute name.
-     * @param value attribute value.
-     */
-    public void add(String name, String value) {
-        add(name, new StringProperty(value));
-    }
-
-    /**
-     * Adds a metric.
-     *
-     * @param name metric name.
-     * @param value metric value.
-     */
-    public void add(String name, Double value) {
-        add(name, new DoubleProperty(value));
     }
 
     /**
@@ -69,8 +49,8 @@ public final class PinpointProperties extends Properties {
      * Used for fluent construction of an immutable {@link PinpointProperties} object.
      */
     public static final class Builder {
-        private Map<String, String> attributes;
-        private Map<String, Double> metrics;
+        private final Map<String, String> attributes;
+        private final Map<String, Double> metrics;
 
         Builder() {
             attributes = new HashMap<>();

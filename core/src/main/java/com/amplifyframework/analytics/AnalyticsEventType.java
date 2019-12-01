@@ -17,9 +17,8 @@ package com.amplifyframework.analytics;
 
 abstract class AnalyticsEventType {
 
-    private String eventType = null;
-
-    private Properties properties = null;
+    private final String eventType;
+    private final Properties properties;
 
     AnalyticsEventType(String eventType, Properties properties) {
         this.eventType = eventType;

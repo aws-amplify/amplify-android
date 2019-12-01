@@ -23,7 +23,7 @@ import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.analytics.GeneralAnalyticsEvent;
+import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.plugin.PluginException;
@@ -43,7 +43,7 @@ import java.util.Set;
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
 
     private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
-    private final AutoEventSubmitter autoEventSubmitter;
+    private AutoEventSubmitter autoEventSubmitter;
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
 
@@ -52,7 +52,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     public AmazonPinpointAnalyticsPlugin() {
         Log.d(TAG, "Amazon Pinpoint Analytics Plugin is initialized.");
-        autoEventSubmitter = new AutoEventSubmitter();
     }
 
     /**
@@ -68,8 +67,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void enable() {
-        autoEventSubmitter.start(analyticsClient,
-                pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
+        autoEventSubmitter.start();
     }
 
     /**
@@ -104,7 +102,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void recordEvent(@NonNull GeneralAnalyticsEvent analyticsEvent)
+    public void recordEvent(@NonNull BasicAnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
 
         final AnalyticsEvent pinpointEvent =
@@ -116,7 +114,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             } else if (entry.getValue() instanceof DoubleProperty) {
                 pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
             } else {
-                throw new RuntimeException("Invalid property type detected.");
+                throw new AnalyticsException("Invalid property type detected.");
             }
         }
         analyticsClient.recordEvent(pinpointEvent);
@@ -126,7 +124,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void registerGlobalProperties(Properties properties) {
+    public void registerGlobalProperties(@NonNull Properties properties) {
         throw new UnsupportedOperationException("This operation has not been implemented yet.");
     }
 
@@ -134,7 +132,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void unregisterGlobalProperties(Set<String> keys) {
+    public void unregisterGlobalProperties(@NonNull Set<String> keys) {
         throw new UnsupportedOperationException("This operation has not been implemented yet.");
     }
 
@@ -160,46 +158,49 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
 
-        pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration();
+        AmazonPinpointAnalyticsPluginConfiguration.Builder configurationBuilder =
+                AmazonPinpointAnalyticsPluginConfiguration.builder();
         // Read all the data from the configuration object to be used for record event
         try {
-            pinpointAnalyticsPluginConfiguration
-                    .setAppId(pluginConfiguration
+            configurationBuilder
+                    .withAppId(pluginConfiguration
                             .getString(PinpointConfigurationKey.APP_ID.getConfigurationKey()));
-            pinpointAnalyticsPluginConfiguration
-                    .setRegion(pluginConfiguration
+            configurationBuilder
+                    .withRegion(pluginConfiguration
                             .getString(PinpointConfigurationKey.REGION.getConfigurationKey()));
 
             if (pluginConfiguration.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.getConfigurationKey())) {
-                pinpointAnalyticsPluginConfiguration
-                        .setAutoFlushEventsInterval(pluginConfiguration
+                configurationBuilder
+                        .withAutoFlushEventsInterval(pluginConfiguration
                                 .getLong(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.getConfigurationKey()));
             }
 
             if (pluginConfiguration
                     .has(PinpointConfigurationKey.AUTO_SESSION_TRACKING_INTERVAL.getConfigurationKey())) {
-                pinpointAnalyticsPluginConfiguration
-                        .setAutoSessionTrackingInterval(pluginConfiguration
+                configurationBuilder
+                        .withAutoSessionTrackingInterval(pluginConfiguration
                                 .getLong(PinpointConfigurationKey.AUTO_SESSION_TRACKING_INTERVAL
                                         .getConfigurationKey()));
             }
 
             if (pluginConfiguration.has(PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS
                     .getConfigurationKey())) {
-                pinpointAnalyticsPluginConfiguration
-                        .setTrackAppLifecycleEvents(pluginConfiguration
+                configurationBuilder
+                        .withTrackAppLifecycleEvents(pluginConfiguration
                                 .getBoolean(PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS
                                         .getConfigurationKey()));
             }
         } catch (JSONException exception) {
-            throw new RuntimeException("Unable to read appId or region from the amplify configuration json");
+            throw new AnalyticsException("Unable to read appId or region from the amplify configuration json");
         }
 
+        pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);
         this.analyticsClient = PinpointClientFactory.create(context, pinpointAnalyticsPluginConfiguration);
 
         // Initiate the logic to automatically submit events periodically
-        autoEventSubmitter.start(analyticsClient,
+        autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
                 pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
+        autoEventSubmitter.start();
     }
 
     /**

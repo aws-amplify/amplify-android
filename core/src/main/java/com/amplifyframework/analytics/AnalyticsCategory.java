@@ -62,6 +62,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
 
     @Override
     public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
+        throw new UnsupportedOperationException("This operation is currently not supported.");
     }
 
     @Override
@@ -87,7 +88,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void recordEvent(@NonNull final GeneralAnalyticsEvent analyticsEvent)
+    public void recordEvent(@NonNull final BasicAnalyticsEvent analyticsEvent)
             throws AnalyticsException, ConfigurationException {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
@@ -95,14 +96,19 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void registerGlobalProperties(Properties properties) {
+    public void registerGlobalProperties(@NonNull Properties properties) {
+        throw new UnsupportedOperationException("This operation is currently not supported.");
     }
 
     @Override
-    public void unregisterGlobalProperties(Set<String> keys) {
+    public void unregisterGlobalProperties(@NonNull Set<String> keys) {
+        throw new UnsupportedOperationException("This operation is currently not supported.");
     }
 
     @Override
     public void flushEvents() {
+        if (enabled) {
+            getSelectedPlugin().flushEvents();
+        }
     }
 }

@@ -21,9 +21,9 @@ import com.amplifyframework.analytics.Property;
  * Represent pinpoint attributes.
  */
 public final class StringProperty implements Property<String> {
-    private String value;
+    private final String value;
 
-    StringProperty(String value) {
+    private StringProperty(String value) {
         this.value = value;
     }
 
@@ -33,11 +33,11 @@ public final class StringProperty implements Property<String> {
     }
 
     /**
-     * Instantiate {@link StringProperty} from a {@link String} value.
+     * Factory method to instantiate {@link StringProperty} from a {@link String} value.
      * @param value a floating point number.
      * @return an instance of {@link StringProperty}
      */
-    public StringProperty of(String value) {
+    public static StringProperty of(String value) {
         return new StringProperty(value);
     }
 }

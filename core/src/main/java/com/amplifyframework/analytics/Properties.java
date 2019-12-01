@@ -15,14 +15,21 @@
 
 package com.amplifyframework.analytics;
 
+import com.amplifyframework.core.Immutable;
+
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Wrapper for {@link Map} to restrict the types that may be passed in.
  */
-public abstract class Properties {
-    private Map<String, Property<?>> properties;
+public class Properties {
+
+    /**
+     * Map to hold analytics properties.
+     */
+    @SuppressWarnings("VisibilityModifier")
+    protected final Map<String, Property<?>> properties;
 
     /**
      * Properties constructor that initializes the underlying map.
@@ -32,20 +39,10 @@ public abstract class Properties {
     }
 
     /**
-     * Allows adding {@link Property} of type {@link T}.
-     * @param name property name
-     * @param property property
-     * @param <T> property type
-     */
-    public <T> void add(String name, Property<T> property) {
-        properties.put(name, property);
-    }
-
-    /**
      * Returns the underlying property map.
      * @return underlying properties map
      */
     public final Map<String, Property<?>> get() {
-        return properties;
+        return Immutable.of(properties);
     }
 }
