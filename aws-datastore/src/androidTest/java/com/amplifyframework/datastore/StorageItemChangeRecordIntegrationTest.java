@@ -71,7 +71,7 @@ public final class StorageItemChangeRecordIntegrationTest {
 
         // Evaluate the returned set of ModelSchema. Make sure that there is one
         // for the StorageItemChange.Record system class.
-        List<ModelSchema> schema = schemaListener.awaitTerminalEvent().assertNoError().getResult();
+        List<ModelSchema> schema = schemaListener.awaitResult();
         assertEquals(
             "Wanted 2 schema, but got " + schema,
             2, schema.size()
@@ -155,7 +155,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         // Wait for it to save...
         LatchedResultListener<StorageItemChange.Record> listener = LatchedResultListener.instance();
         localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE, listener);
-        listener.awaitTerminalEvent().assertNoError().assertResult();
+        listener.awaitResult();
 
         // Assert that our observer got the item;
         // The record we get back has the saved record inside of it, as the contained item field.
@@ -291,10 +291,8 @@ public final class StorageItemChangeRecordIntegrationTest {
         localStorageAdapter.save(storageItemChangeRecord,
             StorageItemChange.Initiator.SYNC_ENGINE, saveResultListener);
 
-        final StorageItemChange.Record result =
-            saveResultListener.awaitTerminalEvent().assertNoError().getResult();
-
-        final StorageItemChange convertedResult = result.toStorageItemChange(storageItemChangeConverter);
+        final StorageItemChange convertedResult =
+            saveResultListener.awaitResult().toStorageItemChange(storageItemChangeConverter);
 
         // Peel out the item from the save result - the item inside is the thing we tried to save,
         // e.g., the mutation to create person
@@ -310,9 +308,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         // TODO: if/when there is a form of query() which shall accept QueryPredicate, use that instead.
         localStorageAdapter.query(StorageItemChange.Record.class, queryResultsListener);
 
-        Iterator<StorageItemChange.Record> queryResultsIterator =
-            queryResultsListener.awaitTerminalEvent().assertNoError().getResult();
-
+        final Iterator<StorageItemChange.Record> queryResultsIterator = queryResultsListener.awaitResult();
         final List<StorageItemChange.Record> storageItemChangeRecords = new ArrayList<>();
         while (queryResultsIterator.hasNext()) {
             storageItemChangeRecords.add(queryResultsIterator.next());
@@ -328,15 +324,12 @@ public final class StorageItemChangeRecordIntegrationTest {
 
         localStorageAdapter.delete(record, StorageItemChange.Initiator.SYNC_ENGINE, recordDeletionListener);
 
-        final StorageItemChange.Record result =
-            recordDeletionListener.awaitTerminalEvent().assertNoError().assertResult().getResult();
-
         // Peel out the inner record out from the save result -
         // the record inside is the thing we tried to save,
         // that is, the record to change a person
         // That interior record should be identical to the thing that we tried to save.
         StorageItemChange<StorageItemChange.Record> recordOfDeletion =
-            result.toStorageItemChange(storageItemChangeConverter);
+            recordDeletionListener.awaitResult().toStorageItemChange(storageItemChangeConverter);
         assertEquals(record, recordOfDeletion.item());
 
         // The record of the record itself has type DELETE, corresponding to our call to delete().

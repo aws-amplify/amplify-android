@@ -90,7 +90,7 @@ public class SyncEngineTest {
         LatchedResultListener<StorageItemChange.Record> listener =
             LatchedResultListener.waitFor(OPERATIONS_TIMEOUT_MS);
         localStorageAdapter.save(susan, StorageItemChange.Initiator.DATA_STORE_API, listener);
-        listener.awaitTerminalEvent().assertNoError().assertResult();
+        listener.awaitResult();
 
         // Wait for the mock network callback to occur on the IO scheduler ...
         assertTrue(apiInvoked.await(OPERATIONS_TIMEOUT_MS, TimeUnit.MILLISECONDS));
