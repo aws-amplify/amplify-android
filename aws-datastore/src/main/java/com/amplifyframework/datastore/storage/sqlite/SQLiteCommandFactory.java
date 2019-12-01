@@ -153,7 +153,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
-        String[] selectionArgs = null;
+        List<String> selectionArgs = null;
 
         // Track the list of columns to return
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
@@ -229,12 +229,11 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // Append predicates.
         // WHERE condition
         if (predicate != null) {
-            List<String> args = new LinkedList<>();
+            selectionArgs = new LinkedList<>();
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
-                    .append(parsePredicate(predicate, args));
-            selectionArgs = args.toArray(new String[0]);
+                    .append(parsePredicate(predicate, selectionArgs));
         }
 
         rawQuery.append(";");

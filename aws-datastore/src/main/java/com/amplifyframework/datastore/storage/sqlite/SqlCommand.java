@@ -20,6 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.Immutable;
+
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -38,8 +41,8 @@ final class SqlCommand {
     // threads can operate on the same SQLiteStatement object.
     private final SQLiteStatement compiledSqlStatement;
 
-    // An array of arguments to be used as selection arguments
-    private final String[] selectionArgs;
+    // A list of arguments to be used as selection arguments
+    private final List<String> selectionArgs;
 
     /**
      * Construct a SqlCommand object.
@@ -71,11 +74,11 @@ final class SqlCommand {
      *
      * @param tableName name of the SQL table
      * @param sqlStatement create table command in string representation
-     * @param selectionArgs an array of arguments for selection
+     * @param selectionArgs a list of arguments for selection
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
-               @Nullable String[] selectionArgs) {
+               @Nullable List<String> selectionArgs) {
         this(tableName, sqlStatement, null, selectionArgs);
     }
 
@@ -86,12 +89,12 @@ final class SqlCommand {
      * @param sqlStatement create table command in string representation
      * @param compiledSqlStatement a compiled Sql statement that can be bound with
      *                             inputs later and executed.
-     * @param selectionArgs an array of arguments for selection
+     * @param selectionArgs a list of arguments for selection
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
                @Nullable SQLiteStatement compiledSqlStatement,
-               @Nullable String[] selectionArgs) {
+               @Nullable List<String> selectionArgs) {
         this.tableName = Objects.requireNonNull(tableName);
         this.sqlStatement = Objects.requireNonNull(sqlStatement);
         this.compiledSqlStatement = compiledSqlStatement;
@@ -125,11 +128,25 @@ final class SqlCommand {
     }
 
     /**
-     * Return the array of arguments for selection.
-     * @return the array of arguments for selection
+     * Return the list of arguments for selection.
+     * @return the list of arguments for selection
      */
-    String[] getSelectionArgs() {
-        return selectionArgs;
+    List<String> getSelectionArgs() {
+        return Immutable.of(selectionArgs);
+    }
+
+    /**
+     * Return the list of arguments for selection
+     * as an array of strings.
+     * @return the list of arguments for selection
+     *         as an array of strings.
+     */
+    String[] getSelectionArgsAsArray() {
+        if (!hasSelectionArgs()) {
+            return null;
+        }
+
+        return selectionArgs.toArray(new String[0]);
     }
 
     /**
@@ -140,6 +157,14 @@ final class SqlCommand {
      */
     boolean hasCompiledSqlStatement() {
         return compiledSqlStatement != null;
+    }
+
+    /**
+     * Return true if selectionArgs is not null and not empty.
+     * @return true if selectionArgs is not null and not empty.
+     */
+    boolean hasSelectionArgs() {
+        return selectionArgs != null && !selectionArgs.isEmpty();
     }
 
     @Override
@@ -162,10 +187,7 @@ final class SqlCommand {
         if (!ObjectsCompat.equals(compiledSqlStatement, that.compiledSqlStatement)) {
             return false;
         }
-        if (!ObjectsCompat.equals(selectionArgs, that.selectionArgs)) {
-            return false;
-        }
-        return true;
+        return ObjectsCompat.equals(selectionArgs, that.selectionArgs);
     }
 
     @SuppressWarnings("checkstyle:MagicNumber")

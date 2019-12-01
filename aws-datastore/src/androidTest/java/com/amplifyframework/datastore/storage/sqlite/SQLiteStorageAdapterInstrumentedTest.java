@@ -422,22 +422,22 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .or(Person.AGE.eq(1).and(Person.AGE.ne(7)));
         Iterator<Person> result = queryModel(Person.class, predicate);
 
-        Set<Person> expectedPersons = new HashSet<>();
-        expectedPersons.add(savedModels.get(1));
-        expectedPersons.add(savedModels.get(4));
-        expectedPersons.add(savedModels.get(5));
-        expectedPersons.add(savedModels.get(6));
+        Set<Person> expectedPeople = new HashSet<>();
+        expectedPeople.add(savedModels.get(1));
+        expectedPeople.add(savedModels.get(4));
+        expectedPeople.add(savedModels.get(5));
+        expectedPeople.add(savedModels.get(6));
 
-        Set<Person> actualPersons = new HashSet<>();
+        Set<Person> actualPeople = new HashSet<>();
         while (result.hasNext()) {
             final Person person = result.next();
             assertNotNull(person);
             assertTrue("Unable to find expected item in the storage adapter.",
                     savedModels.contains(person));
-            actualPersons.add(person);
+            actualPeople.add(person);
         }
 
-        assertEquals(expectedPersons, actualPersons);
+        assertEquals(expectedPeople, actualPeople);
     }
 
     /**
@@ -470,19 +470,19 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .and(not(Person.AGE.gt(8)));
         Iterator<Person> result = queryModel(Person.class, predicate);
 
-        Set<Person> expectedPersons = new HashSet<>();
-        expectedPersons.add(savedModels.get(4));
-        expectedPersons.add(savedModels.get(7));
+        Set<Person> expectedPeople = new HashSet<>();
+        expectedPeople.add(savedModels.get(4));
+        expectedPeople.add(savedModels.get(7));
 
-        Set<Person> actualPersons = new HashSet<>();
+        Set<Person> actualPeople = new HashSet<>();
         while (result.hasNext()) {
             final Person person = result.next();
             assertNotNull(person);
             assertTrue("Unable to find expected item in the storage adapter.",
                     savedModels.contains(person));
-            actualPersons.add(person);
+            actualPeople.add(person);
         }
-        assertEquals(expectedPersons, actualPersons);
+        assertEquals(expectedPeople, actualPeople);
     }
 
     /**
@@ -513,18 +513,19 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @Test
     public void queryWithMaliciousPredicates() {
-        final Person person = Person.builder()
+        final Person jane = Person.builder()
                 .firstName("Jane")
                 .lastName("Doe")
                 .build();
-        saveModel(person);
+        saveModel(jane);
 
         QueryPredicate predicate = Person.FIRST_NAME.eq("Jane; DROP TABLE Person; --");
-        Iterator<Person> result = queryModel(Person.class, predicate);
-        assertFalse(result.hasNext());
+        Iterator<Person> resultOfMaliciousQuery = queryModel(Person.class, predicate);
+        assertFalse(resultOfMaliciousQuery.hasNext());
 
-        Iterator<Person> newResult = queryModel(Person.class);
-        assertTrue(newResult.hasNext());
+        Iterator<Person> resultAfterMaliciousQuery = queryModel(Person.class);
+        assertTrue(resultAfterMaliciousQuery.hasNext());
+        assertEquals(jane, resultAfterMaliciousQuery.next());
     }
 
     /**

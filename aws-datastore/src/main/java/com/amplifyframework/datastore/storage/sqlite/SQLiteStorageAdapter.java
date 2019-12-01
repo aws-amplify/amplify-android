@@ -702,7 +702,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 .getModelSchemaForModelClass(tableName);
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, predicate);
         final String rawQuery = sqlCommand.sqlStatement();
-        final String[] selectionArgs = sqlCommand.getSelectionArgs();
+        final String[] selectionArgs = sqlCommand.getSelectionArgsAsArray();
         return this.databaseConnectionHandle.rawQuery(rawQuery, selectionArgs);
     }
 }
