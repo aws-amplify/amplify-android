@@ -97,10 +97,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         sqLiteStorageAdapter.initialize(context, setupListener);
 
-        List<ModelSchema> modelSchemaList =
-            setupListener.awaitTerminalEvent().assertNoError().getResult();
-        assertNotNull(modelSchemaList);
-        assertFalse(modelSchemaList.isEmpty());
+        List<ModelSchema> setupResults = setupListener.awaitResult();
+
+        List<Class<? extends Model>> expectedModels = new ArrayList<>(modelProvider.models());
+        expectedModels.add(StorageItemChange.Record.class); // Internal
+        assertEquals(expectedModels.size(), setupResults.size());
     }
 
     /**
@@ -272,8 +273,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
 
-        Throwable actualError = carSaveListener.awaitTerminalEvent().assertError().getError();
-        assertNotNull(actualError);
+        Throwable actualError = carSaveListener.awaitError();
         assertNotNull(actualError.getCause());
         assertNotNull(actualError.getCause().getMessage());
         assertTrue(actualError.getCause().getMessage().contains(expectedError));
@@ -493,7 +493,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         LatchedResultListener<StorageItemChange.Record> saveListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
-        return saveListener.awaitTerminalEvent().assertNoError().getResult()
+        return saveListener.awaitResult()
             .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
             .item();
     }
@@ -508,14 +508,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         LatchedResultListener<Iterator<T>> queryResultListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.query(modelClass, predicate, queryResultListener);
-        return queryResultListener.awaitTerminalEvent().assertNoError().getResult();
+        return queryResultListener.awaitResult();
     }
 
     private <T extends Model> T deleteModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqLiteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
-        return deleteListener.awaitTerminalEvent().assertNoError().getResult()
+        return deleteListener.awaitResult()
                 .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
                 .item();
     }
