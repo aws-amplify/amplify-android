@@ -15,8 +15,10 @@
 
 package com.amplifyframework.datastore.storage;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 
+import com.amplifyframework.datastore.DataStoreException;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;
@@ -55,12 +57,17 @@ public final class GsonStorageItemChangeConverter implements
     }
 
     @Override
-    public <T extends Model> StorageItemChange<T> fromRecord(StorageItemChange.Record record) {
+    public <T extends Model> StorageItemChange<T> fromRecord(StorageItemChange.Record record)
+            throws DataStoreException {
         Class<?> itemClass;
         try {
             itemClass = Class.forName(record.getItemClass());
         } catch (ClassNotFoundException classNotFoundException) {
-            throw new IllegalStateException(classNotFoundException);
+            throw new DataStoreException(
+                    "Tried to get the class of an item but couldn't find it.",
+                    classNotFoundException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
         final Type itemType =
             TypeToken.getParameterized(StorageItemChange.class, itemClass).getType();
