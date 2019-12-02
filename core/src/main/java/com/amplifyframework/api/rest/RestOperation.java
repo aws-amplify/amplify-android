@@ -13,12 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.api.rest;
 
+import com.amplifyframework.api.ApiOperation;
 
 /**
- * API category behaviors include REST and GraphQL operations. These
- * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
- * query/subscribe/mutate operations.
+ * A RestOperation is an API operation which returns a REST results.
  */
-public interface ApiCategoryBehavior extends RestBehavior, GraphQlBehavior { }
+public abstract class RestOperation extends ApiOperation<RestOperationRequest> {
+
+    /**
+     * Constructs a new REST ApiOperation.
+     *
+     * @param request An operation request
+     */
+    public RestOperation(RestOperationRequest request) {
+        super(request);
+    }
+}

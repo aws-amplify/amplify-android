@@ -13,12 +13,28 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
-
+package com.amplifyframework.api.rest;
 
 /**
- * API category behaviors include REST and GraphQL operations. These
- * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
- * query/subscribe/mutate operations.
+ * Enum of REST operation types.
  */
-public interface ApiCategoryBehavior extends RestBehavior, GraphQlBehavior { }
+public enum HttpMethod {
+
+    /** GET operation type for REST. */
+    GET,
+
+    /** PUT operation type for REST. */
+    PUT,
+
+    /** POST operation type for REST. */
+    POST,
+
+    /** HEAD operation type for REST. */
+    HEAD,
+
+    /** PATCH operation type for REST. */
+    PATCH,
+
+    /** DELETE operation type for REST. */
+    DELETE,
+}
