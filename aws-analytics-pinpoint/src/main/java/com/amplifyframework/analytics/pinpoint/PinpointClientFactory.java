@@ -17,6 +17,7 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
 
+import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 
@@ -39,13 +40,14 @@ import java.util.concurrent.TimeUnit;
 final class PinpointClientFactory {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
-    private static final int INITIALIZATION_TIMEOUT_MS = 1000;
+    private static final int INITIALIZATION_TIMEOUT_MS = 5000;
 
     private PinpointClientFactory() {
     }
 
     static AnalyticsClient create(Context context,
-                                  AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration) {
+                                  AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration)
+            throws AnalyticsException {
         final PinpointManager pinpointManager;
         final AWSConfiguration awsConfiguration = new AWSConfiguration(context);
 
@@ -62,12 +64,14 @@ final class PinpointClientFactory {
                     @Override
                     public void onError(Exception exception) {
                         LOG.error("Error initializing AWS Mobile Client", exception);
-                        mobileClientLatch.countDown();
                     }
                 });
 
         try {
-            mobileClientLatch.await(INITIALIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (!mobileClientLatch.await(INITIALIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
+                throw new AnalyticsException("Failed to initialize mobile client.",
+                        "Please check your awsconfiguration json.");
+            }
         } catch (InterruptedException exception) {
             throw new RuntimeException("Failed to initialize mobile client: " + exception.getLocalizedMessage());
         }
