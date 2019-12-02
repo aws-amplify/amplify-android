@@ -70,6 +70,7 @@ public final class Blog implements Model {
       .append(getId())
       .append(getName())
       .append(getOwner())
+      .toString()
       .hashCode();
   }
   
