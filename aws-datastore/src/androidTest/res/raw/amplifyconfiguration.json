@@ -1,25 +1,26 @@
 {
-  "UserAgent": "aws-amplify-cli/2.0",
-  "Version": "1.0",
-  "API": {
+  "userAgent": "aws-amplify-cli/2.0",
+  "version": "1.0",
+  "api": {
     "plugins": {
-      "AWSAPIPlugin": {
-        "personAndCarApi": {
+      "awsAPIPlugin": {
+        "commentsBlogApi": {
           "__comment": "This is in Jameson's developer account, right now.",
-          "Endpoint": "https://otpxpxnof5g3hoflqbbq6wr6g4.appsync-api.us-east-1.amazonaws.com/graphql",
-          "Region": "us-east-1",
-          "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-gmrb7ggz6fcttmlote5d7gu3n4"
+          "endpoint": "https://q754zly6erdshd5lbeku75u6qq.appsync-api.us-east-1.amazonaws.com/graphql",
+          "region": "us-east-1",
+          "authorizationType": "API_KEY",
+          "apiKey": "da2-umufvrvebnadnkv5hl3yudoj4m"
         }
       }
     }
   },
-  "DataStore": {
+  "dataStore": {
     "plugins": {
-      "AWSDataStorePlugin": {
+      "awsDataStorePlugin": {
         "syncMode": "api",
-        "apiName": "personAndCarApi"
+        "apiName": "commentsBlogApi"
       }
     }
   }
 }
+

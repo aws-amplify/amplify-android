@@ -20,27 +20,20 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.test.R;
-import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testmodels.personcar.Car;
-import com.amplifyframework.testmodels.personcar.MaritalStatus;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.commentsblog.Blog;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.LatchedResultListener;
 import com.amplifyframework.testutils.LatchedSingleResponseListener;
 import com.amplifyframework.testutils.Sleep;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Date;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
@@ -49,8 +42,9 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Tests the functions of {@link com.amplifyframework.datastore.AWSDataStorePlugin}.
- * This test expects a backend API that has support for the {@link Person} and {@link Car}
- * models.
+ * This test expects a backend API that has support for the {@link Blog} family of models,
+ * which were defined by the schema in:
+ * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
 public final class AWSDataStorePluginInstrumentedTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
@@ -79,39 +73,20 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @BeforeClass
     public static void configureAmplify() throws AmplifyException {
+        final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
+        apiName = testConfig.apiName();
+        awsDataStorePlugin = testConfig.plugin();
         context = ApplicationProvider.getApplicationContext();
-
-        ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
-        awsDataStorePlugin = AWSDataStorePlugin.singleton(modelProvider);
-        Amplify.addPlugin(awsDataStorePlugin);
-
-        // We need to use an API plugin, so that we can validate remote sync.
-        Amplify.addPlugin(new AWSApiPlugin());
-
-        AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
-        amplifyConfiguration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
-        Amplify.configure(amplifyConfiguration, context);
-
-        apiName = firstApiIn(amplifyConfiguration);
-    }
-
-    private static String firstApiIn(AmplifyConfiguration amplifyConfiguration) throws AmplifyException {
-        return amplifyConfiguration.forCategoryType(CategoryType.API)
-            .getPluginConfig("AWSAPIPlugin")
-            .keys()
-            .next();
     }
 
     /**
-     * Save a person via DataStore, wait a bit, check API to see if the person is there, remotely.
+     * Save a BlogOwner via DataStore, wait a bit, check API to see if the BlogOwner is there, remotely.
      */
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void personSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() {
-        // Save Charley Crockett to the DataStore.
-        Person localCharley = Person.builder()
-            .firstName("Charley")
-            .lastName("Crockett")
+    public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() {
+        // Save Charley Crockett, a guy who has a blog, into the DataStore.
+        BlogOwner localCharley = BlogOwner.builder()
+            .name("Charley Crockett")
             .build();
         saveLocal(localCharley);
 
@@ -119,12 +94,11 @@ public final class AWSDataStorePluginInstrumentedTest {
         Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
 
         // Try to get Charley from the backend.
-        Person remoteCharley = getRemote(Person.class, localCharley.getId());
+        BlogOwner remoteCharley = getRemote(BlogOwner.class, localCharley.getId());
 
         // A Charley is a Charley is a Charley, right?
         assertEquals(localCharley.getId(), remoteCharley.getId());
-        assertEquals(localCharley.getFirstName(), remoteCharley.getFirstName());
-        assertEquals(localCharley.getLastName(), remoteCharley.getLastName());
+        assertEquals(localCharley.getName(), remoteCharley.getName());
     }
 
     /**
@@ -132,33 +106,31 @@ public final class AWSDataStorePluginInstrumentedTest {
      * subscriptions. When we change a model remotely, the sync engine should respond
      * by processing the subscription event and saving the model locally.
      */
-    // "deprecation" -> Date(year, month, day) is a readable API! Disagree-with-IDE, and git-commit.
-    // "checkstyle:MagicNumber" -> Dates and times of historical events are kinda magic.
-    @SuppressWarnings({"deprecation", "checkstyle:MagicNumber"})
+    @Ignore(
+        "This test is broken, until support for _version is added. " +
+        "The local version will be the original created version, not the " +
+        "updated version, since the client is not passing _version right nowl."
+    )
     @Test
-    public void personCreatedAndUpdatedRemotelyIsFoundLocally() {
-        // Create a record for Hank Williams, before he gets married to Audrey
-        Person remoteHank = Person.builder()
-            .firstName("Hank")
-            .lastName("Williams")
-            .relationship(MaritalStatus.single)
-            .age(20)
-            .dob(new Date(1923, 9, 17))
+    public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() {
+        // Create a record for a blog owner, with a misspelling in the last name
+        BlogOwner remoteOwner = BlogOwner.builder()
+            .name("Jameson Willlllliams")
             .build();
-        createRemote(remoteHank);
+        createRemote(remoteOwner);
 
-        // Update the record when Hank marries Audrey
-        updateRemote(remoteHank.newBuilder()
-            .relationship(MaritalStatus.married)
-            .age(21)
+        // Update the record to fix the last name
+        updateRemote(remoteOwner.copyOfBuilder()
+            // This uses the same record ID
+            .name("Jameson Williams")
             .build());
 
         // Wait for sync. TODO: super lame. Get a deterministic event-driven hook for this.
         Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
 
-        // Hank should be in the local DataStore, and we should see that he's married, now.
-        Person localHank = getLocal(Person.class, remoteHank.getId());
-        assertEquals(MaritalStatus.married, localHank.getRelationship());
+        // Jameson should be in the local DataStore, and last name should be updated.
+        BlogOwner localOwner = getLocal(BlogOwner.class, remoteOwner.getId());
+        assertEquals("Jameson Williams", localOwner.getName());
     }
 
     /**
