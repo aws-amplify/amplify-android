@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -143,7 +144,10 @@ public final class SyncEngine {
                     storageAdapter.delete(mutation.model(), initiator, storageResultListener);
                     break;
                 default:
-                    throw new DataStoreException("Unknown mutation type = " + mutation.type());
+                    throw new DataStoreException(
+                        "Unknown mutation type = " + mutation.type(),
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    );
             }
         }));
     }

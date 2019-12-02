@@ -20,6 +20,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.CategoryType;
@@ -27,14 +28,12 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.datastore.network.SyncEngine;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
@@ -102,12 +101,17 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public void configure(
             @NonNull JSONObject pluginConfigurationJson,
-            @NonNull Context context) throws PluginException {
+            @NonNull Context context) throws DataStoreException {
         try {
             this.pluginConfiguration =
                 AWSDataStorePluginConfiguration.fromJson(pluginConfigurationJson);
-        } catch (JSONException badConfigException) {
-            throw new PluginException.PluginConfigurationException(badConfigException);
+        } catch (DataStoreException badConfigException) {
+            throw new DataStoreException(
+                "There was an issue configuring the plugin from the amplifyconfiguration.json",
+                    badConfigException,
+                    "Check the attached exception for more details and " +
+                    "be sure you are only calling Amplify.configure once"
+            );
         }
 
         //noinspection ResultOfMethodCallIgnored
@@ -149,9 +153,12 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
         ));
     }
 
-    private String getApiName() {
+    private String getApiName() throws DataStoreException {
         if (pluginConfiguration == null) {
-            throw new DataStoreException("Tried to get API name, but plugin is not yet configured.");
+            throw new DataStoreException(
+                    "Tried to get API name, but plugin is not yet configured.",
+                    "Make sure to call Amplify.configure before using the plugin."
+            );
         }
         return pluginConfiguration.getApiName();
     }
@@ -159,7 +166,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * Terminate use of the plugin.
      */
-    synchronized void terminate() {
+    synchronized void terminate() throws DataStoreException {
         syncEngine.stop();
         sqliteStorageAdapter.terminate();
     }
@@ -186,7 +193,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            ResultListener<DataStoreItemChange<T>> saveItemListener) {
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
             new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
     }
@@ -197,7 +204,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
-            ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
         sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
             new ResultConversionListener<>(deleteItemListener, this::toDataStoreItemChange));
     }
@@ -208,7 +215,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            ResultListener<Iterator<T>> queryResultsListener) {
+            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         sqliteStorageAdapter.query(itemClass, queryResultsListener);
     }
 
@@ -253,7 +260,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria) {
-        return Observable.error(new DataStoreException("Not implemented yet, buster!"));
+        return Observable.error(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
     }
 
     /**
@@ -265,7 +272,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * @param <T> Type of data that was changed
      * @return A {@link DataStoreItemChange} representing the storage change record
      */
-    private <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(final StorageItemChange.Record record) {
+    private <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(final StorageItemChange.Record record)
+        throws DataStoreException {
         return toDataStoreItemChange(record.toStorageItemChange(storageItemChangeConverter));
     }
 
@@ -276,7 +284,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * @return A data store item change representing the change in storage layer
      */
     private static <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(
-            final StorageItemChange<T> storageItemChange) {
+            final StorageItemChange<T> storageItemChange) throws DataStoreException {
 
         final DataStoreItemChange.Initiator dataStoreItemChangeInitiator;
         switch (storageItemChange.initiator()) {
@@ -287,7 +295,10 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
                 dataStoreItemChangeInitiator = DataStoreItemChange.Initiator.LOCAL;
                 break;
             default:
-                throw new DataStoreException("Unknown initiator of storage change: " + storageItemChange.initiator());
+                throw new DataStoreException(
+                        "Unknown initiator of storage change: " + storageItemChange.initiator(),
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                );
         }
 
         final DataStoreItemChange.Type dataStoreItemChangeType;
@@ -299,7 +310,10 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
                 dataStoreItemChangeType = DataStoreItemChange.Type.DELETE;
                 break;
             default:
-                throw new DataStoreException("Unknown type of storage change: " + storageItemChange.type());
+                throw new DataStoreException(
+                        "Unknown type of storage change: " + storageItemChange.type(),
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                );
         }
 
         return DataStoreItemChange.<T>builder()
@@ -336,12 +350,21 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
 
         @Override
         public void onResult(StorageItemChange.Record result) {
-            dataStoreListener.onResult(conversionStrategy.convert(result));
+            try {
+                DataStoreItemChange<T> converted = conversionStrategy.convert(result);
+                dataStoreListener.onResult(converted);
+            } catch (DataStoreException exception) {
+                onError(exception);
+            }
         }
 
         @Override
         public void onError(Throwable error) {
-            dataStoreListener.onError(error);
+            dataStoreListener.onError(new DataStoreException(
+                    "Oof, something went wrong.",
+                    error,
+                    "Check the attached error for details."
+            ));
         }
 
         /**
@@ -356,7 +379,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
              * @param <T> Type of data contained inside the emitted {@link DataStoreItemChange}
              * @return An {@link DataStoreItemChange}, usable by the DataStore APIs
              */
-            <T extends Model> DataStoreItemChange<T> convert(StorageItemChange.Record record);
+            <T extends Model> DataStoreItemChange<T> convert(StorageItemChange.Record record) throws DataStoreException;
         }
     }
 }

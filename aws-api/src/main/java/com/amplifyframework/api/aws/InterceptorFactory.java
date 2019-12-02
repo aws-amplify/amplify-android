@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.ApiException;
+
 import okhttp3.Interceptor;
 
 /**
@@ -22,5 +24,5 @@ import okhttp3.Interceptor;
  * to be used in {@link AWSApiPlugin}.
  */
 interface InterceptorFactory {
-    Interceptor create(ApiConfiguration config);
+    Interceptor create(ApiConfiguration config) throws ApiException;
 }

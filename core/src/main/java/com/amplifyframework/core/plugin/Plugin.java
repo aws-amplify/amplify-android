@@ -18,6 +18,7 @@ package com.amplifyframework.core.plugin;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryTypeable;
 
 import org.json.JSONObject;
@@ -39,9 +40,9 @@ public interface Plugin<E> extends CategoryTypeable {
      * Configure the plugin with customized configuration object.
      * @param pluginConfiguration plugin-specific configuration data
      * @param context An Android Context
-     * @throws PluginException when configuration for a plugin was not found
+     * @throws AmplifyException when configuration for a plugin was not found
      */
-    void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException;
+    void configure(@NonNull JSONObject pluginConfiguration, Context context) throws AmplifyException;
 
     /**
      * Returns escape hatch for plugin to enable lower-level client use-cases.

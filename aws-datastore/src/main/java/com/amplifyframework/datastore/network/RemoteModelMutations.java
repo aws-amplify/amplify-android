@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -131,7 +132,7 @@ class RemoteModelMutations {
                 return this;
             }
 
-            Subscription<T> begin() {
+            Subscription<T> begin() throws DataStoreException {
                 String apiName = apiNameProvider.getDataStoreApiName();
                 EmittingSubscriptionListener<T> listener =
                     new EmittingSubscriptionListener<>(commonEmitter, modelClass, subscriptionType);
@@ -163,15 +164,21 @@ class RemoteModelMutations {
             @Override
             public void onNext(GraphQLResponse<T> item) {
                 if (item.hasErrors()) {
-                    commonEmitter.onError(new DataStoreException(String.format(
-                        "Errors on subscription %s:%s: %s.",
-                        modelClazz.getSimpleName(), subscriptionType, item.getErrors()
-                    )));
+                    commonEmitter.onError(new DataStoreException(
+                            String.format(
+                                "Errors on subscription %s:%s: %s.",
+                                modelClazz.getSimpleName(), subscriptionType, item.getErrors()
+                            ),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
                 } else if (!item.hasData()) {
-                    commonEmitter.onError(new DataStoreException(String.format(
-                        "Empty data received for %s:%s subscription.",
-                        modelClazz.getSimpleName(), subscriptionType
-                    )));
+                    commonEmitter.onError(new DataStoreException(
+                            String.format(
+                                "Empty data received for %s:%s subscription.",
+                                modelClazz.getSimpleName(), subscriptionType
+                            ),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
                 } else {
                     commonEmitter.onNext(Mutation.<T>builder()
                         .model(item.getData())

@@ -15,13 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.ApiKeyAuthProvider;
 import com.amplifyframework.api.aws.sigv4.AppSyncSigV4SignerInterceptor;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
-import com.amplifyframework.core.plugin.PluginException;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -59,7 +59,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
      *         authorization mode specified in API configuration
      */
     @Override
-    public AppSyncSigV4SignerInterceptor create(ApiConfiguration config) {
+    public AppSyncSigV4SignerInterceptor create(ApiConfiguration config) throws ApiException {
         switch (config.getAuthorizationType()) {
             case API_KEY:
                 // API key provider is configured per API, not per plugin.
@@ -95,14 +95,18 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 OidcAuthProvider oidcProvider = apiAuthProviders.getOidcAuthProvider();
                 if (oidcProvider == null) {
                     oidcProvider = () -> {
-                        throw new ApiException.AuthorizationTypeNotConfiguredException(
-                            "OidcAuthProvider interface is not implemented.");
+                        throw new ApiException(
+                            "OidcAuthProvider interface is not implemented.",
+                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                        );
                     };
                 }
                 return new AppSyncSigV4SignerInterceptor(oidcProvider);
             default:
-                throw new PluginException.PluginConfigurationException(
-                        "Unsupported authorization mode.");
+                throw new ApiException(
+                        "Unsupported authorization mode.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                );
         }
     }
 }

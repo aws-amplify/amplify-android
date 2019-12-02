@@ -51,7 +51,7 @@ public class DataStoreCategory
      */
     @Override
     public <T extends Model> void save(@NonNull T object,
-                                       ResultListener<DataStoreItemChange<T>> saveItemListener) {
+                                       @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
         getSelectedPlugin().save(object, saveItemListener);
     }
 
@@ -60,7 +60,7 @@ public class DataStoreCategory
      */
     @Override
     public <T extends Model> void delete(@NonNull T object,
-                                         ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+                                         @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
         getSelectedPlugin().delete(object, deleteItemListener);
     }
 
@@ -69,7 +69,7 @@ public class DataStoreCategory
      */
     @Override
     public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        ResultListener<Iterator<T>> queryResultsListener) {
+                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         getSelectedPlugin().query(itemClass, queryResultsListener);
     }
 

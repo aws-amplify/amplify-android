@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
@@ -49,24 +48,9 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local
-    ) throws StorageException {
-        return getSelectedPlugin().downloadFile(key, local);
-    }
-
-    @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
             @NonNull String local,
-            StorageDownloadFileOptions options) throws StorageException {
-        return getSelectedPlugin().downloadFile(key, local, options);
-    }
-
-    @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
-            @NonNull String local,
-            ResultListener<StorageDownloadFileResult> resultListener) throws StorageException {
+            @NonNull ResultListener<StorageDownloadFileResult> resultListener
+    ) {
         return getSelectedPlugin().downloadFile(key, local, resultListener);
     }
 
@@ -74,31 +58,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
-            StorageDownloadFileOptions options,
-            ResultListener<StorageDownloadFileResult> resultListener) throws StorageException {
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull ResultListener<StorageDownloadFileResult> resultListener
+    ) {
         return getSelectedPlugin().downloadFile(key, local, options, resultListener);
     }
 
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local) throws StorageException {
-        return getSelectedPlugin().uploadFile(key, local);
-    }
-
-    @Override
-    public StorageUploadFileOperation<?> uploadFile(
-            @NonNull String key,
             @NonNull String local,
-            StorageUploadFileOptions options) throws StorageException {
-        return getSelectedPlugin().uploadFile(key, local, options);
-    }
-
-    @Override
-    public StorageUploadFileOperation<?> uploadFile(
-            @NonNull String key,
-            @NonNull String local,
-            ResultListener<StorageUploadFileResult> resultListener) throws StorageException {
+            @NonNull ResultListener<StorageUploadFileResult> resultListener
+    ) {
         return getSelectedPlugin().uploadFile(key, local, resultListener);
     }
 
@@ -106,63 +77,42 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
-            StorageUploadFileOptions options,
-            ResultListener<StorageUploadFileResult> resultListener) throws StorageException {
+            @NonNull StorageUploadFileOptions options,
+            @NonNull ResultListener<StorageUploadFileResult> resultListener
+    ) {
         return getSelectedPlugin().uploadFile(key, local, options, resultListener);
     }
 
     @Override
     public StorageRemoveOperation<?> remove(
-            @NonNull String key
-    ) throws StorageException {
-        return getSelectedPlugin().remove(key);
-    }
-
-    @Override
-    public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            StorageRemoveOptions options
-    ) throws StorageException {
-        return getSelectedPlugin().remove(key, options);
-    }
-
-    @Override
-    public StorageRemoveOperation<?> remove(
-            @NonNull String key,
-            ResultListener<StorageRemoveResult> resultListener
-    ) throws StorageException {
+            @NonNull ResultListener<StorageRemoveResult> resultListener
+    ) {
         return getSelectedPlugin().remove(key, resultListener);
     }
 
     @Override
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            StorageRemoveOptions options,
-            ResultListener<StorageRemoveResult> resultListener) throws StorageException {
+            @NonNull StorageRemoveOptions options,
+            @NonNull ResultListener<StorageRemoveResult> resultListener) {
         return getSelectedPlugin().remove(key, options, resultListener);
     }
 
     @Override
-    public StorageListOperation<?> list(@NonNull String path) throws StorageException {
-        return getSelectedPlugin().list(path);
-    }
-
-    @Override
-    public StorageListOperation<?> list(@NonNull String path, StorageListOptions options) throws StorageException {
-        return getSelectedPlugin().list(path, options);
-    }
-
-    @Override
-    public StorageListOperation<?> list(@NonNull String path, ResultListener<StorageListResult> resultListener)
-            throws StorageException {
+    public StorageListOperation<?> list(
+            @NonNull String path,
+            @NonNull ResultListener<StorageListResult> resultListener
+    ) {
         return getSelectedPlugin().list(path, resultListener);
     }
 
     @Override
     public StorageListOperation<?> list(
             @NonNull String path,
-            StorageListOptions options,
-            ResultListener<StorageListResult> resultListener) throws StorageException {
+            @NonNull StorageListOptions options,
+            @NonNull ResultListener<StorageListResult> resultListener
+    ) {
         return getSelectedPlugin().list(path, options, resultListener);
     }
 }

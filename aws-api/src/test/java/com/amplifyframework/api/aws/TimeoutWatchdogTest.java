@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.ApiException;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -49,9 +51,10 @@ public final class TimeoutWatchdogTest {
     /**
      * When the timer is started, and more time elapses than the timer
      * allowed, then the timeout action should be run.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void timeoutActionIsInvokedAfterTimeElapsesFromStart() {
+    public void timeoutActionIsInvokedAfterTimeElapsesFromStart() throws ApiException {
         // When watchdog is started,
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
 
@@ -80,9 +83,10 @@ public final class TimeoutWatchdogTest {
     /**
      * If the watchdog gets reset, and the new timeout still has not elapsed,
      * then the timeout action is not run (yet).
+     * @throws ApiException From API configuration
      */
     @Test
-    public void timeoutActionNotRunAfterResetBeforeNewTimeout() {
+    public void timeoutActionNotRunAfterResetBeforeNewTimeout() throws ApiException {
         // Arrange: timer is started and almost counted down.
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
         ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
@@ -98,9 +102,10 @@ public final class TimeoutWatchdogTest {
     /**
      * If you start the watchdog, and then reset it, but time elapses beyond
      * even the newly set timeout, then the timeout action will run.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void timeoutActionIsRunEvenAfterResetTimePeriod() {
+    public void timeoutActionIsRunEvenAfterResetTimePeriod() throws ApiException {
         // Arrange: started watchdog, time has gone by.
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
         ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);
@@ -116,9 +121,10 @@ public final class TimeoutWatchdogTest {
     /**
      * If you stop the watchdog before it times out, then the timeout action
      * doesn't get run.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void timeoutActionIsRunIfWatchdogStoppedBeforeTimeout() {
+    public void timeoutActionIsRunIfWatchdogStoppedBeforeTimeout() throws ApiException {
         // Arrange: timer is started, and almost out of time
         watchdog.start(timeoutAction, DEFAULT_TIMEOUT_MS);
         ShadowLooper.idleMainLooper(DEFAULT_TIMEOUT_MS - 1, TimeUnit.MILLISECONDS);

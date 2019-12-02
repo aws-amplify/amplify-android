@@ -40,19 +40,19 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
 
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @NonNull HubSubscriber hubSubscriber) throws HubException {
+                                       @NonNull HubSubscriber hubSubscriber) {
         return getSelectedPlugin().subscribe(hubChannel, hubSubscriber);
     }
 
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubEventFilter hubEventFilter,
-                                       @NonNull HubSubscriber hubSubscriber) throws HubException {
+                                       @NonNull HubSubscriber hubSubscriber) {
         return getSelectedPlugin().subscribe(hubChannel, hubEventFilter, hubSubscriber);
     }
 
     @Override
-    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException {
+    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
         getSelectedPlugin().unsubscribe(subscriptionToken);
     }
 

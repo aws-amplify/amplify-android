@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
@@ -38,9 +39,10 @@ public class StorageItemChangeRecordTest {
     /**
      * Generation of a ModelSchema for the {@link StorageItemChange.Record}
      * succeeds.
+     * @throws AmplifyException from Amplify configuration
      */
     @Test
-    public void modelSchemaGenerationSucceeds() {
+    public void modelSchemaGenerationSucceeds() throws AmplifyException {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
             .name("id")

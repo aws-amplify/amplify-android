@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.Amplify;
@@ -53,9 +54,10 @@ public final class GraphQLInstrumentationTest {
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
+     * @throws AmplifyException From Amplify configuration
      */
     @BeforeClass
-    public static void onceBeforeTests() {
+    public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
     }
 

@@ -18,10 +18,8 @@ package com.amplifyframework.logging;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.PluginException;
 
 /**
  * The LoggingCategory is a collection of zero or more plugin
@@ -59,7 +57,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     private LoggingPlugin<?> getLoggingPlugin() {
         try {
             return getSelectedPlugin(); // If someone added a plugin, use it
-        } catch (ConfigurationException | PluginException pluginAccessException) {
+        } catch (IllegalStateException pluginAccessException) {
             return new AndroidLoggingPlugin(); // Otherwise, fallback to ours.
         }
     }

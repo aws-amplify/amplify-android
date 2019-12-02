@@ -19,7 +19,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.AmplifyException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -38,30 +38,40 @@ final class AWSDataStorePluginConfiguration {
         this.apiName = apiName;
     }
 
-    static AWSDataStorePluginConfiguration fromJson(JSONObject pluginJson) throws JSONException {
+    static AWSDataStorePluginConfiguration fromJson(JSONObject pluginJson) throws DataStoreException {
         // If no sync mode is specified, we just use the default (no sync) and continue
         if (!pluginJson.has("syncMode")) {
             return new AWSDataStorePluginConfiguration(SyncMode.LOCAL_ONLY, null);
         }
 
-        // If user has specified a sync mode, find out what it was.
-        final SyncMode syncMode = SyncMode.fromJsonPropertyValue(pluginJson.getString("syncMode"));
+        try {
+            // If user has specified a sync mode, find out what it was.
+            final SyncMode syncMode = SyncMode.fromJsonPropertyValue(pluginJson.getString("syncMode"));
 
-        // If user has provided an API name, obtain it.
-        String apiName = null;
-        if (pluginJson.has("apiName")) {
-            apiName = pluginJson.getString("apiName");
-        }
+            // If user has provided an API name, obtain it.
+            String apiName = null;
+            if (pluginJson.has("apiName")) {
+                apiName = pluginJson.getString("apiName");
+            }
 
-        // If he user wanted remote sync, a non-empty value associated to the apiName key is required.
-        if (SyncMode.SYNC_WITH_API.equals(syncMode) && TextUtils.isEmpty(apiName)) {
-            throw new ConfigurationException(
-                "Requested SyncMode of " + SyncMode.SYNC_WITH_API.jsonValue() +
-                    " but required key \"apiName\" was missing/empty."
+            // If he user wanted remote sync, a non-empty value associated to the apiName key is required.
+            if (SyncMode.SYNC_WITH_API.equals(syncMode) && TextUtils.isEmpty(apiName)) {
+                throw new DataStoreException(
+                        "Requested SyncMode of " + SyncMode.SYNC_WITH_API.jsonValue() +
+                                " but required key \"apiName\" was missing/empty.",
+                        "Check your amplifyconfiguration.json file to ensure the field is present."
+                );
+            }
+
+            return new AWSDataStorePluginConfiguration(syncMode, apiName);
+        } catch (JSONException exception) {
+            throw new DataStoreException(
+                    "Issue encountered while parsing configuration JSON",
+                    exception,
+                    "Check the attached exception for more details."
             );
         }
 
-        return new AWSDataStorePluginConfiguration(syncMode, apiName);
     }
 
     /**
@@ -76,15 +86,16 @@ final class AWSDataStorePluginConfiguration {
     /**
      * Gets the name of the API to use when the {@link #getSyncMode()} is
      * {@link SyncMode#SYNC_WITH_API}. If the Value of {@link #getSyncMode()} is
-     * anything else, then this will throw an {@link ConfigurationException}.
+     * anything else, then this will throw an {@link DataStoreException}.
      * @return The name of the API to use, if {@link #getSyncMode()} returns
      *         {@link SyncMode#SYNC_WITH_API}.
-     * @throws ConfigurationException If there is no API name to return
+     * @throws DataStoreException If there is no API name to return
      */
     @NonNull
-    String getApiName() {
+    String getApiName() throws DataStoreException {
         if (apiName == null) {
-            throw new ConfigurationException("No API name was specified.");
+            throw new DataStoreException("No API name was specified.",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
         return apiName;
     }
@@ -138,13 +149,14 @@ final class AWSDataStorePluginConfiguration {
          * @param jsonPropertyValue A property value from a JSON config
          * @return An enumerated sync mode
          */
-        static SyncMode fromJsonPropertyValue(@Nullable String jsonPropertyValue) {
+        static SyncMode fromJsonPropertyValue(@Nullable String jsonPropertyValue) throws DataStoreException {
             for (final SyncMode possibleMatch : values()) {
                 if (possibleMatch.jsonValue().equals(jsonPropertyValue)) {
                     return possibleMatch;
                 }
             }
-            throw new ConfigurationException("No sync mode known for jsonPropertyValue = " + jsonPropertyValue);
+            throw new DataStoreException("No sync mode known for jsonPropertyValue = " + jsonPropertyValue,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 }

@@ -20,6 +20,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -183,9 +184,13 @@ final class StorageItemChangeJournal {
                     @Override
                     public void onResult(final Iterator<StorageItemChange.Record> queryResultsIterator) {
                         while (queryResultsIterator.hasNext()) {
-                            final StorageItemChange<? extends Model> storageItemChange =
-                                queryResultsIterator.next().toStorageItemChange(storageItemChangeConverter);
-                            emitter.onNext(storageItemChange);
+                            try {
+                                final StorageItemChange<? extends Model> storageItemChange =
+                                        queryResultsIterator.next().toStorageItemChange(storageItemChangeConverter);
+                                emitter.onNext(storageItemChange);
+                            } catch (DataStoreException exception) {
+                                onError(exception);
+                            }
                         }
                         emitter.onComplete();
                     }

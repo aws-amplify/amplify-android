@@ -29,8 +29,8 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
-import com.amplifyframework.datastore.storage.sqlite.UnsupportedTypeException;
 
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -61,8 +61,9 @@ public final class SQLPredicate {
      * Constructs an adapted instance of SQLPredicate
      * from an instance of {@link QueryPredicate}.
      * @param predicate query predicate to adapt
+     * @throws DataStoreException If unable to parse the predicate
      */
-    public SQLPredicate(QueryPredicate predicate) {
+    public SQLPredicate(QueryPredicate predicate) throws DataStoreException {
         this.selectionArgs = new LinkedList<>();
         this.queryString = parsePredicate(predicate).toString();
     }
@@ -93,7 +94,7 @@ public final class SQLPredicate {
     }
 
     // Utility method to recursively parse a given predicate.
-    private StringBuilder parsePredicate(QueryPredicate queryPredicate) {
+    private StringBuilder parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
             return parsePredicateOperation(qpo);
@@ -101,18 +102,16 @@ public final class SQLPredicate {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
             return parsePredicateGroup(qpg);
         } else {
-            throw new UnsupportedTypeException(
+            throw new DataStoreException(
                     "Tried to parse an unsupported QueryPredicate",
-                    null,
                     "Try changing to one of the supported values: " +
-                            "QueryPredicateOperation, QueryPredicateGroup.",
-                    false
+                            "QueryPredicateOperation, QueryPredicateGroup."
             );
         }
     }
 
     // Utility method to recursively parse a given predicate operation.
-    private StringBuilder parsePredicateOperation(QueryPredicateOperation operation) {
+    private StringBuilder parsePredicateOperation(QueryPredicateOperation operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
         final String field = operation.field();
         final QueryOperator op = operation.operator();
@@ -155,18 +154,16 @@ public final class SQLPredicate {
                         .append(SqlKeyword.DELIMITER)
                         .append("?");
             default:
-                throw new UnsupportedTypeException(
+                throw new DataStoreException(
                         "Tried to parse an unsupported QueryPredicateOperation",
-                        null,
                         "Try changing to one of the supported values from " +
-                                "QueryPredicateOperation.Type enum.",
-                        false
+                                "QueryPredicateOperation.Type enum."
                 );
         }
     }
 
     // Utility method to recursively parse a given predicate group.
-    private StringBuilder parsePredicateGroup(QueryPredicateGroup group) {
+    private StringBuilder parsePredicateGroup(QueryPredicateGroup group) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
         switch (group.type()) {
             case NOT:
@@ -187,18 +184,16 @@ public final class SQLPredicate {
                 }
                 return builder.append(")");
             default:
-                throw new UnsupportedTypeException(
+                throw new DataStoreException(
                         "Tried to parse an unsupported QueryPredicateGroup",
-                        null,
                         "Try changing to one of the supported values from " +
-                                "QueryPredicateGroup.Type enum.",
-                        false
+                                "QueryPredicateGroup.Type enum."
                 );
         }
     }
 
     // Utility method to extract the parameter value from a given operator.
-    private Object getOperatorValue(QueryOperator qOp) throws UnsupportedTypeException {
+    private Object getOperatorValue(QueryOperator qOp) throws DataStoreException {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
@@ -213,12 +208,10 @@ public final class SQLPredicate {
             case GREATER_THAN:
                 return ((GreaterThanQueryOperator) qOp).value();
             default:
-                throw new UnsupportedTypeException(
+                throw new DataStoreException(
                         "Tried to parse an unsupported QueryOperator type",
-                        null,
                         "Check if a new QueryOperator.Type enum has been created which is not supported" +
-                                "in the AppSyncGraphQLRequestFactory.",
-                        false
+                                "in the AppSyncGraphQLRequestFactory."
                 );
         }
     }

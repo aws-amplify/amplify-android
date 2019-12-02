@@ -18,6 +18,9 @@ package com.amplifyframework.api.aws;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
+
 /**
  * Closes the WebSocket connection if the time remaining has elapsed.
  * Enables resetting of the watchdog remaining time.
@@ -41,11 +44,17 @@ final class TimeoutWatchdog {
      * @param timeoutAction An action to perform after a timeout has elapsed
      * @param timeoutMs After this period of time, action is performed
      */
-    synchronized void start(final Runnable timeoutAction, long timeoutMs) {
+    synchronized void start(final Runnable timeoutAction, long timeoutMs) throws ApiException {
         if (timeoutAction == null) {
-            throw new NullPointerException("Passed null action to watchdog.");
+            throw new ApiException(
+                "Passed null action to watchdog.",
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         } else if (timeoutMs <= 0) {
-            throw new IllegalArgumentException("timeoutMs must be > 0.");
+            throw new ApiException(
+                "timeoutMs must be > 0.",
+                "Make sure you didn't set a negative timeout"
+            );
         }
 
         // If there's an existing timer, stop it.

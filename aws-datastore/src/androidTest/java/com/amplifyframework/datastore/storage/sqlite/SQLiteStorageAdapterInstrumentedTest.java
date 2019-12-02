@@ -27,6 +27,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.logging.Logger;
@@ -107,20 +108,21 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Drop all tables and database, terminate and delete the database.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @After
-    public void tearDown() {
+    public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
     }
 
     /**
      * Assert that save stores item in the SQLite database correctly.
-     *
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelUpdatesData() {
+    public void saveModelUpdatesData() throws DataStoreException {
         // Triggers an insert
         final Person raphael = Person.builder()
                 .firstName("Raphael")
@@ -151,10 +153,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Assert that save stores data in the SQLite database correctly.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelInsertsData() throws ParseException {
+    public void saveModelInsertsData() throws ParseException, DataStoreException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -183,11 +186,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Assert that save stores data in the SQLite database correctly
      * even if some optional values are null.
-     *
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithNullsInsertsData() {
+    public void saveModelWithNullsInsertsData() throws DataStoreException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -213,10 +216,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Assert that save stores foreign key in the SQLite database correctly.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithValidForeignKey() throws ParseException {
+    public void saveModelWithValidForeignKey() throws ParseException, DataStoreException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -247,10 +251,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Assert that foreign key constraint is enforced.
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void saveModelWithInvalidForeignKey() throws ParseException {
+    public void saveModelWithInvalidForeignKey() throws ParseException, DataStoreException {
         final String expectedError = "FOREIGN KEY constraint failed";
 
         final Person person = Person.builder()
@@ -282,9 +287,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test save with SQL injection.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @Test
-    public void saveModelWithMaliciousInputs() {
+    public void saveModelWithMaliciousInputs() throws DataStoreException {
         final Person person = Person.builder()
                 .firstName("Jane'); DROP TABLE Person; --")
                 .lastName("Doe")
@@ -300,10 +306,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithSingleItem() throws ParseException {
+    public void querySavedDataWithSingleItem() throws ParseException, DataStoreException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -326,10 +333,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithMultipleItems() throws ParseException {
+    public void querySavedDataWithMultipleItems() throws ParseException, DataStoreException {
         final Set<Person> savedModels = new HashSet<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -361,10 +369,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * also populates that instance variable with object.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithForeignKey() throws ParseException {
+    public void querySavedDataWithForeignKey() throws ParseException, DataStoreException {
         final Person person = Person.builder()
                 .firstName("Alan")
                 .lastName("Turing")
@@ -400,10 +409,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * predicate conditions.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithNumericalPredicates() throws ParseException {
+    public void querySavedDataWithNumericalPredicates() throws ParseException, DataStoreException {
         final List<Person> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -446,10 +456,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      * predicate conditions.
      *
      * @throws ParseException when the date cannot be parsed.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("magicnumber")
     @Test
-    public void querySavedDataWithStringPredicates() throws ParseException {
+    public void querySavedDataWithStringPredicates() throws ParseException, DataStoreException {
         final List<Person> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -488,9 +499,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test querying with predicate condition on connected model.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @Test
-    public void querySavedDataWithPredicatesOnForeignKey() {
+    public void querySavedDataWithPredicatesOnForeignKey() throws DataStoreException {
         final Person person = Person.builder()
                 .firstName("Jane")
                 .lastName("Doe")
@@ -511,9 +523,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test query with SQL injection.
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @Test
-    public void queryWithMaliciousPredicates() {
+    public void queryWithMaliciousPredicates() throws DataStoreException {
         final Person jane = Person.builder()
                 .firstName("Jane")
                 .lastName("Doe")
@@ -531,11 +544,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert that save stores item in the SQLite database correctly.
-     *
+     * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @SuppressWarnings("MagicNumber")
     @Test
-    public void deleteModelDeletesData() {
+    public void deleteModelDeletesData() throws DataStoreException {
         // Triggers an insert
         final Person raphael = Person.builder()
                 .firstName("Raphael")
@@ -552,7 +565,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertFalse(iterator.hasNext());
     }
 
-    private <T extends Model> T saveModel(@NonNull T model) {
+    private <T extends Model> T saveModel(@NonNull T model) throws DataStoreException {
         LatchedResultListener<StorageItemChange.Record> saveListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
@@ -574,7 +587,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         return queryResultListener.awaitResult();
     }
 
-    private <T extends Model> T deleteModel(@NonNull T model) {
+    private <T extends Model> T deleteModel(@NonNull T model) throws DataStoreException {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);

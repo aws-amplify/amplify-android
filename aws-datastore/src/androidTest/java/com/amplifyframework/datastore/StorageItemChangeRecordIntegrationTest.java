@@ -80,9 +80,10 @@ public final class StorageItemChangeRecordIntegrationTest {
 
     /**
      * Drop all tables and database, terminate and delete the database.
+     * @throws DataStoreException from DataStore terminate
      */
     @After
-    public void terminateLocalStorageAdapter() {
+    public void terminateLocalStorageAdapter() throws DataStoreException {
         localStorageAdapter.terminate();
         ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
     }
@@ -91,10 +92,11 @@ public final class StorageItemChangeRecordIntegrationTest {
      * The adapter must be able to save a StorageItemChange.Record. When we query the adapter for that
      * same StorageItemChange.Record, we will expect to find an exact replica of the one we
      * had saved.
+     * @throws DataStoreException from storage item change
      */
     @SuppressWarnings("checkstyle:MagicNumber") // Tony's age is randomly chosen as 45 for no reason.
     @Test
-    public void adapterCanSaveAndQueryChangeRecords() {
+    public void adapterCanSaveAndQueryChangeRecords() throws DataStoreException {
         final Person tony = Person.builder()
             .firstName("Tony")
             .lastName("Daniels")
@@ -132,9 +134,10 @@ public final class StorageItemChangeRecordIntegrationTest {
      * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, ResultListener)}
      * is called for a {@link StorageItemChange.Record}, we should see this event on the
      * {@link LocalStorageAdapter#observe()} method's {@link Observable}.
+     * @throws DataStoreException from storage item change
      */
     @Test
-    public void saveIsObservedForChangeRecord() {
+    public void saveIsObservedForChangeRecord() throws DataStoreException {
 
         // Start watching observe() ...
         TestObserver<StorageItemChange.Record> observer = TestObserver.create();
@@ -178,11 +181,12 @@ public final class StorageItemChangeRecordIntegrationTest {
      * record on the observable. The type will be StorageItemChange.Record and inside of it
      * will be a StorageItemChange.Record which itself contains a Person.
      *
+     * @throws DataStoreException from storage item change
      */
     @Ignore("update operations are not currently implemented! TODO: validate this, once available")
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void updatesAreObservedForChangeRecords() {
+    public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
         TestObserver<StorageItemChange.Record> recordObserver = TestObserver.create();
         localStorageAdapter.observe().subscribe(recordObserver);
@@ -235,10 +239,12 @@ public final class StorageItemChangeRecordIntegrationTest {
      * When an {@link StorageItemChange.Record} is deleted from the DataStore, the
      * {@link Observable} returned by {@link LocalStorageAdapter#observe()} shall
      * emit that same change record.
+     *
+     * @throws DataStoreException from storage item change
      */
     @Ignore("delete() is not currently implemented! Validate this test when it is.")
     @Test
-    public void deletionIsObservedForChangeRecord() {
+    public void deletionIsObservedForChangeRecord() throws DataStoreException {
         // What we are really observing are items of type StorageItemChange.Record that contain
         // StorageItemChange.Record of Person
         TestObserver<StorageItemChange.Record> saveObserver = TestObserver.create();
@@ -282,7 +288,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         deletionObserver.dispose();
     }
 
-    private void save(StorageItemChange.Record storageItemChangeRecord) {
+    private void save(StorageItemChange.Record storageItemChangeRecord) throws DataStoreException {
         // The thing we are saving is a StorageItemChange.Record.
         // The fact that it is getting saved means it gets wrapped into another
         // StorageItemChange.Record, which itself contains the original StorageItemChange.Record.
@@ -316,7 +322,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         return storageItemChangeRecords;
     }
 
-    private void delete(StorageItemChange.Record record) {
+    private void delete(StorageItemChange.Record record) throws DataStoreException {
         // The thing we are deleting is a StorageItemChange.Record, which is wrapping
         // a StorageItemChange.Record, which is wrapping a Person.
         LatchedResultListener<StorageItemChange.Record> recordDeletionListener =

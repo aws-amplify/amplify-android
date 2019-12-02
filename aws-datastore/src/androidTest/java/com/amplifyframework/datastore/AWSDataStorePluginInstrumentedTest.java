@@ -19,6 +19,7 @@ import android.content.Context;
 import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
@@ -74,9 +75,10 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     /**
      * Setup the Android application context.
+     * @throws AmplifyException from Amplify configuration
      */
     @BeforeClass
-    public static void configureAmplify() {
+    public static void configureAmplify() throws AmplifyException {
         context = ApplicationProvider.getApplicationContext();
 
         ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
@@ -93,7 +95,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         apiName = firstApiIn(amplifyConfiguration);
     }
 
-    private static String firstApiIn(AmplifyConfiguration amplifyConfiguration) {
+    private static String firstApiIn(AmplifyConfiguration amplifyConfiguration) throws AmplifyException {
         return amplifyConfiguration.forCategoryType(CategoryType.API)
             .getPluginConfig("AWSAPIPlugin")
             .keys()
@@ -161,9 +163,10 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     /**
      * Drop all tables and database, terminate and delete the database.
+     * @throws DataStoreException from terminate if anything goes wrong
      */
     @AfterClass
-    public static void tearDown() {
+    public static void tearDown() throws DataStoreException {
         awsDataStorePlugin.terminate();
         context.deleteDatabase(DATABASE_NAME);
     }

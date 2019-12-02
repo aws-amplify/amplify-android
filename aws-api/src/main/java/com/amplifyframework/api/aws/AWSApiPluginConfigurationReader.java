@@ -15,7 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -39,53 +40,63 @@ final class AWSApiPluginConfigurationReader {
      * Reads an {@link AWSApiPluginConfiguration} from a JSON object.
      * @param configurationJson The top-level JSON config for the AWS API plugin
      * @return A strongly typed model of the configuration
-     * @throws ConfigurationException If the configuration json cannot be parsed
+     * @throws ApiException If the configuration json cannot be parsed
      */
     static AWSApiPluginConfiguration readFrom(JSONObject configurationJson)
-            throws ConfigurationException {
+            throws ApiException {
 
         if (configurationJson == null) {
-            throw new ConfigurationException.UnableToDecodeException(
-                "Null configuration JSON provided to AWS API plugin.");
+            throw new ApiException(
+                "Null configuration JSON provided to AWS API plugin.",
+                "Check that the content of the AWS API Plugin section of the amplifyconfiguration.json file hasn't " +
+                "been accidentally deleted."
+            );
         }
-        try {
-            return parseConfigurationJson(configurationJson);
-        } catch (JSONException jsonException) {
-            throw new ConfigurationException.UnableToDecodeException(
-                "Bad configuration for AWS API Plugin.", jsonException);
-        }
+
+        return parseConfigurationJson(configurationJson);
     }
 
     private static AWSApiPluginConfiguration parseConfigurationJson(JSONObject configurationJson)
-            throws JSONException {
+            throws ApiException {
 
         final AWSApiPluginConfiguration.Builder configBuilder = AWSApiPluginConfiguration.builder();
 
-        Iterator<String> apiSpecIterator = configurationJson.keys();
-        while (apiSpecIterator.hasNext()) {
-            final String apiName = apiSpecIterator.next();
-            JSONObject apiSpec = configurationJson.getJSONObject(apiName);
+        try {
+            Iterator<String> apiSpecIterator = configurationJson.keys();
+            while (apiSpecIterator.hasNext()) {
+                final String apiName = apiSpecIterator.next();
+                JSONObject apiSpec = configurationJson.getJSONObject(apiName);
 
-            for (final String requiredKey : ConfigKey.requiredKeys()) {
-                if (!apiSpec.has(requiredKey)) {
-                    throw new ConfigurationException.UnableToDecodeException(
-                        "Failed to parse configuration, missing required key: " + requiredKey);
+                for (final String requiredKey : ConfigKey.requiredKeys()) {
+                    if (!apiSpec.has(requiredKey)) {
+                        throw new ApiException(
+                                "Failed to parse configuration, missing required key: " + requiredKey,
+                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                        );
+                    }
                 }
+
+                final AuthorizationType authorizationType =
+                        AuthorizationType.from(apiSpec.getString(ConfigKey.AUTHORIZATION_TYPE.key()));
+
+                final ApiConfiguration.Builder apiConfigBuilder = ApiConfiguration.builder()
+                        .endpoint(apiSpec.getString(ConfigKey.ENDPOINT.key()))
+                        .region(apiSpec.getString(ConfigKey.REGION.key()))
+                        .authorizationType(authorizationType);
+
+                if (AuthorizationType.API_KEY.equals(authorizationType)) {
+                    apiConfigBuilder.apiKey(apiSpec.getString(ConfigKey.API_KEY.key()));
+                }
+
+                configBuilder.addApi(apiName, apiConfigBuilder.build());
             }
-
-            final AuthorizationType authorizationType =
-                AuthorizationType.from(apiSpec.getString(ConfigKey.AUTHORIZATION_TYPE.key()));
-            
-            final ApiConfiguration.Builder apiConfigBuilder = ApiConfiguration.builder()
-                .endpoint(apiSpec.getString(ConfigKey.ENDPOINT.key()))
-                .region(apiSpec.getString(ConfigKey.REGION.key()))
-                .authorizationType(authorizationType);
-
-            if (AuthorizationType.API_KEY.equals(authorizationType)) {
-                apiConfigBuilder.apiKey(apiSpec.getString(ConfigKey.API_KEY.key()));
-            }
-
-            configBuilder.addApi(apiName, apiConfigBuilder.build());
+        } catch (JSONException | ApiException exception) {
+            throw new ApiException(
+                   "Failed to parse configuration JSON for AWS API Plugin",
+                   exception,
+                   "Check amplifyconfiguration.json to make sure the AWS API configuration section hasn't been " +
+                   "wrongly modified."
+            );
         }
 
         return configBuilder.build();

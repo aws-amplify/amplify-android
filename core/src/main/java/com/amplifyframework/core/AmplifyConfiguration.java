@@ -18,12 +18,11 @@ package com.amplifyframework.core;
 import android.content.Context;
 import androidx.annotation.RawRes;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
@@ -72,8 +71,9 @@ public final class AmplifyConfiguration {
     /**
      * Populates all configuration objects from the amplifyconfiguration.json file.
      * @param context Context needed for reading JSON file
+     * @throws AmplifyException If there is a problem in the config file
      */
-    public void populateFromConfigFile(Context context) {
+    public void populateFromConfigFile(Context context) throws AmplifyException {
         populateFromConfigFile(context, getConfigResourceId(context));
     }
 
@@ -83,8 +83,9 @@ public final class AmplifyConfiguration {
      * @param configFileResourceId
      *        The Android resource ID of a raw resource which contains
      *        an amplify configuration as JSON
+     * @throws AmplifyException If there is a problem in the config file
      */
-    public void populateFromConfigFile(Context context, @RawRes int configFileResourceId) {
+    public void populateFromConfigFile(Context context, @RawRes int configFileResourceId) throws AmplifyException {
         JSONObject json = readInputJson(context, configFileResourceId);
 
         try {
@@ -97,9 +98,10 @@ public final class AmplifyConfiguration {
                 }
             }
         } catch (JSONException error) {
-            throw new PluginException.PluginConfigurationException(
-                    "Could not parse amplifyconfiguration.json - check any modifications made to the file.",
-                    error
+            throw new AmplifyException(
+                    "Could not parse amplifyconfiguration.json ",
+                    error,
+                    "Check any modifications made to the file."
             );
         }
     }
@@ -139,12 +141,14 @@ public final class AmplifyConfiguration {
      * Gets the configuration for the specified category type.
      * @param categoryType The category type to return the configuration object for
      * @return Requested category configuration object
+     * @throws AmplifyException If there is a problem in the config file
      */
-    public CategoryConfiguration forCategoryType(final CategoryType categoryType) {
+    public CategoryConfiguration forCategoryType(final CategoryType categoryType) throws AmplifyException {
         if (categoryConfigurations.containsKey(categoryType.getConfigurationKey())) {
             return categoryConfigurations.get(categoryType.getConfigurationKey());
         } else {
-            throw new ConfigurationException("Unknown/bad category type: " + categoryType);
+            throw new AmplifyException("Unknown/bad category type: " + categoryType,
+                    "Be sure to use one of the supported Categories in your current version of Amplify");
         }
     }
 }

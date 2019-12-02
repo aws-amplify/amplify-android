@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -53,9 +54,10 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
+     * @throws AmplifyException From Amplify configuration
      */
     @BeforeClass
-    public static void onceBeforeTests() {
+    public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
     }
 

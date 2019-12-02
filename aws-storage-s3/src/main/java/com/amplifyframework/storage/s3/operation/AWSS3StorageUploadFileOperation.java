@@ -15,8 +15,10 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.storage.exception.StorageException;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
@@ -45,9 +47,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * @param request upload request parameters
      * @param resultListener Will be notified when results of upload are available
      */
-    public AWSS3StorageUploadFileOperation(AWSS3StorageService storageService,
-                                           AWSS3StorageUploadFileRequest request,
-                                           ResultListener<StorageUploadFileResult> resultListener) {
+    public AWSS3StorageUploadFileOperation(@NonNull AWSS3StorageService storageService,
+                                           @NonNull AWSS3StorageUploadFileRequest request,
+                                           @NonNull ResultListener<StorageUploadFileResult> resultListener) {
         super(request);
         this.storageService = storageService;
         this.resultListener = resultListener;
@@ -56,98 +58,114 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
     }
 
     @Override
-    public void start() throws StorageException {
+    public void start() {
         // Only start if it hasn't already been started
         if (transferObserver == null) {
             String identityId;
 
             try {
                 identityId = AWSMobileClient.getInstance().getIdentityId();
-            } catch (Exception exception) {
-                throw new StorageException(
-                        "AWSMobileClient could not get user id." +
-                        "Check whether you configured it properly before calling this method.",
-                        exception
+
+                String serviceKey = S3RequestUtils.getServiceKey(
+                        getRequest().getAccessLevel(),
+                        identityId,
+                        getRequest().getKey(),
+                        getRequest().getTargetIdentityId()
                 );
-            }
+                this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
 
-            String serviceKey = S3RequestUtils.getServiceKey(
-                    getRequest().getAccessLevel(),
-                    identityId,
-                    getRequest().getKey(),
-                    getRequest().getTargetIdentityId()
-            );
-            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
+                try {
+                    if (getRequest().getMetadata() == null || getRequest().getMetadata().isEmpty()) {
+                        transferObserver = storageService.uploadFile(serviceKey, file);
+                    } else {
+                        transferObserver = storageService.uploadFile(serviceKey, file, getRequest().getMetadata());
+                    }
 
-            try {
-                if (getRequest().getMetadata() == null || getRequest().getMetadata().isEmpty()) {
-                    transferObserver = storageService.uploadFile(serviceKey, file);
-                } else {
-                    transferObserver = storageService.uploadFile(serviceKey, file, getRequest().getMetadata());
+                } catch (Exception exception) {
+                    resultListener.onError(new StorageException(
+                        "Issue uploading file",
+                        exception,
+                        "See included exception for more details and suggestions to fix."
+                    ));
                 }
 
-            } catch (Exception exception) {
-                throw new StorageException("Issue uploading file - see included exception", exception);
-            }
-
-            transferObserver.setTransferListener(new TransferListener() {
-                @Override
-                public void onStateChanged(int transferId, TransferState state) {
-                    // TODO: dispatch event to hub
-                    if (TransferState.COMPLETED == state) {
-                        if (resultListener != null) {
+                transferObserver.setTransferListener(new TransferListener() {
+                    @Override
+                    public void onStateChanged(int transferId, TransferState state) {
+                        // TODO: dispatch event to hub
+                        if (TransferState.COMPLETED == state) {
                             resultListener.onResult(StorageUploadFileResult.fromKey(getRequest().getKey()));
                         }
                     }
-                }
 
-                @SuppressWarnings("checkstyle:MagicNumber")
-                @Override
-                public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
-                    int percentage = (int) (bytesCurrent / bytesTotal * 100);
-                    // TODO: dispatch event to hub
-                }
-
-                @Override
-                public void onError(int transferId, Exception exception) {
-                    // TODO: dispatch event to hub
-                    if (resultListener != null) {
-                        resultListener.onError(exception);
+                    @SuppressWarnings("checkstyle:MagicNumber")
+                    @Override
+                    public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
+                        int percentage = (int) (bytesCurrent / bytesTotal * 100);
+                        // TODO: dispatch event to hub
                     }
-                }
-            });
+
+                    @Override
+                    public void onError(int transferId, Exception exception) {
+                        resultListener.onError(new StorageException(
+                            "Something went wrong with your AWS S3 Storage upload file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
+                        ));
+                    }
+                });
+            } catch (Exception exception) {
+                resultListener.onError(new StorageException(
+                    "AWSMobileClient could not get user id.",
+                    exception,
+                    "Check whether you initialized AWSMobileClient and waited for its success callback " +
+                            "before calling Amplify config."
+                ));
+            }
         }
     }
 
     @Override
-    public void cancel() throws StorageException {
+    public void cancel() {
         if (transferObserver != null) {
             try {
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
-                throw new StorageException("Issue cancelling file upload - see included exception", exception);
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
 
     @Override
-    public void pause() throws StorageException {
+    public void pause() {
         if (transferObserver != null) {
             try {
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
-                throw new StorageException("Issue pausing file upload - see included exception", exception);
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
 
     @Override
-    public void resume() throws StorageException {
+    public void resume() {
         if (transferObserver != null) {
             try {
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
-                throw new StorageException("Issue resuming file upload - see included exception", exception);
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
