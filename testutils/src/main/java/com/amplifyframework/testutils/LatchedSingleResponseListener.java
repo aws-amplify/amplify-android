@@ -13,15 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.testutils;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.testutils.LatchedResultListener;
+
+import org.junit.Assert;
+
+import java.util.List;
 
 /**
  * An {@link ResultListener} that can await results.
@@ -50,66 +52,46 @@ public final class LatchedSingleResponseListener<T> implements ResultListener<Gr
     }
 
     @Override
-    public void onResult(GraphQLResponse<T> result) {
+    public void onResult(@NonNull GraphQLResponse<T> result) {
         latchedResultListener.onResult(result);
     }
 
     @Override
-    public void onError(Throwable error) {
+    public void onError(@NonNull Throwable error) {
         latchedResultListener.onError(error);
     }
 
     /**
-     * Await a terminal event, either {@link #onResult(GraphQLResponse)} is called,
-     * or {@link #onError(Throwable)} is called.
-     * @return Current {@link LatchedSingleResponseListener} instance for fluent call chaining
+     * Awaits a terminal event - either an error, or a response.
+     * @return Current instance of {@link LatchedSingleResponseListener}, for fluent chaining
      */
-    @NonNull
-    public LatchedSingleResponseListener<T> awaitTerminalEvent() {
+    private LatchedSingleResponseListener<T> awaitTerminalEvent() {
         latchedResultListener.awaitTerminalEvent();
         return this;
     }
 
     /**
-     * Assert that no error was observed at {@link #onError(Throwable)}.
-     * It is a usage error to call this method before calling {@link #awaitTerminalEvent()}.
-     * @return Current {@link LatchedSingleResponseListener} instance for fluent call chaining
+     * Awaits a GraphQLResponse, and then validates that that response
+     * had no GraphQLReponse.Error(s), and did contain non-null data.
+     * @return The non-null data in a successful GraphQLResponse
+     * @throws AssertionError In all other circumstances
      */
     @NonNull
-    public LatchedSingleResponseListener<T> assertNoError() {
-        latchedResultListener.assertNoError();
-        return this;
+    public T awaitSuccessResponse() {
+        final GraphQLResponse<T> response = latchedResultListener.awaitResult();
+        Assert.assertFalse(response.getErrors().toString(), response.hasErrors());
+        Assert.assertNotNull("No data in GraphQLResponse", response.getData());
+        return response.getData();
     }
 
     /**
-     * Asserts that this listener received a response.
-     * It is an usage error to call this before calling {@link #awaitTerminalEvent()}.
-     * @return Current {@link LatchedSingleResponseListener} instance for fluent call chaining
+     * Await a GraphQLResponse which contains (a) error(s).
+     * @return The errors
      */
     @NonNull
-    public LatchedSingleResponseListener<T> assertResponse() {
-        latchedResultListener.assertResult();
-        return this;
-    }
-
-    /**
-     * Gets the value of the response, if present, as it had been received in
-     * {@link #onResult(GraphQLResponse)}.
-     * It is a usage error to call this before {@link #awaitTerminalEvent()}.
-     * @return the value of the response that was received in the result callback.
-     */
-    @NonNull
-    public GraphQLResponse<T> getResponse() {
-        return latchedResultListener.getResult();
-    }
-
-    /**
-     * Gets the error that had been received in {@link #onError(Throwable)}.
-     * It is a usage error to call this before calling {@link #awaitTerminalEvent()}.
-     * @return The error that had been received in the error callback.
-     */
-    @Nullable
-    public Throwable getError() {
-        return latchedResultListener.getError();
+    public List<GraphQLResponse.Error> awaitErrors() {
+        final GraphQLResponse<T> response = latchedResultListener.awaitResult();
+        Assert.assertTrue("Expected errors, but response had none.", response.hasErrors());
+        return response.getErrors();
     }
 }

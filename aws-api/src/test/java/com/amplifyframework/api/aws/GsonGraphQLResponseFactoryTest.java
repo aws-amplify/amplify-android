@@ -25,6 +25,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -137,8 +138,7 @@ public final class GsonGraphQLResponseFactoryTest {
     @Test
     public void partialResponseCanBeRenderedAsStringType() throws JSONException {
         // Arrange some known JSON response
-        final JSONObject partialResponseJson =
-                new JSONObject(Resources.readAsString("partial-gql-response.json"));
+        final JSONObject partialResponseJson = Resources.readAsJson("partial-gql-response.json");
 
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
@@ -148,6 +148,29 @@ public final class GsonGraphQLResponseFactoryTest {
         assertEquals(
                 partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(),
                 response.getData()
+        );
+    }
+
+    /**
+     * The response to a base sync query must be resolvable by the response factory.
+     */
+    @Test
+    public void syncQueryResponseCanBeRenderedAsStringType() {
+        final JSONObject baseQueryResponseJson =
+            Resources.readAsJson("base-sync-posts-response.json");
+
+        final Iterable<String> queryResults =
+            responseFactory.buildSingleArrayResponse(baseQueryResponseJson.toString(), String.class)
+                .getData();
+
+        final List<String> resultJsons = new ArrayList<>();
+        for (final String queryResult : queryResults) {
+            resultJsons.add(queryResult);
+        }
+
+        assertEquals(
+            Resources.readLines("base-sync-posts-response-items.json"),
+            resultJsons
         );
     }
 }

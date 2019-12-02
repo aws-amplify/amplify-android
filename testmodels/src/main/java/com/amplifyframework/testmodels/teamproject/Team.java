@@ -13,12 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.teamproject;
 
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -26,32 +25,25 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import java.util.Objects;
 import java.util.UUID;
 
-/** This is an auto generated class representing the Rating type in your schema. */
+/** This is an auto generated class representing the Team type in your schema. */
 @SuppressWarnings("all")
-@ModelConfig(pluralName = "Ratings")
-public final class Rating implements Model {
+@ModelConfig
+public final class Team implements Model {
     public static final QueryField ID = QueryField.field("id");
-    public static final QueryField STARS = QueryField.field("stars");
-    public static final QueryField POST = QueryField.field("ratingPostId");
+    public static final QueryField NAME = QueryField.field("name");
     private final @ModelField(targetType="ID", isRequired = true) String id;
-    private final @ModelField(targetType="Int", isRequired = true) Integer stars;
-    private final @ModelField(targetType="Post", isRequired = true) @BelongsTo(targetName = "ratingPostId", type = Post.class) Post post;
+    private final @ModelField(targetType="String", isRequired = true) String name;
     public String getId() {
         return id;
     }
 
-    public Integer getStars() {
-        return stars;
+    public String getName() {
+        return name;
     }
 
-    public Post getPost() {
-        return post;
-    }
-
-    private Rating(String id, Integer stars, Post post) {
+    private Team(String id, String name) {
         this.id = id;
-        this.stars = stars;
-        this.post = post;
+        this.name = name;
     }
 
     @Override
@@ -61,10 +53,9 @@ public final class Rating implements Model {
         } else if(obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            Rating rating = (Rating) obj;
-            return ObjectsCompat.equals(getId(), rating.getId()) &&
-                    ObjectsCompat.equals(getStars(), rating.getStars()) &&
-                    ObjectsCompat.equals(getPost(), rating.getPost());
+            Team team = (Team) obj;
+            return ObjectsCompat.equals(getId(), team.getId()) &&
+                    ObjectsCompat.equals(getName(), team.getName());
         }
     }
 
@@ -72,25 +63,21 @@ public final class Rating implements Model {
     public int hashCode() {
         return new StringBuilder()
                 .append(getId())
-                .append(getStars())
-                .append(getPost())
+                .append(getName())
                 .hashCode();
-    }
-
-    public static StarsStep builder() {
-        return new Builder();
     }
 
     /**
      * WARNING: This method should not be used to build an instance of this object for a CREATE mutation.
+     *
      * This is a convenience method to return an instance of the object with only its ID populated
      * to be used in the context of a parameter in a delete mutation or referencing a foreign key
      * in a relationship.
      * @param id the id of the existing item this instance will represent
      * @return an instance of this model with only ID populated
      * @throws IllegalArgumentException Checks that ID is in the proper format
-     **/
-    public static Rating justId(String id) {
+     */
+    public static Team justId(String id) {
         try {
             UUID.fromString(id); // Check that ID is in the UUID format - if not an exception is thrown
         } catch (Exception exception) {
@@ -100,59 +87,48 @@ public final class Rating implements Model {
                             "creating a new object, use the standard builder method and leave the ID field blank."
             );
         }
-        return new Rating(
+
+        return new Team(
                 id,
-                null,
                 null
         );
     }
 
-    public CopyOfBuilder copyOfBuilder() {
-        return new CopyOfBuilder(id,
-                stars,
-                post);
-    }
-    public interface StarsStep {
-        PostStep stars(Integer stars);
+    public static NameStep builder() {
+        return new Builder();
     }
 
-
-    public interface PostStep {
-        BuildStep post(Post post);
+    public NewBuilder newBuilder() {
+        return new NewBuilder(id,
+                name);
+    }
+    public interface NameStep {
+        BuildStep name(String name);
     }
 
 
     public interface BuildStep {
-        Rating build();
+        Team build();
         BuildStep id(String id) throws IllegalArgumentException;
     }
 
 
-    public static class Builder implements StarsStep, PostStep, BuildStep {
+    public static class Builder implements NameStep, BuildStep {
         private String id;
-        private Integer stars;
-        private Post post;
+        private String name;
         @Override
-        public Rating build() {
+        public Team build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
 
-            return new Rating(
+            return new Team(
                     id,
-                    stars,
-                    post);
+                    name);
         }
 
         @Override
-        public PostStep stars(Integer stars) {
-            Objects.requireNonNull(stars);
-            this.stars = stars;
-            return this;
-        }
-
-        @Override
-        public BuildStep post(Post post) {
-            Objects.requireNonNull(post);
-            this.post = post;
+        public BuildStep name(String name) {
+            Objects.requireNonNull(name);
+            this.name = name;
             return this;
         }
 
@@ -178,21 +154,15 @@ public final class Rating implements Model {
     }
 
 
-    public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, Integer stars, Post post) {
+    public final class NewBuilder extends Builder {
+        private NewBuilder(String id, String name) {
             super.id(id);
-            super.stars(stars)
-                    .post(post);
+            super.name(name);
         }
 
         @Override
-        public CopyOfBuilder stars(Integer stars) {
-            return (CopyOfBuilder) super.stars(stars);
-        }
-
-        @Override
-        public CopyOfBuilder post(Post post) {
-            return (CopyOfBuilder) super.post(post);
+        public NewBuilder name(String name) {
+            return (NewBuilder) super.name(name);
         }
     }
 

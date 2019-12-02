@@ -47,7 +47,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Converts provided model or class type into a request container
@@ -332,8 +331,7 @@ final class AppSyncGraphQLRequestFactory {
 
         StringBuilder result = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(clazz);
-        final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
-        Iterator<Field> iterator = classFields.iterator();
+        Iterator<Field> iterator = FieldFinder.findFieldsIn(clazz).iterator();
 
         while (iterator.hasNext()) {
             Field field = iterator.next();

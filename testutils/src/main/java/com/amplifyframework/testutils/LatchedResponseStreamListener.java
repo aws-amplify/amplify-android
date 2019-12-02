@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.testutils;
 
 import androidx.annotation.NonNull;
 
@@ -22,6 +22,8 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.StreamListener;
+
+import org.junit.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -101,18 +103,27 @@ public final class LatchedResponseStreamListener<T> implements StreamListener<Gr
     /**
      * Waits for all responses to arrive. The number of responses that will be
      * expected are the number provided at {@link #LatchedResponseStreamListener(int)}.
-     * @return A list of all responses received, if at least as many were received as requested
-     * @throws Throwable If fewer than the expected number of responses were obtained
+     * Validates that no response contains any error. Aggregates non-null response data
+     * into the returned list.
+     * @return A list of all data from received responses, if at least as many were received as requested
+     * @throws Throwable If fewer than the expected number of responses were obtained,
+     *                   or if any had errors, or if any had null data in its response
      */
     @NonNull // Possibly empty, though
-    public List<GraphQLResponse<T>> awaitItems() throws Throwable {
+    public List<T> awaitSuccessfulResponses() throws Throwable {
         if (!allItemsLatch.await(latchTimeoutMs, TimeUnit.MILLISECONDS)) {
             throw new IllegalStateException("Items count down latch did not count down.");
         }
         if (error != null) {
             throw error;
         }
-        return Immutable.of(items);
+        List<T> results = new ArrayList<>();
+        for (GraphQLResponse<T> responseItem : items) {
+            Assert.assertFalse(responseItem.getErrors().toString(), responseItem.hasErrors());
+            Assert.assertNotNull("A response contained no data.", responseItem.getData());
+            results.add(responseItem.getData());
+        }
+        return Immutable.of(results);
     }
 
     /**

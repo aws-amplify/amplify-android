@@ -23,7 +23,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.LatchedResultListener;
 import com.amplifyframework.testutils.RandomString;
 
@@ -90,7 +90,7 @@ public class SyncEngineTest {
         LatchedResultListener<StorageItemChange.Record> listener =
             LatchedResultListener.waitFor(OPERATIONS_TIMEOUT_MS);
         localStorageAdapter.save(susan, StorageItemChange.Initiator.DATA_STORE_API, listener);
-        listener.awaitTerminalEvent().assertNoError().assertResult();
+        listener.awaitResult();
 
         // Wait for the mock network callback to occur on the IO scheduler ...
         assertTrue(apiInvoked.await(OPERATIONS_TIMEOUT_MS, TimeUnit.MILLISECONDS));
