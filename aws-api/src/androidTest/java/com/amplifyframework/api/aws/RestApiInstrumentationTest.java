@@ -20,9 +20,13 @@ import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Amplify;
 
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -42,14 +46,76 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make api Rest call in none auth.
+     * @throws JSONException Exception is thrown if JSON parsing fails.
      */
     @Test
-    public void getRequestWithNoAuth() {
+    public void getRequestWithNoAuth() throws JSONException {
         final RestOptions options = new RestOptions("simplesuccess");
         LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
         Amplify.API.get("nonAuthApi", options, responseListener);
-        RestResponse getResponse =
-                responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue(getResponse.getData() != null);
+        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
+        assertTrue("Should return a non null data", response.getData() != null);
+
+        final JSONObject resultJSON = response.getData().asJSONObject();
+        final JSONObject contextJSON = resultJSON.getJSONObject("context");
+        assertNotNull("Should contain an object called context", contextJSON);
+        assertEquals(
+                "Should return the right value",
+                "GET",
+                contextJSON.getString("http-method"));
+        assertEquals(
+                "Should return the right value",
+                "/simplesuccess",
+                contextJSON.getString("resource-path"));
+    }
+
+    /**
+     * Test whether we can make POST api Rest call in none auth.
+     * @throws JSONException Exception is thrown if JSON parsing fails.
+     */
+    @Test
+    public void postRequestWithNoAuth() throws JSONException {
+        final RestOptions options = new RestOptions("simplesuccess", "sample body".getBytes());
+        LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
+        Amplify.API.post("nonAuthApi", options, responseListener);
+        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
+        assertTrue("Should return a non null data", response.getData() != null);
+
+        final JSONObject resultJSON = response.getData().asJSONObject();
+        final JSONObject contextJSON = resultJSON.getJSONObject("context");
+        assertNotNull("Should contain an object called context", contextJSON);
+        assertEquals(
+                "Should return the right value",
+                "POST",
+                contextJSON.getString("http-method"));
+        assertEquals(
+                "Should return the right value",
+                "/simplesuccess",
+                contextJSON.getString("resource-path"));
+    }
+
+    /**
+     * Test whether we can make api Rest call in api key as auth type.
+     * @throws JSONException Exception is thrown if JSON parsing fails.
+     */
+    @Test
+    public void getRequestWithApiKey() throws JSONException {
+        final RestOptions options = new RestOptions("simplesuccessapikey");
+        LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
+        Amplify.API.get("apiKeyApi", options, responseListener);
+        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
+        assertTrue("Should return a non null data", response.getData() != null);
+
+        final JSONObject resultJSON = response.getData().asJSONObject();
+        final JSONObject contextJSON = resultJSON.getJSONObject("context");
+        assertNotNull("Should contain an object called context", contextJSON);
+        assertEquals(
+                "Should return the right value",
+                "GET",
+                contextJSON.getString("http-method"));
+        assertEquals(
+                "Should return the right value",
+                "/simplesuccessapikey",
+                contextJSON.getString("resource-path"));
     }
 }
