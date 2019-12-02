@@ -43,12 +43,15 @@ import java.util.List;
  * format alongside its selection arguments.
  *
  * For example:
+ *<pre>
+ *     {@code
+ *     QueryPredicate nameCheck = QueryField.field("name").eq("Jane");
+ *     SQLPredicate adapted = new SQLPredicate(nameCheck);
+ *     System.out.println(adapted.toString()); // Prints "name = ?"
+ *     System.out.println(adapted.getSelectionArgs()); // Prints "[Jane]"
+ *     }
+ *</pre>
  *
- * QueryPredicate nameCheck = QueryField.field("name").eq("Jane");
- * SQLPredicate adapted = new SQLPredicate(nameCheck);
- *
- * System.out.println(adapted.toString()); // Prints "name = ?"
- * System.out.println(adapted.getSelectionArgs()); // Prints "[Jane]"
  */
 public final class SQLPredicate {
     private final List<String> selectionArgs;
