@@ -46,6 +46,7 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make api Rest call in none auth.
+     * @throws JSONException Exception is thrown if JSON parsing fails.
      */
     @Test
     public void getRequestWithNoAuth() throws JSONException {
@@ -56,7 +57,7 @@ public final class RestApiInstrumentationTest {
                 responseListener.awaitTerminalEvent().awaitSuccessResponse();
         assertTrue(response.getData() != null);
 
-        final JSONObject resultJSON =new JSONObject(new String(response.getData().getRawBytes()));
+        final JSONObject resultJSON = new JSONObject(new String(response.getData().getRawBytes()));
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
@@ -71,6 +72,7 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make POST api Rest call in none auth.
+     * @throws JSONException Exception is thrown if JSON parsing fails.
      */
     @Test
     public void postRequestWithNoAuth() throws JSONException {
@@ -81,7 +83,7 @@ public final class RestApiInstrumentationTest {
                 responseListener.awaitTerminalEvent().awaitSuccessResponse();
         assertTrue(response.getData() != null);
 
-        final JSONObject resultJSON =new JSONObject(new String(response.getData().getRawBytes()));
+        final JSONObject resultJSON = new JSONObject(new String(response.getData().getRawBytes()));
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
@@ -96,6 +98,7 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make api Rest call in api key as auth type.
+     * @throws JSONException Exception is thrown if JSON parsing fails.
      */
     @Test
     public void getRequestWithApiKey() throws JSONException {
@@ -106,7 +109,7 @@ public final class RestApiInstrumentationTest {
                 responseListener.awaitTerminalEvent().awaitSuccessResponse();
         assertTrue(response.getData() != null);
 
-        final JSONObject resultJSON =new JSONObject(new String(response.getData().getRawBytes()));
+        final JSONObject resultJSON = new JSONObject(new String(response.getData().getRawBytes()));
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(

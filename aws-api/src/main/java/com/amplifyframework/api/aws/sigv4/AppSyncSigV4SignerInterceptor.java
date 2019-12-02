@@ -137,7 +137,7 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
         Buffer body = null;
 
-        if (req.body()  != null) {
+        if (req.body() != null) {
             //write the body to a byte array stream.
             final Buffer buffer = new Buffer();
             req.body().writeTo(buffer);
