@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.network;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
@@ -59,22 +60,24 @@ class RemoteModelMutations {
         return Observable.defer(() -> Observable.create(emitter -> {
             emitter.setCancellable(() -> {
                 synchronized (subscriptions) {
-                    for (Subscription<? extends Model> subscription : subscriptions) {
+                    for (final Subscription<?> subscription : subscriptions) {
                         subscription.end();
                     }
                     subscriptions.clear();
                 }
             });
 
-            for (Class<? extends Model> modelClass : modelProvider.models()) {
-                for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-                    subscriptions.add(Subscription.request()
-                        .api(api)
-                        .apiNameProvider(apiNameProvider)
-                        .modelClass(modelClass)
-                        .subscriptionType(subscriptionType)
-                        .commonEmitter(emitter)
-                        .begin());
+            synchronized (subscriptions) {
+                for (Class<? extends Model> modelClass : modelProvider.models()) {
+                    for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+                        subscriptions.add(Subscription.request()
+                            .api(api)
+                            .apiNameProvider(apiNameProvider)
+                            .modelClass(modelClass)
+                            .subscriptionType(subscriptionType)
+                            .commonEmitter(emitter)
+                            .begin());
+                    }
                 }
             }
         }));
@@ -188,6 +191,7 @@ class RemoteModelMutations {
                 }
             }
 
+            @SuppressLint("SyntheticAccessor")
             @Override
             public void onComplete() {
                 LOG.info(String.format(

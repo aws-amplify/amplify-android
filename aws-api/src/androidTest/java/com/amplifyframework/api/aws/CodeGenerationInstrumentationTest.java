@@ -156,13 +156,15 @@ public final class CodeGenerationInstrumentationTest {
                 streamListener
         );
 
+        LatchedSingleResponseListener<Person> creationListener = new LatchedSingleResponseListener<>();
         Amplify.API.mutate(
                 PERSON_API_NAME,
                 person,
                 null,
                 MutationType.CREATE,
-                null
+                creationListener
         );
+        creationListener.awaitSuccessResponse();
 
         // Validate that subscription received the newly created person.
         List<Person> peopleOnSubscription = streamListener.awaitSuccessfulResponses();

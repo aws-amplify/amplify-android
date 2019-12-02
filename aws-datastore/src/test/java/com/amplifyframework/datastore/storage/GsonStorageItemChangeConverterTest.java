@@ -16,8 +16,8 @@
 package com.amplifyframework.datastore.storage;
 
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.testmodels.personcar.MaritalStatus;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.commentsblog.Blog;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Test;
 
@@ -40,16 +40,16 @@ public class GsonStorageItemChangeConverterTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void convertStorageItemChangeToRecordAndBack() throws DataStoreException {
-        // Arrange a StorageItemChange<Person> with an expected change ID
+        // Arrange a StorageItemChange<Blog> with an expected change ID
         String expectedChangeId = UUID.randomUUID().toString();
-        StorageItemChange<Person> originalItemChange = StorageItemChange.<Person>builder()
+        StorageItemChange<Blog> originalItemChange = StorageItemChange.<Blog>builder()
             .changeId(expectedChangeId)
-            .itemClass(Person.class)
-            .item(Person.builder()
-                .firstName("Tabitha")
-                .lastName("Stevens")
-                .age(52)
-                .relationship(MaritalStatus.married)
+            .itemClass(Blog.class)
+            .item(Blog.builder()
+                .name("A neat blog")
+                .owner(BlogOwner.builder()
+                    .name("Joe Swanson")
+                    .build())
                 .build())
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .type(StorageItemChange.Type.SAVE)
@@ -64,7 +64,7 @@ public class GsonStorageItemChangeConverterTest {
         assertEquals(expectedChangeId, record.getId());
 
         // Now, try to convert it back...
-        StorageItemChange<Person> reconstructedItemChange = converter.fromRecord(record);
+        StorageItemChange<Blog> reconstructedItemChange = converter.fromRecord(record);
         assertEquals(expectedChangeId, reconstructedItemChange.changeId().toString());
         assertEquals(originalItemChange, reconstructedItemChange);
     }
