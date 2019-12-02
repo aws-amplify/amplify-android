@@ -67,12 +67,12 @@ public final class RestResponse {
     /**
      * Data representing the response of the HTTP request.
      */
-    public final class Data {
+    public static final class Data {
 
         /**
          * Data returned by the response.
          */
-        private byte[] bytes;
+        private final byte[] bytes;
 
         /**
          * Constructs a data object with the raw bytes.
@@ -111,7 +111,7 @@ public final class RestResponse {
     /**
      * Status code of the response.
      */
-    public final class Code {
+    public static final class Code {
 
         private final int statusCode;
         private final Range<Integer> validCodes = new Range<Integer>(100, 599);

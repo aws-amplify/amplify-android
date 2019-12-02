@@ -76,7 +76,7 @@ public final class AWSRestOperation extends RestOperation {
                     getRequest().getQueryParameters());
             Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
                     getRequest().getData(),
-                    getRequest().getOperationType());
+                    getRequest().getHttpMethod());
             ongoingCall = client.newCall(request);
             ongoingCall.enqueue(new AWSRestOperation.OkHttpCallback());
         } catch (Exception error) {
@@ -127,7 +127,9 @@ public final class AWSRestOperation extends RestOperation {
         public void onFailure(@NonNull Call call,
                               @NonNull IOException ioe) {
             ApiException wrappedError =
-                    new ApiException("Received an IO exception while making the request.", ioe);
+                    new ApiException("Received an IO exception while making the request.",
+                            ioe,
+                            "Retry the request.");
             if (responseListener != null) {
                 responseListener.onError(wrappedError);
             }
