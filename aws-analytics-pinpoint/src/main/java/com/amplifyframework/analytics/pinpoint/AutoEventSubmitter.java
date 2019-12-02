@@ -56,5 +56,4 @@ final class AutoEventSubmitter {
 
         submitRunnable = null;
     }
-
 }

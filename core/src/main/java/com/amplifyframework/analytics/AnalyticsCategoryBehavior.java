@@ -49,7 +49,7 @@ public interface AnalyticsCategoryBehavior {
 
     /**
      * Record the event by storing in the local database.
-     * @param eventName name of the event. An AnalyticsEvent is constructed
+     * @param eventName name of the event. An AnalyticsEventType is constructed
      *                  based on the name of the event.
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
@@ -59,16 +59,16 @@ public interface AnalyticsCategoryBehavior {
 
     /**
      * Record the event by storing in the local database.
-     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
+     * @param analyticsEvent object that encapsulates the details of an AnalyticsEventType
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
      * @throws ConfigurationException If the category is badly/not yet configured
      */
-    void recordEvent(@NonNull BasicAnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
+    void recordEvent(@NonNull AnalyticsEventType analyticsEvent) throws AnalyticsException, ConfigurationException;
 
     /**
      * Register properties that will be recorded by all the subsequent calls to
-     * {@link #recordEvent(BasicAnalyticsEvent)}. Properties registered here can be overridden
+     * {@link #recordEvent(AnalyticsEventType)}. Properties registered here can be overridden
      * by the ones with the same name when calling `recordEvent`.
      *
      * Examples of global properties would be `selectedPlan`, `campaignSource`

@@ -15,21 +15,19 @@
 
 package com.amplifyframework.analytics;
 
-abstract class AnalyticsEventType {
+/**
+ * Defines contract for different types of analytics event.
+ */
+public interface AnalyticsEventType {
+    /**
+     * Return event name.
+     * @return event name
+     */
+    String getName();
 
-    private final String eventType;
-    private final Properties properties;
-
-    AnalyticsEventType(String eventType, Properties properties) {
-        this.eventType = eventType;
-        this.properties = properties;
-    }
-
-    public String getEventType() {
-        return eventType;
-    }
-
-    public Properties getProperties() {
-        return properties;
-    }
+    /**
+     * Return event properties.
+     * @return event properties
+     */
+    Properties getProperties();
 }

@@ -18,15 +18,28 @@ package com.amplifyframework.analytics;
 /**
  * Represents event in its most general form and can have different properties.
  */
-public class BasicAnalyticsEvent extends AnalyticsEventType {
+public final class BasicAnalyticsEvent implements AnalyticsEventType {
+    private final String name;
+    private final Properties properties;
 
     /**
      * Construct a general analytics event.
      *
-     * @param eventType name for the event.
+     * @param name name for the event.
      * @param properties event properties.
      */
-    public BasicAnalyticsEvent(String eventType, Properties properties) {
-        super(eventType, properties);
+    public BasicAnalyticsEvent(String name, Properties properties) {
+        this.name = name;
+        this.properties = properties;
+    }
+
+    @Override
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public Properties getProperties() {
+        return properties;
     }
 }

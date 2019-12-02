@@ -19,10 +19,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.analytics.AnalyticsEventType;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
-import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.plugin.PluginException;
@@ -40,8 +40,6 @@ import java.util.Set;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
-
-    private static final String TAG = AmazonPinpointAnalyticsPlugin.class.getSimpleName();
     private AutoEventSubmitter autoEventSubmitter;
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
@@ -100,11 +98,11 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void recordEvent(@NonNull BasicAnalyticsEvent analyticsEvent)
+    public void recordEvent(@NonNull AnalyticsEventType analyticsEvent)
             throws AnalyticsException, ConfigurationException {
 
         final AnalyticsEvent pinpointEvent =
-                analyticsClient.createEvent(analyticsEvent.getEventType());
+                analyticsClient.createEvent(analyticsEvent.getName());
 
         if (analyticsEvent.getProperties() != null) {
             for (Map.Entry<String, Property<?>> entry : analyticsEvent.getProperties().get().entrySet()) {
