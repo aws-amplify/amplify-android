@@ -33,6 +33,7 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
+     * @throws AmplifyException Exception is thrown if configuration fails.
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
