@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by Storage category plugins.
  */
-public class StorageException extends AmplifyException {
+public final class StorageException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,13 +50,5 @@ public class StorageException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
-    }
-
-    public static StorageException selectedPluginIssue(Throwable rootCause) {
-        return new StorageException(
-                "Couldn't select a default plugin for Storage",
-                rootCause,
-                "Check the included exception for details"
-        );
     }
 }

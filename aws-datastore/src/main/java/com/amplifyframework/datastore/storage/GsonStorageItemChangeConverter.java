@@ -17,8 +17,8 @@ package com.amplifyframework.datastore.storage;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
-
 import com.amplifyframework.datastore.DataStoreException;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.TypeAdapter;

@@ -37,6 +37,7 @@ public final class AWSApiPluginConfigurationReaderTest {
     /**
      * An attempt to read a null JSON object should result in a
      * configuration exception.
+     * @throws ApiException From API configuration
      */
     @Test(expected = ApiException.class)
     public void readFromNullJsonObjectThrowsConfigurationException() throws ApiException {
@@ -47,6 +48,7 @@ public final class AWSApiPluginConfigurationReaderTest {
      * An attempt to read from an empty JSON object should result in a configuration
      * exception.
      * @throws JSONException On failure to arrange test inputs
+     * @throws ApiException From API configuration
      */
     @Test(expected = ApiException.class)
     public void readFromApiWithNoSpecThrowsConfigurationException() throws JSONException, ApiException {
@@ -57,13 +59,13 @@ public final class AWSApiPluginConfigurationReaderTest {
     /**
      * Validates that the configuration reader is able to parse a valid config
      * for a single API spec, returning a modeled object that resembles the input.
-     * @throws JSONException On failure to arrange the test input
+     * @throws ApiException From API configuration
      */
     @Test
-    public void readFromWellFormedJsonObjectProducesValidConfig() throws JSONException, ApiException {
+    public void readFromWellFormedJsonObjectProducesValidConfig() throws ApiException {
 
         // Arrange an input JSONObject
-        final JSONObject json = new JSONObject(Resources.readAsString("single-api.config"));
+        final JSONObject json = Resources.readAsJson("single-api.config");
 
         // Act: try to parse it to a modeled configuration object
         final AWSApiPluginConfiguration config = AWSApiPluginConfigurationReader.readFrom(json);

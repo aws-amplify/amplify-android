@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageListOperation;
@@ -43,10 +45,10 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
      * @param request list request parameters
      * @param resultListener notified when list operation results are available
      */
-    public AWSS3StorageListOperation(AWSS3StorageService storageService,
-                                     ExecutorService executorService,
-                                     AWSS3StorageListRequest request,
-                                     ResultListener<StorageListResult> resultListener) {
+    public AWSS3StorageListOperation(@NonNull AWSS3StorageService storageService,
+                                     @NonNull ExecutorService executorService,
+                                     @NonNull AWSS3StorageListRequest request,
+                                     @NonNull ResultListener<StorageListResult> resultListener) {
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
@@ -63,39 +65,29 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
 
                 try {
                     StorageListResult result = storageService.listFiles(
-                            S3RequestUtils.getServiceKey(
-                                    getRequest().getAccessLevel(),
-                                    identityId,
-                                    getRequest().getPath(),
-                                    getRequest().getTargetIdentityId()
-                            )
+                        S3RequestUtils.getServiceKey(
+                            getRequest().getAccessLevel(),
+                            identityId,
+                            getRequest().getPath(),
+                            getRequest().getTargetIdentityId()
+                        )
                     );
 
-                    if (resultListener != null) {
-                        resultListener.onResult(result);
-                    }
+                    resultListener.onResult(result);
                 } catch (Exception exception) {
-                    if (resultListener != null) {
-                        resultListener.onError(new StorageException(
-                                "Something went wrong with your AWS S3 Storage list operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                        ));
-                    } else {
-                        // TODO: Dispatch on Hub
-                    }
+                    resultListener.onError(new StorageException(
+                        "Something went wrong with your AWS S3 Storage list operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
                 }
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "AWSMobileClient could not get user id.",
-                            exception,
-                            "Check whether you initialized AWSMobileClient and waited for its success callback " +
-                                    "before calling Amplify config."
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "AWSMobileClient could not get user id.",
+                    exception,
+                    "Check whether you initialized AWSMobileClient and waited for its success callback " +
+                            "before calling Amplify config."
+                ));
             }
         });
     }

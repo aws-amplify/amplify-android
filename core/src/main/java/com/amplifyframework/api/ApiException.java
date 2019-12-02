@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by API category plugins.
  */
-public class ApiException extends AmplifyException {
+public final class ApiException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,13 +50,5 @@ public class ApiException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
-    }
-
-    public static ApiException selectedPluginIssue(Throwable rootCause) {
-        return new ApiException(
-                "Couldn't select a default plugin for API",
-                rootCause,
-                "Check the included exception for details"
-        );
     }
 }

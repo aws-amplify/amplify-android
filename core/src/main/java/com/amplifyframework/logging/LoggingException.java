@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by Logging category plugins.
  */
-public class LoggingException extends AmplifyException {
+public final class LoggingException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 

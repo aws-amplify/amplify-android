@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by Hub category plugins.
  */
-public class HubException extends AmplifyException {
+public final class HubException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 

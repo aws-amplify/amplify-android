@@ -14,8 +14,6 @@
  */
 
 apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/android-lint.gradle")
 
 android {
     compileSdkVersion 29
@@ -36,13 +34,15 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility 1.8
+        targetCompatibility 1.8
     }
 }
 
 dependencies {
     implementation project(path: ':core')
     implementation 'androidx.core:core:1.1.0'
+    testImplementation 'junit:junit:4.12'
+    testImplementation project(path: ':testutils')
 }
 

@@ -169,6 +169,7 @@ public final class GraphQLResponse<T> {
          * @param <T> The type of the data field in the response object
          * @return An instance of the casting class which models the data
          *         provided in the response JSON string
+         * @throws ApiException If the class provided mismatches the data
          */
         <T> GraphQLResponse<T> buildSingleItemResponse(String apiResponseJson, Class<T> classToCast)
             throws ApiException;
@@ -183,6 +184,7 @@ public final class GraphQLResponse<T> {
          * @param <T> The type of the elements in the data field list in the response object
          * @return An instance of the casting class which models the data
          *         provided in the response JSON string
+         * @throws ApiException If the class provided mismatches the data
          */
         <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast)
             throws ApiException;

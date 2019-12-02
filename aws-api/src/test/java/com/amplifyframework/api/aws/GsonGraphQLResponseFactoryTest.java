@@ -26,6 +26,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -54,6 +55,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * the response object builder. Null data and/or error will
      * return a non-null response object with null data and/or
      * an empty list of errors.
+     * @throws ApiException From API configuration
      */
     @Test
     public void nullDataNullErrorsReturnsEmptyResponseObject() throws ApiException {
@@ -75,6 +77,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * Validates that the converter is able to parse a partial GraphQL
      * response into a result. In this case, the result contains some
      * data, but also a list of errors.
+     * @throws ApiException From API configuration
      */
     @Test
     public void partialResponseRendersWithTodoDataAndErrors() throws ApiException {
@@ -134,12 +137,12 @@ public final class GsonGraphQLResponseFactoryTest {
      * It is possible to cast the response data as a string, instead of as the strongly
      * modeled type, if you choose to do so.
      * @throws JSONException Shouldn't, but might while arranging test input
+     * @throws ApiException From API configuration
      */
     @Test
     public void partialResponseCanBeRenderedAsStringType() throws JSONException, ApiException {
         // Arrange some known JSON response
-        final JSONObject partialResponseJson =
-                new JSONObject(Resources.readAsString("partial-gql-response.json"));
+        final JSONObject partialResponseJson = Resources.readAsJson("partial-gql-response.json");
 
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
@@ -149,6 +152,30 @@ public final class GsonGraphQLResponseFactoryTest {
         assertEquals(
                 partialResponseJson.getJSONObject("data").getJSONObject("listTodos").toString(),
                 response.getData()
+        );
+    }
+
+    /**
+     * The response to a base sync query must be resolvable by the response factory.
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void syncQueryResponseCanBeRenderedAsStringType() throws ApiException {
+        final JSONObject baseQueryResponseJson =
+            Resources.readAsJson("base-sync-posts-response.json");
+
+        final Iterable<String> queryResults =
+            responseFactory.buildSingleArrayResponse(baseQueryResponseJson.toString(), String.class)
+                .getData();
+
+        final List<String> resultJsons = new ArrayList<>();
+        for (final String queryResult : queryResults) {
+            resultJsons.add(queryResult);
+        }
+
+        assertEquals(
+            Resources.readLines("base-sync-posts-response-items.json"),
+            resultJsons
         );
     }
 }

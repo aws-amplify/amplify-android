@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by Analytics category plugins.
  */
-public class AnalyticsException extends AmplifyException {
+public final class AnalyticsException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,13 +50,5 @@ public class AnalyticsException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
-    }
-
-    public static AnalyticsException selectedPluginIssue(Throwable rootCause) {
-        return new AnalyticsException(
-                "Couldn't select a default plugin for Analytics",
-                rootCause,
-                "Check the included exception for details"
-        );
     }
 }

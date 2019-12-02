@@ -17,8 +17,6 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.ApiException;
-
 /**
  * An enumeration of the values that are possible in the "type" field
  * of a subscription message.

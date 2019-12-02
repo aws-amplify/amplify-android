@@ -63,6 +63,7 @@ public final class LatchedResultListener<T> implements ResultListener<T> {
      * @param <T> Type of result being awaited
      * @return A LatchedResultListener configured to wait for the provided number of milliseconds
      */
+    @NonNull
     public static <T> LatchedResultListener<T> waitFor(long milliseconds) {
         return new LatchedResultListener<>(milliseconds);
     }
@@ -75,29 +76,27 @@ public final class LatchedResultListener<T> implements ResultListener<T> {
      * @return An instance of a LatchedResultListener, configure to await a result
      *         for a default waiting time.
      */
+    @NonNull
     public static <T> LatchedResultListener<T> instance() {
         return new LatchedResultListener<>(REASONABLE_WAIT_TIME_MS);
     }
 
     @Override
-    public void onResult(T result) {
+    public void onResult(@NonNull T result) {
         resultReference.set(result);
         completionsPending.countDown();
     }
 
     @Override
-    public void onError(Throwable error) {
+    public void onError(@NonNull Throwable error) {
         errorReference.set(error);
         completionsPending.countDown();
     }
 
     /**
-     * Await a terminal event in the listener. A terminal event
-     * is either an invocation of {@link ResultListener#onError(Throwable)},
-     * or of {@link ResultListener#onResult(Object)}, whichever shall occur
-     * first.
-     * @return The current instance of the {@link LatchedResultListener},
-     *         for the utility of fluent method chaining
+     * Awaits a terminal event, either a result or an error.
+     * @return Current instance of the {@link LatchedResultListener}, for
+     *         fluent method chaining
      */
     @NonNull
     public LatchedResultListener<T> awaitTerminalEvent() {
@@ -109,84 +108,36 @@ public final class LatchedResultListener<T> implements ResultListener<T> {
         }
         Assert.assertTrue("Listener did not count down...", didCountDown);
 
-        return LatchedResultListener.this;
+        return this;
     }
 
     /**
-     * Assert that no errors have been received by the listener.
-     * This should be called only after {@link #awaitTerminalEvent()};
-     * It is a usage error to call this before calling {@link #awaitTerminalEvent()}.
-     * @return The current instance of the {@link LatchedResultListener},
-     *         for the utility of fluent method chaining
+     * Awaits a successful result.
+     * If the listener did not get a result, and/or if it got an error,
+     * this will throw an {@link AssertionError}.
+     * @return The result value
      */
     @NonNull
-    public LatchedResultListener<T> assertNoError() {
+    public T awaitResult() {
+        awaitTerminalEvent();
         final Throwable error = errorReference.get();
-        Assert.assertNull("Had error: " + Log.getStackTraceString(error), error);
-        return LatchedResultListener.this;
+        Assert.assertNull("Listener got error: " + Log.getStackTraceString(error), error);
+        T result = resultReference.get();
+        Assert.assertNotNull("Listener has no result data.", result);
+        return result;
     }
 
     /**
-     * Asserts that an error was received by the listener.
-     * This should be called only after {@link #awaitTerminalEvent()}.
-     * It is a usage error to call this before calling {@link #awaitTerminalEvent()}.
-     * @return The current instance of the {@link LatchedResultListener},
-     *         for the purpose of fluent method chaining
-     */
-    public LatchedResultListener<T> assertError() {
-        Assert.assertTrue("Expected an error, but had none.", hasError());
-        return LatchedResultListener.this;
-    }
-
-    /**
-     * Asserts that the listener has received a non-null result.
-     * @return True if the listener has received a non-null result; false, otherwise
+     * Awaits receipt of an error.
+     * @return The error received by the listener.
      */
     @NonNull
-    public LatchedResultListener<T> assertResult() {
-        final T result = resultReference.get();
-        Assert.assertNotNull("Expected a result, but had null.", result);
-        return LatchedResultListener.this;
-    }
-
-    /**
-     * Gets the value of the of the result, as received int the {@link ResultListener#onResult(Object)}
-     * callback. It is a usage error to call this method before {@link #awaitTerminalEvent()} has been called.
-     * @return The value which the listener received in {@link ResultListener#onResult(Object)}.
-     */
-    @NonNull
-    public T getResult() {
-        Assert.assertTrue(hasResult());
-        return resultReference.get();
-    }
-
-    /**
-     * Checks if the listener has received a result.
-     * It is a usage error to call this before first calling {@link #awaitTerminalEvent()}.
-     * @return True if the listener has received a result; false, otherwise
-     */
-    public boolean hasResult() {
-        return resultReference.get() != null;
-    }
-
-    /**
-     * Gets the value of the error that was obtained via {@link #onError(Throwable)},
-     * if an error was received, there.
-     * It is a usage error to call this before {@link #awaitTerminalEvent()}.
-     * @return The throwable that had been obtained via the onError(Throwable) callback.
-     */
-    @NonNull
-    public Throwable getError() {
-        Assert.assertTrue(hasError());
-        return errorReference.get();
-    }
-
-    /**
-     * Checks if the listener has received an error.
-     * It is a usage error to call this before first calling {@link #awaitTerminalEvent()}.
-     * @return true if the listener has received an error, false otherwise
-     */
-    public boolean hasError() {
-        return errorReference.get() != null;
+    public Throwable awaitError() {
+        awaitTerminalEvent();
+        final T data = resultReference.get();
+        Assert.assertNull("Got data, but expected error: " + data, data);
+        final Throwable error = errorReference.get();
+        Assert.assertNotNull("Wanted error, but it was null.", error);
+        return error;
     }
 }

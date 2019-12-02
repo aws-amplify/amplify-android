@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
+import com.amplifyframework.api.ApiException;
+
 /**
  * Interface to provide authentication token
  * from Cognito User Pools to signer.
@@ -24,6 +26,7 @@ public interface CognitoUserPoolsAuthProvider {
      * Vends the latest valid authentication token
      * from Cognito User Pool session.
      * @return the latest auth token
+     * @throws ApiException if retrieving token fails
      */
-    String getLatestAuthToken();
+    String getLatestAuthToken() throws ApiException;
 }

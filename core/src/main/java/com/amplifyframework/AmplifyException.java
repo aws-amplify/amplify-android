@@ -21,9 +21,12 @@ import androidx.annotation.NonNull;
  * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
  */
 public class AmplifyException extends Exception {
-
-    private static final long serialVersionUID = 1L;
+    /**
+     * All Amplify Exceptions should have a recovery suggestion. This string can be used as a filler until one is
+     * defined but should ultimately be replaced as all good todos.
+     */
     public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don't have a suggested fix for this error yet.";
+    private static final long serialVersionUID = 1L;
 
     private final String recoverySuggestion;
 

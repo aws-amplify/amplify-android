@@ -122,6 +122,7 @@ public class SqlCommandTest {
     /**
      * Tests that a CREATE index command is correctly constructs for the
      * {@link StorageItemChange.Record}.
+     * @throws AmplifyException from Amplify config
      */
     @Test
     public void createIndexForStorageItemChangeRecord() throws AmplifyException {

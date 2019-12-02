@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
@@ -45,9 +47,9 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * @param request upload request parameters
      * @param resultListener Will be notified when results of upload are available
      */
-    public AWSS3StorageUploadFileOperation(AWSS3StorageService storageService,
-                                           AWSS3StorageUploadFileRequest request,
-                                           ResultListener<StorageUploadFileResult> resultListener) {
+    public AWSS3StorageUploadFileOperation(@NonNull AWSS3StorageService storageService,
+                                           @NonNull AWSS3StorageUploadFileRequest request,
+                                           @NonNull ResultListener<StorageUploadFileResult> resultListener) {
         super(request);
         this.storageService = storageService;
         this.resultListener = resultListener;
@@ -80,13 +82,11 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     }
 
                 } catch (Exception exception) {
-                    if (resultListener != null) {
-                        resultListener.onError(new StorageException(
-                                "Issue uploading file",
-                                exception,
-                                "See included exception for more details and suggestions to fix."
-                        ));
-                    }
+                    resultListener.onError(new StorageException(
+                        "Issue uploading file",
+                        exception,
+                        "See included exception for more details and suggestions to fix."
+                    ));
                 }
 
                 transferObserver.setTransferListener(new TransferListener() {
@@ -94,9 +94,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     public void onStateChanged(int transferId, TransferState state) {
                         // TODO: dispatch event to hub
                         if (TransferState.COMPLETED == state) {
-                            if (resultListener != null) {
-                                resultListener.onResult(StorageUploadFileResult.fromKey(getRequest().getKey()));
-                            }
+                            resultListener.onResult(StorageUploadFileResult.fromKey(getRequest().getKey()));
                         }
                     }
 
@@ -109,28 +107,20 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
 
                     @Override
                     public void onError(int transferId, Exception exception) {
-                        if (resultListener != null) {
-                            resultListener.onError(new StorageException(
-                                    "Something went wrong with your AWS S3 Storage upload file operation",
-                                    exception,
-                                    "See attached exception for more information and suggestions"
-                            ));
-                        } else {
-                            // TODO: Dispatch on Hub
-                        }
+                        resultListener.onError(new StorageException(
+                            "Something went wrong with your AWS S3 Storage upload file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
+                        ));
                     }
                 });
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "AWSMobileClient could not get user id.",
-                            exception,
-                            "Check whether you initialized AWSMobileClient and waited for its success callback " +
-                                    "before calling Amplify config."
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "AWSMobileClient could not get user id.",
+                    exception,
+                    "Check whether you initialized AWSMobileClient and waited for its success callback " +
+                            "before calling Amplify config."
+                ));
             }
         }
     }
@@ -141,15 +131,11 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             try {
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
@@ -160,15 +146,11 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             try {
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
@@ -179,15 +161,11 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             try {
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }

@@ -38,53 +38,16 @@ public interface StorageCategoryBehavior {
 
     /**
      * Download object to file from storage.
-     * @param key the unique identifier for the object in storage
-     * @param local the path to a local file
-     * @return an operation object that provides notifications and
-     *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to obtain the requested object from storage.
-     *         This could occur for a variety of reasons, including if
-     *         {@see key} is not known in storage.
-     */
-    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
-                                              @NonNull String local);
-
-    /**
-     * Download object to file from storage.
-     * Set advanced options such as the access level of the object
-     * you want to retrieve (you can have different objects with
-     * the same name under different access levels).
-     * @param key the unique identifier for the object in storage
-     * @param local the path to a local file
-     * @param options parameters specific to plugin behavior
-     * @return an operation object that provides notifications and
-     *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to obtain the requested object from storage.
-     *         This could occur for a variety of reasons, including if {@see key}
-     *         is now known in storage, or if bad {@see options} are provided.
-     */
-    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
-                                  @NonNull String local,
-                                  StorageDownloadFileOptions options);
-
-    /**
-     * Download object to file from storage.
      * Register a listener to get the download results.
      * @param key the unique identifier for the object in storage
      * @param local the path to a local file
      * @param resultListener Listens for the results of the download
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to obtain the requested object from storage.
-     *         This could occur for a variety of reasons, including if
-     *         {@see key} is not known in storage.
      */
     StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
-                                  ResultListener<StorageDownloadFileResult> resultListener);
+                                  @NonNull ResultListener<StorageDownloadFileResult> resultListener);
 
     /**
      * Download object to memory from storage.
@@ -98,46 +61,11 @@ public interface StorageCategoryBehavior {
      * @param resultListener Listens for the results of the download
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @throws StorageException
-     *         If a failure occurs before asynchronous operation begins.
-     *         After that time, errors are communicated via the
-     *         {@see resultListener}.
      */
     StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
-                                  StorageDownloadFileOptions options,
-                                  ResultListener<StorageDownloadFileResult> resultListener);
-
-    /**
-     * Upload local file on given path to storage.
-     * @param key the unique identifier of the object in storage
-     * @param local the path to a local file
-     * @return an operation object that provides notifications and
-     *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to put an object into storage. This could
-     *         occur for a variety of reasons, including a bad
-     *         {@see key}, a bad {@see local} file path, or other reasons.
-     */
-    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
-                                          @NonNull String local);
-
-    /**
-     * Upload local file on given path to storage.
-     * Specify options such as the access level the file should have.
-     * @param key the unique identifier of the object in storage
-     * @param local the path to a local file
-     * @param options parameters specific to plugin behavior
-     * @return an operation object that provides notifications and
-     *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to put an object into storage. This could occur
-     *         for a variety of reasons, including a bad {@see key},
-     *         a bad {@see local} file path, or bad {@see options}.
-     */
-    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
-                                @NonNull String local,
-                                StorageUploadFileOptions options);
+                                  @NonNull StorageDownloadFileOptions options,
+                                  @NonNull ResultListener<StorageDownloadFileResult> resultListener);
 
     /**
      * Upload local file on given path to storage.
@@ -147,14 +75,10 @@ public interface StorageCategoryBehavior {
      * @param resultListener Listens for results of upload request
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @throws StorageException
-     *         If a failure to upload a file occurs before asynchronous operation
-     *         is attempted; otherwise, errors are reported via the
-     *         result listener.
      */
     StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
-                                ResultListener<StorageUploadFileResult> resultListener);
+                                @NonNull ResultListener<StorageUploadFileResult> resultListener);
 
     /**
      * Upload local file on given path to storage.
@@ -166,43 +90,11 @@ public interface StorageCategoryBehavior {
      * @param resultListener Listens to results of upload request
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @throws StorageException
-     *         If an error occurs before asynchronous operation begins.
-     *         After that, errors are communicated via the
-     *         {@see resultListener}.
      */
     StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
-                                StorageUploadFileOptions options,
-                                ResultListener<StorageUploadFileResult> resultListener);
-
-    /**
-     * Delete object from storage.
-     * @param key the unique identifier of the object in storage
-     * @return an operation object that provides notifications and
-     *        actions related to the execution of the work
-     * @throws StorageException
-     *         On error to remove an object from storage.
-     *         This could occur for a variety of reasons, including
-     *         if the {@see key} does not refer to an object currently in storage.
-     */
-    StorageRemoveOperation<?> remove(@NonNull String key);
-
-    /**
-     * Delete object from storage.
-     * @param key the unique identifier of the object in storage
-     * @param options parameters specific to plugin behavior
-     * @return an operation object that provides notifications and
-     *        actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to remove an object from storage. This could
-     *         occur for a variety of reasons, including if {@see key}
-     *         does not refer to an object in storage, or if the
-     *         provided {@see options} are invalid.
-     *
-     */
-    StorageRemoveOperation<?> remove(@NonNull String key,
-                            StorageRemoveOptions options);
+                                @NonNull StorageUploadFileOptions options,
+                                @NonNull ResultListener<StorageUploadFileResult> resultListener);
 
     /**
      * Delete object from storage.
@@ -210,15 +102,10 @@ public interface StorageCategoryBehavior {
      * @param resultListener Listens to results of remove operation
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to remove an object from storage. This could
-     *         occur for a variety of reasons, including if {@see key}
-     *         does not refer to an object in storage, or if the
-     *         provided {@see options} are invalid.
      *
      */
     StorageRemoveOperation<?> remove(@NonNull String key,
-                            ResultListener<StorageRemoveResult> resultListener);
+                            @NonNull ResultListener<StorageRemoveResult> resultListener);
 
     /**
      * Delete object from storage.
@@ -228,41 +115,10 @@ public interface StorageCategoryBehavior {
      * @param resultListener Listens for results of remove request.
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
-     * @throws StorageException
-     *         If removal of an object from storage fails before the
-     *         asynchronous operation begins. Otherwise, failures
-     *         will be reported via the {@see resultListener}.
      */
     StorageRemoveOperation<?> remove(@NonNull String key,
-                            StorageRemoveOptions options,
-                            ResultListener<StorageRemoveResult> resultListener);
-
-    /**
-     * List the object identifiers under the hierarchy specified
-     * by the path, relative to access level, from storage.
-     * @param path The path in storage to list items from
-     * @return an operation object that provides notifications and
-     *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to list items in storage. This can occur for
-     *         a variety or reasons, such as if the storage system is not
-     *         currently accessible.
-     */
-    StorageListOperation<?> list(@NonNull String path);
-
-    /**
-     * List the object identifiers under the hierarchy specified
-     * by the path, relative to access level, from storage.
-     * @param path The path in storage to list items from
-     * @param options parameters specific to plugin behavior
-     * @return an operation object that provides notifications and
-     *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to list items in storage. This can happen
-     *         for a variety of reasons, such as if the provided {@see options}
-     *         are invalid.
-     */
-    StorageListOperation<?> list(@NonNull String path, StorageListOptions options);
+                            @NonNull StorageRemoveOptions options,
+                            @NonNull ResultListener<StorageRemoveResult> resultListener);
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -271,13 +127,9 @@ public interface StorageCategoryBehavior {
      * @param resultListener Listens for results of list operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @throws StorageException
-     *         On failure to list items in storage. This can happen
-     *         for a variety of reasons, such as if the provided {@see options}
-     *         are invalid.
      */
     StorageListOperation<?> list(@NonNull String path,
-                            ResultListener<StorageListResult> resultListener);
+                            @NonNull ResultListener<StorageListResult> resultListener);
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -288,12 +140,8 @@ public interface StorageCategoryBehavior {
      * @param resultListener listens to results of list operation
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
-     * @throws StorageException
-     *         If a failure to list items in storage occurs before
-     *         asynchronous operation begins. Otherwise, failures will
-     *         be reported via the {@see resultListener}.
      */
     StorageListOperation<?> list(@NonNull String path,
-                            StorageListOptions options,
-                            ResultListener<StorageListResult> resultListener);
+                            @NonNull StorageListOptions options,
+                            @NonNull ResultListener<StorageListResult> resultListener);
 }

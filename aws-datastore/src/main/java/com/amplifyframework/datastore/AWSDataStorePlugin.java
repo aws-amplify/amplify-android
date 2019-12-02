@@ -34,7 +34,6 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Iterator;
@@ -92,7 +91,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      */
     @Override
     public String getPluginKey() {
-        return "AWSDataStorePlugin";
+        return "awsDataStorePlugin";
     }
 
     /**
@@ -194,7 +193,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            ResultListener<DataStoreItemChange<T>> saveItemListener) {
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
             new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
     }
@@ -205,7 +204,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
-            ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
         sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
             new ResultConversionListener<>(deleteItemListener, this::toDataStoreItemChange));
     }
@@ -216,7 +215,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            ResultListener<Iterator<T>> queryResultsListener) {
+            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         sqliteStorageAdapter.query(itemClass, queryResultsListener);
     }
 

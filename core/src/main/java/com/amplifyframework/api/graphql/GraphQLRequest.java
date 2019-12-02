@@ -110,7 +110,7 @@ public final class GraphQLRequest<T> {
             contentString = contentString.replace("\\\\", "\\");
         }
 
-        return contentString;
+        return contentString + "\n";
     }
 
     /**

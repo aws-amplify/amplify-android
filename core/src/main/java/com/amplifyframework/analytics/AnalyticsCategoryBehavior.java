@@ -50,20 +50,14 @@ public interface AnalyticsCategoryBehavior {
      * Record the event by storing in the local database.
      * @param eventName name of the event. An AnalyticsEvent is constructed
      *                  based on the name of the event.
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     * @throws AnalyticsException If the category is badly/not yet configured
      */
-    void recordEvent(@NonNull String eventName) throws AnalyticsException;
+    void recordEvent(@NonNull String eventName);
 
     /**
      * Record the event by storing in the local database.
      * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
-     * @throws AnalyticsException If the category is badly/not yet configured
      */
-    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent);
 
     /**
      * Register properties that will be recorded by all the subsequent calls to {@link #recordEvent(AnalyticsEvent)}.

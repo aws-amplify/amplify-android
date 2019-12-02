@@ -71,6 +71,7 @@ public final class AmplifyConfiguration {
     /**
      * Populates all configuration objects from the amplifyconfiguration.json file.
      * @param context Context needed for reading JSON file
+     * @throws AmplifyException If there is a problem in the config file
      */
     public void populateFromConfigFile(Context context) throws AmplifyException {
         populateFromConfigFile(context, getConfigResourceId(context));
@@ -82,6 +83,7 @@ public final class AmplifyConfiguration {
      * @param configFileResourceId
      *        The Android resource ID of a raw resource which contains
      *        an amplify configuration as JSON
+     * @throws AmplifyException If there is a problem in the config file
      */
     public void populateFromConfigFile(Context context, @RawRes int configFileResourceId) throws AmplifyException {
         JSONObject json = readInputJson(context, configFileResourceId);
@@ -139,6 +141,7 @@ public final class AmplifyConfiguration {
      * Gets the configuration for the specified category type.
      * @param categoryType The category type to return the configuration object for
      * @return Requested category configuration object
+     * @throws AmplifyException If there is a problem in the config file
      */
     public CategoryConfiguration forCategoryType(final CategoryType categoryType) throws AmplifyException {
         if (categoryConfigurations.containsKey(categoryType.getConfigurationKey())) {

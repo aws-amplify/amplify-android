@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
@@ -46,9 +48,9 @@ public final class AWSS3StorageDownloadFileOperation
      * @param request download request parameters
      * @param resultListener Notified when download results are available
      */
-    public AWSS3StorageDownloadFileOperation(AWSS3StorageService storageService,
-                                             AWSS3StorageDownloadFileRequest request,
-                                             ResultListener<StorageDownloadFileResult> resultListener) {
+    public AWSS3StorageDownloadFileOperation(@NonNull AWSS3StorageService storageService,
+                                             @NonNull AWSS3StorageDownloadFileRequest request,
+                                             @NonNull ResultListener<StorageDownloadFileResult> resultListener) {
         super(request);
         this.storageService = storageService;
         this.resultListener = resultListener;
@@ -77,23 +79,18 @@ public final class AWSS3StorageDownloadFileOperation
                 try {
                     transferObserver = storageService.downloadToFile(serviceKey, file);
                 } catch (Exception exception) {
-                    if (resultListener != null) {
-                        resultListener.onError(new StorageException(
-                                "Issue downloading file",
-                                exception,
-                                "See included exception for more details and suggestions to fix."
-                        ));
-                    }
+                    resultListener.onError(new StorageException(
+                            "Issue downloading file",
+                            exception,
+                            "See included exception for more details and suggestions to fix."
+                    ));
                 }
 
                 transferObserver.setTransferListener(new TransferListener() {
                     @Override
                     public void onStateChanged(int transferId, TransferState state) {
-                        // TODO: dispatch event to hub
                         if (TransferState.COMPLETED == state) {
-                            if (resultListener != null) {
-                                resultListener.onResult(StorageDownloadFileResult.fromFile(file));
-                            }
+                            resultListener.onResult(StorageDownloadFileResult.fromFile(file));
                         }
                     }
 
@@ -106,28 +103,20 @@ public final class AWSS3StorageDownloadFileOperation
 
                     @Override
                     public void onError(int transferId, Exception exception) {
-                        if (resultListener != null) {
-                            resultListener.onError(new StorageException(
-                                "Something went wrong with your AWS S3 Storage download file operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                            ));
-                        } else {
-                            // TODO: Dispatch on Hub
-                        }
+                        resultListener.onError(new StorageException(
+                            "Something went wrong with your AWS S3 Storage download file operation",
+                            exception,
+                            "See attached exception for more information and suggestions"
+                        ));
                     }
                 });
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "AWSMobileClient could not get user id.",
-                            exception,
-                            "Check whether you initialized AWSMobileClient and waited for its success callback " +
-                                    "before calling Amplify config."
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                        "AWSMobileClient could not get user id.",
+                        exception,
+                        "Check whether you initialized AWSMobileClient and waited for its success callback " +
+                                "before calling Amplify config."
+                ));
             }
         }
     }
@@ -138,15 +127,11 @@ public final class AWSS3StorageDownloadFileOperation
             try {
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                        "Something went wrong while attempting to cancel your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to cancel your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
@@ -157,15 +142,11 @@ public final class AWSS3StorageDownloadFileOperation
             try {
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                        "Something went wrong while attempting to pause your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to pause your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }
@@ -176,15 +157,11 @@ public final class AWSS3StorageDownloadFileOperation
             try {
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                        "Something went wrong while attempting to resume your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong while attempting to resume your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         }
     }

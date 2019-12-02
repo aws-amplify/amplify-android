@@ -48,6 +48,7 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
      * {@link GraphQLResponse} object that a response listener can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
+     * @throws ApiException If the class provided mismatches the data
      */
     protected final GraphQLResponse<T> wrapSingleResultResponse(String jsonResponse) throws ApiException {
         try {
@@ -63,6 +64,7 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
      * {@link GraphQLResponse} object that a response listener can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
+     * @throws ApiException If the class provided mismatches the data
      */
     protected final GraphQLResponse<Iterable<T>> wrapMultiResultResponse(String jsonResponse) throws ApiException {
         try {

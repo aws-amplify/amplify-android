@@ -15,6 +15,9 @@
 
 package com.amplifyframework.logging;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -25,9 +28,37 @@ import com.amplifyframework.core.category.CategoryType;
  * LoggingCategory class.
  */
 public final class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
+
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.LOGGING;
     }
-}
 
+    @NonNull
+    @Override
+    public Logger getDefaultLogger() {
+        return getLoggingPlugin().getDefaultLogger();
+    }
+
+    @NonNull
+    @Override
+    public Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold) {
+        return getLoggingPlugin().forNamespaceAndThreshold(namespace, threshold);
+    }
+
+    @NonNull
+    @Override
+    public Logger forNamespace(@Nullable String namespace) {
+        return getLoggingPlugin().forNamespace(namespace);
+    }
+
+    @NonNull
+    private LoggingPlugin<?> getLoggingPlugin() {
+        try {
+            return getSelectedPlugin(); // If someone added a plugin, use it
+        } catch (IllegalStateException pluginAccessException) {
+            return new AndroidLoggingPlugin(); // Otherwise, fallback to ours.
+        }
+    }
+}

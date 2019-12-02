@@ -107,10 +107,10 @@ final class AWSApiPluginConfigurationReader {
      * an API configuration json.
      */
     enum ConfigKey {
-        ENDPOINT("Endpoint", Importance.REQUIRED),
-        REGION("Region", Importance.REQUIRED),
-        AUTHORIZATION_TYPE("AuthorizationType", Importance.REQUIRED),
-        API_KEY("ApiKey", Importance.OPTIONAL);
+        ENDPOINT("endpoint", Importance.REQUIRED),
+        REGION("region", Importance.REQUIRED),
+        AUTHORIZATION_TYPE("authorizationType", Importance.REQUIRED),
+        API_KEY("apiKey", Importance.OPTIONAL);
 
         private final String key;
         private final Importance importance;

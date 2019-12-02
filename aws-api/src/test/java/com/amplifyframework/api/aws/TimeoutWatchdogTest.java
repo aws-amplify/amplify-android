@@ -51,6 +51,7 @@ public final class TimeoutWatchdogTest {
     /**
      * When the timer is started, and more time elapses than the timer
      * allowed, then the timeout action should be run.
+     * @throws ApiException From API configuration
      */
     @Test
     public void timeoutActionIsInvokedAfterTimeElapsesFromStart() throws ApiException {
@@ -82,6 +83,7 @@ public final class TimeoutWatchdogTest {
     /**
      * If the watchdog gets reset, and the new timeout still has not elapsed,
      * then the timeout action is not run (yet).
+     * @throws ApiException From API configuration
      */
     @Test
     public void timeoutActionNotRunAfterResetBeforeNewTimeout() throws ApiException {
@@ -100,6 +102,7 @@ public final class TimeoutWatchdogTest {
     /**
      * If you start the watchdog, and then reset it, but time elapses beyond
      * even the newly set timeout, then the timeout action will run.
+     * @throws ApiException From API configuration
      */
     @Test
     public void timeoutActionIsRunEvenAfterResetTimePeriod() throws ApiException {
@@ -118,6 +121,7 @@ public final class TimeoutWatchdogTest {
     /**
      * If you stop the watchdog before it times out, then the timeout action
      * doesn't get run.
+     * @throws ApiException From API configuration
      */
     @Test
     public void timeoutActionIsRunIfWatchdogStoppedBeforeTimeout() throws ApiException {

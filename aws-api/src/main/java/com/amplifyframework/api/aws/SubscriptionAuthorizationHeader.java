@@ -29,7 +29,7 @@ final class SubscriptionAuthorizationHeader {
     /**
      * Return authorization json to be used for connection and subscription registration.
      */
-    static JSONObject from(ApiConfiguration apiConfiguration) throws ApiException{
+    static JSONObject from(ApiConfiguration apiConfiguration) throws ApiException {
         final String host = Uri.parse(apiConfiguration.getEndpoint()).getHost();
         final String apiKey = apiConfiguration.getApiKey();
         try {

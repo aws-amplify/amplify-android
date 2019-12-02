@@ -15,9 +15,9 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amazonaws.internal.StaticCredentialsProvider;
 import com.amplifyframework.api.ApiException;
 
+import com.amazonaws.internal.StaticCredentialsProvider;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -43,6 +43,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * never have to provide a custom provider.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
     public void testApiKeyOverrideNotProvided() throws IOException, ApiException {
@@ -54,7 +55,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
         // Uses API key from one of the APIs
         ApiConfiguration config = ApiConfiguration.builder()
@@ -82,6 +83,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * {@link ApiConfiguration} object.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test(expected = IllegalArgumentException.class)
     public void testApiKeyNotProvidedInConfiguration() throws IOException, ApiException {
@@ -90,7 +92,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
         // If API key is not mentioned in API configuration AND
         // auth mode is API_KEY AND no custom API key provider
@@ -110,6 +112,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * ApiAuthProvider, then intercept succeeds.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
     public void testApiKeyProvidedInterceptSucceeds() throws IOException, ApiException {
@@ -119,7 +122,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
         ApiConfiguration config = ApiConfiguration.builder()
                 .endpoint("")
@@ -137,6 +140,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * of obtaining API key directly from configuration.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
     public void testApiKeyOverrideProvided() throws IOException, ApiException {
@@ -146,7 +150,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
         // Even if API key is written in the ApiConfiguration, the interceptor
         // obtains its API key from custom provider and ignores the config
@@ -178,6 +182,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * while sending a request with that API.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Expected since OIDC config was not provided
+     * @throws ApiException From API configuration
      */
     @Test(expected = IOException.class)
     public void testOidcOverrideNotProvided() throws IOException, ApiException {
@@ -186,7 +191,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .build();
-        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
         ApiConfiguration config = ApiConfiguration.builder()
                 .endpoint("")
@@ -202,6 +207,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * prevents crashes while intercepting requests.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
     public void testOidcOverrideProvided() throws IOException, ApiException {
@@ -211,7 +217,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
-        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(null, providers);
+        InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
         ApiConfiguration config = ApiConfiguration.builder()
                 .endpoint("")

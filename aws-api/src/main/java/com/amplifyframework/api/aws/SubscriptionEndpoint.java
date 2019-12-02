@@ -78,29 +78,21 @@ final class SubscriptionEndpoint {
             try {
                 webSocket = createWebSocket();
             } catch (ApiException exception) {
-                if (responseListener != null) {
-                    responseListener.onError(new ApiException(
-                            "Failed to create websocket for subscription",
-                            exception,
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                } else {
-                    //TODO: Dispatch error on Hub
-                }
+                responseListener.onError(new ApiException(
+                        "Failed to create websocket for subscription",
+                        exception,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                ));
             }
 
             try {
                 connectionAcknowledgement.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
             } catch (InterruptedException interruptedException) {
-                if (responseListener != null) {
-                    responseListener.onError(new ApiException(
-                            "Subscription timed out waiting for acknowledgement",
-                            interruptedException,
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                } else {
-                    //TODO: Dispatch error on Hub
-                }
+                responseListener.onError(new ApiException(
+                        "Subscription timed out waiting for acknowledgement",
+                        interruptedException,
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                ));
             }
         }
 
@@ -116,15 +108,11 @@ final class SubscriptionEndpoint {
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
-            if (responseListener != null) {
-                responseListener.onError(new ApiException(
-                        "Failed to construct subscription registration message.",
-                        exception,
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
-            } else {
-                // TODO: Dispatch error on Hub
-            }
+            responseListener.onError(new ApiException(
+                    "Failed to construct subscription registration message.",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
         }
 
         Subscription<T> subscription = new Subscription<>(responseListener, responseFactory, request.getModelClass());
@@ -195,8 +183,14 @@ final class SubscriptionEndpoint {
 
             switch (subscriptionMessageType) {
                 case CONNECTION_ACK:
-                    timeoutWatchdog.start(() -> webSocket.close(NORMAL_CLOSURE_STATUS, "WebSocket closed due to timeout."),
-                            Integer.parseInt(jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")));
+                    timeoutWatchdog.start(() -> webSocket.close(
+                            NORMAL_CLOSURE_STATUS,
+                            "WebSocket closed due to timeout."
+                        ),
+                        Integer.parseInt(
+                            jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
+                        )
+                    );
                     connectionAcknowledgement.countDown();
                     break;
                 case SUBSCRIPTION_ACK:
@@ -448,7 +442,10 @@ final class SubscriptionEndpoint {
             if (!ObjectsCompat.equals(subscriptionReadyAcknowledgment, that.subscriptionReadyAcknowledgment)) {
                 return false;
             }
-            return ObjectsCompat.equals(subscriptionCompletionAcknowledgement, that.subscriptionCompletionAcknowledgement);
+            return ObjectsCompat.equals(
+                    subscriptionCompletionAcknowledgement,
+                    that.subscriptionCompletionAcknowledgement
+            );
         }
 
         @SuppressWarnings("checkstyle:MagicNumber")

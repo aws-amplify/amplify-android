@@ -135,25 +135,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local
-    ) {
-        return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance());
-    }
-
-    @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
             @NonNull String local,
-            StorageDownloadFileOptions options
-    ) {
-        return downloadFile(key, local, options, null);
-    }
-
-    @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
-            @NonNull String local,
-            ResultListener<StorageDownloadFileResult> resultListener
+            @NonNull ResultListener<StorageDownloadFileResult> resultListener
     ) {
         return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), resultListener);
     }
@@ -162,8 +145,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
-            StorageDownloadFileOptions options,
-            ResultListener<StorageDownloadFileResult> resultListener
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull ResultListener<StorageDownloadFileResult> resultListener
     ) {
         AWSS3StorageDownloadFileRequest request = new AWSS3StorageDownloadFileRequest(
                 key,
@@ -182,25 +165,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local
-    ) {
-        return uploadFile(key, local, StorageUploadFileOptions.defaultInstance());
-    }
-
-    @Override
-    public StorageUploadFileOperation<?> uploadFile(
-            @NonNull String key,
             @NonNull String local,
-            StorageUploadFileOptions options
-    ) {
-        return uploadFile(key, local, options, null);
-    }
-
-    @Override
-    public StorageUploadFileOperation<?> uploadFile(
-            @NonNull String key,
-            @NonNull String local,
-            ResultListener<StorageUploadFileResult> resultListener
+            @NonNull ResultListener<StorageUploadFileResult> resultListener
     ) {
         return uploadFile(key, local, StorageUploadFileOptions.defaultInstance(), resultListener);
     }
@@ -209,8 +175,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
-            StorageUploadFileOptions options,
-            ResultListener<StorageUploadFileResult> resultListener
+            @NonNull StorageUploadFileOptions options,
+            @NonNull ResultListener<StorageUploadFileResult> resultListener
     ) {
         AWSS3StorageUploadFileRequest request = new AWSS3StorageUploadFileRequest(
                 key,
@@ -231,23 +197,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     @Override
     public StorageRemoveOperation<?> remove(
-            @NonNull String key
-    ) {
-        return remove(key, StorageRemoveOptions.defaultInstance());
-    }
-
-    @Override
-    public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            StorageRemoveOptions options
-    ) {
-        return remove(key, options, null);
-    }
-
-    @Override
-    public StorageRemoveOperation<?> remove(
-            @NonNull String key,
-            ResultListener<StorageRemoveResult> resultListener
+            @NonNull ResultListener<StorageRemoveResult> resultListener
     ) {
         return remove(key, StorageRemoveOptions.defaultInstance(), resultListener);
     }
@@ -255,8 +206,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            StorageRemoveOptions options,
-            ResultListener<StorageRemoveResult> resultListener
+            @NonNull StorageRemoveOptions options,
+            @NonNull ResultListener<StorageRemoveResult> resultListener
     ) {
         AWSS3StorageRemoveRequest request = new AWSS3StorageRemoveRequest(
                 key,
@@ -273,25 +224,18 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     }
 
     @Override
-    public StorageListOperation<?> list(@NonNull String path) {
-        return list(path, StorageListOptions.defaultInstance());
-    }
-
-    @Override
-    public StorageListOperation<?> list(@NonNull String path, StorageListOptions options) {
-        return list(path, options, null);
-    }
-
-    @Override
-    public StorageListOperation<?> list(@NonNull String path, ResultListener<StorageListResult> resultListener) {
+    public StorageListOperation<?> list(
+            @NonNull String path,
+            @NonNull ResultListener<StorageListResult> resultListener
+    ) {
         return list(path, StorageListOptions.defaultInstance(), resultListener);
     }
 
     @Override
     public StorageListOperation<?> list(
             @NonNull String path,
-            StorageListOptions options,
-            ResultListener<StorageListResult> resultListener
+            @NonNull StorageListOptions options,
+            @NonNull ResultListener<StorageListResult> resultListener
     ) {
         AWSS3StorageListRequest request = new AWSS3StorageListRequest(
                 path,

@@ -40,19 +40,19 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
 
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @NonNull HubSubscriber hubSubscriber) throws HubException {
+                                       @NonNull HubSubscriber hubSubscriber) {
         return getSelectedPlugin().subscribe(hubChannel, hubSubscriber);
     }
 
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubEventFilter hubEventFilter,
-                                       @NonNull HubSubscriber hubSubscriber) throws HubException {
+                                       @NonNull HubSubscriber hubSubscriber) {
         return getSelectedPlugin().subscribe(hubChannel, hubEventFilter, hubSubscriber);
     }
 
     @Override
-    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException {
+    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
         getSelectedPlugin().unsubscribe(subscriptionToken);
     }
 
@@ -76,7 +76,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
      */
     public <E, R> SubscriptionToken subscribe(
             @NonNull final AmplifyOperation<R> operation,
-            @NonNull final EventListener<E> eventListener) throws HubException {
+            @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubSubscriber transformingListener = event -> {
             // TODO: check for casting of Object to E and

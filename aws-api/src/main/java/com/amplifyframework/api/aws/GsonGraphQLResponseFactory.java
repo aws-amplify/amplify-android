@@ -184,14 +184,19 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     // Cannot use the same TypeToken trick used in parseErrors due to type erasure
+    @SuppressWarnings("unchecked") // (T) current.toString() IS CHECKED by String.class.isAssignableFrom(...)
     private <T> Iterable<T> parseDataAsList(JsonElement jsonData, Class<T> classToCast) throws ApiException {
         try {
             ArrayList<T> dataAsList = new ArrayList<>();
             Iterator<JsonElement> iterator = jsonData.getAsJsonArray().iterator();
 
             while (iterator.hasNext()) {
-                T data = gson.fromJson(iterator.next(), classToCast);
-                dataAsList.add(data);
+                final JsonElement current = iterator.next();
+                if (String.class.isAssignableFrom(classToCast)) {
+                    dataAsList.add((T) current.toString());
+                } else {
+                    dataAsList.add(gson.fromJson(current, classToCast));
+                }
             }
             return dataAsList;
         } catch (ClassCastException classCastException) {

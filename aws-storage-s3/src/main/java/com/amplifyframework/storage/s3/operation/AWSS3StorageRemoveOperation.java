@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
@@ -42,10 +44,10 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * @param request remove request parameters
      * @param resultListener notified when remove operation results available
      */
-    public AWSS3StorageRemoveOperation(AWSS3StorageService storageService,
-                                       ExecutorService executorService,
-                                       AWSS3StorageRemoveRequest request,
-                                       ResultListener<StorageRemoveResult> resultListener) {
+    public AWSS3StorageRemoveOperation(@NonNull AWSS3StorageService storageService,
+                                       @NonNull ExecutorService executorService,
+                                       @NonNull AWSS3StorageRemoveRequest request,
+                                       @NonNull ResultListener<StorageRemoveResult> resultListener) {
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
@@ -62,38 +64,28 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
 
                 try {
                     storageService.deleteObject(
-                            S3RequestUtils.getServiceKey(
-                                    getRequest().getAccessLevel(),
-                                    identityId,
-                                    getRequest().getKey(),
-                                    getRequest().getTargetIdentityId()
-                            )
+                        S3RequestUtils.getServiceKey(
+                            getRequest().getAccessLevel(),
+                            identityId,
+                            getRequest().getKey(),
+                            getRequest().getTargetIdentityId()
+                        )
                     );
 
-                    if (resultListener != null) {
-                        resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
-                    }
+                    resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
                 } catch (Exception exception) {
-                    if (resultListener != null) {
-                        resultListener.onError(new StorageException(
-                                "Something went wrong with your AWS S3 Storage remove operation",
-                                exception,
-                                "See attached exception for more information and suggestions"
-                        ));
-                    } else {
-                        // TODO: Dispatch on Hub
-                    }
+                    resultListener.onError(new StorageException(
+                        "Something went wrong with your AWS S3 Storage remove operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
                 }
             } catch (Exception exception) {
-                if (resultListener != null) {
-                    resultListener.onError(new StorageException(
-                            "Something went wrong with your AWS S3 Storage remove operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                    ));
-                } else {
-                    // TODO: Dispatch on Hub
-                }
+                resultListener.onError(new StorageException(
+                    "Something went wrong with your AWS S3 Storage remove operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         });
     }

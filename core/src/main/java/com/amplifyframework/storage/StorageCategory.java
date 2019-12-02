@@ -48,24 +48,9 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local
+            @NonNull String local,
+            @NonNull ResultListener<StorageDownloadFileResult> resultListener
     ) {
-        return getSelectedPlugin().downloadFile(key, local);
-    }
-
-    @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
-            @NonNull String local,
-            StorageDownloadFileOptions options)  {
-        return getSelectedPlugin().downloadFile(key, local, options);
-    }
-
-    @Override
-    public StorageDownloadFileOperation<?> downloadFile(
-            @NonNull String key,
-            @NonNull String local,
-            ResultListener<StorageDownloadFileResult> resultListener)  {
         return getSelectedPlugin().downloadFile(key, local, resultListener);
     }
 
@@ -73,31 +58,18 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
-            StorageDownloadFileOptions options,
-            ResultListener<StorageDownloadFileResult> resultListener)  {
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull ResultListener<StorageDownloadFileResult> resultListener
+    ) {
         return getSelectedPlugin().downloadFile(key, local, options, resultListener);
     }
 
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local)  {
-        return getSelectedPlugin().uploadFile(key, local);
-    }
-
-    @Override
-    public StorageUploadFileOperation<?> uploadFile(
-            @NonNull String key,
             @NonNull String local,
-            StorageUploadFileOptions options)  {
-        return getSelectedPlugin().uploadFile(key, local, options);
-    }
-
-    @Override
-    public StorageUploadFileOperation<?> uploadFile(
-            @NonNull String key,
-            @NonNull String local,
-            ResultListener<StorageUploadFileResult> resultListener)  {
+            @NonNull ResultListener<StorageUploadFileResult> resultListener
+    ) {
         return getSelectedPlugin().uploadFile(key, local, resultListener);
     }
 
@@ -105,63 +77,42 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
-            StorageUploadFileOptions options,
-            ResultListener<StorageUploadFileResult> resultListener)  {
+            @NonNull StorageUploadFileOptions options,
+            @NonNull ResultListener<StorageUploadFileResult> resultListener
+    ) {
         return getSelectedPlugin().uploadFile(key, local, options, resultListener);
     }
 
     @Override
     public StorageRemoveOperation<?> remove(
-            @NonNull String key
-    )  {
-        return getSelectedPlugin().remove(key);
-    }
-
-    @Override
-    public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            StorageRemoveOptions options
-    )  {
-        return getSelectedPlugin().remove(key, options);
-    }
-
-    @Override
-    public StorageRemoveOperation<?> remove(
-            @NonNull String key,
-            ResultListener<StorageRemoveResult> resultListener
-    )  {
+            @NonNull ResultListener<StorageRemoveResult> resultListener
+    ) {
         return getSelectedPlugin().remove(key, resultListener);
     }
 
     @Override
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            StorageRemoveOptions options,
-            ResultListener<StorageRemoveResult> resultListener)  {
+            @NonNull StorageRemoveOptions options,
+            @NonNull ResultListener<StorageRemoveResult> resultListener) {
         return getSelectedPlugin().remove(key, options, resultListener);
     }
 
     @Override
-    public StorageListOperation<?> list(@NonNull String path)  {
-        return getSelectedPlugin().list(path);
-    }
-
-    @Override
-    public StorageListOperation<?> list(@NonNull String path, StorageListOptions options)  {
-        return getSelectedPlugin().list(path, options);
-    }
-
-    @Override
-    public StorageListOperation<?> list(@NonNull String path, ResultListener<StorageListResult> resultListener)
-             {
+    public StorageListOperation<?> list(
+            @NonNull String path,
+            @NonNull ResultListener<StorageListResult> resultListener
+    ) {
         return getSelectedPlugin().list(path, resultListener);
     }
 
     @Override
     public StorageListOperation<?> list(
             @NonNull String path,
-            StorageListOptions options,
-            ResultListener<StorageListResult> resultListener)  {
+            @NonNull StorageListOptions options,
+            @NonNull ResultListener<StorageListResult> resultListener
+    ) {
         return getSelectedPlugin().list(path, options, resultListener);
     }
 }

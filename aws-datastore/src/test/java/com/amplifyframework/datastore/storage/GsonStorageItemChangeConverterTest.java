@@ -16,8 +16,8 @@
 package com.amplifyframework.datastore.storage;
 
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.testmodels.MaritalStatus;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.MaritalStatus;
+import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Test;
 
@@ -35,6 +35,7 @@ public class GsonStorageItemChangeConverterTest {
      * Validate that the {@link GsonStorageItemChangeConverter} can be
      * used to convert a sample {@link StorageItemChange} to a
      * {@link StorageItemChange.Record}, and vice-versa.
+     * @throws DataStoreException from DataStore conversion
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test

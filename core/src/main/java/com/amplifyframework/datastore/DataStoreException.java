@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by DataStore category plugins.
  */
-public class DataStoreException extends AmplifyException {
+public final class DataStoreException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,13 +50,5 @@ public class DataStoreException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
-    }
-
-    public static DataStoreException selectedPluginIssue(Throwable rootCause) {
-        return new DataStoreException(
-                "Couldn't select a default plugin for DataStore",
-                rootCause,
-                "Check the included exception for details"
-        );
     }
 }

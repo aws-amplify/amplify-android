@@ -102,11 +102,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
     /**
      * Remove a plugin from the category.
-     * @param plugin A plugin to remove 
-     * @throws AmplifyException
-     *         If the provided plugin was not associated to the
-     *         category, perhaps because it never was, or because it was
-     *         already removed
+     * @param plugin A plugin to remove
      */
     public final void removePlugin(@NonNull P plugin) {
         if (plugins.remove(plugin.getPluginKey()) == null) {
@@ -141,10 +137,6 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Obtain the registered plugin for this category.
      * @return The only registered plugin for this category
-     * @throws AmplifyException
-     *         If the category has not yet been configured, or if
-     *         category configuration had been attempted previously but
-     *         did not succeed
      */
     protected final P getSelectedPlugin() {
         if (!isConfigured) {

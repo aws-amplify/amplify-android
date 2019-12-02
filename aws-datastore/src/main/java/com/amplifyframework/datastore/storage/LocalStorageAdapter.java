@@ -119,6 +119,7 @@ public interface LocalStorageAdapter {
     /**
      * Terminate use of the local storage.
      * This should release all resources used by the implementation.
+     * @throws DataStoreException if something goes wrong during terminate
      */
     void terminate() throws DataStoreException;
 }

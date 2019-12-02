@@ -16,7 +16,6 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -47,9 +46,7 @@ public interface ApiCategoryBehavior {
      * in the response, it will be cast as the requested class type.
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are querying on
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -57,7 +54,7 @@ public interface ApiCategoryBehavior {
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
 
     /**
      * This is a special helper method for easily performing GET Queries
@@ -71,9 +68,7 @@ public interface ApiCategoryBehavior {
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are querying on
      * @param objectId The unique ID of the object you want to get
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -82,7 +77,7 @@ public interface ApiCategoryBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
 
     /**
      * This is a special helper method for easily performing LIST Queries
@@ -96,9 +91,7 @@ public interface ApiCategoryBehavior {
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are querying on
      * @param predicate Filtering conditions for the query
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -107,7 +100,7 @@ public interface ApiCategoryBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             QueryPredicate predicate,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
 
     /**
      * Perform a GraphQL query against a configured GraphQL endpoint.
@@ -117,9 +110,7 @@ public interface ApiCategoryBehavior {
      * in the response, it will be cast as the requested class type.
      * @param apiName The name of a configured API
      * @param graphQlRequest Wrapper for request details
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -127,7 +118,7 @@ public interface ApiCategoryBehavior {
     <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
 
     /**
      * This is a special helper method for easily performing Mutations
@@ -142,9 +133,7 @@ public interface ApiCategoryBehavior {
      * @param apiName The name of a configured API
      * @param model An instance of the Model with the values to mutate
      * @param mutationType  What type of mutation to perform (e.g. Create, Update, Delete)
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -153,7 +142,7 @@ public interface ApiCategoryBehavior {
             @NonNull String apiName,
             @NonNull T model,
             @NonNull MutationType mutationType,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
 
     /**
      * This is a special helper method for easily performing Mutations
@@ -170,9 +159,7 @@ public interface ApiCategoryBehavior {
      * @param predicate Conditions on the current data to determine whether to go through
      *                  with an UPDATE or DELETE operation
      * @param mutationType  What type of mutation to perform (e.g. Create, Update, Delete)
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -182,7 +169,7 @@ public interface ApiCategoryBehavior {
             @NonNull T model,
             QueryPredicate predicate,
             @NonNull MutationType mutationType,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
 
     /**
      * Perform a GraphQL mutation against a configured GraphQL endpoint.
@@ -193,9 +180,7 @@ public interface ApiCategoryBehavior {
      * type.
      * @param apiName The name of a configured API
      * @param graphQlRequest Wrapper for request details
-     * @param responseListener
-     *        Invoked when response data/errors are available.  If null,
-     *        response can still be obtained via Hub.
+     * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
@@ -203,33 +188,7 @@ public interface ApiCategoryBehavior {
     <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener);
-
-    /**
-     * This is a special helper method for easily subscribing to events
-     * on Model objects which are autogenerated from your schema.
-     *
-     * Initiates a GraphQL subscription against a configured GraphQL
-     * endpoint. The operation is on-going and emits a stream of
-     * {@link GraphQLResponse}s to the provided stream listener.
-     * The subscription may be canceled by calling
-     * {@link GraphQLOperation#cancel()}.
-     * @param apiName The name of a previously configured GraphQL API
-     * @param modelClass The class of the Model we are subscribing to
-     * @param predicate Filtering conditions for the query
-     * @param subscriptionType What type of subscription to listen for (e.g. OnCreate, OnUpdate, OnDelete)
-     * @param subscriptionListener
-     *        A listener to receive notifications when new items are
-     *        available via the subscription stream
-     * @param <T> The type of data expected in the subscription stream. Must extend Model.
-     * @return A GraphQLOperation representing this ongoing subscription
-     */
-    <T extends Model> GraphQLOperation<T> subscribe(
-            @NonNull String apiName,
-            @NonNull Class<T> modelClass,
-            @NonNull QueryPredicate predicate,
-            @NonNull SubscriptionType subscriptionType,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
 
     /**
      * This is a special helper method for easily subscribing to events
@@ -253,7 +212,7 @@ public interface ApiCategoryBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
 
     /**
      * Initiates a GraphQL subscription against a configured GraphQL
@@ -272,5 +231,5 @@ public interface ApiCategoryBehavior {
     <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
 }

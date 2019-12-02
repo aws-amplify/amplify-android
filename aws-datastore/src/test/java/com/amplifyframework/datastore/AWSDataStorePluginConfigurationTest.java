@@ -39,11 +39,7 @@ public final class AWSDataStorePluginConfigurationTest {
     /**
      * If no configuration is specified, it's okay, sync mode will default to
      * {@link AWSDataStorePluginConfiguration.SyncMode#LOCAL_ONLY}.
-     * @throws JSONException Technically possible as part of the method signature
-     *                       {@link AWSDataStorePluginConfiguration#fromJson(JSONObject)},
-     *                       and also while arranging the {@link JSONObject} input,
-     *                       but JSONException is not expected this test, and would constitute a
-     *                       test failure.
+     * @throws DataStoreException from DataStore configuration
      */
     @Test
     public void defaultSyncModeUsedWhenJsonIsEmpty() throws DataStoreException {
@@ -60,6 +56,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
+     * @throws DataStoreException from DataStore configuration
      */
     @Test
     public void remoteSyncDisabledWhenJsonRequestsDisable() throws JSONException, DataStoreException {
@@ -83,7 +80,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
-     *
+     * @throws DataStoreException from DataStore configuration
      */
     @Test(expected = DataStoreException.class)
     public void getSyncModeThrowsConfigExceptionWhenItWasNotConfigured() throws JSONException, DataStoreException {
@@ -107,6 +104,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
+     * @throws DataStoreException from DataStore configuration
      */
     @Test
     public void remoteSyncDisabledWhenJsonRequestsDisabledEvenThoughApiNameSpecified()
@@ -129,6 +127,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
+     * @throws DataStoreException from DataStore configuration
      */
     @Test(expected = DataStoreException.class)
     public void throwsConfigurationExceptionWhenNoApiSpecifiedForRemoteSync()
@@ -147,6 +146,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
+     * @throws DataStoreException from DataStore configuration
      */
     @Test(expected = DataStoreException.class)
     public void throwsConfigurationExceptionWhenApiNameIsBlankForRemoteSync()
@@ -166,6 +166,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
+     * @throws DataStoreException from DataStore configuration
      */
     @Test
     public void remoteSyncIsConfiguredWhenApiNameAlsoProvided() throws JSONException, DataStoreException {

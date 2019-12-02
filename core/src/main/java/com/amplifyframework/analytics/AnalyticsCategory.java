@@ -79,14 +79,14 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void recordEvent(@NonNull String eventName) throws AnalyticsException {
+    public void recordEvent(@NonNull String eventName) {
         if (enabled) {
             getSelectedPlugin().recordEvent(eventName);
         }
     }
 
     @Override
-    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) throws AnalyticsException {
+    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }

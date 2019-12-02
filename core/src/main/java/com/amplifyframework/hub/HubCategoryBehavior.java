@@ -41,10 +41,9 @@ public interface HubCategoryBehavior {
      * @return A token which serves as an identifier for the subscription.
      *         The token can be used with {@link #unsubscribe(SubscriptionToken)}
      *         to cancel the subscription.
-     * @throws HubException if the subscription fails
      */
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                @NonNull HubSubscriber hubSubscriber) throws HubException;
+                                @NonNull HubSubscriber hubSubscriber);
 
     /**
      * Subscribe to Hub events on a particular channel, and considering
@@ -60,20 +59,17 @@ public interface HubCategoryBehavior {
      *         subscription. The token can be used with
      *         {@link #unsubscribe(SubscriptionToken)} to cancel the
      *         subscription.
-     * @throws HubException if the subscription fails
      */
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                 @Nullable HubEventFilter hubEventFilter,
-                                @NonNull HubSubscriber hubSubscriber) throws HubException;
+                                @NonNull HubSubscriber hubSubscriber);
 
     /**
      * Unsubscribe a subscriber from the Hub system by passing the
      * token received from {@link #subscribe(HubChannel, HubSubscriber)} or
      * {@link #subscribe(HubChannel, HubEventFilter, HubSubscriber)}.
      * @param subscriptionToken A token which serves as an identifier for a subscription
-     * @throws HubException on failure to unsubscribe, perhaps if a token is
-     *                      invalid or does not refer to a known subscription
      */
-    void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException;
+    void unsubscribe(@NonNull SubscriptionToken subscriptionToken);
 }
 

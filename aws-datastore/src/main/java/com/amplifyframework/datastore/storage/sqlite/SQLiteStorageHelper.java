@@ -16,23 +16,33 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Build;
 import android.text.TextUtils;
-import android.util.Log;
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
+
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
+
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * A helper class to manage database creation and version management.
  */
-final class SQLiteStorageHelper extends SQLiteOpenHelper {
+final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgradeStrategy<SQLiteDatabase, String> {
 
-    // Logcat tag
-    private static final String TAG = SQLiteStorageHelper.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
+    // SQLiteDatabase Metadata is stored in tables prefixed by this prefix.
+    private static final String SQLITE_SYSTEM_TABLE_PREFIX = "sqlite_";
 
     // The singleton instance.
-    private static SQLiteStorageHelper sQLiteStorageHelperInstance;
+    private static SQLiteStorageHelper sqliteStorageHelperInstance;
 
     // Contains all create table and create index commands.
     private final CreateSqlCommands createSqlCommands;
@@ -61,11 +71,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
             @NonNull String databaseName,
             int databaseVersion,
             @NonNull CreateSqlCommands createSqlCommands) {
-        if (sQLiteStorageHelperInstance == null) {
-            sQLiteStorageHelperInstance = new SQLiteStorageHelper(
+        if (sqliteStorageHelperInstance == null) {
+            sqliteStorageHelperInstance = new SQLiteStorageHelper(
                     context, databaseName, databaseVersion, createSqlCommands);
         }
-        return sQLiteStorageHelperInstance;
+        return sqliteStorageHelperInstance;
     }
 
     /**
@@ -73,13 +83,13 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * Called when the database connection is being configured, to enable features
      * such as foreign key support.
      *
-     * @param sqLiteDatabase the connection handle to the database.
+     * @param sqliteDatabase the connection handle to the database.
      */
     @Override
-    public void onConfigure(SQLiteDatabase sqLiteDatabase) {
-        super.onConfigure(sqLiteDatabase);
+    public void onConfigure(SQLiteDatabase sqliteDatabase) {
+        super.onConfigure(sqliteDatabase);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-            sqLiteDatabase.setForeignKeyConstraintsEnabled(true);
+            sqliteDatabase.setForeignKeyConstraintsEnabled(true);
         }
     }
 
@@ -88,11 +98,11 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * If a database already exists on disk with the same DATABASE_NAME,
      * this method will NOT be called.
      *
-     * @param sqLiteDatabase the connection handle to the database.
+     * @param sqliteDatabase the connection handle to the database.
      */
     @Override
-    public synchronized void onCreate(SQLiteDatabase sqLiteDatabase) {
-        createTablesAndIndexes(sqLiteDatabase);
+    public synchronized void onCreate(SQLiteDatabase sqliteDatabase) {
+        createTablesAndIndexes(sqliteDatabase);
     }
 
     /**
@@ -100,10 +110,10 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * such as foreign key support.
      */
     @Override
-    public synchronized void onOpen(SQLiteDatabase sqLiteDatabase) {
-        super.onOpen(sqLiteDatabase);
-        if (!sqLiteDatabase.isReadOnly()) {
-            sqLiteDatabase.execSQL("PRAGMA foreign_keys = ON;");
+    public synchronized void onOpen(SQLiteDatabase sqliteDatabase) {
+        super.onOpen(sqliteDatabase);
+        if (!sqliteDatabase.isReadOnly()) {
+            sqliteDatabase.execSQL("PRAGMA foreign_keys = ON;");
         }
     }
 
@@ -117,52 +127,109 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper {
      * this method will be invoked. It always drop all tables and then call
      * onCreate() method to create all table again.
      *
-     * @param sqLiteDatabase the connection handle to the database.
+     * @param sqliteDatabase the connection handle to the database.
      * @param oldVersion older version number
      * @param newVersion newer version number
      */
     @Override
-    public synchronized void onUpgrade(SQLiteDatabase sqLiteDatabase,
+    public synchronized void onUpgrade(SQLiteDatabase sqliteDatabase,
                                        int oldVersion,
                                        int newVersion) {
         if (oldVersion != newVersion) {
             // Loop all the tables in the set and drop them if they exist
             // and re-create all the tables.
-            sqLiteDatabase.beginTransaction();
+            sqliteDatabase.beginTransaction();
             try {
                 for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
                     if (!TextUtils.isEmpty(sqlCommand.tableName())) {
-                        sqLiteDatabase.execSQL("drop table if exists " +
+                        sqliteDatabase.execSQL("drop table if exists " +
                                 sqlCommand.tableName());
                     }
                 }
-                sqLiteDatabase.setTransactionSuccessful();
+                sqliteDatabase.setTransactionSuccessful();
             } finally {
-                sqLiteDatabase.endTransaction();
+                sqliteDatabase.endTransaction();
             }
 
             // After drop all exist tables, create all tables again.
-            onCreate(sqLiteDatabase);
+            onCreate(sqliteDatabase);
         }
     }
 
-    private void createTablesAndIndexes(SQLiteDatabase sqLiteDatabase) {
+    /**
+     * {@inheritDoc}.
+     */
+    @Override
+    public synchronized void upgrade(
+            @NonNull SQLiteDatabase sqliteDatabase,
+            @NonNull String oldVersion,
+            @NonNull String newVersion) {
+        Objects.requireNonNull(sqliteDatabase);
+        Objects.requireNonNull(oldVersion);
+        Objects.requireNonNull(newVersion);
+
+        // Currently on any model version change, drop all tables created by the DataStore.
+        // TODO: This can be improved by detecting the specific changes in each Model and applying
+        // the changes to the existing schema of the SQLite tables.
+        if (!ObjectsCompat.equals(oldVersion, newVersion)) {
+            dropAllTables(sqliteDatabase);
+
+            // After the existing tables are dropped, call onCreate(SQLiteDatabase) to re-create
+            // the required tables.
+            onCreate(sqliteDatabase);
+        }
+    }
+
+    private void createTablesAndIndexes(SQLiteDatabase sqliteDatabase) {
+        Objects.requireNonNull(sqliteDatabase);
+
         // Loop all the create table sql command string in the set.
         // each sql will create a table in SQLite database.
-        sqLiteDatabase.beginTransaction();
+        sqliteDatabase.beginTransaction();
         try {
             for (final SqlCommand sqlCommand : createSqlCommands.getCreateTableCommands()) {
-                Log.i(TAG, "Creating table: " + sqlCommand.tableName());
-                sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
+                LOG.info("Creating table: " + sqlCommand.tableName());
+                sqliteDatabase.execSQL(sqlCommand.sqlStatement());
             }
 
             for (final SqlCommand sqlCommand : createSqlCommands.getCreateIndexCommands()) {
-                Log.i(TAG, "Creating index for table: " + sqlCommand.tableName());
-                sqLiteDatabase.execSQL(sqlCommand.sqlStatement());
+                LOG.info("Creating index for table: " + sqlCommand.tableName());
+                sqliteDatabase.execSQL(sqlCommand.sqlStatement());
             }
-            sqLiteDatabase.setTransactionSuccessful();
+            sqliteDatabase.setTransactionSuccessful();
         } finally {
-            sqLiteDatabase.endTransaction();
+            sqliteDatabase.endTransaction();
+        }
+    }
+
+    private void dropAllTables(@NonNull SQLiteDatabase sqliteDatabase) {
+        Objects.requireNonNull(sqliteDatabase);
+
+        final Cursor cursor = sqliteDatabase.rawQuery("SELECT name FROM sqlite_master " +
+                "WHERE type='table'", null);
+        try {
+            Objects.requireNonNull(cursor);
+
+            final Set<String> tablesToDrop = new HashSet<>();
+
+            while (cursor.moveToNext()) {
+                tablesToDrop.add(cursor.getString(0));
+            }
+
+            sqliteDatabase.beginTransaction();
+            for (String table : tablesToDrop) {
+                // Android SQLite creates system tables to store metadata
+                // and all the system tables have the prefix SQLITE_SYSTEM_TABLE_PREFIX.
+                if (table.startsWith(SQLITE_SYSTEM_TABLE_PREFIX)) {
+                    continue;
+                }
+                sqliteDatabase.execSQL("DROP TABLE IF EXISTS " + table);
+                LOG.verbose("Dropped table: " + table);
+            }
+            sqliteDatabase.setTransactionSuccessful();
+            sqliteDatabase.endTransaction();
+        } finally {
+            cursor.close();
         }
     }
 }

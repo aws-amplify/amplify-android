@@ -15,7 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.util.Log;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -23,7 +22,9 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
 
@@ -43,7 +44,7 @@ import okhttp3.ResponseBody;
  * @param <T> Casted type of GraphQL result data
  */
 public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
-    private static final String TAG = SingleArrayResultOperation.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
@@ -62,11 +63,11 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
      *        listener to be invoked when response is available, or if
      */
     private SingleArrayResultOperation(
-            String endpoint,
-            OkHttpClient client,
-            GraphQLRequest<T> request,
-            GraphQLResponse.Factory responseFactory,
-            ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+            @NonNull String endpoint,
+            @NonNull OkHttpClient client,
+            @NonNull GraphQLRequest<T> request,
+            @NonNull GraphQLResponse.Factory responseFactory,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -81,7 +82,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         }
 
         try {
-            Log.d(TAG, "Request: " + getRequest().getContent());
+            LOG.debug("Request: " + getRequest().getContent());
             ongoingCall = client.newCall(new Request.Builder()
                     .url(endpoint)
                     .addHeader("accept", CONTENT_TYPE)
@@ -104,11 +105,8 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
                         error,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                     );
-            if (responseListener != null) {
-                responseListener.onError(wrappedError);
-            } else {
-                //TODO: Possibly broadcast error on Hub. We should not throw it here though.
-            }
+
+            responseListener.onError(wrappedError);
         }
     }
 
@@ -130,47 +128,34 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
             if (responseBody != null) {
                 try {
                     jsonResponse = responseBody.string();
-                } catch(IOException exception) {
-                    if (responseListener != null) {
-                        responseListener.onError(new ApiException(
-                                "Could not retrieve the response body from the returned JSON",
-                                exception,
-                                AmplifyException.TODO_RECOVERY_SUGGESTION
-                        ));
-                    } else {
-                        //TODO: Possibly broadcast error on Hub. We should not throw it here though.
-                    }
+                } catch (IOException exception) {
+                    responseListener.onError(new ApiException(
+                            "Could not retrieve the response body from the returned JSON",
+                            exception,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
                 }
             }
 
             try {
                 GraphQLResponse<Iterable<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
 
-                if (responseListener != null) {
-                    responseListener.onResult(wrappedResponse);
-                }
+                responseListener.onResult(wrappedResponse);
+
                 //TODO: Dispatch to hub
             } catch (ApiException exception) {
-                if (responseListener != null) {
-                    responseListener.onError(exception);
-                } else {
-                    //TODO: Dispatch to Hub
-                }
+                responseListener.onError(exception);
             }
         }
 
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException exception) {
-            if (responseListener != null) {
-                responseListener.onError(new ApiException(
-                        "Could not retrieve the response body from the returned JSON",
-                        exception,
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                ));
-            } else {
-                //TODO: Possibly broadcast error on Hub. We should not throw it here though.
-            }
+            responseListener.onError(new ApiException(
+                    "Could not retrieve the response body from the returned JSON",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
         }
     }
 

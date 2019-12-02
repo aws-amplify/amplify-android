@@ -1,0 +1,52 @@
+type Blog @model {
+  id: ID!
+  name: String!
+  posts: [Post] @connection(name: "BlogPosts")
+  owner: BlogOwner! @connection(name: "BlogOwner")
+}
+
+type BlogOwner @model {
+  name: String!
+  id: ID!
+  blog: Blog @connection(name: "BlogOwner")
+  wea: String
+}
+
+enum PostStatus {
+  ACTIVE
+  INACTIVE
+}
+
+type Post @model {
+  id: ID!
+  title: String!
+  blog: Blog @connection(name: "BlogPosts")
+  comments: [Comment] @connection(name: "PostComments")
+  authors: [PostAuthorJoin] @connection(keyName: "byPost", fields: ["id"])
+  status: PostStatus!
+  rating: Int!
+}
+
+type Comment @model {
+  id: ID!
+  content: String
+  post: Post @connection(name: "PostComments")
+}
+
+type Author @model {
+  id: ID!
+  name: String!
+  posts: [PostAuthorJoin] @connection(keyName: "byAuthor", fields: ["id"])
+}
+
+type PostAuthorJoin
+  @model
+  @key(name: "byAuthor", fields: ["authorId"])
+  @key(name: "byPost", fields: ["postId"]) {
+  id: ID!
+  authorId: ID!
+  postId: ID!
+  author: Author @connection(fields: ["authorId"])
+  post: Post @connection(fields: ["postId"])
+}
+
