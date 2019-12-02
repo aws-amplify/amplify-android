@@ -26,11 +26,9 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 /**
- * Convenience class to extend API query and mutate capabilities to also support versioning.
+ * Convenience class to call API in a way that supports versioning and retrieving sync metadata
  */
-public final class ModelSync {
-    private ModelSync() { }
-
+public interface ApiModelSync {
     /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param apiName The name of a configured API
@@ -43,15 +41,12 @@ public final class ModelSync {
      * @return A {@link GraphQLOperation} to track progress and provide
      *        a means to cancel the asynchronous operation
      */
-    public static <T extends Model> GraphQLOperation<T> query(
+    <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             QueryPredicate predicate,
             @NonNull Long lastSync,
-            @Nullable ResultListener<GraphQLResponse<Iterable<ModelSyncEntry<T>>>> responseListener
-    ) {
-        throw new UnsupportedOperationException("Coming soon...");
-    }
+            @Nullable ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener);
 
     /**
      * Uses Amplify API to make a mutation and record versioning information.
@@ -67,14 +62,11 @@ public final class ModelSync {
      * @return A {@link GraphQLOperation} to track progress and provide
      *        a means to cancel the asynchronous operation
      */
-    public static <T extends Model> GraphQLOperation<T> mutate(
+    <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
             QueryPredicate predicate,
             @NonNull MutationType type,
             @NonNull Long lastSync,
-            @Nullable ResultListener<GraphQLResponse<ModelSyncEntry<T>>> responseListener
-    ) {
-        throw new UnsupportedOperationException("Coming soon...");
-    }
+            @Nullable ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
 }
