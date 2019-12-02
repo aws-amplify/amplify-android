@@ -66,7 +66,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private Context context;
-    private SQLiteStorageAdapter sqLiteStorageAdapter;
+    private SQLiteStorageAdapter sqliteStorageAdapter;
 
     /**
      * Enable strict mode for catching SQLite leaks.
@@ -90,17 +90,18 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         context.deleteDatabase(DATABASE_NAME);
 
         ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
-        sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
 
         LatchedResultListener<List<ModelSchema>> setupListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
 
-        sqLiteStorageAdapter.initialize(context, setupListener);
+        sqliteStorageAdapter.initialize(context, setupListener);
 
         List<ModelSchema> setupResults = setupListener.awaitResult();
 
         List<Class<? extends Model>> expectedModels = new ArrayList<>(modelProvider.models());
         expectedModels.add(StorageItemChange.Record.class); // Internal
+        expectedModels.add(PersistentModelVersion.class); // Internal
         assertEquals(expectedModels.size(), setupResults.size());
     }
 
@@ -109,7 +110,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @After
     public void tearDown() {
-        sqLiteStorageAdapter.terminate();
+        sqliteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
     }
 
@@ -163,7 +164,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         assertEquals(person, saveModel(person));
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("Person");
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
@@ -193,7 +194,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         assertEquals(person, saveModel(person));
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Person");
+        final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("Person");
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
@@ -231,7 +232,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         saveModel(car);
 
-        final Cursor cursor = sqLiteStorageAdapter.getQueryAllCursor("Car");
+        final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("Car");
         assertNotNull(cursor);
         assertEquals(1, cursor.getCount());
         if (cursor.moveToFirst()) {
@@ -271,7 +272,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         LatchedResultListener<StorageItemChange.Record> carSaveListener =
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
+        sqliteStorageAdapter.save(car, StorageItemChange.Initiator.DATA_STORE_API, carSaveListener);
 
         Throwable actualError = carSaveListener.awaitError();
         assertNotNull(actualError.getCause());
@@ -554,7 +555,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private <T extends Model> T saveModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
+        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
         return saveListener.awaitResult()
             .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
             .item();
@@ -569,14 +570,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                                                      @Nullable QueryPredicate predicate) {
         LatchedResultListener<Iterator<T>> queryResultListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.query(modelClass, predicate, queryResultListener);
+        sqliteStorageAdapter.query(modelClass, predicate, queryResultListener);
         return queryResultListener.awaitResult();
     }
 
     private <T extends Model> T deleteModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqLiteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
+        sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
         return deleteListener.awaitResult()
                 .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
                 .item();
