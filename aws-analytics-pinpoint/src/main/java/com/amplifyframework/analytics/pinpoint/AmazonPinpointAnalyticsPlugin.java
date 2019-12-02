@@ -147,7 +147,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public String getPluginKey() {
-        return "AmazonPinpointAnalyticsPlugin";
+        return "amazonPinpointAnalyticsPlugin";
     }
 
     /**
