@@ -51,4 +51,12 @@ public class ApiException extends AmplifyException {
     ) {
         super(message, recoverySuggestion);
     }
+
+    public static ApiException selectedPluginIssue(Throwable rootCause) {
+        return new ApiException(
+                "Couldn't select a default plugin for API",
+                rootCause,
+                "Check the included exception for details"
+        );
+    }
 }

@@ -106,10 +106,12 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
         try {
             this.pluginConfiguration =
                 AWSDataStorePluginConfiguration.fromJson(pluginConfigurationJson);
-        } catch (JSONException badConfigException) {
+        } catch (DataStoreException badConfigException) {
             throw new DataStoreException(
-                "The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.",
-                    "Be sure to only call Amplify.configure once"
+                "There was an issue configuring the plugin from the amplifyconfiguration.json",
+                    badConfigException,
+                    "Check the attached exception for more details and " +
+                    "be sure you are only calling Amplify.configure once"
             );
         }
 
@@ -165,7 +167,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * Terminate use of the plugin.
      */
-    synchronized void terminate() {
+    synchronized void terminate() throws DataStoreException {
         syncEngine.stop();
         sqliteStorageAdapter.terminate();
     }

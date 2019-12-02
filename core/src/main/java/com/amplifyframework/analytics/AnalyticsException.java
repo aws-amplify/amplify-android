@@ -51,4 +51,12 @@ public class AnalyticsException extends AmplifyException {
     ) {
         super(message, recoverySuggestion);
     }
+
+    public static AnalyticsException selectedPluginIssue(Throwable rootCause) {
+        return new AnalyticsException(
+                "Couldn't select a default plugin for Analytics",
+                rootCause,
+                "Check the included exception for details"
+        );
+    }
 }

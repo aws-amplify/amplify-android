@@ -143,12 +143,21 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
                 }
             }
 
-            GraphQLResponse<T> wrappedResponse = wrapSingleResultResponse(jsonResponse);
+            try {
+                GraphQLResponse<T> wrappedResponse = wrapSingleResultResponse(jsonResponse);
 
-            if (responseListener != null) {
-                responseListener.onResult(wrappedResponse);
+                if (responseListener != null) {
+                    responseListener.onResult(wrappedResponse);
+                }
+
+                //TODO: Dispatch to hub
+            } catch (ApiException exception) {
+                if (responseListener != null) {
+                    responseListener.onError(exception);
+                } else {
+                    //TODO: Dispatch to Hub
+                }
             }
-            //TODO: Dispatch to hub
         }
 
         @Override

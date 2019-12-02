@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -36,7 +37,7 @@ final class AmplifyTestConfigurator {
      * Gets the singleton instance of Amplify, configured for the API
      * plugin tests.
      */
-    static synchronized void configureIfNotConfigured() {
+    static synchronized void configureIfNotConfigured() throws AmplifyException {
         if (alreadyConfigured) {
             return;
         }

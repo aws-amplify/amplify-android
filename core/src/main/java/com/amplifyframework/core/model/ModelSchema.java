@@ -100,7 +100,7 @@ public final class ModelSchema {
      * @param clazz the instance of a model class
      * @return the ModelSchema object.
      */
-    public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) {
+    public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) throws AmplifyException {
         try {
             final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
             final TreeMap<String, ModelField> fields = new TreeMap<>();
@@ -140,7 +140,11 @@ public final class ModelSchema {
                     .indexes(indexes)
                     .build();
         } catch (Exception exception) {
-            throw new ModelSchemaException("Error in constructing a ModelSchema.", exception);
+            throw new AmplifyException(
+                    "Error in constructing a ModelSchema.",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
     }
 
@@ -276,7 +280,7 @@ public final class ModelSchema {
 
         if (!instance.getClass().getSimpleName().equals(this.getName())) {
             throw new AmplifyException(
-                    "The object provided is not an instance of this Model." +
+                    "The object provided is not an instance of this Model.",
                     "Please provide an instance of " + this.getName() + " which this is a schema for.");
         }
 
@@ -300,8 +304,7 @@ public final class ModelSchema {
                         " is not present in " +
                         instance.getClass().getSimpleName(),
                         exception,
-                        "Check if this model schema is a correct representation of the fields in the provided Object",
-                        false);
+                        "Check if this model schema is a correct representation of the fields in the provided Object");
             }
         }
         return result;

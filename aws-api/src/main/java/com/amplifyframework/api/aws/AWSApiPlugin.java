@@ -34,6 +34,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import org.json.JSONObject;
 
+import java.lang.reflect.ParameterizedType;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -124,11 +125,21 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String objectId,
             @Nullable ResultListener<GraphQLResponse<T>> responseListener
     ) {
-        GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
-        final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, request, responseListener);
-        operation.start();
-        return operation;
+        try {
+            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
+            final GraphQLOperation<T> operation =
+                    buildSingleResponseOperation(apiName, request, responseListener);
+            operation.start();
+            return operation;
+        } catch (ApiException exception) {
+            if (responseListener != null) {
+                responseListener.onError(exception);
+            } else {
+                //TODO: Dispatch on Hub
+            }
+
+            return null;
+        }
     }
 
     @Override
@@ -142,7 +153,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
             return query(apiName, request, responseListener);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            if (responseListener != null) {
+                responseListener.onError(exception);
+            } else {
+                //TODO: Dispatch on Hub
+            }
+
             return null;
         }
     }
@@ -185,7 +201,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildMutation(model, predicate, mutationType);
             return mutate(apiName, request, responseListener);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            if (responseListener != null) {
+                responseListener.onError(exception);
+            } else {
+                //TODO: Dispatch on Hub
+            }
+
             return null;
         }
     }
@@ -209,14 +230,24 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull SubscriptionType subscriptionType,
             @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener
     ) {
-        return subscribe(
-                apiName,
-                AppSyncGraphQLRequestFactory.buildSubscription(
-                        modelClass,
-                        subscriptionType
-                ),
-                subscriptionListener
-        );
+        try {
+            return subscribe(
+                    apiName,
+                    AppSyncGraphQLRequestFactory.buildSubscription(
+                            modelClass,
+                            subscriptionType
+                    ),
+                    subscriptionListener
+            );
+        } catch (ApiException exception) {
+            if (subscriptionListener != null) {
+                subscriptionListener.onError(exception);
+            } else {
+                //TODO: Dispatch on Hub
+            }
+
+            return null;
+        }
     }
 
     @SuppressWarnings("checkstyle:WhitespaceAround") // {} inline block for new QueryPredicate {}

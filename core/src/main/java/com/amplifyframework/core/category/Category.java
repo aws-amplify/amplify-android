@@ -18,7 +18,7 @@ package com.amplifyframework.core.category;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
@@ -59,13 +59,13 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Configure category with provided AmplifyConfiguration object.
      * @param configuration Configuration for all plugins in the category
      * @param context An Android Context
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no configuration found for a plugin
+     * @throws AmplifyException if already configured or no config is found for a plugin
      */
     public final void configure(CategoryConfiguration configuration, Context context)
-            throws ConfigurationException, PluginException {
+            throws AmplifyException {
         if (isConfigured) {
-            throw new ConfigurationException.AmplifyAlreadyConfiguredException();
+            throw new AmplifyException("Amplify was already configured",
+                    "Be sure to only call Amplify.configure once");
         }
 
         for (P plugin : getPlugins()) {
@@ -75,8 +75,8 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             if (pluginConfig != null) {
                 plugin.configure(pluginConfig, context);
             } else {
-                throw new PluginException("No configuration data was provided for " + pluginKey +
-                        ". Check the amplifyconfiguration.json file or, if you are configuring manually, " +
+                throw new AmplifyException("No configuration data was provided for " + pluginKey + ".",
+                        "Check the amplifyconfiguration.json file or, if you are configuring manually, " +
                         "the config object you provided for the " + plugin.getCategoryType() + " category");
             }
         }
@@ -87,27 +87,30 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Register a plugin into the Category.
      * @param plugin A plugin to add
-     * @throws PluginException On failure to add the plugin
+     * @throws AmplifyException On failure to add the plugin
      */
-    public final void addPlugin(@NonNull P plugin) throws PluginException {
+    public final void addPlugin(@NonNull P plugin) throws AmplifyException {
         try {
             plugins.put(plugin.getPluginKey(), plugin);
         } catch (Exception exception) {
-            throw new PluginException.EmptyKeyException();
+            throw new AmplifyException(
+                "Plugin key was missing for + " + plugin.getClass().getSimpleName(),
+                "This should never happen - contact the plugin developers to find out why this is."
+            );
         }
     }
 
     /**
      * Remove a plugin from the category.
      * @param plugin A plugin to remove 
-     * @throws PluginException
+     * @throws AmplifyException
      *         If the provided plugin was not associated to the
      *         category, perhaps because it never was, or because it was
      *         already removed
      */
-    public final void removePlugin(@NonNull P plugin) throws PluginException {
+    public final void removePlugin(@NonNull P plugin) {
         if (plugins.remove(plugin.getPluginKey()) == null) {
-            throw new PluginException.NoSuchPluginException();
+            // TODO: Fail silently for now, matching iOS - potentially publish on Hub in the future.
         }
     }
 
@@ -115,14 +118,15 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Retrieve a plugin by its key.
      * @param pluginKey A key that identifies a plugin implementation
      * @return The plugin object associated to pluginKey, if registered
-     * @throws PluginException
-     *         If there is no plugin associated to the requested key
      */
-    public final P getPlugin(@NonNull final String pluginKey) throws PluginException {
+    public final P getPlugin(@NonNull final String pluginKey) {
         if (plugins.containsKey(pluginKey)) {
             return plugins.get(pluginKey);
         } else {
-            throw new PluginException.NoSuchPluginException();
+            throw new IllegalStateException(
+                    "Tried to get a plugin but that plugin was not present." +
+                    "Check if the plugin was added originally or perhaps was already removed."
+            );
         }
     }
 
@@ -137,20 +141,27 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Obtain the registered plugin for this category.
      * @return The only registered plugin for this category
-     * @throws ConfigurationException
+     * @throws AmplifyException
      *         If the category has not yet been configured, or if
      *         category configuration had been attempted previously but
      *         did not succeed
      */
-    protected final P getSelectedPlugin() throws ConfigurationException {
+    protected final P getSelectedPlugin() {
         if (!isConfigured) {
-            throw new ConfigurationException("This category is not yet configured.");
+            throw new IllegalStateException("This category is not yet configured." +
+                    "Make sure you added it with Amplify.addPlugin and then called Amplify.config");
         }
         if (plugins.isEmpty()) {
-            throw new PluginException.NoSuchPluginException();
+            throw new IllegalStateException(
+                    "Tried to get a plugin but that plugin was not present." +
+                    "Check if the plugin was added originally or perhaps was already removed."
+            );
         }
         if (plugins.size() > 1) {
-            throw new PluginException.MultiplePluginsException();
+            throw new IllegalStateException(
+                    "Tried to get a default plugin but there are more than one to choose from in this category." +
+                    "Call getPlugin(pluginKey) to choose the specific plugin you want to use in this case."
+            );
         }
 
         return getPlugins().iterator().next();

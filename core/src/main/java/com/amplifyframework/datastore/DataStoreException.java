@@ -51,4 +51,12 @@ public class DataStoreException extends AmplifyException {
     ) {
         super(message, recoverySuggestion);
     }
+
+    public static DataStoreException selectedPluginIssue(Throwable rootCause) {
+        return new DataStoreException(
+                "Couldn't select a default plugin for DataStore",
+                rootCause,
+                "Check the included exception for details"
+        );
+    }
 }

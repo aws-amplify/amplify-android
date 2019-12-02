@@ -17,8 +17,6 @@ package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.ConfigurationException;
-
 import java.util.Map;
 import java.util.Set;
 
@@ -54,18 +52,18 @@ public interface AnalyticsCategoryBehavior {
      *                  based on the name of the event.
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
-     * @throws ConfigurationException If the category is badly/not yet configured
+     * @throws AnalyticsException If the category is badly/not yet configured
      */
-    void recordEvent(@NonNull String eventName) throws AnalyticsException, ConfigurationException;
+    void recordEvent(@NonNull String eventName) throws AnalyticsException;
 
     /**
      * Record the event by storing in the local database.
      * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
      * @throws AnalyticsException when there is an error in
      *                            storing the event in the local database.
-     * @throws ConfigurationException If the category is badly/not yet configured
+     * @throws AnalyticsException If the category is badly/not yet configured
      */
-    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException, ConfigurationException;
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
 
     /**
      * Register properties that will be recorded by all the subsequent calls to {@link #recordEvent(AnalyticsEvent)}.

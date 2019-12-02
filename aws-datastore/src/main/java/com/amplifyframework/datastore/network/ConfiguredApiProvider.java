@@ -36,5 +36,5 @@ public interface ConfiguredApiProvider {
      * @throws DataStoreException If there is no such API configured for use
      */
     @NonNull
-    String getDataStoreApiName() throws DataStoreException, DataStoreException;
+    String getDataStoreApiName() throws DataStoreException;
 }

@@ -65,8 +65,7 @@ public enum HubChannel {
                 return possibleMatch;
             }
         }
-        throw new NoHubChannelException("No HubChannel found for the CategoryType: " +
-                categoryType);
+        throw new IllegalArgumentException("No HubChannel found for the CategoryType: " + categoryType);
     }
 }
 

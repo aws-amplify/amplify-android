@@ -105,12 +105,13 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     }
 
     @Override
-    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
+    public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) throws HubException {
         synchronized (subscriptionsLock) {
             // First, find the subscription while trying to remove its subscription from the token map.
             HubSubscription subscriptionBeingEnded = subscriptionsByToken.remove(subscriptionToken);
             if (subscriptionBeingEnded == null) {
-                throw new HubException("Invalid subscription token. Subscriber invalid, or already unsubscribed?");
+                throw new HubException("Invalid subscription token.",
+                        "Subscriber invalid, or already unsubscribed?");
             }
 
             // Now that we have a handle to the subscription, figure out which channel
@@ -127,7 +128,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws HubException {
 
     }
 

@@ -409,7 +409,7 @@ final class SubscriptionEndpoint {
 
         void dispatchNextMessage(String message) {
             try {
-                GraphQLResponse response = responseFactory.buildSingleItemResponse(message, classToCast);
+                GraphQLResponse<T> response = responseFactory.buildSingleItemResponse(message, classToCast);
                 responseListener.onNext(response);
             } catch (ApiException exception) {
                 dispatchError(exception);

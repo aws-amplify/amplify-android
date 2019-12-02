@@ -19,7 +19,7 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.core.category.Category;
@@ -101,10 +101,9 @@ public final class Amplify {
     /**
      * Read the configuration from amplifyconfiguration.json file.
      * @param context Android context required to read the contents of file
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no plugin found for a configuration
+     * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
      */
-    public static void configure(@NonNull Context context) throws ConfigurationException, PluginException {
+    public static void configure(@NonNull Context context) throws AmplifyException {
         AmplifyConfiguration config = new AmplifyConfiguration();
         config.populateFromConfigFile(context);
         configure(config, context);
@@ -114,15 +113,17 @@ public final class Amplify {
      * Configure Amplify with AmplifyConfiguration object.
      * @param configuration AmplifyConfiguration object for configuration via code
      * @param context An Android Context
-     * @throws ConfigurationException thrown when already configured
-     * @throws PluginException thrown when there is no configuration found for a plugin
+     * @throws AmplifyException thrown when already configured or there is no configuration found for a plugin
      */
     public static void configure(final AmplifyConfiguration configuration, Context context)
-            throws ConfigurationException, PluginException {
+            throws AmplifyException {
 
         synchronized (LOCK) {
             if (configured) {
-                throw new ConfigurationException.AmplifyAlreadyConfiguredException();
+                throw new AmplifyException(
+                    "The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.",
+                        "Be sure to only call Amplify.configure once"
+                );
             }
             amplifyConfiguration = configuration;
 
@@ -143,10 +144,10 @@ public final class Amplify {
      * @param plugin an implementation of a CATEGORY_TYPE that
      *               conforms to the {@link Plugin} interface.
      * @param <P> any plugin that conforms to the {@link Plugin} interface
-     * @throws PluginException when a plugin cannot be registered for the category type it belongs to
+     * @throws AmplifyException when a plugin cannot be registered for the category type it belongs to
      *                         or when when the plugin's category type is not supported by Amplify.
      */
-    public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin) throws PluginException {
+    public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin) throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.ADD);
     }
 
@@ -154,21 +155,24 @@ public final class Amplify {
      * Removes a plugin form the Amplify framework.
      * @param plugin The plugin to remove from the Amplify framework
      * @param <P> The type of the plugin being removed
-     * @throws PluginException On failure to remove a plugin
+     * @throws AmplifyException On failure to remove a plugin
      */
-    public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws PluginException {
+    public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
     }
 
     @SuppressWarnings("unchecked") // Wants Category<P> from CATEGORIES.get(...), but it has Category<?>
     private static <P extends Plugin<?>> void updatePluginRegistry(
-            final P plugin, final RegistryUpdateType registryUpdateType) throws PluginException {
+            final P plugin, final RegistryUpdateType registryUpdateType) throws AmplifyException {
 
         synchronized (LOCK) {
             if (TextUtils.isEmpty(plugin.getPluginKey())) {
-                throw new PluginException.EmptyKeyException();
+                throw new AmplifyException(
+                        "Plugin key was missing for + " + plugin.getClass().getSimpleName(),
+                        "This should never happen - contact the plugin developers to find out why this is."
+                );
             } else if (!CATEGORIES.containsKey(plugin.getCategoryType())) {
-                throw new PluginException.NoSuchPluginException("Plugin category does not exist. " +
+                throw new AmplifyException("Plugin category does not exist. ",
                     "Verify that the library version is correct and supports the plugin's category.");
             }
 
@@ -180,7 +184,8 @@ public final class Amplify {
                 category = null;
             }
             if (category == null) {
-                throw new PluginException.MismatchedPluginException();
+                throw new AmplifyException("A plugin is being added to the wrong category",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION);
             }
 
             if (RegistryUpdateType.REMOVE.equals(registryUpdateType)) {

@@ -143,12 +143,20 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
                 }
             }
 
-            GraphQLResponse<Iterable<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
+            try {
+                GraphQLResponse<Iterable<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
 
-            if (responseListener != null) {
-                responseListener.onResult(wrappedResponse);
+                if (responseListener != null) {
+                    responseListener.onResult(wrappedResponse);
+                }
+                //TODO: Dispatch to hub
+            } catch (ApiException exception) {
+                if (responseListener != null) {
+                    responseListener.onError(exception);
+                } else {
+                    //TODO: Dispatch to Hub
+                }
             }
-            //TODO: Dispatch to hub
         }
 
         @Override

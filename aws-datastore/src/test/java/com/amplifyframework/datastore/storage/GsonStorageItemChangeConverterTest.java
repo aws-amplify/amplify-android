@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage;
 
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
 
@@ -37,7 +38,7 @@ public class GsonStorageItemChangeConverterTest {
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void convertStorageItemChangeToRecordAndBack() {
+    public void convertStorageItemChangeToRecordAndBack() throws DataStoreException {
         // Arrange a StorageItemChange<Person> with an expected change ID
         String expectedChangeId = UUID.randomUUID().toString();
         StorageItemChange<Person> originalItemChange = StorageItemChange.<Person>builder()

@@ -51,4 +51,12 @@ public class StorageException extends AmplifyException {
     ) {
         super(message, recoverySuggestion);
     }
+
+    public static StorageException selectedPluginIssue(Throwable rootCause) {
+        return new StorageException(
+                "Couldn't select a default plugin for Storage",
+                rootCause,
+                "Check the included exception for details"
+        );
+    }
 }

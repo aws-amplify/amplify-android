@@ -18,7 +18,6 @@ package com.amplifyframework.storage;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.storage.exception.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
@@ -49,7 +48,7 @@ public interface StorageCategoryBehavior {
      *         {@see key} is not known in storage.
      */
     StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
-                                              @NonNull String local) throws StorageException;
+                                              @NonNull String local);
 
     /**
      * Download object to file from storage.
@@ -68,7 +67,7 @@ public interface StorageCategoryBehavior {
      */
     StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
-                                  StorageDownloadFileOptions options) throws StorageException;
+                                  StorageDownloadFileOptions options);
 
     /**
      * Download object to file from storage.
@@ -85,7 +84,7 @@ public interface StorageCategoryBehavior {
      */
     StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
-                                  ResultListener<StorageDownloadFileResult> resultListener) throws StorageException;
+                                  ResultListener<StorageDownloadFileResult> resultListener);
 
     /**
      * Download object to memory from storage.
@@ -107,7 +106,7 @@ public interface StorageCategoryBehavior {
     StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
                                   @NonNull String local,
                                   StorageDownloadFileOptions options,
-                                  ResultListener<StorageDownloadFileResult> resultListener) throws StorageException;
+                                  ResultListener<StorageDownloadFileResult> resultListener);
 
     /**
      * Upload local file on given path to storage.
@@ -121,7 +120,7 @@ public interface StorageCategoryBehavior {
      *         {@see key}, a bad {@see local} file path, or other reasons.
      */
     StorageUploadFileOperation<?> uploadFile(@NonNull String key,
-                                          @NonNull String local) throws StorageException;
+                                          @NonNull String local);
 
     /**
      * Upload local file on given path to storage.
@@ -138,7 +137,7 @@ public interface StorageCategoryBehavior {
      */
     StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
-                                StorageUploadFileOptions options) throws StorageException;
+                                StorageUploadFileOptions options);
 
     /**
      * Upload local file on given path to storage.
@@ -155,7 +154,7 @@ public interface StorageCategoryBehavior {
      */
     StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
-                                ResultListener<StorageUploadFileResult> resultListener) throws StorageException;
+                                ResultListener<StorageUploadFileResult> resultListener);
 
     /**
      * Upload local file on given path to storage.
@@ -175,7 +174,7 @@ public interface StorageCategoryBehavior {
     StorageUploadFileOperation<?> uploadFile(@NonNull String key,
                                 @NonNull String local,
                                 StorageUploadFileOptions options,
-                                ResultListener<StorageUploadFileResult> resultListener) throws StorageException;
+                                ResultListener<StorageUploadFileResult> resultListener);
 
     /**
      * Delete object from storage.
@@ -187,7 +186,7 @@ public interface StorageCategoryBehavior {
      *         This could occur for a variety of reasons, including
      *         if the {@see key} does not refer to an object currently in storage.
      */
-    StorageRemoveOperation<?> remove(@NonNull String key) throws StorageException;
+    StorageRemoveOperation<?> remove(@NonNull String key);
 
     /**
      * Delete object from storage.
@@ -203,7 +202,7 @@ public interface StorageCategoryBehavior {
      *
      */
     StorageRemoveOperation<?> remove(@NonNull String key,
-                            StorageRemoveOptions options) throws StorageException;
+                            StorageRemoveOptions options);
 
     /**
      * Delete object from storage.
@@ -219,7 +218,7 @@ public interface StorageCategoryBehavior {
      *
      */
     StorageRemoveOperation<?> remove(@NonNull String key,
-                            ResultListener<StorageRemoveResult> resultListener) throws StorageException;
+                            ResultListener<StorageRemoveResult> resultListener);
 
     /**
      * Delete object from storage.
@@ -236,7 +235,7 @@ public interface StorageCategoryBehavior {
      */
     StorageRemoveOperation<?> remove(@NonNull String key,
                             StorageRemoveOptions options,
-                            ResultListener<StorageRemoveResult> resultListener) throws StorageException;
+                            ResultListener<StorageRemoveResult> resultListener);
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -249,7 +248,7 @@ public interface StorageCategoryBehavior {
      *         a variety or reasons, such as if the storage system is not
      *         currently accessible.
      */
-    StorageListOperation<?> list(@NonNull String path) throws StorageException;
+    StorageListOperation<?> list(@NonNull String path);
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -263,7 +262,7 @@ public interface StorageCategoryBehavior {
      *         for a variety of reasons, such as if the provided {@see options}
      *         are invalid.
      */
-    StorageListOperation<?> list(@NonNull String path, StorageListOptions options) throws StorageException;
+    StorageListOperation<?> list(@NonNull String path, StorageListOptions options);
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -278,7 +277,7 @@ public interface StorageCategoryBehavior {
      *         are invalid.
      */
     StorageListOperation<?> list(@NonNull String path,
-                            ResultListener<StorageListResult> resultListener) throws StorageException;
+                            ResultListener<StorageListResult> resultListener);
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -296,5 +295,5 @@ public interface StorageCategoryBehavior {
      */
     StorageListOperation<?> list(@NonNull String path,
                             StorageListOptions options,
-                            ResultListener<StorageListResult> resultListener) throws StorageException;
+                            ResultListener<StorageListResult> resultListener);
 }

@@ -17,7 +17,6 @@ package com.amplifyframework.datastore;
 
 import android.os.Build;
 
-import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.testutils.RandomString;
 
 import org.json.JSONException;
@@ -47,7 +46,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       test failure.
      */
     @Test
-    public void defaultSyncModeUsedWhenJsonIsEmpty() throws JSONException {
+    public void defaultSyncModeUsedWhenJsonIsEmpty() throws DataStoreException {
         AWSDataStorePluginConfiguration config = AWSDataStorePluginConfiguration.fromJson(new JSONObject());
         assertEquals(AWSDataStorePluginConfiguration.SyncMode.LOCAL_ONLY, config.getSyncMode());
         assertFalse(config.hasApiName());
@@ -63,7 +62,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       test failure.
      */
     @Test
-    public void remoteSyncDisabledWhenJsonRequestsDisable() throws JSONException {
+    public void remoteSyncDisabledWhenJsonRequestsDisable() throws JSONException, DataStoreException {
         AWSDataStorePluginConfiguration config = AWSDataStorePluginConfiguration.fromJson(new JSONObject()
             .put("syncMode", "none"));
 
@@ -76,7 +75,7 @@ public final class AWSDataStorePluginConfigurationTest {
      * key had not been configured, it is possible to construct a valid config object. But,
      * in this situation, the
      * {@link AWSDataStorePluginConfiguration#getSyncMode()} getter should throw an
-     * {@link ConfigurationException} instead of returning a null-value. The getter behaves
+     * {@link DataStoreException} instead of returning a null-value. The getter behaves
      * this way so that it may always return non-null. A caller may check for the presence of the
      * value by using {@link AWSDataStorePluginConfiguration#hasApiName()}.
      * @throws JSONException Technically possible as part of the method signature
@@ -84,9 +83,10 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
+     *
      */
-    @Test(expected = ConfigurationException.class)
-    public void getSyncModeThrowsConfigExceptionWhenItWasNotConfigured() throws JSONException {
+    @Test(expected = DataStoreException.class)
+    public void getSyncModeThrowsConfigExceptionWhenItWasNotConfigured() throws JSONException, DataStoreException {
         String expectedApiName = RandomString.string();
         AWSDataStorePluginConfiguration config = AWSDataStorePluginConfiguration.fromJson(new JSONObject()
             .put("syncMode", "none")
@@ -109,7 +109,8 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       test failure.
      */
     @Test
-    public void remoteSyncDisabledWhenJsonRequestsDisabledEvenThoughApiNameSpecified() throws JSONException {
+    public void remoteSyncDisabledWhenJsonRequestsDisabledEvenThoughApiNameSpecified()
+            throws JSONException, DataStoreException {
         String expectedApiName = RandomString.string();
         AWSDataStorePluginConfiguration config = AWSDataStorePluginConfiguration.fromJson(new JSONObject()
             .put("syncMode", "none")
@@ -122,15 +123,16 @@ public final class AWSDataStorePluginConfigurationTest {
 
     /**
      * If API sync mode is requested, but the "apiName" key is not present in the
-     * config, then an {@link ConfigurationException} shall be thrown.
+     * config, then an {@link DataStoreException} shall be thrown.
      * @throws JSONException Technically possible as part of the method signature
      *                       {@link AWSDataStorePluginConfiguration#fromJson(JSONObject)},
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
      */
-    @Test(expected = ConfigurationException.class)
-    public void throwsConfigurationExceptionWhenNoApiSpecifiedForRemoteSync() throws JSONException {
+    @Test(expected = DataStoreException.class)
+    public void throwsConfigurationExceptionWhenNoApiSpecifiedForRemoteSync()
+            throws JSONException, DataStoreException {
         AWSDataStorePluginConfiguration.fromJson(new JSONObject()
             .put("syncMode", "api")
             // .put("apiName", "non-empty") cause of exception, this is not here
@@ -139,15 +141,16 @@ public final class AWSDataStorePluginConfigurationTest {
 
     /**
      * If API sync mode is requested, but the value for "apiName" is blank,
-     * an {@link ConfigurationException} shall be raised.
+     * an {@link DataStoreException} shall be raised.
      * @throws JSONException Technically possible as part of the method signature
      *                       {@link AWSDataStorePluginConfiguration#fromJson(JSONObject)},
      *                       and also while arranging the {@link JSONObject} input,
      *                       but JSONException is not expected this test, and would constitute a
      *                       test failure.
      */
-    @Test(expected = ConfigurationException.class)
-    public void throwsConfigurationExceptionWhenApiNameIsBlankForRemoteSync() throws JSONException {
+    @Test(expected = DataStoreException.class)
+    public void throwsConfigurationExceptionWhenApiNameIsBlankForRemoteSync()
+            throws JSONException, DataStoreException {
         AWSDataStorePluginConfiguration.fromJson(new JSONObject()
             .put("syncMode", "api")
             .put("apiName", "")); // cause of exception, has blank apiName, ""
@@ -165,7 +168,7 @@ public final class AWSDataStorePluginConfigurationTest {
      *                       test failure.
      */
     @Test
-    public void remoteSyncIsConfiguredWhenApiNameAlsoProvided() throws JSONException {
+    public void remoteSyncIsConfiguredWhenApiNameAlsoProvided() throws JSONException, DataStoreException {
         // Arrange some known api name. Configure JSON to include it, and request for API sync mode
         String expectedApiName = RandomString.string();
         AWSDataStorePluginConfiguration config = AWSDataStorePluginConfiguration.fromJson(new JSONObject()

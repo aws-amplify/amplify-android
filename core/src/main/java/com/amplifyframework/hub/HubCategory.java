@@ -76,7 +76,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
      */
     public <E, R> SubscriptionToken subscribe(
             @NonNull final AmplifyOperation<R> operation,
-            @NonNull final EventListener<E> eventListener) {
+            @NonNull final EventListener<E> eventListener) throws HubException {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubSubscriber transformingListener = event -> {
             // TODO: check for casting of Object to E and
