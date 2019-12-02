@@ -114,51 +114,6 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Asserts if the expected model version is stored on disk.
-     */
-    @Test
-    public void modelVersionStoredCorrectly() {
-        ModelProvider modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
-        String expectedVersion = modelProvider.version();
-
-        PersistentModelVersion persistentModelVersion =
-                PersistentModelVersion
-                        .fromLocalStorage(sqliteStorageAdapter)
-                        .blockingGet()
-                        .next();
-        String actualVersion = persistentModelVersion.getVersion();
-
-        assertEquals(expectedVersion, actualVersion);
-    }
-
-    /**
-     * Asserts if the model version change drops existing tables and creates
-     * new tables.
-     */
-    @Test
-    public void modelVersionChangeIsDetectedAndUpdatedInLocalStorage() {
-        sqliteStorageAdapter.terminate();
-
-        ModelProvider modelProvider = RandomVersionModelProvider.singletonInstance();
-        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
-        String expectedVersion = modelProvider.version();
-
-        LatchedResultListener<List<ModelSchema>> setupListener =
-                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.initialize(context, setupListener);
-        setupListener.awaitTerminalEvent().assertNoError();
-
-        PersistentModelVersion persistentModelVersion =
-                PersistentModelVersion
-                        .fromLocalStorage(sqliteStorageAdapter)
-                        .blockingGet()
-                        .next();
-        String actualVersion = persistentModelVersion.getVersion();
-
-        assertEquals(expectedVersion, actualVersion);
-    }
-
-    /**
      * Assert that save stores item in the SQLite database correctly.
      *
      */
