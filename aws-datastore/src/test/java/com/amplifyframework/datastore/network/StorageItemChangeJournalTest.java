@@ -19,7 +19,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -61,19 +61,18 @@ public class StorageItemChangeJournalTest {
         TestObserver<StorageItemChange<? extends Model>> queueObserver = TestObserver.create();
         storageItemChangeJournal.observe().subscribe(queueObserver);
 
-        StorageItemChange<Person> saveJameson = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> saveJameson = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.SAVE)
-            .itemClass(Person.class)
-            .item(Person.builder()
-                .firstName("Jameson")
-                .lastName("Williams")
+            .itemClass(BlogOwner.class)
+            .item(BlogOwner.builder()
+                .name("Jameson Williams")
                 .build())
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
 
-        // Enqueue an save for a Jameson person object,
+        // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onSuccess().
-        TestObserver<StorageItemChange<Person>> saveObserver = TestObserver.create();
+        TestObserver<StorageItemChange<BlogOwner>> saveObserver = TestObserver.create();
         storageItemChangeJournal.enqueue(saveJameson).subscribe(saveObserver);
         saveObserver.awaitTerminalEvent();
         saveObserver.dispose();
@@ -102,11 +101,10 @@ public class StorageItemChangeJournalTest {
         storageItemChangeJournal.observe().subscribe(testObserver);
 
         // Enqueue something, but don't subscribe to the observable just yet.
-        storageItemChangeJournal.enqueue(StorageItemChange.<Person>builder()
-            .itemClass(Person.class)
-            .item(Person.builder()
-                .firstName("Tony")
-                .lastName("Daniels")
+        storageItemChangeJournal.enqueue(StorageItemChange.<BlogOwner>builder()
+            .itemClass(BlogOwner.class)
+            .item(BlogOwner.builder()
+                .name("Tony Daniels")
                 .build())
             .type(StorageItemChange.Type.SAVE)
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
@@ -131,31 +129,28 @@ public class StorageItemChangeJournalTest {
     public void observeReplaysUnprocessedChangesOnSubscribe() {
 
         // Arrange: some mutations.
-        StorageItemChange<Person> updateTony = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> updateTony = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.SAVE)
-            .item(Person.builder()
-                .firstName("Tony")
-                .lastName("Daniels")
+            .item(BlogOwner.builder()
+                .name("Tony Daniels")
                 .build())
-            .itemClass(Person.class)
+            .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
-        StorageItemChange<Person> insertSam = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> insertSam = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.SAVE)
-            .item(Person.builder()
-                .firstName("Sam")
-                .lastName("Watson")
+            .item(BlogOwner.builder()
+                .name("Sam Watson")
                 .build())
-            .itemClass(Person.class)
+            .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
-        StorageItemChange<Person> deleteBetty = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> deleteBetty = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.DELETE)
-            .item(Person.builder()
-                .firstName("Betty")
-                .lastName("Smith")
+            .item(BlogOwner.builder()
+                .name("Betty Smith")
                 .build())
-            .itemClass(Person.class)
+            .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
 
@@ -179,18 +174,17 @@ public class StorageItemChangeJournalTest {
     @Test
     public void removeRemovesChangesFromQueue() {
         // Arrange: there is a change in the queue.
-        StorageItemChange<Person> deleteBillGates = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> deleteBillGates = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.DELETE)
-            .itemClass(Person.class)
-            .item(Person.builder()
-                .firstName("Bill")
-                .lastName("Gates")
+            .itemClass(BlogOwner.class)
+            .item(BlogOwner.builder()
+                .name("Bill Gates")
                 .build())
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
         inMemoryStorageAdapter.items().add(deleteBillGates.toRecord(storageItemChangeConverter));
 
-        TestObserver<StorageItemChange<Person>> testObserver = TestObserver.create();
+        TestObserver<StorageItemChange<BlogOwner>> testObserver = TestObserver.create();
         storageItemChangeJournal.remove(deleteBillGates).subscribe(testObserver);
 
         testObserver.assertValue(deleteBillGates);

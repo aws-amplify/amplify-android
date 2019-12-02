@@ -1,20 +1,20 @@
 {
-  "UserAgent": "aws-amplify-cli/2.0",
-  "Version": "1.0",
-  "Storage": {
+  "userAgent": "aws-amplify-cli/2.0",
+  "version": "1.0",
+  "storage": {
     "plugins": {
-      "AWSS3StoragePlugin": {
-        "Bucket": "my-s3-bucket",
-        "Region": "us-west-2",
-        "TransferAcceleration": true
+      "awsS3StoragePlugin": {
+        "bucket": "my-s3-bucket",
+        "region": "us-west-2",
+        "transferAcceleration": true
       }
     }
   },
   "analytics": {
     "plugins": {
-      "AmazonPinpointAnalyticsPlugin": {
-        "AppId": "xx113344",
-        "Region": "us-east-1",
+      "amazonPinpointAnalyticsPlugin": {
+        "appId": "xx113344",
+        "region": "us-east-1",
         "optOut": "ALL",
         "globalUserAttributes": {
           "interests": [
@@ -24,10 +24,10 @@
           ]
         }
       },
-      "AmazonKinesisAnalyticsPlugin": {
-        "Stream": "my-kinesis-stream",
-        "PartitionKey": "my-kinesis-partition-key",
-        "Region": "us-east-1"
+      "amazonKinesisAnalyticsPlugin": {
+        "stream": "my-kinesis-stream",
+        "partitionKey": "my-kinesis-partition-key",
+        "region": "us-east-1"
       }
     }
   },

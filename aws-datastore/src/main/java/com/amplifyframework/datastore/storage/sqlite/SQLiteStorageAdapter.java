@@ -491,10 +491,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             if (column == null) {
                 continue;
             }
-            final String columnName = column.isPrimaryKey()
-                    ? column.getAliasedName()
-                    : column.getName();
-
+            final String columnName = column.getAliasedName();
             final JavaFieldType javaFieldType;
             if (Model.class.isAssignableFrom(field.getType())) {
                 javaFieldType = JavaFieldType.MODEL;
@@ -585,10 +582,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 if (column == null) {
                     continue;
                 }
-                final String columnName = column.isPrimaryKey()
-                        ? column.getAliasedName()
-                        : column.getName();
-
+                final String columnName = column.getAliasedName();
                 final ModelField modelField = entry.getValue();
                 final String fieldGraphQlType = entry.getValue().getTargetType();
                 final JavaFieldType fieldJavaType;

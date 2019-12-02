@@ -41,9 +41,6 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
     // SQLiteDatabase Metadata is stored in tables prefixed by this prefix.
     private static final String SQLITE_SYSTEM_TABLE_PREFIX = "sqlite_";
 
-    // The singleton instance.
-    private static SQLiteStorageHelper sqliteStorageHelperInstance;
-
     // Contains all create table and create index commands.
     private final CreateSqlCommands createSqlCommands;
 
@@ -58,24 +55,19 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
     }
 
     /**
-     * Create / Retrieve the singleton instance of the SQLiteStorageHelper.
-     *
+     * Creates an instance of the SQLiteStorageHelper.
      * @param context Android context
      * @param databaseName name of the database
      * @param databaseVersion version of the database
      * @param createSqlCommands set of create table and create index sql commands
-     * @return the singleton instance
+     * @return A new instance of the SQLiteStorageHelper
      */
-    static synchronized SQLiteStorageHelper getInstance(
+    static SQLiteStorageHelper getInstance(
             @NonNull Context context,
             @NonNull String databaseName,
             int databaseVersion,
             @NonNull CreateSqlCommands createSqlCommands) {
-        if (sqliteStorageHelperInstance == null) {
-            sqliteStorageHelperInstance = new SQLiteStorageHelper(
-                    context, databaseName, databaseVersion, createSqlCommands);
-        }
-        return sqliteStorageHelperInstance;
+        return new SQLiteStorageHelper(context, databaseName, databaseVersion, createSqlCommands);
     }
 
     /**

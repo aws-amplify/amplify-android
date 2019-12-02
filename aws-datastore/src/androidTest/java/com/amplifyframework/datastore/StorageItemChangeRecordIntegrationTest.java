@@ -25,7 +25,7 @@ import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
@@ -34,6 +34,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -46,7 +48,6 @@ import static org.junit.Assert.assertEquals;
  * Tests that the {@link SQLiteStorageAdapter} is able to serve as as repository
  * for our {@link StorageItemChange.Record}s.
  */
-@SuppressWarnings("rawtypes")
 public final class StorageItemChangeRecordIntegrationTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
@@ -65,16 +66,22 @@ public final class StorageItemChangeRecordIntegrationTest {
         ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         LatchedResultListener<List<ModelSchema>> schemaListener = LatchedResultListener.instance();
-        ModelProvider personProvider = ModelProviderFactory.createProviderOf(Person.class);
-        this.localStorageAdapter = SQLiteStorageAdapter.forModels(personProvider);
+        ModelProvider modelProvider = ModelProviderFactory.createProviderOf(BlogOwner.class);
+        this.localStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         localStorageAdapter.initialize(ApplicationProvider.getApplicationContext(), schemaListener);
 
         // Evaluate the returned set of ModelSchema. Make sure that there is one
-        // for the StorageItemChange.Record system class.
-        List<ModelSchema> schema = schemaListener.awaitResult();
+        // for the StorageItemChange.Record system class, and one for
+        // the PersistentModelVersion.
+
+        final List<String> actualNames = new ArrayList<>();
+        for (ModelSchema modelSchema : schemaListener.awaitResult()) {
+            actualNames.add(modelSchema.getName());
+        }
+        Collections.sort(actualNames);
         assertEquals(
-            "Wanted 2 schema, but got " + schema,
-            2, schema.size()
+            Arrays.asList("BlogOwner", "PersistentModelVersion", "Record"),
+            actualNames
         );
     }
 
@@ -94,22 +101,20 @@ public final class StorageItemChangeRecordIntegrationTest {
      * had saved.
      * @throws DataStoreException from storage item change
      */
-    @SuppressWarnings("checkstyle:MagicNumber") // Tony's age is randomly chosen as 45 for no reason.
     @Test
     public void adapterCanSaveAndQueryChangeRecords() throws DataStoreException {
-        final Person tony = Person.builder()
-            .firstName("Tony")
-            .lastName("Daniels")
-            .age(45)
+        final BlogOwner tonyDaniels = BlogOwner.builder()
+            .name("Tony Daniels")
             .build();
-        final StorageItemChange<Person> originalSaveForTony = StorageItemChange.<Person>builder()
-            .item(tony)
-            .itemClass(Person.class)
+
+        final StorageItemChange<BlogOwner> originalSaveForTony = StorageItemChange.<BlogOwner>builder()
+            .item(tonyDaniels)
+            .itemClass(BlogOwner.class)
             .type(StorageItemChange.Type.SAVE)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
 
-        // Save the creation mutation for tony, as a Record object.
+        // Save the creation mutation for Tony, as a Record object.
         StorageItemChange.Record saveForTonyAsRecord =
             originalSaveForTony.toRecord(storageItemChangeConverter);
         save(saveForTonyAsRecord);
@@ -125,7 +130,7 @@ public final class StorageItemChangeRecordIntegrationTest {
 
         // After we convert back from record, we should get back a copy of
         // what we created above
-        StorageItemChange<Person> reconstructedSaveForTony =
+        StorageItemChange<BlogOwner> reconstructedSaveForTony =
             firstResultRecord.toStorageItemChange(storageItemChangeConverter);
         assertEquals(originalSaveForTony, reconstructedSaveForTony);
     }
@@ -144,13 +149,12 @@ public final class StorageItemChangeRecordIntegrationTest {
         localStorageAdapter.observe().subscribe(observer);
 
         // Save something ..
-        StorageItemChange.Record record = StorageItemChange.<Person>builder()
+        StorageItemChange.Record record = StorageItemChange.<BlogOwner>builder()
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-            .item(Person.builder()
-                .firstName("Juan")
-                .lastName("Gonzales")
+            .item(BlogOwner.builder()
+                .name("Juan Gonzales")
                 .build())
-            .itemClass(Person.class)
+            .itemClass(BlogOwner.class)
             .type(StorageItemChange.Type.SAVE)
             .build()
             .toRecord(new GsonStorageItemChangeConverter());
@@ -179,12 +183,10 @@ public final class StorageItemChangeRecordIntegrationTest {
      *
      * Similarly, when we update the record that we had just saved, we should see an update
      * record on the observable. The type will be StorageItemChange.Record and inside of it
-     * will be a StorageItemChange.Record which itself contains a Person.
-     *
+     * will be a StorageItemChange.Record which itself contains a BlogOwner.
      * @throws DataStoreException from storage item change
      */
     @Ignore("update operations are not currently implemented! TODO: validate this, once available")
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
@@ -192,71 +194,64 @@ public final class StorageItemChangeRecordIntegrationTest {
         localStorageAdapter.observe().subscribe(recordObserver);
 
         // Create a record for Joe, and a change to save him into storage
-        Person joeWrongAge = Person.builder()
-            .firstName("Joe")
-            .lastName(("Sweeney"))
-            .age(39)
+        BlogOwner joeLastNameMispelled = BlogOwner.builder()
+            .name("Joe Sweeneyy")
             .build();
-        StorageItemChange<Person> saveJoeWrongAge = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> saveJoeWrongLastName = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.SAVE)
-            .item(joeWrongAge)
-            .itemClass(Person.class)
+            .item(joeLastNameMispelled)
+            .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
-        StorageItemChange.Record saveJoeWrongAgeRecord =
-            saveJoeWrongAge.toRecord(storageItemChangeConverter);
+        StorageItemChange.Record saveJoeWrongLastNameRecord =
+            saveJoeWrongLastName.toRecord(storageItemChangeConverter);
 
-        // Save our saveJoeWrongAge change, as a record.
-        save(saveJoeWrongAgeRecord);
+        // Save our saveJoeWrongLastName change item, as a record.
+        save(saveJoeWrongLastNameRecord);
 
         // Now, suppose we have to update that change object. Maybe it contained a bad item payload.
-        Person joeWithCorrectAge = Person.builder()
-            .firstName(joeWrongAge.getFirstName())
-            .lastName(joeWrongAge.getLastName())
-            .age(41) // Joe is actually 41, not 39, oops.
-            .id(joeWrongAge.getId())
+        BlogOwner joeWithLastNameFix = BlogOwner.builder()
+            .name("Joe Sweeney")
             .build();
-        StorageItemChange<Person> saveJoeCorrectAge = StorageItemChange.<Person>builder()
-            .changeId(saveJoeWrongAge.changeId().toString()) // Same ID
-            .item(joeWithCorrectAge) // But with a patch to the item
-            .itemClass(Person.class)
+        StorageItemChange<BlogOwner> saveJoeCorrectLastName = StorageItemChange.<BlogOwner>builder()
+            .changeId(saveJoeWrongLastName.changeId().toString()) // Same ID
+            .item(joeWithLastNameFix) // But with a patch to the item
+            .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .type(StorageItemChange.Type.SAVE) // We're still saving Joe, we're updating this change.
             .build();
-        StorageItemChange.Record saveJoeCorrectAgeRecord =
-            saveJoeCorrectAge.toRecord(storageItemChangeConverter);
+        StorageItemChange.Record saveJoeCorrectLastNameRecord =
+            saveJoeCorrectLastName.toRecord(storageItemChangeConverter);
 
         // Save an update (same model type, same unique ID) to the thing we saved before.
-        save(saveJoeCorrectAgeRecord);
+        save(saveJoeCorrectLastNameRecord);
 
         // Our observer got the records to save Joe with wrong age, and also to save joe with right age
         recordObserver.awaitCount(2);
         recordObserver.assertNoErrors();
-        recordObserver.assertValues(saveJoeWrongAgeRecord, saveJoeCorrectAgeRecord);
+        recordObserver.assertValues(saveJoeWrongLastNameRecord, saveJoeCorrectLastNameRecord);
     }
 
     /**
      * When an {@link StorageItemChange.Record} is deleted from the DataStore, the
      * {@link Observable} returned by {@link LocalStorageAdapter#observe()} shall
      * emit that same change record.
-     *
      * @throws DataStoreException from storage item change
      */
     @Ignore("delete() is not currently implemented! Validate this test when it is.")
     @Test
     public void deletionIsObservedForChangeRecord() throws DataStoreException {
         // What we are really observing are items of type StorageItemChange.Record that contain
-        // StorageItemChange.Record of Person
+        // StorageItemChange.Record of BlogOwner
         TestObserver<StorageItemChange.Record> saveObserver = TestObserver.create();
         localStorageAdapter.observe().subscribe(saveObserver);
 
-        Person beatrice = Person.builder()
-            .firstName("Beatrice")
-            .lastName("Stone")
+        BlogOwner beatrice = BlogOwner.builder()
+            .name("Beatrice Stone")
             .build();
-        StorageItemChange<Person> saveBeatrice = StorageItemChange.<Person>builder()
+        StorageItemChange<BlogOwner> saveBeatrice = StorageItemChange.<BlogOwner>builder()
             .item(beatrice)
-            .itemClass(Person.class)
+            .itemClass(BlogOwner.class)
             .type(StorageItemChange.Type.SAVE)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
@@ -297,11 +292,11 @@ public final class StorageItemChangeRecordIntegrationTest {
         localStorageAdapter.save(storageItemChangeRecord,
             StorageItemChange.Initiator.SYNC_ENGINE, saveResultListener);
 
-        final StorageItemChange convertedResult =
+        final StorageItemChange<?> convertedResult =
             saveResultListener.awaitResult().toStorageItemChange(storageItemChangeConverter);
 
         // Peel out the item from the save result - the item inside is the thing we tried to save,
-        // e.g., the mutation to create person
+        // e.g., the mutation to create BlogOwner
         // It should be identical to the thing that we tried to save.
         assertEquals(storageItemChangeRecord, convertedResult.item());
     }
@@ -324,7 +319,7 @@ public final class StorageItemChangeRecordIntegrationTest {
 
     private void delete(StorageItemChange.Record record) throws DataStoreException {
         // The thing we are deleting is a StorageItemChange.Record, which is wrapping
-        // a StorageItemChange.Record, which is wrapping a Person.
+        // a StorageItemChange.Record, which is wrapping an item.
         LatchedResultListener<StorageItemChange.Record> recordDeletionListener =
             LatchedResultListener.instance();
 
@@ -332,7 +327,7 @@ public final class StorageItemChangeRecordIntegrationTest {
 
         // Peel out the inner record out from the save result -
         // the record inside is the thing we tried to save,
-        // that is, the record to change a person
+        // that is, the record to change an item
         // That interior record should be identical to the thing that we tried to save.
         StorageItemChange<StorageItemChange.Record> recordOfDeletion =
             recordDeletionListener.awaitResult().toStorageItemChange(storageItemChangeConverter);
