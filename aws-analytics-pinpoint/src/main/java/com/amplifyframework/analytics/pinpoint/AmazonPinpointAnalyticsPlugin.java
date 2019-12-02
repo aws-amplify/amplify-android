@@ -18,14 +18,12 @@ package com.amplifyframework.analytics.pinpoint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.analytics.AnalyticsEventType;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
-import com.amplifyframework.core.plugin.PluginException;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
@@ -98,7 +96,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void recordEvent(@NonNull AnalyticsEventType analyticsEvent)
-            throws AnalyticsException, ConfigurationException {
+            throws AnalyticsException {
 
         final AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(analyticsEvent.getName());
@@ -110,7 +108,9 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                 } else if (entry.getValue() instanceof DoubleProperty) {
                     pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
                 } else {
-                    throw new AnalyticsException("Invalid property type detected.");
+                    throw new AnalyticsException("Invalid property type detected.",
+                            "AmazonPinpointAnalyticsPlugin support only StringProperty or DoubleProperty." +
+                                    "Refer tio the docuemntation for details.");
                 }
             }
         }
@@ -153,7 +153,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws AnalyticsException {
 
         AmazonPinpointAnalyticsPluginConfiguration.Builder configurationBuilder =
                 AmazonPinpointAnalyticsPluginConfiguration.builder();
@@ -188,7 +188,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                                         .getConfigurationKey()));
             }
         } catch (JSONException exception) {
-            throw new AnalyticsException("Unable to read appId or region from the amplify configuration json");
+            throw new AnalyticsException("Unable to read appId or region from the amplify configuration json.",
+                    exception,
+                    "Make sure amplifyconfiguration.json is a valid json object in expected format." +
+                            "Please take a look at the documentation for expected format of amplifyconfiguration.json");
         }
 
         pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);

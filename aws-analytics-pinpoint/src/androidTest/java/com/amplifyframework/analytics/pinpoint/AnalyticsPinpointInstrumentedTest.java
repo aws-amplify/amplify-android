@@ -19,6 +19,8 @@ import android.content.Context;
 import android.util.Log;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -47,9 +49,10 @@ public class AnalyticsPinpointInstrumentedTest {
 
     /**
      * Configure the Amplify framework.
+     * @throws AmplifyException From Amplify configuration.
      */
     @BeforeClass
-    public static void setUp() {
+    public static void setUp() throws AmplifyException {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
@@ -60,9 +63,10 @@ public class AnalyticsPinpointInstrumentedTest {
     /**
      * Record a basic analytics event and verify that it has been recorded using Analytics
      * pinpoint client.
+     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
      */
     @Test
-    public void testRecordEvent() {
+    public void testRecordEvent() throws AnalyticsException {
         AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify
                 .Analytics
                 .getPlugin("amazonPinpointAnalyticsPlugin");
@@ -85,9 +89,10 @@ public class AnalyticsPinpointInstrumentedTest {
 
     /**
      * Record a basic analytic event and test that events are flushed from local database periodically.
+     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
      */
     @Test
-    public void testAutoFlush() {
+    public void testAutoFlush() throws AnalyticsException {
         Log.i(TAG, "Test configuration invoked");
 
         AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify

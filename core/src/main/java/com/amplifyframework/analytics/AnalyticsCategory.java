@@ -87,7 +87,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
 
     @Override
     public void recordEvent(@NonNull final AnalyticsEventType analyticsEvent)
-            throws AnalyticsException, ConfigurationException {
+            throws AnalyticsException {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }

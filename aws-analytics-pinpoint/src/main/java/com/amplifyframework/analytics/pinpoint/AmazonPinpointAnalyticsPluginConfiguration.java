@@ -20,8 +20,8 @@ package com.amplifyframework.analytics.pinpoint;
  */
 public final class AmazonPinpointAnalyticsPluginConfiguration {
 
-    private static final long DEFAULT_AUTO_FLUSH_INTERVAL = 30L;
-    private static final long DEFAULT_AUTO_SESSION_TRACKING_INTERVAL = 30L;
+    private static final long DEFAULT_AUTO_FLUSH_INTERVAL = 30000L;
+    private static final long DEFAULT_AUTO_SESSION_TRACKING_INTERVAL = 30000L;
 
     // Pinpoint plugin configuration options
     private final String appId;
