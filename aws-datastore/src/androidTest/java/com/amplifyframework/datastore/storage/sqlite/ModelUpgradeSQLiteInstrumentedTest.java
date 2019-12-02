@@ -20,8 +20,8 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
+import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
