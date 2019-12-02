@@ -92,7 +92,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      */
     @Override
     public String getPluginKey() {
-        return "AWSDataStorePlugin";
+        return "awsDataStorePlugin";
     }
 
     /**
