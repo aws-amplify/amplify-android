@@ -13,22 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework;
+package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 
-/**
- * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
- */
-public class AmplifyException extends Exception {
-    /**
-     * All Amplify Exceptions should have a recovery suggestion. This string can be used as a filler until one is
-     * defined but should ultimately be replaced as all good todos.
-     */
-    public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don't have a suggested fix for this error yet.";
-    private static final long serialVersionUID = 1L;
+import com.amplifyframework.AmplifyException;
 
-    private final String recoverySuggestion;
+/**
+ * Exception thrown by DataStore category plugins.
+ */
+public final class DataStoreException extends AmplifyException {
+
+    private static final long serialVersionUID = 1L;
 
     /**
      * Creates a new exception with a message, root cause, and recovery suggestion.
@@ -36,13 +32,12 @@ public class AmplifyException extends Exception {
      * @param throwable The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AmplifyException(
+    public DataStoreException(
             @NonNull final String message,
             final Throwable throwable,
             @NonNull final String recoverySuggestion
     ) {
-        super(message, throwable);
-        this.recoverySuggestion = recoverySuggestion;
+        super(message, throwable, recoverySuggestion);
     }
 
     /**
@@ -50,15 +45,10 @@ public class AmplifyException extends Exception {
      * @param message Explains the reason for the exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AmplifyException(final String message, final String recoverySuggestion) {
-        this(message, null, recoverySuggestion);
-    }
-
-    /**
-     * Gets the recovery suggestion message.
-     * @return customized recovery suggestion message
-     */
-    public final String getRecoverySuggestion() {
-        return recoverySuggestion;
+    public DataStoreException(
+            @NonNull final String message,
+            @NonNull final String recoverySuggestion
+    ) {
+        super(message, recoverySuggestion);
     }
 }

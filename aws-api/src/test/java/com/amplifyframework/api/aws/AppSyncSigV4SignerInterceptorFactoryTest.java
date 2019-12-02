@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.ApiException;
+
 import com.amazonaws.internal.StaticCredentialsProvider;
 import org.junit.Test;
 
@@ -41,9 +43,10 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * never have to provide a custom provider.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void testApiKeyOverrideNotProvided() throws IOException {
+    public void testApiKeyOverrideNotProvided() throws IOException, ApiException {
         final String apiKey1 = "API_KEY_1";
         final String apiKey2 = "API_KEY_2";
 
@@ -80,9 +83,10 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * {@link ApiConfiguration} object.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testApiKeyNotProvidedInConfiguration() throws IOException {
+    public void testApiKeyNotProvidedInConfiguration() throws IOException, ApiException {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
                 .cognitoUserPoolsAuthProvider(() -> "COGNITO_USER_POOLS_JWT_TOKEN")
@@ -108,9 +112,10 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * ApiAuthProvider, then intercept succeeds.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void testApiKeyProvidedInterceptSucceeds() throws IOException {
+    public void testApiKeyProvidedInterceptSucceeds() throws IOException, ApiException {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "CUSTOM_API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
@@ -135,9 +140,10 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * of obtaining API key directly from configuration.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void testApiKeyOverrideProvided() throws IOException {
+    public void testApiKeyOverrideProvided() throws IOException, ApiException {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "CUSTOM_API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
@@ -176,9 +182,10 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * while sending a request with that API.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Expected since OIDC config was not provided
+     * @throws ApiException From API configuration
      */
     @Test(expected = IOException.class)
-    public void testOidcOverrideNotProvided() throws IOException {
+    public void testOidcOverrideNotProvided() throws IOException, ApiException {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
@@ -200,9 +207,10 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
      * prevents crashes while intercepting requests.
      * @throws IOException From {@link Interceptor#intercept(Interceptor.Chain)} ;
      *                     Not expected in this test.
+     * @throws ApiException From API configuration
      */
     @Test
-    public void testOidcOverrideProvided() throws IOException {
+    public void testOidcOverrideProvided() throws IOException, ApiException {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))

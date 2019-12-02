@@ -17,8 +17,6 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.api.ApiException;
-
 /**
  * An enumeration of the values that are possible in the "type" field
  * of a subscription message.
@@ -107,6 +105,6 @@ enum SubscriptionMessageType {
             }
         }
 
-        throw new ApiException("No such subscription message type: " + value);
+        throw new IllegalArgumentException("No such subscription message type: " + value);
     }
 }

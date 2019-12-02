@@ -17,6 +17,7 @@ package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Immutable;
 
 import java.util.HashMap;
@@ -40,8 +41,9 @@ public final class ModelSchemaRegistry {
     /**
      * Create the ModelSchema objects for all Model classes.
      * @param models the set that contains all the Model classes.
+     * @throws AmplifyException if unable to create a Model Schema for a model
      */
-    public synchronized void load(@NonNull Set<Class<? extends Model>> models) {
+    public synchronized void load(@NonNull Set<Class<? extends Model>> models) throws AmplifyException {
         for (Class<? extends Model> modelClass : models) {
             final String modelClassName = modelClass.getSimpleName();
             final ModelSchema modelSchema = ModelSchema.fromModelClass(modelClass);

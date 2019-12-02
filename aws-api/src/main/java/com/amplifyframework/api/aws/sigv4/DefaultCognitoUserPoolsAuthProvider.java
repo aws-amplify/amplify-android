@@ -15,7 +15,8 @@
 
 package com.amplifyframework.api.aws.sigv4;
 
-import com.amplifyframework.AmplifyRuntimeException;
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -37,7 +38,7 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
     private String lastTokenRetrievalFailureMessage;
 
     // Fetches token from the mobile client.
-    private synchronized void fetchToken() {
+    private synchronized void fetchToken() throws ApiException {
         final Semaphore semaphore = new Semaphore(0);
         lastTokenRetrievalFailureMessage = null;
         AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
@@ -57,16 +58,20 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         try {
             semaphore.acquire();
         } catch (InterruptedException exception) {
-            throw new AmplifyRuntimeException("Interrupted waiting for Cognito Userpools token.", exception);
+            throw new ApiException(
+                "Interrupted waiting for Cognito Userpools token.",
+                exception,
+                AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
         }
 
         if (lastTokenRetrievalFailureMessage != null) {
-            throw new AmplifyRuntimeException(lastTokenRetrievalFailureMessage);
+            throw new ApiException(lastTokenRetrievalFailureMessage, AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 
     @Override
-    public String getLatestAuthToken() {
+    public String getLatestAuthToken() throws ApiException {
         fetchToken();
         return token;
     }

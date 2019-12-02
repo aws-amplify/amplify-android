@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -39,9 +40,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
 
     /**
      * Validate construction of a GraphQL query from a class and an object ID.
+     * @throws ApiException from possible query builder failure
      */
     @Test
-    public void buildQueryFromClassAndId() {
+    public void buildQueryFromClassAndId() throws ApiException {
         // Arrange a hard-coded ID as found int the expected data file.
         final String uuidForExpectedQuery = "9a1bee5c-248f-4746-a7da-58f703ec572d";
 
@@ -110,9 +112,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
     /**
      * Validates construction of a subscription request using a class and an
      * {@link SubscriptionType}.
+     * @throws ApiException from subscription builder potential failure
      */
     @Test
-    public void buildSubscriptionFromClassAndSubscriptionType() {
+    public void buildSubscriptionFromClassAndSubscriptionType() throws ApiException {
         GraphQLRequest<Person> subscriptionRequest = AppSyncGraphQLRequestFactory.buildSubscription(
             Person.class, SubscriptionType.ON_CREATE
         );

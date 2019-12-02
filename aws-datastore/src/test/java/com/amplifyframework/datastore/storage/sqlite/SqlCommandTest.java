@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.os.Build;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
@@ -121,9 +122,10 @@ public class SqlCommandTest {
     /**
      * Tests that a CREATE index command is correctly constructs for the
      * {@link StorageItemChange.Record}.
+     * @throws AmplifyException from Amplify config
      */
     @Test
-    public void createIndexForStorageItemChangeRecord() {
+    public void createIndexForStorageItemChangeRecord() throws AmplifyException {
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
                 .createIndexesFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
                 .iterator();

@@ -17,7 +17,6 @@ package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.ConfigurationException;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -80,16 +79,14 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void recordEvent(@NonNull String eventName)
-            throws AnalyticsException, ConfigurationException {
+    public void recordEvent(@NonNull String eventName) {
         if (enabled) {
             getSelectedPlugin().recordEvent(eventName);
         }
     }
 
     @Override
-    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent)
-            throws AnalyticsException, ConfigurationException {
+    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }

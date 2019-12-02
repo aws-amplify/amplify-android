@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.api.ApiException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -167,8 +169,10 @@ public final class GraphQLResponse<T> {
          * @param <T> The type of the data field in the response object
          * @return An instance of the casting class which models the data
          *         provided in the response JSON string
+         * @throws ApiException If the class provided mismatches the data
          */
-        <T> GraphQLResponse<T> buildSingleItemResponse(String apiResponseJson, Class<T> classToCast);
+        <T> GraphQLResponse<T> buildSingleItemResponse(String apiResponseJson, Class<T> classToCast)
+            throws ApiException;
 
         /**
          * Builds a response containing a list of data objects from JSON returned by an API.
@@ -180,7 +184,9 @@ public final class GraphQLResponse<T> {
          * @param <T> The type of the elements in the data field list in the response object
          * @return An instance of the casting class which models the data
          *         provided in the response JSON string
+         * @throws ApiException If the class provided mismatches the data
          */
-        <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast);
+        <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast)
+            throws ApiException;
     }
 }

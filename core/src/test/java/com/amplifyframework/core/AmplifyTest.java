@@ -21,8 +21,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.core.plugin.PluginException;
 import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingPlugin;
@@ -47,9 +47,10 @@ public class AmplifyTest {
 
     /**
      * Tests that a plugin can be added and removed via the Amplify facade.
+     * @throws AmplifyException from Amplify configuration
      */
     @Test
-    public void pluginCanBeAddedAndRemoved() {
+    public void pluginCanBeAddedAndRemoved() throws AmplifyException {
         // Arrange a plugin
         final SimpleLoggingPlugin loggingPlugin = new SimpleLoggingPlugin();
 
@@ -103,8 +104,7 @@ public class AmplifyTest {
         @Override
         public void configure(
                 @NonNull final JSONObject pluginConfiguration,
-                final Context context)
-                throws PluginException {
+                final Context context) {
             // No configuration for this one. Cool, huh?
         }
 

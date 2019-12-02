@@ -20,8 +20,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.plugin.PluginException;
-
 import org.json.JSONObject;
 
 /**
@@ -70,7 +68,7 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     public void configure(
             @NonNull JSONObject pluginConfiguration,
             @NonNull Context context)
-            throws PluginException {
+            throws LoggingException {
         // In the future, accept a log level configuration from JSON?
     }
 

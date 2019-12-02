@@ -29,6 +29,7 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
@@ -136,7 +137,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @WorkerThread
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
-                               @Nullable QueryPredicate predicate) {
+                               @Nullable QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final String tableName = table.getName();
         StringBuilder rawQuery = new StringBuilder();

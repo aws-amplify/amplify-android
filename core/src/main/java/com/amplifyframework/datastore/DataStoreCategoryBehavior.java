@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -46,7 +45,7 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void save(
             @NonNull T item,
-            @Nullable ResultListener<DataStoreItemChange<T>> saveItemListener);
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
 
     /**
      * Deletes an item from the DataStore.
@@ -57,7 +56,7 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void delete(
             @NonNull T item,
-            @Nullable ResultListener<DataStoreItemChange<T>> deleteItemListener);
+            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener);
 
     /**
      * Query the DataStore to find all items of the requested Java class.
@@ -69,7 +68,7 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @Nullable ResultListener<Iterator<T>> queryResultsListener);
+            @NonNull ResultListener<Iterator<T>> queryResultsListener);
 
     /**
      * Observe all changes to any/all item(s) in the DataStore.
