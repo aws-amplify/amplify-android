@@ -97,7 +97,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     private static String firstApiIn(AmplifyConfiguration amplifyConfiguration) throws AmplifyException {
         return amplifyConfiguration.forCategoryType(CategoryType.API)
-            .getPluginConfig("AWSAPIPlugin")
+            .getPluginConfig("awsAPIPlugin")
             .keys()
             .next();
     }

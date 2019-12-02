@@ -20,6 +20,7 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testutils.LatchedResultListener;
@@ -77,7 +78,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
      * Drop all tables and database, terminate and delete the database.
      */
     @After
-    public void tearDown() {
+    public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
         context.deleteDatabase(DATABASE_NAME);
     }
@@ -86,7 +87,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
      * Asserts if the model version change updates the new version in local storage.
      */
     @Test
-    public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() {
+    public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws DataStoreException {
         // Initialize StorageAdapter with models
         LatchedResultListener<List<ModelSchema>> setupListener =
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
