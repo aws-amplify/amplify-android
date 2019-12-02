@@ -18,6 +18,7 @@ package com.amplifyframework.datastore;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
@@ -49,9 +50,6 @@ import io.reactivex.schedulers.Schedulers;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
-    // Singleton instance
-    private static AWSDataStorePlugin singleton;
-
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final SQLiteStorageAdapter sqliteStorageAdapter;
@@ -73,17 +71,13 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     }
 
     /**
-     * Return the singleton instance if it exists, otherwise create, assign
-     * and return.
+     * Return the instance for the model provider.
      * @param modelProvider Provider of models to be usable by plugin
-     * @return the singleton instance.
+     * @return the plugin instance for the model provider.
      */
     @SuppressWarnings("WeakerAccess")
-    public static synchronized AWSDataStorePlugin singleton(@NonNull final ModelProvider modelProvider) {
-        if (singleton == null) {
-            singleton = new AWSDataStorePlugin(modelProvider);
-        }
-        return singleton;
+    public static synchronized AWSDataStorePlugin forModels(@NonNull final ModelProvider modelProvider) {
+        return new AWSDataStorePlugin(modelProvider);
     }
 
     /**
@@ -217,6 +211,17 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         sqliteStorageAdapter.query(itemClass, queryResultsListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+        sqliteStorageAdapter.query(itemClass, predicate, queryResultsListener);
     }
 
     /**

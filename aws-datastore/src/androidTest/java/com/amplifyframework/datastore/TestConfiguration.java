@@ -33,7 +33,7 @@ final class TestConfiguration {
     private final String apiName;
 
     private TestConfiguration(Context context) throws AmplifyException {
-        plugin = AWSDataStorePlugin.singleton(AmplifyModelProvider.getInstance());
+        plugin = AWSDataStorePlugin.forModels(AmplifyModelProvider.getInstance());
 
         // We need to use an API plugin, so that we can validate remote sync.
         Amplify.addPlugin(new AWSApiPlugin());

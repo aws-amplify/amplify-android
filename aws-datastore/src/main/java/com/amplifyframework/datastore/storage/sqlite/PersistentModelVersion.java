@@ -46,7 +46,7 @@ final class PersistentModelVersion implements Model {
     // and can be used to identify a ModelProvider.
     // 
     // Once the limitation is addressed, remove this static identifier and provide an appropriate
-    // upgrade strategy for the PersistentModelVersion to move to the new architecture.
+    // update strategy for the PersistentModelVersion to move to the new architecture.
     private static final String STATIC_IDENTIFIER_FOR_VERSION = "version-in-local-storage";
 
     @ModelField(targetType = "ID", isRequired = true)

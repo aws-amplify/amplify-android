@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -69,6 +70,21 @@ public interface DataStoreCategoryBehavior {
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull ResultListener<Iterator<T>> queryResultsListener);
+
+    /**
+     * Query the DataStore to find all items of the requested Java class that fulfills the
+     * predicate.
+     * @param itemClass Items of this class will be targeted by this query
+     * @param predicate Predicate condition to apply to query
+     * @param queryResultsListener
+     *        An optional listener which will be invoked when the query returns
+     *        results, or if there is a failure to query
+     * @param <T> The type of items being queried
+     */
+    <T extends Model> void query(@NonNull Class<T> itemClass,
+                                 @Nullable QueryPredicate predicate,
+                                 @NonNull ResultListener<Iterator<T>> queryResultsListener);
+
 
     /**
      * Observe all changes to any/all item(s) in the DataStore.

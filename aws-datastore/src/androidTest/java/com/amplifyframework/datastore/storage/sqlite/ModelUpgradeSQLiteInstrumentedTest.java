@@ -38,7 +38,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Test the functionality of {@link SQLiteStorageAdapter} with model upgrade operations.
+ * Test the functionality of {@link SQLiteStorageAdapter} with model update operations.
  */
 public final class ModelUpgradeSQLiteInstrumentedTest {
     private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
@@ -114,7 +114,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
         // Terminate storage adapter and create a new storage adapter with
         // a model provider that upgrades version to mimic restartability with
-        // version upgrade.
+        // version update.
         sqliteStorageAdapter.terminate();
         sqliteStorageAdapter = null;
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProviderThatUpgradesVersion);
