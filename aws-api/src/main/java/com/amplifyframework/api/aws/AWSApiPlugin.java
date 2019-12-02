@@ -78,7 +78,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public String getPluginKey() {
-        return "AWSAPIPlugin";
+        return "awsAPIPlugin";
     }
 
     @Override
