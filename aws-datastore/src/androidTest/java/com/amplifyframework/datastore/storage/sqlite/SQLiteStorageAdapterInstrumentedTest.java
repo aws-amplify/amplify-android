@@ -101,6 +101,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         List<Class<? extends Model>> expectedModels = new ArrayList<>(modelProvider.models());
         expectedModels.add(StorageItemChange.Record.class); // Internal
+        expectedModels.add(PersistentModelVersion.class); // Internal
         assertEquals(expectedModels.size(), setupResults.size());
     }
 

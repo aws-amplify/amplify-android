@@ -96,7 +96,7 @@ final class PersistentModelVersion implements Model {
      * return a Single that emits the PersistentModelVersion read from disk upon success and
      *        error upon failure
      */
-    static PersistentModelVersion saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
+    static Single<PersistentModelVersion> saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
                                                              @NonNull PersistentModelVersion persistentModelVersion) {
         return Single.<PersistentModelVersion>create(emitter -> {
             final ResultListener<StorageItemChange.Record> saveListener =
@@ -115,7 +115,7 @@ final class PersistentModelVersion implements Model {
                     persistentModelVersion,
                     StorageItemChange.Initiator.DATA_STORE_API,
                     saveListener);
-        }).blockingGet();
+        });
     }
 
     /** {@inheritDoc}. */

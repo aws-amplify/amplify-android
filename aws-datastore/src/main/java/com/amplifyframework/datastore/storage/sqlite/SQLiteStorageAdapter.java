@@ -729,7 +729,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             newVersion);
                 }
             }
-            PersistentModelVersion.saveToLocalStorage(
+        }).flatMap(iterator -> {
+            return PersistentModelVersion.saveToLocalStorage(
                     this,
                     new PersistentModelVersion(modelProvider.version()));
         }).doOnError(error -> {

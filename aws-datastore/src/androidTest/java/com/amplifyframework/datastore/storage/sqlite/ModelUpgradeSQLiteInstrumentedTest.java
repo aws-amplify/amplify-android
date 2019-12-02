@@ -20,8 +20,8 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testmodels.RandomVersionModelProvider;
+import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
+import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;
@@ -95,7 +95,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
         // Assert if initialize succeeds.
         List<ModelSchema> modelSchemaList =
-                setupListener.awaitTerminalEvent().assertNoError().getResult();
+                setupListener.awaitTerminalEvent().awaitResult();
         assertNotNull(modelSchemaList);
         assertFalse(modelSchemaList.isEmpty());
 
@@ -119,7 +119,9 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Now, initialize storage adapter with the new models
         setupListener = LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.initialize(context, setupListener);
-        setupListener.awaitTerminalEvent().assertNoError();
+        modelSchemaList = setupListener.awaitTerminalEvent().awaitResult();
+        assertNotNull(modelSchemaList);
+        assertFalse(modelSchemaList.isEmpty());
 
         // Check if the new version is stored in local storage.
         expectedVersion = modelProviderThatUpgradesVersion.version();
