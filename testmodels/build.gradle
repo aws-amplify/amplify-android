@@ -42,5 +42,7 @@ android {
 dependencies {
     implementation project(path: ':core')
     implementation 'androidx.core:core:1.1.0'
+    testImplementation 'junit:junit:4.12'
+    testImplementation project(path: ':testutils')
 }
 

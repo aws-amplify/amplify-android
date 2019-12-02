@@ -60,6 +60,7 @@ public final class Author implements Model {
     return new StringBuilder()
       .append(getId())
       .append(getName())
+      .toString()
       .hashCode();
   }
   

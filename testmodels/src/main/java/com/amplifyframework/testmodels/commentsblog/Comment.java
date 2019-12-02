@@ -64,6 +64,7 @@ public final class Comment implements Model {
       .append(getId())
       .append(getContent())
       .append(getPost())
+      .toString()
       .hashCode();
   }
   

@@ -66,6 +66,7 @@ public final class PostAuthorJoin implements Model {
       .append(getId())
       .append(getAuthor())
       .append(getPost())
+      .toString()
       .hashCode();
   }
   

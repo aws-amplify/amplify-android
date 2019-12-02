@@ -93,6 +93,7 @@ public final class Post implements Model {
       .append(getBlog())
       .append(getStatus())
       .append(getRating())
+      .toString()
       .hashCode();
   }
   
