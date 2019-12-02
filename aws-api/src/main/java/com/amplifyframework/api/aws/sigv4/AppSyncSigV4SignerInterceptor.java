@@ -135,12 +135,15 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         String userAgent = toHumanReadableAscii(VersionInfoUtils.getUserAgent());
         dr.addHeader(HEADER_USER_AGENT, userAgent);
 
-        //write the body to a byte array stream.
-        final Buffer buffer = new Buffer();
-        req.body().writeTo(buffer);
-        dr.setContent(buffer.inputStream());
+        Buffer body = null;
 
-        Buffer body = buffer.clone();
+        if (req.body()  != null) {
+            //write the body to a byte array stream.
+            final Buffer buffer = new Buffer();
+            req.body().writeTo(buffer);
+            dr.setContent(buffer.inputStream());
+            body = buffer.clone();
+        }
 
         //Sign or Decorate request with the required headers
         if (AuthorizationType.AWS_IAM.equals(authType)) {
@@ -179,7 +182,9 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
 
         //Set the URL and Method
         okReqBuilder.url(req.url());
-        okReqBuilder.method(req.method(), RequestBody.create(body.readByteArray(), JSON_MEDIA_TYPE));
+        final RequestBody requestBody = body != null ?
+                RequestBody.create(body.readByteArray(), JSON_MEDIA_TYPE) : null;
+        okReqBuilder.method(req.method(), requestBody);
 
         //continue with chain.
         return chain.proceed(okReqBuilder.build());

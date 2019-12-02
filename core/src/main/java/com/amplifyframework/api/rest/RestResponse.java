@@ -86,7 +86,7 @@ public final class RestResponse {
          * Get the raw data.
          * @return Returns the raw data as byte array.
          */
-        public byte[] getData() {
+        public byte[] getRawBytes() {
             return bytes;
         }
 

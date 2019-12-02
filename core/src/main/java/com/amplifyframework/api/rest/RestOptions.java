@@ -47,6 +47,16 @@ public final class RestOptions {
     /**
      * Construct a REST request.
      * @param path Path for the endpoint to make the request
+     * @param data Data for the rest option
+     */
+    public RestOptions(String path,
+                       byte[] data) {
+        this(path, data, null);
+    }
+
+    /**
+     * Construct a REST request.
+     * @param path Path for the endpoint to make the request
      * @param queryParameters Query parameters for the request. This value is nullable
      */
     public RestOptions(String path,

@@ -81,7 +81,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
         HubSubscriber transformingListener = event -> {
             // TODO: check for casting of Object to E and
             // see if it can be prevented.
-            // eventListener.onEvent(event.getData());
+            // eventListener.onEvent(event.getRawBytes());
         };
 
         return subscribe(channel, event -> true, transformingListener);
