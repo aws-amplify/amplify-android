@@ -15,79 +15,50 @@
 
 package com.amplifyframework;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 /**
- * Top-level compile-time exception in the Amplify System. Any compile-time
- * exception in Amplify should derive from this exception.
+ * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
  */
 public class AmplifyException extends Exception {
-
+    /**
+     * All Amplify Exceptions should have a recovery suggestion. This string can be used as a filler until one is
+     * defined but should ultimately be replaced as all good todos.
+     */
+    public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don't have a suggested fix for this error yet.";
     private static final long serialVersionUID = 1L;
 
     private final String recoverySuggestion;
-    private final boolean isRetryable;
 
     /**
-     * Creates a new AmplifyException with the specified message, and root
-     * cause.
-     * @param message An error message describing why this exception was thrown.
-     * @param throwable The underlying cause of this exception.
-     * @param recoverySuggestion An optional text suggesting a way to recover
-     *                           from the error being described
-     * @param isRetryable A boolean indicating whether or not this exception
-     *                    indicates a recoverable state, or if a consumer
-     *                    should not retry the operation that failed
+     * Creates a new exception with a message, root cause, and recovery suggestion.
+     * @param message An error message describing why this exception was thrown
+     * @param throwable The underlying cause of this exception
+     * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
     public AmplifyException(
-            final String message,
+            @NonNull final String message,
             final Throwable throwable,
-            @Nullable final String recoverySuggestion,
-            final boolean isRetryable) {
+            @NonNull final String recoverySuggestion
+    ) {
         super(message, throwable);
         this.recoverySuggestion = recoverySuggestion;
-        this.isRetryable = isRetryable;
     }
 
     /**
-     * Constructs a new AmplifyException using a provided message and an associated error.
+     * Constructs a new exception using a provided message and an associated error.
      * @param message Explains the reason for the exception
-     * @param throwable An error associated with this exception
+     * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AmplifyException(final String message, final Throwable throwable) {
-        this(message, throwable, null, false);
+    public AmplifyException(final String message, final String recoverySuggestion) {
+        this(message, null, recoverySuggestion);
     }
 
     /**
-     * Creates a new AmplifyException with the specified message.
-     * @param message An error message describing why this exception was thrown.
-     */
-    public AmplifyException(final String message) {
-        this(message, null, null, false);
-    }
-
-    /**
-     * Create an AmplifyException with an exception cause.
-     * @param throwable the cause of the exception.
-     */
-    public AmplifyException(final Throwable throwable) {
-        this(null, throwable);
-    }
-
-    /**
-     * Gets the optional recovery suggestion message.
+     * Gets the recovery suggestion message.
      * @return customized recovery suggestion message
      */
     public final String getRecoverySuggestion() {
         return recoverySuggestion;
-    }
-
-    /**
-     * Returns a hint as to whether it makes sense to retry upon this exception.
-     * Default is true, but subclass may override.
-     * @return true if it is retryable.
-     */
-    public final boolean isRetryable() {
-        return isRetryable;
     }
 }

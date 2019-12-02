@@ -46,9 +46,10 @@ public class AndroidLoggingPluginTest {
 
     /**
      * Redirect the system output to a capturing gizmo.
+     * @throws LoggingException from logging configuration
      */
     @Before
-    public void redirectLogOutput() {
+    public void redirectLogOutput() throws LoggingException {
         systemLog = new LogOutputStream();
         ShadowLog.stream = new PrintStream(systemLog);
         plugin = new AndroidLoggingPlugin();

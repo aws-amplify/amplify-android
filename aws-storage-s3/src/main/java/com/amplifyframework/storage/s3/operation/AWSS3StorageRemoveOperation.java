@@ -15,8 +15,10 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.storage.exception.StorageException;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
@@ -42,10 +44,10 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * @param request remove request parameters
      * @param resultListener notified when remove operation results available
      */
-    public AWSS3StorageRemoveOperation(AWSS3StorageService storageService,
-                                       ExecutorService executorService,
-                                       AWSS3StorageRemoveRequest request,
-                                       ResultListener<StorageRemoveResult> resultListener) {
+    public AWSS3StorageRemoveOperation(@NonNull AWSS3StorageService storageService,
+                                       @NonNull ExecutorService executorService,
+                                       @NonNull AWSS3StorageRemoveRequest request,
+                                       @NonNull ResultListener<StorageRemoveResult> resultListener) {
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
@@ -53,43 +55,37 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     }
 
     @Override
-    public void start() throws StorageException {
+    public void start() {
         executorService.submit(() -> {
             String identityId;
 
             try {
                 identityId = AWSMobileClient.getInstance().getIdentityId();
-            } catch (Exception exception) {
-                StorageException storageException = new StorageException(
-                        "AWSMobileClient could not get user id." +
-                                "Check whether you configured it properly before calling this method.",
-                        exception
-                );
 
-                if (resultListener != null) {
-                    resultListener.onError(storageException);
-                }
-                throw storageException;
-            }
-
-            try {
-                storageService.deleteObject(
+                try {
+                    storageService.deleteObject(
                         S3RequestUtils.getServiceKey(
-                                getRequest().getAccessLevel(),
-                                identityId,
-                                getRequest().getKey(),
-                                getRequest().getTargetIdentityId()
+                            getRequest().getAccessLevel(),
+                            identityId,
+                            getRequest().getKey(),
+                            getRequest().getTargetIdentityId()
                         )
-                );
+                    );
 
-                if (resultListener != null) {
                     resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
+                } catch (Exception exception) {
+                    resultListener.onError(new StorageException(
+                        "Something went wrong with your AWS S3 Storage remove operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
                 }
-            } catch (Exception error) {
-                if (resultListener != null) {
-                    resultListener.onError(error);
-                }
-                throw error;
+            } catch (Exception exception) {
+                resultListener.onError(new StorageException(
+                    "Something went wrong with your AWS S3 Storage remove operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+                ));
             }
         });
     }

@@ -18,6 +18,7 @@ package com.amplifyframework.hub;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.logging.Logger;
@@ -48,9 +49,10 @@ public final class HubInstrumentedTest {
     /**
      * Before any test is run, configure Amplify to use an
      * {@link BackgroundExecutorHubPlugin} to satisfy the Hub category.
+     * @throws AmplifyException from Amplify configuration
      */
     @BeforeClass
-    public static void configureAmplify() {
+    public static void configureAmplify() throws AmplifyException {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
@@ -63,9 +65,10 @@ public final class HubInstrumentedTest {
      * used to unsubscribe from the hub.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
+     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException {
+    public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException, HubException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
             event -> waitUntilSubscriptionIsReceived.countDown());
@@ -83,9 +86,10 @@ public final class HubInstrumentedTest {
      * Validates that a subscriber will receive a published event.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
+     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void isSubscriptionReceived() throws InterruptedException {
+    public void isSubscriptionReceived() throws InterruptedException, HubException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
@@ -110,9 +114,10 @@ public final class HubInstrumentedTest {
      * from the hub, once it has unsubscribed.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
+     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException {
+    public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException, HubException {
         final CountDownLatch subscriptionReceived = new CountDownLatch(1);
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
@@ -135,9 +140,10 @@ public final class HubInstrumentedTest {
      * multiple publications.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
+     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void multiplePublications() throws InterruptedException {
+    public void multiplePublications() throws InterruptedException, HubException {
         final int numPublications = 10;
         final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
         final List<Integer> subscriptionsReceived = new ArrayList<>();
@@ -174,9 +180,10 @@ public final class HubInstrumentedTest {
      * multiple events of different types.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
+     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void multiplePublicationsMultipleDataTypes() throws InterruptedException {
+    public void multiplePublicationsMultipleDataTypes() throws InterruptedException, HubException {
         final int numPublications = 10;
         final int numDataTypes = 2;
         final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);

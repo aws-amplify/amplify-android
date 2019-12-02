@@ -86,8 +86,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void recordEvent(@NonNull String eventName)
-            throws AnalyticsException, ConfigurationException {
+    public void recordEvent(@NonNull String eventName) {
 
         final AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(eventName);

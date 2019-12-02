@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -47,7 +48,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Converts provided model or class type into a request container
@@ -64,65 +64,81 @@ final class AppSyncGraphQLRequestFactory {
     public static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
             String objectId
-    ) {
-        StringBuilder doc = new StringBuilder();
-        Map<String, Object> variables = new HashMap<>();
-        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String graphQlTypeName = schema.getName();
+    ) throws ApiException {
+        try {
+            StringBuilder doc = new StringBuilder();
+            Map<String, Object> variables = new HashMap<>();
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            String graphQlTypeName = schema.getName();
 
-        doc.append("query ")
-            .append("Get")
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("(")
-            .append("$id: ID!) { get")
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("(id: $id) { ")
-            .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-            .append("}}");
+            doc.append("query ")
+                    .append("Get")
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("(")
+                    .append("$id: ID!) { get")
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("(id: $id) { ")
+                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
+                    .append("}}");
 
-        variables.put("id", objectId);
+            variables.put("id", objectId);
 
-        return new GraphQLRequest<>(
-                doc.toString(),
-                variables,
-                modelClass,
-                new GsonVariablesSerializer()
-        );
+            return new GraphQLRequest<>(
+                    doc.toString(),
+                    variables,
+                    modelClass,
+                    new GsonVariablesSerializer()
+            );
+        } catch (AmplifyException exception) {
+            throw new ApiException(
+                    "Could not generate a schema for the specified class",
+                    exception,
+                    "Check the included exception for more details"
+            );
+        }
     }
 
     public static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
-    ) throws AmplifyException {
-        StringBuilder doc = new StringBuilder();
-        Map<String, Object> variables = new HashMap<>();
-        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String graphQlTypeName = schema.getName();
+    ) throws ApiException {
+        try {
+            StringBuilder doc = new StringBuilder();
+            Map<String, Object> variables = new HashMap<>();
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            String graphQlTypeName = schema.getName();
 
-        doc.append("query ")
-            .append("List")
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("(")
-            .append("$filter: Model")
-            .append(graphQlTypeName)
-            .append("FilterInput ")
-            .append("$limit: Int $nextToken: String) { list")
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
-            .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-            .append("} nextToken }}");
+            doc.append("query ")
+                    .append("List")
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("(")
+                    .append("$filter: Model")
+                    .append(graphQlTypeName)
+                    .append("FilterInput ")
+                    .append("$limit: Int $nextToken: String) { list")
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
+                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
+                    .append("} nextToken }}");
 
-        if (!predicateIsEmpty(predicate)) {
-            variables.put("filter", parsePredicate(predicate));
-            variables.put("limit", DEFAULT_QUERY_LIMIT);
+            if (!predicateIsEmpty(predicate)) {
+                variables.put("filter", parsePredicate(predicate));
+                variables.put("limit", DEFAULT_QUERY_LIMIT);
+            }
+
+            return new GraphQLRequest<>(
+                    doc.toString(),
+                    variables,
+                    modelClass,
+                    new GsonVariablesSerializer()
+            );
+        } catch (AmplifyException exception) {
+            throw new ApiException(
+                    "Could not generate a schema for the specified class",
+                    exception,
+                    "Check the included exception for more details"
+            );
         }
-
-        return new GraphQLRequest<>(
-                doc.toString(),
-                variables,
-                modelClass,
-                new GsonVariablesSerializer()
-        );
     }
 
     @SuppressWarnings("unchecked")
@@ -130,97 +146,113 @@ final class AppSyncGraphQLRequestFactory {
             T model,
             QueryPredicate predicate,
             MutationType type
-    ) throws AmplifyException {
-        // model is of type T so this is a safe cast - hence the warning suppression
-        Class<T> modelClass = (Class<T>) model.getClass();
+    ) throws ApiException {
+        try {
+            // model is of type T so this is a safe cast - hence the warning suppression
+            Class<T> modelClass = (Class<T>) model.getClass();
 
-        StringBuilder doc = new StringBuilder();
-        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String typeStr = type.toString();
-        String graphQlTypeName = schema.getName();
+            StringBuilder doc = new StringBuilder();
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            String typeStr = type.toString();
+            String graphQlTypeName = schema.getName();
 
-        doc.append("mutation ")
-            .append(StringUtils.capitalize(typeStr))
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("($input: ")
-            .append(StringUtils.capitalize(typeStr))
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("Input!");
+            doc.append("mutation ")
+                    .append(StringUtils.capitalize(typeStr))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("($input: ")
+                    .append(StringUtils.capitalize(typeStr))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("Input!");
 
-        if (!predicateIsEmpty(predicate)) {
-            doc.append(", $condition: Model")
-                    .append(graphQlTypeName)
-                    .append("ConditionInput");
+            if (!predicateIsEmpty(predicate)) {
+                doc.append(", $condition: Model")
+                        .append(graphQlTypeName)
+                        .append("ConditionInput");
+            }
+
+            doc.append("){ ")
+                    .append(typeStr.toLowerCase(Locale.getDefault()))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("(input: $input");
+
+            if (!predicateIsEmpty(predicate)) {
+                doc.append(", condition: $condition");
+            }
+
+            doc.append(") { ")
+                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
+                    .append("}}");
+
+            Map<String, Object> variables = new HashMap<>();
+
+            if (type.equals(MutationType.DELETE)) {
+                variables.put("input", Collections.singletonMap("id", model.getId()));
+            } else {
+                try {
+                    variables.put("input", schema.getMapOfFieldNameAndValues(model));
+                } catch (AmplifyException exception) {
+                    throw new ApiException(
+                            "Failed to build the map of variables for this mutation.",
+                            exception,
+                            "See included AmplifyException for more details and a recovery suggestion."
+                    );
+                }
+            }
+
+            if (!predicateIsEmpty(predicate)) {
+                variables.put("condition", parsePredicate(predicate));
+            }
+
+            return new GraphQLRequest<>(
+                    doc.toString(),
+                    variables,
+                    modelClass,
+                    new GsonVariablesSerializer()
+            );
+        } catch (AmplifyException exception) {
+            throw new ApiException(
+                    "Could not generate a schema for the specified class",
+                    exception,
+                    "Check the included exception for more details"
+            );
         }
-
-        doc.append("){ ")
-            .append(typeStr.toLowerCase(Locale.getDefault()))
-            .append(StringUtils.capitalizeFirst(graphQlTypeName))
-            .append("(input: $input");
-
-        if (!predicateIsEmpty(predicate)) {
-            doc.append(", condition: $condition");
-        }
-
-        doc.append(") { ")
-            .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-            .append("}}");
-
-        Map<String, Object> variables = new HashMap<>();
-
-        if (type.equals(MutationType.DELETE)) {
-            variables.put("input", Collections.singletonMap("id", model.getId()));
-        } else {
-            variables.put("input", schema.getMapOfFieldNameAndValues(model));
-        }
-
-        if (!predicateIsEmpty(predicate)) {
-            variables.put("condition", parsePredicate(predicate));
-        }
-
-        return new GraphQLRequest<>(
-                doc.toString(),
-                variables,
-                modelClass,
-                new GsonVariablesSerializer()
-        );
     }
 
     public static <T extends Model> GraphQLRequest<T> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type
-    ) {
-        StringBuilder doc = new StringBuilder();
-        ModelSchema schema = ModelSchema.fromModelClass(modelClass);
-        String typeStr = type.toString();
-        String graphQlTypeName = schema.getName();
+    ) throws ApiException {
+        try {
+            StringBuilder doc = new StringBuilder();
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+            String typeStr = type.toString();
+            String graphQlTypeName = schema.getName();
 
-        doc.append("subscription ")
-                .append(StringUtils.allCapsToPascalCase(typeStr))
-                .append(StringUtils.capitalizeFirst(graphQlTypeName))
-                .append("{")
-                .append(StringUtils.allCapsToCamelCase(typeStr))
-                .append(StringUtils.capitalizeFirst(graphQlTypeName))
-                .append("{")
-                .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-                .append("}}");
+            doc.append("subscription ")
+                    .append(StringUtils.allCapsToPascalCase(typeStr))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("{")
+                    .append(StringUtils.allCapsToCamelCase(typeStr))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append("{")
+                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
+                    .append("}}");
 
-        return new GraphQLRequest<>(
-                doc.toString(),
-                modelClass,
-                new GsonVariablesSerializer()
-        );
+            return new GraphQLRequest<>(
+                    doc.toString(),
+                    modelClass,
+                    new GsonVariablesSerializer()
+            );
+        } catch (AmplifyException exception) {
+            throw new ApiException(
+                    "Could not generate a schema for the specified class",
+                    exception,
+                    "Check the included exception for more details"
+            );
+        }
     }
 
-    public static <T extends Model> GraphQLRequest<T> buildSubscription(
-            Class<T> modelClass,
-            QueryPredicate predicate,
-            SubscriptionType type
-    ) throws AmplifyException {
-        return null;
-    }
-
-    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws AmplifyException {
+    private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws ApiException {
         if (queryPredicate instanceof QueryPredicateOperation) {
             QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
             QueryOperator op = qpo.operator();
@@ -235,11 +267,10 @@ final class AppSyncGraphQLRequestFactory {
                 try {
                     return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
                 } catch (IndexOutOfBoundsException exception) {
-                    throw new AmplifyException(
-                            "Predicate group of type NOT must include a value to negate.",
-                            exception,
-                            "Check if you created a NOT condition in your Predicate with no included value.",
-                            false
+                    throw new ApiException(
+                        "Predicate group of type NOT must include a value to negate.",
+                        exception,
+                        "Check if you created a NOT condition in your Predicate with no included value."
                     );
                 }
             } else {
@@ -252,16 +283,14 @@ final class AppSyncGraphQLRequestFactory {
                 return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
             }
         } else {
-            throw new AmplifyException(
-                    "Tried to parse an unsupported QueryPredicate",
-                    null,
-                    "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup.",
-                    false
+            throw new ApiException(
+                "Tried to parse an unsupported QueryPredicate",
+                "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup."
             );
         }
     }
 
-    private static String appSyncOpType(QueryOperator.Type type) throws AmplifyException {
+    private static String appSyncOpType(QueryOperator.Type type) throws ApiException {
         switch (type) {
             case NOT_EQUAL:
                 return "ne";
@@ -282,17 +311,15 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return "beginsWith";
             default:
-                throw new AmplifyException(
-                        "Tried to parse an unsupported QueryOperator type",
-                        null,
-                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
-                        "in the AppSyncGraphQLRequestFactory.",
-                        false
+                throw new ApiException(
+                    "Tried to parse an unsupported QueryOperator type",
+                    "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                    "in the AppSyncGraphQLRequestFactory."
                 );
         }
     }
 
-    private static Object appSyncOpValue(QueryOperator qOp) throws AmplifyException {
+    private static Object appSyncOpValue(QueryOperator qOp) throws ApiException {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
@@ -314,26 +341,23 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();
             default:
-                throw new AmplifyException(
-                        "Tried to parse an unsupported QueryOperator type",
-                        null,
-                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
-                                "in the AppSyncGraphQLRequestFactory.",
-                        false
+                throw new ApiException(
+                    "Tried to parse an unsupported QueryOperator type",
+                    "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                    "in the AppSyncGraphQLRequestFactory."
                 );
         }
     }
 
     @SuppressWarnings("unchecked")
-    private static String getModelFields(Class<? extends Model> clazz, int levelsDeepToGo) {
+    private static String getModelFields(Class<? extends Model> clazz, int levelsDeepToGo) throws AmplifyException {
         if (levelsDeepToGo < 0) {
             return "";
         }
 
         StringBuilder result = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(clazz);
-        final Set<Field> classFields = FieldFinder.findFieldsIn(clazz);
-        Iterator<Field> iterator = classFields.iterator();
+        Iterator<Field> iterator = FieldFinder.findFieldsIn(clazz).iterator();
 
         while (iterator.hasNext()) {
             Field field = iterator.next();

@@ -21,8 +21,9 @@ import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.lang.reflect.Field;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Utility that operates on the fields of a
@@ -43,17 +44,19 @@ public final class FieldFinder {
      * @param clazz the Class object.
      * @return set of fields
      */
-    public static Set<Field> findFieldsIn(@NonNull Class<?> clazz) {
-        final Set<Field> modifiableSet = new HashSet<>();
+    @NonNull
+    public static List<Field> findFieldsIn(@NonNull Class<?> clazz) {
+        final List<Field> fields = new ArrayList<>();
         Class<?> c = clazz;
         while (c != null) {
             for (Field field : c.getDeclaredFields()) {
                 if (field.isAnnotationPresent(ModelField.class)) {
-                    modifiableSet.add(field);
+                    fields.add(field);
                 }
             }
             c = c.getSuperclass();
         }
-        return Immutable.of(modifiableSet);
+        Collections.sort(fields, (o1, o2) -> o1.getName().compareTo(o2.getName()));
+        return Immutable.of(fields);
     }
 }

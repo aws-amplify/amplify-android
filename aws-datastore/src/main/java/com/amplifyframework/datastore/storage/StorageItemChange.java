@@ -21,6 +21,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -357,9 +358,10 @@ public final class StorageItemChange<T extends Model> {
          * @param factory A factory that can build storage item change from record
          * @param <T> The type of item being modeled in the change
          * @return A StorageItemChange representation of the record
+         * @throws DataStoreException If unable to perform the conversion
          */
         public <T extends Model> StorageItemChange<T> toStorageItemChange(
-                @NonNull StorageItemChangeFactory factory) {
+                @NonNull StorageItemChangeFactory factory) throws DataStoreException {
             return Objects.requireNonNull(factory).fromRecord(this);
         }
 
@@ -515,7 +517,8 @@ public final class StorageItemChange<T extends Model> {
          * @param record Record to deserialize
          * @param <T> Type of item represented inside of the change record
          * @return A {@link StorageItemChange} representation of provided record
+         * @throws DataStoreException If unable to perform the conversion
          */
-        <T extends Model> StorageItemChange<T> fromRecord(Record record);
+        <T extends Model> StorageItemChange<T> fromRecord(Record record) throws DataStoreException;
     }
 }

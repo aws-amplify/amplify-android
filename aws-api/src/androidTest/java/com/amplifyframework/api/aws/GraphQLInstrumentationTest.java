@@ -15,10 +15,12 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.testutils.LatchedResponseStreamListener;
+import com.amplifyframework.testutils.LatchedSingleResponseListener;
 import com.amplifyframework.testutils.TestAssets;
 
 import org.junit.BeforeClass;
@@ -31,8 +33,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Validates the functionality of the {@link AWSApiPlugin}.
@@ -54,9 +54,10 @@ public final class GraphQLInstrumentationTest {
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
+     * @throws AmplifyException From Amplify configuration
      */
     @BeforeClass
-    public static void onceBeforeTests() {
+    public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
     }
 
@@ -93,7 +94,10 @@ public final class GraphQLInstrumentationTest {
         createComment(eventId);
 
         // Validate that subscription received the comment.
-        validateSubscribedComments(streamListener.awaitItems());
+        List<Comment> commentsFromSubscription = streamListener.awaitSuccessfulResponses();
+        assertEquals(1, commentsFromSubscription.size());
+        Comment firstComment = commentsFromSubscription.get(0);
+        assertEquals("It's going to be fun!", firstComment.content());
 
         // Cancel the subscription.
         operation.cancel();
@@ -127,31 +131,7 @@ public final class GraphQLInstrumentationTest {
             ),
             creationListener
         );
-        GraphQLResponse<Comment> response =
-            creationListener.awaitTerminalEvent().assertResponse().getResponse();
-        if (response.hasErrors()) {
-            fail(response.getErrors().iterator().next().getMessage());
-        }
-        assertTrue(response.hasData());
-        Comment comment = response.getData();
-        assertEquals("It's going to be fun!", comment.content());
-    }
-
-    /**
-     * Validates a list of GraphQLResponse objects which contains comments. Our test
-     * code only attempts to create a single subscription and to create a single comment,
-     * so this list should have size one and its singleton item should not have errors.
-     * @param subscriptionResponses List of responses received by subscription
-     */
-    private void validateSubscribedComments(List<GraphQLResponse<Comment>> subscriptionResponses) {
-        // Validate that the subscription received data.
-        assertEquals(1, subscriptionResponses.size());
-        GraphQLResponse<Comment> commentResponse = subscriptionResponses.get(0);
-        if (commentResponse.hasErrors()) {
-            fail(commentResponse.getErrors().iterator().next().getMessage());
-        }
-        Comment subscriptionComment = commentResponse.getData();
-        assertEquals("It's going to be fun!", subscriptionComment.content());
+        assertEquals("It's going to be fun!", creationListener.awaitSuccessResponse().content());
     }
 
     /**
@@ -183,13 +163,7 @@ public final class GraphQLInstrumentationTest {
         );
 
         // Validate the response. No errors are expected.
-        GraphQLResponse<Event> creationResponse = creationListener.awaitTerminalEvent().getResponse();
-        if (creationResponse.hasErrors()) {
-            fail(creationResponse.getErrors().iterator().next().getMessage());
-        }
-
-        // The echo-d response mimics what we provided.
-        Event createdEvent = creationResponse.getData();
+        Event createdEvent = creationListener.awaitSuccessResponse();
         assertEquals("Pizza Party", createdEvent.name());
         assertEquals("Tomorrow", createdEvent.when());
         assertEquals("Mario's Pizza Emporium", createdEvent.where());

@@ -15,8 +15,9 @@
 
 package com.amplifyframework.core.model;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.testmodels.Person;
+import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Test;
 
@@ -38,9 +39,10 @@ public final class ModelSchemaTest {
     /**
      * The factory {@link ModelSchema#fromModelClass(Class)} will produce
      * an {@link ModelSchema} that meets our expectations for the {@link Person} model.
+     * @throws AmplifyException from model schema parsing
      */
     @Test
-    public void modelSchemaIsGeneratedForPersonModel() {
+    public void modelSchemaIsGeneratedForPersonModel() throws AmplifyException {
         Map<String, ModelField> expectedFields = new HashMap<>();
         expectedFields.put("id", ModelField.builder()
             .targetType("ID")

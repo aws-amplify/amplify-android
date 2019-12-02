@@ -17,10 +17,8 @@ package com.amplifyframework.api.aws;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -32,7 +30,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.plugin.PluginException;
 
 import org.json.JSONObject;
 
@@ -78,11 +75,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public String getPluginKey() {
-        return "AWSAPIPlugin";
+        return "awsAPIPlugin";
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfigurationJson, Context context) throws PluginException {
+    public void configure(@NonNull JSONObject pluginConfigurationJson, Context context) throws ApiException {
         AWSApiPluginConfiguration pluginConfig =
                 AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
@@ -114,7 +111,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         return query(apiName, modelClass, null, responseListener);
     }
@@ -124,13 +121,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
     ) {
-        GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
-        final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, request, responseListener);
-        operation.start();
-        return operation;
+        try {
+            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
+            final GraphQLOperation<T> operation =
+                    buildSingleResponseOperation(apiName, request, responseListener);
+            operation.start();
+            return operation;
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
@@ -138,13 +140,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             QueryPredicate predicate,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
             return query(apiName, request, responseListener);
-        } catch (AmplifyException exception) {
+        } catch (ApiException exception) {
             responseListener.onError(exception);
+
             return null;
         }
     }
@@ -153,7 +156,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
         final GraphQLOperation<T> operation =
                 buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
         operation.start();
@@ -165,14 +168,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull T model,
             @NonNull MutationType mutationType,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
     ) {
         return mutate(
-                apiName,
-                model,
-                null,
-                mutationType,
-                responseListener);
+            apiName,
+            model,
+            null,
+            mutationType,
+            responseListener
+        );
     }
 
     @Override
@@ -181,13 +185,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull T model,
             QueryPredicate predicate,
             @NonNull MutationType mutationType,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
     ) {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildMutation(model, predicate, mutationType);
             return mutate(apiName, request, responseListener);
-        } catch (AmplifyException exception) {
+        } catch (ApiException exception) {
             responseListener.onError(exception);
+
             return null;
         }
     }
@@ -196,7 +201,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> qraphQlRequest,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener) {
         final GraphQLOperation<T> operation =
                 buildSingleResponseOperation(apiName, qraphQlRequest, responseListener);
         operation.start();
@@ -208,26 +213,41 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
-        return subscribe(
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        try {
+            return subscribe(
                 apiName,
                 AppSyncGraphQLRequestFactory.buildSubscription(
-                        modelClass,
-                        subscriptionType
+                    modelClass,
+                    subscriptionType
                 ),
                 subscriptionListener
-        );
+            );
+        } catch (ApiException exception) {
+            subscriptionListener.onError(exception);
+
+            return null;
+        }
     }
 
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> qraphQlRequest,
-            @Nullable StreamListener<GraphQLResponse<T>> subscriptionListener) {
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener) {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            subscriptionListener.onError(
+                new ApiException(
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there is a correctly configured section for "
+                            + apiName
+                )
+            );
+
+            return null;
         }
 
         SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
@@ -245,11 +265,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private <T> SingleItemResultOperation<T> buildSingleResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @Nullable ResultListener<GraphQLResponse<T>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener) {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            responseListener.onError(
+                new ApiException(
+                        "No client information for API named " + apiName,
+                        "Check your amplify configuration to make sure there is a correctly configured section for "
+                                + apiName
+                )
+            );
+
+            return null;
         }
 
         return SingleItemResultOperation.<T>builder()
@@ -264,11 +292,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private <T> SingleArrayResultOperation<T> buildMultiResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @Nullable ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            responseListener.onError(
+                new ApiException(
+                        "No client information for API named " + apiName,
+                        "Check your amplify configuration to make sure there is a correctly configured section for "
+                                + apiName
+                )
+            );
+
+            return null;
         }
 
         return SingleArrayResultOperation.<T>builder()

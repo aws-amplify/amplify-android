@@ -29,20 +29,20 @@ public enum CategoryType {
      * Analytics track your app's operational status and customer
      * engagement, recording to an AWS backend service.
      */
-    ANALYTICS("Analytics"),
+    ANALYTICS("analytics"),
 
     /**
      * API simplifies interactions with a remote backend via REST
      * and GraphQL operations.
      */
-    API("API"),
+    API("api"),
 
     /**
      * DataStore simplifies local storage of your application data on the
      * device for offline access and automatically synchronizes data with
      * the cloud.
      */
-    DATASTORE("DataStore"),
+    DATASTORE("dataStore"),
 
     /**
      * Hub is an event bus style pub/sub system that is used to
@@ -50,7 +50,7 @@ public enum CategoryType {
      * This category is expected to operate locally to the device,
      * without talking to the cloud backend services, directly.
      */
-    HUB("Hub"),
+    HUB("hub"),
 
     /**
      * Logging for troubleshooting of component behaviors during
@@ -58,13 +58,13 @@ public enum CategoryType {
      * expected to operate locally to the device, without talking to the
      * cloud backend services, directly.
      */
-    LOGGING("Logging"),
+    LOGGING("logging"),
 
     /**
      * Storage is an interface to a remote repository to store and
      * retrieve instances of domain models.
      */
-    STORAGE("Storage");
+    STORAGE("storage");
 
     /**
      * The key this category is listed under in the config JSON.

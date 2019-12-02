@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -62,11 +63,11 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
      *        listener to be invoked when response is available, or if
      */
     private SingleItemResultOperation(
-            String endpoint,
-            OkHttpClient client,
-            GraphQLRequest<T> request,
-            GraphQLResponse.Factory responseFactory,
-            ResultListener<GraphQLResponse<T>> responseListener) {
+            @NonNull String endpoint,
+            @NonNull OkHttpClient client,
+            @NonNull GraphQLRequest<T> request,
+            @NonNull GraphQLResponse.Factory responseFactory,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -99,12 +100,13 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
             // errors to it. Otherwise, throw the error synchronously to
             // the caller.
             ApiException wrappedError =
-                    new ApiException("OkHttp client failed to make a successful request.", error);
-            if (responseListener != null) {
-                responseListener.onError(wrappedError);
-            } else {
-                throw wrappedError;
-            }
+                    new ApiException(
+                            "OkHttp client failed to make a successful request.",
+                            error,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    );
+
+            responseListener.onError(wrappedError);
         }
     }
 
@@ -120,28 +122,40 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
     class OkHttpCallback implements Callback {
         @Override
         public void onResponse(@NonNull Call call,
-                               @NonNull Response response) throws IOException {
+                               @NonNull Response response) {
             final ResponseBody responseBody = response.body();
             String jsonResponse = null;
             if (responseBody != null) {
-                jsonResponse = responseBody.string();
+                try {
+                    jsonResponse = responseBody.string();
+                } catch (IOException exception) {
+                    responseListener.onError(new ApiException(
+                            "Could not retrieve the response body from the returned JSON",
+                            exception,
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                }
             }
 
-            GraphQLResponse<T> wrappedResponse = wrapSingleResultResponse(jsonResponse);
+            try {
+                GraphQLResponse<T> wrappedResponse = wrapSingleResultResponse(jsonResponse);
 
-            if (responseListener != null) {
                 responseListener.onResult(wrappedResponse);
+
+                //TODO: Dispatch to hub
+            } catch (ApiException exception) {
+                responseListener.onError(exception);
             }
-            //TODO: Dispatch to hub
         }
 
         @Override
         public void onFailure(@NonNull Call call,
-                              @NonNull IOException ioe) {
-            if (responseListener != null) {
-                responseListener.onError(ioe);
-            }
-            //TODO: Dispatch to hub
+                              @NonNull IOException exception) {
+            responseListener.onError(new ApiException(
+                    "Could not retrieve the response body from the returned JSON",
+                    exception,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
         }
     }
 

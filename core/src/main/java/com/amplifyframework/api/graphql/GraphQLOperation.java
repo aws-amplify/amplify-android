@@ -17,6 +17,7 @@ package com.amplifyframework.api.graphql;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;
 
@@ -47,12 +48,14 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
      * {@link GraphQLResponse} object that a response listener can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
+     * @throws ApiException If the class provided mismatches the data
      */
-    protected final GraphQLResponse<T> wrapSingleResultResponse(String jsonResponse) {
+    protected final GraphQLResponse<T> wrapSingleResultResponse(String jsonResponse) throws ApiException {
         try {
             return responseFactory.buildSingleItemResponse(jsonResponse, classToCast);
         } catch (ClassCastException cce) {
-            throw new ApiException.ObjectSerializationException();
+            throw new ApiException("Amplify encountered an error while deserializing an object",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 
@@ -61,12 +64,14 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
      * {@link GraphQLResponse} object that a response listener can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
+     * @throws ApiException If the class provided mismatches the data
      */
-    protected final GraphQLResponse<Iterable<T>> wrapMultiResultResponse(String jsonResponse) {
+    protected final GraphQLResponse<Iterable<T>> wrapMultiResultResponse(String jsonResponse) throws ApiException {
         try {
             return responseFactory.buildSingleArrayResponse(jsonResponse, classToCast);
         } catch (ClassCastException cce) {
-            throw new ApiException.ObjectSerializationException();
+            throw new ApiException("Amplify encountered an error while deserializing an object",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
         }
     }
 

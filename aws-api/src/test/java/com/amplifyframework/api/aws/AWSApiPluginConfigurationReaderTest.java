@@ -15,7 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.ConfigurationException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -37,9 +37,10 @@ public final class AWSApiPluginConfigurationReaderTest {
     /**
      * An attempt to read a null JSON object should result in a
      * configuration exception.
+     * @throws ApiException From API configuration
      */
-    @Test(expected = ConfigurationException.class)
-    public void readFromNullJsonObjectThrowsConfigurationException() {
+    @Test(expected = ApiException.class)
+    public void readFromNullJsonObjectThrowsConfigurationException() throws ApiException {
         AWSApiPluginConfigurationReader.readFrom(null);
     }
 
@@ -47,9 +48,10 @@ public final class AWSApiPluginConfigurationReaderTest {
      * An attempt to read from an empty JSON object should result in a configuration
      * exception.
      * @throws JSONException On failure to arrange test inputs
+     * @throws ApiException From API configuration
      */
-    @Test(expected = ConfigurationException.class)
-    public void readFromApiWithNoSpecThrowsConfigurationException() throws JSONException {
+    @Test(expected = ApiException.class)
+    public void readFromApiWithNoSpecThrowsConfigurationException() throws JSONException, ApiException {
         final JSONObject emptyApiSpec = new JSONObject().put("api1", new JSONObject());
         AWSApiPluginConfigurationReader.readFrom(emptyApiSpec);
     }
@@ -57,13 +59,13 @@ public final class AWSApiPluginConfigurationReaderTest {
     /**
      * Validates that the configuration reader is able to parse a valid config
      * for a single API spec, returning a modeled object that resembles the input.
-     * @throws JSONException On failure to arrange the test input
+     * @throws ApiException From API configuration
      */
     @Test
-    public void readFromWellFormedJsonObjectProducesValidConfig() throws JSONException {
+    public void readFromWellFormedJsonObjectProducesValidConfig() throws ApiException {
 
         // Arrange an input JSONObject
-        final JSONObject json = new JSONObject(Resources.readAsString("single-api.config"));
+        final JSONObject json = Resources.readAsJson("single-api.config");
 
         // Act: try to parse it to a modeled configuration object
         final AWSApiPluginConfiguration config = AWSApiPluginConfigurationReader.readFrom(json);
