@@ -10,7 +10,7 @@
       }
     }
   },
-  "Analytics": {
+  "analytics": {
     "plugins": {
       "AmazonPinpointAnalyticsPlugin": {
         "AppId": "xx113344",
@@ -31,43 +31,43 @@
       }
     }
   },
-  "API": {
+  "api": {
     "plugins": {
-      "AWSAPIPlugin": {
+      "awsAPIPlugin": {
         "eventsApi": {
           "__comment": "This is in Jameson's developer account, right now.",
-          "Endpoint": "https://57qnjcavhbdatfveg5dccboqji.appsync-api.us-west-2.amazonaws.com/graphql",
-          "Region": "us-east-1",
-          "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-b6dnxr7f5fchzgpi7vl5ftxogm"
+          "endpoint": "https://57qnjcavhbdatfveg5dccboqji.appsync-api.us-west-2.amazonaws.com/graphql",
+          "region": "us-east-1",
+          "authorizationType": "API_KEY",
+          "apiKey": "da2-b6dnxr7f5fchzgpi7vl5ftxogm"
         },
         "personApi": {
           "__comment": "This is in David's developer account, right now.",
-          "Endpoint": "https://ek6uzvzttffmlczragsv6ipsdu.appsync-api.us-east-1.amazonaws.com/graphql",
-          "Region": "us-east-1",
-          "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-om5d5cekffb65agcin76nszxa4"
+          "endpoint": "https://ek6uzvzttffmlczragsv6ipsdu.appsync-api.us-east-1.amazonaws.com/graphql",
+          "region": "us-east-1",
+          "authorizationType": "API_KEY",
+          "apiKey": "da2-om5d5cekffb65agcin76nszxa4"
         },
         "projectApi": {
           "__comment": "This is in David's developer account, right now.",
-          "Endpoint": "https://xsbadeypwbgozoy6hpffr2utom.appsync-api.us-east-1.amazonaws.com/graphql",
-          "Region": "us-east-1",
-          "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-66qwellewfcjfefzjww56luqs4"
+          "endpoint": "https://xsbadeypwbgozoy6hpffr2utom.appsync-api.us-east-1.amazonaws.com/graphql",
+          "region": "us-east-1",
+          "authorizationType": "API_KEY",
+          "apiKey": "da2-66qwellewfcjfefzjww56luqs4"
         },
         "blogApi": {
           "__comment": "This is in David's developer account, right now.",
-          "Endpoint": "https://pzoz25f54fbqxobwew5opcxbkm.appsync-api.us-east-1.amazonaws.com/graphql",
-          "Region": "us-east-1",
-          "AuthorizationType": "API_KEY",
-          "ApiKey": "da2-3eha7ayvijdolcak6bmjqxxiie"
+          "endpoint": "https://pzoz25f54fbqxobwew5opcxbkm.appsync-api.us-east-1.amazonaws.com/graphql",
+          "region": "us-east-1",
+          "authorizationType": "API_KEY",
+          "apiKey": "da2-3eha7ayvijdolcak6bmjqxxiie"
         },
         "nonAuthApi": {
           "__comment": "This is in Jithin's developer account, right now.",
-          "Endpoint": "https://0idx6yjn11.execute-api.us-east-1.amazonaws.com/beta",
-          "Region": "us-east-1",
-          "AuthorizationType": "NONE",
-          "EndpointType": "REST"
+          "endpoint": "https://0idx6yjn11.execute-api.us-east-1.amazonaws.com/beta",
+          "region": "us-east-1",
+          "authorizationType": "NONE",
+          "endpointType": "REST"
         }
       }
     }

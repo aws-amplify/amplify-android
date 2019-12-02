@@ -16,12 +16,13 @@
 package com.amplifyframework.api.aws;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.testutils.LatchedResultListener;
+
+import org.junit.Assert;
 
 /**
  * An {@link ResultListener} that can await results.
@@ -71,45 +72,27 @@ public final class LatchedRestResponseListener implements ResultListener<RestRes
     }
 
     /**
-     * Assert that no error was observed at {@link #onError(Throwable)}.
-     * It is a usage error to call this method before calling {@link #awaitTerminalEvent()}.
-     * @return Current {@link LatchedRestResponseListener} instance for fluent call chaining
+     * Awaits a RestResponse, and then validates that that response
+     * had no RestResponse.Code, and did contain non-null data.
+     * @return The non-null data in a successful GraphQLResponse
+     * @throws AssertionError In all other circumstances
      */
     @NonNull
-    public LatchedRestResponseListener assertNoError() {
-        latchedResultListener.assertNoError();
-        return this;
+    public RestResponse awaitSuccessResponse() {
+        final RestResponse response = latchedResultListener.awaitResult();
+        Assert.assertTrue("Should return successful response", response.getCode().isSucessful());
+        Assert.assertNotNull("No data in RestResponse", response.getData());
+        return response;
     }
 
     /**
-     * Asserts that this listener received a response.
-     * It is an usage error to call this before calling {@link #awaitTerminalEvent()}.
-     * @return Current {@link LatchedRestResponseListener} instance for fluent call chaining
+     * Await a RestResponse which contains (a) error(s).
+     * @return The errors
      */
     @NonNull
-    public LatchedRestResponseListener assertResponse() {
-        latchedResultListener.assertResult();
-        return this;
-    }
-
-    /**
-     * Gets the value of the response, if present, as it had been received in
-     * {@link #onResult(RestResponse)}.
-     * It is a usage error to call this before {@link #awaitTerminalEvent()}.
-     * @return the value of the response that was received in the result callback.
-     */
-    @NonNull
-    public RestResponse getResponse() {
-        return latchedResultListener.getResult();
-    }
-
-    /**
-     * Gets the error that had been received in {@link #onError(Throwable)}.
-     * It is a usage error to call this before calling {@link #awaitTerminalEvent()}.
-     * @return The error that had been received in the error callback.
-     */
-    @Nullable
-    public Throwable getError() {
-        return latchedResultListener.getError();
+    public RestResponse awaitErrors() {
+        final RestResponse response = latchedResultListener.awaitResult();
+        Assert.assertFalse("Should not return successful response", response.getCode().isSucessful());
+        return response;
     }
 }

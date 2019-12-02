@@ -140,7 +140,7 @@ public final class RestResponse {
          * Returns true if the status code is of range 5xx.
          * @return true if service failure occurred.
          */
-        boolean isServiceFailure() {
+        public boolean isServiceFailure() {
             return serviceFailureCodes.contains(statusCode);
         }
 
@@ -148,7 +148,7 @@ public final class RestResponse {
          * Returns true if the status code is of range 4xx.
          * @return true if client error occurred.
          */
-        boolean isClientError() {
+        public boolean isClientError() {
             return clientErrorCodes.contains(statusCode);
         }
 
@@ -156,7 +156,7 @@ public final class RestResponse {
          * Returns true if the status code is of range 2xx.
          * @return true if response has success code.
          */
-        boolean isSucessful() {
+        public boolean isSucessful() {
             return successCodes.contains(statusCode);
         }
     }
