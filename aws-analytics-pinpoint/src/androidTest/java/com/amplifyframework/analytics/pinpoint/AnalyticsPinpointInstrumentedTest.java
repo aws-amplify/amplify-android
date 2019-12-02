@@ -65,7 +65,7 @@ public class AnalyticsPinpointInstrumentedTest {
     public void testRecordEvent() {
         AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify
                 .Analytics
-                .getPlugin("AmazonPinpointAnalyticsPlugin");
+                .getPlugin("amazonPinpointAnalyticsPlugin");
         AnalyticsClient analyticsClient = plugin.getAnalyticsClient();
 
         // Flush any events from previous tests.
@@ -92,7 +92,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
         AmazonPinpointAnalyticsPlugin plugin = (AmazonPinpointAnalyticsPlugin) Amplify
                 .Analytics
-                .getPlugin("AmazonPinpointAnalyticsPlugin");
+                .getPlugin("amazonPinpointAnalyticsPlugin");
         AnalyticsClient analyticsClient = plugin.getAnalyticsClient();
 
         // Flush any events from previous tests.
