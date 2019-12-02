@@ -96,9 +96,6 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
                 ongoingCall.cancel();
             }
 
-            // If a response listener was provided, then dispatch the
-            // errors to it. Otherwise, throw the error synchronously to
-            // the caller.
             ApiException wrappedError =
                     new ApiException(
                         "OkHttp client failed to make a successful request.",
