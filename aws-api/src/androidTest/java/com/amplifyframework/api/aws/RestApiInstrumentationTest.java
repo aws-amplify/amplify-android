@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Amplify;
@@ -34,7 +35,7 @@ public final class RestApiInstrumentationTest {
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
      */
     @BeforeClass
-    public static void onceBeforeTests() {
+    public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
     }
 
@@ -43,13 +44,11 @@ public final class RestApiInstrumentationTest {
      */
     @Test
     public void getRequestWithNoAuth() {
-        final RestOptions options = new RestOptions("nonAuthApi",
-                "simplesuccess"
-                );
+        final RestOptions options = new RestOptions("simplesuccess");
         LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
-        Amplify.API.get(options, responseListener);
+        Amplify.API.get("nonAuthApi", options, responseListener);
         RestResponse getResponse =
-                responseListener.awaitTerminalEvent().assertNoError().assertResponse().getResponse();
+                responseListener.awaitTerminalEvent().awaitSuccessResponse();
         assertTrue(getResponse.getData() != null);
     }
 }
