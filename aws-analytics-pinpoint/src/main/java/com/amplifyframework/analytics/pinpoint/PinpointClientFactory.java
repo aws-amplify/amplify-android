@@ -16,7 +16,9 @@
 package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
-import android.util.Log;
+
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -29,13 +31,15 @@ import com.amazonaws.regions.Regions;
 import com.amazonaws.services.pinpoint.model.ChannelType;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Factory class to vend out pinpoint analytics client.
  */
 final class PinpointClientFactory {
 
-    private static final String TAG = PinpointClientFactory.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
+    private static final int INITIALIZATION_TIMEOUT_MS = 1000;
 
     private PinpointClientFactory() {
     }
@@ -51,19 +55,19 @@ final class PinpointClientFactory {
                 new Callback<UserStateDetails>() {
                     @Override
                     public void onResult(UserStateDetails userStateDetails) {
-                        Log.i(TAG, "Mobile client initialized");
+                        LOG.info("Mobile client initialized");
                         mobileClientLatch.countDown();
                     }
 
                     @Override
                     public void onError(Exception exception) {
-                        Log.e(TAG, "Error initializing AWS Mobile Client", exception);
+                        LOG.error("Error initializing AWS Mobile Client", exception);
                         mobileClientLatch.countDown();
                     }
                 });
 
         try {
-            mobileClientLatch.await();
+            mobileClientLatch.await(INITIALIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         } catch (InterruptedException exception) {
             throw new RuntimeException("Failed to initialize mobile client: " + exception.getLocalizedMessage());
         }

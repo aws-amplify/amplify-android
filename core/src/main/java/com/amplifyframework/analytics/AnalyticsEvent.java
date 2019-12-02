@@ -18,7 +18,7 @@ package com.amplifyframework.analytics;
 /**
  * Defines contract for different types of analytics event.
  */
-public interface AnalyticsEventType {
+public interface AnalyticsEvent {
     /**
      * Return event name.
      * @return event name

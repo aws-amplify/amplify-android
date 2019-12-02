@@ -55,6 +55,7 @@ dependencies {
     androidTestImplementation "androidx.test:core:1.2.0" // Core Library
     androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
     androidTestImplementation "androidx.test.ext:junit:1.1.1"
+    androidTestImplementation project(path: ':testutils')
 }
 
 project.afterEvaluate {

@@ -18,7 +18,7 @@ package com.amplifyframework.analytics.pinpoint;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.analytics.AnalyticsEventType;
+import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
@@ -26,7 +26,6 @@ import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent;
 import com.amazonaws.regions.Regions;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -86,7 +85,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @Override
     public void recordEvent(@NonNull String eventName) {
 
-        final AnalyticsEvent pinpointEvent =
+        final com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(eventName);
         analyticsClient.recordEvent(pinpointEvent);
     }
@@ -95,10 +94,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void recordEvent(@NonNull AnalyticsEventType analyticsEvent)
+    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent)
             throws AnalyticsException {
 
-        final AnalyticsEvent pinpointEvent =
+        final com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(analyticsEvent.getName());
 
         if (analyticsEvent.getProperties() != null) {
@@ -207,8 +206,8 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public Object getEscapeHatch() {
-        return null;
+    public AnalyticsClient getEscapeHatch() {
+        return analyticsClient;
     }
 
     /**

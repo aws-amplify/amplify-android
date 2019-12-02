@@ -18,7 +18,7 @@ package com.amplifyframework.analytics;
 /**
  * Represents event in its most general form and can have different properties.
  */
-public final class BasicAnalyticsEvent implements AnalyticsEventType {
+public final class BasicAnalyticsEvent implements AnalyticsEvent {
     private final String name;
     private final Properties properties;
 

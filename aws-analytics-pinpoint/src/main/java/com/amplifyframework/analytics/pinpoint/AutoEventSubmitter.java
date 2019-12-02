@@ -17,15 +17,19 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.os.Handler;
 import android.os.HandlerThread;
-import android.util.Log;
+
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+
+import java.util.Locale;
 
 /**
  * Submits all the recorded event periodically.
  */
 final class AutoEventSubmitter {
-    private static final String TAG = AutoEventSubmitter.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 
     private final Handler handler;
     private final HandlerThread handlerThread;
@@ -38,7 +42,7 @@ final class AutoEventSubmitter {
         this.handler = new Handler(handlerThread.getLooper());
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {
-            Log.d(TAG, String.format("Auto submitting events after %d seconds", autoFlushInterval));
+            LOG.debug(String.format(Locale.US, "Auto submitting events after %d seconds", autoFlushInterval));
             analyticsClient.submitEvents();
             handler.postDelayed(this.submitRunnable, autoFlushInterval);
         };
@@ -49,11 +53,6 @@ final class AutoEventSubmitter {
     }
 
     synchronized void stop() {
-        if (submitRunnable != null) {
-            handler.removeCallbacksAndMessages(null);
-            handlerThread.quit();
-        }
-
-        submitRunnable = null;
+        handler.removeCallbacksAndMessages(null);
     }
 }
