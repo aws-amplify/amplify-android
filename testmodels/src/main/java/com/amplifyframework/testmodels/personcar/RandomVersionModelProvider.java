@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testmodels;
+package com.amplifyframework.testmodels.personcar;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
