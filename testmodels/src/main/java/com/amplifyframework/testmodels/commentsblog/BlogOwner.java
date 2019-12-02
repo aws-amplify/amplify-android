@@ -69,6 +69,7 @@ public final class BlogOwner implements Model {
       .append(getName())
       .append(getId())
       .append(getWea())
+      .toString()
       .hashCode();
   }
   
