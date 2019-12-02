@@ -70,16 +70,16 @@ public final class RestResponse {
     public static final class Data {
 
         /**
-         * Data returned by the response.
+         * Raw data returned by the response.
          */
-        private final byte[] bytes;
+        private final byte[] rawBytes;
 
         /**
-         * Constructs a data object with the raw bytes.
-         * @param bytes Raw bytes of the response.
+         * Constructs a data object with the raw rawBytes.
+         * @param rawBytes Raw bytes of the response.
          */
-        public Data(byte[] bytes) {
-            this.bytes = bytes == null ? null : Arrays.copyOf(bytes, bytes.length);
+        public Data(byte[] rawBytes) {
+            this.rawBytes = rawBytes == null ? null : Arrays.copyOf(rawBytes, rawBytes.length);
         }
 
         /**
@@ -87,7 +87,7 @@ public final class RestResponse {
          * @return Returns the raw data as byte array.
          */
         public byte[] getRawBytes() {
-            return bytes;
+            return rawBytes;
         }
 
         /**
@@ -95,11 +95,11 @@ public final class RestResponse {
          * @return String representation of the byte array.
          */
         public String asString() {
-            return new String(bytes);
+            return new String(rawBytes);
         }
 
         /**
-         * Returns the JSON object of the bytes array.
+         * Returns the JSON object of the rawBytes array.
          * @return JSON representation.
          * @throws JSONException Exception for JSON errors.
          */

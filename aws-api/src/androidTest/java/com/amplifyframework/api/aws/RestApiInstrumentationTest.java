@@ -53,21 +53,20 @@ public final class RestApiInstrumentationTest {
         final RestOptions options = new RestOptions("simplesuccess");
         LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
         Amplify.API.get("nonAuthApi", options, responseListener);
-        RestResponse response =
-                responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue(response.getData() != null);
+        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
+        assertTrue("Should return a non null data", response.getData() != null);
 
-        final JSONObject resultJSON = new JSONObject(new String(response.getData().getRawBytes()));
+        final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
                 "Should return the right value",
-                contextJSON.getString("http-method"),
-                "GET");
+                "GET",
+                contextJSON.getString("http-method"));
         assertEquals(
                 "Should return the right value",
-                contextJSON.getString("resource-path"),
-                "/simplesuccess");
+                "/simplesuccess",
+                contextJSON.getString("resource-path"));
     }
 
     /**
@@ -79,21 +78,20 @@ public final class RestApiInstrumentationTest {
         final RestOptions options = new RestOptions("simplesuccess", "sample body".getBytes());
         LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
         Amplify.API.post("nonAuthApi", options, responseListener);
-        RestResponse response =
-                responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue(response.getData() != null);
+        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
+        assertTrue("Should return a non null data", response.getData() != null);
 
-        final JSONObject resultJSON = new JSONObject(new String(response.getData().getRawBytes()));
+        final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
                 "Should return the right value",
-                contextJSON.getString("http-method"),
-                "POST");
+                "POST",
+                contextJSON.getString("http-method"));
         assertEquals(
                 "Should return the right value",
-                contextJSON.getString("resource-path"),
-                "/simplesuccess");
+                "/simplesuccess",
+                contextJSON.getString("resource-path"));
     }
 
     /**
@@ -105,20 +103,19 @@ public final class RestApiInstrumentationTest {
         final RestOptions options = new RestOptions("simplesuccessapikey");
         LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
         Amplify.API.get("apiKeyApi", options, responseListener);
-        RestResponse response =
-                responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue(response.getData() != null);
+        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
+        assertTrue("Should return a non null data", response.getData() != null);
 
-        final JSONObject resultJSON = new JSONObject(new String(response.getData().getRawBytes()));
+        final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
         assertNotNull("Should contain an object called context", contextJSON);
         assertEquals(
                 "Should return the right value",
-                contextJSON.getString("http-method"),
-                "GET");
+                "GET",
+                contextJSON.getString("http-method"));
         assertEquals(
                 "Should return the right value",
-                contextJSON.getString("resource-path"),
-                "/simplesuccessapikey");
+                "/simplesuccessapikey",
+                contextJSON.getString("resource-path"));
     }
 }
