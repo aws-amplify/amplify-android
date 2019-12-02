@@ -67,7 +67,6 @@ import java.util.concurrent.Executors;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.subjects.PublishSubject;
 
@@ -223,7 +222,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Delete the database if there is a version change.
                  */
                 toBeDisposed.add(upgradeModels().subscribe(() -> {
-                    listener.onResult(new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values()));
+                    listener.onResult(Immutable.of(
+                            new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())));
                 }, throwable -> {
                         listener.onError(new DataStoreException("Error in initializing the " +
                                 "SQLiteStorageAdapter", throwable));
