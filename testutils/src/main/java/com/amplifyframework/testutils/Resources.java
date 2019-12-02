@@ -16,13 +16,19 @@
 package com.amplifyframework.testutils;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * A little utility to load test content from src/test/resources.
@@ -81,5 +87,35 @@ public final class Resources {
      */
     public static String readAsString(Context context, @RawRes int rawResourceId) {
         return stringFromStream(context.getResources().openRawResource(rawResourceId));
+    }
+
+    /**
+     * Gets a test resource as a JSONObject, given its path relative to the
+     * resources directory. For example, the file at
+     * ${PROJECT_ROOT}/src/test/resources/foo/bar.json would have a
+     * relative path value of "foo/bar.json".
+     * @param path Relative path of the test resource
+     * @return Contents of the test resource as a JSONObject, if it is
+     *         available
+     */
+    @NonNull
+    public static JSONObject readAsJson(String path) {
+        try {
+            return new JSONObject(readAsString(path));
+        } catch (JSONException jsonException) {
+            throw new RuntimeException(jsonException);
+        }
+    }
+
+    /**
+     * Read lines of test from a resource. Each sequential line is a new item in the list.
+     * @param path A path relative to the resources directory. For example, the file at
+     *             ${PROJECT_ROOT}/src/test/resources/foo/bar.lines would have a relative
+     *             path value of "foo/bar.lines".
+     * @return A list of strings, one for each line of text found in the resource file
+     *         that exists at the the provided path.
+     */
+    public static List<String> readLines(String path) {
+        return Arrays.asList(readAsString(path).split("\\r?\\n"));
     }
 }
