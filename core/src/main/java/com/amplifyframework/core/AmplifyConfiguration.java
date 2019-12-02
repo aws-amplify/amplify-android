@@ -23,6 +23,7 @@ import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
@@ -95,6 +96,11 @@ public final class AmplifyConfiguration {
 
                 if (json.has(categoryJsonKey)) {
                     categoryConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
+                } else if (categoryJsonKey.equals(CategoryType.DATASTORE.getConfigurationKey())) {
+                    // CLI currently does not generate configuration for DataStore,
+                    // so this is a temporary fix to avoid unexpected PluginException.
+                    final String defaultConfig = "{ \"plugins\": { \"awsDataStorePlugin\": {} } }";
+                    categoryConfig.populateFromJSON(new JSONObject(defaultConfig));
                 }
             }
         } catch (JSONException error) {
