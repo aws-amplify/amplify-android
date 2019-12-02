@@ -124,7 +124,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     @Override
     public String getPluginKey() {
-        return BackgroundExecutorHubPlugin.class.getSimpleName();
+        return "backgroundExecutorHubPlugin";
     }
 
     @Override

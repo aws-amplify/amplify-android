@@ -23,7 +23,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.LatchedResultListener;
 import com.amplifyframework.testutils.RandomString;
 
@@ -69,10 +69,9 @@ public class SyncEngineTest {
         // Arrange: storage engine is running
         syncEngine.start();
 
-        // Arrange: create a person
-        final Person susan = Person.builder()
-            .firstName("Susan")
-            .lastName("Quimby")
+        // Arrange: create a BlogOwner
+        final BlogOwner susan = BlogOwner.builder()
+            .name("Susan Quimby")
             .build();
 
         CountDownLatch apiInvoked = new CountDownLatch(1);
@@ -86,7 +85,7 @@ public class SyncEngineTest {
             any()
         );
 
-        // Act: Put person into storage, and wait for it to complete.
+        // Act: Put BlogOwner into storage, and wait for it to complete.
         LatchedResultListener<StorageItemChange.Record> listener =
             LatchedResultListener.waitFor(OPERATIONS_TIMEOUT_MS);
         localStorageAdapter.save(susan, StorageItemChange.Initiator.DATA_STORE_API, listener);

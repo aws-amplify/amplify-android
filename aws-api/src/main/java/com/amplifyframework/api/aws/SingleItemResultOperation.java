@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -27,6 +28,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -120,6 +122,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
     }
 
     class OkHttpCallback implements Callback {
+        @SuppressLint("SyntheticAccessor")
         @Override
         public void onResponse(@NonNull Call call,
                                @NonNull Response response) {
@@ -148,6 +151,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
             }
         }
 
+        @SuppressLint("SyntheticAccessor")
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException exception) {
@@ -191,13 +195,15 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
+        @SuppressLint("SyntheticAccessor")
         SingleItemResultOperation<T> build() {
             return new SingleItemResultOperation<>(
-                    endpoint,
-                    client,
-                    request,
-                    responseFactory,
-                    responseListener);
+                Objects.requireNonNull(endpoint),
+                Objects.requireNonNull(client),
+                Objects.requireNonNull(request),
+                Objects.requireNonNull(responseFactory),
+                Objects.requireNonNull(responseListener)
+            );
         }
     }
 }
