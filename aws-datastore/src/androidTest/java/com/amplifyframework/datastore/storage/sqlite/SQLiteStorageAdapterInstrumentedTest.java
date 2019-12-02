@@ -34,7 +34,6 @@ import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.Car;
 import com.amplifyframework.testmodels.MaritalStatus;
 import com.amplifyframework.testmodels.Person;
-import com.amplifyframework.testmodels.RandomVersionModelProvider;
 import com.amplifyframework.testutils.LatchedResultListener;
 
 import org.junit.After;

@@ -19,9 +19,7 @@ import android.content.Context;
 import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelSchema;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.RandomVersionModelProvider;
 import com.amplifyframework.testutils.LatchedResultListener;
