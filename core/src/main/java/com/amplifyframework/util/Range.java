@@ -19,10 +19,10 @@ package com.amplifyframework.util;
  * Range of values.
  * @param <T> Generics type of the Range, which should conform to Comparable.
  */
-public class Range<T extends Comparable<T>> {
+public final class Range<T extends Comparable<T>> {
 
-    private T low;
-    private T high;
+    private final T low;
+    private final T high;
 
     /**
      * Constructs the Range object.

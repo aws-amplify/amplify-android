@@ -19,7 +19,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
@@ -181,11 +180,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull ResultListener<GraphQLResponse<T>> responseListener
     ) {
         return mutate(
-            apiName,
-            model,
-            null,
-            mutationType,
-            responseListener
+                apiName,
+                model,
+                null,
+                mutationType,
+                responseListener
         );
     }
 
@@ -227,12 +226,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     ) {
         try {
             return subscribe(
-                apiName,
-                AppSyncGraphQLRequestFactory.buildSubscription(
-                    modelClass,
-                    subscriptionType
-                ),
-                subscriptionListener
+                    apiName,
+                    AppSyncGraphQLRequestFactory.buildSubscription(
+                            modelClass,
+                            subscriptionType
+                    ),
+                    subscriptionListener
             );
         } catch (ApiException exception) {
             subscriptionListener.onError(exception);
@@ -250,11 +249,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
             subscriptionListener.onError(
-                new ApiException(
-                    "No client information for API named " + apiName,
-                    "Check your amplify configuration to make sure there is a correctly configured section for "
-                            + apiName
-                )
+                    new ApiException(
+                            "No client information for API named " + apiName,
+                            "Check your amplify configuration to make sure there is a correctly configured section for "
+                                    + apiName
+                    )
             );
 
             return null;
@@ -277,11 +276,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull RestOptions options,
             @NonNull ResultListener<RestResponse> responseListener) {
-        return createRestOperation(
-                apiName,
-                HttpMethod.GET,
-                options,
-                responseListener);
+
+        try {
+            return createRestOperation(
+                    apiName,
+                    HttpMethod.GET,
+                    options,
+                    responseListener);
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
@@ -289,11 +294,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull RestOptions options,
             @NonNull ResultListener<RestResponse> responseListener) {
-        return createRestOperation(
-                apiName,
-                HttpMethod.PUT,
-                options,
-                responseListener);
+
+        try {
+            return createRestOperation(
+                    apiName,
+                    HttpMethod.PUT,
+                    options,
+                    responseListener);
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
@@ -302,11 +313,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull RestOptions options,
             @NonNull ResultListener<RestResponse> responseListener) {
 
-        return createRestOperation(
-                apiName,
-                HttpMethod.POST,
-                options,
-                responseListener);
+        try {
+            return createRestOperation(
+                    apiName,
+                    HttpMethod.POST,
+                    options,
+                    responseListener);
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
@@ -314,11 +330,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull RestOptions options,
             @NonNull ResultListener<RestResponse> responseListener) {
-        return createRestOperation(
-                apiName,
-                HttpMethod.DELETE,
-                options,
-                responseListener);
+
+        try {
+            return createRestOperation(
+                    apiName,
+                    HttpMethod.DELETE,
+                    options,
+                    responseListener);
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
@@ -327,11 +349,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull RestOptions options,
             @NonNull ResultListener<RestResponse> responseListener) {
 
-        return createRestOperation(
-                apiName,
-                HttpMethod.HEAD,
-                options,
-                responseListener);
+        try {
+            return createRestOperation(
+                    apiName,
+                    HttpMethod.HEAD,
+                    options,
+                    responseListener);
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Override
@@ -340,11 +367,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull RestOptions options,
             @NonNull ResultListener<RestResponse> responseListener) {
 
-        return createRestOperation(
-                apiName,
-                HttpMethod.PATCH,
-                options,
-                responseListener);
+        try {
+            return createRestOperation(
+                    apiName,
+                    HttpMethod.PATCH,
+                    options,
+                    responseListener);
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     private <T> SingleItemResultOperation<T> buildSingleResponseOperation(
@@ -355,11 +387,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
             responseListener.onError(
-                new ApiException(
-                        "No client information for API named " + apiName,
-                        "Check your amplify configuration to make sure there is a correctly configured section for "
-                                + apiName
-                )
+                    new ApiException(
+                            "No client information for API named " + apiName,
+                            "Check your amplify configuration to make sure there is a correctly configured section for "
+                                    + apiName
+                    )
             );
 
             return null;
@@ -382,11 +414,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
             responseListener.onError(
-                new ApiException(
-                        "No client information for API named " + apiName,
-                        "Check your amplify configuration to make sure there is a correctly configured section for "
-                                + apiName
-                )
+                    new ApiException(
+                            "No client information for API named " + apiName,
+                            "Check your amplify configuration to make sure there is a correctly configured section for "
+                                    + apiName
+                    )
             );
 
             return null;
@@ -413,10 +445,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             String apiName,
             HttpMethod type,
             RestOptions options,
-            ResultListener<RestResponse> listener) {
+            ResultListener<RestResponse> listener) throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            throw new ApiException("No client information for API named " + apiName);
+            listener.onError(
+                    new ApiException(
+                            "No client information for API named " + apiName,
+                            "Check your amplify configuration to make sure there is a correctly configured section for "
+                                    + apiName
+                    )
+            );
+            return null;
         }
         RestOperationRequest operationRequest;
         switch (type) {
@@ -425,7 +464,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case GET:
             case DELETE:
                 if (options.hasData()) {
-                    throw new ApiException("HTTP method does not support data object! " + type);
+                    throw new ApiException("HTTP method does not support data object! " + type,
+                            "Try sending the request without any data in the options.");
                 }
                 operationRequest = new RestOperationRequest(
                         type,
@@ -442,7 +482,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         options.getQueryParameters());
                 break;
             default:
-                throw new ApiException("Unknown REST operation type: " + type);
+                throw new ApiException("Unknown REST operation type: " + type,
+                        "Send support type for the request.");
         }
         AWSRestOperation operation = new AWSRestOperation(operationRequest,
                 clientDetails.apiConfiguration.getEndpoint(),

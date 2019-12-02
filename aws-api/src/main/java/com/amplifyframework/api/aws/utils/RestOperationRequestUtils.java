@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws.utils;
 
 import com.amplifyframework.api.rest.HttpMethod;
-import com.amplifyframework.util.CollectionUtils;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -66,7 +65,7 @@ public final class RestOperationRequestUtils {
                 .addPathSegment(url.getPath().replaceFirst("/", ""))
                 .addPathSegment(urlPath);
 
-        if (!CollectionUtils.isNullOrEmpty(queryParameters)) {
+        if (queryParameters != null) {
             for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
                 builder.addQueryParameter(entry.getKey(), entry.getValue());
             }

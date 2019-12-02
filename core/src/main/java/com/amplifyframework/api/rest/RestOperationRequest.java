@@ -24,25 +24,25 @@ import java.util.Map;
 /**
  * Request object used by the RestOperation.
  */
-public class RestOperationRequest {
+public final class RestOperationRequest {
 
-    private final HttpMethod operationType;
+    private final HttpMethod httpMethod;
     private final String path;
     private final byte[] data;
     private final Map<String, String> queryParameters;
 
     /**
      * Constructs a request object for RestOperation.
-     * @param operationType The rest operation type
+     * @param httpMethod The rest operation type
      * @param path Path against which the request is made.
      * @param data Data for the rest option
      * @param queryParameters Query parameters for the request.
      */
-    public RestOperationRequest(HttpMethod operationType,
+    public RestOperationRequest(HttpMethod httpMethod,
                                 String path,
                                 byte[] data,
                                 Map<String, String> queryParameters) {
-        this.operationType = operationType;
+        this.httpMethod = httpMethod;
         this.path = path;
         this.data = data == null ? null : Arrays.copyOf(data, data.length);
         this.queryParameters = queryParameters == null ? Collections.emptyMap() : Immutable.of(queryParameters);
@@ -50,22 +50,22 @@ public class RestOperationRequest {
 
     /**
      * Constructs a request object for RestOperation.
-     * @param operationType The rest operation type
+     * @param httpMethod The rest operation type
      * @param path Path against which the request is made.
      * @param queryParameters Query parameters for the request.
      */
-    public RestOperationRequest(HttpMethod operationType,
+    public RestOperationRequest(HttpMethod httpMethod,
                                 String path,
                                 Map<String, String> queryParameters) {
-        this(operationType, path, null, queryParameters);
+        this(httpMethod, path, null, queryParameters);
     }
 
     /**
      * Returns the operation type of the request.
      * @return Operation type of the request.
      */
-    public HttpMethod getOperationType() {
-        return operationType;
+    public HttpMethod getHttpMethod() {
+        return httpMethod;
     }
 
     /**
