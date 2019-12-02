@@ -280,6 +280,22 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Test save with SQL injection.
+     */
+    @Test
+    public void saveModelWithMaliciousInputs() {
+        final Person person = Person.builder()
+                .firstName("Jane'); DROP TABLE Person; --")
+                .lastName("Doe")
+                .build();
+        saveModel(person);
+
+        Iterator<Person> result = queryModel(Person.class);
+        assertTrue(result.hasNext());
+        assertEquals(person, result.next());
+    }
+
+    /**
      * Test querying the saved item in the SQLite database.
      *
      * @throws ParseException when the date cannot be parsed.
@@ -406,22 +422,22 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .or(Person.AGE.eq(1).and(Person.AGE.ne(7)));
         Iterator<Person> result = queryModel(Person.class, predicate);
 
-        Set<Person> expectedPersons = new HashSet<>();
-        expectedPersons.add(savedModels.get(1));
-        expectedPersons.add(savedModels.get(4));
-        expectedPersons.add(savedModels.get(5));
-        expectedPersons.add(savedModels.get(6));
+        Set<Person> expectedPeople = new HashSet<>();
+        expectedPeople.add(savedModels.get(1));
+        expectedPeople.add(savedModels.get(4));
+        expectedPeople.add(savedModels.get(5));
+        expectedPeople.add(savedModels.get(6));
 
-        Set<Person> actualPersons = new HashSet<>();
+        Set<Person> actualPeople = new HashSet<>();
         while (result.hasNext()) {
             final Person person = result.next();
             assertNotNull(person);
             assertTrue("Unable to find expected item in the storage adapter.",
                     savedModels.contains(person));
-            actualPersons.add(person);
+            actualPeople.add(person);
         }
 
-        assertEquals(expectedPersons, actualPersons);
+        assertEquals(expectedPeople, actualPeople);
     }
 
     /**
@@ -433,7 +449,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @SuppressWarnings("magicnumber")
     @Test
     public void querySavedDataWithStringPredicates() throws ParseException {
-        final Set<Person> savedModels = new HashSet<>();
+        final List<Person> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final Person person = Person.builder()
@@ -453,17 +469,63 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .or(Person.LAST_NAME.beginsWith("9"))
                 .and(not(Person.AGE.gt(8)));
         Iterator<Person> result = queryModel(Person.class, predicate);
-        Set<Integer> ages = new HashSet<>();
+
+        Set<Person> expectedPeople = new HashSet<>();
+        expectedPeople.add(savedModels.get(4));
+        expectedPeople.add(savedModels.get(7));
+
+        Set<Person> actualPeople = new HashSet<>();
         while (result.hasNext()) {
             final Person person = result.next();
             assertNotNull(person);
             assertTrue("Unable to find expected item in the storage adapter.",
                     savedModels.contains(person));
-            ages.add(person.getAge());
+            actualPeople.add(person);
         }
-        assertEquals(2, ages.size());
-        assertTrue(ages.contains(4));
-        assertTrue(ages.contains(7));
+        assertEquals(expectedPeople, actualPeople);
+    }
+
+    /**
+     * Test querying with predicate condition on connected model.
+     */
+    @Test
+    public void querySavedDataWithPredicatesOnForeignKey() {
+        final Person person = Person.builder()
+                .firstName("Jane")
+                .lastName("Doe")
+                .build();
+        saveModel(person);
+
+        final Car car = Car.builder()
+                .vehicleModel("Toyota Prius")
+                .owner(person)
+                .build();
+        saveModel(car);
+
+        QueryPredicate predicate = Person.FIRST_NAME.eq("Jane");
+        Iterator<Car> result = queryModel(Car.class, predicate);
+        assertTrue(result.hasNext());
+        assertEquals(car, result.next());
+    }
+
+    /**
+     * Test query with SQL injection.
+     */
+    @Test
+    public void queryWithMaliciousPredicates() {
+        final Person jane = Person.builder()
+                .firstName("Jane")
+                .lastName("Doe")
+                .build();
+        saveModel(jane);
+
+        QueryPredicate predicate = Person.FIRST_NAME.eq("Jane; DROP TABLE Person; --");
+        Iterator<Person> resultOfMaliciousQuery = queryModel(Person.class, predicate);
+        assertFalse(resultOfMaliciousQuery.hasNext());
+
+        Iterator<Person> resultAfterMaliciousQuery = queryModel(Person.class);
+        assertTrue(resultAfterMaliciousQuery.hasNext());
+        assertEquals(jane, resultAfterMaliciousQuery.next());
     }
 
     /**

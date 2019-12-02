@@ -563,6 +563,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 }
 
                 final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
+                // This check is necessary, because primitive values will return 0 even when null
+                if (cursor.isNull(columnIndex)) {
+                    mapForModel.put(fieldName, null);
+                    continue;
+                }
 
                 final String stringValueFromCursor;
                 switch (fieldJavaType) {
@@ -695,7 +700,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                              @Nullable QueryPredicate predicate) {
         final ModelSchema schema = ModelSchemaRegistry.singleton()
                 .getModelSchemaForModelClass(tableName);
-        final String rawQuery = sqlCommandFactory.queryFor(schema, predicate).sqlStatement();
-        return this.databaseConnectionHandle.rawQuery(rawQuery, null);
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, predicate);
+        final String rawQuery = sqlCommand.sqlStatement();
+        final String[] selectionArgs = sqlCommand.getSelectionArgsAsArray();
+        return this.databaseConnectionHandle.rawQuery(rawQuery, selectionArgs);
     }
 }
