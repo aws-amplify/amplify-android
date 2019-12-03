@@ -16,6 +16,7 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -43,13 +44,15 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param modelClass The class of the Model we are querying on
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
             @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
@@ -64,7 +67,8 @@ public interface GraphQlBehavior {
      * the response listener, and via {@link HubCategory}.  If there is data
      * present in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param modelClass The class of the Model we are querying on
      * @param objectId The unique ID of the object you want to get
      * @param responseListener Invoked when response data/errors are available.
@@ -72,6 +76,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
@@ -87,7 +92,8 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param modelClass The class of the Model we are querying on
      * @param predicate Filtering conditions for the query
      * @param responseListener Invoked when response data/errors are available.
@@ -95,6 +101,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
             QueryPredicate predicate,
@@ -107,13 +114,15 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param graphQlRequest Wrapper for request details
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T> GraphQLOperation<T> query(
             @NonNull GraphQLRequest<T> graphQlRequest,
             @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
@@ -134,6 +143,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
@@ -156,6 +166,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
@@ -179,6 +190,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
@@ -198,6 +210,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
@@ -213,7 +226,8 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
      * type. Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param model An instance of the Model with the values to mutate
      * @param mutationType  What type of mutation to perform (e.g. Create, Update, Delete)
      * @param responseListener Invoked when response data/errors are available.
@@ -221,6 +235,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
             @NonNull MutationType mutationType,
@@ -236,7 +251,8 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
      * type. Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param model An instance of the Model with the values to mutate
      * @param predicate Conditions on the current data to determine whether to go through
      *                  with an UPDATE or DELETE operation
@@ -246,6 +262,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
             QueryPredicate predicate,
@@ -259,13 +276,15 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
      * type. Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param graphQlRequest Wrapper for request details
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T> GraphQLOperation<T> mutate(
             @NonNull GraphQLRequest<T> graphQlRequest,
             @NonNull ResultListener<GraphQLResponse<T>> responseListener);
@@ -288,6 +307,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
@@ -314,6 +334,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
@@ -335,6 +356,7 @@ public interface GraphQlBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
+    @Nullable
     <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
@@ -350,7 +372,8 @@ public interface GraphQlBehavior {
      * The subscription may be canceled by calling
      * {@link GraphQLOperation#cancel()}.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param modelClass The class of the Model we are subscribing to
      * @param subscriptionType What type of subscription to listen for (e.g. OnCreate, OnUpdate, OnDelete)
      * @param subscriptionListener
@@ -359,6 +382,7 @@ public interface GraphQlBehavior {
      * @param <T> The type of data expected in the subscription stream. Must extend Model.
      * @return A GraphQLOperation representing this ongoing subscription
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
@@ -371,7 +395,8 @@ public interface GraphQlBehavior {
      * The subscription may be canceled by calling
      * {@link GraphQLOperation#cancel()}.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
+     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * the provided `ResultListener`.
      * @param graphQlRequest Wrapper for request details
      * @param subscriptionListener
      *        A listener to receive notifications when new items are
@@ -379,6 +404,7 @@ public interface GraphQlBehavior {
      * @param <T> The type of data expected in the subscription stream
      * @return A GraphQLOperation representing this ongoing subscription
      */
+    @Nullable
     <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest,
             @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
@@ -401,6 +427,7 @@ public interface GraphQlBehavior {
      * @param <T> The type of data expected in the subscription stream. Must extend Model.
      * @return A GraphQLOperation representing this ongoing subscription
      */
+    @Nullable
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
@@ -421,6 +448,7 @@ public interface GraphQlBehavior {
      * @param <T> The type of data expected in the subscription stream
      * @return A GraphQLOperation representing this ongoing subscription
      */
+    @Nullable
     <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,

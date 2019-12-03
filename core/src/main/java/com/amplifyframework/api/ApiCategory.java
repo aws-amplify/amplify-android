@@ -45,6 +45,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return CategoryType.API;
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
@@ -53,6 +54,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(modelClass, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
@@ -62,6 +64,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(modelClass, objectId, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
@@ -71,6 +74,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(modelClass, predicate, responseListener);
     }
 
+    @Nullable
     @Override
     public <T> GraphQLOperation<T> query(
             @NonNull GraphQLRequest<T> graphQlRequest,
@@ -79,6 +83,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(graphQlRequest, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
@@ -88,6 +93,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(apiName, modelClass, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
@@ -98,6 +104,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(apiName, modelClass, objectId, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
@@ -108,6 +115,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(apiName, modelClass, predicate, responseListener);
     }
 
+    @Nullable
     @Override
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
@@ -117,6 +125,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().query(apiName, graphQlRequest, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
@@ -126,6 +135,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().mutate(model, mutationType, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
@@ -136,6 +146,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().mutate(model, predicate, mutationType, responseListener);
     }
 
+    @Nullable
     @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull GraphQLRequest<T> graphQlRequest,
@@ -144,6 +155,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().mutate(graphQlRequest, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
@@ -154,6 +166,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().mutate(apiName, model, mutationType, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
@@ -165,6 +178,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().mutate(apiName, model, predicate, mutationType, responseListener);
     }
 
+    @Nullable
     @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
@@ -174,6 +188,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().mutate(apiName, graphQlRequest, responseListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
@@ -182,6 +197,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().subscribe(modelClass, subscriptionType, subscriptionListener);
     }
 
+    @Nullable
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest,
@@ -190,6 +206,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().subscribe(graphQlRequest, subscriptionListener);
     }
 
+    @Nullable
     @Override
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
@@ -199,6 +216,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().subscribe(apiName, modelClass, subscriptionType, subscriptionListener);
     }
 
+    @Nullable
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
@@ -208,6 +226,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().subscribe(apiName, graphQlRequest, subscriptionListener);
     }
 
+    @Nullable
     @Override
     public RestOperation get(
             @NonNull RestOptions request,
@@ -216,6 +235,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().get(request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation get(
             @NonNull String apiName,
@@ -225,6 +245,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().get(apiName, request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation put(
             @NonNull RestOptions request,
@@ -233,6 +254,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().put(request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation put(
             @NonNull String apiName,
@@ -242,6 +264,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().put(apiName, request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation post(
             @NonNull RestOptions request,
@@ -250,6 +273,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().post(request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation post(
             @NonNull String apiName,
@@ -259,6 +283,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().post(apiName, request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation delete(
             @NonNull RestOptions request,
@@ -267,6 +292,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().delete(request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation delete(
             @NonNull String apiName,
@@ -276,6 +302,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().delete(apiName, request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation head(
             @NonNull RestOptions request,
@@ -284,6 +311,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().head(request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation head(
             @NonNull String apiName,
@@ -293,6 +321,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().head(apiName, request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation patch(
             @NonNull RestOptions request,
@@ -301,6 +330,7 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
         return getSelectedPlugin().patch(request, responseListener);
     }
 
+    @Nullable
     @Override
     public RestOperation patch(
             @NonNull String apiName,

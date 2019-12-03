@@ -23,14 +23,12 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.test.R.raw;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 
 final class TestConfiguration {
     private static TestConfiguration singleton;
     private final AWSDataStorePlugin plugin;
-    private final String apiName;
 
     private TestConfiguration(Context context) throws AmplifyException {
         plugin = AWSDataStorePlugin.forModels(AmplifyModelProvider.getInstance());
@@ -42,12 +40,6 @@ final class TestConfiguration {
         AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
         amplifyConfiguration.populateFromConfigFile(context, raw.amplifyconfiguration);
         Amplify.configure(amplifyConfiguration, context);
-
-        // Get the first configured API.
-        apiName = amplifyConfiguration.forCategoryType(CategoryType.API)
-            .getPluginConfig("awsAPIPlugin")
-            .keys()
-            .next();
     }
 
     /**
@@ -64,9 +56,5 @@ final class TestConfiguration {
 
     AWSDataStorePlugin plugin() {
         return plugin;
-    }
-
-    String apiName() {
-        return apiName;
     }
 }

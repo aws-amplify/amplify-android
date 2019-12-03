@@ -95,11 +95,6 @@ public final class AmplifyConfiguration {
 
                 if (json.has(categoryJsonKey)) {
                     categoryConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
-                } else if (categoryJsonKey.equals(CategoryType.DATASTORE.getConfigurationKey())) {
-                    // CLI currently does not generate configuration for DataStore,
-                    // so this is a temporary fix to avoid unexpected PluginException.
-                    final String defaultConfig = "{\"plugins\": {\"awsDataStorePlugin\": {}}}";
-                    categoryConfig.populateFromJSON(new JSONObject(defaultConfig));
                 }
             }
         } catch (JSONException error) {

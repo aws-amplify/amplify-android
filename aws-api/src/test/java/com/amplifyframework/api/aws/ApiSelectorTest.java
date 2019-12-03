@@ -39,7 +39,7 @@ public final class ApiSelectorTest {
     @Test
     public void testApiSelectorForSingleApi() throws ApiException {
         // Arrange an input JSONObject
-        final JSONObject json = Resources.readAsJson("single-api.config");
+        final JSONObject json = Resources.readAsJson("single-gql-single-rest-api.config");
 
         AWSApiPlugin plugin = new AWSApiPlugin();
         plugin.configure(json, null);
@@ -52,10 +52,10 @@ public final class ApiSelectorTest {
      * contains more than one API of invoked endpoint type.
      * @throws ApiException From plugin configuration failure
      */
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = ApiException.class)
     public void testApiSelectorForMultiApi() throws ApiException {
         // Arrange an input JSONObject
-        final JSONObject json = Resources.readAsJson("multi-api.config");
+        final JSONObject json = Resources.readAsJson("multi-gql-zero-rest-api.config");
 
         AWSApiPlugin plugin = new AWSApiPlugin();
         plugin.configure(json, null);
@@ -67,10 +67,10 @@ public final class ApiSelectorTest {
      * contains no API of invoked endpoint type.
      * @throws ApiException From plugin configuration failure
      */
-    @Test(expected = IllegalStateException.class)
+    @Test(expected = ApiException.class)
     public void testApiSelectorForZeroApi() throws ApiException {
         // Arrange an input JSONObject
-        final JSONObject json = Resources.readAsJson("multi-api.config");
+        final JSONObject json = Resources.readAsJson("multi-gql-zero-rest-api.config");
 
         AWSApiPlugin plugin = new AWSApiPlugin();
         plugin.configure(json, null);

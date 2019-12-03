@@ -88,6 +88,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                     error,
                     "Check the attached error to see where the parsing issue took place."
             );
+        } catch (NullPointerException error) {
+            throw new StorageException(
+                    "Missing configuration for " + AWS_S3_STORAGE_PLUGIN_KEY,
+                    "Check amplifyconfiguration.json to make sure that there is a section for " +
+                    AWS_S3_STORAGE_PLUGIN_KEY + " under the storage category."
+            );
         }
 
         Region region = Region.getRegion(regionStr);

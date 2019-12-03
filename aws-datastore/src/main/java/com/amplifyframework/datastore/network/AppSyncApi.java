@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.GraphQlBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -47,7 +48,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final int DEFAULT_QUERY_LIMIT = 1000;
 
-    private final ApiCategoryBehavior api;
+    private final GraphQlBehavior api;
     private final GraphQLRequest.VariablesSerializer variablesSerializer;
     private final ResponseDeserializer responseDeserializer;
 
@@ -55,7 +56,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
      * Constructs a new AppSyncApi.
      * @param api The API Category, configured with a DataStore API
      */
-    public AppSyncApi(@NonNull final ApiCategoryBehavior api) {
+    public AppSyncApi(@NonNull final GraphQlBehavior api) {
         this.api = Objects.requireNonNull(api);
         this.variablesSerializer = new GsonVariablesSerializer();
         this.responseDeserializer = new GsonResponseDeserializer();
@@ -64,7 +65,6 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @NonNull
     @Override
     public <T extends Model> Cancelable sync(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
             @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener) {
@@ -81,14 +81,18 @@ public final class AppSyncApi implements AppSyncEndpoint {
             new SyncAdapter<>(responseListener, modelClass, responseDeserializer);
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(queryDoc, Collections.emptyMap(), String.class, variablesSerializer);
-        return api.query(apiName, request, syncAdapter);
+        Cancelable cancelable = api.query(request, syncAdapter);
+
+        if (cancelable != null) {
+            return cancelable;
+        }
+        return new NoOpCancelable();
     }
 
     @SuppressWarnings("unchecked") // (Class<T>)
     @NonNull
     @Override
     public <T extends Model> Cancelable create(
-            @NonNull String apiName,
             @NonNull T model,
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
         final String doc;
@@ -103,7 +107,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
                     schema.getMapOfFieldNameAndValues(model)
             );
 
-            return mutation(apiName, doc, variables, modelClass, responseListener);
+            return mutation(doc, variables, modelClass, responseListener);
         } catch (AmplifyException amplifyException) {
             responseListener.onError(
                     new DataStoreException(
@@ -121,7 +125,6 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @NonNull
     @Override
     public <T extends Model> Cancelable update(
-            @NonNull String apiName,
             @NonNull T model,
             @NonNull Integer version,
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
@@ -140,7 +143,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
                     updateInput
             );
 
-            return mutation(apiName, doc, variables, (Class<T>) model.getClass(), responseListener);
+            return mutation(doc, variables, (Class<T>) model.getClass(), responseListener);
         } catch (AmplifyException amplifyException) {
             responseListener.onError(
                     new DataStoreException(
@@ -157,7 +160,6 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @NonNull
     @Override
     public <T extends Model> Cancelable delete(
-            @NonNull String apiName,
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
@@ -175,7 +177,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
                     deleteInput
             );
 
-            return mutation(apiName, doc, variables, clazz, responseListener);
+            return mutation(doc, variables, clazz, responseListener);
         } catch (DataStoreException dataStoreException) {
             responseListener.onError(dataStoreException);
         }
@@ -186,32 +188,28 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @NonNull
     @Override
     public <T extends Model> Cancelable onCreate(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener) {
-        return subscription(apiName, modelClass, subscriptionListener, SubscriptionType.ON_CREATE);
+        return subscription(modelClass, subscriptionListener, SubscriptionType.ON_CREATE);
     }
 
     @NonNull
     @Override
     public <T extends Model> Cancelable onUpdate(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener) {
-        return subscription(apiName, modelClass, subscriptionListener, SubscriptionType.ON_UPDATE);
+        return subscription(modelClass, subscriptionListener, SubscriptionType.ON_UPDATE);
     }
 
     @NonNull
     @Override
     public <T extends Model> Cancelable onDelete(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener) {
-        return subscription(apiName, modelClass, subscriptionListener, SubscriptionType.ON_DELETE);
+        return subscription(modelClass, subscriptionListener, SubscriptionType.ON_DELETE);
     }
 
     private <T extends Model> Cancelable subscription(
-            String apiName,
             Class<T> clazz,
             StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener,
             SubscriptionType subscriptionType) {
@@ -226,11 +224,15 @@ public final class AppSyncApi implements AppSyncEndpoint {
             new GraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
         final SubscriptionAdapter<T> subscriptionAdapter =
             new SubscriptionAdapter<>(subscriptionListener, clazz, responseDeserializer);
-        return api.subscribe(apiName, request, subscriptionAdapter);
+        Cancelable cancelable = api.subscribe(request, subscriptionAdapter);
+
+        if (cancelable != null) {
+            return cancelable;
+        }
+        return new NoOpCancelable();
     }
 
     private <T extends Model> Cancelable mutation(
-            final String apiName,
             final String document,
             final Map<String, Object> variables,
             final Class<T> itemClass,
@@ -239,6 +241,11 @@ public final class AppSyncApi implements AppSyncEndpoint {
             new MutationAdapter<>(responseListener, itemClass, responseDeserializer);
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(document, variables, String.class, variablesSerializer);
-        return api.mutate(apiName, request, mutationAdapter);
+        Cancelable cancelable = api.mutate(request, mutationAdapter);
+
+        if (cancelable != null) {
+            return cancelable;
+        }
+        return new NoOpCancelable();
     }
 }

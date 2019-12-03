@@ -39,17 +39,14 @@ class RemoteModelMutations {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final AppSyncEndpoint appSyncEndpoint;
-    private final ConfiguredApiProvider apiNameProvider;
     private final ModelProvider modelProvider;
     private final Set<Subscription> subscriptions;
 
     RemoteModelMutations(
             AppSyncEndpoint appSyncEndpoint,
-            ConfiguredApiProvider apiNameProvider,
             ModelProvider modelProvider) {
         this.modelProvider = modelProvider;
         this.appSyncEndpoint = appSyncEndpoint;
-        this.apiNameProvider = apiNameProvider;
         this.subscriptions = new HashSet<>();
     }
 
@@ -70,7 +67,6 @@ class RemoteModelMutations {
                     for (SubscriptionType subscriptionType : SubscriptionType.values()) {
                         subscriptions.add(Subscription.request()
                             .appSyncEndpoint(appSyncEndpoint)
-                            .apiNameProvider(apiNameProvider)
                             .modelClass(modelClass)
                             .subscriptionType(subscriptionType)
                             .commonEmitter(emitter)
@@ -102,18 +98,12 @@ class RemoteModelMutations {
          */
         static final class Request<T extends Model> {
             private AppSyncEndpoint appSyncEndpoint;
-            private ConfiguredApiProvider apiNameProvider;
             private Class<T> modelClass;
             private SubscriptionType subscriptionType;
             private Emitter<Mutation<? extends Model>> commonEmitter;
 
             Request<T> appSyncEndpoint(AppSyncEndpoint appSyncEndpoint) {
                 this.appSyncEndpoint = appSyncEndpoint;
-                return this;
-            }
-
-            Request<T> apiNameProvider(ConfiguredApiProvider apiNameProvider) {
-                this.apiNameProvider = apiNameProvider;
                 return this;
             }
 
@@ -134,20 +124,19 @@ class RemoteModelMutations {
             }
 
             Subscription begin() throws DataStoreException {
-                String apiName = apiNameProvider.getDataStoreApiName();
                 SubscriptionFunnel<T> listener =
                     new SubscriptionFunnel<>(commonEmitter, modelClass, subscriptionType);
 
                 final Cancelable cancelable;
                 switch (subscriptionType) {
                     case ON_UPDATE:
-                        cancelable = appSyncEndpoint.onUpdate(apiName, modelClass, listener);
+                        cancelable = appSyncEndpoint.onUpdate(modelClass, listener);
                         break;
                     case ON_DELETE:
-                        cancelable = appSyncEndpoint.onDelete(apiName, modelClass, listener);
+                        cancelable = appSyncEndpoint.onDelete(modelClass, listener);
                         break;
                     case ON_CREATE:
-                        cancelable = appSyncEndpoint.onCreate(apiName, modelClass, listener);
+                        cancelable = appSyncEndpoint.onCreate(modelClass, listener);
                         break;
                     default:
                         throw new DataStoreException(
