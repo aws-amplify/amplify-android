@@ -3,7 +3,7 @@
   "version": "1.0",
   "hub": {
     "plugins": {
-      "backgroundExecutorHubPlugin": {
+      "awsHubPlugin": {
       }
     }
   }

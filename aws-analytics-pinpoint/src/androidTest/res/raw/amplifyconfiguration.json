@@ -1,0 +1,16 @@
+{
+  "UserAgent": "aws-amplify-cli/2.0",
+  "Version": "1.0",
+  "analytics": {
+    "plugins": {
+      "amazonPinpointAnalyticsPlugin": {
+        "pinpointAnalytics": {
+          "appId": "3d052968a8514a778b5a87891a98a4b7",
+          "region": "us-west-2"
+        },
+        "autoFlushEventsInterval" : 1000
+      }
+    }
+  }
+}
+

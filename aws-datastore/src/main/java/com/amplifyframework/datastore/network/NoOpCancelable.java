@@ -13,21 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics;
+package com.amplifyframework.datastore.network;
+
+import com.amplifyframework.core.async.Cancelable;
 
 /**
- * Defines contract for different types of analytics event.
+ * A cancelable which does nothing.
  */
-public interface AnalyticsEvent {
-    /**
-     * Return event name.
-     * @return event name
-     */
-    String getName();
-
-    /**
-     * Return event properties.
-     * @return event properties
-     */
-    Properties getProperties();
+final class NoOpCancelable implements Cancelable {
+    @Override
+    public void cancel() {
+    }
 }

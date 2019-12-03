@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.network;
 
 import android.os.Build;
 
-import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
@@ -37,6 +36,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -60,11 +60,11 @@ public class SyncEngineTest {
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException {
         ShadowLog.stream = System.out;
-        ApiCategoryBehavior api = mock(ApiCategoryBehavior.class);
+        AppSyncEndpoint endpoint = mock(AppSyncEndpoint.class);
         String apiName = RandomString.string();
         LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = mock(ModelProvider.class);
-        SyncEngine syncEngine = new SyncEngine(api, () -> apiName, modelProvider, localStorageAdapter);
+        SyncEngine syncEngine = new SyncEngine(modelProvider, localStorageAdapter, endpoint, () -> apiName);
 
         // Arrange: storage engine is running
         syncEngine.start();
@@ -78,12 +78,7 @@ public class SyncEngineTest {
         doAnswer(invocation -> {
             apiInvoked.countDown();
             return null;
-        }).when(api).mutate(
-            any(),
-            any(),
-            any(),
-            any()
-        );
+        }).when(endpoint).create(anyString(), any(), any());
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         LatchedResultListener<StorageItemChange.Record> listener =

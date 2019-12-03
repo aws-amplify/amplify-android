@@ -13,21 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics;
+package com.amplifyframework.datastore.network;
 
-/**
- * Defines contract for different types of analytics event.
- */
-public interface AnalyticsEvent {
-    /**
-     * Return event name.
-     * @return event name
-     */
-    String getName();
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.Model;
 
-    /**
-     * Return event properties.
-     * @return event properties
-     */
-    Properties getProperties();
+interface ResponseDeserializer {
+
+    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> deserialize(
+        String json,
+        Class<T> intoClazz);
+
+    <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> deserialize(
+        Iterable<String> json,
+        Class<T> memberClazz);
 }

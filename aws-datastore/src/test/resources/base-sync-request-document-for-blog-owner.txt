@@ -1,0 +1,17 @@
+query SyncBlogOwners {
+  syncBlogOwners {
+    items {
+      blog {
+        id
+      }
+      id
+      name
+      wea
+      _version
+      _deleted
+      _lastChangedAt
+    }
+    nextToken
+    startedAt
+  }
+}

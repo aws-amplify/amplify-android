@@ -19,13 +19,11 @@ import android.annotation.SuppressLint;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.ApiCategoryBehavior;
-import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
@@ -40,17 +38,17 @@ import io.reactivex.Observable;
 class RemoteModelMutations {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final ApiCategoryBehavior api;
+    private final AppSyncEndpoint appSyncEndpoint;
     private final ConfiguredApiProvider apiNameProvider;
     private final ModelProvider modelProvider;
-    private final Set<Subscription<? extends Model>> subscriptions;
+    private final Set<Subscription> subscriptions;
 
     RemoteModelMutations(
-            ApiCategoryBehavior api,
+            AppSyncEndpoint appSyncEndpoint,
             ConfiguredApiProvider apiNameProvider,
             ModelProvider modelProvider) {
         this.modelProvider = modelProvider;
-        this.api = api;
+        this.appSyncEndpoint = appSyncEndpoint;
         this.apiNameProvider = apiNameProvider;
         this.subscriptions = new HashSet<>();
     }
@@ -60,7 +58,7 @@ class RemoteModelMutations {
         return Observable.defer(() -> Observable.create(emitter -> {
             emitter.setCancellable(() -> {
                 synchronized (subscriptions) {
-                    for (final Subscription<?> subscription : subscriptions) {
+                    for (final Subscription subscription : subscriptions) {
                         subscription.end();
                     }
                     subscriptions.clear();
@@ -71,7 +69,7 @@ class RemoteModelMutations {
                 for (Class<? extends Model> modelClass : modelProvider.models()) {
                     for (SubscriptionType subscriptionType : SubscriptionType.values()) {
                         subscriptions.add(Subscription.request()
-                            .api(api)
+                            .appSyncEndpoint(appSyncEndpoint)
                             .apiNameProvider(apiNameProvider)
                             .modelClass(modelClass)
                             .subscriptionType(subscriptionType)
@@ -83,15 +81,15 @@ class RemoteModelMutations {
         }));
     }
 
-    static final class Subscription<T extends Model> {
-        private final GraphQLOperation<T> operation;
+    static final class Subscription {
+        private final Cancelable cancelable;
 
-        Subscription(final GraphQLOperation<T> operation) {
-            this.operation = operation;
+        Subscription(final Cancelable cancelable) {
+            this.cancelable = cancelable;
         }
 
         synchronized void end() {
-            operation.cancel();
+            cancelable.cancel();
         }
 
         static <T extends Model> Request<T> request() {
@@ -103,14 +101,14 @@ class RemoteModelMutations {
          * @param <T> Type of model for which to subscribe to mutations
          */
         static final class Request<T extends Model> {
-            private ApiCategoryBehavior api;
+            private AppSyncEndpoint appSyncEndpoint;
             private ConfiguredApiProvider apiNameProvider;
             private Class<T> modelClass;
             private SubscriptionType subscriptionType;
             private Emitter<Mutation<? extends Model>> commonEmitter;
 
-            Request<T> api(ApiCategoryBehavior api) {
-                this.api = api;
+            Request<T> appSyncEndpoint(AppSyncEndpoint appSyncEndpoint) {
+                this.appSyncEndpoint = appSyncEndpoint;
                 return this;
             }
 
@@ -135,27 +133,49 @@ class RemoteModelMutations {
                 return this;
             }
 
-            Subscription<T> begin() throws DataStoreException {
+            Subscription begin() throws DataStoreException {
                 String apiName = apiNameProvider.getDataStoreApiName();
-                EmittingSubscriptionListener<T> listener =
-                    new EmittingSubscriptionListener<>(commonEmitter, modelClass, subscriptionType);
-                return new Subscription<>(api.subscribe(apiName, modelClass, subscriptionType, listener));
+                SubscriptionFunnel<T> listener =
+                    new SubscriptionFunnel<>(commonEmitter, modelClass, subscriptionType);
+
+                final Cancelable cancelable;
+                switch (subscriptionType) {
+                    case ON_UPDATE:
+                        cancelable = appSyncEndpoint.onUpdate(apiName, modelClass, listener);
+                        break;
+                    case ON_DELETE:
+                        cancelable = appSyncEndpoint.onDelete(apiName, modelClass, listener);
+                        break;
+                    case ON_CREATE:
+                        cancelable = appSyncEndpoint.onCreate(apiName, modelClass, listener);
+                        break;
+                    default:
+                        throw new DataStoreException(
+                            "Failed to establish a model subscription.",
+                            "Was a new subscription type created?"
+                        );
+                }
+                return new Subscription(cancelable);
             }
         }
 
         /**
-         * A listener to the {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, StreamListener)},
+         * "Funnels" subscription events for a specific type, onto an emitter that is
+         * shared by all types of events, and for all subscription types.
+         * A listener to the {@link AppSyncEndpoint},
          * which responds to new data items by posting them onto an Rx {@link Emitter}. The intention
          * is for a single {@link Emitter} to be shared among several different implementations of this
          * listener.
          * @param <T> Type type of data being received
          */
-        static final class EmittingSubscriptionListener<T extends Model> implements StreamListener<GraphQLResponse<T>> {
+        static final class SubscriptionFunnel<T extends Model>
+                implements StreamListener<GraphQLResponse<ModelWithMetadata<T>>> {
+
             private final Emitter<Mutation<? extends Model>> commonEmitter;
             private final Class<T> modelClazz;
             private final SubscriptionType subscriptionType;
 
-            EmittingSubscriptionListener(
+            SubscriptionFunnel(
                     Emitter<Mutation<? extends Model>> commonEmitter,
                     Class<T> modelClazz,
                     SubscriptionType subscriptionType) {
@@ -165,16 +185,16 @@ class RemoteModelMutations {
             }
 
             @Override
-            public void onNext(GraphQLResponse<T> item) {
-                if (item.hasErrors()) {
+            public void onNext(GraphQLResponse<ModelWithMetadata<T>> response) {
+                if (response.hasErrors()) {
                     commonEmitter.onError(new DataStoreException(
                             String.format(
                                 "Errors on subscription %s:%s: %s.",
-                                modelClazz.getSimpleName(), subscriptionType, item.getErrors()
+                                modelClazz.getSimpleName(), subscriptionType, response.getErrors()
                             ),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
-                } else if (!item.hasData()) {
+                } else if (!response.hasData()) {
                     commonEmitter.onError(new DataStoreException(
                             String.format(
                                 "Empty data received for %s:%s subscription.",
@@ -184,7 +204,7 @@ class RemoteModelMutations {
                     ));
                 } else {
                     commonEmitter.onNext(Mutation.<T>builder()
-                        .model(item.getData())
+                        .model(response.getData().getModel())
                         .modelClass(modelClazz)
                         .type(fromSubscriptionType(subscriptionType))
                         .build());

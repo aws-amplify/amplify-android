@@ -13,21 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.analytics;
+package com.amplifyframework.datastore.network;
 
-/**
- * Defines contract for different types of analytics event.
+import com.amplifyframework.api.graphql.GraphQLRequest;
+
+import java.util.Map;
+
+/*
+ * A variables serializer which doesn't actually do anything.
+ * We don't actually pass variables to the API layer, we just build
+ * raw documents with immediate values inlined.
  */
-public interface AnalyticsEvent {
-    /**
-     * Return event name.
-     * @return event name
-     */
-    String getName();
-
-    /**
-     * Return event properties.
-     * @return event properties
-     */
-    Properties getProperties();
+final class NoOpVariablesSerializer implements GraphQLRequest.VariablesSerializer {
+    @Override
+    public String serialize(Map<String, Object> variables) {
+        return null; // Should never get called...
+    }
 }

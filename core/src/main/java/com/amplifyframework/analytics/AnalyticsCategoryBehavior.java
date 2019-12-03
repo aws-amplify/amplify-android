@@ -17,7 +17,6 @@ package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -56,19 +55,21 @@ public interface AnalyticsCategoryBehavior {
     /**
      * Record the event by storing in the local database.
      * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
+     * @throws AnalyticsException when there is an error in
+     *                            storing the event in the local database.
      */
-    void recordEvent(@NonNull AnalyticsEvent analyticsEvent);
+    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
 
     /**
-     * Register properties that will be recorded by all the subsequent calls to {@link #recordEvent(AnalyticsEvent)}.
-     * Properties registered here can be overridden by the ones with the same
-     * name when calling `recordEvent`.
+     * Register properties that will be recorded by all the subsequent calls to
+     * {@link #recordEvent(AnalyticsEvent)}. Properties registered here can be overridden
+     * by the ones with the same name when calling `recordEvent`.
      *
      * Examples of global properties would be `selectedPlan`, `campaignSource`
      *
-     * @param properties Map of global properties
+     * @param properties Map of global properties wrapped as an instance of {@link Properties}
      */
-    void registerGlobalProperties(Map<String, Object> properties);
+    void registerGlobalProperties(@NonNull Properties properties);
 
     /**
      * Registered global properties can be unregistered though this method.
@@ -78,7 +79,7 @@ public interface AnalyticsCategoryBehavior {
      *
      * @param keys a collection of property names to unregister
      */
-    void unregisterGlobalProperties(Set<String> keys);
+    void unregisterGlobalProperties(@NonNull Set<String> keys);
 
     /**
      * Attempts to submit the locally stored events to the underlying service.

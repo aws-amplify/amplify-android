@@ -36,6 +36,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -62,10 +63,11 @@ import io.reactivex.schedulers.Schedulers;
 public final class SyncEngine {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final ApiCategoryBehavior api;
-    private final ConfiguredApiProvider apiNameProvider;
-    private final RemoteModelMutations remoteModelMutations;
     private final LocalStorageAdapter storageAdapter;
+    private final AppSyncEndpoint appSyncEndpoint;
+    private final ConfiguredApiProvider apiNameProvider;
+
+    private final RemoteModelMutations remoteModelMutations;
     private final StorageItemChangeJournal storageItemChangeJournal;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
     private final CompositeDisposable observationsToDispose;
@@ -74,21 +76,21 @@ public final class SyncEngine {
      * Constructs a new SyncEngine. This sync engine will
      * synchronize data between the provided API and the provided
      * {@link LocalStorageAdapter}.
-     * @param api Interface to a remote GraphQL endpoint
-     * @param apiNameProvider Provides the name of the configured GraphQL endpoint API
      * @param modelProvider A provider of the models to be synchronized
      * @param storageAdapter Interface to local storage, used to
      *                       durably store offline changes until
      *                       then can be written to the network
+     * @param appSyncEndpoint An AppSync Endpoint
+     * @param apiNameProvider Provides the name of the configured AppSync endpoint API
      */
     public SyncEngine(
-            @NonNull final ApiCategoryBehavior api,
-            @NonNull final ConfiguredApiProvider apiNameProvider,
             @NonNull final ModelProvider modelProvider,
-            @NonNull final LocalStorageAdapter storageAdapter) {
-        this.api = Objects.requireNonNull((api));
+            @NonNull final LocalStorageAdapter storageAdapter,
+            @NonNull final AppSyncEndpoint appSyncEndpoint,
+            @NonNull final ConfiguredApiProvider apiNameProvider) {
         this.apiNameProvider = Objects.requireNonNull(apiNameProvider);
-        this.remoteModelMutations = new RemoteModelMutations(api, apiNameProvider, modelProvider);
+        this.appSyncEndpoint = appSyncEndpoint;
+        this.remoteModelMutations = new RemoteModelMutations(appSyncEndpoint, apiNameProvider, modelProvider);
         this.storageAdapter = Objects.requireNonNull(storageAdapter);
         this.storageItemChangeJournal = new StorageItemChangeJournal(storageAdapter);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
@@ -103,6 +105,12 @@ public final class SyncEngine {
         startModelSubscriptions();
         startDrainingChangeJournal();
         startObservingStorageChanges();
+    }
+
+    private Completable pullVersionsFromBackend() {
+        return Completable.defer(() -> Completable.create(emitter -> {
+
+        }));
     }
 
     private void startModelSubscriptions() {
@@ -206,13 +214,12 @@ public final class SyncEngine {
             final SIC storageItemChange) {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            api.mutate(
+            appSyncEndpoint.create(
                 apiNameProvider.getDataStoreApiName(),
                 storageItemChange.item(),
-                selectMutationType(storageItemChange),
-                new ResultListener<GraphQLResponse<MODEL>>() {
+                new ResultListener<GraphQLResponse<ModelWithMetadata<MODEL>>>() {
                     @Override
-                    public void onResult(final GraphQLResponse<MODEL> result) {
+                    public void onResult(final GraphQLResponse<ModelWithMetadata<MODEL>> result) {
                         if (result.hasErrors() || !result.hasData()) {
                             subscriber.onError(new RuntimeException("Failed to publish item to network."));
                         }
@@ -226,17 +233,6 @@ public final class SyncEngine {
                 }
             );
         }));
-    }
-
-    /**
-     * Determines the appropriate mutation type for a StorageItemChange.
-     * @param storageItemChange A {@link StorageItemChange} to be published to network
-     * @return An appropriate {@link MutationType} for this storage item change
-     */
-    private static <T extends Model> MutationType selectMutationType(
-            @SuppressWarnings("unused" /* one sec ... */) StorageItemChange<T> storageItemChange) {
-        // TODO: add business logic here, this should be update/delete sometimes.
-        return MutationType.CREATE;
     }
 
     /**

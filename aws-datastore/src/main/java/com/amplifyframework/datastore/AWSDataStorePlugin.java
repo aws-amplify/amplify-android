@@ -18,6 +18,7 @@ package com.amplifyframework.datastore;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
@@ -28,6 +29,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.network.AppSyncApi;
 import com.amplifyframework.datastore.network.SyncEngine;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -49,9 +51,6 @@ import io.reactivex.schedulers.Schedulers;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
-    // Singleton instance
-    private static AWSDataStorePlugin singleton;
-
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final SQLiteStorageAdapter sqliteStorageAdapter;
@@ -69,26 +68,28 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     private AWSDataStorePlugin(@NonNull final ModelProvider modelProvider) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.syncEngine = new SyncEngine(Amplify.API, this::getApiName, modelProvider, sqliteStorageAdapter);
+        this.syncEngine = createSyncEngine(modelProvider, sqliteStorageAdapter);
+    }
+
+    private SyncEngine createSyncEngine(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
+        return new SyncEngine(modelProvider, storageAdapter, new AppSyncApi(Amplify.API), this::getApiName);
     }
 
     /**
-     * Return the singleton instance if it exists, otherwise create, assign
-     * and return.
+     * Return the instance for the model provider.
      * @param modelProvider Provider of models to be usable by plugin
-     * @return the singleton instance.
+     * @return the plugin instance for the model provider.
      */
+    @NonNull
     @SuppressWarnings("WeakerAccess")
-    public static synchronized AWSDataStorePlugin singleton(@NonNull final ModelProvider modelProvider) {
-        if (singleton == null) {
-            singleton = new AWSDataStorePlugin(modelProvider);
-        }
-        return singleton;
+    public static synchronized AWSDataStorePlugin forModels(@NonNull final ModelProvider modelProvider) {
+        return new AWSDataStorePlugin(modelProvider);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public String getPluginKey() {
         return "awsDataStorePlugin";
@@ -174,6 +175,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @Nullable
     @Override
     public Void getEscapeHatch() {
         return null;
@@ -182,6 +184,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.DATASTORE;
@@ -217,6 +220,17 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         sqliteStorageAdapter.query(itemClass, queryResultsListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+        sqliteStorageAdapter.query(itemClass, predicate, queryResultsListener);
     }
 
     /**
