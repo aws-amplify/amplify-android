@@ -76,8 +76,11 @@ final class GsonResponseDeserializer implements ResponseDeserializer {
         @Override
         @Nullable
         @SuppressWarnings("unchecked")
-        public List<Object> deserialize(@NonNull JsonElement json, @NonNull Type typeOfT, @Nullable JsonDeserializationContext context)
-                throws JsonParseException {
+        public List<Object> deserialize(
+                @NonNull JsonElement json,
+                @NonNull Type typeOfT,
+                @Nullable JsonDeserializationContext context
+        ) throws JsonParseException {
 
             // If the json we got is not really a List and this List has a generics type...
             if (json.isJsonObject() && typeOfT instanceof ParameterizedType) {
