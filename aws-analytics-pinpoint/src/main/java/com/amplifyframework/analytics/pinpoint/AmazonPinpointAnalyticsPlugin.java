@@ -159,10 +159,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         // Read all the data from the configuration object to be used for record event
         try {
             configurationBuilder
-                    .withAppId(pluginConfiguration
+                    .withAppId(pluginConfiguration.getJSONObject("pinpointAnalytics")
                             .getString(PinpointConfigurationKey.APP_ID.getConfigurationKey()));
             configurationBuilder
-                    .withRegion(pluginConfiguration
+                    .withRegion(pluginConfiguration.getJSONObject("pinpointAnalytics")
                             .getString(PinpointConfigurationKey.REGION.getConfigurationKey()));
 
             if (pluginConfiguration.has(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.getConfigurationKey())) {
