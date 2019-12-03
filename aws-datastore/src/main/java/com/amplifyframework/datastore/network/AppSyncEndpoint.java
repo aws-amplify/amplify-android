@@ -18,26 +18,28 @@ package com.amplifyframework.datastore.network;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 
 /**
  * Convenience class to call API in a way that supports versioning and retrieving sync metadata.
  */
-public interface ApiInterface {
+@SuppressWarnings("unused") // Hold my beer...
+public interface AppSyncEndpoint {
     /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
+     * @param <T> The type of data in the response. Must extend Model.
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are querying on
      * @param lastSync The time you last synced - all changes since this time are retrieved.
      * @param responseListener Invoked when response data/errors are available.
-     * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> sync(
+    @NonNull
+    <T extends Model> Cancelable sync(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
@@ -49,9 +51,10 @@ public interface ApiInterface {
      * @param model An instance of the Model with the values to mutate
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> create(
+    @NonNull
+    <T extends Model> Cancelable create(
             @NonNull String apiName,
             @NonNull T model,
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
@@ -63,9 +66,10 @@ public interface ApiInterface {
      * @param version The version of the model we have
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> update(
+    @NonNull
+    <T extends Model> Cancelable update(
             @NonNull String apiName,
             @NonNull T model,
             @NonNull Integer version,
@@ -74,14 +78,17 @@ public interface ApiInterface {
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param apiName The name of a configured API
+     * @param clazz The class of the object being deleted
      * @param objectId ID id of the object to delete
      * @param version The version of the model we have
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> delete(
+    @NonNull
+    <T extends Model> Cancelable delete(
             @NonNull String apiName,
+            @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
@@ -93,9 +100,10 @@ public interface ApiInterface {
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
      * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> onCreate(
+    @NonNull
+    <T extends Model> Cancelable onCreate(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
@@ -107,9 +115,10 @@ public interface ApiInterface {
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
      * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> onUpdate(
+    @NonNull
+    <T extends Model> Cancelable onUpdate(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
@@ -121,9 +130,10 @@ public interface ApiInterface {
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
      * @param <T> The type of data in the response. Must extend Model.
-     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    <T extends Model> GraphQLOperation<T> onDelete(
+    @NonNull
+    <T extends Model> Cancelable onDelete(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);

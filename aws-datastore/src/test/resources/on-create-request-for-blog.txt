@@ -1,0 +1,19 @@
+subscription OnCreateBlog {
+  onCreateBlog {
+    id
+    name
+    owner {
+      id
+    }
+    posts {
+      items {
+        id
+      }
+      nextToken
+      startedAt
+    }
+    _version
+    _deleted
+    _lastChangedAt
+  }
+}
