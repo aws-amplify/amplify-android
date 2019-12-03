@@ -38,7 +38,7 @@ You can manually install the library by cloning this repo and publishing the And
 
 Execute following commands from the project root:
 
-``` console
+```
 ./gradlew publishToMavenLocal
 ```
 
