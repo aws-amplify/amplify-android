@@ -28,8 +28,8 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.network.ApiModelSync;
-import com.amplifyframework.datastore.network.AppSyncApiModelSync;
+import com.amplifyframework.datastore.network.ApiInterface;
+import com.amplifyframework.datastore.network.AppSyncApiInterface;
 import com.amplifyframework.datastore.network.SyncEngine;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -62,7 +62,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     // A utility to call Amplify API with version information and retrieve sync information
-    private final ApiModelSync apiModelSync;
+    private final ApiInterface apiInterface;
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
@@ -74,7 +74,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     private AWSDataStorePlugin(@NonNull final ModelProvider modelProvider) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.apiModelSync = new AppSyncApiModelSync();
+        this.apiInterface = new AppSyncApiInterface();
         this.syncEngine = new SyncEngine(Amplify.API, this::getApiName, modelProvider, sqliteStorageAdapter);
     }
 
