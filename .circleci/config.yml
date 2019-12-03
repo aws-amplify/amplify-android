@@ -51,7 +51,7 @@ commands:
           command: |
             echo "wait for emulator to have booted"
             circle-android wait-for-boot
-            python3 circleci-scripts/unlock_emulator_screen.py
+            python3 ./circleci-scripts/unlock_emulator_screen.py
 jobs:
   build:
     working_directory: ~/amplify-android-home
