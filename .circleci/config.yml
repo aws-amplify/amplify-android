@@ -76,3 +76,4 @@ workflows:
             branches:
               only:
                 - master
+                - roshan/circleCI
