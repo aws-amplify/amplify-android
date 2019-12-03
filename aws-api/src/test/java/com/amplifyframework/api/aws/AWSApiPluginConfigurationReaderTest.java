@@ -74,6 +74,7 @@ public final class AWSApiPluginConfigurationReaderTest {
         assertNotNull(config);
         assertEquals(1, config.getApis().size());
         assertTrue(config.getApis().containsKey("api1"));
+        assertEquals(EndpointType.GRAPHQL, config.getApi("api1").getEndpointType());
         assertEquals("https://www.foo.bar/baz", config.getApi("api1").getEndpoint());
         assertEquals("us-east-1", config.getApi("api1").getRegion());
     }
