@@ -25,6 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -69,15 +70,15 @@ final class AppSyncRequestFactory {
             @Nullable final String nextToken) throws DataStoreException {
 
         final StringBuilder doc = new StringBuilder();
-        final String modelName = modelClass.getSimpleName();
+        final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
 
         int indent = 0;
         // Outer container, e.g. query SyncBlogPost {
-        doc.append("query Sync").append(modelName).append("s {\n");
+        doc.append("query Sync").append(capitalizedModelName).append("s {\n");
 
         // Inner directive, e.g. syncBlogPosts(
         doc.append(padBy(++indent))
-            .append("sync").append(modelName).append("s");
+            .append("sync").append(capitalizedModelName).append("s");
 
         // Optional param for inner directive, i.e. (lastSync: 123123)
         // (lastSync:11123123, nextToken: "asdfasdfaS")
@@ -124,6 +125,7 @@ final class AppSyncRequestFactory {
     static <T extends Model> String buildSubscriptionDoc(
             Class<T> modelClass, SubscriptionType subscriptionType) throws DataStoreException {
 
+        final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
         String verb;
         switch (subscriptionType) {
             case ON_CREATE:
@@ -144,10 +146,10 @@ final class AppSyncRequestFactory {
         int indent = 0;
 
         // subscription OnCreatePost {
-        builder.append("subscription On").append(verb).append(modelClass.getSimpleName()).append(" {\n");
+        builder.append("subscription On").append(verb).append(capitalizedModelName).append(" {\n");
 
         //  onCreatePost {
-        builder.append(padBy(++indent)).append("on").append(verb).append(modelClass.getSimpleName()).append(" {\n");
+        builder.append(padBy(++indent)).append("on").append(verb).append(capitalizedModelName).append(" {\n");
 
         ++indent;
         builder.append(buildSelectionPortion(modelClass, indent, WALK_DEPTH));
@@ -166,11 +168,11 @@ final class AppSyncRequestFactory {
     }
 
     static <T extends Model> String buildDeletionDoc(Class<T> modelClass) throws DataStoreException {
-        return buildMutation(modelClass, MutationType.UPDATE);
+        return buildMutation(modelClass, MutationType.DELETE);
     }
 
     static <T extends Model> String buildUpdateDoc(Class<T> modelClass) throws DataStoreException {
-        return buildMutation(modelClass, MutationType.DELETE);
+        return buildMutation(modelClass, MutationType.UPDATE);
     }
 
     static <T extends Model> String buildCreationDoc(Class<T> modelClass) throws DataStoreException {
@@ -187,7 +189,7 @@ final class AppSyncRequestFactory {
     private static <T extends Model> String buildMutation(Class<T> modelClass, MutationType mutationType)
             throws DataStoreException {
 
-        final String modelName = modelClass.getSimpleName();
+        final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
         int indent = 0;
         StringBuilder doc = new StringBuilder();
 
@@ -210,11 +212,11 @@ final class AppSyncRequestFactory {
         }
 
         // mutation CreateBlogOwner($input:CreateBlogOwnerInput!) {
-        doc.append("mutation ").append(verb).append(modelName)
-            .append("($input:").append(verb).append(modelName).append("Input!) {\n");
+        doc.append("mutation ").append(verb).append(capitalizedModelName)
+            .append("($input:").append(verb).append(capitalizedModelName).append("Input!) {\n");
 
         //   createBlogOwner(input:$input)
-        doc.append(padBy(++indent)).append(verb.toLowerCase(Locale.US)).append(modelName)
+        doc.append(padBy(++indent)).append(verb.toLowerCase(Locale.US)).append(capitalizedModelName)
             .append("(input:$input) {\n");
 
         ++indent;
