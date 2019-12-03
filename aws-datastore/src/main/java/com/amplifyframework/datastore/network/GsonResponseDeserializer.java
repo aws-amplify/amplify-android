@@ -25,15 +25,14 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-/**
- * MAJOR TODO: DESERIALIZE ERRORS AND PUT THEM INTO THE RESPONSE.
- */
 @SuppressWarnings("unused") // remove me later ...
 final class GsonResponseDeserializer implements ResponseDeserializer {
     private final Gson gson;
 
     GsonResponseDeserializer() {
-        this.gson = new GsonBuilder().create();
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(List.class, new GsonListDeserializer())
+                .create();
     }
 
     @Override
