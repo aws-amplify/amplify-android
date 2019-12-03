@@ -1,4 +1,4 @@
-## Amplify for Android
+## Amplify for Android (Beta)
 
 A declarative library for application development using cloud services.
 
