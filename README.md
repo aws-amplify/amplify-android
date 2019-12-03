@@ -1,11 +1,11 @@
 ## Amplify for Android (Beta)
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550" >
-AWS Amplify provides a declarative and easy-to-use interface across different categories of cloud operations. AWS Amplify goes well with any JavaScript based frontend workflow, and React Native for mobile developers.
+AWS Amplify provides a declarative and easy-to-use interface across different categories of cloud operations. AWS Amplify goes well with any Android based frontend workflow for mobile developers.
 
 Our default implementation works with Amazon Web Services (AWS), but AWS Amplify is designed to be open and pluggable for any custom backend or service.
 
 - **API Documentation**
-  https://aws-amplify.github.io/amplify-android/docs
+   https://aws-amplify.github.io/docs/android/start
 
 ## Features/APIs
 *Note: Amplify docs are still being updated and will go live by EOW. The below links will take you to the SDK documentation currently.
@@ -95,6 +95,8 @@ android {
 ### Using AWS Mobile Client
 
 Authentication in Amplify Native is dependent on AWS Mobile Client. Please refer to the [this documentation](https://aws-amplify.github.io/docs/android/authentication) for details.
+
+You need to ensure `AWSMobileClient` is [initialized](https://aws-amplify.github.io/docs/android/authentication#initialization) before you initalize and configure `Amplify`.
 
 ## License
 
