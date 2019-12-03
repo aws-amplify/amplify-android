@@ -21,7 +21,6 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Comment;
 import com.amplifyframework.testmodels.commentsblog.Post;
-import com.amplifyframework.testutils.RandomString;
 import com.amplifyframework.testutils.Resources;
 
 import org.junit.Test;
