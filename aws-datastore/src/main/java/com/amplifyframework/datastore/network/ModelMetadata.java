@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.network;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -74,5 +76,30 @@ public final class ModelMetadata implements Model {
      */
     public Long getLastChangedAt() {
         return _lastChangedAt;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            ModelMetadata metadata = (ModelMetadata) obj;
+            return ObjectsCompat.equals(getId(), metadata.getId()) &&
+                    ObjectsCompat.equals(isDeleted(), metadata.isDeleted()) &&
+                    ObjectsCompat.equals(getVersion(), metadata.getVersion()) &&
+                    ObjectsCompat.equals(getLastChangedAt(), metadata.getLastChangedAt());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getId(),
+                isDeleted(),
+                getVersion(),
+                getLastChangedAt()
+        );
     }
 }

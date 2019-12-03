@@ -15,13 +15,15 @@
 
 package com.amplifyframework.datastore.network;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.core.model.Model;
 
 /**
  * Container class to hold an instance of an object with it's metadata.
  * @param <M> The model represented by this container
  */
-public class ModelWithMetadata<M extends Model> {
+public final class ModelWithMetadata<M extends Model> {
     private M model;
     private ModelMetadata syncMetadata;
 
@@ -49,5 +51,26 @@ public class ModelWithMetadata<M extends Model> {
      */
     public ModelMetadata getSyncMetadata() {
         return syncMetadata;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            ModelWithMetadata<?> modelWithMetadata = (ModelWithMetadata) obj;
+            return ObjectsCompat.equals(getModel(), modelWithMetadata.getModel()) &&
+                    ObjectsCompat.equals(getSyncMetadata(), modelWithMetadata.getSyncMetadata());
+        }
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getModel(),
+                getSyncMetadata()
+        );
     }
 }

@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.network;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -27,10 +28,12 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -91,12 +94,27 @@ public final class AppSyncApi implements AppSyncEndpoint {
         final String doc;
         try {
             doc = AppSyncRequestFactory.buildCreationDoc(model.getClass());
-        } catch (DataStoreException dataStoreException) {
-            responseListener.onError(dataStoreException);
-            return new NoOpCancelable();
+
+            Class<T> modelClass = (Class<T>) model.getClass();
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+
+            final Map<String, Object> variables = Collections.singletonMap(
+                    "input",
+                    schema.getMapOfFieldNameAndValues(model)
+            );
+
+            return mutation(apiName, doc, variables, modelClass, responseListener);
+        } catch (AmplifyException amplifyException) {
+            responseListener.onError(
+                    new DataStoreException(
+                            "Error encountered while creating model schema",
+                            amplifyException,
+                            "See attached exception for more details"
+                    )
+            );
         }
-        final Map<String, Object> variables = Collections.singletonMap("input", model);
-        return mutation(apiName, doc, variables, (Class<T>) model.getClass(), responseListener);
+
+        return new NoOpCancelable();
     }
 
     @SuppressWarnings("unchecked") // (Class<T>)
@@ -110,11 +128,30 @@ public final class AppSyncApi implements AppSyncEndpoint {
         final String doc;
         try {
             doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass());
-        } catch (DataStoreException dataStoreException) {
-            responseListener.onError(dataStoreException);
-            return new NoOpCancelable();
+
+            Class<T> modelClass = (Class<T>) model.getClass();
+            ModelSchema schema = ModelSchema.fromModelClass(modelClass);
+
+            Map<String, Object> updateInput = schema.getMapOfFieldNameAndValues(model);
+            updateInput.put("_version", version);
+
+            final Map<String, Object> variables = Collections.singletonMap(
+                    "input",
+                    updateInput
+            );
+
+            return mutation(apiName, doc, variables, (Class<T>) model.getClass(), responseListener);
+        } catch (AmplifyException amplifyException) {
+            responseListener.onError(
+                    new DataStoreException(
+                            "Error encountered while creating model schema",
+                            amplifyException,
+                            "See attached exception for more details"
+                    )
+            );
         }
-        return mutation(apiName, doc, Collections.emptyMap(), (Class<T>) model.getClass(), responseListener);
+
+        return new NoOpCancelable();
     }
 
     @NonNull
@@ -128,11 +165,22 @@ public final class AppSyncApi implements AppSyncEndpoint {
         final String doc;
         try {
             doc = AppSyncRequestFactory.buildDeletionDoc(clazz);
+
+            Map<String, Object> deleteInput = new HashMap<>();
+            deleteInput.put("id", objectId);
+            deleteInput.put("_version", version);
+
+            final Map<String, Object> variables = Collections.singletonMap(
+                    "input",
+                    deleteInput
+            );
+
+            return mutation(apiName, doc, variables, clazz, responseListener);
         } catch (DataStoreException dataStoreException) {
             responseListener.onError(dataStoreException);
-            return new NoOpCancelable();
         }
-        return mutation(apiName, doc, Collections.emptyMap(), clazz, responseListener);
+
+        return new NoOpCancelable();
     }
 
     @NonNull

@@ -33,7 +33,9 @@ final class GsonResponseDeserializer implements ResponseDeserializer {
     private final Gson gson;
 
     GsonResponseDeserializer() {
-        this.gson = new GsonBuilder().create();
+        this.gson = new GsonBuilder()
+                .registerTypeAdapter(List.class, new GsonListDeserializer())
+                .create();
     }
 
     @Override
