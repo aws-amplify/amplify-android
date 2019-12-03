@@ -76,6 +76,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
     /**
      * Drop all tables and database, terminate and delete the database.
+     * @throws DataStoreException On failure to terminate adapter
      */
     @After
     public void tearDown() throws DataStoreException {
@@ -85,6 +86,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
     /**
      * Asserts if the model version change updates the new version in local storage.
+     * @throws DataStoreException On failure to terminate adapter
      */
     @Test
     public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws DataStoreException {

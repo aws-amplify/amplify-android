@@ -1,12 +1,11 @@
 {
-  "UserAgent": "aws-amplify-cli/2.0",
-  "Version": "1.0",
-  "Hub": {
+  "userAgent": "aws-amplify-cli/2.0",
+  "version": "1.0",
+  "hub": {
     "plugins": {
-      "BackgroundExecutorHubPlugin": {
+      "backgroundExecutorHubPlugin": {
       }
     }
   }
 }
-
 

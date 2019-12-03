@@ -32,7 +32,7 @@ import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -81,7 +81,7 @@ public final class Amplify {
         Hub = new HubCategory();
         DataStore = new DataStoreCategory();
 
-        final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new HashMap<>();
+        final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new LinkedHashMap<>();
         modifiableCategories.put(CategoryType.ANALYTICS, Analytics);
         modifiableCategories.put(CategoryType.API, API);
         modifiableCategories.put(CategoryType.LOGGING, Logging);

@@ -23,7 +23,6 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
@@ -48,7 +47,7 @@ import java.util.Set;
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
 
-    // Connection handle to a Sqlite Database.
+    // Connection handle to a SQLiteDatabase.
     private final SQLiteDatabase databaseConnectionHandle;
 
     /**
@@ -186,12 +185,10 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             selectColumns.append(column.getColumnName());
 
             // Alias primary keys to avoid duplicate column names
-            if (column.isPrimaryKey()) {
-                selectColumns.append(SqlKeyword.DELIMITER)
-                        .append(SqlKeyword.AS)
-                        .append(SqlKeyword.DELIMITER)
-                        .append(column.getAliasedName());
-            }
+            selectColumns.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.AS)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(column.getAliasedName());
 
             if (columnsIterator.hasNext()) {
                 selectColumns.append(",").append(SqlKeyword.DELIMITER);
@@ -292,12 +289,16 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append("UPDATE ")
                 .append(table.getName())
                 .append(" SET ");
-        final List<ModelField> fields = modelSchema.getSortedFields();
-        final Iterator<ModelField> fieldsIterator = fields.iterator();
-        while (fieldsIterator.hasNext()) {
-            final ModelField field = fieldsIterator.next();
-            stringBuilder.append(field.getName()).append(" = ?");
-            if (fieldsIterator.hasNext()) {
+
+        // Previously, we figured out the correct column names from the model schema.
+        // Instead of figuring out the correct column names again, just iterate
+        // over whatever is actually there (since it was "right".)
+        final List<SQLiteColumn> columns = table.getSortedColumns();
+        final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
+        while (columnsIterator.hasNext()) {
+            final String columnName = columnsIterator.next().getName();
+            stringBuilder.append(columnName + " = ?");
+            if (columnsIterator.hasNext()) {
                 stringBuilder.append(", ");
             }
         }

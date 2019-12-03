@@ -54,7 +54,6 @@ public class BlogOwnerTest {
         assertEquals(one, two);
     }
 
-
     /**
      * When you construct a {@link BlogOwner} twice in the same fashion,
      * the {@link BlogOwner#hashCode()} should be the same for both instances.
@@ -83,3 +82,4 @@ public class BlogOwnerTest {
         );
     }
 }
+
