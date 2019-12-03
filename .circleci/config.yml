@@ -62,8 +62,8 @@ jobs:
       - run:
           name: Copy configuration files
           command: |
-            aws s3 cp s3://amplify-circleci-android-payload1/awsconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json --profile amplify_sdk_test 
-            aws s3 cp s3://amplify-circleci-android-payload1/amplifyconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/awsconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json --profile amplify_sdk_test 
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics.json  aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
       - run:
           name: Run integration test
           command: ./gradlew aws-analytics-pinpoint:cAT
