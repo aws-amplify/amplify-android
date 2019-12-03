@@ -4,8 +4,11 @@
   "analytics": {
     "plugins": {
       "amazonPinpointAnalyticsPlugin": {
-        "appId": "3d052968a8514a778b5a87891a98a4b7",
-        "region": "us-west-2"
+        "pinpointAnalytics": {
+          "appId": "3d052968a8514a778b5a87891a98a4b7",
+          "region": "us-west-2"
+        },
+        "autoFlushEventsInterval" : 1000
       }
     }
   }
