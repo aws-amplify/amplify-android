@@ -48,6 +48,7 @@ jobs:
           command: bash gradlew publishToMavenLocal
       - store_test_results:
           path: test-results
+
   integrationtest:
     working_directory: ~/amplify-android-home
     docker:
