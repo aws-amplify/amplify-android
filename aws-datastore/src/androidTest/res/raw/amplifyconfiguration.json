@@ -7,10 +7,10 @@
         "commentsBlogApi": {
           "__comment": "This is in Jameson's developer account, right now.",
           "endpointType": "GraphQL",
-          "endpoint": "https://tu2mikmhivbdljmspvbmh4glpy.appsync-api.us-east-1.amazonaws.com/graphql",
+          "endpoint": "https://q754zly6erdshd5lbeku75u6qq.appsync-api.us-east-1.amazonaws.com/graphql",
           "region": "us-east-1",
           "authorizationType": "API_KEY",
-          "apiKey": "da2-vxi6pdtwofbwxf7yickn7ed6cm"
+          "apiKey": "da2-umufvrvebnadnkv5hl3yudoj4m"
         }
       }
     }
