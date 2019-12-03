@@ -38,7 +38,7 @@ dependencies {
     implementation 'com.amplifyframework:core:0.9.0'
     
     // Specify only the modules that the app will use
-    implementation 'com.amplifyframework:aws-datastore:0.x.y'
+    implementation 'com.amplifyframework:aws-datastore:0.9.0'
     implementation 'com.amplifyframework:aws-api:0.9.0'
     implementation 'com.amplifyframework:aws-storage-s3:0.9.0'
     implementation 'com.amplifyframework:aws-analytics-pinpoint:0.9.0'
