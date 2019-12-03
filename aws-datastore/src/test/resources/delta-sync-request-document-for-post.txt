@@ -1,0 +1,32 @@
+query SyncPosts {
+  syncPosts(lastSync: 123123123) {
+    items {
+      authors {
+        items {
+          id
+        }
+        nextToken
+        startedAt
+      }
+      blog {
+        id
+      }
+      comments {
+        items {
+          id
+        }
+        nextToken
+        startedAt
+      }
+      id
+      rating
+      status
+      title
+      _version
+      _deleted
+      _lastChangedAt
+    }
+    nextToken
+    startedAt
+  }
+}
