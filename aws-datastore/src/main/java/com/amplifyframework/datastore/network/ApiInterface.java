@@ -35,6 +35,7 @@ public interface ApiInterface {
      * @param lastSync The time you last synced - all changes since this time are retrieved.
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> sync(
             @NonNull String apiName,
@@ -43,11 +44,12 @@ public interface ApiInterface {
             @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener);
 
     /**
-     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param apiName The name of a configured API
      * @param model An instance of the Model with the values to mutate
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> create(
             @NonNull String apiName,
@@ -55,12 +57,13 @@ public interface ApiInterface {
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
 
     /**
-     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param apiName The name of a configured API
      * @param model An instance of the Model with the values to mutate
      * @param version The version of the model we have
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> update(
             @NonNull String apiName,
@@ -69,12 +72,13 @@ public interface ApiInterface {
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
 
     /**
-     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param apiName The name of a configured API
      * @param objectId ID id of the object to delete
      * @param version The version of the model we have
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> delete(
             @NonNull String apiName,
@@ -83,12 +87,13 @@ public interface ApiInterface {
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
 
     /**
-     * Get notified when a create event happens on a given class
+     * Get notified when a create event happens on a given class.
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are listening on
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> onCreate(
             @NonNull String apiName,
@@ -96,12 +101,13 @@ public interface ApiInterface {
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
 
     /**
-     * Get notified when an update event happens on a given class
+     * Get notified when an update event happens on a given class.
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are listening on
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> onUpdate(
             @NonNull String apiName,
@@ -109,12 +115,13 @@ public interface ApiInterface {
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
 
     /**
-     * Get notified when a delete event happens on a given class
+     * Get notified when a delete event happens on a given class.
      * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are listening on
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
      * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link GraphQLOperation} to provide a means to cancel the asynchronous operation
      */
     <T extends Model> GraphQLOperation<T> onDelete(
             @NonNull String apiName,

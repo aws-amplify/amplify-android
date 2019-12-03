@@ -32,7 +32,10 @@ import java.lang.reflect.ParameterizedType;
 import java.util.Iterator;
 import java.util.List;
 
-public class AppSyncApiInterface implements ApiInterface {
+/**
+ * Implementation of API Interface for AppSync
+ */
+public final class AppSyncApiInterface implements ApiInterface {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
     private static final int DEFAULT_LEVEL_DEPTH = 2;
 
@@ -102,6 +105,7 @@ public class AppSyncApiInterface implements ApiInterface {
         return null;
     }
 
+    @SuppressWarnings("unchecked")
     private static String getModelFields(Class<? extends Model> clazz, int levelsDeepToGo) throws AmplifyException {
         if (levelsDeepToGo < 0) {
             return "";
