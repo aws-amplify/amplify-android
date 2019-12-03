@@ -26,11 +26,24 @@ List<Bucket> buckets = s3Client.listBuckets();
 
 Amplify SDK supports Android API level 15 (Android 4.0.3) and above.
 
-## License
-
-This library is licensed under the Apache 2.0 License. 
-
 ## Installation
+
+### Using Gradle
+
+Gradle can be used alongside Android Studio to declare dependencies on Amplify right out of the box via Maven central repository. To use Amplify, simply specify the module dependencies inside app's `build.gradle` dependencies section.
+
+``` gradle
+dependencies {
+    // Core SDK is required for configuring Amplify
+    implementation 'com.amplifyframework:core:0.9.0'
+    
+    // Specify only the modules that the app will use
+    implementation 'com.amplifyframework:aws-datastore:0.x.y'
+    implementation 'com.amplifyframework:aws-api:0.9.0'
+    implementation 'com.amplifyframework:aws-storage-s3:0.9.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:0.9.0'
+}
+```
 
 ### Local Publishing of Artifacts
 
@@ -63,3 +76,26 @@ allprojects {
     }
 }
 ```
+
+## Using Amplify
+
+### Java 8 Compatibility
+
+Amplify Android is dependent on Java 8 features. Please add compile options inside app's `build.gradle` like following:
+
+``` gradle
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+```
+
+### Using AWS Mobile Client
+
+Authentication in Amplify Native is dependent on AWS Mobile Client. Please refer to the [this documentation](https://aws-amplify.github.io/docs/android/authentication) for details.
+
+## License
+
+This library is licensed under the Apache 2.0 License. 
