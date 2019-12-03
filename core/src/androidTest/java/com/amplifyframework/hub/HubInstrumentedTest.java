@@ -39,7 +39,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Validates the functionality of the {@link BackgroundExecutorHubPlugin}.
+ * Validates the functionality of the {@link AWSHubPlugin}.
  */
 public final class HubInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core:test");
@@ -48,7 +48,7 @@ public final class HubInstrumentedTest {
 
     /**
      * Before any test is run, configure Amplify to use an
-     * {@link BackgroundExecutorHubPlugin} to satisfy the Hub category.
+     * {@link AWSHubPlugin} to satisfy the Hub category.
      * @throws AmplifyException from Amplify configuration
      */
     @BeforeClass
@@ -56,7 +56,7 @@ public final class HubInstrumentedTest {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
-        Amplify.addPlugin(new BackgroundExecutorHubPlugin());
+        Amplify.addPlugin(new AWSHubPlugin());
         Amplify.configure(configuration, context);
     }
 

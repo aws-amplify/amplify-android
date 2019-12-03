@@ -35,9 +35,7 @@ import java.util.concurrent.Executors;
  * An implementation of the {@link HubPlugin} which dispatches messages via
  * an {@link ExecutorService}.
  */
-public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
-
-    private static final String TAG = BackgroundExecutorHubPlugin.class.getSimpleName();
+public final class AWSHubPlugin extends HubPlugin<Void> {
 
     private final Map<SubscriptionToken, HubSubscription> subscriptionsByToken;
     private final Map<HubChannel, Set<HubSubscription>> subscriptionsByChannel;
@@ -46,7 +44,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
     private final ExecutorService executorService;
     private final Handler mainHandler;
 
-    BackgroundExecutorHubPlugin() {
+    AWSHubPlugin() {
         this.subscriptionsByToken = new HashMap<>();
         this.subscriptionsByChannel = new HashMap<>();
         this.subscriptionsLock = new Object();
@@ -124,7 +122,7 @@ public final class BackgroundExecutorHubPlugin extends HubPlugin<Void> {
 
     @Override
     public String getPluginKey() {
-        return "backgroundExecutorHubPlugin";
+        return "awsHubPlugin";
     }
 
     @Override
