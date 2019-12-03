@@ -24,7 +24,7 @@ import com.amplifyframework.core.model.annotations.ModelField;
  */
 @ModelConfig
 @SuppressWarnings({"MemberName", "ParameterName"})
-public final class ModelSyncMetadata implements Model {
+public final class ModelMetadata implements Model {
     private final @ModelField(targetType = "ID", isRequired = true) String id;
     private final @ModelField(targetType = "Boolean", isRequired = true) Boolean _deleted;
     private final @ModelField(targetType = "Int", isRequired = true) Integer _version;
@@ -37,7 +37,7 @@ public final class ModelSyncMetadata implements Model {
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
      */
-    public ModelSyncMetadata(String id, Boolean deleted, Integer version, Long lastChangedAt) {
+    public ModelMetadata(String id, Boolean deleted, Integer version, Long lastChangedAt) {
         this.id = id;
         this._deleted = deleted;
         this._version = version;

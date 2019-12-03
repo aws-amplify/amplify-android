@@ -21,16 +21,16 @@ import com.amplifyframework.core.model.Model;
  * Container class to hold an instance of an object with it's metadata.
  * @param <M> The model represented by this container
  */
-public class ModelSyncEntry<M extends Model> {
+public class ModelWithMetadata<M extends Model> {
     private M model;
-    private ModelSyncMetadata syncMetadata;
+    private ModelMetadata syncMetadata;
 
     /**
      * Holds an instance of a model in one object and its sync metadata in another.
      * @param model An instance of a model
      * @param syncMetadata The metadata for this model about it's synchronization history.
      */
-    public ModelSyncEntry(M model, ModelSyncMetadata syncMetadata) {
+    public ModelWithMetadata(M model, ModelMetadata syncMetadata) {
         this.model = model;
         this.syncMetadata = syncMetadata;
     }
@@ -47,7 +47,7 @@ public class ModelSyncEntry<M extends Model> {
      * Get the sync/version metadata for the model instance.
      * @return the sync/version metadata
      */
-    public ModelSyncMetadata getSyncMetadata() {
+    public ModelMetadata getSyncMetadata() {
         return syncMetadata;
     }
 }
