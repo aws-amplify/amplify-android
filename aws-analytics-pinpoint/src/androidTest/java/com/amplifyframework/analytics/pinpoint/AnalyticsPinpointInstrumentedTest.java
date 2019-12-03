@@ -21,6 +21,7 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
+import com.amplifyframework.analytics.pinpoint.test.R;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.logging.Logger;
@@ -45,7 +46,7 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int EVENT_FLUSH_TIMEOUT = 60;
-    private static final int EVENT_FLUSH_WAIT = 5;
+    private static final int EVENT_FLUSH_WAIT = 2;
 
     /**
      * Configure the Amplify framework.
@@ -74,7 +75,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
         // Flush any events from previous tests.
         Amplify.Analytics.flushEvents();
-        waitForAutoFlush(analyticsClient.getAllEvents().size());
+        waitForAutoFlush(analyticsClient);
 
         BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
                 PinpointProperties.builder()
@@ -100,7 +101,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
         // Flush any events from previous tests.
         Amplify.Analytics.flushEvents();
-        waitForAutoFlush(analyticsClient.getAllEvents().size());
+        waitForAutoFlush(analyticsClient);
 
         BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
                 PinpointProperties.builder()
@@ -112,7 +113,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
         assertEquals(1, analyticsClient.getAllEvents().size());
 
-        waitForAutoFlush(analyticsClient.getAllEvents().size());
+        waitForAutoFlush(analyticsClient);
 
         LOG.debug("Events in database after calling submitEvents() after submitting: " +
                 analyticsClient.getAllEvents().size());
@@ -129,7 +130,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
         assertEquals(1, analyticsClient.getAllEvents().size());
 
-        waitForAutoFlush(analyticsClient.getAllEvents().size());
+        waitForAutoFlush(analyticsClient);
 
         LOG.debug("Events in database after calling submitEvents() after submitting: " +
                 analyticsClient.getAllEvents().size());
@@ -137,12 +138,12 @@ public class AnalyticsPinpointInstrumentedTest {
         assertEquals(0, analyticsClient.getAllEvents().size());
     }
 
-    private void waitForAutoFlush(int numOfEvents) {
+    private void waitForAutoFlush(AnalyticsClient analyticsClient) {
         long timeSleptSoFar = 0;
         while (timeSleptSoFar < TimeUnit.SECONDS.toMillis(EVENT_FLUSH_TIMEOUT)) {
             Sleep.milliseconds(TimeUnit.SECONDS.toMillis(EVENT_FLUSH_WAIT));
             timeSleptSoFar += TimeUnit.SECONDS.toMillis(EVENT_FLUSH_WAIT);
-            if (numOfEvents == 0) {
+            if (analyticsClient.getAllEvents().size() == 0) {
                 break;
             }
         }

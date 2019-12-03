@@ -1,0 +1,13 @@
+subscription OnDeleteBlogOwner {
+  onDeleteBlogOwner {
+    blog {
+      id
+    }
+    id
+    name
+    wea
+    _version
+    _deleted
+    _lastChangedAt
+  }
+}

@@ -1,0 +1,12 @@
+mutation CreateComment($input:CreateCommentInput!) {
+  createComment(input:$input) {
+    content
+    id
+    post {
+      id
+    }
+    _version
+    _deleted
+    _lastChangedAt
+  }
+}
