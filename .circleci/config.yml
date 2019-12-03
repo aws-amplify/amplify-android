@@ -29,6 +29,29 @@ commands:
           command: |
             aws configure --profile amplify_sdk_test set region us-east-1
             echo -e "[amplify_sdk_test]\naws_access_key_id=${AWS_ACCESS_KEY_ID_TEST}\naws_secret_access_key=${AWS_SECRET_ACCESS_KEY_TEST}\n" >> ~/.aws/credentials
+  setup_emulator:
+    description: >-
+      setup emulator
+    steps:
+      - run:
+          name: Setup emulator
+          command: |
+            echo y | sdkmanager "system-images;android-24;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
+      - run:
+          name: Launch emulator
+          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -no-boot-anim -no-window -accel auto -verbose
+          background: true
+      - run:
+          name: Launch logcat
+          command: 
+            adb logcat > logcat.log
+          background: true
+      - run:
+          name: Wait emulator
+          command: |
+            echo "wait for emulator to have booted"
+            circle-android wait-for-boot
+            python3 unlock_emulator_screen.py
 jobs:
   build:
     working_directory: ~/amplify-android-home
@@ -64,6 +87,9 @@ jobs:
           command: |
             aws s3 cp s3://amplify-circleci-android-payload/awsconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json --profile amplify_sdk_test 
             aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics.json  aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics-core.json  core/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics-api.json  aws-api/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics-datastore.json  aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
       - run:
           name: Run integration test
           command: ./gradlew aws-analytics-pinpoint:cAT
