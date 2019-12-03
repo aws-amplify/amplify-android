@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
@@ -537,7 +538,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
     }
 
-    private String getSelectedApiName(EndpointType endpointType) {
+    @VisibleForTesting
+    String getSelectedApiName(EndpointType endpointType) {
         switch (endpointType) {
             case REST:
                 return selectApiName(restApis);
