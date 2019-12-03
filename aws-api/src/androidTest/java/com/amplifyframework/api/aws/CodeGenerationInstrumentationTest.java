@@ -35,6 +35,7 @@ import com.amplifyframework.testutils.LatchedResponseStreamListener;
 import com.amplifyframework.testutils.LatchedSingleResponseListener;
 
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -47,6 +48,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * TODO: document how to configure a remote endpoint that can accomodate this test.
  */
+@Ignore("Temporarily ignore until remote endpoint can be configured consistently.")
 public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";

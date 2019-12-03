@@ -76,10 +76,13 @@ final class AWSApiPluginConfigurationReader {
                     }
                 }
 
+                final EndpointType endpointType =
+                        EndpointType.from(apiSpec.getString(ConfigKey.ENDPOINT_TYPE.key()));
                 final AuthorizationType authorizationType =
                         AuthorizationType.from(apiSpec.getString(ConfigKey.AUTHORIZATION_TYPE.key()));
 
                 final ApiConfiguration.Builder apiConfigBuilder = ApiConfiguration.builder()
+                        .endpointType(endpointType)
                         .endpoint(apiSpec.getString(ConfigKey.ENDPOINT.key()))
                         .region(apiSpec.getString(ConfigKey.REGION.key()))
                         .authorizationType(authorizationType);
@@ -107,6 +110,7 @@ final class AWSApiPluginConfigurationReader {
      * an API configuration json.
      */
     enum ConfigKey {
+        ENDPOINT_TYPE("endpointType", Importance.REQUIRED),
         ENDPOINT("endpoint", Importance.REQUIRED),
         REGION("region", Importance.REQUIRED),
         AUTHORIZATION_TYPE("authorizationType", Importance.REQUIRED),

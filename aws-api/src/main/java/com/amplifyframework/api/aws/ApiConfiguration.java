@@ -24,16 +24,22 @@ import java.util.Objects;
  * API configuration details.
  */
 final class ApiConfiguration {
+    private final EndpointType endpointType;
     private final String endpoint;
     private final String region;
     private final AuthorizationType authorizationType;
     private final String apiKey;
 
     ApiConfiguration(Builder builder) {
+        this.endpointType = builder.getEndpointType();
         this.endpoint = builder.getEndpoint();
         this.region = builder.getRegion();
         this.authorizationType = builder.getAuthorizationType();
         this.apiKey = builder.getApiKey();
+    }
+
+    EndpointType getEndpointType() {
+        return this.endpointType;
     }
 
     String getEndpoint() {
@@ -57,10 +63,16 @@ final class ApiConfiguration {
     }
 
     static final class Builder {
+        private EndpointType endpointType;
         private String endpoint;
         private String region;
         private AuthorizationType authorizationType;
         private String apiKey;
+
+        Builder endpointType(@NonNull EndpointType endpointType) {
+            Builder.this.endpointType = Objects.requireNonNull(endpointType);
+            return Builder.this;
+        }
 
         Builder endpoint(@NonNull String endpoint) {
             Builder.this.endpoint = Objects.requireNonNull(endpoint);
@@ -91,6 +103,10 @@ final class ApiConfiguration {
             Objects.requireNonNull(Builder.this.region);
             Objects.requireNonNull(Builder.this.authorizationType);
             return new ApiConfiguration(Builder.this);
+        }
+
+        EndpointType getEndpointType() {
+            return Builder.this.endpointType;
         }
 
         String getEndpoint() {

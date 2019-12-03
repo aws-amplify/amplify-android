@@ -41,7 +41,9 @@ import org.json.JSONObject;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import okhttp3.OkHttpClient;
 
@@ -56,6 +58,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
+
+    private final Set<String> restApis;
+    private final Set<String> gqlApis;
 
     /**
      * Default constructor for this plugin without any override.
@@ -78,6 +83,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.apiDetails = new HashMap<>();
         this.gqlResponseFactory = new GsonGraphQLResponseFactory();
         this.authProvider = apiAuthProvider;
+        this.restApis = new HashSet<>();
+        this.gqlApis = new HashSet<>();
     }
 
     @Override
@@ -96,6 +103,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
+            final EndpointType endpointType = apiConfiguration.getEndpointType();
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
             if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
@@ -103,6 +111,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final OkHttpClient okHttpClient = builder.build();
             final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);
+            if (EndpointType.REST.equals(endpointType)) {
+                restApis.add(apiName);
+            }
+            if (EndpointType.GRAPHQL.equals(endpointType)) {
+                gqlApis.add(apiName);
+            }
             apiDetails.put(apiName, new ClientDetails(apiConfiguration, okHttpClient, subscriptionEndpoint));
         }
     }
@@ -114,6 +128,44 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiClientsByName.put(entry.getKey(), entry.getValue().okHttpClient());
         }
         return Collections.unmodifiableMap(apiClientsByName);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull Class<T> modelClass,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return query(apiName, modelClass, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull Class<T> modelClass,
+            @NonNull String objectId,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return query(apiName, modelClass, objectId, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull Class<T> modelClass,
+            QueryPredicate predicate,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return query(apiName, modelClass, predicate, responseListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> query(
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return query(apiName, graphQLRequest, responseListener);
     }
 
     @Override
@@ -165,11 +217,42 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
         final GraphQLOperation<T> operation =
                 buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
         operation.start();
         return operation;
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull T model,
+            @NonNull MutationType mutationType,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return mutate(apiName, model, mutationType, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull T model,
+            QueryPredicate predicate,
+            @NonNull MutationType mutationType,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return mutate(apiName, model, predicate, mutationType, responseListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> mutate(
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return mutate(apiName, graphQlRequest, responseListener);
     }
 
     @Override
@@ -209,12 +292,32 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> qraphQlRequest,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener) {
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
         final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, qraphQlRequest, responseListener);
+                buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
         operation.start();
         return operation;
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull Class<T> modelClass,
+            @NonNull SubscriptionType subscriptionType,
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return subscribe(apiName, modelClass, subscriptionType, subscriptionListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> subscribe(
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        return subscribe(apiName, graphQLRequest, subscriptionListener);
     }
 
     @Override
@@ -243,9 +346,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> qraphQlRequest,
-            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener) {
-
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
             subscriptionListener.onError(
@@ -263,7 +366,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .subscriptionManager(clientDetails.webSocketEndpoint())
                 .endpoint(clientDetails.apiConfiguration().getEndpoint())
                 .client(clientDetails.okHttpClient())
-                .graphQLRequest(qraphQlRequest)
+                .graphQLRequest(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
                 .streamListener(subscriptionListener)
                 .build();
@@ -273,9 +376,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public RestOperation get(
+            @NonNull RestOptions options,
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.REST);
+        return get(apiName, options, responseListener);
+    }
+
+    @Override
+    public RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse> responseListener) {
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
 
         try {
             return createRestOperation(
@@ -291,10 +404,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public RestOperation put(
+            @NonNull RestOptions options,
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.REST);
+        return put(apiName, options, responseListener);
+    }
+
+    @Override
+    public RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse> responseListener) {
-
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
         try {
             return createRestOperation(
                     apiName,
@@ -309,10 +431,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public RestOperation post(
+            @NonNull RestOptions options,
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.REST);
+        return post(apiName, options, responseListener);
+    }
+
+    @Override
+    public RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse> responseListener) {
-
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
         try {
             return createRestOperation(
                     apiName,
@@ -327,10 +458,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public RestOperation delete(
+            @NonNull RestOptions options,
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.REST);
+        return delete(apiName, options, responseListener);
+    }
+
+    @Override
+    public RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse> responseListener) {
-
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
         try {
             return createRestOperation(
                     apiName,
@@ -345,10 +485,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public RestOperation head(
+            @NonNull RestOptions options,
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.REST);
+        return head(apiName, options, responseListener);
+    }
+
+    @Override
+    public RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse> responseListener) {
-
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
         try {
             return createRestOperation(
                     apiName,
@@ -363,10 +512,19 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public RestOperation patch(
+            @NonNull RestOptions options,
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
+        final String apiName = getSelectedApiName(EndpointType.REST);
+        return patch(apiName, options, responseListener);
+    }
+
+    @Override
+    public RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse> responseListener) {
-
+            @NonNull ResultListener<RestResponse> responseListener
+    ) {
         try {
             return createRestOperation(
                     apiName,
@@ -379,6 +537,33 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
     }
 
+    private String getSelectedApiName(EndpointType endpointType) {
+        switch (endpointType) {
+            case REST:
+                return selectApiName(restApis);
+            case GRAPHQL:
+                return selectApiName(gqlApis);
+            default:
+                throw new IllegalStateException("Unexpected error was encountered. "
+                        + endpointType.name() + " is not a supported endpoint type."
+                );
+        }
+    }
+
+    private String selectApiName(Set<String> apiClients) {
+        if (apiClients.isEmpty()) {
+            throw new IllegalStateException("There is no API configured for this " +
+                    "plugin with matching endpoint type. Please add at least one " +
+                    "API in amplifyconfiguration.json");
+        }
+        if (apiClients.size() > 1) {
+            throw new IllegalStateException("There is more than one API configured " +
+                    "for this plugin with matching endpoint type. Please specify " +
+                    "the name of API to invoke in the API method.");
+        }
+        return apiClients.iterator().next();
+    }
+
     private <T> SingleItemResultOperation<T> buildSingleResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
@@ -389,8 +574,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             responseListener.onError(
                     new ApiException(
                             "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there is a correctly configured section for "
-                                    + apiName
+                            "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
                     )
             );
 
@@ -416,8 +601,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             responseListener.onError(
                     new ApiException(
                             "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there is a correctly configured section for "
-                                    + apiName
+                            "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
                     )
             );
 
@@ -451,8 +636,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             listener.onError(
                     new ApiException(
                             "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there is a correctly configured section for "
-                                    + apiName
+                            "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
                     )
             );
             return null;

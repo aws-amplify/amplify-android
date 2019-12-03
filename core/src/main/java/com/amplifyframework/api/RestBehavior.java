@@ -29,6 +29,23 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking GET HTTP request.
+     * This method will work if and only if there is one REST API
+     * endpoint that is registered in amplifyconfiguration.json.
+     *
+     * @param request GET request object.
+     * @param responseListener
+     *      Invoked when response data/errors are available. If null,
+     *      response can still be obtained via Hub.
+     * @return An {@link ApiOperation} to track progress and provide
+     * a means to cancel the asynchronous operation
+     */
+    RestOperation get(
+            @NonNull RestOptions request,
+            @NonNull ResultListener<RestResponse> responseListener
+    );
+
+    /**
+     * This is a helper method for easily invoking GET HTTP request.
      *
      * @param apiName The name of a configured API.
      * @param request GET request object.
@@ -42,7 +59,24 @@ public interface RestBehavior {
             @NonNull String apiName,
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
-   );
+    );
+
+    /**
+     * This is a helper method for easily invoking PUT HTTP request.
+     * This method will work if and only if there is one REST API
+     * endpoint that is registered in amplifyconfiguration.json.
+     *
+     * @param request PUT request object.
+     * @param responseListener
+     *      Invoked when response data/errors are available. If null,
+     *      response can still be obtained via Hub.
+     * @return An {@link ApiOperation} to track progress and provide
+     * a means to cancel the asynchronous operation
+     */
+    RestOperation put(
+            @NonNull RestOptions request,
+            @NonNull ResultListener<RestResponse> responseListener
+    );
 
     /**
      * This is a helper method for easily invoking PUT HTTP request.
@@ -57,6 +91,23 @@ public interface RestBehavior {
      */
     RestOperation put(
             @NonNull String apiName,
+            @NonNull RestOptions request,
+            @NonNull ResultListener<RestResponse> responseListener
+    );
+
+    /**
+     * This is a helper method for easily invoking POST HTTP request.
+     * This method will work if and only if there is one REST API
+     * endpoint that is registered in amplifyconfiguration.json.
+     *
+     * @param request POST request object.
+     * @param responseListener
+     *      Invoked when response data/errors are available. If null,
+     *      response can still be obtained via Hub.
+     * @return An {@link ApiOperation} to track progress and provide
+     * a means to cancel the asynchronous operation
+     */
+    RestOperation post(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
     );
@@ -80,6 +131,23 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking DELETE HTTP request.
+     * This method will work if and only if there is one REST API
+     * endpoint that is registered in amplifyconfiguration.json.
+     *
+     * @param request DELETE request object.
+     * @param responseListener
+     *      Invoked when response data/errors are available. If null,
+     *      response can still be obtained via Hub.
+     * @return An {@link ApiOperation} to track progress and provide
+     * a means to cancel the asynchronous operation
+     */
+    RestOperation delete(
+            @NonNull RestOptions request,
+            @NonNull ResultListener<RestResponse> responseListener
+    );
+
+    /**
+     * This is a helper method for easily invoking DELETE HTTP request.
      *
      * @param apiName The name of a configured API.
      * @param request DELETE request object.
@@ -97,6 +165,23 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking HEAD HTTP request.
+     * This method will work if and only if there is one REST API
+     * endpoint that is registered in amplifyconfiguration.json.
+     *
+     * @param request HEAD request object.
+     * @param responseListener
+     *      Invoked when response data/errors are available. If null,
+     *      response can still be obtained via Hub.
+     * @return An {@link ApiOperation} to track progress and provide
+     * a means to cancel the asynchronous operation
+     */
+    RestOperation head(
+            @NonNull RestOptions request,
+            @NonNull ResultListener<RestResponse> responseListener
+    );
+
+    /**
+     * This is a helper method for easily invoking HEAD HTTP request.
      *
      * @param apiName The name of a configured API.
      * @param request HEAD request object.
@@ -108,6 +193,23 @@ public interface RestBehavior {
      */
     RestOperation head(
             @NonNull String apiName,
+            @NonNull RestOptions request,
+            @NonNull ResultListener<RestResponse> responseListener
+    );
+
+    /**
+     * This is a helper method for easily invoking PATCH HTTP request.
+     * This method will work if and only if there is one REST API
+     * endpoint that is registered in amplifyconfiguration.json.
+     *
+     * @param request PATCH request object.
+     * @param responseListener
+     *      Invoked when response data/errors are available. If null,
+     *      response can still be obtained via Hub.
+     * @return An {@link ApiOperation} to track progress and provide
+     * a means to cancel the asynchronous operation
+     */
+    RestOperation patch(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
     );

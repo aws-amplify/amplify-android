@@ -37,6 +37,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -79,10 +80,10 @@ public class SyncEngineTest {
             apiInvoked.countDown();
             return null;
         }).when(api).mutate(
-            any(),
-            any(),
-            any(),
-            any()
+                anyString(),
+                any(),
+                any(),
+                any()
         );
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
