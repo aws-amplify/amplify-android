@@ -38,13 +38,13 @@ You can manually install the library by cloning this repo and publishing the And
 
 Execute following commands from the project root:
 
-```
+``` console
 ./gradlew publishToMavenLocal
 ```
 
 Locally published artifacts can be accessed by specifying `mavenLocal()` inside the app's `build.gradle` file:
 
-```
+``` gradle
 buildscript {
     repositories {
         mavenLocal() // This should ideally appear before other repositories
