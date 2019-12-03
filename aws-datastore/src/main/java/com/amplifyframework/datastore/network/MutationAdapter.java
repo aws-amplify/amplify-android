@@ -15,11 +15,9 @@
 
 package com.amplifyframework.datastore.network;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.DataStoreException;
 
 final class MutationAdapter<T extends Model> implements ResultListener<GraphQLResponse<String>> {
     private final Class<T> itemClass;
@@ -38,10 +36,7 @@ final class MutationAdapter<T extends Model> implements ResultListener<GraphQLRe
     @Override
     public void onResult(GraphQLResponse<String> result) {
         if (result.hasErrors()) {
-            responseListener.onError(new DataStoreException(
-                "Errors while processing mutation: " + result.getErrors(),
-                AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
+            responseListener.onResult(new GraphQLResponse<>(null, result.getErrors()));
             return;
         }
         responseListener.onResult(responseDeserializer.deserialize(result.getData(), itemClass));
