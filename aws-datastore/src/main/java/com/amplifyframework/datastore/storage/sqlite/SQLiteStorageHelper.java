@@ -34,7 +34,7 @@ import java.util.Set;
 /**
  * A helper class to manage database creation and version management.
  */
-final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgradeStrategy<SQLiteDatabase, String> {
+final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateStrategy<SQLiteDatabase, String> {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
@@ -152,7 +152,7 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpgrade
      * {@inheritDoc}.
      */
     @Override
-    public synchronized void upgrade(
+    public synchronized void update(
             @NonNull SQLiteDatabase sqliteDatabase,
             @NonNull String oldVersion,
             @NonNull String newVersion) {
