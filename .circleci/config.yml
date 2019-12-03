@@ -58,6 +58,7 @@ jobs:
     steps:
       - checkout
       - generate_gradle_wrapper
+      - configure_aws
       - run:
           name: Copy configuration files
           command: |
