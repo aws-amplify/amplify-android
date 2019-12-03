@@ -82,6 +82,7 @@ jobs:
       - checkout
       - generate_gradle_wrapper
       - configure_aws
+      - setup_emulator
       - run:
           name: Copy configuration files
           command: |
