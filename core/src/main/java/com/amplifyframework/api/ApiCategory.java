@@ -47,6 +47,40 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Override
     public <T extends Model> GraphQLOperation<T> query(
+            @NonNull Class<T> modelClass,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        return getSelectedPlugin().query(modelClass, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull Class<T> modelClass,
+            @NonNull String objectId,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().query(modelClass, objectId, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
+            @NonNull Class<T> modelClass,
+            QueryPredicate predicate,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        return getSelectedPlugin().query(modelClass, predicate, responseListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> query(
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
+    ) {
+        return getSelectedPlugin().query(graphQlRequest, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
@@ -85,6 +119,33 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Override
     public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull T model,
+            @NonNull MutationType mutationType,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().mutate(model, mutationType, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
+            @NonNull T model,
+            QueryPredicate predicate,
+            @NonNull MutationType mutationType,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().mutate(model, predicate, mutationType, responseListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> mutate(
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener
+    ) {
+        return getSelectedPlugin().mutate(graphQlRequest, responseListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
             @NonNull MutationType mutationType,
@@ -115,6 +176,22 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Override
     public <T extends Model> GraphQLOperation<T> subscribe(
+            @NonNull Class<T> modelClass,
+            @NonNull SubscriptionType subscriptionType,
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener) {
+        return getSelectedPlugin().subscribe(modelClass, subscriptionType, subscriptionListener);
+    }
+
+    @Override
+    public <T> GraphQLOperation<T> subscribe(
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener
+    ) {
+        return getSelectedPlugin().subscribe(graphQlRequest, subscriptionListener);
+    }
+
+    @Override
+    public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
@@ -132,11 +209,28 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     }
 
     @Override
-    public RestOperation get(@NonNull String apiName,
-                             @NonNull RestOptions request,
-                             @Nullable ResultListener<RestResponse> responseListener
+    public RestOperation get(
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().get(request, responseListener);
+    }
+
+    @Override
+    public RestOperation get(
+            @NonNull String apiName,
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
     ) {
         return getSelectedPlugin().get(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation put(
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().put(request, responseListener);
     }
 
     @Override
@@ -150,11 +244,27 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Override
     public RestOperation post(
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().post(request, responseListener);
+    }
+
+    @Override
+    public RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions request,
             @Nullable ResultListener<RestResponse> responseListener
     ) {
         return getSelectedPlugin().post(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation delete(
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().delete(request, responseListener);
     }
 
     @Override
@@ -168,11 +278,27 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Override
     public RestOperation head(
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().head(request, responseListener);
+    }
+
+    @Override
+    public RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions request,
             @Nullable ResultListener<RestResponse> responseListener
     ) {
         return getSelectedPlugin().head(apiName, request, responseListener);
+    }
+
+    @Override
+    public RestOperation patch(
+            @NonNull RestOptions request,
+            @Nullable ResultListener<RestResponse> responseListener
+    ) {
+        return getSelectedPlugin().patch(request, responseListener);
     }
 
     @Override

@@ -6,6 +6,7 @@
       "awsAPIPlugin": {
         "commentsBlogApi": {
           "__comment": "This is in Jameson's developer account, right now.",
+          "endpointType": "GraphQL",
           "endpoint": "https://q754zly6erdshd5lbeku75u6qq.appsync-api.us-east-1.amazonaws.com/graphql",
           "region": "us-east-1",
           "authorizationType": "API_KEY",
