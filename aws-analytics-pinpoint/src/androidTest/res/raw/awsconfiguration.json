@@ -7,8 +7,8 @@
   "CredentialsProvider": {
     "CognitoIdentity": {
       "Default": {
-        "PoolId": "us-west-2:f4772ffb-7de2-4487-9340-1b58e765309f",
-        "Region": "us-west-2"
+        "PoolId": "******",
+        "Region": "******"
       }
     }
   }
