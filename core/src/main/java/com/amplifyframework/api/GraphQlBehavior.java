@@ -42,9 +42,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param modelClass The class of the Model we are querying on
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available. Must extend Model.
@@ -64,9 +63,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided to
      * the response listener, and via {@link HubCategory}.  If there is data
      * present in the response, it will be cast as the requested class type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param modelClass The class of the Model we are querying on
      * @param objectId The unique ID of the object you want to get
      * @param responseListener Invoked when response data/errors are available.
@@ -88,9 +86,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param modelClass The class of the Model we are querying on
      * @param predicate Filtering conditions for the query
      * @param responseListener Invoked when response data/errors are available.
@@ -109,9 +106,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param graphQlRequest Wrapper for request details
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available
@@ -216,10 +212,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
-     * type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * type. Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param model An instance of the Model with the values to mutate
      * @param mutationType  What type of mutation to perform (e.g. Create, Update, Delete)
      * @param responseListener Invoked when response data/errors are available.
@@ -241,10 +235,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
-     * type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * type. Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param model An instance of the Model with the values to mutate
      * @param predicate Conditions on the current data to determine whether to go through
      *                  with an UPDATE or DELETE operation
@@ -266,10 +258,8 @@ public interface GraphQlBehavior {
      * cancel on the returned operation. The response will be provided
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
-     * type.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * type. Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param graphQlRequest Wrapper for request details
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response, if available
@@ -359,9 +349,8 @@ public interface GraphQlBehavior {
      * {@link GraphQLResponse}s to the provided stream listener.
      * The subscription may be canceled by calling
      * {@link GraphQLOperation#cancel()}.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param modelClass The class of the Model we are subscribing to
      * @param subscriptionType What type of subscription to listen for (e.g. OnCreate, OnUpdate, OnDelete)
      * @param subscriptionListener
@@ -381,9 +370,8 @@ public interface GraphQlBehavior {
      * {@link GraphQLResponse}s to the provided stream listener.
      * The subscription may be canceled by calling
      * {@link GraphQLOperation#cancel()}.
-     *
-     * This method will work if and only if there is one GraphQL API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an IllegalStateException.
      * @param graphQlRequest Wrapper for request details
      * @param subscriptionListener
      *        A listener to receive notifications when new items are

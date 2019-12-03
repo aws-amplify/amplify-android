@@ -29,8 +29,9 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking GET HTTP request.
-     * This method will work if and only if there is one REST API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an
+     * IllegalStateException.
      *
      * @param request GET request object.
      * @param responseListener
@@ -63,8 +64,9 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking PUT HTTP request.
-     * This method will work if and only if there is one REST API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an
+     * IllegalStateException.
      *
      * @param request PUT request object.
      * @param responseListener
@@ -97,8 +99,9 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking POST HTTP request.
-     * This method will work if and only if there is one REST API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an
+     * IllegalStateException.
      *
      * @param request POST request object.
      * @param responseListener
@@ -131,8 +134,9 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking DELETE HTTP request.
-     * This method will work if and only if there is one REST API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an
+     * IllegalStateException.
      *
      * @param request DELETE request object.
      * @param responseListener
@@ -165,8 +169,9 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking HEAD HTTP request.
-     * This method will work if and only if there is one REST API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an
+     * IllegalStateException.
      *
      * @param request HEAD request object.
      * @param responseListener
@@ -199,8 +204,9 @@ public interface RestBehavior {
 
     /**
      * This is a helper method for easily invoking PATCH HTTP request.
-     * This method will work if and only if there is one REST API
-     * endpoint that is registered in amplifyconfiguration.json.
+     * Requires that only one API is configured in your
+     * `amplifyconfigurationl.json`. Otherwise, throws an
+     * IllegalStateException.
      *
      * @param request PATCH request object.
      * @param responseListener

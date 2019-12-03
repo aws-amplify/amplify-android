@@ -18,7 +18,7 @@ package com.amplifyframework.api.aws;
 /**
  * The type of API for a given endpoint.
  */
-public enum EndpointType {
+enum EndpointType {
 
     /**
      * GraphQL backend API.
@@ -41,14 +41,14 @@ public enum EndpointType {
      * @param name String representation of an endpoint type
      * @return The corresponding endpoint type
      */
-    public static EndpointType from(String name) {
+    static EndpointType from(String name) {
         for (final EndpointType endpointType : values()) {
             if (endpointType.name.equals(name)) {
                 return endpointType;
             }
         }
 
-        throw new IllegalArgumentException("No such authorization type: " + name);
+        throw new IllegalArgumentException("No such endpoint type: " + name);
     }
 }
 

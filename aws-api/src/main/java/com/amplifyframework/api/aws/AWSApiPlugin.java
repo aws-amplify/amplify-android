@@ -354,8 +354,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             subscriptionListener.onError(
                     new ApiException(
                             "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there is a correctly configured section for "
-                                    + apiName
+                            "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
                     )
             );
 
@@ -544,9 +544,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             case GRAPHQL:
                 return selectApiName(gqlApis);
             default:
-                throw new IllegalStateException("Unexpected error was encountered. "
-                        + endpointType.name() + " is not a supported endpoint type."
-                );
+                throw new IllegalStateException(endpointType.name() + " is not a " +
+                        "supported endpoint type. Please use REST or GraphQL.");
         }
     }
 
@@ -554,7 +553,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         if (apiClients.isEmpty()) {
             throw new IllegalStateException("There is no API configured for this " +
                     "plugin with matching endpoint type. Please add at least one " +
-                    "API in amplifyconfiguration.json");
+                    "API in amplifyconfiguration.json.");
         }
         if (apiClients.size() > 1) {
             throw new IllegalStateException("There is more than one API configured " +
