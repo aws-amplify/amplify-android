@@ -33,7 +33,7 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * Implementation of API Interface for AppSync
+ * Implementation of API Interface for AppSync.
  */
 public final class AppSyncApiInterface implements ApiInterface {
     private static final int DEFAULT_QUERY_LIMIT = 1000;

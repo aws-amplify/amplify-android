@@ -25,7 +25,7 @@ import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 
 /**
- * Convenience class to call API in a way that supports versioning and retrieving sync metadata
+ * Convenience class to call API in a way that supports versioning and retrieving sync metadata.
  */
 public interface ApiInterface {
     /**
