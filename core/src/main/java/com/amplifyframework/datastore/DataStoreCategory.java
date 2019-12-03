@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.Category;
@@ -71,6 +72,16 @@ public class DataStoreCategory
     public <T extends Model> void query(@NonNull Class<T> itemClass,
                                         @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         getSelectedPlugin().query(itemClass, queryResultsListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void query(@NonNull Class<T> itemClass,
+                                        @Nullable QueryPredicate predicate,
+                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+        getSelectedPlugin().query(itemClass, predicate, queryResultsListener);
     }
 
     /**

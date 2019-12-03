@@ -108,7 +108,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // that this handle represents.
     private SQLiteDatabase databaseConnectionHandle;
 
-    // The helper object controls the lifecycle of database creation, upgrade
+    // The helper object controls the lifecycle of database creation, update
     // and opening connection to database.
     private SQLiteStorageHelper sqliteStorageHelper;
 
@@ -222,7 +222,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * from the version passed in through {@link ModelProvider#version()}.
                  * Delete the database if there is a version change.
                  */
-                toBeDisposed.add(upgradeModels().subscribe(() -> {
+                toBeDisposed.add(updateModels().subscribe(() -> {
                     listener.onResult(Immutable.of(
                             new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())));
                 }, throwable -> {
@@ -325,6 +325,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                     "table for class: " + itemClass.getSimpleName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
+                    return;
                 }
 
                 if (cursor.moveToFirst()) {
@@ -722,35 +723,30 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * from the version passed in through {@link ModelProvider#version()}.
      * Drop all tables if the version has changed.
      */
-    private Completable upgradeModels() {
-        return PersistentModelVersion.fromLocalStorage(this).doOnSuccess(iterator -> {
-            if (iterator.hasNext()) {
-                LOG.verbose("Successfully read model version from local storage. " +
-                        "Checking if the models need to be upgraded...");
-                PersistentModelVersion persistentModelVersion = iterator.next();
-                String oldVersion = persistentModelVersion.getVersion();
-                String newVersion = modelProvider.version();
-                if (!ObjectsCompat.equals(oldVersion, newVersion)) {
-                    LOG.debug("Upgrading models as the version of models changed from " +
-                            oldVersion + " to " + newVersion);
-                    Objects.requireNonNull(sqliteStorageHelper);
-                    Objects.requireNonNull(databaseConnectionHandle);
-                    sqliteStorageHelper.upgrade(
-                            databaseConnectionHandle,
-                            oldVersion,
-                            newVersion);
-                }
-            }
-        }).flatMap(iterator -> {
-            return PersistentModelVersion.saveToLocalStorage(
-                    this,
-                    new PersistentModelVersion(modelProvider.version()));
-        }).doOnError(error -> {
-            LOG.error("Error in reading model version from local storage.", error);
-            PersistentModelVersion.saveToLocalStorage(
-                        this,
-                        new PersistentModelVersion(modelProvider.version()));
-        }).ignoreElement();
+    private Completable updateModels() {
+        return PersistentModelVersion.fromLocalStorage(this)
+                .flatMap(iterator -> {
+                    if (iterator.hasNext()) {
+                        LOG.verbose("Successfully read model version from local storage. " +
+                                "Checking if the model version need to be updated...");
+                        PersistentModelVersion persistentModelVersion = iterator.next();
+                        String oldVersion = persistentModelVersion.getVersion();
+                        String newVersion = modelProvider.version();
+                        if (!ObjectsCompat.equals(oldVersion, newVersion)) {
+                            LOG.debug("Updating version as it has changed from " +
+                                    oldVersion + " to " + newVersion);
+                            Objects.requireNonNull(sqliteStorageHelper);
+                            Objects.requireNonNull(databaseConnectionHandle);
+                            sqliteStorageHelper.update(
+                                    databaseConnectionHandle,
+                                    oldVersion,
+                                    newVersion);
+                        }
+                    }
+                    return PersistentModelVersion.saveToLocalStorage(
+                            this,
+                            new PersistentModelVersion(modelProvider.version()));
+                }).ignoreElement();
     }
 
     private <T extends Model> T deserializeModelFromRawMap(
