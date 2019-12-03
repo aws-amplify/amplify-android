@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
-import java.util.Map;
 import java.util.Set;
 
 /**
@@ -62,6 +61,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
 
     @Override
     public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
+        throw new UnsupportedOperationException("This operation is currently not supported.");
     }
 
     @Override
@@ -86,21 +86,27 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent) {
+    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent)
+            throws AnalyticsException {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }
     }
 
     @Override
-    public void registerGlobalProperties(Map<String, Object> properties) {
+    public void registerGlobalProperties(@NonNull Properties properties) {
+        throw new UnsupportedOperationException("This operation is currently not supported.");
     }
 
     @Override
-    public void unregisterGlobalProperties(Set<String> keys) {
+    public void unregisterGlobalProperties(@NonNull Set<String> keys) {
+        throw new UnsupportedOperationException("This operation is currently not supported.");
     }
 
     @Override
     public void flushEvents() {
+        if (enabled) {
+            getSelectedPlugin().flushEvents();
+        }
     }
 }

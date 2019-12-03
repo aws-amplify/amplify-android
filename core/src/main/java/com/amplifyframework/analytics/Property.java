@@ -16,18 +16,14 @@
 package com.amplifyframework.analytics;
 
 /**
- * Defines contract for different types of analytics event.
+ * Encapsulates a value of type T.
+ * @param <T> property type
  */
-public interface AnalyticsEvent {
-    /**
-     * Return event name.
-     * @return event name
-     */
-    String getName();
+public interface Property<T> {
 
     /**
-     * Return event properties.
-     * @return event properties
+     * Value of type T that is encapsulated by the class.
+     * @return property type
      */
-    Properties getProperties();
+    T getValue();
 }
