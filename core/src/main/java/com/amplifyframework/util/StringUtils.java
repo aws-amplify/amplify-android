@@ -15,8 +15,6 @@
 
 package com.amplifyframework.util;
 
-import android.text.TextUtils;
-
 import java.util.Locale;
 
 /**
@@ -35,7 +33,7 @@ public final class StringUtils {
      * @return camelCaseFormat formatted version of that string
      */
     public static String allCapsToCamelCase(String original) {
-        if (TextUtils.isEmpty(original)) {
+        if (original == null || original.length() == 0) {
             return original;
         }
 
@@ -51,7 +49,7 @@ public final class StringUtils {
      * @return PascalCaseFormat formatted version of that string
      */
     public static String allCapsToPascalCase(String original) {
-        if (TextUtils.isEmpty(original)) {
+        if (original == null || original.length() == 0) {
             return original;
         }
 

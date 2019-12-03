@@ -18,6 +18,7 @@ package com.amplifyframework.datastore;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.datastore.network.AppSyncApi;
 import com.amplifyframework.datastore.network.ModelWithMetadata;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -90,7 +91,7 @@ public class AppSyncApiTest {
         LatchedResponseStreamListener<ModelWithMetadata<Blog>> blogCreateSubscriptionListener =
                 new LatchedResponseStreamListener<>(1);
 
-        api.onCreate(
+        Cancelable subscription = api.onCreate(
                 apiName,
                 Blog.class,
                 blogCreateSubscriptionListener
@@ -107,6 +108,8 @@ public class AppSyncApiTest {
             blogCreateListener
         );
 
+        // Currently cannot do BlogOwner.justId because it will assign the id to the name field.
+        // This is being fixed
         ModelWithMetadata<Blog> blogCreateResult = blogCreateListener.awaitSuccessResponse();
         assertEquals(blog.getId(), blogCreateResult.getModel().getId());
         assertEquals(blog.getName(), blogCreateResult.getModel().getName());
@@ -117,10 +120,12 @@ public class AppSyncApiTest {
         assertTrue(blogCreateResult.getSyncMetadata().getLastChangedAt() > startTime);
         assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
 
+        // Validate that subscription picked up the mutation
         List<ModelWithMetadata<Blog>> blogCreateSubscriptionResult =
                 blogCreateSubscriptionListener.awaitSuccessfulResponses();
         assertEquals(1, blogCreateSubscriptionResult.size());
         assertEquals(blogCreateResult, blogCreateSubscriptionResult.get(0));
+        subscription.cancel();
 
         // Create Posts which Blog hasMany of
         LatchedSingleResponseListener<ModelWithMetadata<Post>> post1CreateListener =
@@ -209,10 +214,11 @@ public class AppSyncApiTest {
         LatchedSingleResponseListener<Iterable<ModelWithMetadata<Blog>>> blogSyncListener =
                 new LatchedSingleResponseListener<>();
 
+        // When you call sync with a null lastSync it gives only one entry per object (the latest state)
         api.sync(
                 apiName,
                 Blog.class,
-                startTime,
+                null,
                 blogSyncListener
         );
 
@@ -224,6 +230,8 @@ public class AppSyncApiTest {
         LatchedSingleResponseListener<Iterable<ModelWithMetadata<Post>>> postSyncListener =
                 new LatchedSingleResponseListener<>();
 
+        // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
+        // since that time.
         api.sync(
                 apiName,
                 Post.class,
