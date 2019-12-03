@@ -68,8 +68,9 @@ public interface AnalyticsCategoryBehavior {
      * Examples of global properties would be `selectedPlan`, `campaignSource`
      *
      * @param properties Map of global properties wrapped as an instance of {@link Properties}
+     * @throws AnalyticsException thrown if an error condition is encountered while registering global properties.
      */
-    void registerGlobalProperties(@NonNull Properties properties);
+    void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException;
 
     /**
      * Registered global properties can be unregistered though this method.

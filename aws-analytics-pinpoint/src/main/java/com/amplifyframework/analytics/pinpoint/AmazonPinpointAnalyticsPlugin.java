@@ -120,8 +120,18 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) {
-        throw new UnsupportedOperationException("This operation has not been implemented yet.");
+    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
+        for (Map.Entry<String, Property<?>> entry : properties.get().entrySet()) {
+            if (entry.getValue() instanceof StringProperty) {
+                analyticsClient.addGlobalAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
+            } else if (entry.getValue() instanceof DoubleProperty) {
+                analyticsClient.addGlobalMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
+            } else {
+                throw new AnalyticsException("Invalid property type detected.",
+                        "AmazonPinpointAnalyticsPlugin support only StringProperty or DoubleProperty." +
+                                "Refer tio the docuemntation for details.");
+            }
+        }
     }
 
     /**
@@ -129,7 +139,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        throw new UnsupportedOperationException("This operation has not been implemented yet.");
+        for (String key: keys) {
+            analyticsClient.removeGlobalAttribute(key);
+            analyticsClient.removeGlobalMetric(key);
+        }
     }
 
     /**
