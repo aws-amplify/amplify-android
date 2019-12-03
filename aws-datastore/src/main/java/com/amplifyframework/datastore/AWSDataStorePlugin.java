@@ -29,8 +29,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.network.ApiInterface;
-import com.amplifyframework.datastore.network.AppSyncApiInterface;
+import com.amplifyframework.datastore.network.AppSyncApi;
 import com.amplifyframework.datastore.network.SyncEngine;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -59,9 +58,6 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     // A utility to convert between StorageItemChange.Record and StorageItemChange
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
-    // A utility to call Amplify API with version information and retrieve sync information
-    private final ApiInterface apiInterface;
-
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
     private final SyncEngine syncEngine;
@@ -72,8 +68,11 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     private AWSDataStorePlugin(@NonNull final ModelProvider modelProvider) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.apiInterface = new AppSyncApiInterface();
-        this.syncEngine = new SyncEngine(Amplify.API, this::getApiName, modelProvider, sqliteStorageAdapter);
+        this.syncEngine = createSyncEngine(modelProvider, sqliteStorageAdapter);
+    }
+
+    private SyncEngine createSyncEngine(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
+        return new SyncEngine(modelProvider, storageAdapter, new AppSyncApi(Amplify.API), this::getApiName);
     }
 
     /**
@@ -81,6 +80,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * @param modelProvider Provider of models to be usable by plugin
      * @return the plugin instance for the model provider.
      */
+    @NonNull
     @SuppressWarnings("WeakerAccess")
     public static synchronized AWSDataStorePlugin forModels(@NonNull final ModelProvider modelProvider) {
         return new AWSDataStorePlugin(modelProvider);
@@ -89,6 +89,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public String getPluginKey() {
         return "awsDataStorePlugin";
@@ -174,6 +175,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @Nullable
     @Override
     public Void getEscapeHatch() {
         return null;
@@ -182,6 +184,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.DATASTORE;
