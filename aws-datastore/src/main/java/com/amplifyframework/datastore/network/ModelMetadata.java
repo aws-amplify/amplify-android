@@ -79,27 +79,45 @@ public final class ModelMetadata implements Model {
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
             return true;
-        } else if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        } else {
-            ModelMetadata metadata = (ModelMetadata) obj;
-            return ObjectsCompat.equals(getId(), metadata.getId()) &&
-                    ObjectsCompat.equals(isDeleted(), metadata.isDeleted()) &&
-                    ObjectsCompat.equals(getVersion(), metadata.getVersion()) &&
-                    ObjectsCompat.equals(getLastChangedAt(), metadata.getLastChangedAt());
         }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ModelMetadata metadata = (ModelMetadata) thatObject;
+
+        if (!ObjectsCompat.equals(id, metadata.id)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(_deleted, metadata._deleted)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(_version, metadata._version)) {
+            return false;
+        }
+        return ObjectsCompat.equals(_lastChangedAt, metadata._lastChangedAt);
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Override
+    public int hashCode() {
+        int result = id != null ? id.hashCode() : 0;
+        result = 31 * result + (_deleted != null ? _deleted.hashCode() : 0);
+        result = 31 * result + (_version != null ? _version.hashCode() : 0);
+        result = 31 * result + (_lastChangedAt != null ? _lastChangedAt.hashCode() : 0);
+        return result;
     }
 
     @Override
-    public int hashCode() {
-        return ObjectsCompat.hash(
-                getId(),
-                isDeleted(),
-                getVersion(),
-                getLastChangedAt()
-        );
+    public String toString() {
+        return "ModelMetadata{" +
+            "id='" + id + '\'' +
+            ", _deleted=" + _deleted +
+            ", _version=" + _version +
+            ", _lastChangedAt=" + _lastChangedAt +
+            '}';
     }
 }

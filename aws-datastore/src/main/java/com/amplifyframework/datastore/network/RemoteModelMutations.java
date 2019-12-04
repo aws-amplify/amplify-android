@@ -35,7 +35,7 @@ import java.util.Set;
 import io.reactivex.Emitter;
 import io.reactivex.Observable;
 
-class RemoteModelMutations {
+final class RemoteModelMutations {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final AppSyncEndpoint appSyncEndpoint;
