@@ -59,7 +59,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Configure category with provided AmplifyConfiguration object.
      * @param configuration Configuration for all plugins in the category
      * @param context An Android Context
-     * @throws AmplifyException if already configured or no config is found for a plugin
+     * @throws AmplifyException if already configured
      */
     public final void configure(CategoryConfiguration configuration, Context context)
             throws AmplifyException {
@@ -72,13 +72,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             String pluginKey = plugin.getPluginKey();
             JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
 
-            if (pluginConfig != null) {
-                plugin.configure(pluginConfig, context);
-            } else {
-                throw new AmplifyException("No configuration data was provided for " + pluginKey + ".",
-                        "Check the amplifyconfiguration.json file or, if you are configuring manually, " +
-                        "the config object you provided for the " + plugin.getCategoryType() + " category");
-            }
+            plugin.configure(pluginConfig, context);
         }
 
         isConfigured = true;

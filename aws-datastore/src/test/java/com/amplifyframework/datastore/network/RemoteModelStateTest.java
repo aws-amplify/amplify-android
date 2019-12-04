@@ -22,7 +22,6 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
-import com.amplifyframework.testutils.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -83,7 +82,6 @@ public final class RemoteModelStateTest {
             new ModelMetadata("28a02356-c560-4b63-b629-efc4b75b63c2", Boolean.TRUE, 12, 333222L)
         );
 
-    private String apiName;
     private AppSyncEndpoint endpoint;
     private ModelProvider modelProvider;
     private RemoteModelState remoteModelState;
@@ -96,10 +94,9 @@ public final class RemoteModelStateTest {
      */
     @Before
     public void setup() {
-        apiName = RandomString.string();
         endpoint = mock(AppSyncEndpoint.class);
         modelProvider = mock(ModelProvider.class);
-        remoteModelState = new RemoteModelState(endpoint, modelProvider, () -> apiName);
+        remoteModelState = new RemoteModelState(endpoint, modelProvider);
     }
 
     /**
@@ -154,8 +151,8 @@ public final class RemoteModelStateTest {
         Class<T> clazz, ModelWithMetadata<T>... responseItems) {
         doAnswer(invocation -> {
             // Get a handle to the listener that is passed into the sync() method
-            // ResultListener is the fourth and final param (@0, @1, @2, @3).
-            final int argumentPositionForResultListener = 3;
+            // ResultListener is the third and final param (@0, @1, @2).
+            final int argumentPositionForResultListener = 2;
             final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> listener =
                 invocation.getArgument(argumentPositionForResultListener);
 
@@ -166,7 +163,6 @@ public final class RemoteModelStateTest {
             // Return a NoOp cancelable via the sync() method's return.
             return new NoOpCancelable();
         }).when(endpoint).sync(
-            eq(apiName),
             eq(clazz),
             any(),
             any()

@@ -32,7 +32,6 @@ public interface AppSyncEndpoint {
     /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param <T> The type of data in the response. Must extend Model.
-     * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are querying on
      * @param lastSync The time you last synced - all changes since this time are retrieved.
      * @param responseListener Invoked when response data/errors are available.
@@ -40,14 +39,12 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable sync(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
             @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener);
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
-     * @param apiName The name of a configured API
      * @param model An instance of the Model with the values to mutate
      * @param responseListener Invoked when response data/errors are available.
      * @param <T> The type of data in the response. Must extend Model.
@@ -55,13 +52,11 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable create(
-            @NonNull String apiName,
             @NonNull T model,
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
-     * @param apiName The name of a configured API
      * @param model An instance of the Model with the values to mutate
      * @param version The version of the model we have
      * @param responseListener Invoked when response data/errors are available.
@@ -70,14 +65,12 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable update(
-            @NonNull String apiName,
             @NonNull T model,
             @NonNull Integer version,
             @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
-     * @param apiName The name of a configured API
      * @param clazz The class of the object being deleted
      * @param objectId ID id of the object to delete
      * @param version The version of the model we have
@@ -87,7 +80,6 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable delete(
-            @NonNull String apiName,
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
@@ -95,7 +87,6 @@ public interface AppSyncEndpoint {
 
     /**
      * Get notified when a create event happens on a given class.
-     * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are listening on
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
@@ -104,13 +95,11 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable onCreate(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
 
     /**
      * Get notified when an update event happens on a given class.
-     * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are listening on
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
@@ -119,13 +108,11 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable onUpdate(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
 
     /**
      * Get notified when a delete event happens on a given class.
-     * @param apiName The name of a configured API
      * @param modelClass The class of the Model we are listening on
      * @param subscriptionListener  A listener to receive notifications when new items are
      *                              available via the subscription stream
@@ -134,7 +121,6 @@ public interface AppSyncEndpoint {
      */
     @NonNull
     <T extends Model> Cancelable onDelete(
-            @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
 }

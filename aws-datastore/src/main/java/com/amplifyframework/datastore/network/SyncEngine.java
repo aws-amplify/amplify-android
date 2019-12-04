@@ -65,7 +65,6 @@ public final class SyncEngine {
 
     private final LocalStorageAdapter storageAdapter;
     private final AppSyncEndpoint appSyncEndpoint;
-    private final ConfiguredApiProvider apiNameProvider;
 
     private final RemoteModelMutations remoteModelMutations;
     private final StorageItemChangeJournal storageItemChangeJournal;
@@ -81,16 +80,13 @@ public final class SyncEngine {
      *                       durably store offline changes until
      *                       then can be written to the network
      * @param appSyncEndpoint An AppSync Endpoint
-     * @param apiNameProvider Provides the name of the configured AppSync endpoint API
      */
     public SyncEngine(
             @NonNull final ModelProvider modelProvider,
             @NonNull final LocalStorageAdapter storageAdapter,
-            @NonNull final AppSyncEndpoint appSyncEndpoint,
-            @NonNull final ConfiguredApiProvider apiNameProvider) {
-        this.apiNameProvider = Objects.requireNonNull(apiNameProvider);
+            @NonNull final AppSyncEndpoint appSyncEndpoint) {
         this.appSyncEndpoint = appSyncEndpoint;
-        this.remoteModelMutations = new RemoteModelMutations(appSyncEndpoint, apiNameProvider, modelProvider);
+        this.remoteModelMutations = new RemoteModelMutations(appSyncEndpoint, modelProvider);
         this.storageAdapter = Objects.requireNonNull(storageAdapter);
         this.storageItemChangeJournal = new StorageItemChangeJournal(storageAdapter);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
@@ -215,7 +211,6 @@ public final class SyncEngine {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
             appSyncEndpoint.create(
-                apiNameProvider.getDataStoreApiName(),
                 storageItemChange.item(),
                 new ResultListener<GraphQLResponse<ModelWithMetadata<MODEL>>>() {
                     @Override

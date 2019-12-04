@@ -16,6 +16,7 @@
 package com.amplifyframework.api;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOptions;
@@ -30,8 +31,8 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking GET HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an
-     * IllegalStateException.
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
+     * to the provided `ResultListener`.
      *
      * @param request GET request object.
      * @param responseListener
@@ -40,6 +41,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation get(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
@@ -56,6 +58,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions request,
@@ -65,8 +68,8 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking PUT HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an
-     * IllegalStateException.
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
+     * to the provided `ResultListener`.
      *
      * @param request PUT request object.
      * @param responseListener
@@ -75,6 +78,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation put(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
@@ -91,6 +95,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions request,
@@ -100,8 +105,8 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking POST HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an
-     * IllegalStateException.
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
+     * to the provided `ResultListener`.
      *
      * @param request POST request object.
      * @param responseListener
@@ -110,6 +115,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation post(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
@@ -126,6 +132,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions request,
@@ -135,8 +142,8 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking DELETE HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an
-     * IllegalStateException.
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
+     * to the provided `ResultListener`.
      *
      * @param request DELETE request object.
      * @param responseListener
@@ -145,6 +152,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation delete(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
@@ -161,6 +169,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions request,
@@ -170,8 +179,8 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking HEAD HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an
-     * IllegalStateException.
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
+     * to the provided `ResultListener`.
      *
      * @param request HEAD request object.
      * @param responseListener
@@ -180,6 +189,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation head(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
@@ -196,6 +206,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions request,
@@ -205,8 +216,8 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking PATCH HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, throws an
-     * IllegalStateException.
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
+     * to the provided `ResultListener`.
      *
      * @param request PATCH request object.
      * @param responseListener
@@ -215,6 +226,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation patch(
             @NonNull RestOptions request,
             @NonNull ResultListener<RestResponse> responseListener
@@ -231,6 +243,7 @@ public interface RestBehavior {
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
+    @Nullable
     RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions request,

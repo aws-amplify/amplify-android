@@ -52,7 +52,6 @@ public final class AWSDataStorePluginInstrumentedTest {
     private static final long NETWORK_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
-    private static String apiName;
 
     /**
      * Enable strict mode for catching SQLite leaks.
@@ -74,7 +73,6 @@ public final class AWSDataStorePluginInstrumentedTest {
     @BeforeClass
     public static void configureAmplify() throws AmplifyException {
         final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
-        apiName = testConfig.apiName();
         awsDataStorePlugin = testConfig.plugin();
         context = ApplicationProvider.getApplicationContext();
     }
@@ -181,21 +179,21 @@ public final class AWSDataStorePluginInstrumentedTest {
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
         LatchedSingleResponseListener<T> queryListener =
             new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.query(apiName, clazz, itemId, queryListener);
+        Amplify.API.query(clazz, itemId, queryListener);
         return queryListener.awaitSuccessResponse();
     }
 
     private <T extends Model> void createRemote(T item) {
         LatchedSingleResponseListener<T> createListener =
             new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.mutate(apiName, item, MutationType.CREATE, createListener);
+        Amplify.API.mutate(item, MutationType.CREATE, createListener);
         createListener.awaitSuccessResponse();
     }
 
     private <T extends Model> void updateRemote(T item) {
         LatchedSingleResponseListener<T> updateListener =
             new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.mutate(apiName, item, MutationType.UPDATE, updateListener);
+        Amplify.API.mutate(item, MutationType.UPDATE, updateListener);
         updateListener.awaitSuccessResponse();
     }
 }
