@@ -109,19 +109,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final StorageItemChange.Initiator initiator,
             @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener) {
 
-        while (items.iterator().hasNext()) {
-            Model next = items.iterator().next();
-            if (next.equals(item)) {
+        for (Model savedItem : items) {
+            if (savedItem.getId().equals(item.getId())) {
                 items.remove(item);
                 StorageItemChange.Record deletion = StorageItemChange.<T>builder()
-                    .item(item)
-                    .itemClass((Class<T>) item.getClass())
+                    .item((T) savedItem)
+                    .itemClass((Class<T>) savedItem.getClass())
                     .type(StorageItemChange.Type.DELETE)
                     .initiator(initiator)
                     .build()
                     .toRecord(storageItemChangeConverter);
-                itemDeletionListener.onResult(deletion);
                 changeRecordStream.onNext(deletion);
+                itemDeletionListener.onResult(deletion);
+                return;
             }
         }
     }
