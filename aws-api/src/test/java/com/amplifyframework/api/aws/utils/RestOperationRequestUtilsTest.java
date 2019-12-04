@@ -22,6 +22,7 @@ import org.junit.Test;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 
 import okhttp3.Request;
 
@@ -35,6 +36,7 @@ public final class RestOperationRequestUtilsTest {
 
     /**
      * Test if we can create a valid URL.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -50,6 +52,7 @@ public final class RestOperationRequestUtilsTest {
 
     /**
      * Test if we can create a valid URL with already existing path.
+     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
@@ -65,6 +68,7 @@ public final class RestOperationRequestUtilsTest {
 
     /**
      * Test creating a valid URL with queries.
+     *
      * @throws MalformedURLException Throws when the url is invalid.
      */
     @Test
@@ -83,6 +87,7 @@ public final class RestOperationRequestUtilsTest {
 
     /**
      * Test if exception is thrown on invalid URL.
+     *
      * @throws MalformedURLException Should throw since the URL is invalid.
      */
     @Test(expected = MalformedURLException.class)
@@ -94,6 +99,7 @@ public final class RestOperationRequestUtilsTest {
 
     /**
      * Test creates a Get request.
+     *
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
@@ -103,12 +109,14 @@ public final class RestOperationRequestUtilsTest {
                 null);
         Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
                 null,
+                null,
                 HttpMethod.GET);
         assertNotNull("Request should not be null", request);
     }
 
     /**
      * Test creates a Post request.
+     *
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
@@ -118,7 +126,29 @@ public final class RestOperationRequestUtilsTest {
                 null);
         Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
                 null,
+                null,
                 HttpMethod.POST);
         assertNotNull("Request should not be null", request);
+    }
+
+    /**
+     * Test creates a Post request with headers.
+     *
+     * @throws MalformedURLException Throws when the URL is invalid.
+     */
+    @Test
+    public void createPostRequestWithHeaders() throws MalformedURLException {
+        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com",
+                "path/to/path",
+                null);
+
+        final Map<String, String> headers = new HashMap<>();
+        headers.put("key1", "value1");
+        Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
+                null,
+                headers,
+                HttpMethod.POST);
+        assertNotNull("Request should not be null", request);
+        assertEquals("Header values should be set", "value1", request.header("key1"));
     }
 }
