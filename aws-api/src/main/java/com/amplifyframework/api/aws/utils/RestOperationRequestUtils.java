@@ -21,6 +21,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
 
+import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -78,11 +79,13 @@ public final class RestOperationRequestUtils {
      *
      * @param url         URL endpoint to make the request
      * @param requestData Data for the request
+     * @param headers     Header map for th request
      * @param type        Rest operation type
      * @return Returns the request
      */
     public static Request constructOKHTTPRequest(final URL url,
                                                  final byte[] requestData,
+                                                 final Map<String, String> headers,
                                                  final HttpMethod type) {
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url)
@@ -117,6 +120,9 @@ public final class RestOperationRequestUtils {
                 break;
             default:
                 break;
+        }
+        if (headers != null) {
+            requestBuilder.headers(Headers.of(headers));
         }
         return requestBuilder.build();
     }

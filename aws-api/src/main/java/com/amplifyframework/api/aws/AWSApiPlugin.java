@@ -654,6 +654,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 operationRequest = new RestOperationRequest(
                         type,
                         options.getPath(),
+                        options.getHeaders(),
                         options.getQueryParameters());
                 break;
             case PUT:
@@ -663,6 +664,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                         type,
                         options.getPath(),
                         options.getData(),
+                        options.getHeaders(),
                         options.getQueryParameters());
                 break;
             default:

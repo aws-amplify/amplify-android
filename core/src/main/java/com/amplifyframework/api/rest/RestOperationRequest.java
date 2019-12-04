@@ -29,6 +29,7 @@ public final class RestOperationRequest {
     private final HttpMethod httpMethod;
     private final String path;
     private final byte[] data;
+    private final Map<String, String> headers;
     private final Map<String, String> queryParameters;
 
     /**
@@ -36,14 +37,17 @@ public final class RestOperationRequest {
      * @param httpMethod The rest operation type
      * @param path Path against which the request is made.
      * @param data Data for the rest option
+     * @param headers Header map for the request
      * @param queryParameters Query parameters for the request.
      */
     public RestOperationRequest(HttpMethod httpMethod,
                                 String path,
                                 byte[] data,
+                                Map<String, String> headers,
                                 Map<String, String> queryParameters) {
         this.httpMethod = httpMethod;
         this.path = path;
+        this.headers = headers == null ? Collections.emptyMap() : Immutable.of(headers);
         this.data = data == null ? null : Arrays.copyOf(data, data.length);
         this.queryParameters = queryParameters == null ? Collections.emptyMap() : Immutable.of(queryParameters);
     }
@@ -52,12 +56,14 @@ public final class RestOperationRequest {
      * Constructs a request object for RestOperation.
      * @param httpMethod The rest operation type
      * @param path Path against which the request is made.
+     * @param headers Header map for the request.
      * @param queryParameters Query parameters for the request.
      */
     public RestOperationRequest(HttpMethod httpMethod,
                                 String path,
+                                Map<String, String> headers,
                                 Map<String, String> queryParameters) {
-        this(httpMethod, path, null, queryParameters);
+        this(httpMethod, path, null, headers, queryParameters);
     }
 
     /**
@@ -90,5 +96,13 @@ public final class RestOperationRequest {
      */
     public byte[] getData() {
         return data;
+    }
+
+    /**
+     * Returns the headers if present.
+     * @return Header map, null if not present
+     */
+    public Map<String, String> getHeaders() {
+        return headers;
     }
 }

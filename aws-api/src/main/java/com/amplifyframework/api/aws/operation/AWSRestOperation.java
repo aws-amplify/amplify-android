@@ -76,6 +76,7 @@ public final class AWSRestOperation extends RestOperation {
                     getRequest().getQueryParameters());
             Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
                     getRequest().getData(),
+                    getRequest().getHeaders(),
                     getRequest().getHttpMethod());
             ongoingCall = client.newCall(request);
             ongoingCall.enqueue(new AWSRestOperation.OkHttpCallback());
