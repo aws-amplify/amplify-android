@@ -77,7 +77,7 @@ jobs:
     docker:
       - image: circleci/android@sha256:5cdc8626cc6f13efe5ed982cdcdb432b0472f8740fed8743a6461e025ad6cdfc
     environment:
-      JVM_OPTS: -Xmx3200m
+      JVM_OPTS: -Xmx4096m
     steps:
       - checkout
       - generate_gradle_wrapper
