@@ -15,9 +15,12 @@
 
 package com.amplifyframework.datastore.network;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
+
+import java.util.Objects;
 
 /**
  * Container class to hold an instance of an object with it's metadata.
@@ -32,15 +35,16 @@ public final class ModelWithMetadata<M extends Model> {
      * @param model An instance of a model
      * @param syncMetadata The metadata for this model about it's synchronization history.
      */
-    public ModelWithMetadata(M model, ModelMetadata syncMetadata) {
-        this.model = model;
-        this.syncMetadata = syncMetadata;
+    public ModelWithMetadata(@NonNull M model, @NonNull ModelMetadata syncMetadata) {
+        this.model = Objects.requireNonNull(model);
+        this.syncMetadata = Objects.requireNonNull(syncMetadata);
     }
 
     /**
      * Get the model instance.
      * @return the model instance
      */
+    @NonNull
     public M getModel() {
         return model;
     }
@@ -49,28 +53,41 @@ public final class ModelWithMetadata<M extends Model> {
      * Get the sync/version metadata for the model instance.
      * @return the sync/version metadata
      */
+    @NonNull
     public ModelMetadata getSyncMetadata() {
         return syncMetadata;
     }
 
     @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
             return true;
-        } else if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        } else {
-            ModelWithMetadata<?> modelWithMetadata = (ModelWithMetadata) obj;
-            return ObjectsCompat.equals(getModel(), modelWithMetadata.getModel()) &&
-                    ObjectsCompat.equals(getSyncMetadata(), modelWithMetadata.getSyncMetadata());
         }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        ModelWithMetadata<?> that = (ModelWithMetadata<?>) thatObject;
+
+        if (!ObjectsCompat.equals(model, that.model)) {
+            return false;
+        }
+        return ObjectsCompat.equals(syncMetadata, that.syncMetadata);
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Override
+    public int hashCode() {
+        int result = model != null ? model.hashCode() : 0;
+        result = 31 * result + (syncMetadata != null ? syncMetadata.hashCode() : 0);
+        return result;
     }
 
     @Override
-    public int hashCode() {
-        return ObjectsCompat.hash(
-                getModel(),
-                getSyncMetadata()
-        );
+    public String toString() {
+        return "ModelWithMetadata{" +
+            "model=" + model +
+            ", syncMetadata=" + syncMetadata +
+            '}';
     }
 }
