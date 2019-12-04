@@ -144,7 +144,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return query(apiName, modelClass, responseListener);
@@ -162,7 +161,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return query(apiName, modelClass, objectId, responseListener);
@@ -180,7 +178,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return query(apiName, modelClass, predicate, responseListener);
@@ -197,7 +194,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return query(apiName, graphQLRequest, responseListener);
@@ -276,7 +272,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return mutate(apiName, model, mutationType, responseListener);
@@ -295,7 +290,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return mutate(apiName, model, predicate, mutationType, responseListener);
@@ -312,7 +306,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return mutate(apiName, graphQlRequest, responseListener);
@@ -349,7 +342,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return mutate(apiName, request, responseListener);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
     }
@@ -379,7 +371,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             subscriptionListener.onError(exception);
-
             return null;
         }
         return subscribe(apiName, modelClass, subscriptionType, subscriptionListener);
@@ -396,7 +387,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
             subscriptionListener.onError(exception);
-
             return null;
         }
         return subscribe(apiName, graphQLRequest, subscriptionListener);
@@ -421,7 +411,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         } catch (ApiException exception) {
             subscriptionListener.onError(exception);
-
             return null;
         }
     }
@@ -442,7 +431,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                             "is a correctly configured section for " + apiName
                     )
             );
-
             return null;
         }
 
@@ -469,7 +457,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return get(apiName, options, responseListener);
@@ -506,7 +493,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return put(apiName, options, responseListener);
@@ -542,7 +528,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return post(apiName, options, responseListener);
@@ -578,7 +563,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return delete(apiName, options, responseListener);
@@ -614,7 +598,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return head(apiName, options, responseListener);
@@ -650,7 +633,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
             responseListener.onError(exception);
-
             return null;
         }
         return patch(apiName, options, responseListener);
