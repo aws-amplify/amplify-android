@@ -44,7 +44,6 @@ import static org.junit.Assert.assertTrue;
 @SuppressWarnings("magicnumber")
 public class AppSyncApiTest {
     private static AppSyncApi api;
-    private static String apiName;
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -52,9 +51,8 @@ public class AppSyncApiTest {
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
-        final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
+        TestConfiguration.configureIfNotConfigured();
         api = new AppSyncApi(Amplify.API);
-        apiName = testConfig.apiName();
     }
 
     /**
@@ -74,7 +72,6 @@ public class AppSyncApiTest {
         BlogOwner owner = BlogOwner.builder().name("David").build();
 
         api.create(
-            apiName,
             owner,
                 blogOwnerCreateListener
         );
@@ -92,7 +89,6 @@ public class AppSyncApiTest {
                 new LatchedResponseStreamListener<>(1);
 
         Cancelable subscription = api.onCreate(
-                apiName,
                 Blog.class,
                 blogCreateSubscriptionListener
         );
@@ -103,7 +99,6 @@ public class AppSyncApiTest {
         Blog blog = Blog.builder().name("Create test").owner(owner).build();
 
         api.create(
-            apiName,
             blog,
             blogCreateListener
         );
@@ -137,13 +132,11 @@ public class AppSyncApiTest {
         Post post2 = Post.builder().title("Post 2").status(PostStatus.INACTIVE).rating(-1).blog(blog).build();
 
         api.create(
-                apiName,
                 post1,
                 post1CreateListener
         );
 
         api.create(
-                apiName,
                 post2,
                 post2CreateListener
         );
@@ -162,7 +155,6 @@ public class AppSyncApiTest {
         Long updateBlogStartTime = new Date().getTime();
 
         api.update(
-                apiName,
                 updatedBlog,
                 1,
                 blogUpdateListener
@@ -183,7 +175,6 @@ public class AppSyncApiTest {
                 new LatchedSingleResponseListener<>();
 
         api.delete(
-                apiName,
                 Post.class,
                 post1.getId(),
                 1,
@@ -199,7 +190,6 @@ public class AppSyncApiTest {
                 new LatchedSingleResponseListener<>();
 
         api.delete(
-                apiName,
                 Post.class,
                 post2.getId(),
                 0,
@@ -216,7 +206,6 @@ public class AppSyncApiTest {
 
         // When you call sync with a null lastSync it gives only one entry per object (the latest state)
         api.sync(
-                apiName,
                 Blog.class,
                 null,
                 blogSyncListener
@@ -233,7 +222,6 @@ public class AppSyncApiTest {
         // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
         // since that time.
         api.sync(
-                apiName,
                 Post.class,
                 startTime,
                 postSyncListener

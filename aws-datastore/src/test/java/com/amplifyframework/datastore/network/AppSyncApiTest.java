@@ -23,7 +23,6 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.LatchedSingleResponseListener;
-import com.amplifyframework.testutils.RandomString;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -40,7 +39,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -51,7 +49,6 @@ import static org.mockito.Mockito.verify;
 @RunWith(RobolectricTestRunner.class)
 public final class AppSyncApiTest {
 
-    private String apiName;
     private ApiCategoryBehavior api;
     private AppSyncEndpoint endpoint;
 
@@ -62,7 +59,6 @@ public final class AppSyncApiTest {
      */
     @Before
     public void setup() {
-        this.apiName = RandomString.string();
         this.api = mock(ApiCategoryBehavior.class);
         this.endpoint = new AppSyncApi(api);
 
@@ -76,16 +72,16 @@ public final class AppSyncApiTest {
      * @throws JSONException On bad request JSON found in API category call
      */
     @Test
-    public void validateBasSyncQueryGen() throws JSONException {
+    public void validateBaseSyncQueryGen() throws JSONException {
         // Request a sync.
         final SyncListener<BlogOwner> syncListener = SyncListener.instance();
-        endpoint.sync(apiName, BlogOwner.class, null, syncListener);
+        endpoint.sync(BlogOwner.class, null, syncListener);
         syncListener.awaitSuccessResponse();
 
         // Now, capture the request argument on API, so we can see what was passed.
         // Recall that we pass a raw doc to API.
         ArgumentCaptor<GraphQLRequest<String>> requestCaptor = ArgumentCaptor.forClass(GraphQLRequest.class);
-        verify(api).query(eq(apiName), requestCaptor.capture(), any(ResultListener.class));
+        verify(api).query(requestCaptor.capture(), any(ResultListener.class));
         GraphQLRequest<String> capturedRequest = requestCaptor.getValue();
 
         assertEquals(String.class, capturedRequest.getModelClass());
@@ -107,13 +103,12 @@ public final class AppSyncApiTest {
      */
     private void mockApiResponse(GraphQLResponse<Iterable<String>> arrangedApiResponse) {
         doAnswer(invocation -> {
-            final int argPositionOfResultListener = 2; // third and final arg, starting from arg 0
+            final int argPositionOfResultListener = 1; // second and final arg, starting from arg 0
             ResultListener<GraphQLResponse<Iterable<String>>> listener =
                 invocation.getArgument(argPositionOfResultListener);
             listener.onResult(arrangedApiResponse);
             return mock(GraphQLOperation.class);
         }).when(api).query(
-            eq(apiName),
             any(GraphQLRequest.class),
             any(ResultListener.class)
         );

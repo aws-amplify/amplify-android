@@ -38,15 +38,12 @@ import io.reactivex.schedulers.Schedulers;
 final class RemoteModelState {
     private final AppSyncEndpoint endpoint;
     private final ModelProvider modelProvider;
-    private final ConfiguredApiProvider configuredApiProvider;
 
     RemoteModelState(
             AppSyncEndpoint endpoint,
-            ModelProvider modelProvider,
-            ConfiguredApiProvider configuredApiProvider) {
+            ModelProvider modelProvider) {
         this.endpoint = endpoint;
         this.modelProvider = modelProvider;
-        this.configuredApiProvider = configuredApiProvider;
     }
 
     /**
@@ -71,15 +68,8 @@ final class RemoteModelState {
             final Class<T> modelClazz,
             @SuppressWarnings("SameParameterValue") @Nullable final Long lastSync) {
         return Single.create(emitter -> {
-            final String apiName;
-            try {
-                apiName = configuredApiProvider.getDataStoreApiName();
-            } catch (DataStoreException noApiConfiguredException) {
-                emitter.onError(noApiConfiguredException);
-                return;
-            }
             final Cancelable cancelable =
-                endpoint.sync(apiName, modelClazz, lastSync, new MetadataEmitter<>(emitter));
+                endpoint.sync(modelClazz, lastSync, new MetadataEmitter<>(emitter));
             emitter.setDisposable(asDisposable(cancelable));
         });
     }

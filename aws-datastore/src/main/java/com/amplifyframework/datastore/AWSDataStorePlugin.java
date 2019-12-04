@@ -72,7 +72,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     }
 
     private SyncEngine createSyncEngine(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
-        return new SyncEngine(modelProvider, storageAdapter, new AppSyncApi(Amplify.API), this::getApiName);
+        return new SyncEngine(modelProvider, storageAdapter, new AppSyncApi(Amplify.API));
     }
 
     /**
@@ -101,7 +101,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @SuppressLint("CheckResult")
     @Override
     public void configure(
-            @NonNull JSONObject pluginConfigurationJson,
+            @Nullable JSONObject pluginConfigurationJson,
             @NonNull Context context) throws DataStoreException {
         try {
             this.pluginConfiguration =
@@ -152,16 +152,6 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
                 }
             })
         ));
-    }
-
-    private String getApiName() throws DataStoreException {
-        if (pluginConfiguration == null) {
-            throw new DataStoreException(
-                    "Tried to get API name, but plugin is not yet configured.",
-                    "Make sure to call Amplify.configure before using the plugin."
-            );
-        }
-        return pluginConfiguration.getApiName();
     }
 
     /**

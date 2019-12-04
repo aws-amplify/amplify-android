@@ -24,7 +24,6 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.LatchedResultListener;
-import com.amplifyframework.testutils.RandomString;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -36,7 +35,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -61,10 +59,9 @@ public class SyncEngineTest {
     public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException {
         ShadowLog.stream = System.out;
         AppSyncEndpoint endpoint = mock(AppSyncEndpoint.class);
-        String apiName = RandomString.string();
         LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = mock(ModelProvider.class);
-        SyncEngine syncEngine = new SyncEngine(modelProvider, localStorageAdapter, endpoint, () -> apiName);
+        SyncEngine syncEngine = new SyncEngine(modelProvider, localStorageAdapter, endpoint);
 
         // Arrange: storage engine is running
         syncEngine.start();
@@ -78,7 +75,7 @@ public class SyncEngineTest {
         doAnswer(invocation -> {
             apiInvoked.countDown();
             return null;
-        }).when(endpoint).create(anyString(), any(), any());
+        }).when(endpoint).create(any(), any());
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         LatchedResultListener<StorageItemChange.Record> listener =
