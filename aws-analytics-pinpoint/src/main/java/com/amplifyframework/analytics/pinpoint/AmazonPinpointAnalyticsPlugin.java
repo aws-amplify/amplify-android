@@ -108,8 +108,8 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                     pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
                 } else {
                     throw new AnalyticsException("Invalid property type detected.",
-                            "AmazonPinpointAnalyticsPlugin support only StringProperty or DoubleProperty." +
-                                    "Refer tio the docuemntation for details.");
+                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
+                                    "Refer to the docuemntation for details.");
                 }
             }
         }
