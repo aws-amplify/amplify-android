@@ -480,7 +480,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
-     * Assert that save stores item in the SQLite database correctly.
+     * Assert that delete deletes item in the SQLite database correctly.
      * @throws DataStoreException from possible underlying DataStore exceptions
      */
     @Test
@@ -497,6 +497,39 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         // Get the BlogOwner record from the database
         Iterator<BlogOwner> iterator = queryModel(BlogOwner.class);
         assertFalse(iterator.hasNext());
+    }
+
+    /**
+     * Assert that delete deletes item in the SQLite database without
+     * violating foreign key constraints.
+     * @throws DataStoreException from possible underlying DataStore exceptions
+     */
+    @Test
+    public void deleteModelCascades() throws DataStoreException {
+        // Triggers an insert
+        final BlogOwner raphael = BlogOwner.builder()
+                .name("Raphael Kim")
+                .build();
+        saveModel(raphael);
+
+        // Triggers a foreign key constraint check
+        final Blog raphaelsBlog = Blog.builder()
+                .name("Raphael's Blog")
+                .owner(raphael)
+                .build();
+        saveModel(raphaelsBlog);
+
+        // Triggers a delete
+        // Deletes Raphael's Blog also to prevent foreign key violation
+        deleteModel(raphael);
+
+        // Get the BlogOwner record from the database
+        Iterator<BlogOwner> blogOwnerterator = queryModel(BlogOwner.class);
+        assertFalse(blogOwnerterator.hasNext());
+
+        // Get the Blog record from the database
+        Iterator<Blog> blogIterator = queryModel(Blog.class);
+        assertFalse(blogIterator.hasNext());
     }
 
     private <T extends Model> T saveModel(@NonNull T model) throws DataStoreException {
