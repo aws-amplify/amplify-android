@@ -57,7 +57,7 @@ import java.util.concurrent.Executors;
  * repository.
  */
 public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
-    private static final String AWS_S3_STORAGE_PLUGIN_KEY = "AWSS3StoragePlugin";
+    private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
     private AWSS3StorageService storageService;
     private final ExecutorService executorService;
     private StorageAccessLevel defaultAccessLevel;
@@ -258,12 +258,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         /**
          * The S3 bucket this plugin will work with.
          */
-        BUCKET("Bucket"),
+        BUCKET("bucket"),
 
         /**
          * The AWS region this plugin will work with.
          */
-        REGION("Region");
+        REGION("region");
 
         /**
          * The key this property is listed under in the config JSON.
