@@ -31,7 +31,7 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking GET HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
      * to the provided `ResultListener`.
      *
      * @param request GET request object.
@@ -68,7 +68,7 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking PUT HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
      * to the provided `ResultListener`.
      *
      * @param request PUT request object.
@@ -105,7 +105,7 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking POST HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
      * to the provided `ResultListener`.
      *
      * @param request POST request object.
@@ -142,7 +142,7 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking DELETE HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
      * to the provided `ResultListener`.
      *
      * @param request DELETE request object.
@@ -179,7 +179,7 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking HEAD HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
      * to the provided `ResultListener`.
      *
      * @param request HEAD request object.
@@ -216,7 +216,7 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking PATCH HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
      * to the provided `ResultListener`.
      *
      * @param request PATCH request object.

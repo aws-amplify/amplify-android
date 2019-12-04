@@ -44,7 +44,7 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param modelClass The class of the Model we are querying on
      * @param responseListener Invoked when response data/errors are available.
@@ -67,7 +67,7 @@ public interface GraphQlBehavior {
      * the response listener, and via {@link HubCategory}.  If there is data
      * present in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param modelClass The class of the Model we are querying on
      * @param objectId The unique ID of the object you want to get
@@ -92,7 +92,7 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param modelClass The class of the Model we are querying on
      * @param predicate Filtering conditions for the query
@@ -114,7 +114,7 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data present
      * in the response, it will be cast as the requested class type.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param graphQlRequest Wrapper for request details
      * @param responseListener Invoked when response data/errors are available.
@@ -226,7 +226,7 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
      * type. Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param model An instance of the Model with the values to mutate
      * @param mutationType  What type of mutation to perform (e.g. Create, Update, Delete)
@@ -251,7 +251,7 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
      * type. Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param model An instance of the Model with the values to mutate
      * @param predicate Conditions on the current data to determine whether to go through
@@ -276,7 +276,7 @@ public interface GraphQlBehavior {
      * to the response listener, and via Hub.  If there is data
      * present in the response, it will be cast as the requested class
      * type. Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param graphQlRequest Wrapper for request details
      * @param responseListener Invoked when response data/errors are available.
@@ -372,7 +372,7 @@ public interface GraphQlBehavior {
      * The subscription may be canceled by calling
      * {@link GraphQLOperation#cancel()}.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param modelClass The class of the Model we are subscribing to
      * @param subscriptionType What type of subscription to listen for (e.g. OnCreate, OnUpdate, OnDelete)
@@ -395,7 +395,7 @@ public interface GraphQlBehavior {
      * The subscription may be canceled by calling
      * {@link GraphQLOperation#cancel()}.
      * Requires that only one API is configured in your
-     * `amplifyconfigurationl.json`. Otherwise, emits an ApiException to
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
      * the provided `ResultListener`.
      * @param graphQlRequest Wrapper for request details
      * @param subscriptionListener
