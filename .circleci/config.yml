@@ -27,7 +27,7 @@ commands:
       - run:
           name: configure aws profile
           command: |
-            aws configure --profile amplify_sdk_test set region us-east-1
+            aws configure --profile amplify_sdk_test set region us-west-2
             echo -e "[amplify_sdk_test]\naws_access_key_id=${AWS_ACCESS_KEY_ID_TEST}\naws_secret_access_key=${AWS_SECRET_ACCESS_KEY_TEST}\n" >> ~/.aws/credentials
   setup_emulator:
     description: >-
