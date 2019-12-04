@@ -381,7 +381,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append("REFERENCES")
                     .append(SqlKeyword.DELIMITER)
                     .append(connectedType)
-                    .append("(" + connectedId + ")");
+                    .append("(" + connectedId + ")")
+                    .append(SqlKeyword.DELIMITER)
+                    .append("ON DELETE CASCADE");
 
             if (foreignKeyIterator.hasNext()) {
                 builder.append(",").append(SqlKeyword.DELIMITER);
