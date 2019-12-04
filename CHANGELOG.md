@@ -1,4 +1,4 @@
-# Amplify for Android (Beta) - CHANGELOG
+# Amplify for Android (Preview) - CHANGELOG
 
 A declarative library for application development using cloud services.
 
