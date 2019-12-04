@@ -73,7 +73,7 @@ public class AppSyncApiTest {
 
         api.create(
             owner,
-                blogOwnerCreateListener
+            blogOwnerCreateListener
         );
 
         ModelWithMetadata<BlogOwner> blogOwnerCreateResult = blogOwnerCreateListener.awaitSuccessResponse();
@@ -81,7 +81,6 @@ public class AppSyncApiTest {
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
         // TODO: BE AWARE THAT THE DELETED PROPERTY RETURNS NULL INSTEAD OF FALSE
         assertNull(blogOwnerCreateResult.getSyncMetadata().isDeleted());
-        assertTrue(new Date().getTime() > blogOwnerCreateResult.getSyncMetadata().getLastChangedAt());
         assertEquals(owner.getId(), blogOwnerCreateResult.getSyncMetadata().getId());
 
         // Create model with BelongsTo relationship and a subscriber listening for the creation
@@ -111,7 +110,6 @@ public class AppSyncApiTest {
         assertEquals(blog.getOwner().getId(), blogCreateResult.getModel().getOwner().getId());
         assertEquals(new Integer(1), blogCreateResult.getSyncMetadata().getVersion());
         assertNull(blogCreateResult.getSyncMetadata().isDeleted());
-        assertTrue(new Date().getTime() > blogCreateResult.getSyncMetadata().getLastChangedAt());
         assertTrue(blogCreateResult.getSyncMetadata().getLastChangedAt() > startTime);
         assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
 
@@ -167,7 +165,6 @@ public class AppSyncApiTest {
         assertEquals(2, blogUpdateResult.getModel().getPosts().size());
         assertEquals(new Integer(2), blogUpdateResult.getSyncMetadata().getVersion());
         assertNull(blogUpdateResult.getSyncMetadata().isDeleted());
-        assertTrue(new Date().getTime() > blogUpdateResult.getSyncMetadata().getLastChangedAt());
         assertTrue(blogUpdateResult.getSyncMetadata().getLastChangedAt() > updateBlogStartTime);
 
         // Delete one of the posts
