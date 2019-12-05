@@ -76,8 +76,9 @@ jobs:
     working_directory: ~/amplify-android-home
     docker:
       - image: circleci/android@sha256:5cdc8626cc6f13efe5ed982cdcdb432b0472f8740fed8743a6461e025ad6cdfc
+    resource_class: xlarge
     environment:
-      JVM_OPTS: -Xmx4096m
+      JVM_OPTS: -Xmx3200m
     steps:
       - checkout
       - generate_gradle_wrapper
