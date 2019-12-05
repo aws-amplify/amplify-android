@@ -88,8 +88,7 @@ public final class RestOperationRequestUtils {
                                                  final Map<String, String> headers,
                                                  final HttpMethod type) {
         Request.Builder requestBuilder = new Request.Builder()
-                .url(url)
-                .addHeader("content-type", CONTENT_TYPE);
+                .url(url);
         switch (type) {
             case GET:
                 requestBuilder.get();
