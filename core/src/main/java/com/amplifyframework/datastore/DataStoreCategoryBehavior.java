@@ -18,13 +18,11 @@ package com.amplifyframework.datastore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
-import java.util.Iterator;
-
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 
 /**
@@ -40,51 +38,50 @@ public interface DataStoreCategoryBehavior {
     /**
      * Saves an item into the DataStore.
      * @param item An item to save
-     * @param saveItemListener
-     *        An optional listener which will be callback'd when the save succeeds or fails
-     * @param <T> The time of item being saved
+     * @param <T> The type of item being saved
+     * @return A Completable which fires success or failure depending on the
+     *         result of the save operation.
      */
-    <T extends Model> void save(
-            @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
+    @NonNull
+    <T extends Model> Completable save(@NonNull T item);
 
     /**
      * Deletes an item from the DataStore.
      * @param item An item to delete from the DataStore
-     * @param deleteItemListener
-     *        An optional listener which will be invoked when the deletion succeeds or fails
      * @param <T> The type of item being deleted
+     * @return A Completable which fires success or failure depending on the
+     *         result of the delete operation.
      */
-    <T extends Model> void delete(
-            @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener);
+    @NonNull
+    <T extends Model> Completable delete(@NonNull T item);
 
     /**
      * Query the DataStore to find all items of the requested Java class.
      * @param itemClass Items of this class will be targeted by this query
-     * @param queryResultsListener
-     *        An optional listener which will be invoked when the query returns
-     *        results, or if there is a failure to query
      * @param <T> The type of items being queried
+     * @return An observable stream of query results. The query will not begin until
+     *         the observable is subscribed. The observable fires onComplete when all
+     *         query results have been emitted. The observable will terminate with an
+     *         error, in case of any issues while handling the query.
      */
-    <T extends Model> void query(
-            @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener);
+    @NonNull
+    <T extends Model> Observable<T> query(@NonNull Class<T> itemClass);
 
     /**
      * Query the DataStore to find all items of the requested Java class that fulfills the
      * predicate.
      * @param itemClass Items of this class will be targeted by this query
      * @param predicate Predicate condition to apply to query
-     * @param queryResultsListener
-     *        An optional listener which will be invoked when the query returns
-     *        results, or if there is a failure to query
      * @param <T> The type of items being queried
+     * @return An observable stream of query results. The query will not begin until
+     *         the observable is subscribed. The observable fires onComplete when all
+     *         query results have been emitted. The observable will terminate with an
+     *         error, in case of any issues while handling the query.
      */
-    <T extends Model> void query(@NonNull Class<T> itemClass,
-                                 @Nullable QueryPredicate predicate,
-                                 @NonNull ResultListener<Iterator<T>> queryResultsListener);
-
+    @NonNull
+    <T extends Model> Observable<T> query(
+            @NonNull Class<T> itemClass,
+            @Nullable QueryPredicate predicate);
 
     /**
      * Observe all changes to any/all item(s) in the DataStore.

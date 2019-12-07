@@ -18,14 +18,12 @@ package com.amplifyframework.datastore;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
-import java.util.Iterator;
-
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 
 /**
@@ -42,6 +40,7 @@ public class DataStoreCategory
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.DATASTORE;
@@ -50,38 +49,37 @@ public class DataStoreCategory
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void save(@NonNull T object,
-                                       @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
-        getSelectedPlugin().save(object, saveItemListener);
+    public <T extends Model> Completable save(@NonNull T object) {
+        return getSelectedPlugin().save(object);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void delete(@NonNull T object,
-                                         @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
-        getSelectedPlugin().delete(object, deleteItemListener);
+    public <T extends Model> Completable delete(@NonNull T object) {
+        return getSelectedPlugin().delete(object);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
-        getSelectedPlugin().query(itemClass, queryResultsListener);
+    public <T extends Model> Observable<T> query(@NonNull Class<T> itemClass) {
+        return getSelectedPlugin().query(itemClass);
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        @Nullable QueryPredicate predicate,
-                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
-        getSelectedPlugin().query(itemClass, predicate, queryResultsListener);
+    public <T extends Model> Observable<T> query(@NonNull Class<T> itemClass, @Nullable QueryPredicate predicate) {
+        return getSelectedPlugin().query(itemClass, predicate);
     }
 
     /**

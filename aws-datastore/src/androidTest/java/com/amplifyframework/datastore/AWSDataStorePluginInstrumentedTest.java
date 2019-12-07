@@ -25,7 +25,6 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.LatchedResultListener;
 import com.amplifyframework.testutils.LatchedSingleResponseListener;
 import com.amplifyframework.testutils.Sleep;
 
@@ -34,11 +33,11 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the functions of {@link com.amplifyframework.datastore.AWSDataStorePlugin}.
@@ -142,10 +141,9 @@ public final class AWSDataStorePluginInstrumentedTest {
     }
 
     private <T extends Model> void saveLocal(T item) {
-        LatchedResultListener<DataStoreItemChange<T>> saveListener =
-            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
-        Amplify.DataStore.save(item, saveListener);
-        saveListener.awaitResult();
+        final boolean didSave = Amplify.DataStore.save(item)
+            .blockingAwait(DATA_STORE_OP_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(didSave);
     }
 
     /**
@@ -160,19 +158,10 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     private <T extends Model> T getLocal(
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedResultListener<Iterator<T>> queryResultsListener =
-            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
-        Amplify.DataStore.query(clazz, queryResultsListener);
-
-        final Iterator<T> iterator = queryResultsListener.awaitResult();
-        while (iterator.hasNext()) {
-            T value = iterator.next();
-            if (value.getId().equals(itemId)) {
-                return value;
-            }
-        }
-
-        throw new NoSuchElementException("No item in DataStore with class = " + clazz + " and id = " + itemId);
+        return Amplify.DataStore.query(clazz)
+            .filter(item -> item.getId().equals(itemId))
+            .firstOrError()
+            .blockingGet();
     }
 
     private <T extends Model> T getRemote(

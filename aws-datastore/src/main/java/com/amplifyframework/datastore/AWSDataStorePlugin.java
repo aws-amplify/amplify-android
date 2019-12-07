@@ -41,7 +41,10 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.List;
 
+import io.reactivex.Completable;
+import io.reactivex.CompletableEmitter;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -183,44 +186,49 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void save(
-            @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
-        sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
-            new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
+    public <T extends Model> Completable save(@NonNull T item) {
+        return Completable.defer(() -> Completable.create(emitter -> {
+            final CompletionListener listener = new CompletionListener(emitter);
+            sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API, listener);
+        }));
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void delete(
-            @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
-        sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
-            new ResultConversionListener<>(deleteItemListener, this::toDataStoreItemChange));
+    public <T extends Model> Completable delete(@NonNull T item) {
+        return Completable.defer(() -> Completable.create(emitter -> {
+            final CompletionListener listener = new CompletionListener(emitter);
+            sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API, listener);
+        }));
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void query(
-            @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
-        sqliteStorageAdapter.query(itemClass, queryResultsListener);
+    public <T extends Model> Observable<T> query(@NonNull Class<T> itemClass) {
+        return Observable.defer(() -> Observable.create(emitter -> {
+            final StreamConversionListener<T> listener = new StreamConversionListener<>(emitter);
+            sqliteStorageAdapter.query(itemClass, listener);
+        }));
     }
 
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
-    public <T extends Model> void query(
-            @NonNull Class<T> itemClass,
-            @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
-        sqliteStorageAdapter.query(itemClass, predicate, queryResultsListener);
+    public <T extends Model> Observable<T> query(@NonNull Class<T> itemClass, @Nullable QueryPredicate predicate) {
+        return Observable.defer(() -> Observable.create(emitter -> {
+            final StreamConversionListener<T> listener = new StreamConversionListener<>(emitter);
+            sqliteStorageAdapter.query(itemClass, predicate, listener);
+        }));
     }
 
     /**
@@ -277,19 +285,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * @return A {@link DataStoreItemChange} representing the storage change record
      */
     private <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(final StorageItemChange.Record record)
-        throws DataStoreException {
-        return toDataStoreItemChange(record.toStorageItemChange(storageItemChangeConverter));
-    }
-
-    /**
-     * Converts an {@link StorageItemChange} into an {@link DataStoreItemChange}.
-     * @param storageItemChange A storage item change
-     * @param <T> Type of data that was changed in the storage layer
-     * @return A data store item change representing the change in storage layer
-     */
-    private static <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(
-            final StorageItemChange<T> storageItemChange) throws DataStoreException {
-
+            throws DataStoreException {
+        final StorageItemChange<T> storageItemChange = record.toStorageItemChange(storageItemChangeConverter);
         final DataStoreItemChange.Initiator dataStoreItemChangeInitiator;
         switch (storageItemChange.initiator()) {
             case SYNC_ENGINE:
@@ -329,61 +326,42 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             .build();
     }
 
-    /**
-     * A listener of the {@link LocalStorageAdapter} APIs, which responds by
-     * converting received {@link StorageItemChange.Record} into {@link DataStoreItemChange}s,
-     * and emitting those on the provided data store item change listener.
-     * using the provided {@link ConversionStrategy}.
-     * @param <T> Type of data in the emitted DataStoreItemChange
-     */
-    static final class ResultConversionListener<T extends Model> implements ResultListener<StorageItemChange.Record> {
-        private final ResultListener<DataStoreItemChange<T>> dataStoreListener;
-        private final ConversionStrategy conversionStrategy;
+    static final class CompletionListener implements ResultListener<StorageItemChange.Record> {
+        private final CompletableEmitter completableEmitter;
 
-        /**
-         * Constructs a new ResultConversionListener.
-         * @param dataStoreListener listener object of the public DataStore API
-         * @param conversionStrategy A strategy to convert between storage adapter and data store api types
-         */
-        ResultConversionListener(
-                ResultListener<DataStoreItemChange<T>> dataStoreListener,
-                ConversionStrategy conversionStrategy) {
-            this.dataStoreListener = dataStoreListener;
-            this.conversionStrategy = conversionStrategy;
+        CompletionListener(CompletableEmitter completableEmitter) {
+            this.completableEmitter = completableEmitter;
         }
 
         @Override
         public void onResult(StorageItemChange.Record result) {
-            try {
-                DataStoreItemChange<T> converted = conversionStrategy.convert(result);
-                dataStoreListener.onResult(converted);
-            } catch (DataStoreException exception) {
-                onError(exception);
-            }
+            completableEmitter.onComplete();
         }
 
         @Override
         public void onError(Throwable error) {
-            dataStoreListener.onError(new DataStoreException(
-                    "Oof, something went wrong.",
-                    error,
-                    "Check the attached error for details."
-            ));
+            completableEmitter.onError(error);
+        }
+    }
+
+    static final class StreamConversionListener<T extends Model> implements ResultListener<Iterator<T>> {
+        private final ObservableEmitter<T> observableEmitter;
+
+        StreamConversionListener(ObservableEmitter<T> observableEmitter) {
+            this.observableEmitter = observableEmitter;
         }
 
-        /**
-         * A strategy to convert an object from the {@link LocalStorageAdapter} into
-         * a {@link DataStoreItemChange} as exposed by the publid {@link DataStoreCategoryBehavior}.
-         */
-        interface ConversionStrategy {
-            /**
-             * Converts a record of change in the {@link LocalStorageAdapter}
-             * (a {@link StorageItemChange.Record}) into a {@link DataStoreItemChange}.
-             * @param record Record to convert
-             * @param <T> Type of data contained inside the emitted {@link DataStoreItemChange}
-             * @return An {@link DataStoreItemChange}, usable by the DataStore APIs
-             */
-            <T extends Model> DataStoreItemChange<T> convert(StorageItemChange.Record record) throws DataStoreException;
+        @Override
+        public void onResult(Iterator<T> result) {
+            while (result.hasNext()) {
+                observableEmitter.onNext(result.next());
+            }
+            observableEmitter.onComplete();
+        }
+
+        @Override
+        public void onError(Throwable error) {
+            observableEmitter.onError(error);
         }
     }
 }

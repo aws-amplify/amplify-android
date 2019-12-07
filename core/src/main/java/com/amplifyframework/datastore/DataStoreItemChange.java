@@ -17,7 +17,6 @@ package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 
 import java.util.Objects;
@@ -251,8 +250,8 @@ public final class DataStoreItemChange<T extends Model> {
 
     /**
      * A DataStoreItemChange can either be caused by a call to one of the
-     * {@link DataStoreCategoryBehavior#save(Model, ResultListener)} family of methods,
-     * or to one of the {@link DataStoreCategoryBehavior#delete(Model, ResultListener)}
+     * {@link DataStoreCategoryBehavior#save(Model)} family of methods,
+     * or to one of the {@link DataStoreCategoryBehavior#delete(Model)}
      * methods.
      */
     public enum Type {
