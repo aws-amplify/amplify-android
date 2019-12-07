@@ -17,7 +17,6 @@ package com.amplifyframework.util;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 import java.lang.reflect.Field;

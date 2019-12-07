@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.Immutable;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 import java.util.Objects;

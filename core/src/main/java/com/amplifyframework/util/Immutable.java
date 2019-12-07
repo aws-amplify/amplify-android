@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core;
+package com.amplifyframework.util;
 
 import androidx.annotation.Nullable;
 
