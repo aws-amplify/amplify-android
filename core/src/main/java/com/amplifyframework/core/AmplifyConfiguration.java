@@ -27,6 +27,7 @@ import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
+import com.amplifyframework.util.Immutable;
 
 import org.json.JSONException;
 import org.json.JSONObject;

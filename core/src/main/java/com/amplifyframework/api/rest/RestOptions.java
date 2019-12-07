@@ -15,7 +15,7 @@
 
 package com.amplifyframework.api.rest;
 
-import com.amplifyframework.core.Immutable;
+import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
 import java.util.Collections;

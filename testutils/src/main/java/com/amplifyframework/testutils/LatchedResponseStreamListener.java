@@ -20,8 +20,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.util.Immutable;
 
 import org.junit.Assert;
 

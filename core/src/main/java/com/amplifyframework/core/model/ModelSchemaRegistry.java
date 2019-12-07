@@ -18,7 +18,7 @@ package com.amplifyframework.core.model;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Immutable;
+import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
 import java.util.Map;

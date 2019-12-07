@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite.adapter;
 
-import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
 import com.amplifyframework.core.model.query.predicate.ContainsQueryOperator;
@@ -31,6 +30,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
+import com.amplifyframework.util.Immutable;
 
 import java.util.Iterator;
 import java.util.LinkedList;

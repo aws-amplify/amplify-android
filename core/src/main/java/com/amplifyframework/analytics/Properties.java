@@ -15,7 +15,7 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.core.Immutable;
+import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
 import java.util.Map;

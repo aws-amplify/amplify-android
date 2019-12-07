@@ -21,7 +21,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
-import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
@@ -33,6 +32,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.StringUtils;
 
 import java.util.HashSet;
