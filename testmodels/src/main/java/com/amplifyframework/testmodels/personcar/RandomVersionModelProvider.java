@@ -15,9 +15,9 @@
 
 package com.amplifyframework.testmodels.personcar;
 
-import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.util.Immutable;
 
 import java.util.HashSet;
 import java.util.Set;
