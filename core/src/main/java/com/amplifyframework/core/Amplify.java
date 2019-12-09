@@ -30,10 +30,12 @@ import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
+import com.amplifyframework.util.Immutable;
 
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * This is the top-level customer-facing interface to the Amplify
@@ -53,34 +55,28 @@ import java.util.Map;
  * </pre>
  */
 public final class Amplify {
-    private static final String TAG = Amplify.class.getSimpleName();
-
     // These static references provide an entry point to the different categories.
     // For example, you can call storage operations through Amplify.Storage.list(String path).
-    @SuppressWarnings("all") public static final AnalyticsCategory Analytics;
-    @SuppressWarnings("all") public static final ApiCategory API;
-    @SuppressWarnings("all") public static final LoggingCategory Logging;
-    @SuppressWarnings("all") public static final StorageCategory Storage;
-    @SuppressWarnings("all") public static final HubCategory Hub;
-    @SuppressWarnings("all") public static final DataStoreCategory DataStore;
+    @SuppressWarnings("checkstyle:all") public static final AnalyticsCategory Analytics = new AnalyticsCategory();
+    @SuppressWarnings("checkstyle:all") public static final ApiCategory API = new ApiCategory();
+    @SuppressWarnings("checkstyle:all") public static final LoggingCategory Logging = new LoggingCategory();
+    @SuppressWarnings("checkstyle:all") public static final StorageCategory Storage = new StorageCategory();
+    @SuppressWarnings("checkstyle:all") public static final HubCategory Hub = new HubCategory();
+    @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
 
-    private static final Object LOCK;
-    private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES;
+    private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
-    private static AmplifyConfiguration amplifyConfiguration;
-    private static boolean configured;
+    // Used as a synchronization locking object. Set to true once configure() is complete.
+    private static final AtomicBoolean CONFIGURATION_LOCK = new AtomicBoolean(false);
 
-    static {
-        LOCK = new Object();
-        configured = false;
+    /**
+     * Dis-allows instantiation of this utility class.
+     */
+    private Amplify() {
+        throw new UnsupportedOperationException("No instances allowed.");
+    }
 
-        Analytics = new AnalyticsCategory();
-        API = new ApiCategory();
-        Logging = new LoggingCategory();
-        Storage = new StorageCategory();
-        Hub = new HubCategory();
-        DataStore = new DataStoreCategory();
-
+    private static Map<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
         final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new LinkedHashMap<>();
         modifiableCategories.put(CategoryType.ANALYTICS, Analytics);
         modifiableCategories.put(CategoryType.API, API);
@@ -88,14 +84,7 @@ public final class Amplify {
         modifiableCategories.put(CategoryType.STORAGE, Storage);
         modifiableCategories.put(CategoryType.HUB, Hub);
         modifiableCategories.put(CategoryType.DATASTORE, DataStore);
-        CATEGORIES = Collections.unmodifiableMap(modifiableCategories);
-    }
-
-    /**
-     * Dis-allows instantiation of this utility class.
-     */
-    private Amplify() {
-        throw new UnsupportedOperationException("No instances allowed.");
+        return Immutable.of(modifiableCategories);
     }
 
     /**
@@ -115,27 +104,28 @@ public final class Amplify {
      * @param context An Android Context
      * @throws AmplifyException thrown when already configured or there is no configuration found for a plugin
      */
-    public static void configure(final AmplifyConfiguration configuration, Context context)
+    public static void configure(@NonNull final AmplifyConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
+        Objects.requireNonNull(configuration);
+        Objects.requireNonNull(context);
 
-        synchronized (LOCK) {
-            if (configured) {
+        synchronized (CONFIGURATION_LOCK) {
+            if (CONFIGURATION_LOCK.get()) {
                 throw new AmplifyException(
                     "The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.",
                         "Be sure to only call Amplify.configure once"
                 );
             }
-            amplifyConfiguration = configuration;
 
             for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
                 if (category.getPlugins().size() > 0) {
                     CategoryConfiguration categoryConfiguration =
-                        amplifyConfiguration.forCategoryType(category.getCategoryType());
+                        configuration.forCategoryType(category.getCategoryType());
                     category.configure(categoryConfiguration, context);
                 }
             }
 
-            configured = true;
+            CONFIGURATION_LOCK.set(true);
         }
     }
 
@@ -157,6 +147,7 @@ public final class Amplify {
      * @param <P> The type of the plugin being removed
      * @throws AmplifyException On failure to remove a plugin
      */
+    @SuppressWarnings("WeakerAccess")
     public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
     }
@@ -165,7 +156,7 @@ public final class Amplify {
     private static <P extends Plugin<?>> void updatePluginRegistry(
             final P plugin, final RegistryUpdateType registryUpdateType) throws AmplifyException {
 
-        synchronized (LOCK) {
+        synchronized (CONFIGURATION_LOCK) {
             if (TextUtils.isEmpty(plugin.getPluginKey())) {
                 throw new AmplifyException(
                         "Plugin key was missing for + " + plugin.getClass().getSimpleName(),
@@ -196,20 +187,8 @@ public final class Amplify {
         }
     }
 
-    /**
-     * Gets the Amplify configuration. The amplify configuration
-     * includes all details about the various categories/plugins that
-     * are available for use by the framework.
-     * @return The current Amplify configuration, possibly null if
-     *         Amplify has not yet been configured
-     */
-    static AmplifyConfiguration getAmplifyConfiguration() {
-        return amplifyConfiguration;
-    }
-
     private enum RegistryUpdateType {
         ADD,
         REMOVE
     }
 }
-
