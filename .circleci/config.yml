@@ -16,6 +16,42 @@ commands:
             cd ~/amplify-android-home
             yes | sdkmanager --licenses && yes | sdkmanager --update
             ~/gradle-5.6.2/bin/gradle wrapper
+  configure_aws:
+    description: >-
+      install aws cli and configure android aws release profile
+    steps:
+      - run:
+          name: install aws cli
+          command: |
+            sudo pip install awscli
+      - run:
+          name: configure aws profile
+          command: |
+            aws configure --profile amplify_sdk_test set region us-west-2
+            echo -e "[amplify_sdk_test]\naws_access_key_id=${AWS_ACCESS_KEY_ID_TEST}\naws_secret_access_key=${AWS_SECRET_ACCESS_KEY_TEST}\n" >> ~/.aws/credentials
+  setup_emulator:
+    description: >-
+      setup emulator
+    steps:
+      - run:
+          name: Setup emulator
+          command: |
+            echo y | sdkmanager "system-images;android-24;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
+      - run:
+          name: Launch emulator
+          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -no-boot-anim -no-window -accel auto -verbose
+          background: true
+      - run:
+          name: Launch logcat
+          command: 
+            adb logcat > logcat.log
+          background: true
+      - run:
+          name: Wait emulator
+          command: |
+            echo "wait for emulator to have booted"
+            circle-android wait-for-boot
+            python3 ./circleci-scripts/unlock_emulator_screen.py
 jobs:
   build:
     working_directory: ~/amplify-android-home
@@ -26,6 +62,7 @@ jobs:
     steps:
       - checkout
       - generate_gradle_wrapper
+      - configure_aws
       - run:
           name: Build the project
           command: bash gradlew build
@@ -34,3 +71,40 @@ jobs:
           command: bash gradlew publishToMavenLocal
       - store_test_results:
           path: test-results
+
+  integrationtest:
+    working_directory: ~/amplify-android-home
+    docker:
+      - image: circleci/android@sha256:5cdc8626cc6f13efe5ed982cdcdb432b0472f8740fed8743a6461e025ad6cdfc
+    resource_class: xlarge
+    environment:
+      JVM_OPTS: -Xmx3200m
+    steps:
+      - checkout
+      - generate_gradle_wrapper
+      - configure_aws
+      - setup_emulator
+      - run:
+          name: Copy configuration files
+          command: |
+            aws s3 cp s3://amplify-circleci-android-payload/awsconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json --profile amplify_sdk_test 
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics.json  aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-core.json  core/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-api.json  aws-api/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-datastore.json  aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+      - run:
+          name: Run integration test
+          command: ./gradlew cAT --no-daemon
+      - store_artifacts:
+          path: logcat.log
+workflows:
+  version: 2
+  build_test:
+    jobs:
+      - build
+      - integrationtest:
+          filters:
+            branches:
+              only:
+                - master
+                - roshan/circleCI
