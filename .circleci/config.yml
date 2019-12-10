@@ -8,14 +8,14 @@ commands:
           name: Download gradle
           command: |
             cd ~
-            wget https://services.gradle.org/distributions/gradle-5.6.2-bin.zip
-            unzip gradle-5.6.2-bin.zip
+            wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip
+            unzip gradle-5.4.1-bin.zip
       - run:
           name: Generate gradle wrapper
           command: |
             cd ~/amplify-android-home
             yes | sdkmanager --licenses && yes | sdkmanager --update
-            ~/gradle-5.6.2/bin/gradle wrapper
+            ~/gradle-5.4.1/bin/gradle wrapper
   configure_aws:
     description: >-
       install aws cli and configure android aws release profile
@@ -36,10 +36,13 @@ commands:
       - run:
           name: Setup emulator
           command: |
-            echo y | sdkmanager "system-images;android-24;default;armeabi-v7a" && echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
+            echo y | sdkmanager "system-images;android-24;default;armeabi-v7a"
+            echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
       - run:
           name: Launch emulator
-          command: export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib && emulator64-arm -avd test -no-boot-anim -no-window -accel auto -verbose
+          command: |
+            export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib
+            emulator64-arm -avd test -no-boot-anim -no-window -accel auto -verbose
           background: true
       - run:
           name: Launch logcat
@@ -51,7 +54,7 @@ commands:
           command: |
             echo "wait for emulator to have booted"
             circle-android wait-for-boot
-            python3 ./circleci-scripts/unlock_emulator_screen.py
+            python3 .circleci/unlock_emulator_screen.py
 jobs:
   build:
     working_directory: ~/amplify-android-home
@@ -87,24 +90,16 @@ jobs:
       - run:
           name: Copy configuration files
           command: |
-            aws s3 cp s3://amplify-circleci-android-payload/awsconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json --profile amplify_sdk_test 
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics.json  aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-core.json  core/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-api.json  aws-api/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-datastore.json  aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            .circleci/copy-configs
       - run:
           name: Run integration test
           command: ./gradlew cAT --no-daemon
       - store_artifacts:
           path: logcat.log
 workflows:
-  version: 2
+  version: 3
   build_test:
     jobs:
       - build
-      - integrationtest:
-          filters:
-            branches:
-              only:
-                - master
-                - roshan/circleCI
+      - integrationtest
+
