@@ -40,4 +40,10 @@ public @interface ModelConfig {
      * @return the plural version of the name.
      */
     String pluralName() default "";
+
+    /**
+     * Specifies whether this model has owner based authorization
+     * @return true if the model has owner based authorization configured
+     */
+    boolean isOwnerAuthorized() default false;
 }
