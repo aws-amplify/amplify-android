@@ -51,7 +51,7 @@ commands:
           command: |
             echo "wait for emulator to have booted"
             circle-android wait-for-boot
-            python3 ./circleci-scripts/unlock_emulator_screen.py
+            python3 .circleci/unlock_emulator_screen.py
 jobs:
   build:
     working_directory: ~/amplify-android-home
@@ -87,24 +87,15 @@ jobs:
       - run:
           name: Copy configuration files
           command: |
-            aws s3 cp s3://amplify-circleci-android-payload/awsconfiguration.json  aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json --profile amplify_sdk_test 
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-analytics.json  aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-core.json  core/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-api.json  aws-api/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
-            aws s3 cp s3://amplify-circleci-android-payload/amplifyconfiguration-datastore.json  aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json --profile amplify_sdk_test
+            .circleci/copy-configs
       - run:
           name: Run integration test
           command: ./gradlew cAT --no-daemon
       - store_artifacts:
           path: logcat.log
 workflows:
-  version: 2
   build_test:
     jobs:
       - build
-      - integrationtest:
-          filters:
-            branches:
-              only:
-                - master
-                - roshan/circleCI
+      - integrationtest
+
