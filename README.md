@@ -12,10 +12,11 @@ Our default implementation works with Amazon Web Services (AWS), but AWS Amplify
 
 - [**Analytics**](https://aws-amplify.github.io/docs/android/analytics): Easily collect analytics data for your app. Analytics data includes user sessions and other custom events that you want to track in your app.
 - [**API**](https://aws-amplify.github.io/docs/android/api): Provides a simple solution when making HTTP requests. It provides an automatic, lightweight signing process which complies with AWS Signature Version 4.
+- [**DataStore**](https://aws-amplify.github.io/docs/android/datastore): Provides a persistent on-device storage repository for you to write, read, and observe changes to data if you are online or offline, and seamlessly sync to the cloud as well as across devices.
 - [**GraphQL Client**](https://aws.github.io/aws-amplify/media/api_guide#configuration-for-graphql-server): Interact with your GraphQL server or AWS AppSync API with an easy-to-use & configured GraphQL client.
 - [**Storage**](https://aws-amplify.github.io/docs/android/storage): Provides a simple mechanism for managing user content for your app in public, protected or private storage buckets.
 
-All services and features not listed above are supported via the Escape Hatch with the [Android SDK](https://github.com/aws-amplify/aws-sdk-android) like below:
+All services and features not listed above are supported via the Escape Hatch with the [AWS Android SDK](https://github.com/aws-amplify/aws-sdk-android) like below:
 
 ``` java
 AmazonS3Client s3Client = Amplify.Storage.getEscapeHatch();
@@ -94,7 +95,7 @@ android {
 
 ### Using AWS Mobile Client
 
-Authentication in Amplify Native is dependent on AWS Mobile Client. Please refer to the [this documentation](https://aws-amplify.github.io/docs/android/authentication) for details.
+Authentication in Amplify for Android is dependent on AWS Mobile Client. Please refer to the [this documentation](https://aws-amplify.github.io/docs/android/authentication) for details.
 
 You need to ensure `AWSMobileClient` is [initialized](https://aws-amplify.github.io/docs/android/authentication#initialization) before you initalize and configure `Amplify`. Please note that AWSMobileClient initialization is not required when using API or Datastore category with API Key as the authorization mode.
 
