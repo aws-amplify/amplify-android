@@ -42,7 +42,7 @@ public @interface ModelConfig {
     String pluralName() default "";
 
     /**
-     * Specifies whether this model has owner based authorization.
+     * Specifies whether this model has owner based authorization: @auth(rules: [{allow: owner}]).
      * @return true if the model has owner based authorization configured
      */
     boolean hasOwnerAuthorization() default false;
