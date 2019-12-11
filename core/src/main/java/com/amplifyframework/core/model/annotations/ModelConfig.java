@@ -42,7 +42,8 @@ public @interface ModelConfig {
     String pluralName() default "";
 
     /**
-     * Specifies whether this model has owner based authorization: @auth(rules: [{allow: owner}]).
+     * Specifies whether this model has owner based authorization.
+     * e.g. @auth(rules: [{allow: owner}]) on the model in the GraphQL Schema.
      * @return true if the model has owner based authorization configured
      */
     boolean hasOwnerAuthorization() default false;
