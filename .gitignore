@@ -79,6 +79,7 @@ __pycache__/
 # Credentials
 **/testconfiguration.json
 **/awsconfiguration.json
+**/amplifyconfiguration.json
 
 # IDE files
 .idea/**
@@ -92,4 +93,3 @@ build/
 dist/
 node_modules/
 aws-exports.js
-awsconfiguration.json
