@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -222,6 +223,14 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             SubscriptionType type
     ) throws ApiException {
+        return buildSubscription(modelClass, type, null);
+    }
+
+    public static <T extends Model> GraphQLRequest<T> buildSubscription(
+            Class<T> modelClass,
+            SubscriptionType type,
+            CognitoUserPoolsAuthProvider cognitoAuth
+    ) throws ApiException {
         try {
             StringBuilder doc = new StringBuilder();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
@@ -230,19 +239,60 @@ final class AppSyncGraphQLRequestFactory {
 
             doc.append("subscription ")
                     .append(StringUtils.allCapsToPascalCase(typeStr))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
-                    .append("{")
-                    .append(StringUtils.allCapsToCamelCase(typeStr))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
-                    .append("{")
-                    .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
-                    .append("}}");
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName));
 
-            return new GraphQLRequest<>(
-                    doc.toString(),
-                    modelClass,
-                    new GsonVariablesSerializer()
-            );
+            if (schema.hasOwnerAuthorization()) {
+                doc.append("($owner: String!) ");
+            }
+
+            doc.append("{")
+                    .append(StringUtils.allCapsToCamelCase(typeStr))
+                    .append(StringUtils.capitalizeFirst(graphQlTypeName));
+
+            if (schema.hasOwnerAuthorization()) {
+                doc.append("(owner: $owner) ");
+            }
+
+            doc.append("{").append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH));
+
+            if (schema.hasOwnerAuthorization()) {
+                doc.append(" owner ");
+            }
+
+            doc.append("}}");
+
+            if (schema.hasOwnerAuthorization()) {
+                if (cognitoAuth == null) {
+                    throw new ApiException(
+                        "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
+                        "Did you initialize AWSMobileClient before making this call?"
+                    );
+                }
+
+                String username = cognitoAuth.getUsername();
+
+                if (username == null) {
+                    throw new ApiException(
+                            "Attempted to subscribe to a model with owner based authorization without a username",
+                            "Make sure that a user is logged in before subscribing to a model with owner based auth"
+                    );
+                }
+
+                return new GraphQLRequest<>(
+                        doc.toString(),
+                        Collections.singletonMap("owner", username),
+                        modelClass,
+                        new GsonVariablesSerializer()
+                );
+            } else {
+                return new GraphQLRequest<>(
+                        doc.toString(),
+                        modelClass,
+                        new GsonVariablesSerializer()
+                );
+            }
+        } catch (ApiException exception) {
+            throw exception;
         } catch (AmplifyException exception) {
             throw new ApiException(
                     "Could not generate a schema for the specified class",

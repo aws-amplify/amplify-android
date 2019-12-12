@@ -254,10 +254,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull GraphQLRequest<T> graphQLRequest,
             @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener
     ) {
-        final GraphQLOperation<T> operation =
-                buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
-        operation.start();
-        return operation;
+        try {
+            final GraphQLOperation<T> operation =
+                    buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
+            operation.start();
+            return operation;
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
     }
 
     @Nullable
@@ -353,10 +358,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull GraphQLRequest<T> graphQLRequest,
             @NonNull ResultListener<GraphQLResponse<T>> responseListener
     ) {
-        final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
-        operation.start();
-        return operation;
+        try {
+            final GraphQLOperation<T> operation =
+                    buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
+            operation.start();
+            return operation;
+        } catch (ApiException exception) {
+            responseListener.onError(exception);
+            return null;
+        }
+
     }
 
     @Nullable
@@ -405,7 +416,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                     apiName,
                     AppSyncGraphQLRequestFactory.buildSubscription(
                             modelClass,
-                            subscriptionType
+                            subscriptionType,
+                            authProvider.getCognitoUserPoolsAuthProvider()
                     ),
                     subscriptionListener
             );
@@ -688,19 +700,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private <T> SingleItemResultOperation<T> buildSingleResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<T>> responseListener) throws ApiException {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            responseListener.onError(
-                    new ApiException(
-                            "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there " +
-                            "is a correctly configured section for " + apiName
-                    )
+            throw new ApiException(
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there " +
+                    "is a correctly configured section for " + apiName
             );
-
-            return null;
         }
 
         return SingleItemResultOperation.<T>builder()
@@ -715,19 +723,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private <T> SingleArrayResultOperation<T> buildMultiResponseOperation(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) throws ApiException {
 
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            responseListener.onError(
-                    new ApiException(
-                            "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there " +
-                            "is a correctly configured section for " + apiName
-                    )
+            throw new ApiException(
+                "No client information for API named " + apiName,
+                "Check your amplify configuration to make sure there " +
+                "is a correctly configured section for " + apiName
             );
-
-            return null;
         }
 
         return SingleArrayResultOperation.<T>builder()
@@ -754,14 +758,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             ResultListener<RestResponse> listener) throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            listener.onError(
-                    new ApiException(
-                            "No client information for API named " + apiName,
-                            "Check your amplify configuration to make sure there " +
-                            "is a correctly configured section for " + apiName
-                    )
+            throw new ApiException(
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there " +
+                    "is a correctly configured section for " + apiName
             );
-            return null;
         }
         RestOperationRequest operationRequest;
         switch (type) {
