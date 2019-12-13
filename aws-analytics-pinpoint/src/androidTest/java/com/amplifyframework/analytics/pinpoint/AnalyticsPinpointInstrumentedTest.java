@@ -180,7 +180,6 @@ public class AnalyticsPinpointInstrumentedTest {
     public void testUnregisterGlobalProperties() throws HubException {
         // Register a global property
         registerGobalProperty();
-        waitForAutoFlush(analyticsClient);
 
         // Unregister global property
         Set<String> globalPropertyKeys = new HashSet<>();
