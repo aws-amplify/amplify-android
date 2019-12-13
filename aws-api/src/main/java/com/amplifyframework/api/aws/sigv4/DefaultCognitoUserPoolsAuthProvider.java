@@ -75,4 +75,9 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
         fetchToken();
         return token;
     }
+
+    @Override
+    public String getUsername() {
+        return AWSMobileClient.getInstance().getUsername();
+    }
 }
