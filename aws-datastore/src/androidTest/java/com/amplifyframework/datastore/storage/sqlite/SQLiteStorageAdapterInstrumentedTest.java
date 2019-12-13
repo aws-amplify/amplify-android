@@ -277,6 +277,57 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Test save with predicate. Conditional write is useful for making sure that
+     * no data is overwritten with outdated assumptions.
+     * @throws DataStoreException from possible underlying DataStore exceptions
+     */
+    @Test
+    public void saveModelWithPredicateUpdatesConditionally() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        saveModel(john);
+        saveModel(jane);
+        saveModel(mark);
+
+        // Only update John and Jane
+        final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
+        final BlogOwner newJohn = john.copyOfBuilder()
+                .name("John Doe")
+                .build();
+        final BlogOwner newJane = jane.copyOfBuilder()
+                .name("Jane Doe")
+                .build();
+        final BlogOwner newMark = mark.copyOfBuilder()
+                .name("Mark Doe")
+                .build();
+        saveModel(newJohn, predicate);
+        saveModel(newJane, predicate);
+        saveModel(newMark, predicate); // Should not update
+
+        Iterator<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertNotNull(blogOwners);
+        Set<BlogOwner> actualBlogOwners = new HashSet<>();
+        while (blogOwners.hasNext()) {
+            actualBlogOwners.add(blogOwners.next());
+        }
+        assertEquals(
+                new HashSet<>(Arrays.asList(
+                        newJohn,
+                        newJane,
+                        mark
+                )),
+                actualBlogOwners
+        );
+    }
+
+    /**
      * Test querying the saved item in the SQLite database.
      * @throws DataStoreException from possible underlying DataStore exceptions
      */
@@ -533,12 +584,17 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     private <T extends Model> T saveModel(@NonNull T model) throws DataStoreException {
+        return saveModel(model, null);
+    }
+
+    private <T extends Model> T saveModel(
+            @NonNull T model, @Nullable QueryPredicate predicate) throws DataStoreException {
         LatchedResultListener<StorageItemChange.Record> saveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
+                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, predicate, saveListener);
         return saveListener.awaitResult()
-            .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
-            .item();
+                .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
+                .item();
     }
 
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {

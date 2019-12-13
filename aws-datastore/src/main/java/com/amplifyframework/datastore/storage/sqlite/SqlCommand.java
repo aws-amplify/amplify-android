@@ -42,7 +42,7 @@ final class SqlCommand {
     private final SQLiteStatement compiledSqlStatement;
 
     // A list of arguments to be used as selection arguments
-    private final List<String> selectionArgs;
+    private final List<Object> selectionArgs;
 
     /**
      * Construct a SqlCommand object.
@@ -78,7 +78,7 @@ final class SqlCommand {
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
-               @Nullable List<String> selectionArgs) {
+               @Nullable List<Object> selectionArgs) {
         this(tableName, sqlStatement, null, selectionArgs);
     }
 
@@ -94,7 +94,7 @@ final class SqlCommand {
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
                @Nullable SQLiteStatement compiledSqlStatement,
-               @Nullable List<String> selectionArgs) {
+               @Nullable List<Object> selectionArgs) {
         this.tableName = Objects.requireNonNull(tableName);
         this.sqlStatement = Objects.requireNonNull(sqlStatement);
         this.compiledSqlStatement = compiledSqlStatement;
@@ -131,7 +131,7 @@ final class SqlCommand {
      * Return the list of arguments for selection.
      * @return the list of arguments for selection
      */
-    List<String> getSelectionArgs() {
+    List<Object> getSelectionArgs() {
         return Immutable.of(selectionArgs);
     }
 
@@ -145,8 +145,19 @@ final class SqlCommand {
         if (!hasSelectionArgs()) {
             return null;
         }
+        /*
+         Potentially inefficient to do this per call, but
+         this should never need to be called more than once.
 
-        return selectionArgs.toArray(new String[0]);
+         Doing `Arrays.copyOf(selectionArgs.toArray(), selectionArgs.size(), String[].class);`
+         does NOT work because not every object (e.g. Integer) can be cast to string.
+         */
+        final int length = selectionArgs.size();
+        final String[] array = new String[length];
+        for (int index = 0; index < length; index++) {
+            array[index] = selectionArgs.get(index).toString();
+        }
+        return Immutable.of(array);
     }
 
     /**

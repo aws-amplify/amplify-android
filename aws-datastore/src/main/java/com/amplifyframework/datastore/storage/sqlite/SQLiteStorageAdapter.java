@@ -32,8 +32,9 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.datastore.DataStoreException;
@@ -240,23 +241,44 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void save(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener
+    ) {
+        save(item, initiator, null, itemSaveListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener) {
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener
+    ) {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
-                final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
+                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+                final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
 
                 if (dataExistsInSQLiteTable(
-                        sqLiteTable.getName(),
-                        PrimaryKey.fieldName(),
+                        sqliteTable.getName(),
+                        primaryKeyName,
                         item.getId())) {
                     // update model stored in SQLite
-                    final SqlCommand sqlCommand = sqlCommandFactory.updateFor(modelSchema, item);
+                    // update always checks for ID first
+                    final QueryPredicateOperation idCheck =
+                            QueryField.field(primaryKeyName).eq(item.getId());
+                    final QueryPredicate condition = predicate != null
+                            ? idCheck.and(predicate)
+                            : idCheck;
+                    final SqlCommand sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
                         itemSaveListener.onError(new DataStoreException(
                                 "Error in saving the model. No update statement " +
@@ -461,14 +483,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return Immutable.of(modifiableMap);
     }
 
-    private <T> void bindPreparedSQLStatementWithValues(@NonNull final T object,
-                                                        @NonNull final SqlCommand sqlCommand)
+    private <T> List<Object> extractFieldValuesFromModel(@NonNull final T model)
             throws IllegalAccessException, DataStoreException {
-        final String tableName = sqlCommand.tableName();
-        final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(object.getClass()).iterator();
 
-        final Cursor cursor = getQueryAllCursor(tableName, null);
+        final String tableName = model.getClass().getSimpleName();
+        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(model.getClass()).iterator();
+        final Cursor cursor = getQueryAllCursor(tableName);
         if (cursor == null) {
             throw new IllegalAccessException("Error in getting a cursor to table: " +
                     tableName);
@@ -479,87 +499,109 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 .getModelSchemaForModelClass(tableName);
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
         final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
+        final List<Object> fieldValues = new ArrayList<>();
+        while (fieldValues.size() < columns.size()) {
+            fieldValues.add(null); // Pre-populate with null values
+        }
 
         while (fieldIterator.hasNext()) {
             final Field field = fieldIterator.next();
 
             field.setAccessible(true);
             final String fieldName = field.getName();
-            final Object fieldValue = field.get(object);
+            final Object fieldValue = field.get(model);
 
             // Skip if there is no equivalent column for field in object
             final SQLiteColumn column = columns.get(fieldName);
             if (column == null) {
                 continue;
             }
+
             final String columnName = column.getAliasedName();
-            final JavaFieldType javaFieldType;
-            if (Model.class.isAssignableFrom(field.getType())) {
-                javaFieldType = JavaFieldType.MODEL;
-            } else if (Enum.class.isAssignableFrom(field.getType())) {
-                javaFieldType = JavaFieldType.ENUM;
-            } else {
-                javaFieldType = JavaFieldType.from(field.getType().getSimpleName());
-            }
-
-            // Move the columns index to 1-based index.
-            final int columnIndex = cursor.getColumnIndexOrThrow(columnName) + 1;
-
-            if (fieldValue == null) {
-                preCompiledInsertStatement.bindNull(columnIndex);
-                continue;
-            }
-
-            bindPreCompiledInsertStatementWithJavaFields(
-                    preCompiledInsertStatement,
-                    fieldValue,
-                    columnIndex,
-                    javaFieldType);
+            final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
+            fieldValues.set(columnIndex, fieldValue);
         }
 
         if (!cursor.isClosed()) {
             cursor.close();
         }
+
+        return Immutable.of(fieldValues);
     }
 
-    private void bindPreCompiledInsertStatementWithJavaFields(
-            @NonNull SQLiteStatement preCompiledInsertStatement,
-            @NonNull Object fieldValue,
-            int columnIndex,
-            JavaFieldType javaFieldType) throws DataStoreException {
+    // Binds each value inside list onto compiled statement in order
+    private void bindPreCompiledStatementWithFieldValues(
+            @NonNull SQLiteStatement preCompiledStatement,
+            @NonNull List<Object> fieldValues
+    ) throws DataStoreException {
+        // 1-based index for columns
+        int columnIndex = 1;
+        for (Object fieldValue : fieldValues) {
+            bindPreCompiledStatementWithFieldValue(
+                    preCompiledStatement,
+                    fieldValue,
+                    columnIndex++
+            );
+        }
+    }
+
+    // Helper method to bind individual value based on type
+    private void bindPreCompiledStatementWithFieldValue(
+            @NonNull SQLiteStatement preCompiledStatement,
+            @Nullable Object fieldValue,
+            int columnIndex
+    ) throws DataStoreException {
+
+        if (fieldValue == null) {
+            preCompiledStatement.bindNull(columnIndex);
+            return;
+        }
+
+        // Find out the type of value being bound and
+        // convert into appropriate enum for processing
+        final Class<?> fieldType = fieldValue.getClass();
+        final JavaFieldType javaFieldType;
+        if (Model.class.isAssignableFrom(fieldType)) {
+            javaFieldType = JavaFieldType.MODEL;
+        } else if (Enum.class.isAssignableFrom(fieldType)) {
+            javaFieldType = JavaFieldType.ENUM;
+        } else {
+            javaFieldType = JavaFieldType.from(fieldType.getSimpleName());
+        }
+
         switch (javaFieldType) {
             case BOOLEAN:
                 boolean booleanValue = (boolean) fieldValue;
-                preCompiledInsertStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
+                preCompiledStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
                 break;
             case INTEGER:
-                preCompiledInsertStatement.bindLong(columnIndex, (Integer) fieldValue);
+                preCompiledStatement.bindLong(columnIndex, (Integer) fieldValue);
                 break;
             case LONG:
-                preCompiledInsertStatement.bindLong(columnIndex, (Long) fieldValue);
+                preCompiledStatement.bindLong(columnIndex, (Long) fieldValue);
                 break;
             case FLOAT:
-                preCompiledInsertStatement.bindDouble(columnIndex, (Float) fieldValue);
+                preCompiledStatement.bindDouble(columnIndex, (Float) fieldValue);
                 break;
             case STRING:
-                preCompiledInsertStatement.bindString(columnIndex, (String) fieldValue);
+                preCompiledStatement.bindString(columnIndex, (String) fieldValue);
                 break;
             case MODEL:
-                preCompiledInsertStatement.bindString(columnIndex, ((Model) fieldValue).getId());
+                preCompiledStatement.bindString(columnIndex, ((Model) fieldValue).getId());
                 break;
             case ENUM:
-                preCompiledInsertStatement.bindString(columnIndex, gson.toJson(fieldValue));
+                preCompiledStatement.bindString(columnIndex, gson.toJson(fieldValue));
                 break;
             case DATE:
                 final Date dateValue = (Date) fieldValue;
                 final String dateString = SimpleDateFormat
                         .getDateInstance()
                         .format(dateValue);
-                preCompiledInsertStatement.bindString(columnIndex, dateString);
+                preCompiledStatement.bindString(columnIndex, dateString);
                 break;
             case TIME:
                 Time timeValue = (Time) fieldValue;
-                preCompiledInsertStatement.bindLong(columnIndex, timeValue.getTime());
+                preCompiledStatement.bindLong(columnIndex, timeValue.getTime());
                 break;
             default:
                 throw new DataStoreException(javaFieldType + " is not supported.",
@@ -570,7 +612,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private <T extends Model> Map<String, Object> buildMapForModel(
             @NonNull Class<T> modelClass,
             @NonNull ModelSchema modelSchema,
-            @NonNull Cursor cursor) throws DataStoreException {
+            @NonNull Cursor cursor
+    ) throws DataStoreException {
         final Map<String, Object> mapForModel = new HashMap<>();
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
         final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
@@ -612,7 +655,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         // At the time of implementation, cursor should have been joined with these
                         // columns IF AND ONLY IF the model is a foreign key to the inner model.
                         Class<?> classType = modelClass.getDeclaredField(fieldName).getType();
-                        @SuppressWarnings("unchecked") // Safe type casting since foreign key is always a model
+                        @SuppressWarnings("unchecked") // Safe type casting since fieldJavaType enum value is MODEL.
                         Class<? extends Model> innerModelType = (Class<? extends Model>) classType;
                         String className = innerModelType.getSimpleName();
                         ModelSchema innerModelSchema = ModelSchemaRegistry.singleton()
@@ -671,7 +714,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
-            ModelConflictStrategy modelConflictStrategy) throws IllegalAccessException, DataStoreException {
+            ModelConflictStrategy modelConflictStrategy
+    ) throws IllegalAccessException, DataStoreException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);
@@ -684,7 +728,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         synchronized (sqlCommand.getCompiledSqlStatement()) {
             final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
             compiledSqlStatement.clearBindings();
-            bindPreparedSQLStatementWithValues(model, sqlCommand);
+
+            // fieldValues is a list of field values that are
+            // applicable when binding to insert statement.
+            final List<Object> fieldValues = new ArrayList<>(extractFieldValuesFromModel(model));
+            if (sqlCommand.hasSelectionArgs()) {
+                // These are additional values to bind in the case of updating SQLite table.
+                fieldValues.addAll(sqlCommand.getSelectionArgs());
+            }
+            bindPreCompiledStatementWithFieldValues(compiledSqlStatement, fieldValues);
+
             switch (modelConflictStrategy) {
                 case OVERWRITE_EXISTING:
                     compiledSqlStatement.executeUpdateDelete();

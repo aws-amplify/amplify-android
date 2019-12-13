@@ -76,6 +76,22 @@ public interface LocalStorageAdapter {
             @NonNull ResultListener<StorageItemChange.Record> itemSaveListener);
 
     /**
+     * Save an item into local storage only if the data being overwritten meets the
+     * specific conditions. The {@link ResultListener} will be invoked when the
+     * save operation is completed, to notify the caller of success or failure.
+     * @param item the item to save into the repository
+     * @param initiator An identification of the actor who initiated this save
+     * @param predicate Predicate condition for conditional write
+     * @param itemSaveListener A listener that will be invoked when the save terminates.
+     * @param <T> The type of the item being stored
+     */
+    <T extends Model> void save(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener);
+
+    /**
      * Query the storage for items of a given type.
      * @param itemClass Items that have this class will be solicited
      * @param queryResultsListener A listener that will be notified when the query terminates

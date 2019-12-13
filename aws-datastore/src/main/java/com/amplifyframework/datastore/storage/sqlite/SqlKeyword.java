@@ -82,6 +82,11 @@ public enum SqlKeyword {
     NOT("NOT"),
 
     /**
+     * SQL keyword to check if a value is in range of values.
+     */
+    BETWEEN("BEWTEEN"),
+
+    /**
      * SQL keyword to check if a string is contained in another.
      */
     IN("IN"),

@@ -60,12 +60,22 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull Context context, @NonNull ResultListener<List<ModelSchema>> listener) {
     }
 
-    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener) {
+        save(item, initiator, null, itemSaveListener);
+    }
+
+    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
+    @Override
+    public <T extends Model> void save(
+            @NonNull final T item,
+            @NonNull final StorageItemChange.Initiator initiator,
+            @Nullable final QueryPredicate predicate,
+            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener) {
+        //TODO: Implement conditional-write
         items.add(item);
         StorageItemChange.Record save = StorageItemChange.<T>builder()
             .item(item)
