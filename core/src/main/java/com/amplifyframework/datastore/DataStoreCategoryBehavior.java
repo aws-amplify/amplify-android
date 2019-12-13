@@ -49,6 +49,21 @@ public interface DataStoreCategoryBehavior {
             @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
 
     /**
+     * Saves an item into the DataStore if the data being overwritten meets
+     * the provided conditions. This is useful for making sure that no data
+     * is overwritten with an outdated/incorrect assumption.
+     * @param item An item to save
+     * @param predicate Predicate condition to apply for conditional write
+     * @param saveItemListener
+     *        An optional listener which will be callback'd when the save succeeds or fails
+     * @param <T> The time of item being saved
+     */
+    <T extends Model> void save(
+            @NonNull T item,
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
+
+    /**
      * Deletes an item from the DataStore.
      * @param item An item to delete from the DataStore
      * @param deleteItemListener

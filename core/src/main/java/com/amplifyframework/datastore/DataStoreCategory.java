@@ -60,6 +60,16 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void save(@NonNull T object,
+                                       @Nullable QueryPredicate predicate,
+                                       @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
+        getSelectedPlugin().save(object, predicate, saveItemListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void delete(@NonNull T object,
                                          @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
         getSelectedPlugin().delete(object, deleteItemListener);
