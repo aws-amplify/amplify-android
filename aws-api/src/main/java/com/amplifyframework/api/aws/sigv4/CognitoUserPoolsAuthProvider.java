@@ -29,4 +29,10 @@ public interface CognitoUserPoolsAuthProvider {
      * @throws ApiException if retrieving token fails
      */
     String getLatestAuthToken() throws ApiException;
+
+    /**
+     * Returns the currently logged in user's name from local cache.
+     * @return the currently logged in user's name or null if not available
+     */
+    String getUsername();
 }
