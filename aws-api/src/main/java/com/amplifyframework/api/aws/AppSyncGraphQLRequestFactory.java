@@ -37,6 +37,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.StringUtils;
 
 import java.lang.reflect.Field;
@@ -280,7 +281,7 @@ final class AppSyncGraphQLRequestFactory {
 
                 return new GraphQLRequest<>(
                         doc.toString(),
-                        Collections.singletonMap("owner", username),
+                        Immutable.of(Collections.singletonMap("owner", username)),
                         modelClass,
                         new GsonVariablesSerializer()
                 );
