@@ -1,0 +1,89 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.datastore.network;
+
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.model.Model;
+
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+
+/**
+ * A utility to mock behaviors of an {@link AppSyncEndpoint} from test code.
+ */
+final class MockAppSyncEndpoint {
+    @SuppressWarnings("checkstyle:all") private MockAppSyncEndpoint() {}
+
+    static Configurator configure(AppSyncEndpoint mock) {
+        return new Configurator(mock);
+    }
+
+    static final class Configurator {
+        private AppSyncEndpoint endpoint;
+
+        Configurator() {
+            this(mock(AppSyncEndpoint.class));
+        }
+
+        Configurator(AppSyncEndpoint appSyncEndpoint) {
+            this.endpoint = appSyncEndpoint;
+        }
+
+        /**
+         * Creates an instance of an {@link AppSyncEndpoint}, which will provide a fake response when asked to
+         * to {@link AppSyncEndpoint#sync(Class, Long, ResultListener)}.
+         * @param modelClass Class of models for which the endpoint should respond
+         * @param responseItems The items that should be included in the mocked response, for the model class
+         * @param <T> Type of models for which a response is mocked
+         */
+        @SuppressWarnings("varargs")
+        @SafeVarargs
+        final <T extends Model> Configurator mockSuccessResponse(
+                Class<T> modelClass, ModelWithMetadata<T>... responseItems) {
+
+            doAnswer(invocation -> {
+                // Get a handle to the listener that is passed into the sync() method
+                // ResultListener is the third and final param at index 2 (@0, @1, @2).
+                final int argumentPositionForResultListener = 2;
+                final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> listener =
+                    invocation.getArgument(argumentPositionForResultListener);
+
+                // Call its onResult(), and pass the mocked items inside of a GraphQLResponse wrapper
+                final Iterable<ModelWithMetadata<T>> data = new HashSet<>(Arrays.asList(responseItems));
+                listener.onResult(new GraphQLResponse<>(data, Collections.emptyList()));
+
+                // Return a NoOp cancelable via the sync() method's return.
+                return new NoOpCancelable();
+            }).when(endpoint).sync(
+                eq(modelClass), // Item class to sync
+                any(), // last sync time
+                any() // Result listener
+            );
+            return Configurator.this;
+        }
+
+        AppSyncEndpoint endpoint() {
+            return this.endpoint;
+        }
+    }
+}
