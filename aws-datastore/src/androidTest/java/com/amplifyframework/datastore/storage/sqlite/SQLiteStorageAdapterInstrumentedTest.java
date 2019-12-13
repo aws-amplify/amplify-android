@@ -54,10 +54,12 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -250,14 +252,12 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .build();
         sqliteStorageAdapter.save(blog, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
 
+        final String expectedError = "FOREIGN KEY constraint failed";
+
         Throwable actualError = saveListener.awaitError();
         assertNotNull(actualError.getCause());
         assertNotNull(actualError.getCause().getMessage());
-        assertEquals(
-            "Unexpected message for invalid foreign key scenario: " + Log.getStackTraceString(actualError),
-            "FOREIGN KEY constraint failed (code 787 SQLITE_CONSTRAINT_FOREIGNKEY)",
-            actualError.getCause().getMessage()
-        );
+        assertThat(Log.getStackTraceString(actualError), containsString(expectedError));
     }
 
     /**
