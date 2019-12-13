@@ -17,6 +17,8 @@ package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.hub.HubException;
+
 import java.util.Set;
 
 /**
@@ -68,9 +70,10 @@ public interface AnalyticsCategoryBehavior {
      * Examples of global properties would be `selectedPlan`, `campaignSource`
      *
      * @param properties Map of global properties wrapped as an instance of {@link Properties}
-     * @throws AnalyticsException thrown if an error condition is encountered while registering global properties.
+     * @throws HubException thrown if an error condition is encountered while registering global properties
+     * and Amplify fails to publish the error message to the hub.
      */
-    void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException;
+    void registerGlobalProperties(@NonNull Properties properties) throws HubException;
 
     /**
      * Registered global properties can be unregistered though this method.

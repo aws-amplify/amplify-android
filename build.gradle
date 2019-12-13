@@ -47,7 +47,7 @@ task clean(type: Delete) {
 }
 
 ext {
-    awsSdkVersion = '2.16.4'
+    awsSdkVersion = '2.16.5'
     rxJava2Version = '2.2.13'
 }
 

@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.hub.HubException;
 
 import java.util.Set;
 
@@ -94,7 +95,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
+    public void registerGlobalProperties(@NonNull Properties properties) throws HubException {
         if (enabled) {
             getSelectedPlugin().registerGlobalProperties(properties);
         }
