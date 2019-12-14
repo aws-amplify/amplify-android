@@ -266,6 +266,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+                final boolean writeSuccess;
 
                 if (dataExistsInSQLiteTable(
                         sqliteTable.getName(),
@@ -286,7 +287,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
                     }
-                    saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.OVERWRITE_EXISTING);
+                    writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.OVERWRITE_EXISTING);
                 } else {
                     // insert model in SQLite
                     final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
@@ -296,18 +297,21 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
                     }
-                    saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
+                    writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
                 }
 
-                final StorageItemChange.Record record = StorageItemChange.<T>builder()
-                        .item(item)
-                        .itemClass((Class<T>) item.getClass())
-                        .type(StorageItemChange.Type.SAVE)
-                        .initiator(initiator)
-                        .build()
-                        .toRecord(storageItemChangeConverter);
-                itemChangeSubject.onNext(record);
-                itemSaveListener.onResult(record);
+                // Do not publish item change if write did not go through.
+                if (writeSuccess) {
+                    final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                            .item(item)
+                            .itemClass((Class<T>) item.getClass())
+                            .type(StorageItemChange.Type.SAVE)
+                            .initiator(initiator)
+                            .build()
+                            .toRecord(storageItemChangeConverter);
+                    itemChangeSubject.onNext(record);
+                    itemSaveListener.onResult(record);
+                }
             } catch (Exception exception) {
                 itemChangeSubject.onError(exception);
                 itemSaveListener.onError(new DataStoreException("Error in saving the model.", exception,
@@ -710,7 +714,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     // Extract the values of the fields of a model and bind the values to the SQLiteStatement
     // and execute the statement.
-    private <T extends Model> void saveModel(
+    // Return true if a model is successfully saved, false otherwise.
+    private <T extends Model> boolean saveModel(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
@@ -722,6 +727,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
 
         LOG.debug("Writing data to table for: " + model.toString());
+        final boolean writeSuccess;
 
         // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
         // are not thread-safe. Adding a synchronization barrier to access it.
@@ -740,10 +746,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
             switch (modelConflictStrategy) {
                 case OVERWRITE_EXISTING:
-                    compiledSqlStatement.executeUpdateDelete();
+                    // executeUpdateDelete returns the number of rows affected.
+                    writeSuccess = compiledSqlStatement.executeUpdateDelete() > 0;
                     break;
                 case THROW_EXCEPTION:
-                    compiledSqlStatement.executeInsert();
+                    // executeInsert returns id if successful, -1 otherwise.
+                    writeSuccess = compiledSqlStatement.executeInsert() != -1;
                     break;
                 default:
                     throw new DataStoreException("ModelConflictStrategy " +
@@ -752,7 +760,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             compiledSqlStatement.clearBindings();
         }
 
-        LOG.debug("Successfully written data to table for: " + model.toString());
+        if (writeSuccess) {
+            LOG.debug("Successfully written data to table for: " + model.toString());
+        } else {
+            LOG.debug("Data was not written to table for: " + model.toString());
+        }
+        return writeSuccess;
     }
 
     private boolean dataExistsInSQLiteTable(
