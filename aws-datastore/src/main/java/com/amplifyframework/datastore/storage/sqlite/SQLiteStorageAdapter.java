@@ -306,6 +306,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             .item(item)
                             .itemClass((Class<T>) item.getClass())
                             .type(StorageItemChange.Type.SAVE)
+                            .predicate(predicate)
                             .initiator(initiator)
                             .build()
                             .toRecord(storageItemChangeConverter);

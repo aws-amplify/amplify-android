@@ -16,11 +16,13 @@
 package com.amplifyframework.datastore.storage;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Objects;
@@ -37,6 +39,7 @@ public final class StorageItemChange<T extends Model> {
     private final UUID changeId;
     private final Initiator initiator;
     private final Type type;
+    private final QueryPredicate predicate;
     private final T item;
     private final Class<T> itemClass;
 
@@ -46,9 +49,20 @@ public final class StorageItemChange<T extends Model> {
             @NonNull Type type,
             @NonNull T item,
             @NonNull Class<T> itemClass) {
+        this(changeId, initiator, type, null, item, itemClass);
+    }
+
+    private StorageItemChange(
+            @NonNull UUID changeId,
+            @NonNull Initiator initiator,
+            @NonNull Type type,
+            @Nullable QueryPredicate predicate,
+            @NonNull T item,
+            @NonNull Class<T> itemClass) {
         this.changeId = changeId;
         this.initiator = initiator;
         this.type = type;
+        this.predicate = predicate;
         this.item = item;
         this.itemClass = itemClass;
     }
@@ -75,6 +89,14 @@ public final class StorageItemChange<T extends Model> {
      */
     public Type type() {
         return type;
+    }
+
+    /**
+     * Gets the predicate that was applied before this item change.
+     * @return Predicate applied for this item change
+     */
+    public QueryPredicate predicate() {
+        return predicate;
     }
 
     /**
@@ -134,6 +156,9 @@ public final class StorageItemChange<T extends Model> {
         if (type != that.type) {
             return false;
         }
+        if (predicate != that.predicate) {
+            return false;
+        }
         if (!item.equals(that.item)) {
             return false;
         }
@@ -146,6 +171,7 @@ public final class StorageItemChange<T extends Model> {
         int result = changeId.hashCode();
         result = 31 * result + initiator.hashCode();
         result = 31 * result + type.hashCode();
+        result = 31 * result + predicate.hashCode();
         result = 31 * result + item.hashCode();
         result = 31 * result + itemClass.hashCode();
         return result;
@@ -154,12 +180,13 @@ public final class StorageItemChange<T extends Model> {
     @Override
     public String toString() {
         return "StorageItemChange{" +
-            "changeId=" + changeId +
-            ", initiator=" + initiator +
-            ", type=" + type +
-            ", item=" + item +
-            ", itemClass=" + itemClass +
-            '}';
+                "changeId=" + changeId +
+                ", initiator=" + initiator +
+                ", type=" + type +
+                ", predicate=" + predicate +
+                ", item=" + item +
+                ", itemClass=" + itemClass +
+                '}';
     }
 
     /**
@@ -171,6 +198,7 @@ public final class StorageItemChange<T extends Model> {
         private UUID changeId;
         private Initiator initiator;
         private Type type;
+        private QueryPredicate predicate;
         private T item;
         private Class<T> itemClass;
 
@@ -217,6 +245,16 @@ public final class StorageItemChange<T extends Model> {
         }
 
         /**
+         * Configures the predicate that was applied before making the change.
+         * @param predicate The predicate that was applied for this change.
+         * @return Current Builder instance for fluent configuration chainging
+         */
+        public Builder<T> predicate(@Nullable QueryPredicate predicate) {
+            this.predicate = predicate;
+            return this;
+        }
+
+        /**
          * Configures the item that changed.
          * For a save, this is the item after the save.
          * For a delete, this is the item before the delete.
@@ -249,6 +287,7 @@ public final class StorageItemChange<T extends Model> {
                 Objects.requireNonNull(usedId),
                 Objects.requireNonNull(initiator),
                 Objects.requireNonNull(type),
+                predicate, // Nullable
                 Objects.requireNonNull(item),
                 Objects.requireNonNull(itemClass)
             );
