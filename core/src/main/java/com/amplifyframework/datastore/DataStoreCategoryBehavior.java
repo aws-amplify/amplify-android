@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -60,7 +59,7 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void save(
             @NonNull T item,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
 
     /**
@@ -97,7 +96,7 @@ public interface DataStoreCategoryBehavior {
      * @param <T> The type of items being queried
      */
     <T extends Model> void query(@NonNull Class<T> itemClass,
-                                 @Nullable QueryPredicate predicate,
+                                 @NonNull QueryPredicate predicate,
                                  @NonNull ResultListener<Iterator<T>> queryResultsListener);
 
 

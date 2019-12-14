@@ -197,7 +197,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API, predicate,
                 new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
@@ -230,7 +230,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         sqliteStorageAdapter.query(itemClass, predicate, queryResultsListener);
     }

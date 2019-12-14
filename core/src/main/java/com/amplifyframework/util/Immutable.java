@@ -18,7 +18,6 @@ package com.amplifyframework.util;
 import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -74,25 +73,11 @@ public final class Immutable {
      * @param <T> The type of items in the list
      * @return An immutable copy of the provided list
      */
-    public static <T> List<T> of(final List<T> mutableList) {
+    public static <T> List<T> of(@Nullable final List<T> mutableList) {
         if (mutableList == null) {
             return null;
         }
 
         return Collections.unmodifiableList(new ArrayList<>(mutableList));
-    }
-
-    /**
-     * Creates an immutable copy of the provided array.
-     * @param mutableArray A possibly null, possibly empty array
-     * @param <T> The type of items in the array
-     * @return An immutable copy of the provided array
-     */
-    public static <T> T[] of(final T[] mutableArray) {
-        if (mutableArray == null) {
-            return null;
-        }
-
-        return Arrays.copyOf(mutableArray, mutableArray.length);
     }
 }

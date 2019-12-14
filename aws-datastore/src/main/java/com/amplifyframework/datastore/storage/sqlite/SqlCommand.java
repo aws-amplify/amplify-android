@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.util.ArrayUtils;
 import com.amplifyframework.util.Immutable;
 
 import java.util.List;
@@ -157,7 +158,7 @@ final class SqlCommand {
         for (int index = 0; index < length; index++) {
             array[index] = selectionArgs.get(index).toString();
         }
-        return Immutable.of(array);
+        return ArrayUtils.copyOf(array);
     }
 
     /**
