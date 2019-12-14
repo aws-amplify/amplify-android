@@ -24,7 +24,6 @@ import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.pinpoint.test.R;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.hub.HubException;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
@@ -41,6 +40,8 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
@@ -142,12 +143,10 @@ public class AnalyticsPinpointInstrumentedTest {
     /**
      * Registers a global property and ensures that all recorded events have the global property.
      * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
-     * @throws HubException thrown if an error condition is encountered while registering global properties
-     *                      and Amplify fails to publish the error message to the hub.
      * @throws JSONException Caused by unexpected event structure.
      */
     @Test
-    public void testRegisterGlobalProperties() throws AnalyticsException, HubException, JSONException {
+    public void testRegisterGlobalProperties() throws AnalyticsException, JSONException {
         // Register a global property
         registerGobalProperty();
 
@@ -164,20 +163,19 @@ public class AnalyticsPinpointInstrumentedTest {
                 new JSONObject(analyticsClient.getAllEvents().get(1).get("attributes").toString());
 
         assertEquals(2, analyticsClient.getAllEvents().size());
-        assertEquals(true, eventAttributes.has("Property"));
-        assertEquals(true, eventAttributes.has("GlobalProperty"));
-        assertEquals(false, event2Attributes.has("Property"));
-        assertEquals(true, event2Attributes.has("GlobalProperty"));
+        assertTrue(eventAttributes.has("Property"));
+        assertTrue(eventAttributes.has("GlobalProperty"));
+        assertFalse(event2Attributes.has("Property"));
+        assertTrue(event2Attributes.has("GlobalProperty"));
     }
 
     /**
      * Registers a global property and then Unregisters the global property
      * and ensures that it is respected in events recorded thereafter.
-     * @throws HubException thrown if an error condition is encountered while registering global properties
-     *                      and Amplify fails to publish the error message to the hub.
+     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
      */
     @Test
-    public void testUnregisterGlobalProperties() throws HubException {
+    public void testUnregisterGlobalProperties() throws AnalyticsException {
         // Register a global property
         registerGobalProperty();
 
@@ -189,10 +187,10 @@ public class AnalyticsPinpointInstrumentedTest {
         Amplify.Analytics.recordEvent("amplify-test-event-without-property");
 
         assertEquals(1, analyticsClient.getAllEvents().size());
-        assertEquals(false, analyticsClient.getAllEvents().get(0).has("attributes"));
+        assertFalse(analyticsClient.getAllEvents().get(0).has("attributes"));
     }
 
-    private void registerGobalProperty() throws HubException {
+    private void registerGobalProperty() throws AnalyticsException {
         // Register a global property
         Amplify.Analytics.registerGlobalProperties(PinpointProperties.builder()
                 .add("GlobalProperty", "globalVal")

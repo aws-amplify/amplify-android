@@ -113,7 +113,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                 } else {
                     throw new AnalyticsException("Invalid property type detected.",
                             "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
-                                    "Refer to the docuemntation for details.");
+                                    "Refer to the documentation for details.");
                 }
             }
         }
@@ -124,16 +124,23 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) throws HubException {
+    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
         for (Map.Entry<String, Property<?>> entry : properties.get().entrySet()) {
             if (entry.getValue() instanceof StringProperty) {
                 analyticsClient.addGlobalAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
             } else if (entry.getValue() instanceof DoubleProperty) {
                 analyticsClient.addGlobalMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
             } else {
-                Amplify.Hub.publish(HubChannel.ANALYTICS, new HubEvent("Analytics.registerGlobalProperties",
-                        "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
-                                " only StringProperty or DoubleProperty. Refer tio the documentation for details."));
+                try {
+                    Amplify.Hub.publish(HubChannel.ANALYTICS, new HubEvent("Analytics.registerGlobalProperties",
+                            "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
+                                    " only StringProperty or DoubleProperty. Refer to the documentation for details."));
+                } catch (HubException hubException) {
+                    throw new AnalyticsException("Failed to publish global property registration failure to the Hub.",
+                            hubException, "Attempt was made to register invalid property type. " +
+                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
+                            " Refer to the documentation for details.");
+                }
             }
         }
     }
