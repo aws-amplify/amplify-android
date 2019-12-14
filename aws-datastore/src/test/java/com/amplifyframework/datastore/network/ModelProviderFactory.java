@@ -15,9 +15,9 @@
 
 package com.amplifyframework.datastore.network;
 
-import com.amplifyframework.core.Immutable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.util.Immutable;
 
 import java.util.Arrays;
 import java.util.HashSet;
