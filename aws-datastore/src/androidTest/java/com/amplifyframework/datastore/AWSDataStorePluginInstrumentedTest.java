@@ -20,13 +20,16 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.LatchedResultListener;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedConsumer;
+import com.amplifyframework.testutils.LatchedResponseConsumer;
 import com.amplifyframework.testutils.Sleep;
 
 import org.junit.AfterClass;
@@ -142,10 +145,12 @@ public final class AWSDataStorePluginInstrumentedTest {
     }
 
     private <T extends Model> void saveLocal(T item) {
-        LatchedResultListener<DataStoreItemChange<T>> saveListener =
-            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
-        Amplify.DataStore.save(item, saveListener);
-        saveListener.awaitResult();
+        LatchedConsumer<DataStoreItemChange<T>> saveConsumer =
+            LatchedConsumer.instance(DATA_STORE_OP_TIMEOUT_MS);
+        ResultListener<DataStoreItemChange<T>> resultListener =
+            ResultListener.instance(saveConsumer, EmptyConsumer.of(Throwable.class));
+        Amplify.DataStore.save(item, resultListener);
+        saveConsumer.awaitValue();
     }
 
     /**
@@ -160,11 +165,13 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     private <T extends Model> T getLocal(
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedResultListener<Iterator<T>> queryResultsListener =
-            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
-        Amplify.DataStore.query(clazz, queryResultsListener);
+        LatchedConsumer<Iterator<T>> queryConsumer =
+            LatchedConsumer.instance(DATA_STORE_OP_TIMEOUT_MS);
+        ResultListener<Iterator<T>> resultListener =
+            ResultListener.instance(queryConsumer, EmptyConsumer.of(Throwable.class));
+        Amplify.DataStore.query(clazz, resultListener);
 
-        final Iterator<T> iterator = queryResultsListener.awaitResult();
+        final Iterator<T> iterator = queryConsumer.awaitValue();
         while (iterator.hasNext()) {
             T value = iterator.next();
             if (value.getId().equals(itemId)) {
@@ -177,23 +184,29 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     private <T extends Model> T getRemote(
             @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedSingleResponseListener<T> queryListener =
-            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.query(clazz, itemId, queryListener);
-        return queryListener.awaitSuccessResponse();
+        LatchedResponseConsumer<T> queryConsumer =
+            LatchedResponseConsumer.instance(NETWORK_OP_TIMEOUT_MS);
+        ResultListener<GraphQLResponse<T>> responseListener =
+            ResultListener.instance(queryConsumer, EmptyConsumer.of(Throwable.class));
+        Amplify.API.query(clazz, itemId, responseListener);
+        return queryConsumer.awaitResponseData();
     }
 
     private <T extends Model> void createRemote(T item) {
-        LatchedSingleResponseListener<T> createListener =
-            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.mutate(item, MutationType.CREATE, createListener);
-        createListener.awaitSuccessResponse();
+        LatchedResponseConsumer<T> createConsumer =
+            LatchedResponseConsumer.instance(NETWORK_OP_TIMEOUT_MS);
+        ResultListener<GraphQLResponse<T>> responseListener =
+            ResultListener.instance(createConsumer, EmptyConsumer.of(Throwable.class));
+        Amplify.API.mutate(item, MutationType.CREATE, responseListener);
+        createConsumer.awaitResponseData();
     }
 
     private <T extends Model> void updateRemote(T item) {
-        LatchedSingleResponseListener<T> updateListener =
-            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.mutate(item, MutationType.UPDATE, updateListener);
-        updateListener.awaitSuccessResponse();
+        LatchedResponseConsumer<T> updateConsumer =
+            LatchedResponseConsumer.instance(NETWORK_OP_TIMEOUT_MS);
+        ResultListener<GraphQLResponse<T>> responseListener =
+            ResultListener.instance(updateConsumer, EmptyConsumer.of(Throwable.class));
+        Amplify.API.mutate(item, MutationType.UPDATE, responseListener);
+        updateConsumer.awaitResponseData();
     }
 }

@@ -16,35 +16,26 @@
 package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 
-final class MutationAdapter<T extends Model> implements ResultListener<GraphQLResponse<String>> {
-    private final Class<T> itemClass;
-    private final ResponseDeserializer responseDeserializer;
-    private final ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener;
+final class MutationAdapter {
+    @SuppressWarnings("checkstyle:all") private MutationAdapter() {}
 
-    MutationAdapter(
+    static <T extends Model> ResultListener<GraphQLResponse<String>> instance(
             ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener,
             Class<T> itemClass,
             ResponseDeserializer responseDeserializer) {
-        this.responseListener = responseListener;
-        this.itemClass = itemClass;
-        this.responseDeserializer = responseDeserializer;
-    }
 
-    @Override
-    public void onResult(GraphQLResponse<String> result) {
-        if (result.hasErrors()) {
-            responseListener.onResult(new GraphQLResponse<>(null, result.getErrors()));
-            return;
-        }
-        responseListener.onResult(responseDeserializer.deserialize(result.getData(), itemClass));
+        final Consumer<GraphQLResponse<String>> resultConsumer = result -> {
+            if (result.hasErrors()) {
+                responseListener.onResult(new GraphQLResponse<>(null, result.getErrors()));
+                return;
+            }
+            responseListener.onResult(responseDeserializer.deserialize(result.getData(), itemClass));
+        };
 
-    }
-
-    @Override
-    public void onError(Throwable error) {
-        responseListener.onError(error);
+        return ResultListener.instance(resultConsumer, responseListener::onError);
     }
 }

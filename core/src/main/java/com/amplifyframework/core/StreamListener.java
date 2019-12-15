@@ -15,8 +15,12 @@
 
 package com.amplifyframework.core;
 
+import androidx.annotation.NonNull;
+
 /**
- * A StreamListener behaves similarly to the Rx Observer.
+ * A utility to combine a collection of {@link Consumer}s - for stream data, and
+ * terminating completion/error events.
+ *
  * A stream of zero or more items may be passed to the StreamListener
  * via the {@see #onNext(T item)} callback. After this,
  * at most one of the {@see #onComplete()} or {@see #onError(Throwable error)}
@@ -24,10 +28,41 @@ package com.amplifyframework.core;
  *
  * See also the {@see ResultListener}, which expects a single result object
  * in its callbacks, as opposed to a stream of 0..n items.
- * @param <T> A common type for the item(s) found in the stream
+ *
+ * The StreamListener is modeled after the RxJava2 {@link io.reactivex.Observer}.
+ *
+ * @param <T> The type of item(s) that can be emitted via {@link #onNext(Object)}
  * @see <a href="http://reactivex.io/documentation/contract.html">The Rx Observable Contract</a>
  */
-public interface StreamListener<T> {
+public final class StreamListener<T> {
+    private final Consumer<T> itemConsumer;
+    private final Consumer<Throwable> errorConsumer;
+    private final Action completionAction;
+
+    private StreamListener(
+            @NonNull Consumer<T> itemConsumer,
+            @NonNull Consumer<Throwable> errorConsumer,
+            @NonNull Action completionAction) {
+        this.itemConsumer = itemConsumer;
+        this.errorConsumer = errorConsumer;
+        this.completionAction = completionAction;
+    }
+
+    /**
+     * Creates a StreamListener.
+     * @param itemConsumer Consumer of stream items
+     * @param errorConsumer Consumer of terminating errors
+     * @param completionAction Action to perform on end of stream
+     * @param <T> Type of items found in stream
+     * @return A stream listener
+     */
+    @NonNull
+    public static <T> StreamListener<T> instance(
+            @NonNull Consumer<T> itemConsumer,
+            @NonNull Consumer<Throwable> errorConsumer,
+            @NonNull Action completionAction) {
+        return new StreamListener<>(itemConsumer, errorConsumer, completionAction);
+    }
 
     /**
      * Called zero or more times, once for each new item
@@ -36,13 +71,17 @@ public interface StreamListener<T> {
      * {@see #onError(Throwable error)} may be called.
      * @param item Next item in the stream
     */
-    void onNext(T item);
+    public void onNext(@NonNull T item) {
+        itemConsumer.accept(item);
+    }
 
     /**
      * Called when the stream has completed emitting items.
      * No other callback will be received once this is invoked.
      */
-    void onComplete();
+    public void onComplete() {
+        completionAction.call();
+    }
 
     /**
      * Called when an error is encountered while processing
@@ -50,5 +89,7 @@ public interface StreamListener<T> {
      * this is invoked.
      * @param error An error encountered while evaluating a stream
      */
-    void onError(Throwable error);
+    public void onError(@NonNull Throwable error) {
+        errorConsumer.accept(error);
+    }
 }

@@ -21,7 +21,6 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import io.reactivex.Completable;
-import io.reactivex.CompletableEmitter;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -64,7 +63,8 @@ final class DataHydration {
             // Save the model portion
             final ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
             final T item = modelWithMetadata.getModel();
-            final StorageItemChangeListener listener = new StorageItemChangeListener(emitter);
+            final ResultListener<StorageItemChange.Record> listener =
+                ResultListener.instance(ignoredRecord -> emitter.onComplete(), emitter::onError);
             if (Boolean.TRUE.equals(metadata.isDeleted())) {
                 localStorageAdapter.delete(item, StorageItemChange.Initiator.SYNC_ENGINE, listener);
             } else {
@@ -78,33 +78,9 @@ final class DataHydration {
             // Save the metadata portion
             // This is separate from the model save since they have two distinct completions.
             final ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
-            final StorageItemChangeListener metadataSaveListener = new StorageItemChangeListener(emitter);
+            final ResultListener<StorageItemChange.Record> metadataSaveListener =
+                ResultListener.instance(ignoredRecord -> emitter.onComplete(), emitter::onError);
             localStorageAdapter.save(metadata, StorageItemChange.Initiator.SYNC_ENGINE, metadataSaveListener);
         });
-    }
-
-    /**
-     * Listens to change record on the {@link LocalStorageAdapter}, for
-     * {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, ResultListener)} and
-     * {@link LocalStorageAdapter#delete(Model, StorageItemChange.Initiator, ResultListener)}.
-     *  Publishes the values onto a {@link CompletableEmitter}, ignoring the result that is
-     *  provided in {@link ResultListener#onResult(Object)}, if/when that is invoked.
-     */
-    static final class StorageItemChangeListener implements ResultListener<StorageItemChange.Record> {
-        private final CompletableEmitter emitter;
-
-        StorageItemChangeListener(CompletableEmitter emitter) {
-            this.emitter = emitter;
-        }
-
-        @Override
-        public void onResult(StorageItemChange.Record result) {
-            emitter.onComplete();
-        }
-
-        @Override
-        public void onError(Throwable error) {
-            emitter.onError(error);
-        }
     }
 }

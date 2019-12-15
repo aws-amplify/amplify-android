@@ -19,6 +19,9 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedConsumer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +30,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 /**
  * Validates the functionality of the {@link AWSApiPlugin} for REST operations.
@@ -51,10 +53,12 @@ public final class RestApiInstrumentationTest {
     @Test
     public void getRequestWithNoAuth() throws JSONException {
         final RestOptions options = new RestOptions("simplesuccess");
-        LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
-        Amplify.API.get("nonAuthApi", options, responseListener);
-        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue("Should return a non null data", response.getData() != null);
+        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
+        ResultListener<RestResponse> resultListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
+        Amplify.API.get("nonAuthApi", options, resultListener);
+        RestResponse response = responseConsumer.awaitValue();
+        assertNotNull("Should return a non null data", response.getData());
 
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
@@ -76,10 +80,12 @@ public final class RestApiInstrumentationTest {
     @Test
     public void postRequestWithNoAuth() throws JSONException {
         final RestOptions options = new RestOptions("simplesuccess", "sample body".getBytes());
-        LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
+        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
+        ResultListener<RestResponse> responseListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
         Amplify.API.post("nonAuthApi", options, responseListener);
-        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue("Should return a non null data", response.getData() != null);
+        RestResponse response = responseConsumer.awaitValue();
+        assertNotNull("Should return a non null data", response.getData());
 
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
@@ -101,10 +107,12 @@ public final class RestApiInstrumentationTest {
     @Test
     public void getRequestWithApiKey() throws JSONException {
         final RestOptions options = new RestOptions("simplesuccessapikey");
-        LatchedRestResponseListener responseListener = new LatchedRestResponseListener();
+        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
+        ResultListener<RestResponse> responseListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
         Amplify.API.get("apiKeyApi", options, responseListener);
-        RestResponse response = responseListener.awaitTerminalEvent().awaitSuccessResponse();
-        assertTrue("Should return a non null data", response.getData() != null);
+        RestResponse response = responseConsumer.awaitValue();
+        assertNotNull("Should return a non null data", response.getData());
 
         final JSONObject resultJSON = response.getData().asJSONObject();
         final JSONObject contextJSON = resultJSON.getJSONObject("context");
