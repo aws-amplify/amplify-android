@@ -94,13 +94,17 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) {
-        throw new UnsupportedOperationException("This operation is currently not supported.");
+    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
+        if (enabled) {
+            getSelectedPlugin().registerGlobalProperties(properties);
+        }
     }
 
     @Override
     public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        throw new UnsupportedOperationException("This operation is currently not supported.");
+        if (enabled) {
+            getSelectedPlugin().unregisterGlobalProperties(keys);
+        }
     }
 
     @Override

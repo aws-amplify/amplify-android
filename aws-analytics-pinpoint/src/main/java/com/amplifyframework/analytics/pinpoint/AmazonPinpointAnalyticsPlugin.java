@@ -24,6 +24,10 @@ import com.amplifyframework.analytics.AnalyticsPlugin;
 import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.hub.HubException;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.regions.Regions;
@@ -108,8 +112,8 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                     pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
                 } else {
                     throw new AnalyticsException("Invalid property type detected.",
-                            "AmazonPinpointAnalyticsPlugin support only StringProperty or DoubleProperty." +
-                                    "Refer tio the docuemntation for details.");
+                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
+                                    "Refer to the documentation for details.");
                 }
             }
         }
@@ -120,8 +124,25 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) {
-        throw new UnsupportedOperationException("This operation has not been implemented yet.");
+    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
+        for (Map.Entry<String, Property<?>> entry : properties.get().entrySet()) {
+            if (entry.getValue() instanceof StringProperty) {
+                analyticsClient.addGlobalAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
+            } else if (entry.getValue() instanceof DoubleProperty) {
+                analyticsClient.addGlobalMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
+            } else {
+                try {
+                    Amplify.Hub.publish(HubChannel.ANALYTICS, new HubEvent("Analytics.registerGlobalProperties",
+                            "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
+                                    " only StringProperty or DoubleProperty. Refer to the documentation for details."));
+                } catch (HubException hubException) {
+                    throw new AnalyticsException("Failed to publish global property registration failure to the Hub.",
+                            hubException, "Attempt was made to register invalid property type. " +
+                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
+                            " Refer to the documentation for details.");
+                }
+            }
+        }
     }
 
     /**
@@ -129,7 +150,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        throw new UnsupportedOperationException("This operation has not been implemented yet.");
+        for (String key: keys) {
+            analyticsClient.removeGlobalAttribute(key);
+            analyticsClient.removeGlobalMetric(key);
+        }
     }
 
     /**
