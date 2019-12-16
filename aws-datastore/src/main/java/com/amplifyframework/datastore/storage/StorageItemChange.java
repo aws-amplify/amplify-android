@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
@@ -156,7 +157,7 @@ public final class StorageItemChange<T extends Model> {
         if (type != that.type) {
             return false;
         }
-        if (predicate != that.predicate) {
+        if (!ObjectsCompat.equals(predicate, that.predicate)) {
             return false;
         }
         if (!item.equals(that.item)) {
@@ -171,7 +172,7 @@ public final class StorageItemChange<T extends Model> {
         int result = changeId.hashCode();
         result = 31 * result + initiator.hashCode();
         result = 31 * result + type.hashCode();
-        result = 31 * result + predicate.hashCode();
+        result = 31 * result + (predicate != null ? predicate.hashCode() : 0);
         result = 31 * result + item.hashCode();
         result = 31 * result + itemClass.hashCode();
         return result;
