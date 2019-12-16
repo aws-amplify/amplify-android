@@ -17,6 +17,8 @@ package com.amplifyframework.datastore.storage;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.QueryOperator;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
 import com.google.gson.Gson;
@@ -43,17 +45,19 @@ public final class GsonStorageItemChangeConverter implements
      */
     public GsonStorageItemChangeConverter() {
         this.gson = new GsonBuilder()
-            .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
-            .create();
+                .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
+                .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
+                .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
+                .create();
     }
 
     @Override
     public <T extends Model> StorageItemChange.Record toRecord(StorageItemChange<T> storageItemChange) {
         return StorageItemChange.Record.builder()
-            .id(storageItemChange.changeId().toString())
-            .entry(gson.toJson(storageItemChange))
-            .itemClass(storageItemChange.itemClass().getName())
-            .build();
+                .id(storageItemChange.changeId().toString())
+                .entry(gson.toJson(storageItemChange))
+                .itemClass(storageItemChange.itemClass().getName())
+                .build();
     }
 
     @Override

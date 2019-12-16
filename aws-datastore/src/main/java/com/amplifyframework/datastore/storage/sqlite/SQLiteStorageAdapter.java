@@ -300,19 +300,19 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
                 }
 
-                // Do not publish item change if write did not go through.
+                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                        .item(item)
+                        .itemClass((Class<T>) item.getClass())
+                        .type(StorageItemChange.Type.SAVE)
+                        .predicate(predicate)
+                        .initiator(initiator)
+                        .build()
+                        .toRecord(storageItemChangeConverter);
                 if (writeSuccess) {
-                    final StorageItemChange.Record record = StorageItemChange.<T>builder()
-                            .item(item)
-                            .itemClass((Class<T>) item.getClass())
-                            .type(StorageItemChange.Type.SAVE)
-                            .predicate(predicate)
-                            .initiator(initiator)
-                            .build()
-                            .toRecord(storageItemChangeConverter);
+                    // Do not publish item change if write did not go through.
                     itemChangeSubject.onNext(record);
-                    itemSaveListener.onResult(record);
                 }
+                itemSaveListener.onResult(record);
             } catch (Exception exception) {
                 itemChangeSubject.onError(exception);
                 itemSaveListener.onError(new DataStoreException("Error in saving the model.", exception,
