@@ -57,14 +57,17 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     @Override
     public void initialize(
-            @NonNull Context context, @NonNull ResultListener<List<ModelSchema>> listener) {
+            @NonNull Context context,
+            @NonNull ResultListener<List<ModelSchema>> listener
+    ) {
     }
 
     @Override
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener) {
+            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener
+    ) {
         save(item, initiator, null, itemSaveListener);
     }
 
@@ -74,16 +77,17 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
-            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener) {
-        //TODO: Implement conditional-write
+            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener
+    ) {
         items.add(item);
         StorageItemChange.Record save = StorageItemChange.<T>builder()
-            .item(item)
-            .itemClass((Class<T>) item.getClass())
-            .type(StorageItemChange.Type.SAVE)
-            .initiator(initiator)
-            .build()
-            .toRecord(storageItemChangeConverter);
+                .item(item)
+                .itemClass((Class<T>) item.getClass())
+                .type(StorageItemChange.Type.SAVE)
+                .predicate(predicate)
+                .initiator(initiator)
+                .build()
+                .toRecord(storageItemChangeConverter);
         changeRecordStream.onNext(save);
         itemSaveListener.onResult(save);
     }
@@ -91,8 +95,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     @Override
     public <T extends Model> void query(
             @NonNull final Class<T> itemClass,
-            @NonNull final ResultListener<Iterator<T>> queryResultsListener) {
-
+            @NonNull final ResultListener<Iterator<T>> queryResultsListener
+    ) {
         query(itemClass, null, queryResultsListener);
     }
 
@@ -101,8 +105,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void query(
             @NonNull final Class<T> itemClass,
             @Nullable final QueryPredicate predicate,
-            @NonNull final ResultListener<Iterator<T>> queryResultsListener) {
-
+            @NonNull final ResultListener<Iterator<T>> queryResultsListener
+    ) {
         List<T> result = new ArrayList<>();
         for (Model item : items) {
             if (itemClass.isAssignableFrom((item.getClass()))) {
@@ -117,8 +121,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener) {
-
+            @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener
+    ) {
         for (Model savedItem : items) {
             if (savedItem.getId().equals(item.getId())) {
                 items.remove(item);
