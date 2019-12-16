@@ -248,7 +248,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
-                    modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
+                        modelSchemaRegistry.getModelSchemaForModelInstance(item);
                 final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
 
                 if (dataExistsInSQLiteTable(
@@ -263,6 +263,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "found for the Model: " + modelSchema.getName(),
                                 AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
+                        return;
                     }
                     saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.OVERWRITE_EXISTING);
                 } else {
@@ -273,6 +274,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "No insert statement found for the Model: " + modelSchema.getName(),
                                 AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
+                        return;
                     }
                     saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
                 }
@@ -359,7 +361,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
-                        modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
+                        modelSchemaRegistry.getModelSchemaForModelInstance(item);
                 final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
 
                 LOG.debug("Deleting item in table: " + sqLiteTable.getName() +
@@ -466,7 +468,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             throws IllegalAccessException, DataStoreException {
         final String tableName = sqlCommand.tableName();
         final SQLiteStatement preCompiledInsertStatement = sqlCommand.getCompiledSqlStatement();
-        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(object.getClass()).iterator();
+
+        final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
+                .getModelSchemaForModelClass(tableName);
+        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
 
         final Cursor cursor = getQueryAllCursor(tableName, null);
         if (cursor == null) {
@@ -475,10 +481,19 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
         cursor.moveToFirst();
 
-        final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
-                .getModelSchemaForModelClass(tableName);
-        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
+        bindAllFieldsWithValues(object, preCompiledInsertStatement, cursor, columns);
+
+        if (!cursor.isClosed()) {
+            cursor.close();
+        }
+    }
+
+    private <T> void bindAllFieldsWithValues(@NonNull T object,
+                                             SQLiteStatement preCompiledInsertStatement,
+                                             Cursor cursor,
+                                             Map<String, SQLiteColumn> columns)
+            throws IllegalAccessException, DataStoreException {
+        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(object.getClass()).iterator();
 
         while (fieldIterator.hasNext()) {
             final Field field = fieldIterator.next();
@@ -492,6 +507,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             if (column == null) {
                 continue;
             }
+
             final String columnName = column.getAliasedName();
             final JavaFieldType javaFieldType;
             if (Model.class.isAssignableFrom(field.getType())) {
@@ -515,10 +531,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     fieldValue,
                     columnIndex,
                     javaFieldType);
-        }
-
-        if (!cursor.isClosed()) {
-            cursor.close();
         }
     }
 

@@ -62,6 +62,15 @@ public final class ModelSchemaRegistry {
     }
 
     /**
+     * Retrieve the ModelSchema object for the given Model instance.
+     * @param modelInstance instance of the Model class
+     * @return the ModelSchema object for the given Model instance.
+     */
+    public synchronized <T extends Model> ModelSchema getModelSchemaForModelInstance(@NonNull T modelInstance) {
+        return modelSchemaMap.get(modelInstance.getClass().getSimpleName());
+    }
+
+    /**
      * Retrieve the map of Model ClassName => ModelSchema.
      * @return an immutable map of Model ClassName => ModelSchema
      */
