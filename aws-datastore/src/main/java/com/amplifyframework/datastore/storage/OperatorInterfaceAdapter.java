@@ -49,8 +49,15 @@ final class OperatorInterfaceAdapter implements
      * {@inheritDoc}
      */
     @Override
-    public QueryOperator deserialize(JsonElement json, Type type,
-                         JsonDeserializationContext context) throws JsonParseException {
+    public QueryOperator deserialize(
+            JsonElement json,
+            Type type,
+            JsonDeserializationContext context
+    ) throws JsonParseException {
+        if (json == null || json.isJsonNull()) {
+            return null;
+        }
+
         JsonObject jsonObject = json.getAsJsonObject();
         String operatorType = jsonObject.get(TYPE).getAsString();
         switch (QueryOperator.Type.valueOf(operatorType)) {
@@ -73,7 +80,8 @@ final class OperatorInterfaceAdapter implements
             case BEGINS_WITH:
                 return context.deserialize(json, BeginsWithQueryOperator.class);
             default:
-                throw new JsonParseException("Unable to deserialize to QueryOperator.");
+                throw new JsonParseException("Unable to deserialize " +
+                        json.toString() + " to QueryOperator instance.");
         }
     }
 
@@ -81,7 +89,11 @@ final class OperatorInterfaceAdapter implements
      * {@inheritDoc}
      */
     @Override
-    public JsonElement serialize(QueryOperator operator, Type type, JsonSerializationContext context) {
+    public JsonElement serialize(
+            QueryOperator operator,
+            Type type,
+            JsonSerializationContext context
+    ) {
         if (operator instanceof ContainsQueryOperator) {
             return context.serialize(operator, ContainsQueryOperator.class);
         } else if (operator instanceof GreaterOrEqualQueryOperator) {
@@ -101,7 +113,8 @@ final class OperatorInterfaceAdapter implements
         } else if (operator instanceof BeginsWithQueryOperator) {
             return context.serialize(operator, BeginsWithQueryOperator.class);
         } else {
-            throw new JsonParseException("Unable to serialize this instance of QueryOperator.");
+            throw new JsonParseException("Unable to serialize a QueryOperator " +
+                    "of type " + operator.type().name() + ".");
         }
     }
 }

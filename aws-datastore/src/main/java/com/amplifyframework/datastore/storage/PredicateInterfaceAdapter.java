@@ -47,8 +47,15 @@ final class PredicateInterfaceAdapter implements
      * {@inheritDoc}
      */
     @Override
-    public QueryPredicate deserialize(JsonElement json, Type type,
-                         JsonDeserializationContext context) throws JsonParseException {
+    public QueryPredicate deserialize(
+            JsonElement json,
+            Type type,
+            JsonDeserializationContext context
+    ) throws JsonParseException {
+        if (json == null || json.isJsonNull()) {
+            return null;
+        }
+
         JsonObject jsonObject = json.getAsJsonObject();
         String predicateType = jsonObject.get(TYPE).getAsString();
         switch (PredicateType.valueOf(predicateType)) {
@@ -57,7 +64,8 @@ final class PredicateInterfaceAdapter implements
             case GROUP:
                 return context.deserialize(json, QueryPredicateGroup.class);
             default:
-                throw new JsonParseException("Unable to deserialize to QueryPredicate.");
+                throw new JsonParseException("Unable to deserialize " +
+                        json.toString() + " to QueryPredicate instance.");
         }
     }
 
@@ -65,7 +73,11 @@ final class PredicateInterfaceAdapter implements
      * {@inheritDoc}
      */
     @Override
-    public JsonElement serialize(QueryPredicate predicate, Type type, JsonSerializationContext context) {
+    public JsonElement serialize(
+            QueryPredicate predicate,
+            Type type,
+            JsonSerializationContext context
+    ) throws JsonParseException {
         JsonElement json;
         PredicateType predicateType;
         if (predicate instanceof QueryPredicateOperation) {
@@ -75,7 +87,7 @@ final class PredicateInterfaceAdapter implements
             json = context.serialize(predicate, QueryPredicateGroup.class);
             predicateType = PredicateType.GROUP;
         } else {
-            throw new JsonParseException("Unable to serialize this instance of QueryPredicate.");
+            throw new JsonParseException("Unable to identify the predicate type.");
         }
         JsonObject jsonObject = json.getAsJsonObject();
         jsonObject.addProperty(TYPE, predicateType.name());
