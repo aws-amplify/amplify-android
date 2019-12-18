@@ -29,7 +29,6 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -158,7 +157,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        assertEquals(blogOwner, saveModel(blogOwner));
+        saveModel(blogOwner);
 
         final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("BlogOwner");
         assertNotNull(cursor);
@@ -183,7 +182,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .name("Tony Danielsen")
             .wea(null)
             .build();
-        assertEquals(blogOwner, saveModel(blogOwner));
+        saveModel(blogOwner);
 
         final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("BlogOwner");
         assertNotNull(cursor);
@@ -336,7 +335,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        assertEquals(blogOwner, saveModel(blogOwner));
+        saveModel(blogOwner);
 
         Iterator<BlogOwner> result = queryModel(BlogOwner.class);
         assertNotNull(result);
@@ -575,26 +574,24 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         deleteModel(raphael);
 
         // Get the BlogOwner record from the database
-        Iterator<BlogOwner> blogOwnerterator = queryModel(BlogOwner.class);
-        assertFalse(blogOwnerterator.hasNext());
+        Iterator<BlogOwner> blogOwnerIterator = queryModel(BlogOwner.class);
+        assertFalse(blogOwnerIterator.hasNext());
 
         // Get the Blog record from the database
         Iterator<Blog> blogIterator = queryModel(Blog.class);
         assertFalse(blogIterator.hasNext());
     }
 
-    private <T extends Model> T saveModel(@NonNull T model) throws DataStoreException {
-        return saveModel(model, null);
+    private <T extends Model> void saveModel(@NonNull T model) {
+        saveModel(model, null);
     }
 
-    private <T extends Model> T saveModel(
-            @NonNull T model, @Nullable QueryPredicate predicate) throws DataStoreException {
+    private <T extends Model> void saveModel(
+            @NonNull T model, @Nullable QueryPredicate predicate) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, predicate, saveListener);
-        return saveListener.awaitResult()
-                .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
-                .item();
+        saveListener.awaitTerminalEvent();
     }
 
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
@@ -610,13 +607,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private <T extends Model> T deleteModel(@NonNull T model) throws DataStoreException {
+    private <T extends Model> void deleteModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
-        return deleteListener.awaitResult()
-            .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
-            .item();
+        deleteListener.awaitTerminalEvent();
     }
 }
 
