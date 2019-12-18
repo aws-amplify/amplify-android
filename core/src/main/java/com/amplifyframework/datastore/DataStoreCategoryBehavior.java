@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
@@ -46,6 +45,21 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void save(
             @NonNull T item,
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
+
+    /**
+     * Saves an item into the DataStore if the data being overwritten meets
+     * the provided conditions. This is useful for making sure that no data
+     * is overwritten with an outdated/incorrect assumption.
+     * @param item An item to save
+     * @param predicate Predicate condition to apply for conditional write
+     * @param saveItemListener
+     *        An optional listener which will be callback'd when the save succeeds or fails
+     * @param <T> The time of item being saved
+     */
+    <T extends Model> void save(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate,
             @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
 
     /**
@@ -82,7 +96,7 @@ public interface DataStoreCategoryBehavior {
      * @param <T> The type of items being queried
      */
     <T extends Model> void query(@NonNull Class<T> itemClass,
-                                 @Nullable QueryPredicate predicate,
+                                 @NonNull QueryPredicate predicate,
                                  @NonNull ResultListener<Iterator<T>> queryResultsListener);
 
 

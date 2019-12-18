@@ -186,7 +186,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener
+    ) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
             new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
     }
@@ -195,9 +196,23 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void save(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener
+    ) {
+        sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API, predicate,
+                new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void delete(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener
+    ) {
         sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
             new ResultConversionListener<>(deleteItemListener, this::toDataStoreItemChange));
     }
@@ -208,7 +223,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+            @NonNull ResultListener<Iterator<T>> queryResultsListener
+    ) {
         sqliteStorageAdapter.query(itemClass, queryResultsListener);
     }
 
@@ -218,8 +234,9 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<Iterator<T>> queryResultsListener
+    ) {
         sqliteStorageAdapter.query(itemClass, predicate, queryResultsListener);
     }
 
@@ -251,7 +268,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId) {
+            @NonNull String uniqueId
+    ) {
         return observe(itemClass)
             .filter(dataStoreItemChange -> uniqueId.equals(dataStoreItemChange.item().getId()));
     }
@@ -263,7 +281,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> Observable<DataStoreItemChange<T>> observe(
             @NonNull Class<T> itemClass,
-            @NonNull QueryPredicate selectionCriteria) {
+            @NonNull QueryPredicate selectionCriteria
+    ) {
         return Observable.error(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
     }
 
