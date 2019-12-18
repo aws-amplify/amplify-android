@@ -73,7 +73,7 @@ public final class Immutable {
      * @param <T> The type of items in the list
      * @return An immutable copy of the provided list
      */
-    public static <T> List<T> of(final List<T> mutableList) {
+    public static <T> List<T> of(@Nullable final List<T> mutableList) {
         if (mutableList == null) {
             return null;
         }

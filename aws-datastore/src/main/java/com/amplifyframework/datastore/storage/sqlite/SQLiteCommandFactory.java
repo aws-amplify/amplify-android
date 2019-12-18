@@ -142,7 +142,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
-        List<String> selectionArgs = null;
+        List<Object> selectionArgs = null;
 
         // Track the list of columns to return
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
@@ -171,7 +171,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(SqlKeyword.DELIMITER)
                     .append(foreignKey.getColumnName())
                     .append(SqlKeyword.EQUAL)
-                    .append(ownedTable.getPrimaryKey().getColumnName());
+                    .append(ownedTable.getPrimaryKeyColumnName());
 
             if (foreignKeyIterator.hasNext()) {
                 joinStatement.append(SqlKeyword.DELIMITER);
@@ -282,13 +282,16 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @WorkerThread
     @Override
     public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item) {
+                                                  @NonNull T item,
+                                                  @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-                .append("UPDATE ")
+        stringBuilder.append("UPDATE")
+                .append(SqlKeyword.DELIMITER)
                 .append(table.getName())
-                .append(" SET ");
+                .append(SqlKeyword.DELIMITER)
+                .append("SET")
+                .append(SqlKeyword.DELIMITER);
 
         // Previously, we figured out the correct column names from the model schema.
         // Instead of figuring out the correct column names again, just iterate
@@ -297,21 +300,32 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final Iterator<SQLiteColumn> columnsIterator = columns.iterator();
         while (columnsIterator.hasNext()) {
             final String columnName = columnsIterator.next().getName();
-            stringBuilder.append(columnName + " = ?");
+            stringBuilder.append(columnName)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.EQUAL)
+                    .append(SqlKeyword.DELIMITER)
+                    .append("?");
             if (columnsIterator.hasNext()) {
                 stringBuilder.append(", ");
             }
         }
 
-        stringBuilder.append(" WHERE ")
-                .append(PrimaryKey.fieldName())
-                .append(" = ")
-                .append(StringUtils.doubleQuote(item.getId()))
+        // Append WHERE statement
+        SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        stringBuilder.append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.WHERE)
+                .append(SqlKeyword.DELIMITER)
+                .append(sqlPredicate)
                 .append(";");
+
         final String preparedUpdateStatement = stringBuilder.toString();
         final SQLiteStatement compiledUpdateStatement =
                 databaseConnectionHandle.compileStatement(preparedUpdateStatement);
-        return new SqlCommand(table.getName(), preparedUpdateStatement, compiledUpdateStatement);
+        return new SqlCommand(table.getName(),
+                preparedUpdateStatement,
+                compiledUpdateStatement,
+                sqlPredicate.getSelectionArgs()
+        );
     }
 
     /**
@@ -368,11 +382,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             String connectedName = foreignKey.getName();
             String connectedType = foreignKey.getOwnedType();
-            final ModelSchema connectedSchema = ModelSchemaRegistry.singleton()
-                    .getModelSchemaForModelClass(connectedType);
-            String connectedId = SQLiteTable.fromSchema(connectedSchema)
-                    .getPrimaryKey()
-                    .getName();
+            String connectedId = PrimaryKey.fieldName();
 
             builder.append("FOREIGN KEY")
                     .append(SqlKeyword.DELIMITER)
