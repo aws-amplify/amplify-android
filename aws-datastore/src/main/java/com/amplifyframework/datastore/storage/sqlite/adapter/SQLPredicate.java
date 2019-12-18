@@ -54,7 +54,7 @@ import java.util.List;
  *
  */
 public final class SQLPredicate {
-    private final List<String> selectionArgs;
+    private final List<Object> selectionArgs;
     private final String queryString;
 
     /**
@@ -89,7 +89,7 @@ public final class SQLPredicate {
      * Returns the selection arguments for the converted query string.
      * @return the selection arguments for the converted query string.
      */
-    public List<String> getSelectionArgs() {
+    public List<Object> getSelectionArgs() {
         return Immutable.of(selectionArgs);
     }
 
@@ -118,16 +118,20 @@ public final class SQLPredicate {
         switch (op.type()) {
             case BETWEEN:
                 BetweenQueryOperator betweenOp = (BetweenQueryOperator) op;
-                Object start = betweenOp.start();
-                Object end = betweenOp.end();
-                QueryPredicateOperation gt = new QueryPredicateOperation(field,
-                        new GreaterThanQueryOperator(start));
-                QueryPredicateOperation lt = new QueryPredicateOperation(field,
-                        new LessThanQueryOperator(end));
-                return parsePredicate(gt.and(lt));
+                selectionArgs.add(betweenOp.start());
+                selectionArgs.add(betweenOp.end());
+                return builder.append(field)
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.BETWEEN)
+                        .append(SqlKeyword.DELIMITER)
+                        .append("?")
+                        .append(SqlKeyword.DELIMITER)
+                        .append(SqlKeyword.AND)
+                        .append(SqlKeyword.DELIMITER)
+                        .append("?");
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
-                selectionArgs.add(containsOp.value().toString());
+                selectionArgs.add(containsOp.value());
                 return builder.append("?")
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.IN)
@@ -147,7 +151,7 @@ public final class SQLPredicate {
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
-                selectionArgs.add(getOperatorValue(op).toString());
+                selectionArgs.add(getOperatorValue(op));
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))

@@ -75,7 +75,8 @@ interface SQLCommandFactory {
      * @return the SQL command that encapsulates the UPDATE command
      */
     <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
-                                           @NonNull T item);
+                                           @NonNull T item,
+                                           @NonNull QueryPredicate predicate) throws DataStoreException;
 
     /**
      * Generates the DELETE command in a raw string representation.

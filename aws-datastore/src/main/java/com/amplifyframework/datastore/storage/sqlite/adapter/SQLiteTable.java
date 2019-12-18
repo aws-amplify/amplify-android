@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite.adapter;
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.PrimaryKey;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.core.model.types.SqliteDataType;
 import com.amplifyframework.core.model.types.internal.TypeConverter;
@@ -137,6 +138,18 @@ public final class SQLiteTable {
             }
         }
         return null;
+    }
+
+    /**
+     * Returns the column name of primary key.
+     * Return "id" if no column identifies as primary key.
+     * @return the column name of primary key
+     */
+    public String getPrimaryKeyColumnName() {
+        if (getPrimaryKey() == null) {
+            return PrimaryKey.fieldName();
+        }
+        return getPrimaryKey().getColumnName();
     }
 
     /**

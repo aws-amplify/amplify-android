@@ -29,7 +29,6 @@ import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -158,7 +157,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        assertEquals(blogOwner, saveModel(blogOwner));
+        saveModel(blogOwner);
 
         final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("BlogOwner");
         assertNotNull(cursor);
@@ -183,7 +182,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .name("Tony Danielsen")
             .wea(null)
             .build();
-        assertEquals(blogOwner, saveModel(blogOwner));
+        saveModel(blogOwner);
 
         final Cursor cursor = sqliteStorageAdapter.getQueryAllCursor("BlogOwner");
         assertNotNull(cursor);
@@ -277,6 +276,57 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     /**
+     * Test save with predicate. Conditional write is useful for making sure that
+     * no data is overwritten with outdated assumptions.
+     * @throws DataStoreException from possible underlying DataStore exceptions
+     */
+    @Test
+    public void saveModelWithPredicateUpdatesConditionally() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        saveModel(john);
+        saveModel(jane);
+        saveModel(mark);
+
+        // Only update John and Jane
+        final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
+        final BlogOwner newJohn = john.copyOfBuilder()
+                .name("John Doe")
+                .build();
+        final BlogOwner newJane = jane.copyOfBuilder()
+                .name("Jane Doe")
+                .build();
+        final BlogOwner newMark = mark.copyOfBuilder()
+                .name("Mark Doe")
+                .build();
+        saveModel(newJohn, predicate);
+        saveModel(newJane, predicate);
+        saveModel(newMark, predicate); // Should not update
+
+        Iterator<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertNotNull(blogOwners);
+        Set<BlogOwner> actualBlogOwners = new HashSet<>();
+        while (blogOwners.hasNext()) {
+            actualBlogOwners.add(blogOwners.next());
+        }
+        assertEquals(
+                new HashSet<>(Arrays.asList(
+                        newJohn,
+                        newJane,
+                        mark
+                )),
+                actualBlogOwners
+        );
+    }
+
+    /**
      * Test querying the saved item in the SQLite database.
      * @throws DataStoreException from possible underlying DataStore exceptions
      */
@@ -285,7 +335,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        assertEquals(blogOwner, saveModel(blogOwner));
+        saveModel(blogOwner);
 
         Iterator<BlogOwner> result = queryModel(BlogOwner.class);
         assertNotNull(result);
@@ -524,21 +574,24 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         deleteModel(raphael);
 
         // Get the BlogOwner record from the database
-        Iterator<BlogOwner> blogOwnerterator = queryModel(BlogOwner.class);
-        assertFalse(blogOwnerterator.hasNext());
+        Iterator<BlogOwner> blogOwnerIterator = queryModel(BlogOwner.class);
+        assertFalse(blogOwnerIterator.hasNext());
 
         // Get the Blog record from the database
         Iterator<Blog> blogIterator = queryModel(Blog.class);
         assertFalse(blogIterator.hasNext());
     }
 
-    private <T extends Model> T saveModel(@NonNull T model) throws DataStoreException {
+    private <T extends Model> void saveModel(@NonNull T model) {
+        saveModel(model, null);
+    }
+
+    private <T extends Model> void saveModel(
+            @NonNull T model, @Nullable QueryPredicate predicate) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
-            LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, saveListener);
-        return saveListener.awaitResult()
-            .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
-            .item();
+                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, predicate, saveListener);
+        saveListener.awaitTerminalEvent();
     }
 
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
@@ -554,13 +607,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     @SuppressWarnings("UnusedReturnValue")
-    private <T extends Model> T deleteModel(@NonNull T model) throws DataStoreException {
+    private <T extends Model> void deleteModel(@NonNull T model) {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
-        return deleteListener.awaitResult()
-            .<T>toStorageItemChange(new GsonStorageItemChangeConverter())
-            .item();
+        deleteListener.awaitTerminalEvent();
     }
 }
 
