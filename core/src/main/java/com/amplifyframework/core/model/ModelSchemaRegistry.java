@@ -64,6 +64,7 @@ public final class ModelSchemaRegistry {
     /**
      * Retrieve the ModelSchema object for the given Model instance.
      * @param modelInstance instance of the Model class
+     * @param <T> type of the model instance
      * @return the ModelSchema object for the given Model instance.
      */
     public synchronized <T extends Model> ModelSchema getModelSchemaForModelInstance(@NonNull T modelInstance) {
