@@ -582,15 +582,52 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertFalse(blogIterator.hasNext());
     }
 
+    /**
+     * Test delete with predicate. Conditional delete is useful for making sure that
+     * no data is removed with outdated assumptions.
+     * @throws DataStoreException from possible underlying DataStore exceptions
+     */
+    @Test
+    public void deleteModelWithPredicateDeletesConditionally() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        saveModel(john);
+        saveModel(jane);
+        saveModel(mark);
+
+        // Delete everybody but Mark
+        final QueryPredicate predicate = BlogOwner.NAME.ne(mark.getName());
+        deleteModel(john, predicate);
+        deleteModel(jane, predicate);
+        deleteModel(mark, predicate); // Should not be deleted
+
+        Iterator<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertNotNull(blogOwners);
+        assertEquals(mark, blogOwners.next());
+        assertFalse(blogOwners.hasNext());
+    }
+
     private <T extends Model> void saveModel(@NonNull T model) {
         saveModel(model, null);
     }
 
     private <T extends Model> void saveModel(
-            @NonNull T model, @Nullable QueryPredicate predicate) {
+            @NonNull T model,
+            @Nullable QueryPredicate predicate
+    ) {
         LatchedResultListener<StorageItemChange.Record> saveListener =
                 LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, predicate, saveListener);
+        sqliteStorageAdapter.save(model,
+                StorageItemChange.Initiator.DATA_STORE_API,
+                predicate,
+                saveListener);
         saveListener.awaitTerminalEvent();
     }
 
@@ -599,18 +636,31 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     private <T extends Model> Iterator<T> queryModel(
-            @NonNull Class<T> modelClass, @Nullable QueryPredicate predicate) {
+            @NonNull Class<T> modelClass,
+            @Nullable QueryPredicate predicate
+    ) {
         LatchedResultListener<Iterator<T>> queryResultListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.query(modelClass, predicate, queryResultListener);
+        sqliteStorageAdapter.query(modelClass,
+                predicate,
+                queryResultListener);
         return queryResultListener.awaitResult();
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     private <T extends Model> void deleteModel(@NonNull T model) {
+        deleteModel(model, null);
+    }
+
+    private <T extends Model> void deleteModel(
+            @NonNull T model,
+            @Nullable QueryPredicate predicate
+    ) {
         LatchedResultListener<StorageItemChange.Record> deleteListener =
             LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
+        sqliteStorageAdapter.delete(model,
+                StorageItemChange.Initiator.DATA_STORE_API,
+                predicate,
+                deleteListener);
         deleteListener.awaitTerminalEvent();
     }
 }

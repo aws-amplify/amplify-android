@@ -78,6 +78,16 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void delete(@NonNull T object,
+                                         @NonNull QueryPredicate predicate,
+                                         @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+        getSelectedPlugin().delete(object, predicate, deleteItemListener);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void query(@NonNull Class<T> itemClass,
                                         @NonNull ResultListener<Iterator<T>> queryResultsListener) {
         getSelectedPlugin().query(itemClass, queryResultsListener);

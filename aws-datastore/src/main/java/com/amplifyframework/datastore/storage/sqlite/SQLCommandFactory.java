@@ -87,5 +87,6 @@ interface SQLCommandFactory {
      * @return the SQL command that encapsulates the DELETE command
      */
     <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                                           @NonNull T item);
+                                           @NonNull T item,
+                                           @NonNull QueryPredicate predicate) throws DataStoreException;
 }

@@ -74,6 +74,21 @@ public interface DataStoreCategoryBehavior {
             @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener);
 
     /**
+     * Deletes an item from the DataStore if the data being deleted meets the
+     * provided conditions. This is useful for making sure that no data is being
+     * deleted with an outdated/incorrect assumption.
+     * @param item An item to delete from the DataStore
+     * @param predicate Predicate condition to apply for conditional write
+     * @param deleteItemListener
+     *        An optional listener which will be invoked when the deletion succeeds or fails
+     * @param <T> The type of item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener);
+
+    /**
      * Query the DataStore to find all items of the requested Java class.
      * @param itemClass Items of this class will be targeted by this query
      * @param queryResultsListener

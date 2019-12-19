@@ -126,6 +126,22 @@ public interface LocalStorageAdapter {
             @NonNull ResultListener<StorageItemChange.Record> itemDeletionListener);
 
     /**
+     * Deletes an item from storage only if the data being deleted meets the
+     * specific conditions. The {@link ResultListener} will be invoked when the
+     * save operation is completed, to notify the caller of success or failure.
+     * @param item Item to delete
+     * @param initiator An identification of the actor who initiated this deletion
+     * @param predicate Predicate condition for conditional delete
+     * @param itemDeletionListener Listener that will be callback-ed when deletion terminates
+     * @param <T> The type of item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<StorageItemChange.Record> itemDeletionListener);
+
+    /**
      * Observe all changes to that occur to any/all objects in the storage.
      * @return An observable which emits an {@link StorageItemChange} notification every time
      *         any object managed by the storage adapter is changed in any way.

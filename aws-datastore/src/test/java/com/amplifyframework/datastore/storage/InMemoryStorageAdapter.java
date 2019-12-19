@@ -116,23 +116,34 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         queryResultsListener.onResult(result.iterator());
     }
 
-    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
     @Override
     public <T extends Model> void delete(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener
     ) {
+        delete(item, initiator, null, itemDeletionListener);
+    }
+
+    @SuppressWarnings("unchecked") // item.getClass() -> Class<?>, but type is T. So cast as Class<T> is OK.
+    @Override
+    public <T extends Model> void delete(
+            @NonNull final T item,
+            @NonNull final StorageItemChange.Initiator initiator,
+            @Nullable final QueryPredicate predicate,
+            @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener
+    ) {
         for (Model savedItem : items) {
             if (savedItem.getId().equals(item.getId())) {
                 items.remove(item);
                 StorageItemChange.Record deletion = StorageItemChange.<T>builder()
-                    .item((T) savedItem)
-                    .itemClass((Class<T>) savedItem.getClass())
-                    .type(StorageItemChange.Type.DELETE)
-                    .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
+                        .item((T) savedItem)
+                        .itemClass((Class<T>) savedItem.getClass())
+                        .type(StorageItemChange.Type.DELETE)
+                        .predicate(predicate)
+                        .initiator(initiator)
+                        .build()
+                        .toRecord(storageItemChangeConverter);
                 changeRecordStream.onNext(deletion);
                 itemDeletionListener.onResult(deletion);
                 return;

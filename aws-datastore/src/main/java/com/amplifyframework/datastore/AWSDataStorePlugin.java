@@ -221,6 +221,19 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener
+    ) {
+        sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API, predicate,
+                new ResultConversionListener<>(deleteItemListener, this::toDataStoreItemChange));
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull ResultListener<Iterator<T>> queryResultsListener
