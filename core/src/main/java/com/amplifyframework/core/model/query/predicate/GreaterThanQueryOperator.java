@@ -40,6 +40,15 @@ public final class GreaterThanQueryOperator extends QueryOperator {
         return value;
     }
 
+    @SuppressWarnings("unchecked")
+    public boolean evaluate(Object field) {
+        if (field instanceof Comparable) {
+            Comparable<Object> fieldValue = (Comparable<Object>) field;
+            return fieldValue.compareTo(value) > 0;
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

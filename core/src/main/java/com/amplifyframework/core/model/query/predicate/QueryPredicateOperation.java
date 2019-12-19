@@ -17,6 +17,7 @@ package com.amplifyframework.core.model.query.predicate;
 
 import androidx.core.util.ObjectsCompat;
 
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
 /**
@@ -78,6 +79,17 @@ public final class QueryPredicateOperation implements QueryPredicate {
      */
     public static QueryPredicateGroup not(QueryPredicateOperation predicate) {
         return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Arrays.asList(predicate));
+    }
+
+    public boolean evaluate(Object object) {
+        try {
+            Field objectField = object.getClass().getDeclaredField(field);
+            objectField.setAccessible(true);
+            Object fieldValue = objectField.get(object);
+            return operator.evaluate(fieldValue);
+        } catch (Exception exception) {
+            return false;
+        }
     }
 
     @Override

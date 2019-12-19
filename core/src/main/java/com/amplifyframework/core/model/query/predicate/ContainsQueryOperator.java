@@ -40,6 +40,12 @@ public final class ContainsQueryOperator extends QueryOperator {
         return value;
     }
 
+    @SuppressWarnings("unchecked")
+    public boolean evaluate(Object field) {
+        String fieldValue = field.toString();
+        return fieldValue.contains(value.toString());
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

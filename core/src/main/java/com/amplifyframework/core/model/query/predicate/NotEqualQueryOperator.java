@@ -40,6 +40,10 @@ public final class NotEqualQueryOperator extends QueryOperator {
         return value;
     }
 
+    public boolean evaluate(Object field) {
+        return !field.equals(value);
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

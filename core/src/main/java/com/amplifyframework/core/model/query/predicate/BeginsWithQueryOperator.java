@@ -40,6 +40,11 @@ public final class BeginsWithQueryOperator extends QueryOperator {
         return value;
     }
 
+    public boolean evaluate(Object field) {
+        String fieldValue = field.toString();
+        return fieldValue.indexOf(value.toString()) == 0;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

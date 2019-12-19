@@ -19,7 +19,7 @@ package com.amplifyframework.core.model.query.predicate;
  * The base class for all comparison objects.
  * Contains the Enum list of valid types and stores the given operator's type.
  */
-public abstract class QueryOperator {
+public abstract class QueryOperator implements Evaluable {
     private Type type;
 
     /**

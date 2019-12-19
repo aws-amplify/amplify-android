@@ -103,6 +103,27 @@ public final class QueryPredicateGroup implements QueryPredicate {
         return new QueryPredicateGroup(Type.NOT, Arrays.asList(predicate));
     }
 
+    public boolean evaluate(Object object) {
+        switch(type) {
+            case OR:
+                boolean eval = true;
+                for (QueryPredicate predicate : predicates) {
+                    eval &= predicate.evaluate(object);
+                }
+                return eval;
+            case AND:
+                for (QueryPredicate predicate : predicates) {
+                    if (!predicate.evaluate(object)) {
+                        return false;
+                    }
+                }
+                return true;
+            case NOT:
+                return !predicates.get(0).evaluate(object);
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {

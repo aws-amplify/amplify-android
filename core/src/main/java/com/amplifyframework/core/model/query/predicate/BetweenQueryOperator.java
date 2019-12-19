@@ -51,6 +51,16 @@ public final class BetweenQueryOperator extends QueryOperator {
         return end;
     }
 
+    @SuppressWarnings("unchecked")
+    public boolean evaluate(Object field) {
+        if (field instanceof Comparable) {
+            Comparable<Object> fieldValue = (Comparable<Object>) field;
+            return fieldValue.compareTo(start) < 0
+                    && fieldValue.compareTo(end) < 0;
+        }
+        return false;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
