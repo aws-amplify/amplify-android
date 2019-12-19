@@ -21,5 +21,5 @@ package com.amplifyframework.core.model.query.predicate;
  * chained with another individual condition or an existing group
  * of conditions.
  */
-public interface QueryPredicate extends Evaluable {
+public interface QueryPredicate extends Evaluable<Object> {
 }

@@ -19,15 +19,16 @@ import androidx.core.util.ObjectsCompat;
 
 /**
  * Represents a less than or equal to condition with a target value for comparison.
+ * @param <T> Comparable data type of the field
  */
-public final class LessOrEqualQueryOperator extends QueryOperator {
-    private Object value;
+public final class LessOrEqualQueryOperator<T extends Comparable<T>> extends QueryOperator<T> {
+    private T value;
 
     /**
      * Constructs a less than or equal to condition.
      * @param value the value to be used in the comparison
      */
-    public LessOrEqualQueryOperator(Object value) {
+    LessOrEqualQueryOperator(T value) {
         super(Type.LESS_OR_EQUAL);
         this.value = value;
     }
@@ -36,17 +37,19 @@ public final class LessOrEqualQueryOperator extends QueryOperator {
      * Returns the value to be used in the comparison.
      * @return the value to be used in the comparison
      */
-    public Object value() {
+    public T value() {
         return value;
     }
 
-    @SuppressWarnings("unchecked")
-    public boolean evaluate(Object field) {
-        if (field instanceof Comparable) {
-            Comparable<Object> fieldValue = (Comparable<Object>) field;
-            return fieldValue.compareTo(value) <= 0;
-        }
-        return false;
+    /**
+     * Returns true if the the provided field value is less
+     * than or equal to the value associated with this operator.
+     * @param field the field value to operate on
+     * @return evaluated result of the operator
+     */
+    @Override
+    public boolean evaluate(T field) {
+        return field.compareTo(value) <= 0;
     }
 
     @Override
@@ -56,7 +59,7 @@ public final class LessOrEqualQueryOperator extends QueryOperator {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            LessOrEqualQueryOperator op = (LessOrEqualQueryOperator) obj;
+            LessOrEqualQueryOperator<?> op = (LessOrEqualQueryOperator) obj;
 
             return ObjectsCompat.equals(type(), op.type()) &&
                     ObjectsCompat.equals(value(), op.value());

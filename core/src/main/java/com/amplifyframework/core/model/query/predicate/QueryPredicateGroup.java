@@ -103,14 +103,24 @@ public final class QueryPredicateGroup implements QueryPredicate {
         return new QueryPredicateGroup(Type.NOT, Arrays.asList(predicate));
     }
 
-    public boolean evaluate(Object object) {
-        switch(type) {
+    /**
+     * Evaluate the combination of operations associated with
+     * this group of predicates.
+     * @param object The object to evaluate against
+     * @return Evaluated result of this logical combination
+     * @throws IllegalArgumentException when the object contains
+     *          a field with data type that cannot be evaluated
+     */
+    @Override
+    public boolean evaluate(Object object) throws IllegalArgumentException {
+        switch (type) {
             case OR:
-                boolean eval = true;
                 for (QueryPredicate predicate : predicates) {
-                    eval &= predicate.evaluate(object);
+                    if (predicate.evaluate(object)) {
+                        return true;
+                    }
                 }
-                return eval;
+                return false;
             case AND:
                 for (QueryPredicate predicate : predicates) {
                     if (!predicate.evaluate(object)) {
@@ -120,8 +130,9 @@ public final class QueryPredicateGroup implements QueryPredicate {
                 return true;
             case NOT:
                 return !predicates.get(0).evaluate(object);
+            default:
+                return false;
         }
-        return false;
     }
 
     @Override

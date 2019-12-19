@@ -19,20 +19,22 @@ import androidx.core.util.ObjectsCompat;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
+import java.util.Collections;
 
 /**
  * Represents an individual comparison operation on a model field.
+ * @param <T> Data type of the field being evaluated
  */
-public final class QueryPredicateOperation implements QueryPredicate {
+public final class QueryPredicateOperation<T> implements QueryPredicate {
     private String field;
-    private QueryOperator operator;
+    private QueryOperator<T> operator;
 
     /**
      * Create a new comparison operation with the field to examine and the comparison to perform on it.
      * @param field the name of the Java property in the model representing the field to perform this comparison on
      * @param operator the comparison to perform on it
      */
-    public QueryPredicateOperation(String field, QueryOperator operator) {
+    public QueryPredicateOperation(String field, QueryOperator<T> operator) {
         this.field = field;
         this.operator = operator;
     }
@@ -50,7 +52,7 @@ public final class QueryPredicateOperation implements QueryPredicate {
      * This includes both the type (e.g. EQUAL) and the value to compare the field to (e.g. "ABC")
      * @return the comparison operation to perform on this field
      */
-    public QueryOperator operator() {
+    public QueryOperator<T> operator() {
         return operator;
     }
 
@@ -77,16 +79,32 @@ public final class QueryPredicateOperation implements QueryPredicate {
      * @param predicate the operation to negate
      * @return a group negating the given operation
      */
-    public static QueryPredicateGroup not(QueryPredicateOperation predicate) {
-        return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Arrays.asList(predicate));
+    public static QueryPredicateGroup not(QueryPredicateOperation<?> predicate) {
+        return new QueryPredicateGroup(QueryPredicateGroup.Type.NOT, Collections.singletonList(predicate));
     }
 
-    public boolean evaluate(Object object) {
+    /**
+     * Evaluate the operation on the specific field of the
+     * provided object.
+     * @param object The object to evaluate against
+     * @return Evaluated result of this operation on
+     *          associated field
+     * @throws IllegalArgumentException when the provided field
+     *          has a data type that cannot be evaluated
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public boolean evaluate(Object object) throws IllegalArgumentException {
         try {
             Field objectField = object.getClass().getDeclaredField(field);
             objectField.setAccessible(true);
-            Object fieldValue = objectField.get(object);
+            T fieldValue = (T) objectField.get(object);
             return operator.evaluate(fieldValue);
+        } catch (ClassCastException castException) {
+            throw new IllegalArgumentException(field + " field inside " +
+                    "provided object cannot be evaluated by the operator " +
+                    "type: " + operator.type().name(),
+                    castException);
         } catch (Exception exception) {
             return false;
         }
@@ -99,7 +117,7 @@ public final class QueryPredicateOperation implements QueryPredicate {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            QueryPredicateOperation op = (QueryPredicateOperation) obj;
+            QueryPredicateOperation<?> op = (QueryPredicateOperation) obj;
 
             return ObjectsCompat.equals(field(), op.field()) &&
                     ObjectsCompat.equals(operator(), op.operator());

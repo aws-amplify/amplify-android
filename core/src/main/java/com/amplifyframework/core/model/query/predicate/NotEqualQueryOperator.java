@@ -20,7 +20,7 @@ import androidx.core.util.ObjectsCompat;
 /**
  * Represents a not equal condition with a target value for comparison.
  */
-public final class NotEqualQueryOperator extends QueryOperator {
+public final class NotEqualQueryOperator extends QueryOperator<Object> {
     private Object value;
 
     /**
@@ -40,6 +40,12 @@ public final class NotEqualQueryOperator extends QueryOperator {
         return value;
     }
 
+    /**
+     * Returns true if the the provided field value does
+     * not equal the value associated with this operator.
+     * @param field the field value to operate on
+     * @return evaluated result of the operator
+     */
     public boolean evaluate(Object field) {
         return !field.equals(value);
     }

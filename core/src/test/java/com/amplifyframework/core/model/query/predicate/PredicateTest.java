@@ -13,12 +13,8 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws;
+package com.amplifyframework.core.model.query.predicate;
 
-import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
-import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
-import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Assert;
@@ -35,7 +31,7 @@ public final class PredicateTest {
      */
     @Test
     public void testSingleQueryPredicateOperation() {
-        QueryPredicateOperation op = Person.ID.eq("1234");
+        QueryPredicateOperation<?> op = Person.ID.eq("1234");
 
         assert (op.field().equals("id"));
         assert (op.operator().getClass().equals(EqualQueryOperator.class));
@@ -53,8 +49,8 @@ public final class PredicateTest {
         QueryPredicateGroup expected = new QueryPredicateGroup(
                 QueryPredicateGroup.Type.AND,
                 Arrays.asList(
-                        new QueryPredicateOperation("id", new EqualQueryOperator("1234")),
-                        new QueryPredicateOperation("age", new GreaterThanQueryOperator(21))
+                        new QueryPredicateOperation<>("id", new EqualQueryOperator("1234")),
+                        new QueryPredicateOperation<>("age", new GreaterThanQueryOperator<>(21))
                 ));
 
         Assert.assertEquals(expected, op);
