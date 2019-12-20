@@ -28,7 +28,7 @@ public final class LessThanQueryOperator<T extends Comparable<T>> extends QueryO
      * Constructs a less than condition.
      * @param value the value to be used in the comparison
      */
-    public LessThanQueryOperator(T value) {
+    LessThanQueryOperator(T value) {
         super(Type.LESS_THAN);
         this.value = value;
     }

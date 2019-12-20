@@ -27,7 +27,7 @@ public final class NotEqualQueryOperator extends QueryOperator<Object> {
      * Constructs a not equal condition.
      * @param value the value to be used in the comparison
      */
-    public NotEqualQueryOperator(Object value) {
+    NotEqualQueryOperator(Object value) {
         super(Type.NOT_EQUAL);
         this.value = value;
     }
