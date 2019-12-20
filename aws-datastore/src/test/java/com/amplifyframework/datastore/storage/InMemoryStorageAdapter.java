@@ -79,17 +79,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @Nullable final QueryPredicate predicate,
             @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener
     ) {
-        items.add(item);
-        StorageItemChange.Record save = StorageItemChange.<T>builder()
-                .item(item)
-                .itemClass((Class<T>) item.getClass())
-                .type(StorageItemChange.Type.SAVE)
-                .predicate(predicate)
-                .initiator(initiator)
-                .build()
-                .toRecord(storageItemChangeConverter);
-        changeRecordStream.onNext(save);
-        itemSaveListener.onResult(save);
+        if (predicate == null || predicate.evaluate(item)) {
+            items.add(item);
+            StorageItemChange.Record save = StorageItemChange.<T>builder()
+                    .item(item)
+                    .itemClass((Class<T>) item.getClass())
+                    .type(StorageItemChange.Type.SAVE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+            changeRecordStream.onNext(save);
+            itemSaveListener.onResult(save);
+        }
     }
 
     @Override
@@ -109,7 +111,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     ) {
         List<T> result = new ArrayList<>();
         for (Model item : items) {
-            if (itemClass.isAssignableFrom((item.getClass()))) {
+            if (itemClass.isAssignableFrom((item.getClass()))
+                    && (predicate == null || predicate.evaluate(item))) {
                 result.add((T) item);
             }
         }
