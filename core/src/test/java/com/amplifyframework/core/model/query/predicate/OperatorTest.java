@@ -21,6 +21,7 @@ import org.junit.Test;
 /**
  * Tests operator evaluation.
  */
+@SuppressWarnings("MagicNumber")
 public final class OperatorTest {
 
     /**
@@ -37,6 +38,7 @@ public final class OperatorTest {
         final EqualQueryOperator stringOperator = new EqualQueryOperator("Hello");
 
         Assert.assertTrue(stringOperator.evaluate("Hello"));
+        Assert.assertFalse(stringOperator.evaluate("HELLO"));
         Assert.assertFalse(stringOperator.evaluate("World"));
     }
 

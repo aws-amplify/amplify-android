@@ -22,9 +22,12 @@ import org.junit.Test;
 
 import java.util.Arrays;
 
+import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
+
 /**
  * Tests predicate creation.
  */
+@SuppressWarnings("MagicNumber")
 public final class PredicateTest {
     /**
      * Tests the creation of a simple single operation predicate.
@@ -42,7 +45,6 @@ public final class PredicateTest {
      * Tests the creation of an AND group predicate.
      */
     @Test
-    @SuppressWarnings("magicnumber")
     public void testSingleQueryPredicateGroup() {
         QueryPredicateGroup op = Person.ID.eq("1234").and(Person.AGE.gt(21));
 
@@ -54,6 +56,60 @@ public final class PredicateTest {
                 ));
 
         Assert.assertEquals(expected, op);
+    }
+
+    /**
+     * Tests the evaluation of a predicate operation.
+     */
+    @Test
+    public void testPredicateOperationEvaluation() {
+        final Person jane = Person.builder()
+                .firstName("Jane")
+                .lastName("Doe")
+                .age(21)
+                .build();
+
+        Assert.assertTrue(Person.AGE.gt(20).evaluate(jane));
+        Assert.assertTrue(Person.AGE.eq(21).evaluate(jane));
+        Assert.assertTrue(Person.AGE.lt(22).evaluate(jane));
+        Assert.assertFalse(Person.AGE.ne(21).evaluate(jane));
+
+        Assert.assertTrue(Person.FIRST_NAME.eq("Jane").evaluate(jane));
+        Assert.assertTrue(Person.FIRST_NAME.beginsWith("J").evaluate(jane));
+        Assert.assertTrue(Person.FIRST_NAME.contains("Jan").evaluate(jane));
+        Assert.assertFalse(Person.LAST_NAME.eq("Jane").evaluate(jane));
+    }
+
+    /**
+     * Tests the evaluation of a predicate group.
+     */
+    @Test
+    public void testPredicateGroupEvaluation() {
+        final Person jane = Person.builder()
+                .firstName("Jane")
+                .lastName("Doe")
+                .age(21)
+                .build();
+
+        // True AND True = True
+        Assert.assertTrue(Person.AGE.eq(21)
+                .and(Person.FIRST_NAME.eq("Jane"))
+                .evaluate(jane));
+        // True AND False = False
+        Assert.assertFalse(Person.AGE.eq(21)
+                .and(Person.LAST_NAME.eq("Jane"))
+                .evaluate(jane));
+        // True OR False = True
+        Assert.assertTrue(Person.AGE.eq(21)
+                .or(Person.LAST_NAME.eq("Jane"))
+                .evaluate(jane));
+        // False OR False = False
+        Assert.assertFalse(Person.AGE.gt(121)
+                .or(Person.LAST_NAME.eq("Jane"))
+                .evaluate(jane));
+        // NOT(True) = False
+        Assert.assertFalse(not(Person.AGE.eq(21))
+                .evaluate(jane));
     }
 }
 
