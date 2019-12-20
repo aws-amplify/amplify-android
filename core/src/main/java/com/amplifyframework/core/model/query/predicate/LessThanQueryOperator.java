@@ -49,7 +49,7 @@ public final class LessThanQueryOperator<T extends Comparable<T>> extends QueryO
      */
     @Override
     public boolean evaluate(T field) {
-        return field.compareTo(value) >= 0;
+        return field.compareTo(value) < 0;
     }
 
     @Override
