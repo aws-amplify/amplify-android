@@ -18,7 +18,7 @@ package com.amplifyframework.core.model.query.predicate;
 import androidx.core.util.ObjectsCompat;
 
 /**
- * Represents a between condition with a starting and ending value for comparison.
+ * Represents an inclusive between condition with a starting and ending value for comparison.
  * @param <T> Comparable data type of the field
  */
 public final class BetweenQueryOperator<T extends Comparable<T>> extends QueryOperator<T> {
@@ -60,8 +60,8 @@ public final class BetweenQueryOperator<T extends Comparable<T>> extends QueryOp
      */
     @Override
     public boolean evaluate(T field) {
-        return field.compareTo(start) > 0
-                && field.compareTo(end) < 0;
+        return field.compareTo(start) >= 0
+                && field.compareTo(end) <= 0;
     }
 
     @Override

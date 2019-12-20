@@ -19,6 +19,7 @@ import androidx.core.util.ObjectsCompat;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -100,7 +101,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @return a group negating the given group of operations
      */
     public static QueryPredicateGroup not(QueryPredicateGroup predicate) {
-        return new QueryPredicateGroup(Type.NOT, Arrays.asList(predicate));
+        return new QueryPredicateGroup(Type.NOT, Collections.singletonList(predicate));
     }
 
     /**
@@ -110,9 +111,18 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @return Evaluated result of this logical combination
      * @throws IllegalArgumentException when the object contains
      *          a field with data type that cannot be evaluated
+     * @throws IllegalStateException when the predicate group does
+     *          not contain any predicate element
      */
     @Override
-    public boolean evaluate(Object object) throws IllegalArgumentException {
+    public boolean evaluate(Object object) throws
+            IllegalArgumentException,
+            IllegalStateException {
+        if (predicates.isEmpty()) {
+            throw new IllegalStateException("A predicate group " +
+                    "must contain at least one predicate element");
+        }
+
         switch (type) {
             case OR:
                 for (QueryPredicate predicate : predicates) {
@@ -129,7 +139,8 @@ public final class QueryPredicateGroup implements QueryPredicate {
                 }
                 return true;
             case NOT:
-                return !predicates.get(0).evaluate(object);
+                QueryPredicate predicate = predicates.get(0);
+                return !predicate.evaluate(object);
             default:
                 return false;
         }

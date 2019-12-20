@@ -163,17 +163,17 @@ public final class OperatorTest {
         final BetweenQueryOperator<Integer> numericalOperator = new BetweenQueryOperator<>(2, 4);
 
         Assert.assertFalse(numericalOperator.evaluate(1));
-        Assert.assertFalse(numericalOperator.evaluate(2));
+        Assert.assertTrue(numericalOperator.evaluate(2));
         Assert.assertTrue(numericalOperator.evaluate(3));
-        Assert.assertFalse(numericalOperator.evaluate(4));
+        Assert.assertTrue(numericalOperator.evaluate(4));
         Assert.assertFalse(numericalOperator.evaluate(5));
 
         final BetweenQueryOperator<String> stringOperator = new BetweenQueryOperator<>("2", "4");
 
         Assert.assertFalse(stringOperator.evaluate("1"));
-        Assert.assertFalse(stringOperator.evaluate("2"));
+        Assert.assertTrue(stringOperator.evaluate("2"));
         Assert.assertTrue(stringOperator.evaluate("3"));
-        Assert.assertFalse(stringOperator.evaluate("4"));
+        Assert.assertTrue(stringOperator.evaluate("4"));
         Assert.assertFalse(stringOperator.evaluate("5"));
     }
 
