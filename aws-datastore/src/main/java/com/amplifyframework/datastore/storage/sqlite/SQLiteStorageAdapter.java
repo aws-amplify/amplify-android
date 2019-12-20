@@ -263,7 +263,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
-                    modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
+                    modelSchemaRegistry.getModelSchemaForModelInstance(item);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
                 final boolean writeSuccess;
@@ -286,6 +286,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "found for the Model: " + modelSchema.getName(),
                                 AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
+                        return;
                     }
                     writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.OVERWRITE_EXISTING);
                 } else {
@@ -296,6 +297,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "No insert statement found for the Model: " + modelSchema.getName(),
                                 AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
+                        return;
                     }
                     writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
                 }
@@ -401,8 +403,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull ResultListener<StorageItemChange.Record> itemDeleteListener) {
         threadPool.submit(() -> {
             try {
-                final ModelSchema modelSchema =
-                        modelSchemaRegistry.getModelSchemaForModelClass(item.getClass().getSimpleName());
+                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelInstance(item);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
                 final boolean deleteSuccess;
@@ -527,7 +528,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     private <T> List<Object> extractFieldValuesFromModel(@NonNull final T model)
             throws IllegalAccessException, DataStoreException {
-
         final String tableName = model.getClass().getSimpleName();
         final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(model.getClass()).iterator();
         final Cursor cursor = getQueryAllCursor(tableName);

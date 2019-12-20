@@ -53,7 +53,7 @@ import io.reactivex.schedulers.Schedulers;
 public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
-    private final SQLiteStorageAdapter sqliteStorageAdapter;
+    private final LocalStorageAdapter sqliteStorageAdapter;
 
     // A utility to convert between StorageItemChange.Record and StorageItemChange
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
