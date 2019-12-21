@@ -15,7 +15,14 @@
 
 package com.amplifyframework.core;
 
+import androidx.annotation.NonNull;
+
+import java.util.Objects;
+
 /**
+ * A ResultListener is used internally to combine two {@link Consumer} into a single
+ * collection of consumers: one for a result object, and one for an thrown error.
+ *
  * A listener which will be notified of a single result, or alternately,
  * a single error, if a result could not be obtained.  Exactly one of
  * {@see #onResult(R result)} or {@see onError(Throwable error)} is
@@ -24,20 +31,52 @@ package com.amplifyframework.core;
  * See also the {@see StreamListener}, which expects to receive 0..n items
  * in its callback(s), instead of just a single result.
  *
+ * An {@link ResultListener} is modeled after an RxJava2 {@link io.reactivex.SingleObserver}.
+ *
  * @param <R> The type of result being returned to the listener
  */
-public interface ResultListener<R> {
+public final class ResultListener<R> {
+    private final Consumer<R> resultConsumer;
+    private final Consumer<Throwable> errorConsumer;
+
+    private ResultListener(
+            @NonNull final Consumer<R> resultConsumer,
+            @NonNull final Consumer<Throwable> errorConsumer) {
+        this.resultConsumer = resultConsumer;
+        this.errorConsumer = errorConsumer;
+    }
+
+    /**
+     * Creates a ResultListener.
+     * @param resultConsumer Consumer of result
+     * @param errorConsumer Consumer of error
+     * @param <R> The result type
+     * @return A result listener
+     */
+    @NonNull
+    public static <R> ResultListener<R> instance(
+            @NonNull final Consumer<R> resultConsumer,
+            @NonNull final Consumer<Throwable> errorConsumer) {
+        return new ResultListener<>(
+            Objects.requireNonNull(resultConsumer),
+            Objects.requireNonNull(errorConsumer)
+        );
+    }
 
     /**
      * Called back when a result is available.
      * @param result A result object
      */
-    void onResult(R result);
+    public void onResult(@NonNull R result) {
+        resultConsumer.accept(result);
+    }
 
     /**
      * Called if a result cannot be obtained, because an
      * error has occurred.
      * @param error An error that prevents determination of a result.
      */
-    void onError(Throwable error);
+    public void onError(@NonNull Throwable error) {
+        errorConsumer.accept(error);
+    }
 }

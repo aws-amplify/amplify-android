@@ -23,6 +23,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
@@ -140,17 +141,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @WorkerThread
     private Single<List<ModelSchema>> initializeStorageAdapter(Context context) {
         return Single.defer(() -> Single.create(emitter ->
-            sqliteStorageAdapter.initialize(context, new ResultListener<List<ModelSchema>>() {
-                @Override
-                public void onResult(List<ModelSchema> modelSchema) {
-                    emitter.onSuccess(modelSchema);
-                }
-
-                @Override
-                public void onError(Throwable error) {
-                    emitter.onError(error);
-                }
-            })
+            sqliteStorageAdapter.initialize(context, ResultListener.instance(emitter::onSuccess, emitter::onError))
         ));
     }
 
@@ -189,7 +180,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener
     ) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
-            new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
+            ResultConversionListener.instance(saveItemListener, this::toDataStoreItemChange));
     }
 
     /**
@@ -202,7 +193,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener
     ) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API, predicate,
-                new ResultConversionListener<>(saveItemListener, this::toDataStoreItemChange));
+            ResultConversionListener.instance(saveItemListener, this::toDataStoreItemChange));
     }
 
     /**
@@ -214,7 +205,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener
     ) {
         sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
-            new ResultConversionListener<>(deleteItemListener, this::toDataStoreItemChange));
+            ResultConversionListener.instance(deleteItemListener, this::toDataStoreItemChange));
     }
 
     /**
@@ -353,41 +344,36 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * converting received {@link StorageItemChange.Record} into {@link DataStoreItemChange}s,
      * and emitting those on the provided data store item change listener.
      * using the provided {@link ConversionStrategy}.
-     * @param <T> Type of data in the emitted DataStoreItemChange
      */
-    static final class ResultConversionListener<T extends Model> implements ResultListener<StorageItemChange.Record> {
-        private final ResultListener<DataStoreItemChange<T>> dataStoreListener;
-        private final ConversionStrategy conversionStrategy;
+    static final class ResultConversionListener {
+        @SuppressWarnings("checkstyle:all") private ResultConversionListener() {}
 
         /**
-         * Constructs a new ResultConversionListener.
+         * Creates a new ResultConversionListener.
          * @param dataStoreListener listener object of the public DataStore API
          * @param conversionStrategy A strategy to convert between storage adapter and data store api types
          */
-        ResultConversionListener(
+        static <T extends Model> ResultListener<StorageItemChange.Record> instance(
                 ResultListener<DataStoreItemChange<T>> dataStoreListener,
                 ConversionStrategy conversionStrategy) {
-            this.dataStoreListener = dataStoreListener;
-            this.conversionStrategy = conversionStrategy;
-        }
 
-        @Override
-        public void onResult(StorageItemChange.Record result) {
-            try {
-                DataStoreItemChange<T> converted = conversionStrategy.convert(result);
-                dataStoreListener.onResult(converted);
-            } catch (DataStoreException exception) {
-                onError(exception);
-            }
-        }
+            @SuppressWarnings("CodeBlock2Expr") // More readable as block
+            final Consumer<Throwable> errorConsumer = error -> {
+                dataStoreListener.onError(new DataStoreException(
+                    "Oof, something went wrong.", error, "Check the attached error for details."
+                ));
+            };
 
-        @Override
-        public void onError(Throwable error) {
-            dataStoreListener.onError(new DataStoreException(
-                    "Oof, something went wrong.",
-                    error,
-                    "Check the attached error for details."
-            ));
+            final Consumer<StorageItemChange.Record> resultConsumer = result -> {
+                try {
+                    DataStoreItemChange<T> converted = conversionStrategy.convert(result);
+                    dataStoreListener.onResult(converted);
+                } catch (DataStoreException exception) {
+                    errorConsumer.accept(exception);
+                }
+            };
+
+            return ResultListener.instance(resultConsumer, errorConsumer);
         }
 
         /**

@@ -69,7 +69,7 @@ final class RemoteModelState {
             @SuppressWarnings("SameParameterValue") @Nullable final Long lastSync) {
         return Single.create(emitter -> {
             final Cancelable cancelable =
-                endpoint.sync(modelClazz, lastSync, new MetadataEmitter<>(emitter));
+                endpoint.sync(modelClazz, lastSync, MetadataEmitter.instance(emitter));
             emitter.setDisposable(asDisposable(cancelable));
         });
     }
@@ -100,37 +100,34 @@ final class RemoteModelState {
         };
     }
 
-    static final class MetadataEmitter<T extends Model>
-            implements ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> {
+    static final class MetadataEmitter {
+        @SuppressWarnings("checkstyle:all") MetadataEmitter() {}
 
-        private final SingleEmitter<Iterable<ModelWithMetadata<T>>> emitter;
-
-        MetadataEmitter(final SingleEmitter<Iterable<ModelWithMetadata<T>>> emitter) {
-            this.emitter = emitter;
-        }
-
-        @Override
-        public void onResult(GraphQLResponse<Iterable<ModelWithMetadata<T>>> resultFromEndpoint) {
-            if (resultFromEndpoint.hasErrors()) {
-                emitter.onError(new DataStoreException(String.format(
-                    "A model sync failed: %s", resultFromEndpoint.getErrors()
-                ), "Check your schema."));
-            } else if (!resultFromEndpoint.hasData()) {
-                emitter.onError(new DataStoreException("Empty response from AppSync.", "Report to AWS team."));
-            } else {
-                final Set<ModelWithMetadata<T>> emittedValue = new HashSet<>();
-                for (ModelWithMetadata<T> modelWithMetadata : resultFromEndpoint.getData()) {
-                    emittedValue.add(modelWithMetadata);
+        static <T extends Model> ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> instance(
+            final SingleEmitter<Iterable<ModelWithMetadata<T>>> emitter) {
+            //noinspection CodeBlock2Expr
+            return ResultListener.instance(
+                resultFromEndpoint -> {
+                    if (resultFromEndpoint.hasErrors()) {
+                        emitter.onError(new DataStoreException(String.format(
+                            "A model sync failed: %s", resultFromEndpoint.getErrors()
+                        ), "Check your schema."));
+                    } else if (!resultFromEndpoint.hasData()) {
+                        emitter.onError(new DataStoreException("Empty response from AppSync.", "Report to AWS team."));
+                    } else {
+                        final Set<ModelWithMetadata<T>> emittedValue = new HashSet<>();
+                        for (ModelWithMetadata<T> modelWithMetadata : resultFromEndpoint.getData()) {
+                            emittedValue.add(modelWithMetadata);
+                        }
+                        emitter.onSuccess(emittedValue);
+                    }
+                },
+                error -> {
+                    emitter.onError(new DataStoreException(
+                        "Failed to sync a model.", error, "Check error details."
+                    ));
                 }
-                emitter.onSuccess(emittedValue);
-            }
-        }
-
-        @Override
-        public void onError(Throwable error) {
-            emitter.onError(new DataStoreException(
-                "Failed to sync a model.", error, "Check error details."
-            ));
+            );
         }
     }
 }
