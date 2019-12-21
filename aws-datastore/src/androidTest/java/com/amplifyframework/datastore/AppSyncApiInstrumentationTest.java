@@ -18,6 +18,8 @@ package com.amplifyframework.datastore;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.datastore.network.AppSyncApi;
 import com.amplifyframework.datastore.network.ModelWithMetadata;
@@ -25,8 +27,9 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
-import com.amplifyframework.testutils.LatchedResponseStreamListener;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
+import com.amplifyframework.testutils.EmptyAction;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedResponseConsumer;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -59,54 +62,54 @@ public class AppSyncApiInstrumentationTest {
 
     /**
      * Tests the operations in AppSyncApi.
-     * @throws Throwable for timeouts or invalid responses
      */
     @Test
     @SuppressWarnings("MethodLength")
-    public void testAllOperations() throws Throwable {
-
+    public void testAllOperations() {
         Long startTime = new Date().getTime();
 
         // Create simple model with no relationship
-        LatchedSingleResponseListener<ModelWithMetadata<BlogOwner>> blogOwnerCreateListener =
-                new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<ModelWithMetadata<BlogOwner>> blogOwnerCreateConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<BlogOwner>>> blogOwnerCreateListener =
+            ResultListener.instance(blogOwnerCreateConsumer, EmptyConsumer.of(Throwable.class));
 
-        BlogOwner owner = BlogOwner.builder().name("David").build();
+        BlogOwner owner = BlogOwner.builder()
+            .name("David")
+            .build();
+        api.create(owner, blogOwnerCreateListener);
 
-        api.create(
-            owner,
-            blogOwnerCreateListener
-        );
-
-        ModelWithMetadata<BlogOwner> blogOwnerCreateResult = blogOwnerCreateListener.awaitSuccessResponse();
+        ModelWithMetadata<BlogOwner> blogOwnerCreateResult = blogOwnerCreateConsumer.awaitResponseData();
         assertEquals(owner, blogOwnerCreateResult.getModel());
         assertEquals(new Integer(1), blogOwnerCreateResult.getSyncMetadata().getVersion());
         // TODO: BE AWARE THAT THE DELETED PROPERTY RETURNS NULL INSTEAD OF FALSE
         assertNull(blogOwnerCreateResult.getSyncMetadata().isDeleted());
         assertEquals(owner.getId(), blogOwnerCreateResult.getSyncMetadata().getId());
 
-        // Create model with BelongsTo relationship and a subscriber listening for the creation
-        LatchedResponseStreamListener<ModelWithMetadata<Blog>> blogCreateSubscriptionListener =
-                new LatchedResponseStreamListener<>(1);
+        // Subscribe to Blog creations
+        LatchedResponseConsumer<ModelWithMetadata<Blog>> blogCreateSubscriptionConsumer =
+            LatchedResponseConsumer.instance();
+        StreamListener<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreateSubscriptionListener =
+            StreamListener.instance(
+                blogCreateSubscriptionConsumer, EmptyConsumer.of(Throwable.class), EmptyAction.instance()
+            );
+        Cancelable subscription = api.onCreate(Blog.class, blogCreateSubscriptionListener);
 
-        Cancelable subscription = api.onCreate(
-                Blog.class,
-                blogCreateSubscriptionListener
-        );
+        // Now, actually create a Blog
+        LatchedResponseConsumer<ModelWithMetadata<Blog>> blogCreateConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreateListener =
+            ResultListener.instance(blogCreateConsumer, EmptyConsumer.of(Throwable.class));
 
-        LatchedSingleResponseListener<ModelWithMetadata<Blog>> blogCreateListener =
-                new LatchedSingleResponseListener<>();
-
-        Blog blog = Blog.builder().name("Create test").owner(owner).build();
-
-        api.create(
-            blog,
-            blogCreateListener
-        );
+        Blog blog = Blog.builder()
+            .name("Create test")
+            .owner(owner)
+            .build();
+        api.create(blog, blogCreateListener);
 
         // Currently cannot do BlogOwner.justId because it will assign the id to the name field.
         // This is being fixed
-        ModelWithMetadata<Blog> blogCreateResult = blogCreateListener.awaitSuccessResponse();
+        ModelWithMetadata<Blog> blogCreateResult = blogCreateConsumer.awaitResponseData();
         assertEquals(blog.getId(), blogCreateResult.getModel().getId());
         assertEquals(blog.getName(), blogCreateResult.getModel().getName());
         assertEquals(blog.getOwner().getId(), blogCreateResult.getModel().getOwner().getId());
@@ -116,51 +119,67 @@ public class AppSyncApiInstrumentationTest {
         assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
 
         // Validate that subscription picked up the mutation
-        List<ModelWithMetadata<Blog>> blogCreateSubscriptionResult =
-                blogCreateSubscriptionListener.awaitSuccessfulResponses();
-        assertEquals(1, blogCreateSubscriptionResult.size());
-        assertEquals(blogCreateResult, blogCreateSubscriptionResult.get(0));
+        // & End the subscription since we're done with.
+        assertEquals(blogCreateResult, blogCreateSubscriptionConsumer.awaitResponseData());
         subscription.cancel();
 
         // Create Posts which Blog hasMany of
-        LatchedSingleResponseListener<ModelWithMetadata<Post>> post1CreateListener =
-                new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<ModelWithMetadata<Post>> post2CreateListener =
-                new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<ModelWithMetadata<Post>> post1CreateConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<Post>>> post1CreateListener =
+            ResultListener.instance(post1CreateConsumer, EmptyConsumer.of(Throwable.class));
 
-        Post post1 = Post.builder().title("Post 1").status(PostStatus.ACTIVE).rating(4).blog(blog).build();
-        Post post2 = Post.builder().title("Post 2").status(PostStatus.INACTIVE).rating(-1).blog(blog).build();
+        LatchedResponseConsumer<ModelWithMetadata<Post>> post2CreateConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<Post>>> post2CreateListener =
+            ResultListener.instance(post2CreateConsumer, EmptyConsumer.of(Throwable.class));
 
-        api.create(
-                post1,
-                post1CreateListener
-        );
+        Post post1 = Post.builder()
+            .title("Post 1")
+            .status(PostStatus.ACTIVE)
+            .rating(4)
+            .blog(blog)
+            .build();
+        Post post2 = Post.builder()
+            .title("Post 2")
+            .status(PostStatus.INACTIVE)
+            .rating(-1)
+            .blog(blog)
+            .build();
 
-        api.create(
-                post2,
-                post2CreateListener
-        );
+        api.create(post1, post1CreateListener);
+        api.create(post2, post2CreateListener);
 
-        Post post1ModelResult = post1CreateListener.awaitSuccessResponse().getModel();
-        Post post2ModelResult = post2CreateListener.awaitSuccessResponse().getModel();
+        Post post1ModelResult = post1CreateConsumer.awaitResponseData().getModel();
+        Post post2ModelResult = post2CreateConsumer.awaitResponseData().getModel();
 
         // Results only have blog ID so strip out other information from the original post blog
-        assertEquals(post1.copyOfBuilder().blog(Blog.justId(blog.getId())).build(), post1ModelResult);
-        assertEquals(post2.copyOfBuilder().blog(Blog.justId(blog.getId())).build(), post2ModelResult);
-
-        // Update model
-        LatchedSingleResponseListener<ModelWithMetadata<Blog>> blogUpdateListener =
-                new LatchedSingleResponseListener<>();
-        Blog updatedBlog = blog.copyOfBuilder().name("Updated blog").build();
-        Long updateBlogStartTime = new Date().getTime();
-
-        api.update(
-                updatedBlog,
-                1,
-                blogUpdateListener
+        assertEquals(
+            post1.copyOfBuilder()
+                .blog(Blog.justId(blog.getId()))
+                .build(),
+            post1ModelResult
+        );
+        assertEquals(
+            post2.copyOfBuilder()
+                .blog(Blog.justId(blog.getId()))
+                .build(),
+            post2ModelResult
         );
 
-        ModelWithMetadata<Blog> blogUpdateResult = blogUpdateListener.awaitSuccessResponse();
+        // Update model
+        LatchedResponseConsumer<ModelWithMetadata<Blog>> blogUpdateConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<Blog>>> blogUpdateListener =
+            ResultListener.instance(blogUpdateConsumer, EmptyConsumer.of(Throwable.class));
+        Blog updatedBlog = blog.copyOfBuilder()
+            .name("Updated blog")
+            .build();
+        Long updateBlogStartTime = new Date().getTime();
+
+        api.update(updatedBlog, 1, blogUpdateListener);
+
+        ModelWithMetadata<Blog> blogUpdateResult = blogUpdateConsumer.awaitResponseData();
         assertEquals(updatedBlog.getName(), blogUpdateResult.getModel().getName());
         assertEquals(updatedBlog.getOwner().getId(), blogUpdateResult.getModel().getOwner().getId());
         assertEquals(updatedBlog.getId(), blogUpdateResult.getModel().getId());
@@ -170,63 +189,58 @@ public class AppSyncApiInstrumentationTest {
         assertTrue(blogUpdateResult.getSyncMetadata().getLastChangedAt() > updateBlogStartTime);
 
         // Delete one of the posts
-        LatchedSingleResponseListener<ModelWithMetadata<Post>> post1DeleteListener =
-                new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<ModelWithMetadata<Post>> post1DeleteConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<Post>>> post1DeleteListener =
+            ResultListener.instance(post1CreateConsumer, EmptyConsumer.of(Throwable.class));
 
-        api.delete(
-                Post.class,
-                post1.getId(),
-                1,
-                post1DeleteListener
+        api.delete(Post.class, post1.getId(), 1, post1DeleteListener);
+
+        ModelWithMetadata<Post> post1DeleteResult = post1DeleteConsumer.awaitResponseData();
+        assertEquals(
+            post1.copyOfBuilder()
+                .blog(Blog.justId(blog.getId()))
+                .build(),
+            post1DeleteResult.getModel()
         );
-
-        ModelWithMetadata<Post> post1DeleteResult = post1DeleteListener.awaitSuccessResponse();
-        assertEquals(post1.copyOfBuilder().blog(Blog.justId(blog.getId())).build(), post1DeleteResult.getModel());
         assertTrue(post1DeleteResult.getSyncMetadata().isDeleted());
 
         // Try to delete a post with a bad version number
-        LatchedSingleResponseListener<ModelWithMetadata<Post>> post2DeleteListener =
-                new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<ModelWithMetadata<Post>> post2DeleteConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<ModelWithMetadata<Post>>> post2DeleteListener =
+            ResultListener.instance(post2CreateConsumer, EmptyConsumer.of(Throwable.class));
 
-        api.delete(
-                Post.class,
-                post2.getId(),
-                0,
-                post2DeleteListener
-        );
+        api.delete(Post.class, post2.getId(), 0, post2DeleteListener);
 
-        List<GraphQLResponse.Error> post2DeleteErrors = post2DeleteListener.awaitErrors();
+        List<GraphQLResponse.Error> post2DeleteErrors = post2DeleteConsumer.awaitErrorsInNextResponse();
         assertEquals("Conflict resolver rejects mutation.", post2DeleteErrors.get(0).getMessage());
 
         // Run sync on Blogs
         // TODO: This is currently a pretty worthless test - mainly for setting a debug point and manually inspecting
-        LatchedSingleResponseListener<Iterable<ModelWithMetadata<Blog>>> blogSyncListener =
-                new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Iterable<ModelWithMetadata<Blog>>> blogSyncConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<Blog>>>> blogSyncListener =
+            ResultListener.instance(blogSyncConsumer, EmptyConsumer.of(Throwable.class));
 
         // When you call sync with a null lastSync it gives only one entry per object (the latest state)
-        api.sync(
-                Blog.class,
-                null,
-                blogSyncListener
-        );
+        api.sync(Blog.class, null, blogSyncListener);
 
-        Iterable<ModelWithMetadata<Blog>> blogSyncResult = blogSyncListener.awaitSuccessResponse();
+        Iterable<ModelWithMetadata<Blog>> blogSyncResult = blogSyncConsumer.awaitResponseData();
         assertTrue(blogSyncResult.iterator().hasNext());
 
         // Run sync on Posts
         // TODO: This is currently a pretty worthless test - mainly for setting a debug point and manually inspecting
-        LatchedSingleResponseListener<Iterable<ModelWithMetadata<Post>>> postSyncListener =
-                new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Iterable<ModelWithMetadata<Post>>> postSyncConsumer =
+            LatchedResponseConsumer.instance();
+        ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<Post>>>> postSyncListener =
+            ResultListener.instance(postSyncConsumer, EmptyConsumer.of(Throwable.class));
 
         // When you call sync with a lastSyncTime it gives you one entry per version of that object which was created
         // since that time.
-        api.sync(
-                Post.class,
-                startTime,
-                postSyncListener
-        );
+        api.sync(Post.class, startTime, postSyncListener);
 
-        Iterable<ModelWithMetadata<Post>> postSyncResult = postSyncListener.awaitSuccessResponse();
+        Iterable<ModelWithMetadata<Post>> postSyncResult = postSyncConsumer.awaitResponseData();
         assertTrue(postSyncResult.iterator().hasNext());
     }
 }

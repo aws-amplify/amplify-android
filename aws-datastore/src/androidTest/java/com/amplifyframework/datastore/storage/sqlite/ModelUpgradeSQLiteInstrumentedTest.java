@@ -19,11 +19,14 @@ import android.content.Context;
 import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
-import com.amplifyframework.testutils.LatchedResultListener;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedConsumer;
+import com.amplifyframework.util.CollectionUtils;
 
 import org.junit.After;
 import org.junit.Before;
@@ -35,7 +38,6 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * Test the functionality of {@link SQLiteStorageAdapter} with model update operations.
@@ -91,16 +93,16 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @Test
     public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws DataStoreException {
         // Initialize StorageAdapter with models
-        LatchedResultListener<List<ModelSchema>> setupListener =
-                LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
+        LatchedConsumer<List<ModelSchema>> firstInitializationConsumer =
+                LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
+        ResultListener<List<ModelSchema>> firstResultListener =
+                ResultListener.instance(firstInitializationConsumer, EmptyConsumer.of(Throwable.class));
+
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
-        sqliteStorageAdapter.initialize(context, setupListener);
+        sqliteStorageAdapter.initialize(context, firstResultListener);
 
         // Assert if initialize succeeds.
-        List<ModelSchema> modelSchemaList =
-                setupListener.awaitTerminalEvent().awaitResult();
-        assertNotNull(modelSchemaList);
-        assertFalse(modelSchemaList.isEmpty());
+        assertFalse(CollectionUtils.isNullOrEmpty(firstInitializationConsumer.awaitValue()));
 
         // Assert if version is stored correctly
         String expectedVersion = modelProvider.version();
@@ -117,21 +119,23 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // version update.
         sqliteStorageAdapter.terminate();
         sqliteStorageAdapter = null;
+
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProviderThatUpgradesVersion);
 
         // Now, initialize storage adapter with the new models
-        setupListener = LatchedResultListener.waitFor(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.initialize(context, setupListener);
-        modelSchemaList = setupListener.awaitTerminalEvent().awaitResult();
-        assertNotNull(modelSchemaList);
-        assertFalse(modelSchemaList.isEmpty());
+        LatchedConsumer<List<ModelSchema>> secondInitializationConsumer =
+            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
+        ResultListener<List<ModelSchema>> secondResultListener =
+            ResultListener.instance(secondInitializationConsumer, EmptyConsumer.of(Throwable.class));
+        sqliteStorageAdapter.initialize(context, secondResultListener);
+        assertFalse(CollectionUtils.isNullOrEmpty(secondInitializationConsumer.awaitValue()));
 
         // Check if the new version is stored in local storage.
         expectedVersion = modelProviderThatUpgradesVersion.version();
         persistentModelVersion = PersistentModelVersion
-                        .fromLocalStorage(sqliteStorageAdapter)
-                        .blockingGet()
-                        .next();
+                .fromLocalStorage(sqliteStorageAdapter)
+                .blockingGet()
+                .next();
         actualVersion = persistentModelVersion.getVersion();
         assertEquals(expectedVersion, actualVersion);
     }

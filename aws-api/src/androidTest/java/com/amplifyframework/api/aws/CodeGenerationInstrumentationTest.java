@@ -21,6 +21,8 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -31,17 +33,18 @@ import com.amplifyframework.testmodels.ratingsblog.Rating;
 import com.amplifyframework.testmodels.ratingsblog.User;
 import com.amplifyframework.testmodels.teamproject.Projectfields;
 import com.amplifyframework.testmodels.teamproject.Team;
-import com.amplifyframework.testutils.LatchedResponseStreamListener;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedAction;
+import com.amplifyframework.testutils.LatchedResponseConsumer;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -70,7 +73,7 @@ public final class CodeGenerationInstrumentationTest {
     @Test
     public void queryMatchesMutationResult() {
         // Create a Person
-        LatchedSingleResponseListener<Person> mutationListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Person> createdPersonConsumer = LatchedResponseConsumer.instance();
         Person david = Person.builder()
             .firstName("David")
             .lastName("Daudelin")
@@ -81,20 +84,20 @@ public final class CodeGenerationInstrumentationTest {
             PERSON_API_NAME,
             david,
             MutationType.CREATE,
-            mutationListener
+            ResultListener.instance(createdPersonConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Person createdPerson = mutationListener.awaitSuccessResponse();
+        Person createdPerson = createdPersonConsumer.awaitResponseData();
         assertEquals(david, createdPerson);
 
         // Query for that created person, expect him to be there
-        LatchedSingleResponseListener<Person> queryListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Person> queriedPersonConsumer = LatchedResponseConsumer.instance();
         Amplify.API.query(
             PERSON_API_NAME,
             Person.class,
             createdPerson.getId(),
-            queryListener
+            ResultListener.instance(queriedPersonConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Person queriedPerson = queryListener.awaitSuccessResponse();
+        Person queriedPerson = queriedPersonConsumer.awaitResponseData();
         assertEquals(createdPerson, queriedPerson);
     }
 
@@ -103,7 +106,7 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void queryListWithPredicate() {
-        LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Iterable<Person>> queryConsumer = LatchedResponseConsumer.instance();
 
         Amplify.API.query(
             PERSON_API_NAME,
@@ -111,10 +114,10 @@ public final class CodeGenerationInstrumentationTest {
             Person.LAST_NAME.eq("Daudelin")
                 .and(Person.FIRST_NAME.eq("David")
                     .or(Person.FIRST_NAME.eq("Sarah"))),
-            queryListener
+            ResultListener.instance(queryConsumer, EmptyConsumer.of(Throwable.class))
         );
 
-        for (Person person : queryListener.awaitSuccessResponse()) {
+        for (Person person : queryConsumer.awaitResponseData()) {
             assertTrue(Arrays.asList("David", "Sarah").contains(person.getFirstName()));
             assertEquals("Daudelin", person.getLastName());
         }
@@ -126,9 +129,10 @@ public final class CodeGenerationInstrumentationTest {
     @SuppressWarnings("checkstyle:MagicNumber") // test table configured to have at least 3 items
     @Test
     public void queryListWithoutPredicate() {
-        LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(PERSON_API_NAME, Person.class, queryListener);
-        Iterable<Person> queryResultsIterable = queryListener.awaitSuccessResponse();
+        LatchedResponseConsumer<Iterable<Person>> queryConsumer = LatchedResponseConsumer.instance();
+        Amplify.API.query(PERSON_API_NAME, Person.class,
+            ResultListener.instance(queryConsumer, EmptyConsumer.of(Throwable.class)));
+        Iterable<Person> queryResultsIterable = queryConsumer.awaitResponseData();
 
         // Test table should always have at least three items
         int count = 0;
@@ -142,34 +146,36 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Tests that a subscription can receive an event when a create mutation takes place.
-     * @throws Throwable If we timeout while talking to the endpoint,
-     *                   or if any response comes back invalid
      */
     @Test
-    public void subscribeReceivesMutationEvent() throws Throwable {
-        Person person = Person.builder().firstName("John").lastName("Doe").build();
-        LatchedResponseStreamListener<Person> streamListener = new LatchedResponseStreamListener<>(1);
-        GraphQLOperation<Person> operation = Amplify.API.subscribe(
-                PERSON_API_NAME,
-                Person.class,
-                SubscriptionType.ON_CREATE,
-                streamListener
-        );
+    public void subscribeReceivesMutationEvent() {
+        Person person = Person.builder()
+            .firstName("John")
+            .lastName("Doe")
+            .build();
 
-        LatchedSingleResponseListener<Person> creationListener = new LatchedSingleResponseListener<>();
-        Amplify.API.mutate(
-                PERSON_API_NAME,
-                person,
-                null,
-                MutationType.CREATE,
-                creationListener
+        LatchedResponseConsumer<Person> streamItemConsumer = LatchedResponseConsumer.instance();
+        LatchedAction streamCompletionAction = LatchedAction.instance();
+        GraphQLOperation<Person> operation = Amplify.API.subscribe(
+            PERSON_API_NAME,
+            Person.class,
+            SubscriptionType.ON_CREATE,
+            StreamListener.instance(streamItemConsumer, EmptyConsumer.of(Throwable.class), streamCompletionAction)
         );
-        creationListener.awaitSuccessResponse();
+        assertNotNull(operation);
+
+        LatchedResponseConsumer<Person> creationConsumer = LatchedResponseConsumer.instance();
+        Amplify.API.mutate(
+            PERSON_API_NAME,
+            person,
+            null,
+            MutationType.CREATE,
+            ResultListener.instance(creationConsumer, EmptyConsumer.of(Throwable.class))
+        );
+        creationConsumer.awaitResponseData();
 
         // Validate that subscription received the newly created person.
-        List<Person> peopleOnSubscription = streamListener.awaitSuccessfulResponses();
-        assertEquals(1, peopleOnSubscription.size());
-        Person firstPersonOnSubscription = peopleOnSubscription.get(0);
+        Person firstPersonOnSubscription = streamItemConsumer.awaitResponseData();
         assertEquals(person.getFirstName(), firstPersonOnSubscription.getFirstName());
         assertEquals(person.getLastName(), firstPersonOnSubscription.getLastName());
 
@@ -178,7 +184,7 @@ public final class CodeGenerationInstrumentationTest {
 
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
-        streamListener.awaitCompletion();
+        streamCompletionAction.awaitCall();
     }
 
     /**
@@ -188,45 +194,43 @@ public final class CodeGenerationInstrumentationTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void mutationFailsInvalidConditionAndPassesCorrectCondition() {
-        LatchedSingleResponseListener<Person> deleteListener = new LatchedSingleResponseListener<>();
-
-        LatchedSingleResponseListener<Person> createListener = new LatchedSingleResponseListener<>();
-        Person person = Person
-                .builder()
-                .firstName("David")
-                .lastName("Daudelin")
-                .age(29)
-                .relationship(MaritalStatus.married)
-                .build();
-
+        LatchedResponseConsumer<Person> createdPersonConsumer = LatchedResponseConsumer.instance();
+        Person person = Person.builder()
+            .firstName("David")
+            .lastName("Daudelin")
+            .age(29)
+            .relationship(MaritalStatus.married)
+            .build();
         Amplify.API.mutate(
-                PERSON_API_NAME,
-                person,
-                MutationType.CREATE,
-                createListener
+            PERSON_API_NAME,
+            person,
+            MutationType.CREATE,
+            ResultListener.instance(createdPersonConsumer, EmptyConsumer.of(Throwable.class))
         );
-        createListener.awaitSuccessResponse();
+        createdPersonConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Person> updateListener = new LatchedSingleResponseListener<>();
-        Person updated = person.newBuilder().age(30).build();
+        LatchedResponseConsumer<Person> updateConsumer = LatchedResponseConsumer.instance();
+        Person updated = person.newBuilder()
+            .age(30)
+            .build();
         Amplify.API.mutate(
-                PERSON_API_NAME,
-                updated,
-                Person.LAST_NAME.eq("Dandelion"),
-                MutationType.UPDATE,
-                updateListener
+            PERSON_API_NAME,
+            updated,
+            Person.LAST_NAME.eq("Dandelion"),
+            MutationType.UPDATE,
+            ResultListener.instance(updateConsumer, EmptyConsumer.of(Throwable.class))
         );
-
-        GraphQLResponse.Error firstError = updateListener.awaitErrors().get(0);
+        GraphQLResponse.Error firstError = updateConsumer.awaitErrorsInNextResponse().get(0);
         assertTrue(firstError.getMessage().contains("ConditionalCheckFailedException"));
 
+        LatchedResponseConsumer<Person> deleteConsumer = LatchedResponseConsumer.instance();
         Amplify.API.mutate(
-                PERSON_API_NAME,
-                Person.justId(person.getId()),
-                MutationType.DELETE,
-                deleteListener
+            PERSON_API_NAME,
+            Person.justId(person.getId()),
+            MutationType.DELETE,
+            ResultListener.instance(deleteConsumer, EmptyConsumer.of(Throwable.class))
         );
-        deleteListener.awaitSuccessResponse();
+        deleteConsumer.awaitResponseData();
     }
 
     /**
@@ -234,57 +238,57 @@ public final class CodeGenerationInstrumentationTest {
      * successful query, mutations, subscription.
      * TODO: Add mutate with condition and list with predicate since those are the ones
      *       that actually use the original model name
-     * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
      */
     @Test
-    public void belongsToRelationship() throws Throwable {
-        LatchedResponseStreamListener<Projectfields> projectSubscriptionListener =
-                new LatchedResponseStreamListener<>(1);
-        GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
-                PROJECT_API_NAME,
-                Projectfields.class,
-                SubscriptionType.ON_CREATE,
-                projectSubscriptionListener
+    public void belongsToRelationship() {
+        LatchedResponseConsumer<Projectfields> projectSubscriptionConsumer = LatchedResponseConsumer.instance();
+        LatchedAction subscriptionCompletionAction = LatchedAction.instance();
+        StreamListener<GraphQLResponse<Projectfields>> streamListener = StreamListener.instance(
+            projectSubscriptionConsumer, EmptyConsumer.of(Throwable.class), subscriptionCompletionAction
         );
 
-        LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
+        GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
+            PROJECT_API_NAME,
+            Projectfields.class,
+            SubscriptionType.ON_CREATE,
+            streamListener
+        );
+        assertNotNull(operation);
+
+        LatchedResponseConsumer<Team> teamCreationConsumer = LatchedResponseConsumer.instance();
         Team team = Team.builder().name("AWS Mobile SDK").build();
         Amplify.API.mutate(
-                PROJECT_API_NAME,
-                team,
-                MutationType.CREATE,
-                teamMutationListener
+            PROJECT_API_NAME,
+            team,
+            MutationType.CREATE,
+            ResultListener.instance(teamCreationConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Team createdTeam = teamMutationListener.awaitSuccessResponse();
+        Team createdTeam = teamCreationConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Projectfields> projectMutationListener = new LatchedSingleResponseListener<>();
-        Projectfields projectfields = Projectfields
-                .builder()
-                .name("API Codegen")
-                .team(Team.justId(createdTeam.getId()))
-                .build();
+        LatchedResponseConsumer<Projectfields> projectCreationConsumer = LatchedResponseConsumer.instance();
+        Projectfields projectfields = Projectfields.builder()
+            .name("API Codegen")
+            .team(Team.justId(createdTeam.getId()))
+            .build();
         Amplify.API.mutate(
-                PROJECT_API_NAME,
-                projectfields,
-                MutationType.CREATE,
-                projectMutationListener
+            PROJECT_API_NAME,
+            projectfields,
+            MutationType.CREATE,
+            ResultListener.instance(projectCreationConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Projectfields createdProjectfields = projectMutationListener.awaitSuccessResponse();
+        Projectfields createdProjectfields = projectCreationConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Projectfields> projectQueryListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Projectfields> projectQueryConsumer = LatchedResponseConsumer.instance();
         Amplify.API.query(
-                PROJECT_API_NAME,
-                Projectfields.class,
-                createdProjectfields.getId(),
-                projectQueryListener
+            PROJECT_API_NAME,
+            Projectfields.class,
+            createdProjectfields.getId(),
+            ResultListener.instance(projectQueryConsumer, EmptyConsumer.of(Throwable.class))
         );
-        assertEquals(team, projectQueryListener.awaitSuccessResponse().getTeam());
+        assertEquals(team, projectQueryConsumer.awaitResponseData().getTeam());
 
         // Validate that subscription received the newly created person.
-        List<Projectfields> projectfieldsFromSubscription =
-            projectSubscriptionListener.awaitSuccessfulResponses();
-        assertEquals(1, projectfieldsFromSubscription.size());
-        Projectfields firstProjectfieldsOnSubscription = projectfieldsFromSubscription.get(0);
+        Projectfields firstProjectfieldsOnSubscription = projectSubscriptionConsumer.awaitResponseData();
         assertEquals(projectfields.getName(), firstProjectfieldsOnSubscription.getName());
         assertEquals(team, firstProjectfieldsOnSubscription.getTeam());
 
@@ -293,7 +297,7 @@ public final class CodeGenerationInstrumentationTest {
 
         // Ensure that onComplete() is called as a response to canceling
         // the operation.
-        projectSubscriptionListener.awaitCompletion();
+        subscriptionCompletionAction.awaitCall();
     }
 
     /**
@@ -301,43 +305,45 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void hasManyRelationship() {
-        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Blog> blogCreateConsumer = LatchedResponseConsumer.instance();
         Blog blog = Blog.builder()
-                .name("All Things Amplify")
-                .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
-                .build();
+            .name("All Things Amplify")
+            .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                blog,
-                MutationType.CREATE,
-                blogCreateListener
+            BLOG_API_NAME,
+            blog,
+            MutationType.CREATE,
+            ResultListener.instance(blogCreateConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Blog blogCreateResult = blogCreateListener.awaitSuccessResponse();
-        assertEquals(blog, blogCreateResult);
+        assertEquals(blog, blogCreateConsumer.awaitResponseData());
 
-        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
-        Post post = Post.builder().title("Test 1").blog(blog).build();
+        LatchedResponseConsumer<Post> postCreateConsumer = LatchedResponseConsumer.instance();
+        Post post = Post.builder()
+            .title("Test 1")
+            .blog(blog)
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                post,
-                MutationType.CREATE,
-                postCreateListener
+            BLOG_API_NAME,
+            post,
+            MutationType.CREATE,
+            ResultListener.instance(postCreateConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Post postCreateResult = postCreateListener.awaitSuccessResponse();
+        Post postCreateResult = postCreateConsumer.awaitResponseData();
         assertEquals(post.getId(), postCreateResult.getId());
         assertEquals(post.getTitle(), postCreateResult.getTitle());
         assertEquals(post.getBlog().getId(), postCreateResult.getBlog().getId());
         assertEquals(post.getBlog().getName(), postCreateResult.getBlog().getName());
         assertEquals(post.getBlog().getTags(), postCreateResult.getBlog().getTags());
 
-        LatchedSingleResponseListener<Blog> blogGetListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Blog> blogGetConsumer = LatchedResponseConsumer.instance();
         Amplify.API.query(
-                BLOG_API_NAME,
-                Blog.class,
-                blog.getId(),
-                blogGetListener
+            BLOG_API_NAME,
+            Blog.class,
+            blog.getId(),
+            ResultListener.instance(blogGetConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Blog blogGetResult = blogGetListener.awaitSuccessResponse();
+        Blog blogGetResult = blogGetConsumer.awaitResponseData();
         Post blogGetResultPost = blogGetResult.getPosts().get(0);
         assertEquals(post.getId(), blogGetResultPost.getId());
         assertEquals(post.getTitle(), blogGetResultPost.getTitle());
@@ -349,52 +355,54 @@ public final class CodeGenerationInstrumentationTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void hasOneRelationship() {
-        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Blog> blogCreationConsumer = LatchedResponseConsumer.instance();
         Blog blog = Blog.builder()
-                .name("Necessary blog for post")
-                .build();
+            .name("Necessary blog for post")
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                blog,
-                MutationType.CREATE,
-                blogCreateListener
+            BLOG_API_NAME,
+            blog,
+            MutationType.CREATE,
+            ResultListener.instance(blogCreationConsumer, EmptyConsumer.of(Throwable.class))
         );
-        blogCreateListener.awaitSuccessResponse();
+        blogCreationConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
-        Post post = Post.builder().title("Test post").blog(blog).build();
+        LatchedResponseConsumer<Post> postCreationConsumer = LatchedResponseConsumer.instance();
+        Post post = Post.builder()
+            .title("Test post")
+            .blog(blog)
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                post,
-                MutationType.CREATE,
-                postCreateListener
+            BLOG_API_NAME,
+            post,
+            MutationType.CREATE,
+            ResultListener.instance(postCreationConsumer, EmptyConsumer.of(Throwable.class))
         );
-        postCreateListener.awaitSuccessResponse();
+        postCreationConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Rating> ratingCreateListener = new LatchedSingleResponseListener<>();
-
+        LatchedResponseConsumer<Rating> ratingCreationConsumer = LatchedResponseConsumer.instance();
         Rating rating = Rating.builder().stars(5).post(post).build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                rating,
-                MutationType.CREATE,
-                ratingCreateListener
+            BLOG_API_NAME,
+            rating,
+            MutationType.CREATE,
+            ResultListener.instance(ratingCreationConsumer, EmptyConsumer.of(Throwable.class))
         );
-        assertEquals(post, ratingCreateListener.awaitSuccessResponse().getPost());
+        assertEquals(post, ratingCreationConsumer.awaitResponseData().getPost());
 
         /*
         TODO: This condition should work. However there is a bug on the AppSync transformer side which
             sets up the HasOne / BelongsTo relationship as two independent BelongsTo relationships so it fails.
             Once the AppSync transformer bug is fixed, we can uncomment this part of the test.
 
-        LatchedSingleResponseListener<Post> postGetListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Post> postGetConsumer = LatchedResponseConsumer.instance();
         Amplify.API.query(
-                BLOG_API_NAME,
-                Post.class,
-                post.getId(),
-                postGetListener
+            BLOG_API_NAME,
+            Post.class,
+            post.getId(),
+            ResultListener.instance(postGetConsumer, EmptyConsumer.of(Throwable.class))
         );
-        assertEquals(rating, postGetListener.awaitSuccessResponse().getRating());
+        assertEquals(rating, postGetListener.awaitResponseData().getRating());
          */
     }
 
@@ -403,64 +411,72 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void manyToManyRelationship() {
-        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Blog> blogCreateConsumer = LatchedResponseConsumer.instance();
         Blog blog = Blog.builder()
-                .name("Necessary blog for post")
-                .build();
+            .name("Necessary blog for post")
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                blog,
-                MutationType.CREATE,
-                blogCreateListener
+            BLOG_API_NAME,
+            blog,
+            MutationType.CREATE,
+            ResultListener.instance(blogCreateConsumer, EmptyConsumer.of(Throwable.class))
         );
-        blogCreateListener.awaitSuccessResponse();
+        blogCreateConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
-        Post post = Post.builder().title("Test post").blog(blog).build();
+        LatchedResponseConsumer<Post> postCreateConsumer = LatchedResponseConsumer.instance();
+        Post post = Post.builder()
+            .title("Test post")
+            .blog(blog)
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                post,
-                MutationType.CREATE,
-                postCreateListener
+            BLOG_API_NAME,
+            post,
+            MutationType.CREATE,
+            ResultListener.instance(postCreateConsumer, EmptyConsumer.of(Throwable.class))
         );
-        postCreateListener.awaitSuccessResponse();
+        postCreateConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<User> userCreateListener = new LatchedSingleResponseListener<>();
-        User user = User.builder().username("Patches46").build();
+        LatchedResponseConsumer<User> userCreateConsumer = LatchedResponseConsumer.instance();
+        User user = User.builder()
+            .username("Patches46")
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                user,
-                MutationType.CREATE,
-                userCreateListener
+            BLOG_API_NAME,
+            user,
+            MutationType.CREATE,
+            ResultListener.instance(userCreateConsumer, EmptyConsumer.of(Throwable.class))
         );
-        userCreateListener.awaitSuccessResponse();
+        userCreateConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<PostEditor> editorCreateListener = new LatchedSingleResponseListener<>();
-        PostEditor editor = PostEditor.builder().post(post).editor(user).build();
+        LatchedResponseConsumer<PostEditor> postEditorCreationConsumer = LatchedResponseConsumer.instance();
+        PostEditor editor = PostEditor.builder()
+            .post(post)
+            .editor(user)
+            .build();
         Amplify.API.mutate(
-                BLOG_API_NAME,
-                editor,
-                MutationType.CREATE,
-                editorCreateListener
+            BLOG_API_NAME,
+            editor,
+            MutationType.CREATE,
+            ResultListener.instance(postEditorCreationConsumer, EmptyConsumer.of(Throwable.class))
         );
-        editorCreateListener.awaitSuccessResponse();
+        postEditorCreationConsumer.awaitResponseData();
 
-        LatchedSingleResponseListener<Post> postGetListener = new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<User> userGetListener = new LatchedSingleResponseListener<>();
+        LatchedResponseConsumer<Post> postGetConsumer = LatchedResponseConsumer.instance();
+        LatchedResponseConsumer<User> userGetConsumer = LatchedResponseConsumer.instance();
         Amplify.API.query(
-                BLOG_API_NAME,
-                Post.class,
-                post.getId(),
-                postGetListener
+            BLOG_API_NAME,
+            Post.class,
+            post.getId(),
+            ResultListener.instance(postGetConsumer, EmptyConsumer.of(Throwable.class))
         );
         Amplify.API.query(
-                BLOG_API_NAME,
-                User.class,
-                user.getId(),
-                userGetListener
+            BLOG_API_NAME,
+            User.class,
+            user.getId(),
+            ResultListener.instance(userGetConsumer, EmptyConsumer.of(Throwable.class))
         );
-        Post postGetResult = postGetListener.awaitSuccessResponse();
-        User userGetResult = userGetListener.awaitSuccessResponse();
+        Post postGetResult = postGetConsumer.awaitResponseData();
+        User userGetResult = userGetConsumer.awaitResponseData();
 
         assertEquals(1, postGetResult.getEditors().size());
         assertEquals(user, postGetResult.getEditors().get(0).getEditor());

@@ -37,9 +37,6 @@ import io.reactivex.Single;
  * {@link ModelProvider#version()} for detecting version changes.
  */
 final class PersistentModelVersion implements Model {
-
-    private static final String TAG = PersistentModelVersion.class.getSimpleName();
-
     // A static identifier that is used to store the version of model. Currently there can be
     // only ONE version of ONE ModelProvider be stored in the local storage at any time. This
     // limitation can be addressed in the future by an identifier that is long-lived than the version
@@ -72,21 +69,10 @@ final class PersistentModelVersion implements Model {
      *         error upon failure
      */
     static Single<Iterator<PersistentModelVersion>> fromLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter) {
-        return Single.create(emitter -> {
-            final ResultListener<Iterator<PersistentModelVersion>> queryListener =
-                    new ResultListener<Iterator<PersistentModelVersion>>() {
-                @Override
-                public void onResult(Iterator<PersistentModelVersion> result) {
-                    emitter.onSuccess(result);
-                }
-
-                @Override
-                public void onError(Throwable error) {
-                    emitter.onError(error);
-                }
-            };
-            localStorageAdapter.query(PersistentModelVersion.class, queryListener);
-        });
+        return Single.create(emitter -> localStorageAdapter.query(
+            PersistentModelVersion.class,
+            ResultListener.instance(emitter::onSuccess, emitter::onError)
+        ));
     }
 
     /**
@@ -96,26 +82,17 @@ final class PersistentModelVersion implements Model {
      * return a Single that emits the PersistentModelVersion read from disk upon success and
      *        error upon failure
      */
-    static Single<PersistentModelVersion> saveToLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter,
-                                                             @NonNull PersistentModelVersion persistentModelVersion) {
-        return Single.<PersistentModelVersion>create(emitter -> {
-            final ResultListener<StorageItemChange.Record> saveListener =
-                    new ResultListener<StorageItemChange.Record>() {
-                @Override
-                public void onResult(StorageItemChange.Record record) {
-                    emitter.onSuccess(persistentModelVersion);
-                }
-
-                @Override
-                public void onError(Throwable error) {
-                    emitter.onError(error);
-                }
-            };
-            localStorageAdapter.save(
-                    persistentModelVersion,
-                    StorageItemChange.Initiator.DATA_STORE_API,
-                    saveListener);
-        });
+    static Single<PersistentModelVersion> saveToLocalStorage(
+            @NonNull LocalStorageAdapter localStorageAdapter,
+            @NonNull PersistentModelVersion persistentModelVersion) {
+        return Single.create(emitter -> localStorageAdapter.save(
+            persistentModelVersion,
+            StorageItemChange.Initiator.DATA_STORE_API,
+            ResultListener.instance(
+                ignoredRecord -> emitter.onSuccess(persistentModelVersion),
+                emitter::onError
+            )
+        ));
     }
 
     /** {@inheritDoc}. */
@@ -146,10 +123,7 @@ final class PersistentModelVersion implements Model {
         if (!ObjectsCompat.equals(id, versionObject.id)) {
             return false;
         }
-        if (!ObjectsCompat.equals(version, versionObject.version)) {
-            return false;
-        }
-        return true;
+        return ObjectsCompat.equals(version, versionObject.version);
     }
 
     @SuppressWarnings("checkstyle:MagicNumber") // 31 is IDE-generated

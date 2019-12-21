@@ -77,12 +77,10 @@ public final class AppSyncApi implements AppSyncEndpoint {
             return new NoOpCancelable();
         }
 
-        final SyncAdapter<T> syncAdapter =
-            new SyncAdapter<>(responseListener, modelClass, responseDeserializer);
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(queryDoc, Collections.emptyMap(), String.class, variablesSerializer);
-        Cancelable cancelable = api.query(request, syncAdapter);
-
+        final Cancelable cancelable =
+            api.query(request, SyncAdapter.instance(responseListener, modelClass, responseDeserializer));
         if (cancelable != null) {
             return cancelable;
         }
@@ -222,10 +220,8 @@ public final class AppSyncApi implements AppSyncEndpoint {
         }
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
-        final SubscriptionAdapter<T> subscriptionAdapter =
-            new SubscriptionAdapter<>(subscriptionListener, clazz, responseDeserializer);
-        Cancelable cancelable = api.subscribe(request, subscriptionAdapter);
-
+        final Cancelable cancelable =
+            api.subscribe(request, SubscriptionAdapter.instance(subscriptionListener, clazz, responseDeserializer));
         if (cancelable != null) {
             return cancelable;
         }
@@ -237,12 +233,10 @@ public final class AppSyncApi implements AppSyncEndpoint {
             final Map<String, Object> variables,
             final Class<T> itemClass,
             final ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
-        final MutationAdapter<T> mutationAdapter =
-            new MutationAdapter<>(responseListener, itemClass, responseDeserializer);
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(document, variables, String.class, variablesSerializer);
-        Cancelable cancelable = api.mutate(request, mutationAdapter);
-
+        final Cancelable cancelable =
+            api.mutate(request, MutationAdapter.instance(responseListener, itemClass, responseDeserializer));
         if (cancelable != null) {
             return cancelable;
         }
