@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
@@ -33,10 +34,11 @@ import com.amplifyframework.datastore.DataStoreException;
 final class SubscriptionAdapter {
     @SuppressWarnings("checkstyle:all") private SubscriptionAdapter() {}
 
-    static <T extends Model> StreamListener<GraphQLResponse<String>> instance(
-            StreamListener<GraphQLResponse<ModelWithMetadata<T>>> listener,
+    static <T extends Model> StreamListener<GraphQLResponse<String>, ApiException> instance(
+            StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener,
             Class<T> modelClass,
             ResponseDeserializer responseDeserializer) {
+        //noinspection CodeBlock2Expr to keep line length down a bit
         return StreamListener.instance(
             item -> {
                 if (item.hasErrors()) {
@@ -48,7 +50,9 @@ final class SubscriptionAdapter {
                 }
                 listener.onNext(responseDeserializer.deserialize(item.getData(), modelClass));
             },
-            listener::onError,
+            error -> {
+                listener.onError(new DataStoreException("Error during subscription.", error, "Evaluate details."));
+            },
             listener::onComplete
         );
     }

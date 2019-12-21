@@ -127,6 +127,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * Construct the SQLiteStorageAdapter object.
      * @param modelProvider Provides the models that will be usable by the DataStore
      */
+    @SuppressWarnings("WeakerAccess") // Must be public so user can access from their app package(s)
     public SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
@@ -143,8 +144,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * @param modelProvider A provider of models that will be represented in SQL
      * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
      */
-    public static SQLiteStorageAdapter forModels(ModelProvider modelProvider) {
-        return new SQLiteStorageAdapter(modelProvider);
+    @NonNull
+    public static SQLiteStorageAdapter forModels(@NonNull ModelProvider modelProvider) {
+        return new SQLiteStorageAdapter(Objects.requireNonNull(modelProvider));
     }
 
     /**
@@ -153,7 +155,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public synchronized void initialize(
             @NonNull Context context,
-            @NonNull final ResultListener<List<ModelSchema>> listener) {
+            @NonNull final ResultListener<List<ModelSchema>, DataStoreException> listener) {
         threadPool.submit(() -> {
             try {
                 final Set<Class<? extends Model>> models = new HashSet<>();
@@ -244,8 +246,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener
-    ) {
+            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener) {
         save(item, initiator, null, itemSaveListener);
     }
 
@@ -258,8 +259,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener
-    ) {
+            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener) {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
@@ -331,8 +331,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         query(itemClass, null, queryResultsListener);
     }
 
@@ -340,9 +341,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        @Nullable QueryPredicate predicate,
-                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @Nullable QueryPredicate predicate,
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         threadPool.submit(() -> {
             try {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
@@ -388,7 +390,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> itemDeleteListener) {
+            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemDeleteListener) {
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
@@ -433,6 +435,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public Observable<StorageItemChange.Record> observe() {
         return itemChangeSubject;
@@ -559,8 +562,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private void bindPreCompiledStatementWithFieldValue(
             @NonNull SQLiteStatement preCompiledStatement,
             @Nullable Object fieldValue,
-            int columnIndex
-    ) throws DataStoreException {
+            int columnIndex)
+            throws DataStoreException {
 
         if (fieldValue == null) {
             preCompiledStatement.bindNull(columnIndex);
@@ -622,8 +625,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private <T extends Model> Map<String, Object> buildMapForModel(
             @NonNull Class<T> modelClass,
             @NonNull ModelSchema modelSchema,
-            @NonNull Cursor cursor
-    ) throws DataStoreException {
+            @NonNull Cursor cursor) {
         final Map<String, Object> mapForModel = new HashMap<>();
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
         final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
@@ -725,8 +727,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
-            ModelConflictStrategy modelConflictStrategy
-    ) throws IllegalAccessException, DataStoreException {
+            ModelConflictStrategy modelConflictStrategy)
+            throws IllegalAccessException, DataStoreException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);

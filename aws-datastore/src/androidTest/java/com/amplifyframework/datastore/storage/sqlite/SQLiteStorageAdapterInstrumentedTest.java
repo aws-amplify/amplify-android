@@ -99,8 +99,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         LatchedConsumer<List<ModelSchema>> setupResultConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<List<ModelSchema>> setupResultListener =
-            ResultListener.instance(setupResultConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<List<ModelSchema>, DataStoreException> setupResultListener =
+            ResultListener.instance(setupResultConsumer, EmptyConsumer.of(DataStoreException.class));
 
         sqliteStorageAdapter.initialize(context, setupResultListener);
 
@@ -243,8 +243,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .build();
         saveModel(blogOwner);
 
-        LatchedConsumer<Throwable> errorConsumer = LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record> saveResultListener =
+        LatchedConsumer<DataStoreException> errorConsumer = LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
+        ResultListener<StorageItemChange.Record, DataStoreException> saveResultListener =
             ResultListener.instance(EmptyConsumer.of(StorageItemChange.Record.class), errorConsumer);
 
         final Blog blog = Blog.builder()
@@ -583,8 +583,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             @NonNull T model, @Nullable QueryPredicate predicate) {
         LatchedConsumer<StorageItemChange.Record> consumerOfSaveResult =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record> saveListener =
-            ResultListener.instance(consumerOfSaveResult, EmptyConsumer.of(Throwable.class));
+        ResultListener<StorageItemChange.Record, DataStoreException> saveListener =
+            ResultListener.instance(consumerOfSaveResult, EmptyConsumer.of(DataStoreException.class));
 
         sqliteStorageAdapter.save(
             model,
@@ -597,9 +597,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     private <T extends Model> void saveModelExpectingError(@NonNull T model, @NonNull QueryPredicate predicate) {
-        LatchedConsumer<Throwable> consumerOfError =
+        LatchedConsumer<DataStoreException> consumerOfError =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record> saveListener =
+        ResultListener<StorageItemChange.Record, DataStoreException> saveListener =
             ResultListener.instance(EmptyConsumer.of(StorageItemChange.Record.class), consumerOfError);
 
         sqliteStorageAdapter.save(
@@ -619,8 +619,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             @NonNull Class<T> modelClass, @Nullable QueryPredicate predicate) {
         LatchedConsumer<Iterator<T>> queryResultConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<Iterator<T>> resultListener =
-            ResultListener.instance(queryResultConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<Iterator<T>, DataStoreException> resultListener =
+            ResultListener.instance(queryResultConsumer, EmptyConsumer.of(DataStoreException.class));
         sqliteStorageAdapter.query(modelClass, predicate, resultListener);
         return queryResultConsumer.awaitValue();
     }
@@ -629,8 +629,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private <T extends Model> void deleteModel(@NonNull T model) {
         LatchedConsumer<StorageItemChange.Record> deleteConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record> deleteListener =
-            ResultListener.instance(deleteConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<StorageItemChange.Record, DataStoreException> deleteListener =
+            ResultListener.instance(deleteConsumer, EmptyConsumer.of(DataStoreException.class));
         sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
         deleteConsumer.awaitValue();
     }

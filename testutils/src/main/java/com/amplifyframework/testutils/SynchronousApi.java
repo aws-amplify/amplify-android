@@ -18,6 +18,7 @@ package com.amplifyframework.testutils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -173,8 +174,8 @@ public final class SynchronousApi {
     @NonNull
     public RestResponse get(@NonNull String apiName, @NonNull RestOptions options) {
         LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        ResultListener<RestResponse> resultListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<RestResponse, ApiException> resultListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
         Amplify.API.get(apiName, options, resultListener);
         return responseConsumer.awaitValue();
     }
@@ -188,8 +189,8 @@ public final class SynchronousApi {
     @NonNull
     public RestResponse post(@NonNull String apiName, @NonNull RestOptions options) {
         LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        ResultListener<RestResponse> responseListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<RestResponse, ApiException> responseListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
         Amplify.API.post(apiName, options, responseListener);
         return responseConsumer.awaitValue();
     }
@@ -270,8 +271,8 @@ public final class SynchronousApi {
     private <T> Subscription<T> createSubscription(SubscriptionCreationMethod<T> method) {
         LatchedResponseConsumer<T> streamItemConsumer = LatchedResponseConsumer.instance();
         LatchedAction streamCompletionAction = LatchedAction.instance();
-        LatchedConsumer<Throwable> errorConsumer = LatchedConsumer.instance();
-        StreamListener<GraphQLResponse<T>> streamListener =
+        LatchedConsumer<ApiException> errorConsumer = LatchedConsumer.instance();
+        StreamListener<GraphQLResponse<T>, ApiException> streamListener =
             StreamListener.instance(streamItemConsumer, errorConsumer, streamCompletionAction);
 
         final Cancelable cancelable = method.streamTo(streamListener);
@@ -289,26 +290,26 @@ public final class SynchronousApi {
 
     private <T> T awaitResponseData(AsyncOperation<T> operation) {
         LatchedResponseConsumer<T> responseConsumer = LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<T>> responseListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<T>, ApiException> responseListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
         operation.respondWith(responseListener);
         return responseConsumer.awaitResponseData();
     }
 
     private <T> List<GraphQLResponse.Error> awaitResponseErrors(AsyncOperation<T> operation) {
         LatchedResponseConsumer<T> responseConsumer = LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<T>> responseListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<T>, ApiException> responseListener =
+            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
         operation.respondWith(responseListener);
         return responseConsumer.awaitErrorsInNextResponse();
     }
 
     interface AsyncOperation<T> {
-        void respondWith(ResultListener<GraphQLResponse<T>> responseListener);
+        void respondWith(ResultListener<GraphQLResponse<T>, ApiException> responseListener);
     }
 
     interface SubscriptionCreationMethod<T> {
-        Cancelable streamTo(StreamListener<GraphQLResponse<T>> streamListener);
+        Cancelable streamTo(StreamListener<GraphQLResponse<T>, ApiException> streamListener);
     }
 
     /**
@@ -319,13 +320,13 @@ public final class SynchronousApi {
     @SuppressWarnings("unused")
     public static final class Subscription<T> {
         private final LatchedResponseConsumer<T> itemConsumer;
-        private final LatchedConsumer<Throwable> errorConsumer;
+        private final LatchedConsumer<ApiException> errorConsumer;
         private final LatchedAction completionAction;
         private final Cancelable cancellationMethod;
 
         Subscription(
                 @NonNull LatchedResponseConsumer<T> itemConsumer,
-                @NonNull LatchedConsumer<Throwable> errorConsumer,
+                @NonNull LatchedConsumer<ApiException> errorConsumer,
                 @NonNull LatchedAction completionAction,
                 @NonNull Cancelable cancellationMethod) {
             this.itemConsumer = itemConsumer;

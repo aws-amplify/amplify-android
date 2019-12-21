@@ -95,8 +95,8 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Initialize StorageAdapter with models
         LatchedConsumer<List<ModelSchema>> firstInitializationConsumer =
                 LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<List<ModelSchema>> firstResultListener =
-                ResultListener.instance(firstInitializationConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<List<ModelSchema>, DataStoreException> firstResultListener =
+                ResultListener.instance(firstInitializationConsumer, EmptyConsumer.of(DataStoreException.class));
 
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         sqliteStorageAdapter.initialize(context, firstResultListener);
@@ -125,8 +125,8 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Now, initialize storage adapter with the new models
         LatchedConsumer<List<ModelSchema>> secondInitializationConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<List<ModelSchema>> secondResultListener =
-            ResultListener.instance(secondInitializationConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<List<ModelSchema>, DataStoreException> secondResultListener =
+            ResultListener.instance(secondInitializationConsumer, EmptyConsumer.of(DataStoreException.class));
         sqliteStorageAdapter.initialize(context, secondResultListener);
         assertFalse(CollectionUtils.isNullOrEmpty(secondInitializationConsumer.awaitValue()));
 

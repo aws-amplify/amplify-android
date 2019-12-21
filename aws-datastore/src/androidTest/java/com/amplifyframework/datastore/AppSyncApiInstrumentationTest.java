@@ -194,8 +194,8 @@ public class AppSyncApiInstrumentationTest {
     private <T extends Model> ModelWithMetadata<T> create(@NonNull T model) {
         LatchedResponseConsumer<ModelWithMetadata<T>> createdItemConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>> listener =
-            ResultListener.instance(createdItemConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
+            ResultListener.instance(createdItemConsumer, EmptyConsumer.of(DataStoreException.class));
         api.create(model, listener);
         return createdItemConsumer.awaitResponseData();
     }
@@ -212,8 +212,8 @@ public class AppSyncApiInstrumentationTest {
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version) {
         LatchedResponseConsumer<ModelWithMetadata<T>> updatedItemConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>> listener =
-            ResultListener.instance(updatedItemConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
+            ResultListener.instance(updatedItemConsumer, EmptyConsumer.of(DataStoreException.class));
         api.update(model, version, listener);
         return updatedItemConsumer.awaitResponseData();
     }
@@ -231,8 +231,8 @@ public class AppSyncApiInstrumentationTest {
             @NonNull Class<T> clazz, String modelId, int version) {
         LatchedResponseConsumer<ModelWithMetadata<T>> deleteResultConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>> listener =
-            ResultListener.instance(deleteResultConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
+            ResultListener.instance(deleteResultConsumer, EmptyConsumer.of(DataStoreException.class));
         api.delete(clazz, modelId, version, listener);
         return deleteResultConsumer.awaitResponseData();
     }
@@ -251,8 +251,8 @@ public class AppSyncApiInstrumentationTest {
             @NonNull Class<T> clazz, String modelId, int version) {
         LatchedResponseConsumer<ModelWithMetadata<T>> deleteResultConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>> listener =
-            ResultListener.instance(deleteResultConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
+            ResultListener.instance(deleteResultConsumer, EmptyConsumer.of(DataStoreException.class));
         api.delete(clazz, modelId, version, listener);
         return deleteResultConsumer.awaitErrorsInNextResponse();
     }
@@ -268,8 +268,8 @@ public class AppSyncApiInstrumentationTest {
             @NonNull Class<T> clazz, @Nullable Long lastSyncTime) {
         LatchedResponseConsumer<Iterable<ModelWithMetadata<T>>> syncConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> syncListener =
-            ResultListener.instance(syncConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> syncListener =
+            ResultListener.instance(syncConsumer, EmptyConsumer.of(DataStoreException.class));
         api.sync(clazz, lastSyncTime, syncListener);
         return syncConsumer.awaitResponseData();
     }
@@ -299,8 +299,8 @@ public class AppSyncApiInstrumentationTest {
         static <T extends Model> Subscription<T> onCreate(Class<T> clazz) {
             LatchedResponseConsumer<ModelWithMetadata<T>> itemConsumer = LatchedResponseConsumer.instance();
             LatchedAction completionAction = LatchedAction.instance();
-            StreamListener<GraphQLResponse<ModelWithMetadata<T>>> listener =
-                StreamListener.instance(itemConsumer, EmptyConsumer.of(Throwable.class), completionAction);
+            StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
+                StreamListener.instance(itemConsumer, EmptyConsumer.of(DataStoreException.class), completionAction);
             Cancelable cancelable = api.onCreate(clazz, listener);
             return new Subscription<>(cancelable, itemConsumer, completionAction);
         }

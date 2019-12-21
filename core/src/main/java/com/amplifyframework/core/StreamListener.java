@@ -17,6 +17,8 @@ package com.amplifyframework.core;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
+
 /**
  * A utility to combine a collection of {@link Consumer}s - for stream data, and
  * terminating completion/error events.
@@ -32,16 +34,17 @@ import androidx.annotation.NonNull;
  * The StreamListener is modeled after the RxJava2 {@link io.reactivex.Observer}.
  *
  * @param <T> The type of item(s) that can be emitted via {@link #onNext(Object)}
+ * @param <E> The type of error(s) that can be emitted via {@link #onError(E)}.
  * @see <a href="http://reactivex.io/documentation/contract.html">The Rx Observable Contract</a>
  */
-public final class StreamListener<T> {
+public final class StreamListener<T, E extends AmplifyException> {
     private final Consumer<T> itemConsumer;
-    private final Consumer<Throwable> errorConsumer;
+    private final Consumer<E> errorConsumer;
     private final Action completionAction;
 
     private StreamListener(
             @NonNull Consumer<T> itemConsumer,
-            @NonNull Consumer<Throwable> errorConsumer,
+            @NonNull Consumer<E> errorConsumer,
             @NonNull Action completionAction) {
         this.itemConsumer = itemConsumer;
         this.errorConsumer = errorConsumer;
@@ -54,12 +57,13 @@ public final class StreamListener<T> {
      * @param errorConsumer Consumer of terminating errors
      * @param completionAction Action to perform on end of stream
      * @param <T> Type of items found in stream
+     * @param <E> Type of error that terminates the stream
      * @return A stream listener
      */
     @NonNull
-    public static <T> StreamListener<T> instance(
+    public static <T, E extends AmplifyException> StreamListener<T, E> instance(
             @NonNull Consumer<T> itemConsumer,
-            @NonNull Consumer<Throwable> errorConsumer,
+            @NonNull Consumer<E> errorConsumer,
             @NonNull Action completionAction) {
         return new StreamListener<>(itemConsumer, errorConsumer, completionAction);
     }
@@ -89,7 +93,7 @@ public final class StreamListener<T> {
      * this is invoked.
      * @param error An error encountered while evaluating a stream
      */
-    public void onError(@NonNull Throwable error) {
+    public void onError(@NonNull E error) {
         errorConsumer.accept(error);
     }
 }

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
@@ -46,8 +47,8 @@ public final class LatchedResponseConsumerTest {
     @Test
     public void valuesAreConsumedThroughResultListener() {
         LatchedResponseConsumer<String> resultConsumer = LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<String>> resultListener =
-            ResultListener.instance(resultConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<GraphQLResponse<String>, ApiException> resultListener =
+            ResultListener.instance(resultConsumer, EmptyConsumer.of(ApiException.class));
 
         String expectedResponseData = "Hello, World.";
         resultListener.onResult(new GraphQLResponse<>(expectedResponseData, Collections.emptyList()));

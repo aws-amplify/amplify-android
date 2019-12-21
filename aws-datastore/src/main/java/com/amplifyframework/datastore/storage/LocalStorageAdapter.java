@@ -60,7 +60,8 @@ public interface LocalStorageAdapter {
      */
     void initialize(
             @NonNull Context context,
-            @NonNull ResultListener<List<ModelSchema>> listener);
+            @NonNull ResultListener<List<ModelSchema>, DataStoreException> listener
+    );
 
     /**
      * Save an item into local storage. The {@link ResultListener} will be invoked when the
@@ -73,7 +74,8 @@ public interface LocalStorageAdapter {
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener);
+            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener
+    );
 
     /**
      * Save an item into local storage only if the data being overwritten meets the
@@ -89,7 +91,8 @@ public interface LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<StorageItemChange.Record> itemSaveListener);
+            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener
+    );
 
     /**
      * Query the storage for items of a given type.
@@ -99,7 +102,8 @@ public interface LocalStorageAdapter {
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener);
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+    );
 
     /**
      * Query the storage for items of a given type with specific conditions.
@@ -111,7 +115,8 @@ public interface LocalStorageAdapter {
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener);
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+    );
 
     /**
      * Deletes an item from storage.
@@ -123,13 +128,14 @@ public interface LocalStorageAdapter {
     <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record> itemDeletionListener);
+            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemDeletionListener);
 
     /**
      * Observe all changes to that occur to any/all objects in the storage.
      * @return An observable which emits an {@link StorageItemChange} notification every time
      *         any object managed by the storage adapter is changed in any way.
      */
+    @NonNull
     Observable<StorageItemChange.Record> observe();
 
     /**

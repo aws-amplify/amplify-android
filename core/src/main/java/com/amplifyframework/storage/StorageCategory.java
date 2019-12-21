@@ -40,79 +40,81 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
  */
 public final class StorageCategory extends Category<StoragePlugin<?>> implements StorageCategoryBehavior {
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.STORAGE;
     }
 
+    @NonNull
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
-            @NonNull ResultListener<StorageDownloadFileResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageDownloadFileResult, StorageException> resultListener) {
         return getSelectedPlugin().downloadFile(key, local, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
             @NonNull String local,
             @NonNull StorageDownloadFileOptions options,
-            @NonNull ResultListener<StorageDownloadFileResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageDownloadFileResult, StorageException> resultListener) {
         return getSelectedPlugin().downloadFile(key, local, options, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
-            @NonNull ResultListener<StorageUploadFileResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageUploadFileResult, StorageException> resultListener) {
         return getSelectedPlugin().uploadFile(key, local, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
             @NonNull String local,
             @NonNull StorageUploadFileOptions options,
-            @NonNull ResultListener<StorageUploadFileResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageUploadFileResult, StorageException> resultListener) {
         return getSelectedPlugin().uploadFile(key, local, options, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
-            @NonNull ResultListener<StorageRemoveResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageRemoveResult, StorageException> resultListener) {
         return getSelectedPlugin().remove(key, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
             @NonNull StorageRemoveOptions options,
-            @NonNull ResultListener<StorageRemoveResult> resultListener) {
+            @NonNull ResultListener<StorageRemoveResult, StorageException> resultListener) {
         return getSelectedPlugin().remove(key, options, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageListOperation<?> list(
             @NonNull String path,
-            @NonNull ResultListener<StorageListResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageListResult, StorageException> resultListener) {
         return getSelectedPlugin().list(path, resultListener);
     }
 
+    @NonNull
     @Override
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull StorageListOptions options,
-            @NonNull ResultListener<StorageListResult> resultListener
-    ) {
+            @NonNull ResultListener<StorageListResult, StorageException> resultListener) {
         return getSelectedPlugin().list(path, options, resultListener);
     }
 }

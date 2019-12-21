@@ -103,8 +103,10 @@ final class RemoteModelState {
     static final class MetadataEmitter {
         @SuppressWarnings("checkstyle:all") MetadataEmitter() {}
 
-        static <T extends Model> ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> instance(
-            final SingleEmitter<Iterable<ModelWithMetadata<T>>> emitter) {
+        @SuppressWarnings("checkstyle:Indentation") // Long template types require line breaks
+        static <T extends Model>
+        ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException>
+        instance(final SingleEmitter<Iterable<ModelWithMetadata<T>>> emitter) {
             //noinspection CodeBlock2Expr
             return ResultListener.instance(
                 resultFromEndpoint -> {

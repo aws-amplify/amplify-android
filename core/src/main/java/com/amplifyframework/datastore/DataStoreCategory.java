@@ -41,6 +41,7 @@ public class DataStoreCategory
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.DATASTORE;
@@ -50,8 +51,9 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void save(@NonNull T item,
-                                       @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
+    public <T extends Model> void save(
+            @NonNull T item,
+            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener) {
         getSelectedPlugin().save(item, saveItemListener);
     }
 
@@ -59,9 +61,10 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void save(@NonNull T item,
-                                       @NonNull QueryPredicate predicate,
-                                       @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener) {
+    public <T extends Model> void save(
+            @NonNull T item,
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener) {
         getSelectedPlugin().save(item, predicate, saveItemListener);
     }
 
@@ -69,8 +72,9 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void delete(@NonNull T item,
-                                         @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener) {
+    public <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> deleteItemListener) {
         getSelectedPlugin().delete(item, deleteItemListener);
     }
 
@@ -78,8 +82,9 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         getSelectedPlugin().query(itemClass, queryResultsListener);
     }
 
@@ -87,9 +92,10 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
-    public <T extends Model> void query(@NonNull Class<T> itemClass,
-                                        @NonNull QueryPredicate predicate,
-                                        @NonNull ResultListener<Iterator<T>> queryResultsListener) {
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         getSelectedPlugin().query(itemClass, predicate, queryResultsListener);
     }
 

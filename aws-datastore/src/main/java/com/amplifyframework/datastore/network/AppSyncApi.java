@@ -74,12 +74,13 @@ public final class AppSyncApi implements AppSyncEndpoint {
         return new AppSyncApi(Amplify.API);
     }
 
+    @SuppressWarnings("checkstyle:LineLength")
     @NonNull
     @Override
     public <T extends Model> Cancelable sync(
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
-            @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> responseListener) {
 
         final String queryDoc;
         try {
@@ -104,7 +105,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @Override
     public <T extends Model> Cancelable create(
             @NonNull T model,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener) {
         final String doc;
         try {
             doc = AppSyncRequestFactory.buildCreationDoc(model.getClass());
@@ -137,7 +138,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
     public <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull Integer version,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener) {
         final String doc;
         try {
             doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass());
@@ -173,7 +174,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener) {
         final String doc;
         try {
             doc = AppSyncRequestFactory.buildDeletionDoc(clazz);
@@ -199,7 +200,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @Override
     public <T extends Model> Cancelable onCreate(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener) {
+            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener) {
         return subscription(modelClass, subscriptionListener, SubscriptionType.ON_CREATE);
     }
 
@@ -207,7 +208,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @Override
     public <T extends Model> Cancelable onUpdate(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener) {
+            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener) {
         return subscription(modelClass, subscriptionListener, SubscriptionType.ON_UPDATE);
     }
 
@@ -215,13 +216,13 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @Override
     public <T extends Model> Cancelable onDelete(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener) {
+            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener) {
         return subscription(modelClass, subscriptionListener, SubscriptionType.ON_DELETE);
     }
 
     private <T extends Model> Cancelable subscription(
             Class<T> clazz,
-            StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener,
+            StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener,
             SubscriptionType subscriptionType) {
         final String document;
         try {
@@ -244,7 +245,7 @@ public final class AppSyncApi implements AppSyncEndpoint {
             final String document,
             final Map<String, Object> variables,
             final Class<T> itemClass,
-            final ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener) {
+            final ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener) {
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(document, variables, String.class, variablesSerializer);
         final Cancelable cancelable =
