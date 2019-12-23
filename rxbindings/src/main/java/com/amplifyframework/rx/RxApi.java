@@ -13,15 +13,12 @@
  * permissions and limitations under the License.
  */
 
-include ':core', ':rxbindings'
+package com.amplifyframework.rx;
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-storage-s3'
-include ':aws-datastore'
+import com.amplifyframework.api.ApiCategoryBehavior;
 
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
-
+/**
+ * An Rx-idiomatic expression of Amplify's {@link ApiCategoryBehavior}s.
+ */
+public interface RxApi extends RxRestApi, RxGraphQlApi {
+}
