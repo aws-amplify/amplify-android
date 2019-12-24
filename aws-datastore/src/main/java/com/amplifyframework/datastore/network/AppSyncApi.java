@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
@@ -56,10 +57,21 @@ public final class AppSyncApi implements AppSyncEndpoint {
      * Constructs a new AppSyncApi.
      * @param api The API Category, configured with a DataStore API
      */
-    public AppSyncApi(@NonNull final GraphQlBehavior api) {
+    @VisibleForTesting
+    AppSyncApi(@NonNull final GraphQlBehavior api) {
         this.api = Objects.requireNonNull(api);
         this.variablesSerializer = new GsonVariablesSerializer();
         this.responseDeserializer = new GsonResponseDeserializer();
+    }
+
+    /**
+     * Obtain an instance of the AppSyncAPI, which uses the Amplify API category
+     * as its backing implementation for GraphQL behaviors.
+     * @return An App Sync API instance
+     */
+    @NonNull
+    public static AppSyncApi instance() {
+        return new AppSyncApi(Amplify.API);
     }
 
     @NonNull
