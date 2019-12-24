@@ -22,7 +22,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.category.CategoryType;
@@ -73,7 +72,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     }
 
     private SyncEngine createSyncEngine(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
-        return new SyncEngine(modelProvider, storageAdapter, new AppSyncApi(Amplify.API));
+        return new SyncEngine(modelProvider, storageAdapter, AppSyncApi.instance());
     }
 
     /**
