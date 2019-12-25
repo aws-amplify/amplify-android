@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -49,7 +50,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<GraphQLResponse<Iterable<T>>> responseListener;
+    private final ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener;
 
     private Call ongoingCall;
 
@@ -67,7 +68,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<T> request,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -116,6 +117,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         return new Builder<>();
     }
 
+    @SuppressLint("SyntheticAccessor")
     class OkHttpCallback implements Callback {
         @Override
         public void onResponse(@NonNull Call call,
@@ -161,7 +163,7 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         private OkHttpClient client;
         private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
-        private ResultListener<GraphQLResponse<Iterable<T>>> responseListener;
+        private ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener;
 
         Builder<T> endpoint(final String endpoint) {
             this.endpoint = endpoint;
@@ -183,11 +185,12 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        Builder<T> responseListener(final ResultListener<GraphQLResponse<Iterable<T>>> responseListener) {
+        Builder<T> responseListener(final ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
             this.responseListener = responseListener;
             return this;
         }
 
+        @SuppressLint("SyntheticAccessor")
         SingleArrayResultOperation<T> build() {
             return new SingleArrayResultOperation<>(
                     endpoint,

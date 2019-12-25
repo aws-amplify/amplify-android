@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
@@ -63,7 +64,7 @@ final class DataHydration {
             // Save the model portion
             final ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
             final T item = modelWithMetadata.getModel();
-            final ResultListener<StorageItemChange.Record> listener =
+            final ResultListener<StorageItemChange.Record, DataStoreException> listener =
                 ResultListener.instance(ignoredRecord -> emitter.onComplete(), emitter::onError);
             if (Boolean.TRUE.equals(metadata.isDeleted())) {
                 localStorageAdapter.delete(item, StorageItemChange.Initiator.SYNC_ENGINE, listener);
@@ -78,7 +79,7 @@ final class DataHydration {
             // Save the metadata portion
             // This is separate from the model save since they have two distinct completions.
             final ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
-            final ResultListener<StorageItemChange.Record> metadataSaveListener =
+            final ResultListener<StorageItemChange.Record, DataStoreException> metadataSaveListener =
                 ResultListener.instance(ignoredRecord -> emitter.onComplete(), emitter::onError);
             localStorageAdapter.save(metadata, StorageItemChange.Initiator.SYNC_ENGINE, metadataSaveListener);
         });

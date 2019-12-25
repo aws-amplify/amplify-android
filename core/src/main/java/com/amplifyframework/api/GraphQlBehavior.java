@@ -55,7 +55,8 @@ public interface GraphQlBehavior {
     @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing GET Queries
@@ -80,7 +81,8 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing LIST Queries
@@ -104,8 +106,9 @@ public interface GraphQlBehavior {
     @Nullable
     <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
-            QueryPredicate predicate,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener
+    );
 
     /**
      * Perform a GraphQL query against a configured GraphQL endpoint.
@@ -125,7 +128,8 @@ public interface GraphQlBehavior {
     @Nullable
     <T> GraphQLOperation<T> query(
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily calling a list query for
@@ -147,7 +151,8 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing GET Queries
@@ -171,7 +176,8 @@ public interface GraphQlBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing LIST Queries
@@ -194,8 +200,9 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            QueryPredicate predicate,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener
+    );
 
     /**
      * Perform a GraphQL query against a configured GraphQL endpoint.
@@ -214,7 +221,8 @@ public interface GraphQlBehavior {
     <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing Mutations
@@ -239,7 +247,8 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing Mutations
@@ -265,9 +274,10 @@ public interface GraphQlBehavior {
     @Nullable
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
-            QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * Perform a GraphQL mutation against a configured GraphQL endpoint.
@@ -287,7 +297,8 @@ public interface GraphQlBehavior {
     @Nullable
     <T> GraphQLOperation<T> mutate(
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing Mutations
@@ -312,7 +323,8 @@ public interface GraphQlBehavior {
             @NonNull String apiName,
             @NonNull T model,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily performing Mutations
@@ -338,9 +350,10 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull T model,
-            QueryPredicate predicate,
+            @NonNull QueryPredicate predicate,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * Perform a GraphQL mutation against a configured GraphQL endpoint.
@@ -360,7 +373,8 @@ public interface GraphQlBehavior {
     <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener
+    );
 
     /**
      * This is a special helper method for easily subscribing to events
@@ -386,7 +400,8 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener
+    );
 
     /**
      * Initiates a GraphQL subscription against a configured GraphQL
@@ -407,7 +422,8 @@ public interface GraphQlBehavior {
     @Nullable
     <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener
+    );
 
     /**
      * This is a special helper method for easily subscribing to events
@@ -432,7 +448,8 @@ public interface GraphQlBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener
+    );
 
     /**
      * Initiates a GraphQL subscription against a configured GraphQL
@@ -452,5 +469,6 @@ public interface GraphQlBehavior {
     <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull StreamListener<GraphQLResponse<T>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener
+    );
 }

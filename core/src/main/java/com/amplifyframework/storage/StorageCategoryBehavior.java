@@ -45,9 +45,12 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
-                                  @NonNull String local,
-                                  @NonNull ResultListener<StorageDownloadFileResult> resultListener);
+    @NonNull
+    StorageDownloadFileOperation<?> downloadFile(
+            @NonNull String key,
+            @NonNull String local,
+            @NonNull ResultListener<StorageDownloadFileResult, StorageException> resultListener
+    );
 
     /**
      * Download object to memory from storage.
@@ -62,10 +65,13 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageDownloadFileOperation<?> downloadFile(@NonNull String key,
-                                  @NonNull String local,
-                                  @NonNull StorageDownloadFileOptions options,
-                                  @NonNull ResultListener<StorageDownloadFileResult> resultListener);
+    @NonNull
+    StorageDownloadFileOperation<?> downloadFile(
+            @NonNull String key,
+            @NonNull String local,
+            @NonNull StorageDownloadFileOptions options,
+            @NonNull ResultListener<StorageDownloadFileResult, StorageException> resultListener
+    );
 
     /**
      * Upload local file on given path to storage.
@@ -76,9 +82,12 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
-                                @NonNull String local,
-                                @NonNull ResultListener<StorageUploadFileResult> resultListener);
+    @NonNull
+    StorageUploadFileOperation<?> uploadFile(
+            @NonNull String key,
+            @NonNull String local,
+            @NonNull ResultListener<StorageUploadFileResult, StorageException> resultListener
+    );
 
     /**
      * Upload local file on given path to storage.
@@ -91,10 +100,13 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageUploadFileOperation<?> uploadFile(@NonNull String key,
-                                @NonNull String local,
-                                @NonNull StorageUploadFileOptions options,
-                                @NonNull ResultListener<StorageUploadFileResult> resultListener);
+    @NonNull
+    StorageUploadFileOperation<?> uploadFile(
+            @NonNull String key,
+            @NonNull String local,
+            @NonNull StorageUploadFileOptions options,
+            @NonNull ResultListener<StorageUploadFileResult, StorageException> resultListener
+    );
 
     /**
      * Delete object from storage.
@@ -104,8 +116,11 @@ public interface StorageCategoryBehavior {
      *        actions related to the execution of the work
      *
      */
-    StorageRemoveOperation<?> remove(@NonNull String key,
-                            @NonNull ResultListener<StorageRemoveResult> resultListener);
+    @NonNull
+    StorageRemoveOperation<?> remove(
+            @NonNull String key,
+            @NonNull ResultListener<StorageRemoveResult, StorageException> resultListener
+    );
 
     /**
      * Delete object from storage.
@@ -116,9 +131,12 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *        actions related to the execution of the work
      */
-    StorageRemoveOperation<?> remove(@NonNull String key,
-                            @NonNull StorageRemoveOptions options,
-                            @NonNull ResultListener<StorageRemoveResult> resultListener);
+    @NonNull
+    StorageRemoveOperation<?> remove(
+            @NonNull String key,
+            @NonNull StorageRemoveOptions options,
+            @NonNull ResultListener<StorageRemoveResult, StorageException> resultListener
+    );
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -128,8 +146,11 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageListOperation<?> list(@NonNull String path,
-                            @NonNull ResultListener<StorageListResult> resultListener);
+    @NonNull
+    StorageListOperation<?> list(
+            @NonNull String path,
+            @NonNull ResultListener<StorageListResult, StorageException> resultListener
+    );
 
     /**
      * List the object identifiers under the hierarchy specified
@@ -141,7 +162,10 @@ public interface StorageCategoryBehavior {
      * @return an operation object that provides notifications and
      *         actions related to the execution of the work
      */
-    StorageListOperation<?> list(@NonNull String path,
-                            @NonNull StorageListOptions options,
-                            @NonNull ResultListener<StorageListResult> resultListener);
+    @NonNull
+    StorageListOperation<?> list(
+            @NonNull String path,
+            @NonNull StorageListOptions options,
+            @NonNull ResultListener<StorageListResult, StorageException> resultListener
+    );
 }

@@ -15,16 +15,18 @@
 
 package com.amplifyframework.datastore.network;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 
 final class MutationAdapter {
     @SuppressWarnings("checkstyle:all") private MutationAdapter() {}
 
-    static <T extends Model> ResultListener<GraphQLResponse<String>> instance(
-            ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener,
+    static <T extends Model> ResultListener<GraphQLResponse<String>, ApiException> instance(
+            ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener,
             Class<T> itemClass,
             ResponseDeserializer responseDeserializer) {
 
@@ -36,6 +38,9 @@ final class MutationAdapter {
             responseListener.onResult(responseDeserializer.deserialize(result.getData(), itemClass));
         };
 
-        return ResultListener.instance(resultConsumer, responseListener::onError);
+        //noinspection CodeBlock2Expr Keep down line length a bit
+        return ResultListener.instance(resultConsumer, error -> {
+            responseListener.onError(new DataStoreException("Error during mutation.", error, "Check details."));
+        });
     }
 }

@@ -126,7 +126,7 @@ final class RemoteModelMutations {
             }
 
             Subscription begin() throws DataStoreException {
-                StreamListener<GraphQLResponse<ModelWithMetadata<T>>> listener =
+                StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
                     SubscriptionFunnel.instance(commonEmitter, modelClass, subscriptionType);
 
                 final Cancelable cancelable;
@@ -175,7 +175,7 @@ final class RemoteModelMutations {
             }
 
             @SuppressLint("SyntheticAccessor")
-            static <T extends Model> StreamListener<GraphQLResponse<ModelWithMetadata<T>>> instance(
+            static <T extends Model> StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> instance(
                     Emitter<Mutation<? extends Model>> commonEmitter,
                     Class<T> modelClazz,
                     SubscriptionType subscriptionType) {

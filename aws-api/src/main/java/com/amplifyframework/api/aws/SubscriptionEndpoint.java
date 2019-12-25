@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.util.Base64;
 import androidx.annotation.NonNull;
@@ -72,7 +73,7 @@ final class SubscriptionEndpoint {
 
     synchronized <T> String requestSubscription(
             @NonNull GraphQLRequest<T> request,
-            @NonNull StreamListener<GraphQLResponse<T>> responseListener) {
+            @NonNull StreamListener<GraphQLResponse<T>, ApiException> responseListener) {
 
         if (webSocket == null) {
             try {
@@ -122,6 +123,7 @@ final class SubscriptionEndpoint {
         return subscriptionId;
     }
 
+    @SuppressLint("SyntheticAccessor")
     private WebSocket createWebSocket() throws ApiException {
         Request request = new Request.Builder()
             .url(buildConnectionRequestUrl())
@@ -342,14 +344,14 @@ final class SubscriptionEndpoint {
     static final class Subscription<T> {
         private static final int ACKNOWLEDGEMENT_TIMEOUT = 10 /* seconds */;
 
-        private final StreamListener<GraphQLResponse<T>> responseListener;
+        private final StreamListener<GraphQLResponse<T>, ApiException> responseListener;
         private final GraphQLResponse.Factory responseFactory;
         private final Class<T> classToCast;
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
 
         Subscription(
-                StreamListener<GraphQLResponse<T>> responseListener,
+                StreamListener<GraphQLResponse<T>, ApiException> responseListener,
                 GraphQLResponse.Factory responseFactory,
                 Class<T> classToCast) {
             this.responseListener = responseListener;
@@ -410,7 +412,7 @@ final class SubscriptionEndpoint {
             }
         }
 
-        void dispatchError(Throwable error) {
+        void dispatchError(ApiException error) {
             responseListener.onError(error);
         }
 
