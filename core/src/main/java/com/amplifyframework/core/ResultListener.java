@@ -17,6 +17,8 @@ package com.amplifyframework.core;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
+
 import java.util.Objects;
 
 /**
@@ -34,14 +36,15 @@ import java.util.Objects;
  * An {@link ResultListener} is modeled after an RxJava2 {@link io.reactivex.SingleObserver}.
  *
  * @param <R> The type of result being returned to the listener
+ * @param <E> The type of error expected instead of a result
  */
-public final class ResultListener<R> {
+public final class ResultListener<R, E extends AmplifyException> {
     private final Consumer<R> resultConsumer;
-    private final Consumer<Throwable> errorConsumer;
+    private final Consumer<E> errorConsumer;
 
     private ResultListener(
             @NonNull final Consumer<R> resultConsumer,
-            @NonNull final Consumer<Throwable> errorConsumer) {
+            @NonNull final Consumer<E> errorConsumer) {
         this.resultConsumer = resultConsumer;
         this.errorConsumer = errorConsumer;
     }
@@ -51,12 +54,13 @@ public final class ResultListener<R> {
      * @param resultConsumer Consumer of result
      * @param errorConsumer Consumer of error
      * @param <R> The result type
+     * @param <E> The expected type of error
      * @return A result listener
      */
     @NonNull
-    public static <R> ResultListener<R> instance(
+    public static <R, E extends AmplifyException> ResultListener<R, E> instance(
             @NonNull final Consumer<R> resultConsumer,
-            @NonNull final Consumer<Throwable> errorConsumer) {
+            @NonNull final Consumer<E> errorConsumer) {
         return new ResultListener<>(
             Objects.requireNonNull(resultConsumer),
             Objects.requireNonNull(errorConsumer)
@@ -76,7 +80,7 @@ public final class ResultListener<R> {
      * error has occurred.
      * @param error An error that prevents determination of a result.
      */
-    public void onError(@NonNull Throwable error) {
+    public void onError(@NonNull E error) {
         errorConsumer.accept(error);
     }
 }

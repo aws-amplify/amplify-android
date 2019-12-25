@@ -42,7 +42,7 @@ public final class AWSRestOperation extends RestOperation {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<RestResponse> responseListener;
+    private final ResultListener<RestResponse, ApiException> responseListener;
 
     private Call ongoingCall;
 
@@ -57,7 +57,7 @@ public final class AWSRestOperation extends RestOperation {
             RestOperationRequest request,
             String endpoint,
             OkHttpClient client,
-            ResultListener<RestResponse> responseListener) {
+            ResultListener<RestResponse, ApiException> responseListener) {
         super(request);
         this.endpoint = endpoint;
         this.client = client;

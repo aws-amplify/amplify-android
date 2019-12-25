@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 
 import java.util.Iterator;
@@ -55,8 +56,8 @@ public final class SynchronousDataStore {
      */
     public <T extends Model> void save(@NonNull T item) {
         LatchedConsumer<DataStoreItemChange<T>> saveConsumer = LatchedConsumer.instance();
-        ResultListener<DataStoreItemChange<T>> resultListener =
-            ResultListener.instance(saveConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<DataStoreItemChange<T>, DataStoreException> resultListener =
+            ResultListener.instance(saveConsumer, EmptyConsumer.of(DataStoreException.class));
         Amplify.DataStore.save(item, resultListener);
         saveConsumer.awaitValue();
     }
@@ -72,8 +73,8 @@ public final class SynchronousDataStore {
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) {
         LatchedConsumer<Iterator<T>> queryConsumer = LatchedConsumer.instance();
-        ResultListener<Iterator<T>> resultListener =
-            ResultListener.instance(queryConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<Iterator<T>, DataStoreException> resultListener =
+            ResultListener.instance(queryConsumer, EmptyConsumer.of(DataStoreException.class));
         Amplify.DataStore.query(clazz, resultListener);
 
         final Iterator<T> iterator = queryConsumer.awaitValue();

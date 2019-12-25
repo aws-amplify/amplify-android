@@ -20,6 +20,7 @@ import android.os.Build;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -81,8 +82,8 @@ public class SyncEngineTest {
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         LatchedConsumer<StorageItemChange.Record> saveConsumer = LatchedConsumer.instance(OPERATIONS_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record> listener =
-            ResultListener.instance(saveConsumer::accept, EmptyConsumer.of(Throwable.class));
+        ResultListener<StorageItemChange.Record, DataStoreException> listener =
+            ResultListener.instance(saveConsumer, EmptyConsumer.of(DataStoreException.class));
         localStorageAdapter.save(susan, StorageItemChange.Initiator.DATA_STORE_API, listener);
         saveConsumer.awaitValue();
 

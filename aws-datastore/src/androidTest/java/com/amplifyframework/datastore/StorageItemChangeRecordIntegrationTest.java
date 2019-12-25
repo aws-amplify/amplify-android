@@ -67,8 +67,8 @@ public final class StorageItemChangeRecordIntegrationTest {
         ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         LatchedConsumer<List<ModelSchema>> resultConsumer = LatchedConsumer.instance();
-        ResultListener<List<ModelSchema>> resultListener =
-            ResultListener.instance(resultConsumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<List<ModelSchema>, DataStoreException> resultListener =
+            ResultListener.instance(resultConsumer, EmptyConsumer.of(DataStoreException.class));
         ModelProvider modelProvider = ModelProviderFactory.createProviderOf(BlogOwner.class);
         this.localStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         localStorageAdapter.initialize(ApplicationProvider.getApplicationContext(), resultListener);
@@ -164,8 +164,8 @@ public final class StorageItemChangeRecordIntegrationTest {
 
         // Wait for it to save...
         LatchedConsumer<StorageItemChange.Record> consumer = LatchedConsumer.instance();
-        ResultListener<StorageItemChange.Record> listener =
-            ResultListener.instance(consumer, EmptyConsumer.of(Throwable.class));
+        ResultListener<StorageItemChange.Record, DataStoreException> listener =
+            ResultListener.instance(consumer, EmptyConsumer.of(DataStoreException.class));
         localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE, listener);
         consumer.awaitValue();
 
@@ -293,8 +293,8 @@ public final class StorageItemChangeRecordIntegrationTest {
         // The fact that it is getting saved means it gets wrapped into another
         // StorageItemChange.Record, which itself contains the original StorageItemChange.Record.
         LatchedConsumer<StorageItemChange.Record> consumerOfSaveResult = LatchedConsumer.instance();
-        ResultListener<StorageItemChange.Record> saveResultListener =
-            ResultListener.instance(consumerOfSaveResult, EmptyConsumer.of(Throwable.class));
+        ResultListener<StorageItemChange.Record, DataStoreException> saveResultListener =
+            ResultListener.instance(consumerOfSaveResult, EmptyConsumer.of(DataStoreException.class));
 
         localStorageAdapter.save(storageItemChangeRecord,
             StorageItemChange.Initiator.SYNC_ENGINE, saveResultListener);
@@ -312,8 +312,8 @@ public final class StorageItemChangeRecordIntegrationTest {
         // Okay, now we're going to do a query, then await & stash the query results.
         LatchedConsumer<Iterator<StorageItemChange.Record>> consumerOfQueryResults =
             LatchedConsumer.instance();
-        ResultListener<Iterator<StorageItemChange.Record>> queryResultsListener =
-            ResultListener.instance(consumerOfQueryResults, EmptyConsumer.of(Throwable.class));
+        ResultListener<Iterator<StorageItemChange.Record>, DataStoreException> queryResultsListener =
+            ResultListener.instance(consumerOfQueryResults, EmptyConsumer.of(DataStoreException.class));
 
         // TODO: if/when there is a form of query() which shall accept QueryPredicate, use that instead.
         localStorageAdapter.query(StorageItemChange.Record.class, queryResultsListener);
@@ -330,8 +330,8 @@ public final class StorageItemChangeRecordIntegrationTest {
         // The thing we are deleting is a StorageItemChange.Record, which is wrapping
         // a StorageItemChange.Record, which is wrapping an item.
         LatchedConsumer<StorageItemChange.Record> consumerOfRecordDeletionResult = LatchedConsumer.instance();
-        ResultListener<StorageItemChange.Record> recordDeletionListener =
-            ResultListener.instance(consumerOfRecordDeletionResult, EmptyConsumer.of(Throwable.class));
+        ResultListener<StorageItemChange.Record, DataStoreException> recordDeletionListener =
+            ResultListener.instance(consumerOfRecordDeletionResult, EmptyConsumer.of(DataStoreException.class));
 
         localStorageAdapter.delete(record, StorageItemChange.Initiator.SYNC_ENGINE, recordDeletionListener);
 

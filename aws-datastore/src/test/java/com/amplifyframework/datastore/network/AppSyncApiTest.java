@@ -20,6 +20,7 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.EmptyConsumer;
 import com.amplifyframework.testutils.LatchedConsumer;
@@ -76,8 +77,8 @@ public final class AppSyncApiTest {
         // Request a sync. Await its completion using a test latch.
         final LatchedConsumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> syncConsumer =
             LatchedConsumer.instance();
-        final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> listener =
-            ResultListener.instance(syncConsumer, EmptyConsumer.of(Throwable.class));
+        final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>, DataStoreException> listener =
+            ResultListener.instance(syncConsumer, EmptyConsumer.of(DataStoreException.class));
         endpoint.sync(BlogOwner.class, null, listener);
         syncConsumer.awaitValue();
 
@@ -107,7 +108,7 @@ public final class AppSyncApiTest {
     private void mockApiResponse(GraphQLResponse<Iterable<String>> arrangedApiResponse) {
         doAnswer(invocation -> {
             final int argPositionOfResultListener = 1; // second and final arg, starting from arg 0
-            ResultListener<GraphQLResponse<Iterable<String>>> listener =
+            ResultListener<GraphQLResponse<Iterable<String>>, DataStoreException> listener =
                 invocation.getArgument(argPositionOfResultListener);
             listener.onResult(arrangedApiResponse);
             return mock(GraphQLOperation.class);

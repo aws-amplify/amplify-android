@@ -45,7 +45,8 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void save(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
+            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener
+    );
 
     /**
      * Saves an item into the DataStore if the data being overwritten meets
@@ -60,7 +61,8 @@ public interface DataStoreCategoryBehavior {
     <T extends Model> void save(
             @NonNull T item,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<DataStoreItemChange<T>> saveItemListener);
+            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener
+    );
 
     /**
      * Deletes an item from the DataStore.
@@ -71,7 +73,8 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void delete(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>> deleteItemListener);
+            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> deleteItemListener
+    );
 
     /**
      * Query the DataStore to find all items of the requested Java class.
@@ -83,7 +86,8 @@ public interface DataStoreCategoryBehavior {
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>> queryResultsListener);
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+    );
 
     /**
      * Query the DataStore to find all items of the requested Java class that fulfills the
@@ -95,10 +99,11 @@ public interface DataStoreCategoryBehavior {
      *        results, or if there is a failure to query
      * @param <T> The type of items being queried
      */
-    <T extends Model> void query(@NonNull Class<T> itemClass,
-                                 @NonNull QueryPredicate predicate,
-                                 @NonNull ResultListener<Iterator<T>> queryResultsListener);
-
+    <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate predicate,
+            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+    );
 
     /**
      * Observe all changes to any/all item(s) in the DataStore.

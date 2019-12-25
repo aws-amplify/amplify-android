@@ -118,7 +118,7 @@ public final class SyncEngine {
     private Single<Mutation<? extends Model>> applyMutationToLocalStorage(Mutation<? extends Model> mutation) {
         final StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
         return Single.defer(() -> Single.create(emitter -> {
-            final ResultListener<StorageItemChange.Record> storageResultListener =
+            final ResultListener<StorageItemChange.Record, DataStoreException> storageResultListener =
                 ResultListener.instance(result -> emitter.onSuccess(mutation), emitter::onError);
 
             switch (mutation.type()) {

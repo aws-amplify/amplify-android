@@ -23,6 +23,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 
 /**
  * Convenience class to call API in a way that supports versioning and retrieving sync metadata.
@@ -37,11 +38,13 @@ public interface AppSyncEndpoint {
      * @param responseListener Invoked when response data/errors are available.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
+    @SuppressWarnings("checkstyle:LineLength") // Long bounds for ResultListener
     @NonNull
     <T extends Model> Cancelable sync(
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
-            @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> responseListener
+    );
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
@@ -53,7 +56,8 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable create(
             @NonNull T model,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener
+    );
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
@@ -67,7 +71,8 @@ public interface AppSyncEndpoint {
     <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull Integer version,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener
+    );
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
@@ -83,7 +88,8 @@ public interface AppSyncEndpoint {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener);
+            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener
+    );
 
     /**
      * Get notified when a create event happens on a given class.
@@ -96,7 +102,8 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable onCreate(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener
+    );
 
     /**
      * Get notified when an update event happens on a given class.
@@ -109,7 +116,8 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable onUpdate(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener
+    );
 
     /**
      * Get notified when a delete event happens on a given class.
@@ -122,5 +130,6 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable onDelete(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>> subscriptionListener);
+            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener
+    );
 }

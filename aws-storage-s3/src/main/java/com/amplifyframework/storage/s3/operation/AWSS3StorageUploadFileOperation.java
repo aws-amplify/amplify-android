@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.s3.operation;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.ResultListener;
@@ -37,7 +38,7 @@ import java.io.File;
  */
 public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final ResultListener<StorageUploadFileResult> resultListener;
+    private final ResultListener<StorageUploadFileResult, StorageException> resultListener;
     private TransferObserver transferObserver;
     private File file;
 
@@ -47,9 +48,10 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * @param request upload request parameters
      * @param resultListener Will be notified when results of upload are available
      */
-    public AWSS3StorageUploadFileOperation(@NonNull AWSS3StorageService storageService,
-                                           @NonNull AWSS3StorageUploadFileRequest request,
-                                           @NonNull ResultListener<StorageUploadFileResult> resultListener) {
+    public AWSS3StorageUploadFileOperation(
+            @NonNull AWSS3StorageService storageService,
+            @NonNull AWSS3StorageUploadFileRequest request,
+            @NonNull ResultListener<StorageUploadFileResult, StorageException> resultListener) {
         super(request);
         this.storageService = storageService;
         this.resultListener = resultListener;
@@ -57,6 +59,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         this.file = null;
     }
 
+    @SuppressLint("SyntheticAccessor")
     @Override
     public void start() {
         // Only start if it hasn't already been started

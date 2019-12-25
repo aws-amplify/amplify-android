@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
@@ -31,8 +32,8 @@ import com.amplifyframework.datastore.DataStoreException;
 final class SyncAdapter {
     @SuppressWarnings("checkstyle:all") private SyncAdapter() {}
 
-    static <T extends Model> ResultListener<GraphQLResponse<Iterable<String>>> instance(
-            ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> responseListener,
+    static <T extends Model> ResultListener<GraphQLResponse<Iterable<String>>, ApiException> instance(
+            ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> responseListener,
             Class<T> itemClass,
             ResponseDeserializer responseDeserializer) {
         final Consumer<GraphQLResponse<Iterable<String>>> resultConsumer = resultFromApiQuery -> {
@@ -46,7 +47,7 @@ final class SyncAdapter {
             }
         };
         @SuppressWarnings("CodeBlock2Expr") // Block is more readable
-        final Consumer<Throwable> errorConsumer = error -> {
+        final Consumer<ApiException> errorConsumer = error -> {
             responseListener.onError(new DataStoreException(
                 "Failure performing sync query to AppSync.",
                 error, AmplifyException.TODO_RECOVERY_SUGGESTION
