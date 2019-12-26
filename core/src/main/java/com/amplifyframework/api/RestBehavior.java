@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 
 /**
  * REST behaviors which include the family of HTTP verbs (GET, POST, etc.).
@@ -31,20 +31,23 @@ public interface RestBehavior {
     /**
      * This is a helper method for easily invoking GET HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
-     * to the provided `ResultListener`.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided `onFailure` callback.
      *
      * @param request GET request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
     @Nullable
     RestOperation get(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
@@ -52,9 +55,11 @@ public interface RestBehavior {
      *
      * @param apiName The name of a configured API.
      * @param request GET request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
@@ -62,26 +67,30 @@ public interface RestBehavior {
     RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
      * This is a helper method for easily invoking PUT HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
-     * to the provided `ResultListener`.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided `onFailure` callback.
      *
      * @param request PUT request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
     @Nullable
     RestOperation put(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
@@ -89,9 +98,11 @@ public interface RestBehavior {
      *
      * @param apiName The name of a configured API.
      * @param request PUT request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
@@ -99,26 +110,30 @@ public interface RestBehavior {
     RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
      * This is a helper method for easily invoking POST HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
-     * to the provided `ResultListener`.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided `onFailure` callback.
      *
      * @param request POST request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
     @Nullable
     RestOperation post(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
@@ -126,9 +141,11 @@ public interface RestBehavior {
      *
      * @param apiName The name of a configured API.
      * @param request POST request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
@@ -136,26 +153,30 @@ public interface RestBehavior {
     RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
      * This is a helper method for easily invoking DELETE HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
-     * to the provided `ResultListener`.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided `onFailure` callback.
      *
      * @param request DELETE request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
     @Nullable
     RestOperation delete(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
@@ -163,9 +184,11 @@ public interface RestBehavior {
      *
      * @param apiName The name of a configured API.
      * @param request DELETE request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
@@ -173,26 +196,30 @@ public interface RestBehavior {
     RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
      * This is a helper method for easily invoking HEAD HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
-     * to the provided `ResultListener`.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided `onFailure` callback.
      *
      * @param request HEAD request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
     @Nullable
     RestOperation head(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
@@ -200,9 +227,11 @@ public interface RestBehavior {
      *
      * @param apiName The name of a configured API.
      * @param request HEAD request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
@@ -210,26 +239,30 @@ public interface RestBehavior {
     RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
      * This is a helper method for easily invoking PATCH HTTP request.
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException
-     * to the provided `ResultListener`.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided `onFailure` callback.
      *
      * @param request PATCH request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
     @Nullable
     RestOperation patch(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 
     /**
@@ -237,9 +270,11 @@ public interface RestBehavior {
      *
      * @param apiName The name of a configured API.
      * @param request PATCH request object.
-     * @param responseListener
-     *      Invoked when response data/errors are available. If null,
-     *      response can still be obtained via Hub.
+     * @param onResponse
+     *        Invoked when a response is available from the REST endpoint.
+     *        A response may contain a non-200 error code from the endpoint.
+     * @param onFailure
+     *        Invoked upon failure to obtain a response from the REST endpoint
      * @return An {@link ApiOperation} to track progress and provide
      * a means to cancel the asynchronous operation
      */
@@ -247,6 +282,7 @@ public interface RestBehavior {
     RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure
     );
 }
