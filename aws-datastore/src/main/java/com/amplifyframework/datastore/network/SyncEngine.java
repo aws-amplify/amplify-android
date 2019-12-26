@@ -35,6 +35,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -161,21 +162,23 @@ public final class SyncEngine {
      * by the sync engine, then place that change into the persistently-backed change journal.
      */
     private void startObservingStorageChanges() {
-        observationsToDispose.add(
-            storageAdapter.observe()
-                .map(record -> record.toStorageItemChange(storageItemChangeConverter))
-                .filter(possiblyCyclicChange -> {
-                    // Don't continue if the storage change was caused by the sync engine itself
-                    return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .flatMapSingle(storageItemChangeJournal::enqueue)
-                .subscribe(
-                    pendingChange -> LOG.info("Successfully enqueued " + pendingChange),
-                    error -> LOG.warn("Storage adapter subscription ended in error", error),
-                    () -> LOG.warn("Storage adapter subscription terminated with completion.")
-                )
+        observationsToDispose.add(Observable.<StorageItemChange.Record>create(emitter ->
+            storageAdapter.observe(StreamListener.instance(
+                emitter::onNext, emitter::onError, emitter::onComplete)
+            ))
+            .map(record -> record.toStorageItemChange(storageItemChangeConverter))
+            .filter(possiblyCyclicChange -> {
+                // Don't continue if the storage change was caused by the sync engine itself
+                return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
+            })
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .flatMapSingle(storageItemChangeJournal::enqueue)
+            .subscribe(
+                pendingChange -> LOG.info("Successfully enqueued " + pendingChange),
+                error -> LOG.warn("Storage adapter subscription ended in error", error),
+                () -> LOG.warn("Storage adapter subscription terminated with completion.")
+            )
         );
     }
 
