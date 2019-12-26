@@ -15,6 +15,7 @@
 
 apply plugin: 'maven'
 apply plugin: 'signing'
+apply plugin: 'maven-publish'
 
 version = VERSION_NAME
 group = GROUP
@@ -214,4 +215,16 @@ afterEvaluate { project ->
             archives sourcesJar
         }
     }
+
+    publishing {
+        publications {
+            library(MavenPublication) {
+                groupId GROUP
+                artifactId POM_ARTIFACT_ID
+                version VERSION_NAME
+                artifact(bundleReleaseAar)
+            }
+        }
+    }
 }
+
