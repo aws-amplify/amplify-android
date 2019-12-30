@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
@@ -29,41 +30,30 @@ import com.amplifyframework.datastore.DataStoreException;
  * needed for the {@link AppSyncEndpoint} contract.
  * Adapts between the two types of {@link StreamListener} by means of using a
  * {@link ResponseDeserializer}.
- * @param <T> Type of object being de-serialized from API subscription data
  */
-final class SubscriptionAdapter<T extends Model> implements StreamListener<GraphQLResponse<String>> {
-    private final StreamListener<GraphQLResponse<ModelWithMetadata<T>>> listener;
-    private final Class<T> modelClass;
-    private final ResponseDeserializer responseDeserializer;
+final class SubscriptionAdapter {
+    @SuppressWarnings("checkstyle:all") private SubscriptionAdapter() {}
 
-    SubscriptionAdapter(
-            StreamListener<GraphQLResponse<ModelWithMetadata<T>>> listener,
+    static <T extends Model> StreamListener<GraphQLResponse<String>, ApiException> instance(
+            StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener,
             Class<T> modelClass,
             ResponseDeserializer responseDeserializer) {
-        this.listener = listener;
-        this.modelClass = modelClass;
-        this.responseDeserializer = responseDeserializer;
-    }
-
-    @Override
-    public void onNext(GraphQLResponse<String> item) {
-        if (item.hasErrors()) {
-            listener.onError(new DataStoreException(
-                "Bad subscription data for " + modelClass.getSimpleName() + ": " + item.getErrors(),
-                AmplifyException.TODO_RECOVERY_SUGGESTION
-            ));
-            return;
-        }
-        listener.onNext(responseDeserializer.deserialize(item.getData(), modelClass));
-    }
-
-    @Override
-    public void onComplete() {
-        listener.onComplete();
-    }
-
-    @Override
-    public void onError(Throwable error) {
-        listener.onError(error);
+        //noinspection CodeBlock2Expr to keep line length down a bit
+        return StreamListener.instance(
+            item -> {
+                if (item.hasErrors()) {
+                    listener.onError(new DataStoreException(
+                        "Bad subscription data for " + modelClass.getSimpleName() + ": " + item.getErrors(),
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
+                    return;
+                }
+                listener.onNext(responseDeserializer.deserialize(item.getData(), modelClass));
+            },
+            error -> {
+                listener.onError(new DataStoreException("Error during subscription.", error, "Evaluate details."));
+            },
+            listener::onComplete
+        );
     }
 }

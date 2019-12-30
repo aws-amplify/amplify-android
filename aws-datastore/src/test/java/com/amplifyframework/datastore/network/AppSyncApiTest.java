@@ -20,9 +20,10 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedConsumer;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -73,10 +74,13 @@ public final class AppSyncApiTest {
      */
     @Test
     public void validateBaseSyncQueryGen() throws JSONException {
-        // Request a sync.
-        final SyncListener<BlogOwner> syncListener = SyncListener.instance();
-        endpoint.sync(BlogOwner.class, null, syncListener);
-        syncListener.awaitSuccessResponse();
+        // Request a sync. Await its completion using a test latch.
+        final LatchedConsumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> syncConsumer =
+            LatchedConsumer.instance();
+        final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>, DataStoreException> listener =
+            ResultListener.instance(syncConsumer, EmptyConsumer.of(DataStoreException.class));
+        endpoint.sync(BlogOwner.class, null, listener);
+        syncConsumer.awaitValue();
 
         // Now, capture the request argument on API, so we can see what was passed.
         // Recall that we pass a raw doc to API.
@@ -104,7 +108,7 @@ public final class AppSyncApiTest {
     private void mockApiResponse(GraphQLResponse<Iterable<String>> arrangedApiResponse) {
         doAnswer(invocation -> {
             final int argPositionOfResultListener = 1; // second and final arg, starting from arg 0
-            ResultListener<GraphQLResponse<Iterable<String>>> listener =
+            ResultListener<GraphQLResponse<Iterable<String>>, DataStoreException> listener =
                 invocation.getArgument(argPositionOfResultListener);
             listener.onResult(arrangedApiResponse);
             return mock(GraphQLOperation.class);
@@ -112,38 +116,5 @@ public final class AppSyncApiTest {
             any(GraphQLRequest.class),
             any(ResultListener.class)
         );
-    }
-
-    /**
-     * A listener to sync results. You can use it to block the calling thread, and await for
-     * results to arrive, in a synchronous way, by invoking {@link SyncListener#awaitSuccessResponse()}.
-     * @param <T> Type of model being sync'd
-     */
-    static final class SyncListener<T extends Model>
-            implements ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> {
-
-        private final LatchedSingleResponseListener<Iterable<ModelWithMetadata<T>>> listener;
-
-        private SyncListener() {
-            listener = new LatchedSingleResponseListener<>();
-        }
-
-        static <T extends Model> SyncListener<T> instance() {
-            return new SyncListener<>();
-        }
-
-        @Override
-        public void onResult(GraphQLResponse<Iterable<ModelWithMetadata<T>>> result) {
-            listener.onResult(result);
-        }
-
-        @Override
-        public void onError(Throwable error) {
-            listener.onError(error);
-        }
-
-        Iterable<ModelWithMetadata<T>> awaitSuccessResponse() {
-            return listener.awaitSuccessResponse();
-        }
     }
 }

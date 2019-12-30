@@ -36,7 +36,7 @@ import java.util.concurrent.ExecutorService;
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final AWSS3StorageService storageService;
     private final ExecutorService executorService;
-    private final ResultListener<StorageListResult> resultListener;
+    private final ResultListener<StorageListResult, StorageException> resultListener;
 
     /**
      * Constructs a new AWSS3StorageListOperation.
@@ -45,16 +45,18 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
      * @param request list request parameters
      * @param resultListener notified when list operation results are available
      */
-    public AWSS3StorageListOperation(@NonNull AWSS3StorageService storageService,
-                                     @NonNull ExecutorService executorService,
-                                     @NonNull AWSS3StorageListRequest request,
-                                     @NonNull ResultListener<StorageListResult> resultListener) {
+    public AWSS3StorageListOperation(
+            @NonNull AWSS3StorageService storageService,
+            @NonNull ExecutorService executorService,
+            @NonNull AWSS3StorageListRequest request,
+            @NonNull ResultListener<StorageListResult, StorageException> resultListener) {
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
         this.resultListener = resultListener;
     }
 
+    @SuppressWarnings("SyntheticAccessor")
     @Override
     public void start() {
         executorService.submit(() -> {

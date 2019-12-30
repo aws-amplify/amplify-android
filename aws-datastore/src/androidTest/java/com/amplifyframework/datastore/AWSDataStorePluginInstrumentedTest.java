@@ -20,22 +20,17 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.LatchedResultListener;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
 import com.amplifyframework.testutils.Sleep;
+import com.amplifyframework.testutils.SynchronousApi;
+import com.amplifyframework.testutils.SynchronousDataStore;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.util.Iterator;
-import java.util.NoSuchElementException;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -52,6 +47,8 @@ public final class AWSDataStorePluginInstrumentedTest {
     private static final long NETWORK_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
+    private static SynchronousApi api;
+    private static SynchronousDataStore dataStore;
 
     /**
      * Enable strict mode for catching SQLite leaks.
@@ -75,6 +72,8 @@ public final class AWSDataStorePluginInstrumentedTest {
         final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
         awsDataStorePlugin = testConfig.plugin();
         context = ApplicationProvider.getApplicationContext();
+        api = SynchronousApi.singleton();
+        dataStore = SynchronousDataStore.singleton();
     }
 
     /**
@@ -86,13 +85,13 @@ public final class AWSDataStorePluginInstrumentedTest {
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
             .build();
-        saveLocal(localCharley);
+        dataStore.save(localCharley);
 
         // Wait a bit. TODO: this is lame; how to tell deterministically when sync engine has sync'd?
         Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
 
         // Try to get Charley from the backend.
-        BlogOwner remoteCharley = getRemote(BlogOwner.class, localCharley.getId());
+        BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
 
         // A Charley is a Charley is a Charley, right?
         assertEquals(localCharley.getId(), remoteCharley.getId());
@@ -115,10 +114,10 @@ public final class AWSDataStorePluginInstrumentedTest {
         BlogOwner remoteOwner = BlogOwner.builder()
             .name("Jameson Willlllliams")
             .build();
-        createRemote(remoteOwner);
+        api.create(remoteOwner);
 
         // Update the record to fix the last name
-        updateRemote(remoteOwner.copyOfBuilder()
+        api.update(remoteOwner.copyOfBuilder()
             // This uses the same record ID
             .name("Jameson Williams")
             .build());
@@ -127,7 +126,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
 
         // Jameson should be in the local DataStore, and last name should be updated.
-        BlogOwner localOwner = getLocal(BlogOwner.class, remoteOwner.getId());
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, remoteOwner.getId());
         assertEquals("Jameson Williams", localOwner.getName());
     }
 
@@ -139,61 +138,5 @@ public final class AWSDataStorePluginInstrumentedTest {
     public static void tearDown() throws DataStoreException {
         awsDataStorePlugin.terminate();
         context.deleteDatabase(DATABASE_NAME);
-    }
-
-    private <T extends Model> void saveLocal(T item) {
-        LatchedResultListener<DataStoreItemChange<T>> saveListener =
-            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
-        Amplify.DataStore.save(item, saveListener);
-        saveListener.awaitResult();
-    }
-
-    /**
-     * Note: at the time this method was written, there was not version of DataStore()
-     * implemented yet which supported predicates. When there is, use them, instead of querying
-     * all and then filtering the results after the iterator.
-     * @param clazz Class of item being accessed
-     * @param itemId Unique ID of the item being accessed
-     * @param <T> The type of item being accessed
-     * @return An item with the provided class and ID, if present in DataStore
-     * @throws NoSuchElementException If there is no matching item in the DataStore
-     */
-    private <T extends Model> T getLocal(
-            @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedResultListener<Iterator<T>> queryResultsListener =
-            LatchedResultListener.waitFor(DATA_STORE_OP_TIMEOUT_MS);
-        Amplify.DataStore.query(clazz, queryResultsListener);
-
-        final Iterator<T> iterator = queryResultsListener.awaitResult();
-        while (iterator.hasNext()) {
-            T value = iterator.next();
-            if (value.getId().equals(itemId)) {
-                return value;
-            }
-        }
-
-        throw new NoSuchElementException("No item in DataStore with class = " + clazz + " and id = " + itemId);
-    }
-
-    private <T extends Model> T getRemote(
-            @SuppressWarnings("SameParameterValue") Class<T> clazz, String itemId) {
-        LatchedSingleResponseListener<T> queryListener =
-            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.query(clazz, itemId, queryListener);
-        return queryListener.awaitSuccessResponse();
-    }
-
-    private <T extends Model> void createRemote(T item) {
-        LatchedSingleResponseListener<T> createListener =
-            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.mutate(item, MutationType.CREATE, createListener);
-        createListener.awaitSuccessResponse();
-    }
-
-    private <T extends Model> void updateRemote(T item) {
-        LatchedSingleResponseListener<T> updateListener =
-            new LatchedSingleResponseListener<>(NETWORK_OP_TIMEOUT_MS);
-        Amplify.API.mutate(item, MutationType.UPDATE, updateListener);
-        updateListener.awaitSuccessResponse();
     }
 }

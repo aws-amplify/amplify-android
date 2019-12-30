@@ -16,11 +16,8 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.testutils.LatchedResponseStreamListener;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
+import com.amplifyframework.testutils.SynchronousApi;
 import com.amplifyframework.testutils.TestAssets;
 
 import org.junit.BeforeClass;
@@ -28,7 +25,6 @@ import org.junit.Test;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -51,6 +47,7 @@ import static org.junit.Assert.assertEquals;
  */
 public final class GraphQLInstrumentationTest {
     private static final String API_NAME = "eventsApi";
+    private static SynchronousApi api;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
@@ -59,6 +56,7 @@ public final class GraphQLInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
+        api = SynchronousApi.singleton();
     }
 
     /**
@@ -69,42 +67,32 @@ public final class GraphQLInstrumentationTest {
      * 3. Post a comment about the event, validate that comment;
      * 4. Expect the comment to arrive on the subscription;
      * 5. Validate that the subscription can be torn down gracefully.
-     * @throws Throwable If we timeout while talking to the endpoint,
-     *                   or if any response comes back invalid
      */
     @Test
-    public void subscriptionReceivesMutation() throws Throwable {
+    public void subscriptionReceivesMutation() {
         // Create an event
         String eventId = createEvent();
 
         // Start listening for comments on that event
-        LatchedResponseStreamListener<Comment> streamListener = new LatchedResponseStreamListener<>(1);
-        GraphQLOperation<Comment> operation = Amplify.API.subscribe(
+        SynchronousApi.Subscription<Comment> subscription = api.onCreate(
             API_NAME,
             new GraphQLRequest<>(
                 TestAssets.readAsString("subscribe-event-comments.graphql"),
                 Collections.singletonMap("eventId", eventId),
                 Comment.class,
                 new GsonVariablesSerializer()
-            ),
-            streamListener
+            )
         );
 
         // Create a comment
         createComment(eventId);
 
-        // Validate that subscription received the comment.
-        List<Comment> commentsFromSubscription = streamListener.awaitSuccessfulResponses();
-        assertEquals(1, commentsFromSubscription.size());
-        Comment firstComment = commentsFromSubscription.get(0);
-        assertEquals("It's going to be fun!", firstComment.content());
+        // Validate that the comment was received over the subscription
+        assertEquals("It's going to be fun!", subscription.awaitFirstValue().content());
 
         // Cancel the subscription.
-        operation.cancel();
-
-        // Ensure that onComplete() is called as a response to canceling
-        // the operation.
-        streamListener.awaitCompletion();
+        subscription.cancel();
+        subscription.awaitSubscriptionCompletion();
     }
 
     /**
@@ -120,18 +108,16 @@ public final class GraphQLInstrumentationTest {
         variables.put("content", "It's going to be fun!");
         variables.put("createdAt", Iso8601Timestamp.now());
 
-        LatchedSingleResponseListener<Comment> creationListener = new LatchedSingleResponseListener<>();
-        Amplify.API.mutate(
+        Comment createdComment = api.create(
             API_NAME,
             new GraphQLRequest<>(
                 TestAssets.readAsString("create-comment.graphql"),
                 variables,
                 Comment.class,
                 new GsonVariablesSerializer()
-            ),
-            creationListener
+            )
         );
-        assertEquals("It's going to be fun!", creationListener.awaitSuccessResponse().content());
+        assertEquals("It's going to be fun!", createdComment.content());
     }
 
     /**
@@ -148,22 +134,17 @@ public final class GraphQLInstrumentationTest {
         variables.put("where", "Mario's Pizza Emporium");
         variables.put("description", "RSVP for the best possible pizza toppings.");
 
-        // Act: call the API to create the event.
-        // Block this test runner until a response is rendered.
-        LatchedSingleResponseListener<Event> creationListener = new LatchedSingleResponseListener<>();
-        Amplify.API.mutate(
+        Event createdEvent = api.create(
             API_NAME,
             new GraphQLRequest<>(
                 TestAssets.readAsString("create-event.graphql"),
                 variables,
                 Event.class,
                 new GsonVariablesSerializer()
-            ),
-            creationListener
+            )
         );
 
         // Validate the response. No errors are expected.
-        Event createdEvent = creationListener.awaitSuccessResponse();
         assertEquals("Pizza Party", createdEvent.name());
         assertEquals("Tomorrow", createdEvent.when());
         assertEquals("Mario's Pizza Emporium", createdEvent.where());

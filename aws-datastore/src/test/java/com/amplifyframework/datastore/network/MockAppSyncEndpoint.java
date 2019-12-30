@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.network;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,7 +66,7 @@ final class MockAppSyncEndpoint {
                 // Get a handle to the listener that is passed into the sync() method
                 // ResultListener is the third and final param at index 2 (@0, @1, @2).
                 final int argumentPositionForResultListener = 2;
-                final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> listener =
+                final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> listener =
                     invocation.getArgument(argumentPositionForResultListener);
 
                 // Call its onResult(), and pass the mocked items inside of a GraphQLResponse wrapper

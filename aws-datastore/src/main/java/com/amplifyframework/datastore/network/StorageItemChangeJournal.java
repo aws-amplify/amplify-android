@@ -25,7 +25,6 @@ import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
-import java.util.Iterator;
 import java.util.Objects;
 
 import io.reactivex.Observable;
@@ -86,26 +85,19 @@ final class StorageItemChangeJournal {
             // Convert the storageItemChange (that we want to store) into a record
             StorageItemChange.Record record = storageItemChange.toRecord(storageItemChangeConverter);
             // Save it.
-            localStorageAdapter.save(
-                record,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                new ResultListener<StorageItemChange.Record>() {
-                    @Override
-                    public void onResult(final StorageItemChange.Record recordOfRecord) {
-                        // The return value is a record that we saved a record.
-                        // So, we would have to "unwrap" it, to get the item we saved, out.
-                        // Forget that. We know the save succeeded, so just emit the
-                        // original thing enqueue() got as a param.
-                        pendingStorageItemChanges.onNext(storageItemChange);
-                        subscriber.onSuccess(storageItemChange);
-                    }
-
-                    @Override
-                    public void onError(final Throwable error) {
-                        pendingStorageItemChanges.onError(error);
-                        subscriber.onError(error);
-                    }
-                }
+            localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE, ResultListener.instance(
+                recordOfRecord -> {
+                    // The return value is a record that we saved a record.
+                    // So, we would have to "unwrap" it, to get the item we saved, out.
+                    // Forget that. We know the save succeeded, so just emit the
+                    // original thing enqueue() got as a param.
+                    pendingStorageItemChanges.onNext(storageItemChange);
+                    subscriber.onSuccess(storageItemChange);
+                },
+                error -> {
+                    pendingStorageItemChanges.onError(error);
+                    subscriber.onError(error);
+                })
             );
         }));
     }
@@ -150,20 +142,15 @@ final class StorageItemChangeJournal {
             localStorageAdapter.delete(
                 record,
                 StorageItemChange.Initiator.SYNC_ENGINE,
-                new ResultListener<StorageItemChange.Record>() {
-                    @Override
-                    public void onResult(final StorageItemChange.Record recordOfRecord) {
+                ResultListener.instance(
+                    recordOfRecord -> {
                         // The response is a record that we deleted a record.
                         // We would have to unpack the contained item (the record we deleted)
                         // So, forget that. Just return the copy we received via remove() method call.
                         subscriber.onSuccess(storageItemChange);
-                    }
-
-                    @Override
-                    public void onError(final Throwable error) {
-                        subscriber.onError(error);
-                    }
-                }
+                    },
+                    subscriber::onError
+                )
             );
         }));
     }
@@ -179,27 +166,21 @@ final class StorageItemChangeJournal {
         // when they do, respond by create()ing an Observable which emits the results of a
         // query to LocalStorageAdapter, for any existing StorageItemChange.Record.
         return Observable.defer(() -> Observable.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class,
-                new ResultListener<Iterator<StorageItemChange.Record>>() {
-                    @Override
-                    public void onResult(final Iterator<StorageItemChange.Record> queryResultsIterator) {
-                        while (queryResultsIterator.hasNext()) {
-                            try {
-                                final StorageItemChange<? extends Model> storageItemChange =
-                                        queryResultsIterator.next().toStorageItemChange(storageItemChangeConverter);
-                                emitter.onNext(storageItemChange);
-                            } catch (DataStoreException exception) {
-                                onError(exception);
-                            }
+            localStorageAdapter.query(StorageItemChange.Record.class, ResultListener.instance(
+                queryResultsIterator -> {
+                    while (queryResultsIterator.hasNext()) {
+                        try {
+                            final StorageItemChange<? extends Model> storageItemChange =
+                                queryResultsIterator.next().toStorageItemChange(storageItemChangeConverter);
+                            emitter.onNext(storageItemChange);
+                        } catch (DataStoreException exception) {
+                            emitter.onError(exception);
                         }
-                        emitter.onComplete();
                     }
-
-                    @Override
-                    public void onError(final Throwable error) {
-                        emitter.onError(error);
-                    }
-                });
+                    emitter.onComplete();
+                },
+                emitter::onError
+            ));
         }));
     }
 }

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
@@ -29,13 +30,14 @@ import java.util.Objects;
 
 import okhttp3.OkHttpClient;
 
+@SuppressWarnings("unused")
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
 
     private final String endpoint;
     private final OkHttpClient client;
     private final SubscriptionEndpoint subscriptionEndpoint;
-    private final StreamListener<GraphQLResponse<T>> subscriptionListener;
+    private final StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener;
 
     private String subscriptionId;
 
@@ -45,7 +47,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             @NonNull final OkHttpClient client,
             @NonNull final GraphQLRequest<T> graphQLRequest,
             @NonNull final GraphQLResponse.Factory responseFactory,
-            @NonNull final StreamListener<GraphQLResponse<T>> subscriptionListener) {
+            @NonNull final StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener) {
         super(graphQLRequest, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -69,7 +71,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     }
 
     @NonNull
-    StreamListener<GraphQLResponse<T>> subscriptionListener() {
+    StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener() {
         return subscriptionListener;
     }
 
@@ -107,7 +109,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
         private OkHttpClient client;
         private GraphQLRequest<T> graphQLRequest;
         private GraphQLResponse.Factory responseFactory;
-        private StreamListener<GraphQLResponse<T>> streamListener;
+        private StreamListener<GraphQLResponse<T>, ApiException> streamListener;
 
         @NonNull
         @Override
@@ -146,11 +148,13 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
         @NonNull
         @Override
-        public BuilderStep<T> streamListener(@NonNull final StreamListener<GraphQLResponse<T>> streamListener) {
+        public BuilderStep<T> streamListener(
+                @NonNull final StreamListener<GraphQLResponse<T>, ApiException> streamListener) {
             this.streamListener = Objects.requireNonNull(streamListener);
             return this;
         }
 
+        @SuppressLint("SyntheticAccessor")
         @NonNull
         @Override
         public SubscriptionOperation<T> build() {
@@ -192,7 +196,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
 
     interface StreamListenerStep<T> {
         @NonNull
-        BuilderStep<T> streamListener(@NonNull StreamListener<GraphQLResponse<T>> streamListener);
+        BuilderStep<T> streamListener(@NonNull StreamListener<GraphQLResponse<T>, ApiException> streamListener);
     }
 
     interface BuilderStep<T> {
