@@ -15,36 +15,32 @@
 
 package com.amplifyframework.datastore.network;
 
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 
-final class MutationAdapter<T extends Model> implements ResultListener<GraphQLResponse<String>> {
-    private final Class<T> itemClass;
-    private final ResponseDeserializer responseDeserializer;
-    private final ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener;
+final class MutationAdapter {
+    @SuppressWarnings("checkstyle:all") private MutationAdapter() {}
 
-    MutationAdapter(
-            ResultListener<GraphQLResponse<ModelWithMetadata<T>>> responseListener,
+    static <T extends Model> ResultListener<GraphQLResponse<String>, ApiException> instance(
+            ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener,
             Class<T> itemClass,
             ResponseDeserializer responseDeserializer) {
-        this.responseListener = responseListener;
-        this.itemClass = itemClass;
-        this.responseDeserializer = responseDeserializer;
-    }
 
-    @Override
-    public void onResult(GraphQLResponse<String> result) {
-        if (result.hasErrors()) {
-            responseListener.onResult(new GraphQLResponse<>(null, result.getErrors()));
-            return;
-        }
-        responseListener.onResult(responseDeserializer.deserialize(result.getData(), itemClass));
+        final Consumer<GraphQLResponse<String>> resultConsumer = result -> {
+            if (result.hasErrors()) {
+                responseListener.onResult(new GraphQLResponse<>(null, result.getErrors()));
+                return;
+            }
+            responseListener.onResult(responseDeserializer.deserialize(result.getData(), itemClass));
+        };
 
-    }
-
-    @Override
-    public void onError(Throwable error) {
-        responseListener.onError(error);
+        //noinspection CodeBlock2Expr Keep down line length a bit
+        return ResultListener.instance(resultConsumer, error -> {
+            responseListener.onError(new DataStoreException("Error during mutation.", error, "Check details."));
+        });
     }
 }

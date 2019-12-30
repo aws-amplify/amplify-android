@@ -21,7 +21,9 @@ import androidx.annotation.WorkerThread;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
@@ -124,8 +126,8 @@ final class RemoteModelMutations {
             }
 
             Subscription begin() throws DataStoreException {
-                SubscriptionFunnel<T> listener =
-                    new SubscriptionFunnel<>(commonEmitter, modelClass, subscriptionType);
+                StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
+                    SubscriptionFunnel.instance(commonEmitter, modelClass, subscriptionType);
 
                 final Cancelable cancelable;
                 switch (subscriptionType) {
@@ -155,64 +157,9 @@ final class RemoteModelMutations {
          * which responds to new data items by posting them onto an Rx {@link Emitter}. The intention
          * is for a single {@link Emitter} to be shared among several different implementations of this
          * listener.
-         * @param <T> Type type of data being received
          */
-        static final class SubscriptionFunnel<T extends Model>
-                implements StreamListener<GraphQLResponse<ModelWithMetadata<T>>> {
-
-            private final Emitter<Mutation<? extends Model>> commonEmitter;
-            private final Class<T> modelClazz;
-            private final SubscriptionType subscriptionType;
-
-            SubscriptionFunnel(
-                    Emitter<Mutation<? extends Model>> commonEmitter,
-                    Class<T> modelClazz,
-                    SubscriptionType subscriptionType) {
-                this.commonEmitter = commonEmitter;
-                this.modelClazz = modelClazz;
-                this.subscriptionType = subscriptionType;
-            }
-
-            @Override
-            public void onNext(GraphQLResponse<ModelWithMetadata<T>> response) {
-                if (response.hasErrors()) {
-                    commonEmitter.onError(new DataStoreException(
-                            String.format(
-                                "Errors on subscription %s:%s: %s.",
-                                modelClazz.getSimpleName(), subscriptionType, response.getErrors()
-                            ),
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                } else if (!response.hasData()) {
-                    commonEmitter.onError(new DataStoreException(
-                            String.format(
-                                "Empty data received for %s:%s subscription.",
-                                modelClazz.getSimpleName(), subscriptionType
-                            ),
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                } else {
-                    commonEmitter.onNext(Mutation.<T>builder()
-                        .model(response.getData().getModel())
-                        .modelClass(modelClazz)
-                        .type(fromSubscriptionType(subscriptionType))
-                        .build());
-                }
-            }
-
-            @SuppressLint("SyntheticAccessor")
-            @Override
-            public void onComplete() {
-                LOG.info(String.format(
-                    "Subscription to %s:%s is completed.",
-                    modelClazz.getSimpleName(), subscriptionType
-                ));
-            }
-
-            @Override
-            public void onError(Throwable error) {
-                commonEmitter.onError(error);
-            }
+        static final class SubscriptionFunnel {
+            @SuppressWarnings("checkstyle:all") SubscriptionFunnel() {}
 
             private static Mutation.Type fromSubscriptionType(SubscriptionType subscriptionType) {
                 switch (subscriptionType) {
@@ -225,6 +172,49 @@ final class RemoteModelMutations {
                     default:
                         throw new IllegalArgumentException("Unknown subscription type: " + subscriptionType);
                 }
+            }
+
+            @SuppressLint("SyntheticAccessor")
+            static <T extends Model> StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> instance(
+                    Emitter<Mutation<? extends Model>> commonEmitter,
+                    Class<T> modelClazz,
+                    SubscriptionType subscriptionType) {
+
+                final Consumer<GraphQLResponse<ModelWithMetadata<T>>> itemConsumer = response -> {
+                    if (response.hasErrors()) {
+                        commonEmitter.onError(new DataStoreException(
+                            String.format(
+                                "Errors on subscription %s:%s: %s.",
+                                modelClazz.getSimpleName(), subscriptionType, response.getErrors()
+                            ),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        ));
+                    } else if (!response.hasData()) {
+                        commonEmitter.onError(new DataStoreException(
+                            String.format(
+                                "Empty data received for %s:%s subscription.",
+                                modelClazz.getSimpleName(), subscriptionType
+                            ),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        ));
+                    } else {
+                        commonEmitter.onNext(Mutation.<T>builder()
+                            .model(response.getData().getModel())
+                            .modelClass(modelClazz)
+                            .type(fromSubscriptionType(subscriptionType))
+                            .build());
+                    }
+                };
+
+                //noinspection CodeBlock2Expr
+                final Action completionAction = () -> {
+                    LOG.info(String.format(
+                        "Subscription to %s:%s is completed.",
+                        modelClazz.getSimpleName(), subscriptionType
+                    ));
+                };
+
+                return StreamListener.instance(itemConsumer, commonEmitter::onError, completionAction);
             }
         }
     }

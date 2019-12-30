@@ -16,11 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.annotations.BelongsTo;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -31,14 +27,12 @@ import com.amplifyframework.testmodels.ratingsblog.Rating;
 import com.amplifyframework.testmodels.ratingsblog.User;
 import com.amplifyframework.testmodels.teamproject.Projectfields;
 import com.amplifyframework.testmodels.teamproject.Team;
-import com.amplifyframework.testutils.LatchedResponseStreamListener;
-import com.amplifyframework.testutils.LatchedSingleResponseListener;
+import com.amplifyframework.testutils.SynchronousApi;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Iterator;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -52,6 +46,8 @@ public final class CodeGenerationInstrumentationTest {
     private static final String PROJECT_API_NAME = "projectApi";
     private static final String BLOG_API_NAME = "blogApi";
 
+    private static SynchronousApi api;
+
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
      * @throws AmplifyException From Amplify configuration
@@ -59,6 +55,7 @@ public final class CodeGenerationInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
+        api = SynchronousApi.singleton();
     }
 
     /**
@@ -70,31 +67,17 @@ public final class CodeGenerationInstrumentationTest {
     @Test
     public void queryMatchesMutationResult() {
         // Create a Person
-        LatchedSingleResponseListener<Person> mutationListener = new LatchedSingleResponseListener<>();
         Person david = Person.builder()
             .firstName("David")
             .lastName("Daudelin")
             .age(29)
             .relationship(MaritalStatus.married)
             .build();
-        Amplify.API.mutate(
-            PERSON_API_NAME,
-            david,
-            MutationType.CREATE,
-            mutationListener
-        );
-        Person createdPerson = mutationListener.awaitSuccessResponse();
+        Person createdPerson = api.create(PERSON_API_NAME, david);
         assertEquals(david, createdPerson);
 
         // Query for that created person, expect him to be there
-        LatchedSingleResponseListener<Person> queryListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(
-            PERSON_API_NAME,
-            Person.class,
-            createdPerson.getId(),
-            queryListener
-        );
-        Person queriedPerson = queryListener.awaitSuccessResponse();
+        Person queriedPerson = api.get(PERSON_API_NAME, Person.class, createdPerson.getId());
         assertEquals(createdPerson, queriedPerson);
     }
 
@@ -103,18 +86,15 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void queryListWithPredicate() {
-        LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
-
-        Amplify.API.query(
+        final List<Person> matchingPeople = api.list(
             PERSON_API_NAME,
             Person.class,
             Person.LAST_NAME.eq("Daudelin")
                 .and(Person.FIRST_NAME.eq("David")
-                    .or(Person.FIRST_NAME.eq("Sarah"))),
-            queryListener
+                    .or(Person.FIRST_NAME.eq("Sarah")))
         );
 
-        for (Person person : queryListener.awaitSuccessResponse()) {
+        for (Person person : matchingPeople) {
             assertTrue(Arrays.asList("David", "Sarah").contains(person.getFirstName()));
             assertEquals("Daudelin", person.getLastName());
         }
@@ -126,59 +106,33 @@ public final class CodeGenerationInstrumentationTest {
     @SuppressWarnings("checkstyle:MagicNumber") // test table configured to have at least 3 items
     @Test
     public void queryListWithoutPredicate() {
-        LatchedSingleResponseListener<Iterable<Person>> queryListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(PERSON_API_NAME, Person.class, queryListener);
-        Iterable<Person> queryResultsIterable = queryListener.awaitSuccessResponse();
-
-        // Test table should always have at least three items
-        int count = 0;
-        Iterator<Person> iterator = queryResultsIterable.iterator();
-        while (iterator.hasNext() && count < 3) {
-            iterator.next();
-            count++;
-        }
-        assertEquals(3, count);
+        final List<Person> queryResults = api.list(PERSON_API_NAME, Person.class);
+        assertTrue(queryResults.size() > 3);
     }
 
     /**
      * Tests that a subscription can receive an event when a create mutation takes place.
-     * @throws Throwable If we timeout while talking to the endpoint,
-     *                   or if any response comes back invalid
      */
     @Test
-    public void subscribeReceivesMutationEvent() throws Throwable {
-        Person person = Person.builder().firstName("John").lastName("Doe").build();
-        LatchedResponseStreamListener<Person> streamListener = new LatchedResponseStreamListener<>(1);
-        GraphQLOperation<Person> operation = Amplify.API.subscribe(
-                PERSON_API_NAME,
-                Person.class,
-                SubscriptionType.ON_CREATE,
-                streamListener
-        );
+    public void subscribeReceivesMutationEvent() {
+        SynchronousApi.Subscription<Person> subscription =
+            api.onCreate(PERSON_API_NAME, Person.class);
 
-        LatchedSingleResponseListener<Person> creationListener = new LatchedSingleResponseListener<>();
-        Amplify.API.mutate(
-                PERSON_API_NAME,
-                person,
-                null,
-                MutationType.CREATE,
-                creationListener
-        );
-        creationListener.awaitSuccessResponse();
+        Person johnDoe = Person.builder()
+            .firstName("John")
+            .lastName("Doe")
+            .build();
+        api.create(PERSON_API_NAME, johnDoe);
 
         // Validate that subscription received the newly created person.
-        List<Person> peopleOnSubscription = streamListener.awaitSuccessfulResponses();
-        assertEquals(1, peopleOnSubscription.size());
-        Person firstPersonOnSubscription = peopleOnSubscription.get(0);
-        assertEquals(person.getFirstName(), firstPersonOnSubscription.getFirstName());
-        assertEquals(person.getLastName(), firstPersonOnSubscription.getLastName());
+        Person firstPersonOnSubscription = subscription.awaitFirstValue();
+        assertEquals(johnDoe.getFirstName(), firstPersonOnSubscription.getFirstName());
+        assertEquals(johnDoe.getLastName(), firstPersonOnSubscription.getLastName());
 
-        // Cancel the subscription.
-        operation.cancel();
-
-        // Ensure that onComplete() is called as a response to canceling
-        // the operation.
-        streamListener.awaitCompletion();
+        // Cancel the subscription, and ensure that onComplete()
+        // is called as a response to canceling the operation.
+        subscription.cancel();
+        subscription.awaitSubscriptionCompletion();
     }
 
     /**
@@ -188,45 +142,24 @@ public final class CodeGenerationInstrumentationTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void mutationFailsInvalidConditionAndPassesCorrectCondition() {
-        LatchedSingleResponseListener<Person> deleteListener = new LatchedSingleResponseListener<>();
+        Person person = Person.builder()
+            .firstName("David")
+            .lastName("Daudelin")
+            .age(29)
+            .relationship(MaritalStatus.married)
+            .build();
+        api.create(PERSON_API_NAME, person);
 
-        LatchedSingleResponseListener<Person> createListener = new LatchedSingleResponseListener<>();
-        Person person = Person
-                .builder()
-                .firstName("David")
-                .lastName("Daudelin")
-                .age(29)
-                .relationship(MaritalStatus.married)
-                .build();
-
-        Amplify.API.mutate(
-                PERSON_API_NAME,
-                person,
-                MutationType.CREATE,
-                createListener
+        List<GraphQLResponse.Error> errors = api.updateExpectingErrors(
+            PERSON_API_NAME,
+            person.newBuilder()
+                .age(30)
+                .build(),
+            Person.LAST_NAME.eq("Dandelion")
         );
-        createListener.awaitSuccessResponse();
+        assertTrue(errors.get(0).getMessage().contains("ConditionalCheckFailedException"));
 
-        LatchedSingleResponseListener<Person> updateListener = new LatchedSingleResponseListener<>();
-        Person updated = person.newBuilder().age(30).build();
-        Amplify.API.mutate(
-                PERSON_API_NAME,
-                updated,
-                Person.LAST_NAME.eq("Dandelion"),
-                MutationType.UPDATE,
-                updateListener
-        );
-
-        GraphQLResponse.Error firstError = updateListener.awaitErrors().get(0);
-        assertTrue(firstError.getMessage().contains("ConditionalCheckFailedException"));
-
-        Amplify.API.mutate(
-                PERSON_API_NAME,
-                Person.justId(person.getId()),
-                MutationType.DELETE,
-                deleteListener
-        );
-        deleteListener.awaitSuccessResponse();
+        api.delete(PERSON_API_NAME, Person.justId(person.getId()));
     }
 
     /**
@@ -234,66 +167,43 @@ public final class CodeGenerationInstrumentationTest {
      * successful query, mutations, subscription.
      * TODO: Add mutate with condition and list with predicate since those are the ones
      *       that actually use the original model name
-     * @throws Throwable If we timeout while talking to the endpoint, or if any response comes back invalid
      */
     @Test
-    public void belongsToRelationship() throws Throwable {
-        LatchedResponseStreamListener<Projectfields> projectSubscriptionListener =
-                new LatchedResponseStreamListener<>(1);
-        GraphQLOperation<Projectfields> operation = Amplify.API.subscribe(
-                PROJECT_API_NAME,
-                Projectfields.class,
-                SubscriptionType.ON_CREATE,
-                projectSubscriptionListener
+    public void belongsToRelationship() {
+        // Subscribe to creation events for any Projectfields
+        SynchronousApi.Subscription<Projectfields> subscription =
+            api.onCreate(PROJECT_API_NAME, Projectfields.class);
+
+        // Create a team
+        Team team = Team.builder()
+            .name("AWS Mobile SDK")
+            .build();
+        Team createdTeam = api.create(PROJECT_API_NAME, team);
+
+        // Create a Projectfields
+        Projectfields projectfields = Projectfields.builder()
+            .name("API Codegen")
+            .team(Team.justId(createdTeam.getId()))
+            .build();
+        Projectfields createdProjectfields = api.create(PROJECT_API_NAME, projectfields);
+
+        // Query for the Projectfields that were just created. The referenced team
+        // should be the same as the one we requested for creation, earlier.
+        assertEquals(
+            team,
+            api.get(PROJECT_API_NAME, Projectfields.class, createdProjectfields.getId())
+                .getTeam()
         );
 
-        LatchedSingleResponseListener<Team> teamMutationListener = new LatchedSingleResponseListener<>();
-        Team team = Team.builder().name("AWS Mobile SDK").build();
-        Amplify.API.mutate(
-                PROJECT_API_NAME,
-                team,
-                MutationType.CREATE,
-                teamMutationListener
-        );
-        Team createdTeam = teamMutationListener.awaitSuccessResponse();
+        // Validate that subscription received the newly created team, too.
+        Projectfields projectfieldsOnSubscription = subscription.awaitFirstValue();
+        assertEquals(projectfields.getName(), projectfieldsOnSubscription.getName());
+        assertEquals(team, projectfieldsOnSubscription.getTeam());
 
-        LatchedSingleResponseListener<Projectfields> projectMutationListener = new LatchedSingleResponseListener<>();
-        Projectfields projectfields = Projectfields
-                .builder()
-                .name("API Codegen")
-                .team(Team.justId(createdTeam.getId()))
-                .build();
-        Amplify.API.mutate(
-                PROJECT_API_NAME,
-                projectfields,
-                MutationType.CREATE,
-                projectMutationListener
-        );
-        Projectfields createdProjectfields = projectMutationListener.awaitSuccessResponse();
-
-        LatchedSingleResponseListener<Projectfields> projectQueryListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(
-                PROJECT_API_NAME,
-                Projectfields.class,
-                createdProjectfields.getId(),
-                projectQueryListener
-        );
-        assertEquals(team, projectQueryListener.awaitSuccessResponse().getTeam());
-
-        // Validate that subscription received the newly created person.
-        List<Projectfields> projectfieldsFromSubscription =
-            projectSubscriptionListener.awaitSuccessfulResponses();
-        assertEquals(1, projectfieldsFromSubscription.size());
-        Projectfields firstProjectfieldsOnSubscription = projectfieldsFromSubscription.get(0);
-        assertEquals(projectfields.getName(), firstProjectfieldsOnSubscription.getName());
-        assertEquals(team, firstProjectfieldsOnSubscription.getTeam());
-
-        // Cancel the subscription.
-        operation.cancel();
-
-        // Ensure that onComplete() is called as a response to canceling
-        // the operation.
-        projectSubscriptionListener.awaitCompletion();
+        // We're done using the subscription, so cancel it.
+        // As a result of cancellation, it should fire the onComplete action.
+        subscription.cancel();
+        subscription.awaitSubscriptionCompletion();
     }
 
     /**
@@ -301,46 +211,35 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void hasManyRelationship() {
-        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        // Create a blog.
         Blog blog = Blog.builder()
-                .name("All Things Amplify")
-                .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
-                .build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                blog,
-                MutationType.CREATE,
-                blogCreateListener
+            .name("All Things Amplify")
+            .tags(Arrays.asList("amazon", "amplify", "framework", "software"))
+            .build();
+        assertEquals(
+            blog,
+            api.create(BLOG_API_NAME, blog)
         );
-        Blog blogCreateResult = blogCreateListener.awaitSuccessResponse();
-        assertEquals(blog, blogCreateResult);
 
-        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
-        Post post = Post.builder().title("Test 1").blog(blog).build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                post,
-                MutationType.CREATE,
-                postCreateListener
-        );
-        Post postCreateResult = postCreateListener.awaitSuccessResponse();
-        assertEquals(post.getId(), postCreateResult.getId());
-        assertEquals(post.getTitle(), postCreateResult.getTitle());
-        assertEquals(post.getBlog().getId(), postCreateResult.getBlog().getId());
-        assertEquals(post.getBlog().getName(), postCreateResult.getBlog().getName());
-        assertEquals(post.getBlog().getTags(), postCreateResult.getBlog().getTags());
+        // Create a post, associated to that blog
+        Post post = Post.builder()
+            .title("Test 1")
+            .blog(blog)
+            .build();
+        Post createdPost = api.create(BLOG_API_NAME, post);
 
-        LatchedSingleResponseListener<Blog> blogGetListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(
-                BLOG_API_NAME,
-                Blog.class,
-                blog.getId(),
-                blogGetListener
-        );
-        Blog blogGetResult = blogGetListener.awaitSuccessResponse();
-        Post blogGetResultPost = blogGetResult.getPosts().get(0);
-        assertEquals(post.getId(), blogGetResultPost.getId());
-        assertEquals(post.getTitle(), blogGetResultPost.getTitle());
+        // Validate that created post has same fields
+        assertEquals(post.getId(), createdPost.getId());
+        assertEquals(post.getTitle(), createdPost.getTitle());
+        assertEquals(post.getBlog().getId(), createdPost.getBlog().getId());
+        assertEquals(post.getBlog().getName(), createdPost.getBlog().getName());
+        assertEquals(post.getBlog().getTags(), createdPost.getBlog().getTags());
+
+        // Get the blog, and ensure that posts are associated to it on the endpoint
+        Blog queriedBlog = api.get(BLOG_API_NAME, Blog.class, blog.getId());
+        Post firstPostInQueriedBlog = queriedBlog.getPosts().get(0);
+        assertEquals(post.getId(), firstPostInQueriedBlog.getId());
+        assertEquals(post.getTitle(), firstPostInQueriedBlog.getTitle());
     }
 
     /**
@@ -349,53 +248,40 @@ public final class CodeGenerationInstrumentationTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void hasOneRelationship() {
-        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        // Create a blog
         Blog blog = Blog.builder()
-                .name("Necessary blog for post")
-                .build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                blog,
-                MutationType.CREATE,
-                blogCreateListener
-        );
-        blogCreateListener.awaitSuccessResponse();
+            .name("Necessary blog for post")
+            .build();
+        api.create(BLOG_API_NAME, blog);
 
-        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
-        Post post = Post.builder().title("Test post").blog(blog).build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                post,
-                MutationType.CREATE,
-                postCreateListener
-        );
-        postCreateListener.awaitSuccessResponse();
+        // Associate a post to that blog
+        Post post = Post.builder()
+            .title("Test post")
+            .blog(blog)
+            .build();
+        api.create(BLOG_API_NAME, post);
 
-        LatchedSingleResponseListener<Rating> ratingCreateListener = new LatchedSingleResponseListener<>();
+        // Make a ating for the post
+        Rating rating = Rating.builder()
+            .stars(5)
+            .post(post)
+            .build();
+        Rating createdRating = api.create(BLOG_API_NAME, rating);
 
-        Rating rating = Rating.builder().stars(5).post(post).build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                rating,
-                MutationType.CREATE,
-                ratingCreateListener
-        );
-        assertEquals(post, ratingCreateListener.awaitSuccessResponse().getPost());
+        // Validate that rating that exists on the endpoint refers to the original post
+        assertEquals(post, createdRating.getPost());
 
         /*
         TODO: This condition should work. However there is a bug on the AppSync transformer side which
             sets up the HasOne / BelongsTo relationship as two independent BelongsTo relationships so it fails.
             Once the AppSync transformer bug is fixed, we can uncomment this part of the test.
 
-        LatchedSingleResponseListener<Post> postGetListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(
-                BLOG_API_NAME,
-                Post.class,
-                post.getId(),
-                postGetListener
+        assertEquals(
+            rating,
+            api.get(BLOG_API_NAME, Post.class, post.getId())
+                .getRating()
         );
-        assertEquals(rating, postGetListener.awaitSuccessResponse().getRating());
-         */
+        */
     }
 
     /**
@@ -403,69 +289,42 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void manyToManyRelationship() {
-        LatchedSingleResponseListener<Blog> blogCreateListener = new LatchedSingleResponseListener<>();
+        // Create a blog.
         Blog blog = Blog.builder()
-                .name("Necessary blog for post")
-                .build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                blog,
-                MutationType.CREATE,
-                blogCreateListener
-        );
-        blogCreateListener.awaitSuccessResponse();
+            .name("Necessary blog for post")
+            .build();
+        api.create(BLOG_API_NAME, blog);
 
-        LatchedSingleResponseListener<Post> postCreateListener = new LatchedSingleResponseListener<>();
-        Post post = Post.builder().title("Test post").blog(blog).build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                post,
-                MutationType.CREATE,
-                postCreateListener
-        );
-        postCreateListener.awaitSuccessResponse();
+        // Which contains a post
+        Post post = Post.builder()
+            .title("Test post")
+            .blog(blog)
+            .build();
+        api.create(BLOG_API_NAME, post);
 
-        LatchedSingleResponseListener<User> userCreateListener = new LatchedSingleResponseListener<>();
-        User user = User.builder().username("Patches46").build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                user,
-                MutationType.CREATE,
-                userCreateListener
-        );
-        userCreateListener.awaitSuccessResponse();
+        // Create a user
+        User user = User.builder()
+            .username("Patches46")
+            .build();
+        api.create(BLOG_API_NAME, user);
 
-        LatchedSingleResponseListener<PostEditor> editorCreateListener = new LatchedSingleResponseListener<>();
-        PostEditor editor = PostEditor.builder().post(post).editor(user).build();
-        Amplify.API.mutate(
-                BLOG_API_NAME,
-                editor,
-                MutationType.CREATE,
-                editorCreateListener
-        );
-        editorCreateListener.awaitSuccessResponse();
+        // The user is an editor of the created post
+        PostEditor editor = PostEditor.builder()
+            .post(post)
+            .editor(user)
+            .build();
+        api.create(BLOG_API_NAME, editor);
 
-        LatchedSingleResponseListener<Post> postGetListener = new LatchedSingleResponseListener<>();
-        LatchedSingleResponseListener<User> userGetListener = new LatchedSingleResponseListener<>();
-        Amplify.API.query(
-                BLOG_API_NAME,
-                Post.class,
-                post.getId(),
-                postGetListener
-        );
-        Amplify.API.query(
-                BLOG_API_NAME,
-                User.class,
-                user.getId(),
-                userGetListener
-        );
-        Post postGetResult = postGetListener.awaitSuccessResponse();
-        User userGetResult = userGetListener.awaitSuccessResponse();
+        // Now, see what was actually setup on the endpoint, by querying for post and user
+        Post queriedPost = api.get(BLOG_API_NAME, Post.class, post.getId());
+        User queriedUser = api.get(BLOG_API_NAME, User.class, user.getId());
 
-        assertEquals(1, postGetResult.getEditors().size());
-        assertEquals(user, postGetResult.getEditors().get(0).getEditor());
-        assertEquals(1, userGetResult.getPosts().size());
-        assertEquals(post.getTitle(), userGetResult.getPosts().get(0).getPost().getTitle());
-        assertEquals(post.getId(), userGetResult.getPosts().get(0).getPost().getId());
+        // Validate that associations are setup correctly on the objects returned from endpoint
+        // The post should refer to the user, and the user should refer to the post.
+        assertEquals(1, queriedPost.getEditors().size());
+        assertEquals(user, queriedPost.getEditors().get(0).getEditor());
+        assertEquals(1, queriedUser.getPosts().size());
+        assertEquals(post.getTitle(), queriedUser.getPosts().get(0).getPost().getTitle());
+        assertEquals(post.getId(), queriedUser.getPosts().get(0).getPost().getId());
     }
 }

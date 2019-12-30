@@ -23,6 +23,7 @@ import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -58,16 +59,14 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     @Override
     public void initialize(
             @NonNull Context context,
-            @NonNull ResultListener<List<ModelSchema>> listener
-    ) {
+            @NonNull ResultListener<List<ModelSchema>, DataStoreException> listener) {
     }
 
     @Override
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener
-    ) {
+            @NonNull final ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener) {
         save(item, initiator, null, itemSaveListener);
     }
 
@@ -77,28 +76,24 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
-            @NonNull final ResultListener<StorageItemChange.Record> itemSaveListener
-    ) {
-        if (predicate == null || predicate.evaluate(item)) {
-            items.add(item);
-            StorageItemChange.Record save = StorageItemChange.<T>builder()
-                    .item(item)
-                    .itemClass((Class<T>) item.getClass())
-                    .type(StorageItemChange.Type.SAVE)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
-            changeRecordStream.onNext(save);
-            itemSaveListener.onResult(save);
-        }
+            @NonNull final ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener) {
+        items.add(item);
+        StorageItemChange.Record save = StorageItemChange.<T>builder()
+                .item(item)
+                .itemClass((Class<T>) item.getClass())
+                .type(StorageItemChange.Type.SAVE)
+                .predicate(predicate)
+                .initiator(initiator)
+                .build()
+                .toRecord(storageItemChangeConverter);
+        changeRecordStream.onNext(save);
+        itemSaveListener.onResult(save);
     }
 
     @Override
     public <T extends Model> void query(
             @NonNull final Class<T> itemClass,
-            @NonNull final ResultListener<Iterator<T>> queryResultsListener
-    ) {
+            @NonNull final ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         query(itemClass, null, queryResultsListener);
     }
 
@@ -107,8 +102,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void query(
             @NonNull final Class<T> itemClass,
             @Nullable final QueryPredicate predicate,
-            @NonNull final ResultListener<Iterator<T>> queryResultsListener
-    ) {
+            @NonNull final ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         List<T> result = new ArrayList<>();
         for (Model item : items) {
             if (itemClass.isAssignableFrom((item.getClass()))
@@ -124,8 +118,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final ResultListener<StorageItemChange.Record> itemDeletionListener
-    ) {
+            @NonNull final ResultListener<StorageItemChange.Record, DataStoreException> itemDeletionListener) {
         for (Model savedItem : items) {
             if (savedItem.getId().equals(item.getId())) {
                 items.remove(item);
@@ -143,6 +136,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
     }
 
+    @NonNull
     @Override
     public Observable<StorageItemChange.Record> observe() {
         return changeRecordStream;

@@ -34,7 +34,7 @@ import java.util.concurrent.ExecutorService;
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final AWSS3StorageService storageService;
-    private final ResultListener<StorageRemoveResult> resultListener;
+    private final ResultListener<StorageRemoveResult, StorageException> resultListener;
     private final ExecutorService executorService;
 
     /**
@@ -44,16 +44,18 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * @param request remove request parameters
      * @param resultListener notified when remove operation results available
      */
-    public AWSS3StorageRemoveOperation(@NonNull AWSS3StorageService storageService,
-                                       @NonNull ExecutorService executorService,
-                                       @NonNull AWSS3StorageRemoveRequest request,
-                                       @NonNull ResultListener<StorageRemoveResult> resultListener) {
+    public AWSS3StorageRemoveOperation(
+            @NonNull AWSS3StorageService storageService,
+            @NonNull ExecutorService executorService,
+            @NonNull AWSS3StorageRemoveRequest request,
+            @NonNull ResultListener<StorageRemoveResult, StorageException> resultListener) {
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
         this.resultListener = resultListener;
     }
 
+    @SuppressWarnings("SyntheticAccessor")
     @Override
     public void start() {
         executorService.submit(() -> {

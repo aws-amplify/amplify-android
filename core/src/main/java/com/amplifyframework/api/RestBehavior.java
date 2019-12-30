@@ -44,7 +44,7 @@ public interface RestBehavior {
     @Nullable
     RestOperation get(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -62,7 +62,7 @@ public interface RestBehavior {
     RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -81,7 +81,7 @@ public interface RestBehavior {
     @Nullable
     RestOperation put(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -99,7 +99,7 @@ public interface RestBehavior {
     RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -118,7 +118,7 @@ public interface RestBehavior {
     @Nullable
     RestOperation post(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -136,7 +136,7 @@ public interface RestBehavior {
     RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -155,7 +155,7 @@ public interface RestBehavior {
     @Nullable
     RestOperation delete(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -173,7 +173,7 @@ public interface RestBehavior {
     RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -192,7 +192,7 @@ public interface RestBehavior {
     @Nullable
     RestOperation head(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -210,7 +210,7 @@ public interface RestBehavior {
     RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -229,7 +229,7 @@ public interface RestBehavior {
     @Nullable
     RestOperation patch(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 
     /**
@@ -247,6 +247,6 @@ public interface RestBehavior {
     RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse> responseListener
+            @NonNull ResultListener<RestResponse, ApiException> responseListener
     );
 }

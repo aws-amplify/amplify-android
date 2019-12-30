@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
@@ -36,7 +35,6 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
-import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -103,12 +101,6 @@ public final class SyncEngine {
         startObservingStorageChanges();
     }
 
-    private Completable pullVersionsFromBackend() {
-        return Completable.defer(() -> Completable.create(emitter -> {
-
-        }));
-    }
-
     private void startModelSubscriptions() {
         observationsToDispose.add(
             remoteModelMutations.observe()
@@ -126,18 +118,8 @@ public final class SyncEngine {
     private Single<Mutation<? extends Model>> applyMutationToLocalStorage(Mutation<? extends Model> mutation) {
         final StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
         return Single.defer(() -> Single.create(emitter -> {
-            final ResultListener<StorageItemChange.Record> storageResultListener =
-                new ResultListener<StorageItemChange.Record>() {
-                    @Override
-                    public void onResult(StorageItemChange.Record result) {
-                        emitter.onSuccess(mutation);
-                    }
-
-                    @Override
-                    public void onError(Throwable error) {
-                        emitter.onError(error);
-                    }
-                };
+            final ResultListener<StorageItemChange.Record, DataStoreException> storageResultListener =
+                ResultListener.instance(result -> emitter.onSuccess(mutation), emitter::onError);
 
             switch (mutation.type()) {
                 case UPDATE:
@@ -210,23 +192,15 @@ public final class SyncEngine {
             final SIC storageItemChange) {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            appSyncEndpoint.create(
-                storageItemChange.item(),
-                new ResultListener<GraphQLResponse<ModelWithMetadata<MODEL>>>() {
-                    @Override
-                    public void onResult(final GraphQLResponse<ModelWithMetadata<MODEL>> result) {
-                        if (result.hasErrors() || !result.hasData()) {
-                            subscriber.onError(new RuntimeException("Failed to publish item to network."));
-                        }
-                        subscriber.onSuccess(storageItemChange);
+            appSyncEndpoint.create(storageItemChange.item(), ResultListener.instance(
+                result -> {
+                    if (result.hasErrors() || !result.hasData()) {
+                        subscriber.onError(new RuntimeException("Failed to publish item to network."));
                     }
-
-                    @Override
-                    public void onError(final Throwable error) {
-                        subscriber.onError(error);
-                    }
-                }
-            );
+                    subscriber.onSuccess(storageItemChange);
+                },
+                subscriber::onError
+            ));
         }));
     }
 

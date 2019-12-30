@@ -51,7 +51,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<GraphQLResponse<T>> responseListener;
+    private final ResultListener<GraphQLResponse<T>, ApiException> responseListener;
 
     private Call ongoingCall;
 
@@ -69,7 +69,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<T> request,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull ResultListener<GraphQLResponse<T>> responseListener) {
+            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
@@ -168,7 +168,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
         private OkHttpClient client;
         private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
-        private ResultListener<GraphQLResponse<T>> responseListener;
+        private ResultListener<GraphQLResponse<T>, ApiException> responseListener;
 
         Builder<T> endpoint(final String endpoint) {
             this.endpoint = endpoint;
@@ -190,7 +190,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
             return this;
         }
 
-        Builder<T> responseListener(final ResultListener<GraphQLResponse<T>> responseListener) {
+        Builder<T> responseListener(final ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
             this.responseListener = responseListener;
             return this;
         }
