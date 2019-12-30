@@ -17,12 +17,14 @@ package com.amplifyframework.core.model.query.predicate;
 
 import com.amplifyframework.testmodels.personcar.Person;
 
-import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Arrays;
 
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests predicate creation.
@@ -36,9 +38,9 @@ public final class PredicateTest {
     public void testSingleQueryPredicateOperation() {
         QueryPredicateOperation<?> op = Person.ID.eq("1234");
 
-        assert (op.field().equals("id"));
-        assert (op.operator().getClass().equals(EqualQueryOperator.class));
-        assert (((EqualQueryOperator) op.operator()).value().equals("1234"));
+        assertEquals("id", op.field());
+        assertTrue(op.operator() instanceof EqualQueryOperator);
+        assertEquals("1234", ((EqualQueryOperator) op.operator()).value());
     }
 
     /**
@@ -55,7 +57,7 @@ public final class PredicateTest {
                         new QueryPredicateOperation<>("age", new GreaterThanQueryOperator<>(21))
                 ));
 
-        Assert.assertEquals(expected, op);
+        assertEquals(expected, op);
     }
 
     /**
@@ -69,15 +71,15 @@ public final class PredicateTest {
                 .age(21)
                 .build();
 
-        Assert.assertTrue(Person.AGE.gt(20).evaluate(jane));
-        Assert.assertTrue(Person.AGE.eq(21).evaluate(jane));
-        Assert.assertTrue(Person.AGE.lt(22).evaluate(jane));
-        Assert.assertFalse(Person.AGE.ne(21).evaluate(jane));
+        assertTrue(Person.AGE.gt(20).evaluate(jane));
+        assertTrue(Person.AGE.eq(21).evaluate(jane));
+        assertTrue(Person.AGE.lt(22).evaluate(jane));
+        assertFalse(Person.AGE.ne(21).evaluate(jane));
 
-        Assert.assertTrue(Person.FIRST_NAME.eq("Jane").evaluate(jane));
-        Assert.assertTrue(Person.FIRST_NAME.beginsWith("J").evaluate(jane));
-        Assert.assertTrue(Person.FIRST_NAME.contains("Jan").evaluate(jane));
-        Assert.assertFalse(Person.LAST_NAME.eq("Jane").evaluate(jane));
+        assertTrue(Person.FIRST_NAME.eq("Jane").evaluate(jane));
+        assertTrue(Person.FIRST_NAME.beginsWith("J").evaluate(jane));
+        assertTrue(Person.FIRST_NAME.contains("Jan").evaluate(jane));
+        assertFalse(Person.LAST_NAME.eq("Jane").evaluate(jane));
     }
 
     /**
@@ -92,23 +94,23 @@ public final class PredicateTest {
                 .build();
 
         // True AND True = True
-        Assert.assertTrue(Person.AGE.eq(21)
+        assertTrue(Person.AGE.eq(21)
                 .and(Person.FIRST_NAME.eq("Jane"))
                 .evaluate(jane));
         // True AND False = False
-        Assert.assertFalse(Person.AGE.eq(21)
+        assertFalse(Person.AGE.eq(21)
                 .and(Person.LAST_NAME.eq("Jane"))
                 .evaluate(jane));
         // True OR False = True
-        Assert.assertTrue(Person.AGE.eq(21)
+        assertTrue(Person.AGE.eq(21)
                 .or(Person.LAST_NAME.eq("Jane"))
                 .evaluate(jane));
         // False OR False = False
-        Assert.assertFalse(Person.AGE.gt(121)
+        assertFalse(Person.AGE.gt(121)
                 .or(Person.LAST_NAME.eq("Jane"))
                 .evaluate(jane));
         // NOT(True) = False
-        Assert.assertFalse(not(Person.AGE.eq(21))
+        assertFalse(not(Person.AGE.eq(21))
                 .evaluate(jane));
     }
 }

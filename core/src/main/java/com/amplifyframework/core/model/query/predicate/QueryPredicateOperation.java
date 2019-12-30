@@ -15,9 +15,11 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import java.lang.reflect.Field;
+import com.amplifyframework.util.FieldFinder;
+
 import java.util.Arrays;
 import java.util.Collections;
 
@@ -34,7 +36,8 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      * @param field the name of the Java property in the model representing the field to perform this comparison on
      * @param operator the comparison to perform on it
      */
-    public QueryPredicateOperation(String field, QueryOperator<T> operator) {
+    QueryPredicateOperation(@NonNull String field,
+                            @NonNull QueryOperator<T> operator) {
         this.field = field;
         this.operator = operator;
     }
@@ -94,11 +97,9 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
      */
     @Override
     @SuppressWarnings("unchecked")
-    public boolean evaluate(Object object) throws IllegalArgumentException {
+    public boolean evaluate(@NonNull Object object) throws IllegalArgumentException {
         try {
-            Field objectField = object.getClass().getDeclaredField(field);
-            objectField.setAccessible(true);
-            T fieldValue = (T) objectField.get(object);
+            T fieldValue = (T) FieldFinder.extractFieldValue(object, field);
             return operator.evaluate(fieldValue);
         } catch (ClassCastException castException) {
             throw new IllegalArgumentException(field + " field inside " +

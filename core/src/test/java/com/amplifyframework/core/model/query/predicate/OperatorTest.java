@@ -15,8 +15,10 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
-import org.junit.Assert;
 import org.junit.Test;
+
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests operator evaluation.
@@ -31,15 +33,15 @@ public final class OperatorTest {
     public void testEqualOperator() {
         final EqualQueryOperator numericalOperator = new EqualQueryOperator(123);
 
-        Assert.assertTrue(numericalOperator.evaluate(123));
-        Assert.assertFalse(numericalOperator.evaluate(1234));
-        Assert.assertFalse(numericalOperator.evaluate("123"));
+        assertTrue(numericalOperator.evaluate(123));
+        assertFalse(numericalOperator.evaluate(1234));
+        assertFalse(numericalOperator.evaluate("123"));
 
         final EqualQueryOperator stringOperator = new EqualQueryOperator("Hello");
 
-        Assert.assertTrue(stringOperator.evaluate("Hello"));
-        Assert.assertFalse(stringOperator.evaluate("HELLO"));
-        Assert.assertFalse(stringOperator.evaluate("World"));
+        assertTrue(stringOperator.evaluate("Hello"));
+        assertFalse(stringOperator.evaluate("HELLO"));
+        assertFalse(stringOperator.evaluate("World"));
     }
 
     /**
@@ -49,14 +51,14 @@ public final class OperatorTest {
     public void testNotEqualOperator() {
         final NotEqualQueryOperator numericalOperator = new NotEqualQueryOperator(123);
 
-        Assert.assertTrue(numericalOperator.evaluate(124));
-        Assert.assertTrue(numericalOperator.evaluate("123"));
-        Assert.assertFalse(numericalOperator.evaluate(123));
+        assertTrue(numericalOperator.evaluate(124));
+        assertTrue(numericalOperator.evaluate("123"));
+        assertFalse(numericalOperator.evaluate(123));
 
         final NotEqualQueryOperator stringOperator = new NotEqualQueryOperator("Hello");
 
-        Assert.assertTrue(stringOperator.evaluate("World"));
-        Assert.assertFalse(stringOperator.evaluate("Hello"));
+        assertTrue(stringOperator.evaluate("World"));
+        assertFalse(stringOperator.evaluate("Hello"));
     }
 
     /**
@@ -66,21 +68,21 @@ public final class OperatorTest {
     public void testGreaterThanOperator() {
         final GreaterThanQueryOperator<Integer> integerOperator = new GreaterThanQueryOperator<>(123);
 
-        Assert.assertFalse(integerOperator.evaluate(122));
-        Assert.assertFalse(integerOperator.evaluate(123));
-        Assert.assertTrue(integerOperator.evaluate(124));
+        assertFalse(integerOperator.evaluate(122));
+        assertFalse(integerOperator.evaluate(123));
+        assertTrue(integerOperator.evaluate(124));
 
         final GreaterThanQueryOperator<Float> floatOperator = new GreaterThanQueryOperator<>(123f);
 
-        Assert.assertFalse(floatOperator.evaluate(122f));
-        Assert.assertFalse(floatOperator.evaluate(123f));
-        Assert.assertTrue(floatOperator.evaluate(124f));
+        assertFalse(floatOperator.evaluate(122f));
+        assertFalse(floatOperator.evaluate(123f));
+        assertTrue(floatOperator.evaluate(124f));
 
         final GreaterThanQueryOperator<String> stringOperator = new GreaterThanQueryOperator<>("abc");
 
-        Assert.assertFalse(stringOperator.evaluate("abb"));
-        Assert.assertFalse(stringOperator.evaluate("abc"));
-        Assert.assertTrue(stringOperator.evaluate("abd"));
+        assertFalse(stringOperator.evaluate("abb"));
+        assertFalse(stringOperator.evaluate("abc"));
+        assertTrue(stringOperator.evaluate("abd"));
     }
 
     /**
@@ -90,21 +92,21 @@ public final class OperatorTest {
     public void testGreaterOrEqualOperator() {
         final GreaterOrEqualQueryOperator<Integer> integerOperator = new GreaterOrEqualQueryOperator<>(123);
 
-        Assert.assertFalse(integerOperator.evaluate(122));
-        Assert.assertTrue(integerOperator.evaluate(123));
-        Assert.assertTrue(integerOperator.evaluate(124));
+        assertFalse(integerOperator.evaluate(122));
+        assertTrue(integerOperator.evaluate(123));
+        assertTrue(integerOperator.evaluate(124));
 
         final GreaterOrEqualQueryOperator<Float> floatOperator = new GreaterOrEqualQueryOperator<>(123f);
 
-        Assert.assertFalse(floatOperator.evaluate(122f));
-        Assert.assertTrue(floatOperator.evaluate(123f));
-        Assert.assertTrue(floatOperator.evaluate(124f));
+        assertFalse(floatOperator.evaluate(122f));
+        assertTrue(floatOperator.evaluate(123f));
+        assertTrue(floatOperator.evaluate(124f));
 
         final GreaterOrEqualQueryOperator<String> stringOperator = new GreaterOrEqualQueryOperator<>("abc");
 
-        Assert.assertFalse(stringOperator.evaluate("abb"));
-        Assert.assertTrue(stringOperator.evaluate("abc"));
-        Assert.assertTrue(stringOperator.evaluate("abd"));
+        assertFalse(stringOperator.evaluate("abb"));
+        assertTrue(stringOperator.evaluate("abc"));
+        assertTrue(stringOperator.evaluate("abd"));
     }
 
     /**
@@ -114,21 +116,21 @@ public final class OperatorTest {
     public void testLessThanOperator() {
         final LessThanQueryOperator<Integer> integerOperator = new LessThanQueryOperator<>(123);
 
-        Assert.assertTrue(integerOperator.evaluate(122));
-        Assert.assertFalse(integerOperator.evaluate(123));
-        Assert.assertFalse(integerOperator.evaluate(124));
+        assertTrue(integerOperator.evaluate(122));
+        assertFalse(integerOperator.evaluate(123));
+        assertFalse(integerOperator.evaluate(124));
 
         final LessThanQueryOperator<Float> floatOperator = new LessThanQueryOperator<>(123f);
 
-        Assert.assertTrue(floatOperator.evaluate(122f));
-        Assert.assertFalse(floatOperator.evaluate(123f));
-        Assert.assertFalse(floatOperator.evaluate(124f));
+        assertTrue(floatOperator.evaluate(122f));
+        assertFalse(floatOperator.evaluate(123f));
+        assertFalse(floatOperator.evaluate(124f));
 
         final LessThanQueryOperator<String> stringOperator = new LessThanQueryOperator<>("abc");
 
-        Assert.assertTrue(stringOperator.evaluate("abb"));
-        Assert.assertFalse(stringOperator.evaluate("abc"));
-        Assert.assertFalse(stringOperator.evaluate("abd"));
+        assertTrue(stringOperator.evaluate("abb"));
+        assertFalse(stringOperator.evaluate("abc"));
+        assertFalse(stringOperator.evaluate("abd"));
     }
 
     /**
@@ -138,21 +140,21 @@ public final class OperatorTest {
     public void testLessOrEqualOperator() {
         final LessOrEqualQueryOperator<Integer> integerOperator = new LessOrEqualQueryOperator<>(123);
 
-        Assert.assertTrue(integerOperator.evaluate(122));
-        Assert.assertTrue(integerOperator.evaluate(123));
-        Assert.assertFalse(integerOperator.evaluate(124));
+        assertTrue(integerOperator.evaluate(122));
+        assertTrue(integerOperator.evaluate(123));
+        assertFalse(integerOperator.evaluate(124));
 
         final LessOrEqualQueryOperator<Float> floatOperator = new LessOrEqualQueryOperator<>(123f);
 
-        Assert.assertTrue(floatOperator.evaluate(122f));
-        Assert.assertTrue(floatOperator.evaluate(123f));
-        Assert.assertFalse(floatOperator.evaluate(124f));
+        assertTrue(floatOperator.evaluate(122f));
+        assertTrue(floatOperator.evaluate(123f));
+        assertFalse(floatOperator.evaluate(124f));
 
         final LessOrEqualQueryOperator<String> stringOperator = new LessOrEqualQueryOperator<>("abc");
 
-        Assert.assertTrue(stringOperator.evaluate("abb"));
-        Assert.assertTrue(stringOperator.evaluate("abc"));
-        Assert.assertFalse(stringOperator.evaluate("abd"));
+        assertTrue(stringOperator.evaluate("abb"));
+        assertTrue(stringOperator.evaluate("abc"));
+        assertFalse(stringOperator.evaluate("abd"));
     }
 
     /**
@@ -162,19 +164,19 @@ public final class OperatorTest {
     public void testBetweenOperator() {
         final BetweenQueryOperator<Integer> numericalOperator = new BetweenQueryOperator<>(2, 4);
 
-        Assert.assertFalse(numericalOperator.evaluate(1));
-        Assert.assertTrue(numericalOperator.evaluate(2));
-        Assert.assertTrue(numericalOperator.evaluate(3));
-        Assert.assertTrue(numericalOperator.evaluate(4));
-        Assert.assertFalse(numericalOperator.evaluate(5));
+        assertFalse(numericalOperator.evaluate(1));
+        assertTrue(numericalOperator.evaluate(2));
+        assertTrue(numericalOperator.evaluate(3));
+        assertTrue(numericalOperator.evaluate(4));
+        assertFalse(numericalOperator.evaluate(5));
 
         final BetweenQueryOperator<String> stringOperator = new BetweenQueryOperator<>("2", "4");
 
-        Assert.assertFalse(stringOperator.evaluate("1"));
-        Assert.assertTrue(stringOperator.evaluate("2"));
-        Assert.assertTrue(stringOperator.evaluate("3"));
-        Assert.assertTrue(stringOperator.evaluate("4"));
-        Assert.assertFalse(stringOperator.evaluate("5"));
+        assertFalse(stringOperator.evaluate("1"));
+        assertTrue(stringOperator.evaluate("2"));
+        assertTrue(stringOperator.evaluate("3"));
+        assertTrue(stringOperator.evaluate("4"));
+        assertFalse(stringOperator.evaluate("5"));
     }
 
     /**
@@ -184,10 +186,10 @@ public final class OperatorTest {
     public void testBeginsWithOperator() {
         final BeginsWithQueryOperator operator = new BeginsWithQueryOperator("Raph");
 
-        Assert.assertTrue(operator.evaluate("Raphael"));
-        Assert.assertTrue(operator.evaluate("Raph"));
-        Assert.assertFalse(operator.evaluate("R"));
-        Assert.assertFalse(operator.evaluate("RRaphael"));
+        assertTrue(operator.evaluate("Raphael"));
+        assertTrue(operator.evaluate("Raph"));
+        assertFalse(operator.evaluate("R"));
+        assertFalse(operator.evaluate("RRaphael"));
     }
 
     /**
@@ -197,10 +199,10 @@ public final class OperatorTest {
     public void testContainsOperator() {
         final ContainsQueryOperator operator = new ContainsQueryOperator("e");
 
-        Assert.assertTrue(operator.evaluate("Hello"));
-        Assert.assertTrue(operator.evaluate("e"));
-        Assert.assertFalse(operator.evaluate("World"));
-        Assert.assertFalse(operator.evaluate(""));
+        assertTrue(operator.evaluate("Hello"));
+        assertTrue(operator.evaluate("e"));
+        assertFalse(operator.evaluate("World"));
+        assertFalse(operator.evaluate(""));
     }
 }
 

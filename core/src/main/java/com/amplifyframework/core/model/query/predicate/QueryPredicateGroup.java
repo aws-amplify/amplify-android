@@ -15,6 +15,7 @@
 
 package com.amplifyframework.core.model.query.predicate;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.ArrayList;
@@ -31,23 +32,18 @@ public final class QueryPredicateGroup implements QueryPredicate {
     private List<QueryPredicate> predicates;
 
     /**
-     * Creates a new group given a type to apply to the elements of this group.
-     * @param type the type to apply to the elements of this group
-     */
-    public QueryPredicateGroup(Type type) {
-        this(type, null);
-    }
-
-    /**
      * Creates a new group given a type to apply to the elements of this group + the elements of this group.
      * @param type the type to apply to the elements of this group
      * @param predicates the operations and/or groups of operations to group together here
+     * @throws IllegalArgumentException when the group does not contain any predicate element
      */
-    public QueryPredicateGroup(Type type, List<QueryPredicate> predicates) {
+    QueryPredicateGroup(@NonNull Type type,
+                        @NonNull List<QueryPredicate> predicates) {
         this.type = type;
-        this.predicates = new ArrayList<>();
-        if (predicates != null) {
-            this.predicates.addAll(predicates);
+        this.predicates = new ArrayList<>(predicates);
+        if (predicates.isEmpty()) {
+            throw new IllegalArgumentException("A predicate group " +
+                    "must contain at least one predicate element");
         }
     }
 
@@ -115,14 +111,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      *          not contain any predicate element
      */
     @Override
-    public boolean evaluate(Object object) throws
-            IllegalArgumentException,
-            IllegalStateException {
-        if (predicates.isEmpty()) {
-            throw new IllegalStateException("A predicate group " +
-                    "must contain at least one predicate element");
-        }
-
+    public boolean evaluate(Object object) throws IllegalArgumentException {
         switch (type) {
             case OR:
                 for (QueryPredicate predicate : predicates) {
@@ -139,6 +128,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
                 }
                 return true;
             case NOT:
+                // predicates should never be empty!
                 QueryPredicate predicate = predicates.get(0);
                 return !predicate.evaluate(object);
             default:
