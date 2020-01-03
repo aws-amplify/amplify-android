@@ -48,6 +48,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import okhttp3.OkHttpClient;
 
@@ -59,6 +61,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
+    private final ExecutorService executorService;
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
@@ -87,6 +90,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.authProvider = Objects.requireNonNull(apiAuthProvider);
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
+        this.executorService = Executors.newCachedThreadPool();
     }
 
     @NonNull
@@ -439,6 +443,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .graphQLRequest(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
                 .streamListener(subscriptionListener)
+                .executorService(executorService)
                 .build();
         operation.start();
         return operation;

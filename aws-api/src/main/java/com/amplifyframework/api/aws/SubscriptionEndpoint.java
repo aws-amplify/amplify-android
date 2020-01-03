@@ -58,7 +58,7 @@ final class SubscriptionEndpoint {
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
     private final CountDownLatch connectionAcknowledgement;
-
+    private String connectionFailure;
     private WebSocket webSocket;
 
     SubscriptionEndpoint(
@@ -84,16 +84,24 @@ final class SubscriptionEndpoint {
                         exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
+                return null;
             }
 
             try {
                 connectionAcknowledgement.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
-            } catch (InterruptedException interruptedException) {
+            } catch (InterruptedException interruptedException) { }
+
+            if (connectionAcknowledgement.getCount() != 0) {
                 responseListener.onError(new ApiException(
                         "Subscription timed out waiting for acknowledgement",
-                        interruptedException,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
+                return null;
+            } else if (connectionFailure != null) {
+                responseListener.onError(
+                    new ApiException(connectionFailure, "Check if you are authorized to make this subscription")
+                );
+                return null;
             }
         }
 
@@ -130,7 +138,7 @@ final class SubscriptionEndpoint {
             .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
             .build();
 
-        webSocket = new OkHttpClient.Builder()
+        WebSocket output = new OkHttpClient.Builder()
             .retryOnConnectionFailure(true)
             .build()
             .newWebSocket(request, new WebSocketListener() {
@@ -141,7 +149,11 @@ final class SubscriptionEndpoint {
 
                 @Override
                 public void onMessage(@NonNull final WebSocket webSocket, @NonNull final String message) {
-                    processMessage(webSocket, message);
+                    try {
+                        processJsonMessage(webSocket, message);
+                    } catch (ApiException exception) {
+                        notifyError(exception);
+                    }
                 }
 
                 @Override
@@ -156,7 +168,7 @@ final class SubscriptionEndpoint {
                 }
             });
 
-        return webSocket;
+        return output;
     }
 
     private void sendConnectionInit(WebSocket webSocket) {
@@ -166,14 +178,6 @@ final class SubscriptionEndpoint {
                 .toString());
         } catch (JSONException jsonException) {
             notifyError(jsonException);
-        }
-    }
-
-    private void processMessage(WebSocket webSocket, String message) {
-        try {
-            processJsonMessage(webSocket, message);
-        } catch (ApiException exception) {
-            notifyError(exception);
         }
     }
 
@@ -195,6 +199,10 @@ final class SubscriptionEndpoint {
                     );
                     connectionAcknowledgement.countDown();
                     break;
+                case CONNECTION_ERROR:
+                    connectionFailure = message;
+                    connectionAcknowledgement.countDown();
+                    break;
                 case SUBSCRIPTION_ACK:
                     notifySubscriptionAcknowledged(jsonMessage.getString("id"));
                     break;
@@ -214,7 +222,7 @@ final class SubscriptionEndpoint {
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
             }
-        } catch (JSONException | ApiException exception) {
+        } catch (JSONException exception) {
             throw new ApiException(
                     "Error processing Json message in subscription endpoint",
                     exception,
