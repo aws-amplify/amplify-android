@@ -26,6 +26,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.category.Category;
@@ -215,8 +216,9 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     @Override
     public RestOperation get(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().get(request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().get(request, onResponse, onFailure);
     }
 
     @Nullable
@@ -224,16 +226,18 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().get(apiName, request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().get(apiName, request, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public RestOperation put(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().put(request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().put(request, onResponse, onFailure);
     }
 
     @Nullable
@@ -241,16 +245,18 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().put(apiName, request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().put(apiName, request, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public RestOperation post(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().post(request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().post(request, onResponse, onFailure);
     }
 
     @Nullable
@@ -258,16 +264,18 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().post(apiName, request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().post(apiName, request, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public RestOperation delete(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().delete(request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().delete(request, onResponse, onFailure);
     }
 
     @Nullable
@@ -275,16 +283,18 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().delete(apiName, request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().delete(apiName, request, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public RestOperation head(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().head(request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().head(request, onResponse, onFailure);
     }
 
     @Nullable
@@ -292,16 +302,18 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().head(apiName, request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().head(apiName, request, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public RestOperation patch(
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().patch(request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().patch(request, onResponse, onFailure);
     }
 
     @Nullable
@@ -309,8 +321,9 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions request,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
-        return getSelectedPlugin().patch(apiName, request, responseListener);
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().patch(apiName, request, onResponse, onFailure);
     }
 }
 
