@@ -117,8 +117,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
             ResponseFactoryStep<T>,
             StreamListenerStep<T>,
             BuilderStep<T>,
-            ExecutorServiceStep<T>
-        {
+            ExecutorServiceStep<T> {
         private SubscriptionEndpoint subscriptionEndpoint;
         private String endpoint;
         private OkHttpClient client;
