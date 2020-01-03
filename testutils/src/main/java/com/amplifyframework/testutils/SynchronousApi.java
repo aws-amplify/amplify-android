@@ -174,9 +174,7 @@ public final class SynchronousApi {
     @NonNull
     public RestResponse get(@NonNull String apiName, @NonNull RestOptions options) {
         LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        ResultListener<RestResponse, ApiException> resultListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
-        Amplify.API.get(apiName, options, resultListener);
+        Amplify.API.get(apiName, options, responseConsumer, EmptyConsumer.of(ApiException.class));
         return responseConsumer.awaitValue();
     }
 
@@ -189,9 +187,7 @@ public final class SynchronousApi {
     @NonNull
     public RestResponse post(@NonNull String apiName, @NonNull RestOptions options) {
         LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        ResultListener<RestResponse, ApiException> responseListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
-        Amplify.API.post(apiName, options, responseListener);
+        Amplify.API.post(apiName, options, responseConsumer, EmptyConsumer.of(ApiException.class));
         return responseConsumer.awaitValue();
     }
 

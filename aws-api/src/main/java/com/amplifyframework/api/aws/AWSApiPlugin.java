@@ -35,6 +35,7 @@ import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
@@ -448,15 +449,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation get(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return get(apiName, options, responseListener);
+        return get(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -464,15 +466,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.GET,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -481,15 +485,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation put(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return put(apiName, options, responseListener);
+        return put(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -497,15 +502,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.PUT,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -514,15 +521,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation post(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return post(apiName, options, responseListener);
+        return post(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -530,15 +538,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.POST,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -547,15 +557,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation delete(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return delete(apiName, options, responseListener);
+        return delete(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -563,15 +574,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.DELETE,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -580,15 +593,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation head(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return head(apiName, options, responseListener);
+        return head(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -596,15 +610,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.HEAD,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -613,15 +629,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation patch(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return patch(apiName, options, responseListener);
+        return patch(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -629,15 +646,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.PATCH,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
