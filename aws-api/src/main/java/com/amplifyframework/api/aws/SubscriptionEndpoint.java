@@ -77,6 +77,7 @@ final class SubscriptionEndpoint {
 
         if (webSocket == null) {
             try {
+                connectionFailure = null;
                 webSocket = createWebSocket();
             } catch (ApiException exception) {
                 responseListener.onError(new ApiException(
