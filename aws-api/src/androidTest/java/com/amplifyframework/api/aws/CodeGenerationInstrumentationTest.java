@@ -124,7 +124,7 @@ public final class CodeGenerationInstrumentationTest {
             api.onCreate(PERSON_API_NAME, Person.class);
 
         // Give the subscription time to complete the connection before running the mutation.
-        // This should happen within 1 second - if not it's good that this fails so we can investigate.
+        // This should happen within 1 second - if not, it's good that this fails so we can investigate.
         try {
             Thread.sleep(ONE_SECOND_OF_MILLISECONDS);
         } catch (InterruptedException exception) { }
