@@ -20,14 +20,14 @@ import androidx.core.util.ObjectsCompat;
 /**
  * Represents a contains condition with a target value for comparison.
  */
-public final class ContainsQueryOperator extends QueryOperator {
-    private Object value;
+public final class ContainsQueryOperator extends QueryOperator<String> {
+    private String value;
 
     /**
      * Constructs a contains condition.
      * @param value the value to be used in the comparison
      */
-    public ContainsQueryOperator(Object value) {
+    ContainsQueryOperator(String value) {
         super(Type.CONTAINS);
         this.value = value;
     }
@@ -38,6 +38,17 @@ public final class ContainsQueryOperator extends QueryOperator {
      */
     public Object value() {
         return value;
+    }
+
+    /**
+     * Returns true if the the provided field value contains
+     * the value associated with this operator.
+     * @param field the field value to operate on
+     * @return evaluated result of the operator
+     */
+    @Override
+    public boolean evaluate(String field) {
+        return field.contains(value);
     }
 
     @Override

@@ -19,15 +19,16 @@ import androidx.core.util.ObjectsCompat;
 
 /**
  * Represents a less than condition with a target value for comparison.
+ * @param <T> Comparable data type of the field
  */
-public final class LessThanQueryOperator extends QueryOperator {
-    private Object value;
+public final class LessThanQueryOperator<T extends Comparable<T>> extends QueryOperator<T> {
+    private T value;
 
     /**
      * Constructs a less than condition.
      * @param value the value to be used in the comparison
      */
-    public LessThanQueryOperator(Object value) {
+    LessThanQueryOperator(T value) {
         super(Type.LESS_THAN);
         this.value = value;
     }
@@ -36,8 +37,19 @@ public final class LessThanQueryOperator extends QueryOperator {
      * Returns the value to be used in the comparison.
      * @return the value to be used in the comparison
      */
-    public Object value() {
+    public T value() {
         return value;
+    }
+
+    /**
+     * Returns true if the the provided field value is less
+     * than the value associated with this operator.
+     * @param field the field value to operate on
+     * @return evaluated result of the operator
+     */
+    @Override
+    public boolean evaluate(T field) {
+        return field.compareTo(value) < 0;
     }
 
     @Override
@@ -47,7 +59,7 @@ public final class LessThanQueryOperator extends QueryOperator {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            LessThanQueryOperator op = (LessThanQueryOperator) obj;
+            LessThanQueryOperator<?> op = (LessThanQueryOperator) obj;
 
             return ObjectsCompat.equals(type(), op.type()) &&
                     ObjectsCompat.equals(value(), op.value());

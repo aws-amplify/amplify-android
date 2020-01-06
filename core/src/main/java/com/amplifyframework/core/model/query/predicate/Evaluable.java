@@ -16,10 +16,14 @@
 package com.amplifyframework.core.model.query.predicate;
 
 /**
- * Parent class for groups of conditions and individual conditions.
- * This way, through polymorphism, an individual condition can be
- * chained with another individual condition or an existing group
- * of conditions.
+ * Interface for evaluable item.
+ * @param <T> Type of target value being evaluated against
  */
-public interface QueryPredicate extends Evaluable<Object> {
+public interface Evaluable<T> {
+    /**
+     * Evaluates target to a boolean value.
+     * @param target an evaluable target
+     * @return Evaluated result of the target
+     */
+    boolean evaluate(T target);
 }

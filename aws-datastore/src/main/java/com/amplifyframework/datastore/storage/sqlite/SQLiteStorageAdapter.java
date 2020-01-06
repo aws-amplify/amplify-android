@@ -274,7 +274,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         item.getId())) {
                     // update model stored in SQLite
                     // update always checks for ID first
-                    final QueryPredicateOperation idCheck =
+                    final QueryPredicateOperation<?> idCheck =
                             QueryField.field(primaryKeyName).eq(item.getId());
                     final QueryPredicate condition = predicate != null
                             ? idCheck.and(predicate)
