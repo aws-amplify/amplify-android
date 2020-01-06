@@ -105,7 +105,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
         List<T> result = new ArrayList<>();
         for (Model item : items) {
-            if (itemClass.isAssignableFrom((item.getClass()))) {
+            if (itemClass.isAssignableFrom((item.getClass()))
+                    && (predicate == null || predicate.evaluate(item))) {
                 result.add((T) item);
             }
         }

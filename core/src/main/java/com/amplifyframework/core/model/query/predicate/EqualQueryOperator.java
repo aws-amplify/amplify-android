@@ -20,14 +20,14 @@ import androidx.core.util.ObjectsCompat;
 /**
  * Represents an equality condition with a target value for comparison.
  */
-public final class EqualQueryOperator extends QueryOperator {
+public final class EqualQueryOperator extends QueryOperator<Object> {
     private Object value;
 
     /**
      * Constructs an equality condition.
      * @param value the value to be used in the comparison
      */
-    public EqualQueryOperator(Object value) {
+    EqualQueryOperator(Object value) {
         super(Type.EQUAL);
         this.value = value;
     }
@@ -38,6 +38,16 @@ public final class EqualQueryOperator extends QueryOperator {
      */
     public Object value() {
         return value;
+    }
+
+    /**
+     * Returns true if the the provided field value equals
+     * the value associated with this operator.
+     * @param field the field value to operate on
+     * @return evaluated result of the operator
+     */
+    public boolean evaluate(Object field) {
+        return field.equals(value);
     }
 
     @Override

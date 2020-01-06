@@ -96,7 +96,7 @@ public final class SQLPredicate {
     // Utility method to recursively parse a given predicate.
     private StringBuilder parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
             return parsePredicateOperation(qpo);
         } else if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
@@ -111,13 +111,13 @@ public final class SQLPredicate {
     }
 
     // Utility method to recursively parse a given predicate operation.
-    private StringBuilder parsePredicateOperation(QueryPredicateOperation operation) throws DataStoreException {
+    private StringBuilder parsePredicateOperation(QueryPredicateOperation<?> operation) throws DataStoreException {
         final StringBuilder builder = new StringBuilder();
         final String field = operation.field();
-        final QueryOperator op = operation.operator();
+        final QueryOperator<?> op = operation.operator();
         switch (op.type()) {
             case BETWEEN:
-                BetweenQueryOperator betweenOp = (BetweenQueryOperator) op;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) op;
                 selectionArgs.add(betweenOp.start());
                 selectionArgs.add(betweenOp.end());
                 return builder.append(field)
@@ -197,7 +197,7 @@ public final class SQLPredicate {
     }
 
     // Utility method to extract the parameter value from a given operator.
-    private Object getOperatorValue(QueryOperator qOp) throws DataStoreException {
+    private Object getOperatorValue(QueryOperator<?> qOp) throws DataStoreException {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
