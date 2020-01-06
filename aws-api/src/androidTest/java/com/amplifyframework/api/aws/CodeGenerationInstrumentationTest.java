@@ -16,8 +16,10 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.testmodels.noteswithauth.PrivateNote;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testmodels.ratingsblog.Blog;
@@ -45,6 +47,9 @@ public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
     private static final String BLOG_API_NAME = "blogApi";
+    private static final String NOTES_WITH_AUTH_API_NAME = "notesWithAuthApi";
+
+    private static final int ONE_SECOND_OF_MILLISECONDS = 1000;
 
     private static SynchronousApi api;
 
@@ -118,6 +123,12 @@ public final class CodeGenerationInstrumentationTest {
         SynchronousApi.Subscription<Person> subscription =
             api.onCreate(PERSON_API_NAME, Person.class);
 
+        // Give the subscription time to complete the connection before running the mutation.
+        // This should happen within 1 second - if not it's good that this fails so we can investigate.
+        try {
+            Thread.sleep(ONE_SECOND_OF_MILLISECONDS);
+        } catch (InterruptedException exception) { }
+
         Person johnDoe = Person.builder()
             .firstName("John")
             .lastName("Doe")
@@ -133,6 +144,24 @@ public final class CodeGenerationInstrumentationTest {
         // is called as a response to canceling the operation.
         subscription.cancel();
         subscription.awaitSubscriptionCompletion();
+    }
+
+    /**
+     * Tests that attempting to subscribe to an API which is protected by Cognito User Pool auth will fail if the user
+     * is unauthenticated. Also checks that the connection error is returned quickly without waiting for a timeout.
+     */
+    @Test
+    public void subscribeFailsWithoutProperAuth() {
+        Long startTime = System.currentTimeMillis();
+
+        SynchronousApi.Subscription<PrivateNote> subscription =
+                api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class);
+
+        Throwable exception = subscription.awaitSubscriptionFailure();
+        assertTrue(exception instanceof ApiException);
+        assertTrue(exception.getMessage().contains("connection_error"));
+        // A connection error should take less than a second to be reported
+        assertTrue(System.currentTimeMillis() - startTime < ONE_SECOND_OF_MILLISECONDS);
     }
 
     /**

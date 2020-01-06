@@ -57,7 +57,7 @@ final class SubscriptionEndpoint {
     private final Map<String, Subscription<?>> subscriptions;
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
-    private final CountDownLatch connectionAcknowledgement;
+    private final CountDownLatch connectionResponse;
     private String connectionFailure;
     private WebSocket webSocket;
 
@@ -68,7 +68,7 @@ final class SubscriptionEndpoint {
         this.subscriptions = new ConcurrentHashMap<>();
         this.responseFactory = responseFactory;
         this.timeoutWatchdog = new TimeoutWatchdog();
-        this.connectionAcknowledgement = new CountDownLatch(1);
+        this.connectionResponse = new CountDownLatch(1);
     }
 
     synchronized <T> String requestSubscription(
@@ -89,10 +89,10 @@ final class SubscriptionEndpoint {
             }
 
             try {
-                connectionAcknowledgement.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
+                connectionResponse.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
             } catch (InterruptedException interruptedException) { }
 
-            if (connectionAcknowledgement.getCount() != 0) {
+            if (connectionResponse.getCount() != 0) {
                 responseListener.onError(new ApiException(
                         "Subscription timed out waiting for acknowledgement",
                         AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -198,11 +198,11 @@ final class SubscriptionEndpoint {
                             jsonMessage.getJSONObject("payload").getString("connectionTimeoutMs")
                         )
                     );
-                    connectionAcknowledgement.countDown();
+                    connectionResponse.countDown();
                     break;
                 case CONNECTION_ERROR:
                     connectionFailure = message;
-                    connectionAcknowledgement.countDown();
+                    connectionResponse.countDown();
                     break;
                 case SUBSCRIPTION_ACK:
                     notifySubscriptionAcknowledged(jsonMessage.getString("id"));
