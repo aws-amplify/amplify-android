@@ -78,7 +78,7 @@ public class SyncEngineTest {
         doAnswer(invocation -> {
             apiInvoked.countDown();
             return null;
-        }).when(endpoint).create(any(), any());
+        }).when(endpoint).create(any(), any(), any());
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         LatchedConsumer<StorageItemChange.Record> saveConsumer = LatchedConsumer.instance(OPERATIONS_TIMEOUT_MS);

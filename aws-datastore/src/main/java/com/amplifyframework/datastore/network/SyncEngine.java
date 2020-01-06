@@ -21,9 +21,10 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -50,10 +51,10 @@ import io.reactivex.schedulers.Schedulers;
  *
  * At the same time, the SyncEngine will drain this journal, and try to publish each
  * change out over the network via the
- * {@link ApiCategoryBehavior#mutate(String, Model, QueryPredicate, MutationType, ResultListener)} .
+ * {@link ApiCategoryBehavior#mutate(String, Model, QueryPredicate, MutationType, Consumer, Consumer)} .
  *
  * Meanwhile, the SyncEngine also subscribes to remote changes via the
- * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, StreamListener)} operations.
+ * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, Consumer, Consumer, Action)} operations.
  * Remote changes are written into the local storage without going into the journal.
  */
 // The generics get intense, so we use MODEL and SIC instead of just M and S.
@@ -192,15 +193,17 @@ public final class SyncEngine {
             final SIC storageItemChange) {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            appSyncEndpoint.create(storageItemChange.item(), ResultListener.instance(
+            appSyncEndpoint.create(
+                storageItemChange.item(),
                 result -> {
                     if (result.hasErrors() || !result.hasData()) {
                         subscriber.onError(new RuntimeException("Failed to publish item to network."));
+                    } else {
+                        subscriber.onSuccess(storageItemChange);
                     }
-                    subscriber.onSuccess(storageItemChange);
                 },
                 subscriber::onError
-            ));
+            );
         }));
     }
 

@@ -25,9 +25,9 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -68,8 +68,8 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> T create(@NonNull String apiName, @NonNull T model) {
-        return awaitResponseData(listener ->
-            Amplify.API.mutate(apiName, model, MutationType.CREATE, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.mutate(apiName, model, MutationType.CREATE, onResponse, onFailure));
     }
 
     /**
@@ -80,7 +80,8 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> T create(@NonNull T model) {
-        return awaitResponseData(listener -> Amplify.API.mutate(model, MutationType.CREATE, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.mutate(model, MutationType.CREATE, onResponse, onFailure));
     }
 
     /**
@@ -92,7 +93,8 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T> T create(@NonNull String apiName, @NonNull GraphQLRequest<T> request) {
-        return awaitResponseData(listener -> Amplify.API.mutate(apiName, request, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.mutate(apiName, request, onResponse, onFailure));
     }
 
     /**
@@ -106,8 +108,8 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T update(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) {
-        return awaitResponseData(listener ->
-            Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
     }
 
     /**
@@ -119,7 +121,8 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> T update(@NonNull T model) {
-        return awaitResponseData(listener -> Amplify.API.mutate(model, MutationType.UPDATE, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.mutate(model, MutationType.UPDATE, onResponse, onFailure));
     }
 
     /**
@@ -134,8 +137,8 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> List<GraphQLResponse.Error> updateExpectingErrors(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) {
-        return this.<T>awaitResponseErrors(listener ->
-            Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, listener));
+        return this.<T>awaitResponseErrors((onResponse, onFailure) ->
+            Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
     }
 
     /**
@@ -149,7 +152,8 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T get(
             @NonNull final String apiName, @NonNull Class<T> clazz, @NonNull String modelId) {
-        return awaitResponseData(listener -> Amplify.API.query(apiName, clazz, modelId, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.query(apiName, clazz, modelId, onResponse, onFailure));
     }
 
     /**
@@ -162,7 +166,8 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String modelId) {
-        return awaitResponseData(listener -> Amplify.API.query(clazz, modelId, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.query(clazz, modelId, onResponse, onFailure));
     }
 
     /**
@@ -204,8 +209,8 @@ public final class SynchronousApi {
             @NonNull String apiName,
             @NonNull Class<T> clazz,
             @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate) {
-        final Iterable<T> queryResults =
-            awaitResponseData(listener -> Amplify.API.query(apiName, clazz, predicate, listener));
+        final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.query(apiName, clazz, predicate, onResponse, onFailure));
         final List<T> results = new ArrayList<>();
         for (T item : queryResults) {
             results.add(item);
@@ -235,8 +240,8 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> T delete(@NonNull String apiName, @NonNull T modelToDelete) {
-        return awaitResponseData(listener ->
-            Amplify.API.mutate(apiName, modelToDelete, MutationType.DELETE, listener));
+        return awaitResponseData((onResponse, onFailure) ->
+            Amplify.API.mutate(apiName, modelToDelete, MutationType.DELETE, onResponse, onFailure));
     }
 
     /**
@@ -248,8 +253,9 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> Subscription<T> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
-        return createSubscription(streamListener ->
-            Amplify.API.subscribe(apiName, clazz, SubscriptionType.ON_CREATE, streamListener));
+        return createSubscription((onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
+            Amplify.API.subscribe(apiName, clazz, SubscriptionType.ON_CREATE,
+                onNextResponse, onSubscriptionFailure, onSubscriptionCompleted));
     }
 
     /**
@@ -261,17 +267,17 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T> Subscription<T> onCreate(@NonNull String apiName, @NonNull GraphQLRequest<T> request) {
-        return createSubscription(streamListener -> Amplify.API.subscribe(apiName, request, streamListener));
+        return createSubscription((onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
+            Amplify.API.subscribe(apiName, request, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted));
     }
 
     private <T> Subscription<T> createSubscription(SubscriptionCreationMethod<T> method) {
         LatchedResponseConsumer<T> streamItemConsumer = LatchedResponseConsumer.instance();
         LatchedAction streamCompletionAction = LatchedAction.instance();
         LatchedConsumer<ApiException> errorConsumer = LatchedConsumer.instance();
-        StreamListener<GraphQLResponse<T>, ApiException> streamListener =
-            StreamListener.instance(streamItemConsumer, errorConsumer, streamCompletionAction);
 
-        final Cancelable cancelable = method.streamTo(streamListener);
+        final Cancelable cancelable =
+            method.streamWith(streamItemConsumer, errorConsumer, streamCompletionAction);
         if (cancelable == null) {
             throw new RuntimeException("Got a null operation back from API subscribe.");
         }
@@ -286,26 +292,29 @@ public final class SynchronousApi {
 
     private <T> T awaitResponseData(AsyncOperation<T> operation) {
         LatchedResponseConsumer<T> responseConsumer = LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<T>, ApiException> responseListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
-        operation.respondWith(responseListener);
+        operation.respondWith(responseConsumer, EmptyConsumer.of(ApiException.class));
         return responseConsumer.awaitResponseData();
     }
 
     private <T> List<GraphQLResponse.Error> awaitResponseErrors(AsyncOperation<T> operation) {
         LatchedResponseConsumer<T> responseConsumer = LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<T>, ApiException> responseListener =
-            ResultListener.instance(responseConsumer, EmptyConsumer.of(ApiException.class));
-        operation.respondWith(responseListener);
+        operation.respondWith(responseConsumer, EmptyConsumer.of(ApiException.class));
         return responseConsumer.awaitErrorsInNextResponse();
     }
 
     interface AsyncOperation<T> {
-        void respondWith(ResultListener<GraphQLResponse<T>, ApiException> responseListener);
+        void respondWith(
+            Consumer<GraphQLResponse<T>> onResponse,
+            Consumer<ApiException> onFailure
+        );
     }
 
     interface SubscriptionCreationMethod<T> {
-        Cancelable streamTo(StreamListener<GraphQLResponse<T>, ApiException> streamListener);
+        Cancelable streamWith(
+            Consumer<GraphQLResponse<T>> onNextResponse,
+            Consumer<ApiException> onSubscriptionFailure,
+            Action onSubscriptionCompleted
+        );
     }
 
     /**
@@ -362,7 +371,7 @@ public final class SynchronousApi {
         }
 
         /**
-         * Wait for the subscription to commplete.
+         * Wait for the subscription to complete.
          */
         public void awaitSubscriptionCompletion() {
             completionAction.awaitCall();

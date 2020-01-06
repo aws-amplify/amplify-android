@@ -33,7 +33,7 @@ import com.amplifyframework.AmplifyException;
  *
  * The StreamListener is modeled after the RxJava2 {@link io.reactivex.Observer}.
  *
- * @param <T> The type of item(s) that can be emitted via {@link #onNext(Object)}
+ * @param <T> The type of item(s) that can be emitted via {@link #onNext(T)}
  * @param <E> The type of error(s) that can be emitted via {@link #onError(E)}.
  * @see <a href="http://reactivex.io/documentation/contract.html">The Rx Observable Contract</a>
  */
@@ -97,3 +97,4 @@ public final class StreamListener<T, E extends AmplifyException> {
         errorConsumer.accept(error);
     }
 }
+
