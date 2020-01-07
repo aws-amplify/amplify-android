@@ -22,8 +22,11 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -41,7 +44,6 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.android.schedulers.AndroidSchedulers;
@@ -176,9 +178,10 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener) {
+            @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
+            @NonNull Consumer<DataStoreException> onFailureToSave) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
-            ResultConversionListener.instance(saveItemListener, this::toDataStoreItemChange));
+            ResultConversionListener.instance(onItemSaved, onFailureToSave, this::toDataStoreItemChange));
     }
 
     /**
@@ -188,9 +191,10 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener) {
+            @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
+            @NonNull Consumer<DataStoreException> onFailureToSave) {
         sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API, predicate,
-            ResultConversionListener.instance(saveItemListener, this::toDataStoreItemChange));
+            ResultConversionListener.instance(onItemSaved, onFailureToSave, this::toDataStoreItemChange));
     }
 
     /**
@@ -199,9 +203,10 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> deleteItemListener) {
+            @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
         sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
-            ResultConversionListener.instance(deleteItemListener, this::toDataStoreItemChange));
+            ResultConversionListener.instance(onItemDeleted, onFailureToDelete, this::toDataStoreItemChange));
     }
 
     /**
@@ -210,8 +215,9 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
-        sqliteStorageAdapter.query(itemClass, queryResultsListener);
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        sqliteStorageAdapter.query(itemClass, ResultListener.instance(onQueryResults, onQueryFailure));
     }
 
     /**
@@ -221,52 +227,91 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
-        sqliteStorageAdapter.query(itemClass, predicate, queryResultsListener);
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        sqliteStorageAdapter.query(itemClass, predicate, ResultListener.instance(onQueryResults, onQueryFailure));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
-    public Observable<DataStoreItemChange<? extends Model>> observe() {
-        return sqliteStorageAdapter.observe()
-            .map(this::toDataStoreItemChange);
+    public Cancelable observe(
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return sqliteStorageAdapter.observe(StreamListener.instance(
+            storageItemChangeRecord -> {
+                try {
+                    onDataStoreItemChange.accept(toDataStoreItemChange(storageItemChangeRecord));
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
+        ));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass) {
-        return sqliteStorageAdapter.observe()
-            .filter(record -> record.getItemClass().equals(itemClass.getName()))
-            .map(this::toDataStoreItemChange);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+    public <T extends Model> Cancelable observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId) {
-        return observe(itemClass)
-            .filter(dataStoreItemChange -> uniqueId.equals(dataStoreItemChange.item().getId()));
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return sqliteStorageAdapter.observe(StreamListener.instance(
+            storageItemChangeRecord -> {
+                try {
+                    if (!storageItemChangeRecord.getItemClass().equals(itemClass.getName())) {
+                        return;
+                    }
+                    onDataStoreItemChange.accept(toDataStoreItemChange(storageItemChangeRecord));
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
+        ));
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+    public <T extends Model> Cancelable observe(
             @NonNull Class<T> itemClass,
-            @NonNull QueryPredicate selectionCriteria) {
-        return Observable.error(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
+            @NonNull String uniqueId,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return sqliteStorageAdapter.observe(StreamListener.instance(
+            storageItemChangeRecord -> {
+                try {
+                    final DataStoreItemChange<T> dataStoreItemChange =
+                        toDataStoreItemChange(storageItemChangeRecord);
+                    if (!dataStoreItemChange.itemClass().equals(itemClass) ||
+                            !uniqueId.equals(dataStoreItemChange.item().getId())) {
+                        return;
+                    }
+                    onDataStoreItemChange.accept(dataStoreItemChange);
+                } catch (DataStoreException dataStoreException) {
+                    onObservationFailure.accept(dataStoreException);
+                }
+            },
+            onObservationFailure,
+            onObservationCompleted
+        ));
+    }
+
+    @SuppressWarnings("checkstyle:WhitespaceAround") // () -> {}
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable observe(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate selectionCriteria,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
+        return () -> {};
     }
 
     /**
@@ -342,16 +387,17 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
 
         /**
          * Creates a new ResultConversionListener.
-         * @param dataStoreListener listener object of the public DataStore API
+         * @param onSuccess Success consumer received via the public DataStore API
+         * @param onFailure Failure consumer received via the public DataStore API
          * @param conversionStrategy A strategy to convert between storage adapter and data store api types
          */
         static <T extends Model> ResultListener<StorageItemChange.Record, DataStoreException> instance(
-                ResultListener<DataStoreItemChange<T>, DataStoreException> dataStoreListener,
+                Consumer<DataStoreItemChange<T>> onSuccess, Consumer<DataStoreException> onFailure,
                 ConversionStrategy conversionStrategy) {
 
             @SuppressWarnings("CodeBlock2Expr") // More readable as block
             final Consumer<DataStoreException> errorConsumer = error -> {
-                dataStoreListener.onError(new DataStoreException(
+                onFailure.accept(new DataStoreException(
                     "Oof, something went wrong.", error, "Check the attached error for details."
                 ));
             };
@@ -359,7 +405,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             final Consumer<StorageItemChange.Record> resultConsumer = result -> {
                 try {
                     DataStoreItemChange<T> converted = conversionStrategy.convert(result);
-                    dataStoreListener.onResult(converted);
+                    onSuccess.accept(converted);
                 } catch (DataStoreException exception) {
                     errorConsumer.accept(exception);
                 }

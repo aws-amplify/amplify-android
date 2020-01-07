@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -28,8 +30,6 @@ import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Iterator;
 import java.util.List;
-
-import io.reactivex.Observable;
 
 /**
  * A LocalStorageAdapter provides a simple set of interactions to
@@ -132,11 +132,16 @@ public interface LocalStorageAdapter {
 
     /**
      * Observe all changes to that occur to any/all objects in the storage.
-     * @return An observable which emits an {@link StorageItemChange} notification every time
-     *         any object managed by the storage adapter is changed in any way.
+     * @param itemChangeListener
+     *        Receives a {@link StorageItemChange} notification every time
+     *        any object managed by the storage adapter is changed in any way. Terminates
+     *        with error or successful completion action.
+     * @return A Cancelable with which this observation may be terminated
      */
     @NonNull
-    Observable<StorageItemChange.Record> observe();
+    Cancelable observe(
+            @NonNull StreamListener<StorageItemChange.Record, DataStoreException> itemChangeListener
+    );
 
     /**
      * Terminate use of the local storage.
