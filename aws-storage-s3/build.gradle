@@ -14,11 +14,10 @@
  */
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven-publish'
 apply from: rootProject.file("configuration/retrolambda.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/android-lint.gradle")
-apply from: rootProject.file('gradle-mvn-push.gradle')
+apply from: rootProject.file("configuration/publishing.gradle")
 
 android {
     compileSdkVersion 29
@@ -51,17 +50,3 @@ dependencies {
     implementation ("com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion") { transitive = true }
 }
 
-project.afterEvaluate {
-    // TODO: Refactor to create a generic publishing snippet that takes input
-    // a POM artifact and publishes it
-    publishing {
-        publications {
-            library(MavenPublication) {
-                groupId 'com.amplifyframework'
-                artifactId 'aws-storage-s3'
-                version VERSION_NAME
-                artifact(bundleReleaseAar)
-            }
-        }
-    }
-}
