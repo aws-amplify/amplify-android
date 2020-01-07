@@ -17,14 +17,14 @@ package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
-
-import io.reactivex.Observable;
 
 /**
  * A DataStore is a high-level abstraction of an object repository.
@@ -39,13 +39,14 @@ public interface DataStoreCategoryBehavior {
     /**
      * Saves an item into the DataStore.
      * @param item An item to save
-     * @param saveItemListener
-     *        An optional listener which will be callback'd when the save succeeds or fails
+     * @param onItemSaved Called upon successful save of item
+     * @param onFailureToSave Called upon failure to save item
      * @param <T> The time of item being saved
      */
     <T extends Model> void save(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener
+            @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
+            @NonNull Consumer<DataStoreException> onFailureToSave
     );
 
     /**
@@ -54,39 +55,41 @@ public interface DataStoreCategoryBehavior {
      * is overwritten with an outdated/incorrect assumption.
      * @param item An item to save
      * @param predicate Predicate condition to apply for conditional write
-     * @param saveItemListener
-     *        An optional listener which will be callback'd when the save succeeds or fails
+     * @param onItemSaved Called upon successful save of item
+     * @param onFailureToSave Called upon failure to save item
      * @param <T> The time of item being saved
      */
     <T extends Model> void save(
             @NonNull T item,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener
+            @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
+            @NonNull Consumer<DataStoreException> onFailureToSave
     );
 
     /**
      * Deletes an item from the DataStore.
      * @param item An item to delete from the DataStore
-     * @param deleteItemListener
-     *        An optional listener which will be invoked when the deletion succeeds or fails
+     * @param onItemDeleted Called upon successful deletion of item
+     * @param onFailureToDelete Called upon failure to delete item
      * @param <T> The type of item being deleted
      */
     <T extends Model> void delete(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> deleteItemListener
+            @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete
     );
 
     /**
      * Query the DataStore to find all items of the requested Java class.
      * @param itemClass Items of this class will be targeted by this query
-     * @param queryResultsListener
-     *        An optional listener which will be invoked when the query returns
-     *        results, or if there is a failure to query
+     * @param onQueryResults Called when a query successfully returns 0 or more results
+     * @param onQueryFailure Called when a failure interrupts successful completion of a query
      * @param <T> The type of items being queried
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure
     );
 
     /**
@@ -94,51 +97,76 @@ public interface DataStoreCategoryBehavior {
      * predicate.
      * @param itemClass Items of this class will be targeted by this query
      * @param predicate Predicate condition to apply to query
-     * @param queryResultsListener
-     *        An optional listener which will be invoked when the query returns
-     *        results, or if there is a failure to query
+     * @param onQueryResults Called when a query successfully returns 0 or more results
+     * @param onQueryFailure Called when a failure interrupts successful completion of a query
      * @param <T> The type of items being queried
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure
     );
 
     /**
      * Observe all changes to any/all item(s) in the DataStore.
-     * @return An observable stream of {@link DataStoreItemChange}s,
-     *         one for each and every change that occurs to any/all item(s)
-     *         in the DataStore.
+     *
+     * @param onDataStoreItemChange  Called 0..n times, once for each and every change that
+     *                               occurs to any/all item(s) in the DataStore.
+     * @param onObservationFailure   Called if observation of the DataStore terminates
+     *                               with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     * @return A cancelable by which the observation may be ended
      */
     @NonNull
-    Observable<DataStoreItemChange<? extends Model>> observe();
+    Cancelable observe(
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted
+    );
 
     /**
      * Observe changes to a certain type of item(s) in the DataStore.
      * @param itemClass The class of the item(s) to observe
      * @param <T> The type of the item(s) to observe
-     * @return An observable stream of {@link DataStoreItemChange}s, that
-     *         will emit a new {@link DataStoreItemChange} whenever there there are
-     *         changes to any item of the requested item class.
+     * @param onDataStoreItemChange Called 0..n times, whenever there is a change to an
+     *                              item of the requested class
+     * @param onObservationFailure Called if observation of the DataStore terminates
+     *                             with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     * @return A Cancelable by which the observation may be terminated
      */
     @NonNull
-    <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass);
+    <T extends Model> Cancelable observe(
+            @NonNull Class<T> itemClass,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted
+    );
 
     /**
      * Observe changes to a specific item, identified by its class and unique ID.
      * @param itemClass The class of the item being observed
      * @param uniqueId The unique ID of the item being observed
      * @param <T> The type of item being observed
-     * @return A stream of {@link DataStoreItemChange} events, specific to a single item
-     *         which was uniquely identified by the provided class and unique id.
-     *         Note that this stream may emit a non-trivial number of events, in case the
-     *         selected item is updated many times.
+     * @param onDataStoreItemChange Called 0..n times, whenever there are changes to the
+     *                              item which is uniquely identified by the provided
+     *                              class and unique ID. Note that this callback will be invoked
+     *                              many times for a single item, in the case where
+     *                              the item is updated many times.
+     * @param onObservationFailure Called if observation of the DataStore terminates
+     *                             with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     * @return A Cancelable by which the observation may be terminated
      */
     @NonNull
-    <T extends Model> Observable<DataStoreItemChange<T>> observe(
+    <T extends Model> Cancelable observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId);
+            @NonNull String uniqueId,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted
+    );
 
     /**
      * Observe a collection of item(s) that have a specified class type, and that match
@@ -148,11 +176,20 @@ public interface DataStoreCategoryBehavior {
      *        Additional criteria which will be considered when identifying which
      *        items in the DataStore should be observed for changes.
      * @param <T> The type of the item(s) to observe
-     * @return An observable stream of {@link DataStoreItemChange}s, emitted for items that are
-     *         of the requested class, and that match the provided selection criteria
+     * @param onDataStoreItemChange Called 0..n times, whenever there are changes to
+     *                              models of the given class, that additionally match the provided
+     *                              selection criteria
+     * @param onObservationFailure Called if observation of the DataStore terminates
+     *                             with a non-recoverable failure
+     * @param onObservationCompleted Called when observation completes gracefully
+     * @return A Cancelable with which the observation may be terminated
      */
     @NonNull
-    <T extends Model> Observable<DataStoreItemChange<T>> observe(
+    <T extends Model> Cancelable observe(
             @NonNull Class<T> itemClass,
-            @NonNull QueryPredicate selectionCriteria);
+            @NonNull QueryPredicate selectionCriteria,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted
+    );
 }
