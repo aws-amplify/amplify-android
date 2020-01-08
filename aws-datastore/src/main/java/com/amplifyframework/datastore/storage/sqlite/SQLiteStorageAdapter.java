@@ -421,7 +421,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @NonNull Consumer<StorageItemChange.Record> onSuccess,
-            @NonNull Consumer<DataStoreException> onError) {
+            @NonNull Consumer<DataStoreException> onError
+    ) {
+        delete(item, initiator, null, onSuccess, onError);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @SuppressWarnings({"unchecked", "ConstantConditions"}) // item.getClass() has Class<?>, but we assume Class<T>
+    @Override
+    public <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @Nullable QueryPredicate predicate,
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    ) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
         Objects.requireNonNull(onSuccess);
@@ -429,36 +445,56 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
         threadPool.submit(() -> {
             try {
-                final ModelSchema modelSchema =
-                        modelSchemaRegistry.getModelSchemaForModelInstance(item);
-                final SQLiteTable sqLiteTable = SQLiteTable.fromSchema(modelSchema);
+                final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelInstance(item);
+                final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+                final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
+                final boolean deleteSuccess;
 
-                LOG.debug("Deleting item in table: " + sqLiteTable.getName() +
+                LOG.debug("Deleting item in table: " + sqliteTable.getName() +
                         " identified by ID: " + item.getId());
 
-                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item);
-                if (sqlCommand.sqlStatement() == null) {
+                // delete always checks for ID first
+                final QueryPredicateOperation<?> idCheck =
+                        QueryField.field(primaryKeyName).eq(item.getId());
+                final QueryPredicate condition = predicate != null
+                        ? idCheck.and(predicate)
+                        : idCheck;
+                final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
+                if (sqlCommand == null || sqlCommand.sqlStatement() == null
+                        || !sqlCommand.hasCompiledSqlStatement()) {
                     onError.accept(new DataStoreException(
-                        "No delete statement found for the Model: " + modelSchema.getName(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                            "No delete statement found for the Model: " +
+                                    modelSchema.getName(),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
                 }
 
-                databaseConnectionHandle.beginTransaction();
-                databaseConnectionHandle.execSQL(sqlCommand.sqlStatement());
-                databaseConnectionHandle.setTransactionSuccessful();
-                databaseConnectionHandle.endTransaction();
+                synchronized (sqlCommand.getCompiledSqlStatement()) {
+                    final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
+                    compiledSqlStatement.clearBindings();
+                    bindPreCompiledStatementWithFieldValues(compiledSqlStatement, sqlCommand.getSelectionArgs());
+                    // executeUpdateDelete returns the number of rows affected.
+                    deleteSuccess = compiledSqlStatement.executeUpdateDelete() > 0;
+                    compiledSqlStatement.clearBindings();
+                }
 
-                @SuppressWarnings("unchecked") // item.getClass() is Class<? extends Model>, builder wants Class<T>.
-                final StorageItemChange.Record record = StorageItemChange.<T>builder()
-                        .item(item)
-                        .itemClass((Class<T>) item.getClass())
-                        .type(StorageItemChange.Type.DELETE)
-                        .initiator(initiator)
-                        .build()
-                        .toRecord(storageItemChangeConverter);
-                itemChangeSubject.onNext(record);
-                onSuccess.accept(record);
+                if (deleteSuccess) {
+                    // Do not publish item change if write did not go through.
+                    final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                            .item(item)
+                            .itemClass((Class<T>) item.getClass())
+                            .type(StorageItemChange.Type.DELETE)
+                            .predicate(predicate)
+                            .initiator(initiator)
+                            .build()
+                            .toRecord(storageItemChangeConverter);
+                    itemChangeSubject.onNext(record);
+                    onSuccess.accept(record);
+                } else {
+                    //TODO: implement ConditionCheckFailedException to be cause of this error
+                    onError.accept(new DataStoreException("Predicate condition not met.",
+                            AmplifyException.TODO_RECOVERY_SUGGESTION));
+                }
             } catch (Exception exception) {
                 itemChangeSubject.onError(exception);
                 onError.accept(new DataStoreException(

@@ -85,6 +85,18 @@ public class DataStoreCategory
      * {@inheritDoc}
      */
     @Override
+    public <T extends Model> void delete(
+            @NonNull T object,
+            @NonNull QueryPredicate predicate,
+            @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        getSelectedPlugin().delete(object, predicate, onItemDeleted, onFailureToDelete);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Iterator<T>> onQueryResults,
