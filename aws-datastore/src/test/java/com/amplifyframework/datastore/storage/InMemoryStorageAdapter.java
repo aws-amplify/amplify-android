@@ -165,6 +165,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                     "This item was not found in the datastore: " + item.toString(),
                     "Use save() function to create models to store."
             ));
+            return;
         }
         Model savedItem = items.remove(index);
 
