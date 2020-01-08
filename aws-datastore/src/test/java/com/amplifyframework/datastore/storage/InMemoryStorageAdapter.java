@@ -96,7 +96,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             }
             onError.accept(new DataStoreException(
                     "Conditional check failed.",
-                    "Verify the saved models."));
+                    "Verify that there is a saved model that matches the provided predicate."));
         } else {
             // Insert
             items.add(item);
@@ -160,23 +160,30 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<DataStoreException> onError
     ) {
         final int index = indexOf(item);
-        if (index > -1 && (predicate == null || predicate.evaluate(item))) {
-            Model savedItem = items.remove(index);
-            StorageItemChange.Record deletion = StorageItemChange.<T>builder()
-                    .item((T) savedItem)
-                    .itemClass((Class<T>) savedItem.getClass())
-                    .type(StorageItemChange.Type.DELETE)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
-            changeRecordStream.onNext(deletion);
-            onSuccess.accept(deletion);
-        } else {
+        if (index < 0) {
             onError.accept(new DataStoreException(
-                    "Item does not exist or conditional check failed.",
-                    "Verify the saved models."));
+                    "This item was not found in the datastore: " + item.toString(),
+                    "Use save() function to create models to store."
+            ));
         }
+        Model savedItem = items.remove(index);
+
+        if (predicate != null && !predicate.evaluate(savedItem)) {
+            onError.accept(new DataStoreException(
+                    "Conditional check failed.",
+                    "Verify that there is a saved model that matches the provided predicate."));
+            return;
+        }
+        StorageItemChange.Record deletion = StorageItemChange.<T>builder()
+                .item((T) savedItem)
+                .itemClass((Class<T>) savedItem.getClass())
+                .type(StorageItemChange.Type.DELETE)
+                .predicate(predicate)
+                .initiator(initiator)
+                .build()
+                .toRecord(storageItemChangeConverter);
+        changeRecordStream.onNext(deletion);
+        onSuccess.accept(deletion);
     }
 
     @NonNull
