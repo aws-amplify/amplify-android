@@ -16,7 +16,8 @@ readonly config_bucket='amplify-circleci-android-payload'
 # So, use two simple arrays and join on index.
 # sources are remote URLs, targets are local file paths
 readonly sources=(
-    "s3://$config_bucket/awsconfiguration.json"
+    "s3://$config_bucket/awsconfiguration-analytics.json"
+    "s3://$config_bucket/awsconfiguration-api.json"
     "s3://$config_bucket/amplifyconfiguration-analytics.json"
     "s3://$config_bucket/amplifyconfiguration-core.json"
     "s3://$config_bucket/amplifyconfiguration-api.json"
@@ -24,6 +25,7 @@ readonly sources=(
 )
 readonly targets=(
     "aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-api/src/androidTest/res/raw/awsconfiguration.json"
     "aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json"
     "core/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
