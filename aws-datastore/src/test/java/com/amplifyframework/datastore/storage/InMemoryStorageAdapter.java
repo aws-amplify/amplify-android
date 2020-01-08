@@ -28,10 +28,8 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
@@ -42,12 +40,12 @@ import io.reactivex.subjects.PublishSubject;
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
-    private final Map<String, Model> items;
+    private final List<Model> items;
     private final PublishSubject<StorageItemChange.Record> changeRecordStream;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     private InMemoryStorageAdapter() {
-        this.items = new HashMap<>();
+        this.items = new ArrayList<>();
         this.changeRecordStream = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
@@ -87,11 +85,12 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange.Record> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        if (items.containsKey(item.getId())) {
+        final int index = indexOf(item);
+        if (index > -1) {
             // Update
-            Model savedItem = items.remove(item.getId());
+            Model savedItem = items.get(index);
             if (predicate == null || predicate.evaluate(savedItem)) {
-                items.remove(item.getId());
+                items.remove(index);
                 save(item, initiator, predicate, onSuccess, onError);
                 return;
             }
@@ -100,7 +99,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                     "Verify the saved models."));
         } else {
             // Insert
-            items.put(item.getId(), item);
+            items.add(item);
             StorageItemChange.Record save = StorageItemChange.<T>builder()
                     .item(item)
                     .itemClass((Class<T>) item.getClass())
@@ -132,7 +131,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<DataStoreException> onError
     ) {
         List<T> result = new ArrayList<>();
-        for (Model item : items.values()) {
+        for (Model item : items) {
             if (itemClass.isAssignableFrom(item.getClass())
                     && (predicate == null || predicate.evaluate(item))) {
                 result.add((T) item);
@@ -160,9 +159,9 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange.Record> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        if (items.containsKey(item.getId())
-                && (predicate == null || predicate.evaluate(item))) {
-            Model savedItem = items.remove(item.getId());
+        final int index = indexOf(item);
+        if (index > -1 && (predicate == null || predicate.evaluate(item))) {
+            Model savedItem = items.remove(index);
             StorageItemChange.Record deletion = StorageItemChange.<T>builder()
                     .item((T) savedItem)
                     .itemClass((Class<T>) savedItem.getClass())
@@ -213,7 +212,19 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
      * Get the items that are in the storage.
      * @return Items in storage
      */
-    public Map<String, Model> items() {
+    public List<Model> items() {
         return items;
+    }
+
+    private int indexOf(Model item) {
+        int index = 0;
+        for (Model savedItem : items) {
+            if (savedItem.getClass().equals(item.getClass())
+                    && savedItem.getId().equals(item.getId())) {
+                return index;
+            }
+            index++;
+        }
+        return -1;
     }
 }
