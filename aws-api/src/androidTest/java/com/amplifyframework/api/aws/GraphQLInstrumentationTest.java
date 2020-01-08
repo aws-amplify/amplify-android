@@ -48,7 +48,6 @@ import static org.junit.Assert.assertEquals;
 public final class GraphQLInstrumentationTest {
     private static final String API_NAME = "eventsApi";
     private static SynchronousApi api;
-    private static final int ONE_SECOND_OF_MILLISECONDS = 1000;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
@@ -84,12 +83,7 @@ public final class GraphQLInstrumentationTest {
                 new GsonVariablesSerializer()
             )
         );
-
-        // Give the subscription time to complete the connection before running the mutation.
-        // This should happen within 1 second - if not, it's good that this fails so we can investigate.
-        try {
-            Thread.sleep(ONE_SECOND_OF_MILLISECONDS);
-        } catch (InterruptedException exception) { }
+        subscription.awaitSubscriptionStarted();
 
         // Create a comment
         createComment(eventId);
