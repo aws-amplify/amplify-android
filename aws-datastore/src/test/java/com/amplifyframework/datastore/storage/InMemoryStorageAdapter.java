@@ -139,7 +139,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final ResultListener<StorageItemChange.Record, DataStoreException> itemDeletionListener
     ) {
         for (Model savedItem : items) {
-            if (savedItem.getId().equals(item.getId())) {
+            if (savedItem.getId().equals(item.getId())
+                    && (predicate == null || predicate.evaluate(item))) {
                 items.remove(item);
                 StorageItemChange.Record deletion = StorageItemChange.<T>builder()
                         .item((T) savedItem)
