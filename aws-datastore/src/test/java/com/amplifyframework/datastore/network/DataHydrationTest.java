@@ -80,7 +80,10 @@ public final class DataHydrationTest {
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the DataHydration applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = TestObserver.create();
-        inMemoryStorageAdapter.observe()
+        Observable.<StorageItemChange.Record>create(
+            emitter ->
+                inMemoryStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
+            )
             .map(record -> record.toStorageItemChange(storageRecordDeserializer))
             .subscribe(adapterObserver);
 
@@ -90,10 +93,10 @@ public final class DataHydrationTest {
             .mockSuccessResponse(BlogOwner.class, BLOGGER_ISLA, BLOGGER_JAMESON);
 
         // Act: Call hydrate, and await its completion - assert it completed without error
-        TestObserver<ModelWithMetadata<? extends Model>> hydratorObserver = TestObserver.create();
-        dataHydration.hydrate().subscribe(hydratorObserver);
-        assertTrue(hydratorObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        hydratorObserver.assertNoErrors();
+        TestObserver<ModelWithMetadata<? extends Model>> hydrationObserver = TestObserver.create();
+        dataHydration.hydrate().subscribe(hydrationObserver);
+        assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        hydrationObserver.assertNoErrors();
 
         // Since hydrate() completed, the storage adapter observer should see some values.
         // There should be a total of six changes on storage adapter
@@ -137,7 +140,7 @@ public final class DataHydrationTest {
         );
 
         adapterObserver.dispose();
-        hydratorObserver.dispose();
+        hydrationObserver.dispose();
     }
 
     static final class SortByModelId {

@@ -16,6 +16,7 @@
 package com.amplifyframework.util;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.annotations.ModelField;
 
@@ -57,5 +58,27 @@ public final class FieldFinder {
         }
         Collections.sort(fields, (o1, o2) -> o1.getName().compareTo(o2.getName()));
         return Immutable.of(fields);
+    }
+
+    /**
+     * Extract the value of a field in an Object by field name.
+     * @param object Object to obtain field value from
+     * @param fieldName Name of the field being examined
+     * @return Value of the field if the field exists
+     * @throws NoSuchFieldException if object does not contain
+     *         a field that matches fieldName
+     */
+    @Nullable
+    public static Object extractFieldValue(@NonNull Object object,
+                                       @NonNull String fieldName) throws NoSuchFieldException {
+        try {
+            Field objectField = object.getClass().getDeclaredField(fieldName);
+            objectField.setAccessible(true);
+            return objectField.get(object);
+        } catch (NoSuchFieldException noSuchFieldException) {
+            throw noSuchFieldException;
+        } catch (Exception exception) {
+            return null;
+        }
     }
 }

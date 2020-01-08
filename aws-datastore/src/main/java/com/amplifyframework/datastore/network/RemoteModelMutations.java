@@ -24,7 +24,6 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -96,6 +95,7 @@ final class RemoteModelMutations {
 
         /**
          * A request to begin a subscription to mutations for a given type of model.
+         *
          * @param <T> Type of model for which to subscribe to mutations
          */
         static final class Request<T extends Model> {
@@ -109,7 +109,8 @@ final class RemoteModelMutations {
                 return this;
             }
 
-            @SuppressWarnings("unchecked") // TODO: can this be improved?
+            @SuppressWarnings("unchecked")
+                // TODO: can this be improved?
             Request<T> modelClass(Class<? extends Model> modelClass) {
                 this.modelClass = (Class<T>) modelClass;
                 return this;
@@ -125,20 +126,30 @@ final class RemoteModelMutations {
                 return this;
             }
 
+            @SuppressWarnings("checkstyle:WhitespaceAround")
+            @SuppressLint("SyntheticAccessor")
             Subscription begin() throws DataStoreException {
-                StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
-                    SubscriptionFunnel.instance(commonEmitter, modelClass, subscriptionType);
+                final Consumer<String> onStarted = ignored -> {};
+
+                final Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNext =
+                    itemConsumer(commonEmitter, modelClass, subscriptionType);
+
+                final Consumer<DataStoreException> onFailure = commonEmitter::onError;
+
+                final Action onComplete = () -> LOG.info(String.format(
+                    "Subscription to %s:%s is completed.", modelClass.getSimpleName(), subscriptionType
+                ));
 
                 final Cancelable cancelable;
                 switch (subscriptionType) {
                     case ON_UPDATE:
-                        cancelable = appSyncEndpoint.onUpdate(modelClass, listener);
+                        cancelable = appSyncEndpoint.onUpdate(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     case ON_DELETE:
-                        cancelable = appSyncEndpoint.onDelete(modelClass, listener);
+                        cancelable = appSyncEndpoint.onDelete(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     case ON_CREATE:
-                        cancelable = appSyncEndpoint.onCreate(modelClass, listener);
+                        cancelable = appSyncEndpoint.onCreate(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     default:
                         throw new DataStoreException(
@@ -148,18 +159,6 @@ final class RemoteModelMutations {
                 }
                 return new Subscription(cancelable);
             }
-        }
-
-        /**
-         * "Funnels" subscription events for a specific type, onto an emitter that is
-         * shared by all types of events, and for all subscription types.
-         * A listener to the {@link AppSyncEndpoint},
-         * which responds to new data items by posting them onto an Rx {@link Emitter}. The intention
-         * is for a single {@link Emitter} to be shared among several different implementations of this
-         * listener.
-         */
-        static final class SubscriptionFunnel {
-            @SuppressWarnings("checkstyle:all") SubscriptionFunnel() {}
 
             private static Mutation.Type fromSubscriptionType(SubscriptionType subscriptionType) {
                 switch (subscriptionType) {
@@ -174,13 +173,11 @@ final class RemoteModelMutations {
                 }
             }
 
-            @SuppressLint("SyntheticAccessor")
-            static <T extends Model> StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> instance(
-                    Emitter<Mutation<? extends Model>> commonEmitter,
-                    Class<T> modelClazz,
-                    SubscriptionType subscriptionType) {
-
-                final Consumer<GraphQLResponse<ModelWithMetadata<T>>> itemConsumer = response -> {
+            private static <T extends Model> Consumer<GraphQLResponse<ModelWithMetadata<T>>> itemConsumer(
+                Emitter<Mutation<? extends Model>> commonEmitter,
+                Class<T> modelClazz,
+                SubscriptionType subscriptionType) {
+                return response -> {
                     if (response.hasErrors()) {
                         commonEmitter.onError(new DataStoreException(
                             String.format(
@@ -205,16 +202,6 @@ final class RemoteModelMutations {
                             .build());
                     }
                 };
-
-                //noinspection CodeBlock2Expr
-                final Action completionAction = () -> {
-                    LOG.info(String.format(
-                        "Subscription to %s:%s is completed.",
-                        modelClazz.getSimpleName(), subscriptionType
-                    ));
-                };
-
-                return StreamListener.instance(itemConsumer, commonEmitter::onError, completionAction);
             }
         }
     }

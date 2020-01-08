@@ -20,14 +20,14 @@ import androidx.core.util.ObjectsCompat;
 /**
  * Represents a begins with condition with a target value for comparison.
  */
-public final class BeginsWithQueryOperator extends QueryOperator {
-    private Object value;
+public final class BeginsWithQueryOperator extends QueryOperator<String> {
+    private String value;
 
     /**
      * Constructs a begins with condition.
      * @param value the value to be used in the comparison
      */
-    public BeginsWithQueryOperator(Object value) {
+    BeginsWithQueryOperator(String value) {
         super(Type.BEGINS_WITH);
         this.value = value;
     }
@@ -38,6 +38,17 @@ public final class BeginsWithQueryOperator extends QueryOperator {
      */
     public Object value() {
         return value;
+    }
+
+    /**
+     * Returns true if the the provided field value begins
+     * with the value associated with this operator.
+     * @param field the field value to operate on
+     * @return evaluated result of the operator
+     */
+    @Override
+    public boolean evaluate(String field) {
+        return field.indexOf(value) == 0;
     }
 
     @Override

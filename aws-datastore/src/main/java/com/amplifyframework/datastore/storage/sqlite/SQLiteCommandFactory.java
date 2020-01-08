@@ -33,7 +33,6 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.CollectionUtils;
 import com.amplifyframework.util.Immutable;
-import com.amplifyframework.util.StringUtils;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -68,6 +67,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
@@ -95,6 +95,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
@@ -133,6 +134,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * This method should be invoked from a worker thread and not from the main thread
      * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @NonNull
     @WorkerThread
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
@@ -235,6 +237,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * This method should be invoked from a worker thread and not from the main thread
      * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @NonNull
     @WorkerThread
     @Override
     public SqlCommand insertFor(@NonNull ModelSchema modelSchema) {
@@ -279,6 +282,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * This method should be invoked from a worker thread and not from the main thread
      * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @NonNull
     @WorkerThread
     @Override
     public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
@@ -331,20 +335,31 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * {@inheritDoc}.
      */
+    @NonNull
     @Override
     public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
-                                                  @NonNull T item) {
+                                                  @NonNull T item,
+                                                  @NonNull QueryPredicate predicate) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder
-                .append("DELETE FROM ")
+        final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
+        stringBuilder.append("DELETE FROM")
+                .append(SqlKeyword.DELIMITER)
                 .append(table.getName())
-                .append(" WHERE ")
-                .append(PrimaryKey.fieldName())
-                .append(" = ")
-                .append(StringUtils.doubleQuote(item.getId()))
+                .append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.WHERE)
+                .append(SqlKeyword.DELIMITER)
+                .append(sqlPredicate)
                 .append(";");
-        return new SqlCommand(table.getName(), stringBuilder.toString());
+
+        final String preparedDeleteStatement = stringBuilder.toString();
+        final SQLiteStatement compiledDeleteStatement =
+                databaseConnectionHandle.compileStatement(preparedDeleteStatement);
+        return new SqlCommand(table.getName(),
+                preparedDeleteStatement,
+                compiledDeleteStatement,
+                sqlPredicate.getSelectionArgs()
+        );
     }
 
     // Utility method to parse columns in CREATE TABLE

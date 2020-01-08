@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.network;
 import android.os.Build;
 
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
@@ -78,13 +77,16 @@ public class SyncEngineTest {
         doAnswer(invocation -> {
             apiInvoked.countDown();
             return null;
-        }).when(endpoint).create(any(), any());
+        }).when(endpoint).create(any(), any(), any());
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         LatchedConsumer<StorageItemChange.Record> saveConsumer = LatchedConsumer.instance(OPERATIONS_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record, DataStoreException> listener =
-            ResultListener.instance(saveConsumer, EmptyConsumer.of(DataStoreException.class));
-        localStorageAdapter.save(susan, StorageItemChange.Initiator.DATA_STORE_API, listener);
+        localStorageAdapter.save(
+            susan,
+            StorageItemChange.Initiator.DATA_STORE_API,
+            saveConsumer,
+            EmptyConsumer.of(DataStoreException.class)
+        );
         saveConsumer.awaitValue();
 
         // Wait for the mock network callback to occur on the IO scheduler ...

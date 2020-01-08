@@ -19,7 +19,7 @@ import android.content.Context;
 import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
@@ -95,11 +95,10 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Initialize StorageAdapter with models
         LatchedConsumer<List<ModelSchema>> firstInitializationConsumer =
                 LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<List<ModelSchema>, DataStoreException> firstResultListener =
-                ResultListener.instance(firstInitializationConsumer, EmptyConsumer.of(DataStoreException.class));
+        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
 
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
-        sqliteStorageAdapter.initialize(context, firstResultListener);
+        sqliteStorageAdapter.initialize(context, firstInitializationConsumer, errorConsumer);
 
         // Assert if initialize succeeds.
         assertFalse(CollectionUtils.isNullOrEmpty(firstInitializationConsumer.awaitValue()));
@@ -125,9 +124,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         // Now, initialize storage adapter with the new models
         LatchedConsumer<List<ModelSchema>> secondInitializationConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<List<ModelSchema>, DataStoreException> secondResultListener =
-            ResultListener.instance(secondInitializationConsumer, EmptyConsumer.of(DataStoreException.class));
-        sqliteStorageAdapter.initialize(context, secondResultListener);
+        sqliteStorageAdapter.initialize(context, secondInitializationConsumer, errorConsumer);
         assertFalse(CollectionUtils.isNullOrEmpty(secondInitializationConsumer.awaitValue()));
 
         // Check if the new version is stored in local storage.

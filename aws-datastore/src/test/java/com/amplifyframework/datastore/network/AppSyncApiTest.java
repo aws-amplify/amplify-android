@@ -19,7 +19,7 @@ import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.EmptyConsumer;
@@ -77,15 +77,13 @@ public final class AppSyncApiTest {
         // Request a sync. Await its completion using a test latch.
         final LatchedConsumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> syncConsumer =
             LatchedConsumer.instance();
-        final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>, DataStoreException> listener =
-            ResultListener.instance(syncConsumer, EmptyConsumer.of(DataStoreException.class));
-        endpoint.sync(BlogOwner.class, null, listener);
+        endpoint.sync(BlogOwner.class, null, syncConsumer, EmptyConsumer.of(DataStoreException.class));
         syncConsumer.awaitValue();
 
         // Now, capture the request argument on API, so we can see what was passed.
         // Recall that we pass a raw doc to API.
         ArgumentCaptor<GraphQLRequest<String>> requestCaptor = ArgumentCaptor.forClass(GraphQLRequest.class);
-        verify(api).query(requestCaptor.capture(), any(ResultListener.class));
+        verify(api).query(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
         GraphQLRequest<String> capturedRequest = requestCaptor.getValue();
 
         assertEquals(String.class, capturedRequest.getModelClass());
@@ -107,14 +105,15 @@ public final class AppSyncApiTest {
      */
     private void mockApiResponse(GraphQLResponse<Iterable<String>> arrangedApiResponse) {
         doAnswer(invocation -> {
-            final int argPositionOfResultListener = 1; // second and final arg, starting from arg 0
-            ResultListener<GraphQLResponse<Iterable<String>>, DataStoreException> listener =
-                invocation.getArgument(argPositionOfResultListener);
-            listener.onResult(arrangedApiResponse);
+            final int argPositionOfResponseConsumer = 1; // second/middle arg, starting from arg 0
+            Consumer<GraphQLResponse<Iterable<String>>> onResponse =
+                invocation.getArgument(argPositionOfResponseConsumer);
+            onResponse.accept(arrangedApiResponse);
             return mock(GraphQLOperation.class);
         }).when(api).query(
             any(GraphQLRequest.class),
-            any(ResultListener.class)
+            any(Consumer.class),
+            any(Consumer.class)
         );
     }
 }

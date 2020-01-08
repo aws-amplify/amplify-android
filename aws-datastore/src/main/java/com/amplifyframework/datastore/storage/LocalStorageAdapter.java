@@ -19,7 +19,9 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -28,8 +30,6 @@ import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Iterator;
 import java.util.List;
-
-import io.reactivex.Observable;
 
 /**
  * A LocalStorageAdapter provides a simple set of interactions to
@@ -56,87 +56,129 @@ public interface LocalStorageAdapter {
      * any model type that has not been initialized by this call.
      *
      * @param context An Android Context
-     * @param listener A listener to be invoked upon completion of the initialization
+     * @param onSuccess A callback to be invoked upon completion of the initialization
+     * @param onError A callback to be invoked upon initialization error
      */
     void initialize(
             @NonNull Context context,
-            @NonNull ResultListener<List<ModelSchema>, DataStoreException> listener
+            @NonNull Consumer<List<ModelSchema>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     );
 
     /**
-     * Save an item into local storage. The {@link ResultListener} will be invoked when the
-     * save operation is completed, to notify the caller of success or failure.
+     * Save an item into local storage. A {@link Consumer} will be invoked when the
+     * save operation is completed, to notify the caller of success or error.
      * @param item the item to save into the repository
      * @param initiator An identification of the actor who initiated this save
-     * @param itemSaveListener A listener that will be invoked when the save terminates.
+     * @param onSuccess A callback that will be invoked if the save succeeds
+     * @param onError A callback that will be invoked if the save fails with an error
      * @param <T> The type of the item being stored
      */
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     );
 
     /**
      * Save an item into local storage only if the data being overwritten meets the
-     * specific conditions. The {@link ResultListener} will be invoked when the
+     * specific conditions. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or failure.
      * @param item the item to save into the repository
      * @param initiator An identification of the actor who initiated this save
      * @param predicate Predicate condition for conditional write
-     * @param itemSaveListener A listener that will be invoked when the save terminates.
+     * @param onSuccess A callback that will be invoked if the save succeeds
+     * @param onError A callback that will be invoked if the save fails with an error
      * @param <T> The type of the item being stored
      */
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     );
 
     /**
      * Query the storage for items of a given type.
      * @param itemClass Items that have this class will be solicited
-     * @param queryResultsListener A listener that will be notified when the query terminates
+     * @param onSuccess A callback that will be invoked if the query succeeds
+     * @param onError A callback that will be invoked if the query fails with an error
      * @param <T> Type type of the items that are being queried
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+            @NonNull Consumer<Iterator<T>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     );
 
     /**
      * Query the storage for items of a given type with specific conditions.
      * @param itemClass Items that have this class will be solicited
      * @param predicate Predicate condition to apply to query
-     * @param queryResultsListener A listener that will be notified when the query terminates
+     * @param onSuccess A callback that will be notified if the query succeeds
+     * @param onError A callback that will be notified if the query fails with an error
      * @param <T> Type type of the items that are being queried
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
+            @NonNull Consumer<Iterator<T>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     );
 
     /**
      * Deletes an item from storage.
      * @param item Item to delete
      * @param initiator An identification of the actor who initiated this deletion
-     * @param itemDeletionListener Listener that will be callback-ed when deletion terminates
+     * @param onSuccess A callback that will be invoked when deletion succeeds
+     * @param onError A callback that will be invoked when deletion fails with an error
      * @param <T> The type of item being deleted
      */
     <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemDeletionListener);
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    /**
+     * Deletes an item from storage only if the data being deleted meets the
+     * specific conditions. A {@link Consumer} will be invoked when the
+     * save operation is completed, to notify the caller of success or failure.
+     * @param item Item to delete
+     * @param initiator An identification of the actor who initiated this deletion
+     * @param predicate Predicate condition for conditional delete
+     * @param onSuccess A callback that will be invoked when deletion succeeds
+     * @param onError A callback that will be invoked when deletion fails with an error
+     * @param <T> The type of item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @Nullable QueryPredicate predicate,
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
 
     /**
      * Observe all changes to that occur to any/all objects in the storage.
-     * @return An observable which emits an {@link StorageItemChange} notification every time
-     *         any object managed by the storage adapter is changed in any way.
+     * @param onItemChange
+     *        Receives a {@link StorageItemChange} notification every time
+     *        any object managed by the storage adapter is changed in any way.
+     * @param onObservationError
+     *        Invoked if the observation terminates do an unrecoverable error
+     * @param onObservationComplete
+     *        Invoked it the observation terminates gracefully, perhaps due to cancellation
+     * @return A Cancelable with which this observation may be terminated
      */
     @NonNull
-    Observable<StorageItemChange.Record> observe();
+    Cancelable observe(
+            @NonNull Consumer<StorageItemChange.Record> onItemChange,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete
+    );
 
     /**
      * Terminate use of the local storage.

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import android.os.SystemClock;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -36,8 +38,10 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -48,8 +52,6 @@ public final class CodeGenerationInstrumentationTest {
     private static final String PROJECT_API_NAME = "projectApi";
     private static final String BLOG_API_NAME = "blogApi";
     private static final String NOTES_WITH_AUTH_API_NAME = "notesWithAuthApi";
-
-    private static final int ONE_SECOND_OF_MILLISECONDS = 1000;
 
     private static SynchronousApi api;
 
@@ -122,12 +124,7 @@ public final class CodeGenerationInstrumentationTest {
     public void subscribeReceivesMutationEvent() {
         SynchronousApi.Subscription<Person> subscription =
             api.onCreate(PERSON_API_NAME, Person.class);
-
-        // Give the subscription time to complete the connection before running the mutation.
-        // This should happen within 1 second - if not, it's good that this fails so we can investigate.
-        try {
-            Thread.sleep(ONE_SECOND_OF_MILLISECONDS);
-        } catch (InterruptedException exception) { }
+        subscription.awaitSubscriptionStarted();
 
         Person johnDoe = Person.builder()
             .firstName("John")
@@ -152,16 +149,23 @@ public final class CodeGenerationInstrumentationTest {
      */
     @Test
     public void subscribeFailsWithoutProperAuth() {
-        Long startTime = System.currentTimeMillis();
+        // Start timing the subscription call.
+        long startTime = SystemClock.elapsedRealtime();
 
+        // Act: try to create a subscription
         SynchronousApi.Subscription<PrivateNote> subscription =
-                api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class);
+            api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class);
 
+        // Assert: it failed with a connection_error
         Throwable exception = subscription.awaitSubscriptionFailure();
         assertTrue(exception instanceof ApiException);
+        assertNotNull(exception.getMessage());
         assertTrue(exception.getMessage().contains("connection_error"));
+
         // A connection error should take less than a second to be reported
-        assertTrue(System.currentTimeMillis() - startTime < ONE_SECOND_OF_MILLISECONDS);
+        long acceptableDurationMs = TimeUnit.SECONDS.toMillis(1);
+        long actualApiCallDurationMs = SystemClock.elapsedRealtime() - startTime;
+        assertTrue(actualApiCallDurationMs < acceptableDurationMs);
     }
 
     /**
@@ -202,6 +206,7 @@ public final class CodeGenerationInstrumentationTest {
         // Subscribe to creation events for any Projectfields
         SynchronousApi.Subscription<Projectfields> subscription =
             api.onCreate(PROJECT_API_NAME, Projectfields.class);
+        subscription.awaitSubscriptionStarted();
 
         // Create a team
         Team team = Team.builder()

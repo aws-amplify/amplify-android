@@ -21,9 +21,9 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -35,6 +35,7 @@ import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
+import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -50,10 +51,10 @@ import io.reactivex.schedulers.Schedulers;
  *
  * At the same time, the SyncEngine will drain this journal, and try to publish each
  * change out over the network via the
- * {@link ApiCategoryBehavior#mutate(String, Model, QueryPredicate, MutationType, ResultListener)} .
+ * {@link ApiCategoryBehavior#mutate(String, Model, QueryPredicate, MutationType, Consumer, Consumer)} .
  *
  * Meanwhile, the SyncEngine also subscribes to remote changes via the
- * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, StreamListener)} operations.
+ * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, Consumer, Consumer, Action)} operations.
  * Remote changes are written into the local storage without going into the journal.
  */
 // The generics get intense, so we use MODEL and SIC instead of just M and S.
@@ -118,16 +119,17 @@ public final class SyncEngine {
     private Single<Mutation<? extends Model>> applyMutationToLocalStorage(Mutation<? extends Model> mutation) {
         final StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
         return Single.defer(() -> Single.create(emitter -> {
-            final ResultListener<StorageItemChange.Record, DataStoreException> storageResultListener =
-                ResultListener.instance(result -> emitter.onSuccess(mutation), emitter::onError);
+            final Consumer<StorageItemChange.Record> onSuccess =
+                result -> emitter.onSuccess(mutation);
+            final Consumer<DataStoreException> onError = emitter::onError;
 
             switch (mutation.type()) {
                 case UPDATE:
                 case CREATE:
-                    storageAdapter.save(mutation.model(), initiator, storageResultListener);
+                    storageAdapter.save(mutation.model(), initiator, onSuccess, onError);
                     break;
                 case DELETE:
-                    storageAdapter.delete(mutation.model(), initiator, storageResultListener);
+                    storageAdapter.delete(mutation.model(), initiator, onSuccess, onError);
                     break;
                 default:
                     throw new DataStoreException(
@@ -161,21 +163,23 @@ public final class SyncEngine {
      * by the sync engine, then place that change into the persistently-backed change journal.
      */
     private void startObservingStorageChanges() {
-        observationsToDispose.add(
-            storageAdapter.observe()
-                .map(record -> record.toStorageItemChange(storageItemChangeConverter))
-                .filter(possiblyCyclicChange -> {
-                    // Don't continue if the storage change was caused by the sync engine itself
-                    return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
-                })
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .flatMapSingle(storageItemChangeJournal::enqueue)
-                .subscribe(
-                    pendingChange -> LOG.info("Successfully enqueued " + pendingChange),
-                    error -> LOG.warn("Storage adapter subscription ended in error", error),
-                    () -> LOG.warn("Storage adapter subscription terminated with completion.")
-                )
+        observationsToDispose.add(Observable.<StorageItemChange.Record>create(emitter ->
+            storageAdapter.observe(
+                emitter::onNext, emitter::onError, emitter::onComplete)
+            )
+            .map(record -> record.toStorageItemChange(storageItemChangeConverter))
+            .filter(possiblyCyclicChange -> {
+                // Don't continue if the storage change was caused by the sync engine itself
+                return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
+            })
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .flatMapSingle(storageItemChangeJournal::enqueue)
+            .subscribe(
+                pendingChange -> LOG.info("Successfully enqueued " + pendingChange),
+                error -> LOG.warn("Storage adapter subscription ended in error", error),
+                () -> LOG.warn("Storage adapter subscription terminated with completion.")
+            )
         );
     }
 
@@ -192,15 +196,17 @@ public final class SyncEngine {
             final SIC storageItemChange) {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            appSyncEndpoint.create(storageItemChange.item(), ResultListener.instance(
+            appSyncEndpoint.create(
+                storageItemChange.item(),
                 result -> {
                     if (result.hasErrors() || !result.hasData()) {
                         subscriber.onError(new RuntimeException("Failed to publish item to network."));
+                    } else {
+                        subscriber.onSuccess(storageItemChange);
                     }
-                    subscriber.onSuccess(storageItemChange);
                 },
                 subscriber::onError
-            ));
+            );
         }));
     }
 

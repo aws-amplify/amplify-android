@@ -17,7 +17,9 @@ package com.amplifyframework.datastore;
 
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -26,6 +28,7 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.EmptyAction;
 import com.amplifyframework.testutils.EmptyConsumer;
 import com.amplifyframework.testutils.LatchedConsumer;
 
@@ -39,9 +42,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import io.reactivex.Observable;
-import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 
@@ -66,19 +66,18 @@ public final class StorageItemChangeRecordIntegrationTest {
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         ApplicationProvider.getApplicationContext().deleteDatabase(DATABASE_NAME);
 
-        LatchedConsumer<List<ModelSchema>> resultConsumer = LatchedConsumer.instance();
-        ResultListener<List<ModelSchema>, DataStoreException> resultListener =
-            ResultListener.instance(resultConsumer, EmptyConsumer.of(DataStoreException.class));
+        LatchedConsumer<List<ModelSchema>> onSuccess = LatchedConsumer.instance();
+        Consumer<DataStoreException> onError = EmptyConsumer.of(DataStoreException.class);
         ModelProvider modelProvider = ModelProviderFactory.createProviderOf(BlogOwner.class);
         this.localStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
-        localStorageAdapter.initialize(ApplicationProvider.getApplicationContext(), resultListener);
+        localStorageAdapter.initialize(ApplicationProvider.getApplicationContext(), onSuccess, onError);
 
         // Evaluate the returned set of ModelSchema. Make sure that there is one
         // for the StorageItemChange.Record system class, and one for
         // the PersistentModelVersion.
 
         final List<String> actualNames = new ArrayList<>();
-        for (ModelSchema modelSchema : resultConsumer.awaitValue()) {
+        for (ModelSchema modelSchema : onSuccess.awaitValue()) {
             actualNames.add(modelSchema.getName());
         }
         Collections.sort(actualNames);
@@ -139,17 +138,18 @@ public final class StorageItemChangeRecordIntegrationTest {
     }
 
     /**
-     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, ResultListener)}
+     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)}
      * is called for a {@link StorageItemChange.Record}, we should see this event on the
-     * {@link LocalStorageAdapter#observe()} method's {@link Observable}.
+     * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)} method's `onNextItem` callback.
      * @throws DataStoreException from storage item change
      */
     @Test
     public void saveIsObservedForChangeRecord() throws DataStoreException {
-
         // Start watching observe() ...
-        TestObserver<StorageItemChange.Record> observer = TestObserver.create();
-        localStorageAdapter.observe().subscribe(observer);
+        LatchedConsumer<StorageItemChange.Record> consumerOfObservation = LatchedConsumer.instance();
+        Cancelable cancelableForObservation = localStorageAdapter.observe(
+            consumerOfObservation, EmptyConsumer.of(DataStoreException.class), EmptyAction.instance()
+        );
 
         // Save something ..
         StorageItemChange.Record record = StorageItemChange.<BlogOwner>builder()
@@ -160,34 +160,33 @@ public final class StorageItemChangeRecordIntegrationTest {
             .itemClass(BlogOwner.class)
             .type(StorageItemChange.Type.SAVE)
             .build()
-            .toRecord(new GsonStorageItemChangeConverter());
+            .toRecord(storageItemChangeConverter);
 
         // Wait for it to save...
-        LatchedConsumer<StorageItemChange.Record> consumer = LatchedConsumer.instance();
-        ResultListener<StorageItemChange.Record, DataStoreException> listener =
-            ResultListener.instance(consumer, EmptyConsumer.of(DataStoreException.class));
-        localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE, listener);
-        consumer.awaitValue();
+        LatchedConsumer<StorageItemChange.Record> saveResultConsumer = LatchedConsumer.instance();
+        localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
+            saveResultConsumer, EmptyConsumer.of(DataStoreException.class));
+        saveResultConsumer.awaitValue();
 
         // Assert that our observer got the item;
         // The record we get back has the saved record inside of it, as the contained item field.
-        observer.awaitCount(1);
         assertEquals(
             record,
-            observer.values().get(0)
-                .toStorageItemChange(new GsonStorageItemChangeConverter())
+            consumerOfObservation.awaitValue()
+                .toStorageItemChange(storageItemChangeConverter)
                 .item()
         );
+        cancelableForObservation.cancel();
     }
 
     /**
-     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, ResultListener)}
+     * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)}
      * is called for a {@link StorageItemChange.Record}, we should expect to observe a
-     * record /containing/ that record within it, via the {@link Observable} returned from
-     * {@link LocalStorageAdapter#observe()}.
+     * record /containing/ that record within it, in a callback to the first consumer passed into
+     * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)}.
      *
      * Similarly, when we update the record that we had just saved, we should see an update
-     * record on the observable. The type will be StorageItemChange.Record and inside of it
+     * record on the subscription consumer. The type will be StorageItemChange.Record and inside of it
      * will be a StorageItemChange.Record which itself contains a BlogOwner.
      * @throws DataStoreException from storage item change
      */
@@ -195,8 +194,10 @@ public final class StorageItemChangeRecordIntegrationTest {
     @Test
     public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
-        TestObserver<StorageItemChange.Record> recordObserver = TestObserver.create();
-        localStorageAdapter.observe().subscribe(recordObserver);
+        LatchedConsumer<StorageItemChange.Record> observationConsumer = LatchedConsumer.instance();
+        localStorageAdapter.observe(
+            observationConsumer, EmptyConsumer.of(DataStoreException.class), EmptyAction.instance()
+        );
 
         // Create a record for Joe, and a change to save him into storage
         BlogOwner joeLastNameMispelled = BlogOwner.builder()
@@ -232,15 +233,15 @@ public final class StorageItemChangeRecordIntegrationTest {
         save(saveJoeCorrectLastNameRecord);
 
         // Our observer got the records to save Joe with wrong age, and also to save joe with right age
-        recordObserver.awaitCount(2);
-        recordObserver.assertNoErrors();
-        recordObserver.assertValues(saveJoeWrongLastNameRecord, saveJoeCorrectLastNameRecord);
+        List<StorageItemChange.Record> records = observationConsumer.awaitValues(2);
+        assertEquals(saveJoeWrongLastNameRecord, records.get(0));
+        assertEquals(saveJoeCorrectLastNameRecord, records.get(1));
     }
 
     /**
-     * When an {@link StorageItemChange.Record} is deleted from the DataStore, the
-     * {@link Observable} returned by {@link LocalStorageAdapter#observe()} shall
-     * emit that same change record.
+     * When an {@link StorageItemChange.Record} is deleted from the DataStore,
+     * the first argument that was provided to
+     * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)} will be called.
      * @throws DataStoreException from storage item change
      */
     @Ignore("delete() is not currently implemented! Validate this test when it is.")
@@ -248,8 +249,10 @@ public final class StorageItemChangeRecordIntegrationTest {
     public void deletionIsObservedForChangeRecord() throws DataStoreException {
         // What we are really observing are items of type StorageItemChange.Record that contain
         // StorageItemChange.Record of BlogOwner
-        TestObserver<StorageItemChange.Record> saveObserver = TestObserver.create();
-        localStorageAdapter.observe().subscribe(saveObserver);
+        LatchedConsumer<StorageItemChange.Record> consumerForSaveObservation = LatchedConsumer.instance();
+        Cancelable cancelableForSaveObservation = localStorageAdapter.observe(
+            consumerForSaveObservation, EmptyConsumer.of(DataStoreException.class), EmptyAction.instance()
+        );
 
         BlogOwner beatrice = BlogOwner.builder()
             .name("Beatrice Stone")
@@ -266,26 +269,24 @@ public final class StorageItemChangeRecordIntegrationTest {
         save(saveBeatriceRecord);
 
         // Assert that we do observe the record being saved ...
-        saveObserver.awaitCount(1);
-        saveObserver.assertNoErrors();
         assertEquals(
             saveBeatriceRecord,
-            saveObserver.values().get(0)
+            consumerForSaveObservation.awaitValue()
                 .toStorageItemChange(storageItemChangeConverter)
                 .item()
         );
-        saveObserver.dispose();
+        cancelableForSaveObservation.cancel();
 
-        TestObserver<StorageItemChange.Record> deletionObserver = TestObserver.create();
-        localStorageAdapter.observe().subscribe(deletionObserver);
+        LatchedConsumer<StorageItemChange.Record> consumerForDeletionObservation = LatchedConsumer.instance();
+        Cancelable cancelableForDeleteObservation = localStorageAdapter.observe(
+            consumerForDeletionObservation, EmptyConsumer.of(DataStoreException.class), EmptyAction.instance()
+        );
 
         // The mutation record doesn't change, but we want to delete it, itself.
         delete(saveBeatriceRecord);
 
-        deletionObserver.awaitCount(1);
-        deletionObserver.assertNoErrors();
-        deletionObserver.assertValue(saveBeatriceRecord);
-        deletionObserver.dispose();
+        assertEquals(saveBeatriceRecord, consumerForDeletionObservation.awaitValue());
+        cancelableForDeleteObservation.cancel();
     }
 
     private void save(StorageItemChange.Record storageItemChangeRecord) throws DataStoreException {
@@ -293,11 +294,13 @@ public final class StorageItemChangeRecordIntegrationTest {
         // The fact that it is getting saved means it gets wrapped into another
         // StorageItemChange.Record, which itself contains the original StorageItemChange.Record.
         LatchedConsumer<StorageItemChange.Record> consumerOfSaveResult = LatchedConsumer.instance();
-        ResultListener<StorageItemChange.Record, DataStoreException> saveResultListener =
-            ResultListener.instance(consumerOfSaveResult, EmptyConsumer.of(DataStoreException.class));
 
-        localStorageAdapter.save(storageItemChangeRecord,
-            StorageItemChange.Initiator.SYNC_ENGINE, saveResultListener);
+        localStorageAdapter.save(
+            storageItemChangeRecord,
+            StorageItemChange.Initiator.SYNC_ENGINE,
+            consumerOfSaveResult,
+            EmptyConsumer.of(DataStoreException.class)
+        );
 
         final StorageItemChange<?> convertedResult =
             consumerOfSaveResult.awaitValue().toStorageItemChange(storageItemChangeConverter);
@@ -312,11 +315,13 @@ public final class StorageItemChangeRecordIntegrationTest {
         // Okay, now we're going to do a query, then await & stash the query results.
         LatchedConsumer<Iterator<StorageItemChange.Record>> consumerOfQueryResults =
             LatchedConsumer.instance();
-        ResultListener<Iterator<StorageItemChange.Record>, DataStoreException> queryResultsListener =
-            ResultListener.instance(consumerOfQueryResults, EmptyConsumer.of(DataStoreException.class));
 
         // TODO: if/when there is a form of query() which shall accept QueryPredicate, use that instead.
-        localStorageAdapter.query(StorageItemChange.Record.class, queryResultsListener);
+        localStorageAdapter.query(
+            StorageItemChange.Record.class,
+            consumerOfQueryResults,
+            EmptyConsumer.of(DataStoreException.class)
+        );
 
         final Iterator<StorageItemChange.Record> queryResultsIterator = consumerOfQueryResults.awaitValue();
         final List<StorageItemChange.Record> storageItemChangeRecords = new ArrayList<>();
@@ -330,10 +335,13 @@ public final class StorageItemChangeRecordIntegrationTest {
         // The thing we are deleting is a StorageItemChange.Record, which is wrapping
         // a StorageItemChange.Record, which is wrapping an item.
         LatchedConsumer<StorageItemChange.Record> consumerOfRecordDeletionResult = LatchedConsumer.instance();
-        ResultListener<StorageItemChange.Record, DataStoreException> recordDeletionListener =
-            ResultListener.instance(consumerOfRecordDeletionResult, EmptyConsumer.of(DataStoreException.class));
 
-        localStorageAdapter.delete(record, StorageItemChange.Initiator.SYNC_ENGINE, recordDeletionListener);
+        localStorageAdapter.delete(
+            record,
+            StorageItemChange.Initiator.SYNC_ENGINE,
+            consumerOfRecordDeletionResult,
+            EmptyConsumer.of(DataStoreException.class)
+        );
 
         // Peel out the inner record out from the save result -
         // the record inside is the thing we tried to save,

@@ -19,8 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
@@ -35,35 +35,39 @@ public interface AppSyncEndpoint {
      * @param <T> The type of data in the response. Must extend Model.
      * @param modelClass The class of the Model we are querying on
      * @param lastSync The time you last synced - all changes since this time are retrieved.
-     * @param responseListener Invoked when response data/errors are available.
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure Invoked on failure to obtain response data
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    @SuppressWarnings("checkstyle:LineLength") // Long bounds for ResultListener
     @NonNull
     <T extends Model> Cancelable sync(
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync,
-            @NonNull ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> responseListener
+            @NonNull Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param model An instance of the Model with the values to mutate
-     * @param responseListener Invoked when response data/errors are available.
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure Invoked on failure to obtain response data
      * @param <T> The type of data in the response. Must extend Model.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
     @NonNull
     <T extends Model> Cancelable create(
             @NonNull T model,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param model An instance of the Model with the values to mutate
      * @param version The version of the model we have
-     * @param responseListener Invoked when response data/errors are available.
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure Invoked on failure to obtain response data
      * @param <T> The type of data in the response. Must extend Model.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
@@ -71,7 +75,8 @@ public interface AppSyncEndpoint {
     <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull Integer version,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**
@@ -79,7 +84,8 @@ public interface AppSyncEndpoint {
      * @param clazz The class of the object being deleted
      * @param objectId ID id of the object to delete
      * @param version The version of the model we have
-     * @param responseListener Invoked when response data/errors are available.
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure Invoked on failure to obtain response data
      * @param <T> The type of data in the response. Must extend Model.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
@@ -88,48 +94,79 @@ public interface AppSyncEndpoint {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
-            @NonNull ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> responseListener
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**
      * Get notified when a create event happens on a given class.
      * @param modelClass The class of the Model we are listening on
-     * @param subscriptionListener  A listener to receive notifications when new items are
-     *                              available via the subscription stream
+     * @param onSubscriptionStarted
+     *        Called when subscription over network has been established
+     * @param onNextResponse
+     *        A callback to receive notifications when new items are
+     *        available via the subscription stream
+     * @param onSubscriptionFailure
+     *        Called when the subscription terminates with a failure
+     * @param onSubscriptionCompleted
+     *        Called when the subscription terminates gracefully
      * @param <T> The type of data in the response. Must extend Model.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
     @NonNull
     <T extends Model> Cancelable onCreate(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener
+            @NonNull Consumer<String> onSubscriptionStarted,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
+            @NonNull Consumer<DataStoreException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionCompleted
     );
 
     /**
      * Get notified when an update event happens on a given class.
      * @param modelClass The class of the Model we are listening on
-     * @param subscriptionListener  A listener to receive notifications when new items are
-     *                              available via the subscription stream
+     * @param onSubscriptionStarted
+     *        Called when subscription over network has been established
+     * @param onNextResponse
+     *        A callback to receive notifications when new items are
+     *        available via the subscription stream
+     * @param onSubscriptionFailure
+     *        Called when the subscription terminates with a failure
+     * @param onSubscriptionCompleted
+     *        Called when the subscription terminates gracefully
      * @param <T> The type of data in the response. Must extend Model.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
     @NonNull
     <T extends Model> Cancelable onUpdate(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener
+            @NonNull Consumer<String> onSubscriptionStarted,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
+            @NonNull Consumer<DataStoreException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionCompleted
     );
 
     /**
      * Get notified when a delete event happens on a given class.
      * @param modelClass The class of the Model we are listening on
-     * @param subscriptionListener  A listener to receive notifications when new items are
-     *                              available via the subscription stream
+     * @param onSubscriptionStarted
+     *        Called when subscription over network has been established
+     * @param onNextResponse
+     *        A callback to receive notifications when new items are
+     *        available via the subscription stream
+     * @param onSubscriptionFailure
+     *        Called when the subscription terminates with a failure
+     * @param onSubscriptionCompleted
+     *        Called when the subscription terminates gracefully
      * @param <T> The type of data in the response. Must extend Model.
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
     @NonNull
     <T extends Model> Cancelable onDelete(
             @NonNull Class<T> modelClass,
-            @NonNull StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> subscriptionListener
+            @NonNull Consumer<String> onSubscriptionStarted,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
+            @NonNull Consumer<DataStoreException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionCompleted
     );
 }
