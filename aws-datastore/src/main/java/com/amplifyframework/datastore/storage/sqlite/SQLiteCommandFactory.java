@@ -67,6 +67,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public SqlCommand createTableFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
@@ -94,6 +95,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema) {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
@@ -132,6 +134,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * This method should be invoked from a worker thread and not from the main thread
      * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @NonNull
     @WorkerThread
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
@@ -234,6 +237,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * This method should be invoked from a worker thread and not from the main thread
      * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @NonNull
     @WorkerThread
     @Override
     public SqlCommand insertFor(@NonNull ModelSchema modelSchema) {
@@ -278,6 +282,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
      * This method should be invoked from a worker thread and not from the main thread
      * as this method calls {@link SQLiteDatabase#compileStatement(String)}.
      */
+    @NonNull
     @WorkerThread
     @Override
     public <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
@@ -330,6 +335,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * {@inheritDoc}.
      */
+    @NonNull
     @Override
     public <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
                                                   @NonNull T item,

@@ -70,7 +70,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 if (keyProvider == null) {
                     keyProvider = config::getApiKey;
                 }
-                return new AppSyncSigV4SignerInterceptor(keyProvider);
+                return new AppSyncSigV4SignerInterceptor(keyProvider, config.getEndpointType());
             case AWS_IAM:
                 // Initializes mobile client once and remembers the instance.
                 // This instance is reused by this factory.
@@ -78,7 +78,9 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 if (credentialsProvider == null) {
                     credentialsProvider = AWSMobileClient.getInstance();
                 }
-                return new AppSyncSigV4SignerInterceptor(credentialsProvider, config.getRegion());
+                return new AppSyncSigV4SignerInterceptor(credentialsProvider,
+                        config.getRegion(),
+                        config.getEndpointType());
             case AMAZON_COGNITO_USER_POOLS:
 
                 // Initializes cognito user pool once and remembers the token
@@ -87,7 +89,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 if (cognitoProvider == null) {
                     cognitoProvider = new DefaultCognitoUserPoolsAuthProvider();
                 }
-                return new AppSyncSigV4SignerInterceptor(cognitoProvider);
+                return new AppSyncSigV4SignerInterceptor(cognitoProvider, config.getEndpointType());
             case OPENID_CONNECT:
                 // This factory does not have a default implementation for
                 // OpenID Connect token provider. User-provided implementation
@@ -101,7 +103,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                         );
                     };
                 }
-                return new AppSyncSigV4SignerInterceptor(oidcProvider);
+                return new AppSyncSigV4SignerInterceptor(oidcProvider, config.getEndpointType());
             default:
                 throw new ApiException(
                         "Unsupported authorization mode.",

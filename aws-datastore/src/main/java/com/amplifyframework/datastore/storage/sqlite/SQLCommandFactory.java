@@ -30,12 +30,14 @@ import java.util.Set;
  * {@link ModelSchema} and the {@link com.amplifyframework.core.model.Model}.
  */
 interface SQLCommandFactory {
+
     /**
      * Generates the CREATE TABLE SQL command from the {@link ModelSchema}.
      * @param modelSchema the schema of a {@link com.amplifyframework.core.model.Model}
      *                    for which a CREATE TABLE SQL command needs to be generated.
      * @return the CREATE TABLE SQL command
      */
+    @NonNull
     SqlCommand createTableFor(@NonNull ModelSchema modelSchema);
 
     /**
@@ -44,6 +46,7 @@ interface SQLCommandFactory {
      *                    for which a CREATE INDEX SQL command needs to be generated.
      * @return the set of CREATE INDEX SQL commands
      */
+    @NonNull
     Set<SqlCommand> createIndexesFor(@NonNull ModelSchema modelSchema);
 
     /**
@@ -53,6 +56,7 @@ interface SQLCommandFactory {
      * @param modelSchema schema of the model
      * @return the QUERY SQL command
      */
+    @NonNull
     SqlCommand queryFor(@NonNull ModelSchema modelSchema,
                         @Nullable QueryPredicate predicate) throws DataStoreException;
 
@@ -63,6 +67,7 @@ interface SQLCommandFactory {
      * @param modelSchema schema of the model
      * @return the SQL command that encapsulates the INSERT INTO command
      */
+    @NonNull
     SqlCommand insertFor(@NonNull ModelSchema modelSchema);
 
     /**
@@ -74,6 +79,7 @@ interface SQLCommandFactory {
      * @param <T> type of the model
      * @return the SQL command that encapsulates the UPDATE command
      */
+    @NonNull
     <T extends Model> SqlCommand updateFor(@NonNull ModelSchema modelSchema,
                                            @NonNull T item,
                                            @NonNull QueryPredicate predicate) throws DataStoreException;
@@ -86,6 +92,7 @@ interface SQLCommandFactory {
      * @param <T> type of the model
      * @return the SQL command that encapsulates the DELETE command
      */
+    @NonNull
     <T extends Model> SqlCommand deleteFor(@NonNull ModelSchema modelSchema,
                                            @NonNull T item,
                                            @NonNull QueryPredicate predicate) throws DataStoreException;

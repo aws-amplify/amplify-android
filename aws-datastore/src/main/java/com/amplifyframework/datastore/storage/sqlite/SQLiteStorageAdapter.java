@@ -25,9 +25,9 @@ import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
@@ -129,8 +129,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * Construct the SQLiteStorageAdapter object.
      * @param modelProvider Provides the models that will be usable by the DataStore
      */
-    @SuppressWarnings("WeakerAccess") // Must be public so user can access from their app package(s)
-    public SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
+    private SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
         this.threadPool = Executors.newCachedThreadPool();
@@ -157,8 +156,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public synchronized void initialize(
             @NonNull Context context,
-            @NonNull final ResultListener<List<ModelSchema>, DataStoreException> listener
-    ) {
+            @NonNull Consumer<List<ModelSchema>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
         threadPool.submit(() -> {
             try {
                 final Set<Class<? extends Model>> models = new HashSet<>();
@@ -177,8 +180,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 /*
                  * Create {@link ModelSchema} objects for the corresponding {@link Model}.
                  * Any exception raised during this when inspecting the Model classes
-                 * through reflection will be notified via the
-                 * {@link ResultListener#onError(Throwable)} method.
+                 * through reflection will be notified via the `onError` callback.
                  */
                 modelSchemaRegistry.load(models);
 
@@ -199,12 +201,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Create and/or open a database. This also invokes
                  * {@link SQLiteStorageHelper#onCreate(SQLiteDatabase)} which executes the tasks
                  * to create tables and indexes. When the function returns without any exception
-                 * being thrown, invoke the {@link ResultListener#onResult(Object)}.
+                 * being thrown, invoke the `onError` callback.
                  *
                  * Errors are thrown when there is no write permission to the database, no space
                  * left in the database for any write operation and other errors thrown while
                  * creating and opening a database. All errors are passed through the
-                 * {@link ResultListener#onError(Throwable)}.
+                 * `onError` callback.
                  *
                  * databaseConnectionHandle represents a connection handle to the database.
                  * All database operations will happen through this handle.
@@ -215,7 +217,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 /*
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
                  * and compile them and store in an in-memory map. Later, when a
-                 * {@link #save(T, ResultListener)} operation needs to insert
+                 * {@link #save(T, Consumer, Consumer)} operation needs to insert
                  * an object (sql rows) into the database, it can bind the input
                  * values with the prepared insert statement.
                  *
@@ -228,16 +230,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * from the version passed in through {@link ModelProvider#version()}.
                  * Delete the database if there is a version change.
                  */
-                toBeDisposed.add(updateModels().subscribe(() -> {
-                    listener.onResult(Immutable.of(
-                            new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values())));
-                }, throwable -> {
-                        listener.onError(new DataStoreException("Error in initializing the " +
-                                "SQLiteStorageAdapter", throwable, AmplifyException.TODO_RECOVERY_SUGGESTION));
-                    }));
+                toBeDisposed.add(updateModels().subscribe(
+                    () -> onSuccess.accept(
+                        Immutable.of(new ArrayList<>(modelSchemaRegistry.getModelSchemaMap().values()))
+                    ),
+                    throwable -> onError.accept(new DataStoreException(
+                        "Error in initializing the SQLiteStorageAdapter",
+                        throwable, AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ))
+                ));
             } catch (Exception exception) {
-                listener.onError(new DataStoreException("Error in initializing the " +
-                        "SQLiteStorageAdapter", exception, "See attached exception"));
+                onError.accept(new DataStoreException(
+                    "Error in initializing the SQLiteStorageAdapter",
+                    exception, "See attached exception"
+                ));
             }
         });
     }
@@ -249,22 +255,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener
-    ) {
-        save(item, initiator, null, itemSaveListener);
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(item);
+        Objects.requireNonNull(initiator);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+        save(item, initiator, null, onSuccess, onError);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings("unchecked") // item.getClass() has Class<?>, but we assume Class<T>
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemSaveListener
-    ) {
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(item);
+        Objects.requireNonNull(initiator);
+        // Objects.requireNonNull(predicate); Not required!
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema =
@@ -273,23 +288,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
                 final boolean writeSuccess;
 
-                if (dataExistsInSQLiteTable(
-                        sqliteTable.getName(),
-                        primaryKeyName,
-                        item.getId())) {
+                if (dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
                     // update model stored in SQLite
                     // update always checks for ID first
                     final QueryPredicateOperation<?> idCheck =
                             QueryField.field(primaryKeyName).eq(item.getId());
                     final QueryPredicate condition = predicate != null
-                            ? idCheck.and(predicate)
-                            : idCheck;
+                        ? idCheck.and(predicate)
+                        : idCheck;
                     final SqlCommand sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
-                    if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
-                        itemSaveListener.onError(new DataStoreException(
-                                "Error in saving the model. No update statement " +
-                                "found for the Model: " + modelSchema.getName(),
-                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                    if (!sqlCommand.hasCompiledSqlStatement()) {
+                        onError.accept(new DataStoreException(
+                            "Error in saving the model. No update statement " +
+                            "found for the Model: " + modelSchema.getName(),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
                         return;
                     }
@@ -298,9 +310,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // insert model in SQLite
                     final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
-                        itemSaveListener.onError(new DataStoreException(
-                                "No insert statement found for the Model: " + modelSchema.getName(),
-                                AmplifyException.TODO_RECOVERY_SUGGESTION
+                        onError.accept(new DataStoreException(
+                            "No insert statement found for the Model: " + modelSchema.getName(),
+                            AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
                         return;
                     }
@@ -309,6 +321,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 if (writeSuccess) {
                     // Do not publish item change if write did not go through.
+                    @SuppressWarnings("unchecked") // item.getClass() is Class<? extends Model>, builder wants Class<T>.
                     final StorageItemChange.Record record = StorageItemChange.<T>builder()
                             .item(item)
                             .itemClass((Class<T>) item.getClass())
@@ -318,16 +331,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             .build()
                             .toRecord(storageItemChangeConverter);
                     itemChangeSubject.onNext(record);
-                    itemSaveListener.onResult(record);
+                    onSuccess.accept(record);
                 } else {
-                    //TODO: implement ConditionCheckFailedException to be cause of this error
-                    itemSaveListener.onError(new DataStoreException("Predicate condition not met.",
-                            AmplifyException.TODO_RECOVERY_SUGGESTION));
+                    onError.accept(new DataStoreException(
+                        "Predicate condition not met.",
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
+                    ));
                 }
             } catch (Exception exception) {
                 itemChangeSubject.onError(exception);
-                itemSaveListener.onError(new DataStoreException("Error in saving the model.", exception,
-                        "See attached exception for details."));
+                onError.accept(new DataStoreException(
+                    "Error in saving the model.", exception, "See attached exception for details."
+                ));
             }
         });
     }
@@ -338,9 +353,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
-    ) {
-        query(itemClass, null, queryResultsListener);
+            @NonNull Consumer<Iterator<T>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(itemClass);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+        query(itemClass, null, onSuccess, onError);
     }
 
     /**
@@ -350,8 +368,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener
-    ) {
+            @NonNull Consumer<Iterator<T>> onSuccess,
+            @NonNull Consumer<DataStoreException> onError) {
+        Objects.requireNonNull(itemClass);
+        // Objects.requireNonNull(predicate); It is not required!
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
         threadPool.submit(() -> {
             try {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
@@ -362,10 +385,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
                 final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), predicate);
                 if (cursor == null) {
-                    queryResultsListener.onError(new DataStoreException(
-                            "Error in getting a cursor to the " +
-                                    "table for class: " + itemClass.getSimpleName(),
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    onError.accept(new DataStoreException(
+                        "Error in getting a cursor to the table for class: " + itemClass.getSimpleName(),
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
                     return;
                 }
@@ -381,10 +403,12 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     cursor.close();
                 }
 
-                queryResultsListener.onResult(models.iterator());
+                onSuccess.accept(models.iterator());
             } catch (Exception exception) {
-                queryResultsListener.onError(new DataStoreException("Error in querying the model.", exception,
-                        "See attached exception for details."));
+                onError.accept(new DataStoreException(
+                    "Error in querying the model.", exception,
+                    "See attached exception for details."
+                ));
             }
         });
     }
@@ -396,9 +420,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemDeleteListener
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     ) {
-        delete(item, initiator, null, itemDeleteListener);
+        delete(item, initiator, null, onSuccess, onError);
     }
 
     /**
@@ -410,8 +435,14 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull ResultListener<StorageItemChange.Record, DataStoreException> itemDeleteListener
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
     ) {
+        Objects.requireNonNull(item);
+        Objects.requireNonNull(initiator);
+        Objects.requireNonNull(onSuccess);
+        Objects.requireNonNull(onError);
+
         threadPool.submit(() -> {
             try {
                 final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelInstance(item);
@@ -431,7 +462,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
                 if (sqlCommand == null || sqlCommand.sqlStatement() == null
                         || !sqlCommand.hasCompiledSqlStatement()) {
-                    itemDeleteListener.onError(new DataStoreException(
+                    onError.accept(new DataStoreException(
                             "No delete statement found for the Model: " +
                                     modelSchema.getName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -458,17 +489,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             .build()
                             .toRecord(storageItemChangeConverter);
                     itemChangeSubject.onNext(record);
-                    itemDeleteListener.onResult(record);
+                    onSuccess.accept(record);
                 } else {
                     //TODO: implement ConditionCheckFailedException to be cause of this error
-                    itemDeleteListener.onError(new DataStoreException("Predicate condition not met.",
+                    onError.accept(new DataStoreException("Predicate condition not met.",
                             AmplifyException.TODO_RECOVERY_SUGGESTION));
                 }
             } catch (Exception exception) {
                 itemChangeSubject.onError(exception);
-                itemDeleteListener.onError(
-                        new DataStoreException("Error in deleting the model.", exception,
-                                "See attached exception for details."));
+                onError.accept(new DataStoreException(
+                    "Error in deleting the model.", exception,
+                    "See attached exception for details."
+                ));
             }
         });
     }
@@ -479,21 +511,26 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @NonNull
     @Override
     public Cancelable observe(
-            @NonNull StreamListener<StorageItemChange.Record, DataStoreException> itemChangeListener) {
+            @NonNull Consumer<StorageItemChange.Record> onItemChanged,
+            @NonNull Consumer<DataStoreException> onObservationError,
+            @NonNull Action onObservationComplete) {
+        Objects.requireNonNull(onItemChanged);
+        Objects.requireNonNull(onObservationError);
+        Objects.requireNonNull(onObservationComplete);
         Disposable disposable = itemChangeSubject.subscribe(
-            itemChangeListener::onNext,
+            onItemChanged::accept,
             failure -> {
                 if (failure instanceof DataStoreException) {
-                    itemChangeListener.onError((DataStoreException) failure);
+                    onObservationError.accept((DataStoreException) failure);
                     return;
                 }
-                itemChangeListener.onError(new DataStoreException(
+                onObservationError.accept(new DataStoreException(
                     "Failed to observe items in storage adapter.",
                     failure,
                     "Inspect the failure details."
                 ));
             },
-            itemChangeListener::onComplete
+            onObservationComplete::call
         );
         return disposable::dispose;
     }
@@ -723,9 +760,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         // Eager load model if the necessary columns are present inside the cursor.
                         // At the time of implementation, cursor should have been joined with these
                         // columns IF AND ONLY IF the model is a foreign key to the inner model.
-                        Class<?> classType = modelClass.getDeclaredField(fieldName).getType();
-                        @SuppressWarnings("unchecked") // Safe type casting since fieldJavaType enum value is MODEL.
-                        Class<? extends Model> innerModelType = (Class<? extends Model>) classType;
+                        @SuppressWarnings("unchecked") // value has Class<?>, but we want Class<? extends Model>
+                        Class<? extends Model> innerModelType =
+                            (Class<? extends Model>) modelClass.getDeclaredField(fieldName).getType();
                         String className = innerModelType.getSimpleName();
                         ModelSchema innerModelSchema = ModelSchemaRegistry.singleton()
                                 .getModelSchemaForModelClass(className);
@@ -892,6 +929,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return getQueryAllCursor(tableName, null);
     }
 
+    @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName,
                              @Nullable QueryPredicate predicate) throws DataStoreException {

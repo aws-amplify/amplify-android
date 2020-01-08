@@ -38,12 +38,14 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
         getSelectedPlugin().publish(hubChannel, hubEvent);
     }
 
+    @NonNull
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @NonNull HubSubscriber hubSubscriber) {
         return getSelectedPlugin().subscribe(hubChannel, hubSubscriber);
     }
 
+    @NonNull
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubEventFilter hubEventFilter,
@@ -56,6 +58,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
         getSelectedPlugin().unsubscribe(subscriptionToken);
     }
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.HUB;
@@ -74,9 +77,10 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
      * @param <R> The type of the request object of the {@link AmplifyOperation}
      * @return A subscription token
      */
+    @NonNull
     public <E, R> SubscriptionToken subscribe(
             @NonNull final AmplifyOperation<R> operation,
-            @NonNull final EventListener<E> eventListener) {
+            @SuppressWarnings("unused") @NonNull final EventListener<E> eventListener) {
         HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
         HubSubscriber transformingListener = event -> {
             // TODO: check for casting of Object to E and

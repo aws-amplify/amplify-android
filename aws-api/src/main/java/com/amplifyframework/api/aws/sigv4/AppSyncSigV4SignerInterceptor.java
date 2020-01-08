@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws.sigv4;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.aws.AuthorizationType;
+import com.amplifyframework.api.aws.EndpointType;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentials;
@@ -25,6 +26,7 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.http.HttpMethodName;
 import com.amazonaws.util.VersionInfoUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
@@ -58,19 +60,39 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
     private final OidcAuthProvider oidcAuthProvider;
     private final String awsRegion;
     private final AuthorizationType authType;
+    private final EndpointType endpointType;
+
+    private AppSyncSigV4SignerInterceptor(AWSCredentialsProvider credentialsProvider,
+                                          ApiKeyAuthProvider apiKeyProvider,
+                                          CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider,
+                                          OidcAuthProvider oidcAuthProvider,
+                                          String awsRegion,
+                                          AuthorizationType authType,
+                                          EndpointType endpointType) {
+        this.credentialsProvider = credentialsProvider;
+        this.apiKeyProvider = apiKeyProvider;
+        this.cognitoUserPoolsAuthProvider = cognitoUserPoolsAuthProvider;
+        this.oidcAuthProvider = oidcAuthProvider;
+        this.awsRegion = awsRegion;
+        this.authType = authType;
+        this.endpointType = endpointType;
+    }
 
     /**
      * Constructs an instance of AppSyncSigV4SignerInterceptor that
      * uses API key for authorization.
      * @param apiKeyProvider An instance of {@link ApiKeyAuthProvider}
+     * @param endpointType Endpoint type for the api
      */
-    public AppSyncSigV4SignerInterceptor(@NonNull ApiKeyAuthProvider apiKeyProvider) {
-        this.apiKeyProvider = Objects.requireNonNull(apiKeyProvider);
-        this.credentialsProvider = null;
-        this.cognitoUserPoolsAuthProvider = null;
-        this.oidcAuthProvider = null;
-        this.awsRegion = null;
-        this.authType = AuthorizationType.API_KEY;
+    public AppSyncSigV4SignerInterceptor(@NonNull ApiKeyAuthProvider apiKeyProvider,
+                                         final EndpointType endpointType) {
+        this(null,
+                Objects.requireNonNull(apiKeyProvider),
+                null,
+                null,
+                null,
+                AuthorizationType.API_KEY,
+                endpointType);
     }
 
     /**
@@ -78,42 +100,52 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
      * signs the request with AWS IAM credentials.
      * @param credentialsProvider An instance of {@link AWSCredentialsProvider}
      * @param awsRegion Associated AWS region
+     * @param endpointType Endpoint type for the api
      */
-    public AppSyncSigV4SignerInterceptor(@NonNull AWSCredentialsProvider credentialsProvider, final String awsRegion) {
-        this.credentialsProvider = Objects.requireNonNull(credentialsProvider);
-        this.apiKeyProvider = null;
-        this.cognitoUserPoolsAuthProvider = null;
-        this.oidcAuthProvider = null;
-        this.awsRegion = awsRegion;
-        this.authType = AuthorizationType.AWS_IAM;
+    public AppSyncSigV4SignerInterceptor(@NonNull AWSCredentialsProvider credentialsProvider,
+                                         final String awsRegion,
+                                         final EndpointType endpointType) {
+        this(Objects.requireNonNull(credentialsProvider),
+                null,
+                null,
+                null,
+                awsRegion,
+                AuthorizationType.AWS_IAM,
+                endpointType);
     }
 
     /**
      * Constructs an instance of AppSyncSigV4SignerInterceptor that
      * authorizes user with Cognito User Pool token.
      * @param cognitoUserPoolsAuthProvider An instance of {@link CognitoUserPoolsAuthProvider}
+     * @param endpointType Endpoint type for the api
      */
-    public AppSyncSigV4SignerInterceptor(@NonNull CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider) {
-        this.cognitoUserPoolsAuthProvider = Objects.requireNonNull(cognitoUserPoolsAuthProvider);
-        this.credentialsProvider = null;
-        this.apiKeyProvider = null;
-        this.oidcAuthProvider = null;
-        this.awsRegion = null;
-        this.authType = AuthorizationType.AMAZON_COGNITO_USER_POOLS;
+    public AppSyncSigV4SignerInterceptor(@NonNull CognitoUserPoolsAuthProvider cognitoUserPoolsAuthProvider,
+                                         final EndpointType endpointType) {
+        this(null,
+                null,
+                Objects.requireNonNull(cognitoUserPoolsAuthProvider),
+                null,
+                null,
+                AuthorizationType.AMAZON_COGNITO_USER_POOLS,
+                endpointType);
     }
 
     /**
      * Constructs an instance of AppSyncSigV4SignerInterceptor that
      * authorizes user with OpenID Connect token.
      * @param oidcAuthProvider An instance of {@link OidcAuthProvider}
+     * @param endpointType Endpoint type for the api
      */
-    public AppSyncSigV4SignerInterceptor(@NonNull OidcAuthProvider oidcAuthProvider) {
-        this.oidcAuthProvider = Objects.requireNonNull(oidcAuthProvider);
-        this.credentialsProvider = null;
-        this.apiKeyProvider = null;
-        this.cognitoUserPoolsAuthProvider = null;
-        this.awsRegion = null;
-        authType = AuthorizationType.OPENID_CONNECT;
+    public AppSyncSigV4SignerInterceptor(@NonNull OidcAuthProvider oidcAuthProvider,
+                                         final EndpointType endpointType) {
+        this(null,
+                null,
+                null,
+                Objects.requireNonNull(oidcAuthProvider),
+                null,
+                AuthorizationType.OPENID_CONNECT,
+                endpointType);
     }
 
     @Override
@@ -143,6 +175,8 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
             req.body().writeTo(buffer);
             dr.setContent(buffer.inputStream());
             body = buffer.clone();
+        } else {
+            dr.setContent(new ByteArrayInputStream("".getBytes()));
         }
 
         //Sign or Decorate request with the required headers
@@ -152,7 +186,11 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
                 //Get credentials - This will refresh the credentials if necessary
                 AWSCredentials credentials = this.credentialsProvider.getCredentials();
                 //sign the request
-                new AppSyncV4Signer(this.awsRegion).sign(dr, credentials);
+                if (endpointType == EndpointType.GRAPHQL) {
+                    new AppSyncV4Signer(this.awsRegion).sign(dr, credentials);
+                } else {
+                    new ApiGatewayIamSigner(this.awsRegion).sign(dr, credentials);
+                }
             } catch (Exception error) {
                 throw new IOException("Failed to read credentials to sign the request.", error);
             }

@@ -18,7 +18,7 @@ package com.amplifyframework.api.aws;
 /**
  * The type of API for a given endpoint.
  */
-enum EndpointType {
+public enum EndpointType {
 
     /**
      * GraphQL backend API.
