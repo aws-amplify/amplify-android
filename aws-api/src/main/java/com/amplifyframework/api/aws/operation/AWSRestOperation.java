@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws.operation;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -23,10 +24,11 @@ import com.amplifyframework.api.aws.utils.RestOperationRequestUtils;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -38,11 +40,13 @@ import okhttp3.ResponseBody;
 /**
  * An operation to enqueue a REST HTTP request to OkHttp client.
  */
+@SuppressLint("SyntheticAccessor")
 public final class AWSRestOperation extends RestOperation {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<RestResponse, ApiException> responseListener;
+    private final Consumer<RestResponse> onResponse;
+    private final Consumer<ApiException> onFailure;
 
     private Call ongoingCall;
 
@@ -51,17 +55,20 @@ public final class AWSRestOperation extends RestOperation {
      * @param request REST request that contains the query and data.
      * @param endpoint Endpoint against which the request to be made.
      * @param client OKHTTPClient to be used for the request.
-     * @param responseListener Callback listener.
+     * @param onResponse Callback to be invoked when a response is available from endpoint
+     * @param onFailure Callback to be invoked when there is a failure to obtain any response
      */
     public AWSRestOperation(
-            RestOperationRequest request,
-            String endpoint,
-            OkHttpClient client,
-            ResultListener<RestResponse, ApiException> responseListener) {
-        super(request);
-        this.endpoint = endpoint;
-        this.client = client;
-        this.responseListener = responseListener;
+            @NonNull RestOperationRequest request,
+            @NonNull String endpoint,
+            @NonNull OkHttpClient client,
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        super(Objects.requireNonNull(request));
+        this.endpoint = Objects.requireNonNull(endpoint);
+        this.client = Objects.requireNonNull(client);
+        this.onResponse = Objects.requireNonNull(onResponse);
+        this.onFailure = Objects.requireNonNull(onFailure);
     }
 
     @Override
@@ -86,13 +93,10 @@ public final class AWSRestOperation extends RestOperation {
                 ongoingCall.cancel();
             }
 
-            ApiException wrappedError =
-                    new ApiException("OkHttp client failed to make a successful request.",
-                            error,
-                            AmplifyException.TODO_RECOVERY_SUGGESTION);
-            if (responseListener != null) {
-                responseListener.onError(wrappedError);
-            }
+            onFailure.accept(new ApiException(
+                "OkHttp client failed to make a successful request.",
+                error, AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
         }
     }
 
@@ -103,7 +107,7 @@ public final class AWSRestOperation extends RestOperation {
         }
     }
 
-    class OkHttpCallback implements Callback {
+    private final class OkHttpCallback implements Callback {
         @Override
         public void onResponse(@NonNull Call call,
                                @NonNull Response response) throws IOException {
@@ -118,24 +122,16 @@ public final class AWSRestOperation extends RestOperation {
                 restResponse = new RestResponse(statusCode);
             }
 
-            if (responseListener != null) {
-                responseListener.onResult(restResponse);
-            }
-            //TODO: Dispatch to hub
+            onResponse.accept(restResponse);
         }
 
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException ioe) {
-            ApiException wrappedError =
-                    new ApiException("Received an IO exception while making the request.",
-                            ioe,
-                            "Retry the request.");
-            if (responseListener != null) {
-                responseListener.onError(wrappedError);
-            }
-            //TODO: Dispatch to hub
+            onFailure.accept(new ApiException(
+                "Received an IO exception while making the request.",
+                ioe, "Retry the request."
+            ));
         }
     }
-
 }
