@@ -45,8 +45,6 @@ import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -132,21 +130,16 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(raphael);
 
         // Triggers an update
-        final BlogOwner realRaph = raphael.copyOfBuilder()
+        final BlogOwner raph = raphael.copyOfBuilder()
             .name("Raph Kim")
             .build();
-        saveModel(realRaph);
+        saveModel(raph);
 
         // Get the BlogOwner record from the database
-        List<BlogOwner> people = new ArrayList<>();
-        Iterator<BlogOwner> iterator = queryModel(BlogOwner.class);
-        while (iterator.hasNext()) {
-            people.add(iterator.next());
-        }
-        assertEquals(1, people.size());
-        BlogOwner possiblyRaph = people.get(0);
-
-        assertEquals(realRaph, possiblyRaph);
+        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertEquals(1, blogOwners.size());
+        assertFalse(blogOwners.contains(raphael)); // Replaced by "Raph Kim"
+        assertTrue(blogOwners.contains(raph));
     }
 
     /**
@@ -270,9 +263,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .build();
         saveModel(blogOwner);
 
-        Iterator<BlogOwner> result = queryModel(BlogOwner.class);
-        assertTrue(result.hasNext());
-        assertEquals(blogOwner, result.next());
+        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertTrue(blogOwners.contains(blogOwner));
     }
 
     /**
@@ -309,20 +301,13 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(newJane, predicate);
         saveModelExpectingError(newMark, predicate); // Should not update
 
-        Iterator<BlogOwner> blogOwners = queryModel(BlogOwner.class);
-        assertNotNull(blogOwners);
-        Set<BlogOwner> actualBlogOwners = new HashSet<>();
-        while (blogOwners.hasNext()) {
-            actualBlogOwners.add(blogOwners.next());
-        }
-        assertEquals(
-                new HashSet<>(Arrays.asList(
-                        newJohn,
-                        newJane,
-                        mark
-                )),
-                actualBlogOwners
-        );
+        final Set<BlogOwner> expectedBlogOwners = new HashSet<>(Arrays.asList(
+                newJohn,
+                newJane,
+                mark
+        ));
+        final Set<BlogOwner> actualBlogOwners = queryModel(BlogOwner.class);
+        assertEquals(expectedBlogOwners, actualBlogOwners);
     }
 
     /**
@@ -335,12 +320,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .build();
         saveModel(blogOwner);
 
-        Iterator<BlogOwner> result = queryModel(BlogOwner.class);
-        assertNotNull(result);
-        assertTrue(result.hasNext());
-        BlogOwner queriedBlogOwner = result.next();
-        assertNotNull(queriedBlogOwner);
-        assertEquals(blogOwner, queriedBlogOwner);
+        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertTrue(blogOwners.contains(blogOwner));
     }
 
     /**
@@ -348,7 +329,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
      */
     @Test
     public void querySavedDataWithMultipleItems() {
-        final List<BlogOwner> savedModels = new ArrayList<>();
+        final Set<BlogOwner> savedModels = new HashSet<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
@@ -358,15 +339,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             savedModels.add(blogOwner);
         }
 
-        final Iterator<BlogOwner> resultIterator = queryModel(BlogOwner.class);
-        final List<BlogOwner> results = new ArrayList<>();
-        while (resultIterator.hasNext()) {
-            results.add(resultIterator.next());
-        }
-        Comparator<BlogOwner> comparator = (o1, o2) -> o1.getName().compareTo(o2.getName());
-        Collections.sort(savedModels, comparator);
-        Collections.sort(results, comparator);
-        assertEquals(savedModels, results);
+        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertEquals(savedModels, blogOwners);
     }
 
     /**
@@ -387,15 +361,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(blogOwner);
         saveModel(blog);
 
-        Iterator<Blog> result = queryModel(Blog.class);
-        assertNotNull(result);
-        assertTrue(result.hasNext());
-
-        final BlogOwner queriedBlogOwner = result.next().getOwner();
-        assertNotNull(queriedBlogOwner);
-        assertEquals(blogOwner.getId(), queriedBlogOwner.getId());
-        assertEquals(blogOwner.getName(), queriedBlogOwner.getName());
-        assertEquals(blogOwner.getBlog(), queriedBlogOwner.getBlog());
+        final Set<Blog> blogs = queryModel(Blog.class);
+        assertTrue(blogs.contains(blog));
     }
 
     /**
@@ -420,7 +387,6 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         // 1, 4, 5, 6
         QueryPredicate predicate = Post.RATING.ge(4).and(Post.RATING.lt(7))
                 .or(Post.RATING.eq(1).and(Post.RATING.ne(7)));
-        Iterator<Post> result = queryModel(Post.class, predicate);
 
         final Set<Post> expectedPosts = new HashSet<>(Arrays.asList(
             savedModels.get(1),
@@ -428,17 +394,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             savedModels.get(5),
             savedModels.get(6)
         ));
-
-        final Set<Post> actualPosts = new HashSet<>();
-        while (result.hasNext()) {
-            final Post post = result.next();
-            assertNotNull(post);
-            assertTrue(
-                "Unable to find expected item in the storage adapter.",
-                savedModels.contains(post)
-            );
-            actualPosts.add(post);
-        }
+        final Set<Post> actualPosts = queryModel(Post.class, predicate);
         assertEquals(expectedPosts, actualPosts);
     }
 
@@ -461,24 +417,17 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             savedModels.add(post);
         }
 
-        Iterator<Post> result = queryModel(Post.class, Post.TITLE
+        final Set<Post> expectedPosts = new HashSet<>(Arrays.asList(
+                savedModels.get(4),
+                savedModels.get(7)
+        ));
+        final Set<Post> actualPosts = queryModel(Post.class, Post.TITLE
             .beginsWith("4")
                 .or(Post.TITLE.beginsWith("7"))
                 .or(Post.TITLE.beginsWith("9"))
             .and(not(Post.TITLE.gt(8)))
         );
-
-        Set<Post> actualPosts = new HashSet<>();
-        while (result.hasNext()) {
-            actualPosts.add(result.next());
-        }
-        assertEquals(
-            new HashSet<>(Arrays.asList(
-                savedModels.get(4),
-                savedModels.get(7)
-            )),
-            actualPosts
-        );
+        assertEquals(expectedPosts, actualPosts);
     }
 
     /**
@@ -497,9 +446,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
             .build();
         saveModel(blog);
 
-        Iterator<Blog> result = queryModel(Blog.class, QueryField.field("BlogOwner.name").eq("Jane Doe"));
-        assertTrue(result.hasNext());
-        assertEquals(blog, result.next());
+        final Set<Blog> blogsOwnedByJaneDoe = queryModel(Blog.class, QueryField.field("BlogOwner.name").eq("Jane Doe"));
+        assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }
 
     /**
@@ -513,12 +461,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-        Iterator<BlogOwner> resultOfMaliciousQuery = queryModel(BlogOwner.class, predicate);
-        assertFalse(resultOfMaliciousQuery.hasNext());
+        final Set<BlogOwner> resultOfMaliciousQuery = queryModel(BlogOwner.class, predicate);
+        assertTrue(resultOfMaliciousQuery.isEmpty());
 
-        Iterator<BlogOwner> resultAfterMaliciousQuery = queryModel(BlogOwner.class);
-        assertTrue(resultAfterMaliciousQuery.hasNext());
-        assertEquals(jane, resultAfterMaliciousQuery.next());
+        final Set<BlogOwner> resultAfterMaliciousQuery = queryModel(BlogOwner.class);
+        assertTrue(resultAfterMaliciousQuery.contains(jane));
     }
 
     /**
@@ -536,8 +483,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         deleteModel(raphael);
 
         // Get the BlogOwner record from the database
-        Iterator<BlogOwner> iterator = queryModel(BlogOwner.class);
-        assertFalse(iterator.hasNext());
+        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertTrue(blogOwners.isEmpty());
     }
 
     /**
@@ -564,12 +511,12 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         deleteModel(raphael);
 
         // Get the BlogOwner record from the database
-        Iterator<BlogOwner> blogOwnerIterator = queryModel(BlogOwner.class);
-        assertFalse(blogOwnerIterator.hasNext());
+        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertTrue(blogOwners.isEmpty());
 
         // Get the Blog record from the database
-        Iterator<Blog> blogIterator = queryModel(Blog.class);
-        assertFalse(blogIterator.hasNext());
+        final Set<Blog> blogs = queryModel(Blog.class);
+        assertTrue(blogs.isEmpty());
     }
 
     private <T extends Model> void saveModel(@NonNull T model) {
@@ -604,18 +551,24 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         consumerOfError.awaitValue();
     }
 
-    private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
+    private <T extends Model> Set<T> queryModel(@NonNull Class<T> modelClass) {
         //noinspection ConstantConditions
         return queryModel(modelClass, null);
     }
 
-    private <T extends Model> Iterator<T> queryModel(
+    private <T extends Model> Set<T> queryModel(
             @NonNull Class<T> modelClass, @NonNull QueryPredicate predicate) {
         LatchedConsumer<Iterator<T>> queryResultConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
         Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
         sqliteStorageAdapter.query(modelClass, predicate, queryResultConsumer, errorConsumer);
-        return queryResultConsumer.awaitValue();
+        Iterator<T> resultIterator = queryResultConsumer.awaitValue();
+
+        final Set<T> resultSet = new HashSet<>();
+        while (resultIterator.hasNext()) {
+            resultSet.add(resultIterator.next());
+        }
+        return resultSet;
     }
 
     @SuppressWarnings("UnusedReturnValue")
