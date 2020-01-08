@@ -68,10 +68,10 @@ jobs:
       - configure_aws
       - run:
           name: Build the project
-          command: bash gradlew build
+          command: bash gradlew build --no-daemon
       - run:
           name: Publish the project to local maven
-          command: bash gradlew publishToMavenLocal
+          command: bash gradlew publishToMavenLocal --no-daemon
       - store_test_results:
           path: test-results
 

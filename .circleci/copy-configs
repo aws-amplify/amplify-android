@@ -37,7 +37,9 @@ readonly end_index=$(($source_array_size - 1))
 
 # Iterate source and target, coying out of s3 to local path.
 for index in $(seq $start_index $end_index); do
-    aws --profile "$cli_profile" \
+    aws \
+        --profile "$cli_profile" \
+        --region "us-west-2" \
         s3 cp \
         "${sources[$index]}" \
         "${targets[$index]}"
