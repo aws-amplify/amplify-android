@@ -17,7 +17,7 @@ package com.amplifyframework.storage.s3.operation;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
@@ -36,24 +36,28 @@ import java.util.concurrent.ExecutorService;
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final AWSS3StorageService storageService;
     private final ExecutorService executorService;
-    private final ResultListener<StorageListResult, StorageException> resultListener;
+    private final Consumer<StorageListResult> onSuccess;
+    private final Consumer<StorageException> onError;
 
     /**
      * Constructs a new AWSS3StorageListOperation.
      * @param storageService S3 client wrapper
      * @param executorService Executor service used for running blocking operations on a separate thread
      * @param request list request parameters
-     * @param resultListener notified when list operation results are available
+     * @param onSuccess notified when list operation results are available
+     * @param onError notified when list results cannot be obtained due to error
      */
     public AWSS3StorageListOperation(
             @NonNull AWSS3StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageListRequest request,
-            @NonNull ResultListener<StorageListResult, StorageException> resultListener) {
+            @NonNull Consumer<StorageListResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
-        this.resultListener = resultListener;
+        this.onSuccess = onSuccess;
+        this.onError = onError;
     }
 
     @SuppressWarnings("SyntheticAccessor")
@@ -75,16 +79,16 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
                         )
                     );
 
-                    resultListener.onResult(result);
+                    onSuccess.accept(result);
                 } catch (Exception exception) {
-                    resultListener.onError(new StorageException(
+                    onError.accept(new StorageException(
                         "Something went wrong with your AWS S3 Storage list operation",
                         exception,
                         "See attached exception for more information and suggestions"
                     ));
                 }
             } catch (Exception exception) {
-                resultListener.onError(new StorageException(
+                onError.accept(new StorageException(
                     "AWSMobileClient could not get user id.",
                     exception,
                     "Check whether you initialized AWSMobileClient and waited for its success callback " +

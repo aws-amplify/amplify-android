@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.storage.sqlite;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.annotations.ModelField;
@@ -69,10 +68,13 @@ final class PersistentModelVersion implements Model {
      *         error upon failure
      */
     static Single<Iterator<PersistentModelVersion>> fromLocalStorage(@NonNull LocalStorageAdapter localStorageAdapter) {
-        return Single.create(emitter -> localStorageAdapter.query(
-            PersistentModelVersion.class,
-            ResultListener.instance(emitter::onSuccess, emitter::onError)
-        ));
+        return Single.create(emitter ->
+            localStorageAdapter.query(
+                PersistentModelVersion.class,
+                emitter::onSuccess,
+                emitter::onError
+            )
+        );
     }
 
     /**
@@ -85,14 +87,14 @@ final class PersistentModelVersion implements Model {
     static Single<PersistentModelVersion> saveToLocalStorage(
             @NonNull LocalStorageAdapter localStorageAdapter,
             @NonNull PersistentModelVersion persistentModelVersion) {
-        return Single.create(emitter -> localStorageAdapter.save(
-            persistentModelVersion,
-            StorageItemChange.Initiator.DATA_STORE_API,
-            ResultListener.instance(
+        return Single.create(emitter ->
+            localStorageAdapter.save(
+                persistentModelVersion,
+                StorageItemChange.Initiator.DATA_STORE_API,
                 ignoredRecord -> emitter.onSuccess(persistentModelVersion),
                 emitter::onError
             )
-        ));
+        );
     }
 
     /** {@inheritDoc}. */

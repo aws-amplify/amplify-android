@@ -17,7 +17,7 @@ package com.amplifyframework.storage.s3.operation;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
@@ -27,6 +27,7 @@ import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -34,25 +35,29 @@ import java.util.concurrent.ExecutorService;
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final AWSS3StorageService storageService;
-    private final ResultListener<StorageRemoveResult, StorageException> resultListener;
     private final ExecutorService executorService;
+    private final Consumer<StorageRemoveResult> onSuccess;
+    private final Consumer<StorageException> onError;
 
     /**
      * Constructs a new AWSS3StorageRemoveOperation.
      * @param storageService S3 client wrapper
      * @param executorService Executor service used for running blocking operations on a separate thread
      * @param request remove request parameters
-     * @param resultListener notified when remove operation results available
+     * @param onSuccess notified when remove operation results available
+     * @param onError notified when remove operation does not complete due to error
      */
     public AWSS3StorageRemoveOperation(
             @NonNull AWSS3StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageRemoveRequest request,
-            @NonNull ResultListener<StorageRemoveResult, StorageException> resultListener) {
-        super(request);
-        this.storageService = storageService;
-        this.executorService = executorService;
-        this.resultListener = resultListener;
+            @NonNull Consumer<StorageRemoveResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        super(Objects.requireNonNull(request));
+        this.storageService = Objects.requireNonNull(storageService);
+        this.executorService = Objects.requireNonNull(executorService);
+        this.onSuccess = Objects.requireNonNull(onSuccess);
+        this.onError = Objects.requireNonNull(onError);
     }
 
     @SuppressWarnings("SyntheticAccessor")
@@ -74,16 +79,16 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
                         )
                     );
 
-                    resultListener.onResult(StorageRemoveResult.fromKey(getRequest().getKey()));
+                    onSuccess.accept(StorageRemoveResult.fromKey(getRequest().getKey()));
                 } catch (Exception exception) {
-                    resultListener.onError(new StorageException(
+                    onError.accept(new StorageException(
                         "Something went wrong with your AWS S3 Storage remove operation",
                         exception,
                         "See attached exception for more information and suggestions"
                     ));
                 }
             } catch (Exception exception) {
-                resultListener.onError(new StorageException(
+                onError.accept(new StorageException(
                     "Something went wrong with your AWS S3 Storage remove operation",
                     exception,
                     "See attached exception for more information and suggestions"

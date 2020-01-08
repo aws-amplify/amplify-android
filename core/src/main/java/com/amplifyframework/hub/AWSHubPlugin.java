@@ -73,12 +73,14 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
         });
     }
 
+    @NonNull
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @NonNull HubSubscriber hubSubscriber) {
         return subscribe(hubChannel, null, hubSubscriber);
     }
 
+    @NonNull
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubEventFilter hubEventFilter,
