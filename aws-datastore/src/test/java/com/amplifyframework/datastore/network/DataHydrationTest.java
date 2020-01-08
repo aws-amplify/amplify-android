@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.network;
 
+import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
@@ -80,7 +81,10 @@ public final class DataHydrationTest {
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the DataHydration applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = TestObserver.create();
-        inMemoryStorageAdapter.observe()
+        Observable.<StorageItemChange.Record>create(emitter ->
+            inMemoryStorageAdapter.observe(
+                StreamListener.instance(emitter::onNext, emitter::onError, emitter::onComplete)
+            ))
             .map(record -> record.toStorageItemChange(storageRecordDeserializer))
             .subscribe(adapterObserver);
 

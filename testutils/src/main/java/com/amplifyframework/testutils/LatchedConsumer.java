@@ -18,10 +18,12 @@ package com.amplifyframework.testutils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A consumer which counts down a latch when a value is accepted.
@@ -32,14 +34,14 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class LatchedConsumer<T> implements Consumer<T> {
     private static final long DEFAULT_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
 
-    private final CountDownLatch latch;
     private final long waitTimeMs;
-    private final AtomicReference<T> valueContainer;
+    private final List<T> values;
+    private CountDownLatch latch;
 
     private LatchedConsumer(long waitTimeMs) {
-        this.latch = new CountDownLatch(1);
         this.waitTimeMs = waitTimeMs;
-        this.valueContainer = new AtomicReference<>();
+        this.values = new ArrayList<>();
+        this.latch = null;
     }
 
     /**
@@ -65,8 +67,10 @@ public final class LatchedConsumer<T> implements Consumer<T> {
 
     @Override
     public void accept(@NonNull T value) {
-        valueContainer.set(value);
-        latch.countDown();
+        values.add(value);
+        if (latch != null) {
+            latch.countDown();
+        }
     }
 
     /**
@@ -76,6 +80,20 @@ public final class LatchedConsumer<T> implements Consumer<T> {
      */
     @NonNull
     public T awaitValue() throws RuntimeException {
+        return awaitValues(1).get(0);
+    }
+
+    /**
+     * Await the given number of values to arrive.
+     * @param count Count of values to await
+     * @return The count-many values
+     */
+    @NonNull
+    public List<T> awaitValues(int count) {
+        if (latch == null) {
+            latch = new CountDownLatch(count - values.size());
+        }
+
         try {
             latch.await(waitTimeMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException interruptedException) {
@@ -86,6 +104,6 @@ public final class LatchedConsumer<T> implements Consumer<T> {
             throw new RuntimeException("Result consumer latch did not count down.");
         }
 
-        return valueContainer.get();
+        return Immutable.of(values);
     }
 }

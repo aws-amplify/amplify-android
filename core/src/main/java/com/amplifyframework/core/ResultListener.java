@@ -84,3 +84,4 @@ public final class ResultListener<R, E extends AmplifyException> {
         errorConsumer.accept(error);
     }
 }
+

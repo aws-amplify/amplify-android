@@ -16,9 +16,8 @@
 package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -52,7 +51,7 @@ final class MockAppSyncEndpoint {
 
         /**
          * Creates an instance of an {@link AppSyncEndpoint}, which will provide a fake response when asked to
-         * to {@link AppSyncEndpoint#sync(Class, Long, ResultListener)}.
+         * to {@link AppSyncEndpoint#sync(Class, Long, Consumer, Consumer)}.
          * @param modelClass Class of models for which the endpoint should respond
          * @param responseItems The items that should be included in the mocked response, for the model class
          * @param <T> Type of models for which a response is mocked
@@ -61,24 +60,25 @@ final class MockAppSyncEndpoint {
         @SafeVarargs
         final <T extends Model> Configurator mockSuccessResponse(
                 Class<T> modelClass, ModelWithMetadata<T>... responseItems) {
-
             doAnswer(invocation -> {
-                // Get a handle to the listener that is passed into the sync() method
-                // ResultListener is the third and final param at index 2 (@0, @1, @2).
-                final int argumentPositionForResultListener = 2;
-                final ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> listener =
-                    invocation.getArgument(argumentPositionForResultListener);
+                // Get a handle to the response consumer that is passed into the sync() method
+                // Response consumer is the third param, at index 2 (@0, @1, @2, @3).
+                final int argumentPositionForResponseConsumer = 2;
+                final Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> consumer =
+                    invocation.getArgument(argumentPositionForResponseConsumer);
 
-                // Call its onResult(), and pass the mocked items inside of a GraphQLResponse wrapper
+                // Call the response consumer, and pass the mocked items
+                // inside of a GraphQLResponse wrapper
                 final Iterable<ModelWithMetadata<T>> data = new HashSet<>(Arrays.asList(responseItems));
-                listener.onResult(new GraphQLResponse<>(data, Collections.emptyList()));
+                consumer.accept(new GraphQLResponse<>(data, Collections.emptyList()));
 
                 // Return a NoOp cancelable via the sync() method's return.
                 return new NoOpCancelable();
             }).when(endpoint).sync(
                 eq(modelClass), // Item class to sync
                 any(), // last sync time
-                any() // Result listener
+                any(), // Consumer<Iterable<ModelWithMetadata<T>>>
+                any() // Consumer<DataStoreException>
             );
             return Configurator.this;
         }

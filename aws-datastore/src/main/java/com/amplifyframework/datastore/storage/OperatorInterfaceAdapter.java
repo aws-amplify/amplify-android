@@ -40,8 +40,8 @@ import java.lang.reflect.Type;
  * Custom logic to serialize and deserialize an instance of {@link QueryOperator}.
  */
 final class OperatorInterfaceAdapter implements
-        JsonDeserializer<QueryOperator>,
-        JsonSerializer<QueryOperator> {
+        JsonDeserializer<QueryOperator<?>>,
+        JsonSerializer<QueryOperator<?>> {
 
     private static final String TYPE = "type";
 
@@ -49,7 +49,7 @@ final class OperatorInterfaceAdapter implements
      * {@inheritDoc}
      */
     @Override
-    public QueryOperator deserialize(
+    public QueryOperator<?> deserialize(
             JsonElement json,
             Type type,
             JsonDeserializationContext context
@@ -90,7 +90,7 @@ final class OperatorInterfaceAdapter implements
      */
     @Override
     public JsonElement serialize(
-            QueryOperator operator,
+            QueryOperator<?> operator,
             Type type,
             JsonSerializationContext context
     ) {

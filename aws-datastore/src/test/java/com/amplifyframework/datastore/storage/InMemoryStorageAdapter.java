@@ -20,6 +20,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -29,7 +31,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-import io.reactivex.Observable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
 /**
@@ -111,7 +113,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     ) {
         List<T> result = new ArrayList<>();
         for (Model item : items) {
-            if (itemClass.isAssignableFrom((item.getClass()))) {
+            if (itemClass.isAssignableFrom((item.getClass()))
+                    && (predicate == null || predicate.evaluate(item))) {
                 result.add((T) item);
             }
         }
@@ -155,8 +158,23 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
     @NonNull
     @Override
-    public Observable<StorageItemChange.Record> observe() {
-        return changeRecordStream;
+    public Cancelable observe(
+            StreamListener<StorageItemChange.Record, DataStoreException> itemChangeListener) {
+        Disposable disposable = changeRecordStream.subscribe(
+            itemChangeListener::onNext,
+            failure -> {
+                if (failure instanceof DataStoreException) {
+                    itemChangeListener.onError((DataStoreException) failure);
+                } else {
+                    itemChangeListener.onError(new DataStoreException(
+                        "Failed to observe changes to in-memory storage adapter.",
+                        failure, "Inspect the details."
+                    ));
+                }
+            },
+            itemChangeListener::onComplete
+        );
+        return disposable::dispose;
     }
 
     @Override

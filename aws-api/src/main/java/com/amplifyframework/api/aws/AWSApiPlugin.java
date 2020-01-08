@@ -35,6 +35,8 @@ import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
@@ -139,15 +141,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return query(apiName, modelClass, responseListener);
+        return query(apiName, modelClass, onResponse, onFailure);
     }
 
     @Nullable
@@ -155,15 +158,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return query(apiName, modelClass, objectId, responseListener);
+        return query(apiName, modelClass, objectId, onResponse, onFailure);
     }
 
     @Nullable
@@ -171,30 +175,32 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return query(apiName, modelClass, predicate, responseListener);
+        return query(apiName, modelClass, predicate, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public <T> GraphQLOperation<T> query(
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return query(apiName, graphQLRequest, responseListener);
+        return query(apiName, graphQLRequest, onResponse, onFailure);
     }
 
     @Nullable
@@ -202,9 +208,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
-        //noinspection ConstantConditions null predicate internally - not recommended for external use
-        return query(apiName, modelClass, null, responseListener);
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        //noinspection ConstantConditions null predicate to reduce boiler plate. Not recommended for external use.
+        return query(apiName, modelClass, null, onResponse, onFailure);
     }
 
     @Nullable
@@ -213,7 +220,11 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull String objectId,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        final ResultListener<GraphQLResponse<T>, ApiException> responseListener =
+            ResultListener.instance(onResponse, onFailure);
+
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
             final GraphQLOperation<T> operation =
@@ -221,7 +232,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             operation.start();
             return operation;
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -232,13 +243,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
-            return query(apiName, request, responseListener);
+            return query(apiName, request, onResponse, onFailure);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
-
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -248,14 +259,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        final ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener =
+            ResultListener.instance(onResponse, onFailure);
+
         try {
             final GraphQLOperation<T> operation =
                     buildMultiResponseOperation(apiName, graphQLRequest, responseListener);
             operation.start();
             return operation;
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -265,15 +280,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> mutate(
             @NonNull T model,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return mutate(apiName, model, mutationType, responseListener);
+        return mutate(apiName, model, mutationType, onResponse, onFailure);
     }
 
     @Nullable
@@ -282,30 +298,32 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull T model,
             @NonNull QueryPredicate predicate,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return mutate(apiName, model, predicate, mutationType, responseListener);
+        return mutate(apiName, model, predicate, mutationType, onResponse, onFailure);
     }
 
     @Nullable
     @Override
     public <T> GraphQLOperation<T> mutate(
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return mutate(apiName, graphQlRequest, responseListener);
+        return mutate(apiName, graphQlRequest, onResponse, onFailure);
     }
 
     @Nullable
@@ -314,14 +332,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull T model,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
-        //noinspection ConstantConditions null predicate internally, not recommended for external use
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        //noinspection ConstantConditions null predicate to reduce boiler-plate, not recommmend externally
         return mutate(
                 apiName,
                 model,
                 null,
                 mutationType,
-                responseListener
+                onResponse,
+                onFailure
         );
     }
 
@@ -332,12 +352,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull T model,
             @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate,
             @NonNull MutationType mutationType,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
-            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildMutation(model, predicate, mutationType);
-            return mutate(apiName, request, responseListener);
+            final GraphQLRequest<T> request =
+                AppSyncGraphQLRequestFactory.buildMutation(model, predicate, mutationType);
+            return mutate(apiName, request, onResponse, onFailure);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -347,14 +369,18 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> mutate(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull ResultListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        final ResultListener<GraphQLResponse<T>, ApiException> responseListener =
+            ResultListener.instance(onResponse, onFailure);
+
         try {
             final GraphQLOperation<T> operation =
-                    buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
+                buildSingleResponseOperation(apiName, graphQLRequest, responseListener);
             operation.start();
             return operation;
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
 
@@ -365,30 +391,35 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<ApiException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionComplete) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            subscriptionListener.onError(exception);
+            onSubscriptionFailure.accept(exception);
             return null;
         }
-        return subscribe(apiName, modelClass, subscriptionType, subscriptionListener);
+        return subscribe(apiName, modelClass, subscriptionType,
+            onNextResponse, onSubscriptionFailure, onSubscriptionComplete);
     }
 
     @Nullable
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<ApiException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionComplete) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            subscriptionListener.onError(exception);
+            onSubscriptionFailure.accept(exception);
             return null;
         }
-        return subscribe(apiName, graphQLRequest, subscriptionListener);
+        return subscribe(apiName, graphQLRequest, onNextResponse, onSubscriptionFailure, onSubscriptionComplete);
     }
 
     @Nullable
@@ -397,7 +428,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<ApiException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionComplete) {
         try {
             return subscribe(
                     apiName,
@@ -406,10 +439,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                             subscriptionType,
                             authProvider.getCognitoUserPoolsAuthProvider()
                     ),
-                    subscriptionListener
+                    onNextResponse,
+                    onSubscriptionFailure,
+                    onSubscriptionComplete
             );
         } catch (ApiException exception) {
-            subscriptionListener.onError(exception);
+            onSubscriptionFailure.accept(exception);
             return null;
         }
     }
@@ -419,10 +454,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull StreamListener<GraphQLResponse<T>, ApiException> subscriptionListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<ApiException> onSubscriptionFailure,
+            @NonNull Action onSubscriptionComplete) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            subscriptionListener.onError(
+            onSubscriptionFailure.accept(
                     new ApiException(
                             "No client information for API named " + apiName,
                             "Check your amplify configuration to make sure there " +
@@ -432,13 +469,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return null;
         }
 
+        StreamListener<GraphQLResponse<T>, ApiException> streamListener =
+            StreamListener.instance(onNextResponse, onSubscriptionFailure, onSubscriptionComplete);
+
         SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
                 .subscriptionManager(clientDetails.webSocketEndpoint())
                 .endpoint(clientDetails.apiConfiguration().getEndpoint())
                 .client(clientDetails.okHttpClient())
                 .graphQLRequest(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
-                .streamListener(subscriptionListener)
+                .streamListener(streamListener)
                 .build();
         operation.start();
         return operation;
@@ -448,15 +488,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation get(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return get(apiName, options, responseListener);
+        return get(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -464,15 +505,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation get(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.GET,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -481,15 +524,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation put(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return put(apiName, options, responseListener);
+        return put(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -497,15 +541,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation put(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.PUT,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -514,15 +560,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation post(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return post(apiName, options, responseListener);
+        return post(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -530,15 +577,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation post(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.POST,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -547,15 +596,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation delete(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return delete(apiName, options, responseListener);
+        return delete(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -563,15 +613,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation delete(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.DELETE,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -580,15 +632,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation head(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return head(apiName, options, responseListener);
+        return head(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -596,15 +649,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation head(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.HEAD,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }
@@ -613,15 +668,16 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     @Override
     public RestOperation patch(
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.REST);
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
-        return patch(apiName, options, responseListener);
+        return patch(apiName, options, onResponse, onFailure);
     }
 
     @Nullable
@@ -629,15 +685,17 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public RestOperation patch(
             @NonNull String apiName,
             @NonNull RestOptions options,
-            @NonNull ResultListener<RestResponse, ApiException> responseListener) {
+            @NonNull Consumer<RestResponse> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         try {
             return createRestOperation(
                     apiName,
                     HttpMethod.PATCH,
                     options,
-                    responseListener);
+                    ResultListener.instance(onResponse, onFailure)
+            );
         } catch (ApiException exception) {
-            responseListener.onError(exception);
+            onFailure.accept(exception);
             return null;
         }
     }

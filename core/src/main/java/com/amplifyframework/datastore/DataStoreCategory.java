@@ -17,15 +17,15 @@ package com.amplifyframework.datastore;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
-
-import io.reactivex.Observable;
 
 /**
  * DataStore simplifies local storage of your application data on the
@@ -53,8 +53,9 @@ public class DataStoreCategory
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener) {
-        getSelectedPlugin().save(item, saveItemListener);
+            @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
+            @NonNull Consumer<DataStoreException> onFailureToSave) {
+        getSelectedPlugin().save(item, onItemSaved, onFailureToSave);
     }
 
     /**
@@ -64,8 +65,9 @@ public class DataStoreCategory
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> saveItemListener) {
-        getSelectedPlugin().save(item, predicate, saveItemListener);
+            @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
+            @NonNull Consumer<DataStoreException> onFailureToSave) {
+        getSelectedPlugin().save(item, predicate, onItemSaved, onFailureToSave);
     }
 
     /**
@@ -74,8 +76,9 @@ public class DataStoreCategory
     @Override
     public <T extends Model> void delete(
             @NonNull T item,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> deleteItemListener) {
-        getSelectedPlugin().delete(item, deleteItemListener);
+            @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        getSelectedPlugin().delete(item, onItemDeleted, onFailureToDelete);
     }
 
     /**
@@ -85,8 +88,9 @@ public class DataStoreCategory
     public <T extends Model> void delete(
             @NonNull T object,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<DataStoreItemChange<T>, DataStoreException> deleteItemListener) {
-        getSelectedPlugin().delete(object, predicate, deleteItemListener);
+            @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        getSelectedPlugin().delete(object, predicate, onItemDeleted, onFailureToDelete);
     }
 
     /**
@@ -95,8 +99,9 @@ public class DataStoreCategory
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
-        getSelectedPlugin().query(itemClass, queryResultsListener);
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        getSelectedPlugin().query(itemClass, onQueryResults, onQueryFailure);
     }
 
     /**
@@ -106,8 +111,9 @@ public class DataStoreCategory
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate predicate,
-            @NonNull ResultListener<Iterator<T>, DataStoreException> queryResultsListener) {
-        getSelectedPlugin().query(itemClass, predicate, queryResultsListener);
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        getSelectedPlugin().query(itemClass, predicate, onQueryResults, onQueryFailure);
     }
 
     /**
@@ -115,8 +121,12 @@ public class DataStoreCategory
      */
     @NonNull
     @Override
-    public Observable<DataStoreItemChange<? extends Model>> observe() {
-        return getSelectedPlugin().observe();
+    public Cancelable observe(
+            @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return getSelectedPlugin().observe(
+            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
     /**
@@ -124,19 +134,13 @@ public class DataStoreCategory
      */
     @NonNull
     @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(@NonNull Class<T> itemClass) {
-        return getSelectedPlugin().observe(itemClass);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+    public <T extends Model> Cancelable observe(
             @NonNull Class<T> itemClass,
-            @NonNull String uniqueId) {
-        return getSelectedPlugin().observe(itemClass, uniqueId);
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return getSelectedPlugin().observe(itemClass,
+            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
     /**
@@ -144,9 +148,28 @@ public class DataStoreCategory
      */
     @NonNull
     @Override
-    public <T extends Model> Observable<DataStoreItemChange<T>> observe(
+    public <T extends Model> Cancelable observe(
             @NonNull Class<T> itemClass,
-            @NonNull QueryPredicate selectionCriteria) {
-        return getSelectedPlugin().observe(itemClass, selectionCriteria);
+            @NonNull String uniqueId,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return getSelectedPlugin().observe(itemClass, uniqueId,
+            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable observe(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryPredicate selectionCriteria,
+            @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
+            @NonNull Consumer<DataStoreException> onObservationFailure,
+            @NonNull Action onObservationCompleted) {
+        return getSelectedPlugin().observe(itemClass, selectionCriteria,
+            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 }

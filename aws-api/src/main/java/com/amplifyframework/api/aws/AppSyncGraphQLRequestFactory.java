@@ -305,8 +305,8 @@ final class AppSyncGraphQLRequestFactory {
 
     private static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws ApiException {
         if (queryPredicate instanceof QueryPredicateOperation) {
-            QueryPredicateOperation qpo = (QueryPredicateOperation) queryPredicate;
-            QueryOperator op = qpo.operator();
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryOperator<?> op = qpo.operator();
             return Collections.singletonMap(
                     qpo.field(),
                     Collections.singletonMap(appSyncOpType(op.type()), appSyncOpValue(op))
@@ -370,7 +370,7 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    private static Object appSyncOpValue(QueryOperator qOp) throws ApiException {
+    private static Object appSyncOpValue(QueryOperator<?> qOp) throws ApiException {
         switch (qOp.type()) {
             case NOT_EQUAL:
                 return ((NotEqualQueryOperator) qOp).value();
@@ -387,7 +387,7 @@ final class AppSyncGraphQLRequestFactory {
             case CONTAINS:
                 return ((ContainsQueryOperator) qOp).value();
             case BETWEEN:
-                BetweenQueryOperator betweenOp = (BetweenQueryOperator) qOp;
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) qOp;
                 return Arrays.asList(betweenOp.start(), betweenOp.end());
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();

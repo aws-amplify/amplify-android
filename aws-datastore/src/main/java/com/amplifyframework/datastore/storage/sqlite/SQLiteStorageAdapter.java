@@ -27,6 +27,8 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
@@ -68,8 +70,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import io.reactivex.Completable;
-import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
 
 /**
@@ -277,7 +279,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         item.getId())) {
                     // update model stored in SQLite
                     // update always checks for ID first
-                    final QueryPredicateOperation idCheck =
+                    final QueryPredicateOperation<?> idCheck =
                             QueryField.field(primaryKeyName).eq(item.getId());
                     final QueryPredicate condition = predicate != null
                             ? idCheck.and(predicate)
@@ -421,7 +423,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         " identified by ID: " + item.getId());
 
                 // delete always checks for ID first
-                final QueryPredicateOperation idCheck =
+                final QueryPredicateOperation<?> idCheck =
                         QueryField.field(primaryKeyName).eq(item.getId());
                 final QueryPredicate condition = predicate != null
                         ? idCheck.and(predicate)
@@ -476,8 +478,24 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      */
     @NonNull
     @Override
-    public Observable<StorageItemChange.Record> observe() {
-        return itemChangeSubject;
+    public Cancelable observe(
+            @NonNull StreamListener<StorageItemChange.Record, DataStoreException> itemChangeListener) {
+        Disposable disposable = itemChangeSubject.subscribe(
+            itemChangeListener::onNext,
+            failure -> {
+                if (failure instanceof DataStoreException) {
+                    itemChangeListener.onError((DataStoreException) failure);
+                    return;
+                }
+                itemChangeListener.onError(new DataStoreException(
+                    "Failed to observe items in storage adapter.",
+                    failure,
+                    "Inspect the failure details."
+                ));
+            },
+            itemChangeListener::onComplete
+        );
+        return disposable::dispose;
     }
 
     /**

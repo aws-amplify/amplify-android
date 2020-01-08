@@ -20,8 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.network.AppSyncApi;
@@ -50,7 +49,7 @@ import static org.junit.Assert.assertTrue;
  */
 @Ignore("Multiple tests can't subscribe in a single process right now.")
 @SuppressWarnings("magicnumber")
-public class AppSyncApiInstrumentationTest {
+public final class AppSyncApiInstrumentationTest {
     private static AppSyncApi api;
 
     /**
@@ -194,9 +193,8 @@ public class AppSyncApiInstrumentationTest {
     private <T extends Model> ModelWithMetadata<T> create(@NonNull T model) {
         LatchedResponseConsumer<ModelWithMetadata<T>> createdItemConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
-            ResultListener.instance(createdItemConsumer, EmptyConsumer.of(DataStoreException.class));
-        api.create(model, listener);
+        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
+        api.create(model, createdItemConsumer, failureConsumer);
         return createdItemConsumer.awaitResponseData();
     }
 
@@ -212,9 +210,8 @@ public class AppSyncApiInstrumentationTest {
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version) {
         LatchedResponseConsumer<ModelWithMetadata<T>> updatedItemConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
-            ResultListener.instance(updatedItemConsumer, EmptyConsumer.of(DataStoreException.class));
-        api.update(model, version, listener);
+        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
+        api.update(model, version, updatedItemConsumer, failureConsumer);
         return updatedItemConsumer.awaitResponseData();
     }
 
@@ -231,9 +228,8 @@ public class AppSyncApiInstrumentationTest {
             @NonNull Class<T> clazz, String modelId, int version) {
         LatchedResponseConsumer<ModelWithMetadata<T>> deleteResultConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
-            ResultListener.instance(deleteResultConsumer, EmptyConsumer.of(DataStoreException.class));
-        api.delete(clazz, modelId, version, listener);
+        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
+        api.delete(clazz, modelId, version, deleteResultConsumer, failureConsumer);
         return deleteResultConsumer.awaitResponseData();
     }
 
@@ -251,9 +247,8 @@ public class AppSyncApiInstrumentationTest {
             @NonNull Class<T> clazz, String modelId, int version) {
         LatchedResponseConsumer<ModelWithMetadata<T>> deleteResultConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
-            ResultListener.instance(deleteResultConsumer, EmptyConsumer.of(DataStoreException.class));
-        api.delete(clazz, modelId, version, listener);
+        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
+        api.delete(clazz, modelId, version, deleteResultConsumer, failureConsumer);
         return deleteResultConsumer.awaitErrorsInNextResponse();
     }
 
@@ -268,9 +263,7 @@ public class AppSyncApiInstrumentationTest {
             @NonNull Class<T> clazz, @Nullable Long lastSyncTime) {
         LatchedResponseConsumer<Iterable<ModelWithMetadata<T>>> syncConsumer =
             LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException> syncListener =
-            ResultListener.instance(syncConsumer, EmptyConsumer.of(DataStoreException.class));
-        api.sync(clazz, lastSyncTime, syncListener);
+        api.sync(clazz, lastSyncTime, syncConsumer, EmptyConsumer.of(DataStoreException.class));
         return syncConsumer.awaitResponseData();
     }
 
@@ -299,9 +292,8 @@ public class AppSyncApiInstrumentationTest {
         static <T extends Model> Subscription<T> onCreate(Class<T> clazz) {
             LatchedResponseConsumer<ModelWithMetadata<T>> itemConsumer = LatchedResponseConsumer.instance();
             LatchedAction completionAction = LatchedAction.instance();
-            StreamListener<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException> listener =
-                StreamListener.instance(itemConsumer, EmptyConsumer.of(DataStoreException.class), completionAction);
-            Cancelable cancelable = api.onCreate(clazz, listener);
+            Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
+            Cancelable cancelable = api.onCreate(clazz, itemConsumer, failureConsumer, completionAction);
             return new Subscription<>(cancelable, itemConsumer, completionAction);
         }
 
