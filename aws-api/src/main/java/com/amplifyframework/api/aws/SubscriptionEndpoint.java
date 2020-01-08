@@ -25,7 +25,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Consumer;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,6 +35,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -62,24 +64,30 @@ final class SubscriptionEndpoint {
     private WebSocket webSocket;
 
     SubscriptionEndpoint(
-            ApiConfiguration apiConfiguration,
-            GraphQLResponse.Factory responseFactory) {
-        this.apiConfiguration = apiConfiguration;
+            @NonNull ApiConfiguration apiConfiguration,
+            @NonNull GraphQLResponse.Factory responseFactory) {
+        this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
-        this.responseFactory = responseFactory;
+        this.responseFactory = Objects.requireNonNull(responseFactory);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.connectionAcknowledgement = new CountDownLatch(1);
     }
 
     synchronized <T> String requestSubscription(
             @NonNull GraphQLRequest<T> request,
-            @NonNull StreamListener<GraphQLResponse<T>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<T>> onNextItem,
+            @NonNull Consumer<ApiException> onSubscriptionError,
+            @NonNull Action onSubscriptionComplete) {
+        Objects.requireNonNull(request);
+        Objects.requireNonNull(onNextItem);
+        Objects.requireNonNull(onSubscriptionError);
+        Objects.requireNonNull(onSubscriptionComplete);
 
         if (webSocket == null) {
             try {
                 webSocket = createWebSocket();
             } catch (ApiException exception) {
-                responseListener.onError(new ApiException(
+                onSubscriptionError.accept(new ApiException(
                         "Failed to create websocket for subscription",
                         exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -89,7 +97,7 @@ final class SubscriptionEndpoint {
             try {
                 connectionAcknowledgement.await(CONNECTION_ACKNOWLEDGEMENT_TIMEOUT, TimeUnit.SECONDS);
             } catch (InterruptedException interruptedException) {
-                responseListener.onError(new ApiException(
+                onSubscriptionError.accept(new ApiException(
                         "Subscription timed out waiting for acknowledgement",
                         interruptedException,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
@@ -109,14 +117,17 @@ final class SubscriptionEndpoint {
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
-            responseListener.onError(new ApiException(
+            onSubscriptionError.accept(new ApiException(
                     "Failed to construct subscription registration message.",
                     exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
         }
 
-        Subscription<T> subscription = new Subscription<>(responseListener, responseFactory, request.getModelClass());
+        Subscription<T> subscription = new Subscription<>(
+            onNextItem, onSubscriptionError, onSubscriptionComplete,
+            responseFactory, request.getModelClass()
+        );
         subscriptions.put(subscriptionId, subscription);
         subscription.awaitSubscriptionReady();
 
@@ -344,17 +355,23 @@ final class SubscriptionEndpoint {
     static final class Subscription<T> {
         private static final int ACKNOWLEDGEMENT_TIMEOUT = 10 /* seconds */;
 
-        private final StreamListener<GraphQLResponse<T>, ApiException> responseListener;
+        private final Consumer<GraphQLResponse<T>> onNextItem;
+        private final Consumer<ApiException> onSubscriptionError;
+        private final Action onSubscriptionComplete;
         private final GraphQLResponse.Factory responseFactory;
         private final Class<T> classToCast;
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
 
         Subscription(
-                StreamListener<GraphQLResponse<T>, ApiException> responseListener,
+                Consumer<GraphQLResponse<T>> onNextItem,
+                Consumer<ApiException> onSubscriptionError,
+                Action onSubscriptionComplete,
                 GraphQLResponse.Factory responseFactory,
                 Class<T> classToCast) {
-            this.responseListener = responseListener;
+            this.onNextItem = onNextItem;
+            this.onSubscriptionError = onSubscriptionError;
+            this.onSubscriptionComplete = onSubscriptionComplete;
             this.responseFactory = responseFactory;
             this.classToCast = classToCast;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
@@ -405,19 +422,18 @@ final class SubscriptionEndpoint {
 
         void dispatchNextMessage(String message) {
             try {
-                GraphQLResponse<T> response = responseFactory.buildSingleItemResponse(message, classToCast);
-                responseListener.onNext(response);
+                onNextItem.accept(responseFactory.buildSingleItemResponse(message, classToCast));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }
         }
 
         void dispatchError(ApiException error) {
-            responseListener.onError(error);
+            onSubscriptionError.accept(error);
         }
 
         void dispatchCompleted() {
-            responseListener.onComplete();
+            onSubscriptionComplete.call();
         }
 
         @SuppressWarnings("LineLength")
@@ -432,7 +448,13 @@ final class SubscriptionEndpoint {
 
             Subscription<?> that = (Subscription<?>) thatObject;
 
-            if (!ObjectsCompat.equals(responseListener, that.responseListener)) {
+            if (!ObjectsCompat.equals(onNextItem, that.onNextItem)) {
+                return false;
+            }
+            if (!ObjectsCompat.equals(onSubscriptionError, that.onSubscriptionError)) {
+                return false;
+            }
+            if (!ObjectsCompat.equals(onSubscriptionComplete, that.onSubscriptionComplete)) {
                 return false;
             }
             if (!ObjectsCompat.equals(responseFactory, that.responseFactory)) {
@@ -453,9 +475,11 @@ final class SubscriptionEndpoint {
         @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
-            int result = responseListener != null ? responseListener.hashCode() : 0;
-            result = 31 * result + (responseFactory != null ? responseFactory.hashCode() : 0);
-            result = 31 * result + (classToCast != null ? classToCast.hashCode() : 0);
+            int result = onNextItem.hashCode();
+            result = 31 * result + onSubscriptionError.hashCode();
+            result = 31 * result + onSubscriptionComplete.hashCode();
+            result = 31 * result + responseFactory.hashCode();
+            result = 31 * result + classToCast.hashCode();
             result = 31 * result + subscriptionReadyAcknowledgment.hashCode();
             result = 31 * result + subscriptionCompletionAcknowledgement.hashCode();
             return result;

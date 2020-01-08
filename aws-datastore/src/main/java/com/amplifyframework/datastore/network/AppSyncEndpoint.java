@@ -39,7 +39,6 @@ public interface AppSyncEndpoint {
      * @param onFailure Invoked on failure to obtain response data
      * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
      */
-    @SuppressWarnings("checkstyle:LineLength") // Long bounds for ResultListener
     @NonNull
     <T extends Model> Cancelable sync(
             @NonNull Class<T> modelClass,
@@ -103,7 +102,7 @@ public interface AppSyncEndpoint {
      * Get notified when a create event happens on a given class.
      * @param modelClass The class of the Model we are listening on
      * @param onNextResponse
-     *        A listener to receive notifications when new items are
+     *        A callback to receive notifications when new items are
      *        available via the subscription stream
      * @param onSubscriptionFailure
      *        Called when the subscription terminates with a failure
@@ -124,7 +123,7 @@ public interface AppSyncEndpoint {
      * Get notified when an update event happens on a given class.
      * @param modelClass The class of the Model we are listening on
      * @param onNextResponse
-     *        A listener to receive notifications when new items are
+     *        A callback to receive notifications when new items are
      *        available via the subscription stream
      * @param onSubscriptionFailure
      *        Called when the subscription terminates with a failure
@@ -145,7 +144,7 @@ public interface AppSyncEndpoint {
      * Get notified when a delete event happens on a given class.
      * @param modelClass The class of the Model we are listening on
      * @param onNextResponse
-     *        A listener to receive notifications when new items are
+     *        A callback to receive notifications when new items are
      *        available via the subscription stream
      * @param onSubscriptionFailure
      *        Called when the subscription terminates with a failure

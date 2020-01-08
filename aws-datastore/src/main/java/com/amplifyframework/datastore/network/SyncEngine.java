@@ -24,8 +24,6 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -121,16 +119,17 @@ public final class SyncEngine {
     private Single<Mutation<? extends Model>> applyMutationToLocalStorage(Mutation<? extends Model> mutation) {
         final StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
         return Single.defer(() -> Single.create(emitter -> {
-            final ResultListener<StorageItemChange.Record, DataStoreException> storageResultListener =
-                ResultListener.instance(result -> emitter.onSuccess(mutation), emitter::onError);
+            final Consumer<StorageItemChange.Record> onSuccess =
+                result -> emitter.onSuccess(mutation);
+            final Consumer<DataStoreException> onError = emitter::onError;
 
             switch (mutation.type()) {
                 case UPDATE:
                 case CREATE:
-                    storageAdapter.save(mutation.model(), initiator, storageResultListener);
+                    storageAdapter.save(mutation.model(), initiator, onSuccess, onError);
                     break;
                 case DELETE:
-                    storageAdapter.delete(mutation.model(), initiator, storageResultListener);
+                    storageAdapter.delete(mutation.model(), initiator, onSuccess, onError);
                     break;
                 default:
                     throw new DataStoreException(
@@ -165,9 +164,9 @@ public final class SyncEngine {
      */
     private void startObservingStorageChanges() {
         observationsToDispose.add(Observable.<StorageItemChange.Record>create(emitter ->
-            storageAdapter.observe(StreamListener.instance(
+            storageAdapter.observe(
                 emitter::onNext, emitter::onError, emitter::onComplete)
-            ))
+            )
             .map(record -> record.toStorageItemChange(storageItemChangeConverter))
             .filter(possiblyCyclicChange -> {
                 // Don't continue if the storage change was caused by the sync engine itself

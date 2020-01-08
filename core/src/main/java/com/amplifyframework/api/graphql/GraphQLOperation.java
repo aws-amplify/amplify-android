@@ -45,7 +45,7 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
 
     /**
      * Converts a response json string containing a single object to a formatted
-     * {@link GraphQLResponse} object that a response listener can receive.
+     * {@link GraphQLResponse} object that a response consumer can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
      * @throws ApiException If the class provided mismatches the data
@@ -61,7 +61,7 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
 
     /**
      * Converts a response json string containing a list of objects to a formatted
-     * {@link GraphQLResponse} object that a response listener can receive.
+     * {@link GraphQLResponse} object that a response consumer can receive.
      * @param jsonResponse json response from API to be converted
      * @return wrapped response object
      * @throws ApiException If the class provided mismatches the data

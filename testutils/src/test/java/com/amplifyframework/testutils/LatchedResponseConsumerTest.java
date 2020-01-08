@@ -15,10 +15,8 @@
 
 package com.amplifyframework.testutils;
 
-import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.ResultListener;
 
 import org.junit.Test;
 
@@ -39,22 +37,6 @@ import static org.junit.Assert.assertEquals;
  */
 public final class LatchedResponseConsumerTest {
     private static final long TEST_OP_TIMEOUT_MS = 500L;
-
-    /**
-     * When the response consumer is used as a back-end to an {@link ResultListener},
-     * a result value is proxied through to the consumer and may be awaited, from it.
-     */
-    @Test
-    public void valuesAreConsumedThroughResultListener() {
-        LatchedResponseConsumer<String> resultConsumer = LatchedResponseConsumer.instance();
-        ResultListener<GraphQLResponse<String>, ApiException> resultListener =
-            ResultListener.instance(resultConsumer, EmptyConsumer.of(ApiException.class));
-
-        String expectedResponseData = "Hello, World.";
-        resultListener.onResult(new GraphQLResponse<>(expectedResponseData, Collections.emptyList()));
-
-        assertEquals(expectedResponseData, resultConsumer.awaitResponseData());
-    }
 
     /**
      * When the consumer has accepted a bunch of values, and then we await their receipt,
