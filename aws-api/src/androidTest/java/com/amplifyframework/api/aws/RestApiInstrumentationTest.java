@@ -16,8 +16,12 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.testutils.EmptyConsumer;
+import com.amplifyframework.testutils.LatchedConsumer;
 import com.amplifyframework.testutils.SynchronousApi;
 
 import org.json.JSONException;
@@ -26,24 +30,24 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
  * Validates the functionality of the {@link AWSApiPlugin} for REST operations.
- *
  */
 public final class RestApiInstrumentationTest {
-
     private static SynchronousApi api;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
-     * @throws AmplifyException Exception is thrown if configuration fails.
+     * @throws AmplifyException if configuration fails
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
         api = SynchronousApi.singleton();
+        TestAWSMobileClient.initialize();
     }
 
     /**
@@ -108,5 +112,29 @@ public final class RestApiInstrumentationTest {
                 "Should return the right value",
                 "/simplesuccessapikey",
                 contextJSON.getString("resource-path"));
+    }
+
+    /**
+     * Test whether we can make api Rest call in IAM as auth type.
+     */
+    @Test
+    public void getRequestWithIAM() {
+        final RestOptions options = RestOptions.builder().addPath("items").build();
+        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
+        Amplify.API.get("iamAuthApi", options, responseConsumer, EmptyConsumer.of(ApiException.class));
+        assertNotNull("Should return non-null data", responseConsumer.awaitValue().getData());
+    }
+
+    /**
+     * Test whether we can get failed response for access denied.
+     */
+    @Test
+    public void getRequestWithIAMFailedAccess() {
+        final RestOptions options = RestOptions.builder().addPath("invalidPath").build();
+        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
+        Amplify.API.get("iamAuthApi", options, responseConsumer, EmptyConsumer.of(ApiException.class));
+        RestResponse response = responseConsumer.awaitValue();
+        assertNotNull("Should return non-null data", response.getData());
+        assertFalse("Response should be unsuccessful", response.getCode().isSucessful());
     }
 }
