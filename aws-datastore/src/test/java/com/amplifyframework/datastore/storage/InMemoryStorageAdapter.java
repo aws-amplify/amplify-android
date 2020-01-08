@@ -28,8 +28,10 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
@@ -40,12 +42,12 @@ import io.reactivex.subjects.PublishSubject;
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
 
-    private final List<Model> items;
+    private final Map<String, Model> items;
     private final PublishSubject<StorageItemChange.Record> changeRecordStream;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     private InMemoryStorageAdapter() {
-        this.items = new ArrayList<>();
+        this.items = new HashMap<>();
         this.changeRecordStream = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
@@ -81,21 +83,35 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final QueryPredicate predicate,
+            @Nullable final QueryPredicate predicate,
             @NonNull final Consumer<StorageItemChange.Record> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        items.add(item);
-        StorageItemChange.Record save = StorageItemChange.<T>builder()
-                .item(item)
-                .itemClass((Class<T>) item.getClass())
-                .type(StorageItemChange.Type.SAVE)
-                .predicate(predicate)
-                .initiator(initiator)
-                .build()
-                .toRecord(storageItemChangeConverter);
-        changeRecordStream.onNext(save);
-        onSuccess.accept(save);
+        if (items.containsKey(item.getId())) {
+            // Update
+            Model savedItem = items.remove(item.getId());
+            if (predicate == null || predicate.evaluate(savedItem)) {
+                items.remove(item.getId());
+                save(item, initiator, predicate, onSuccess, onError);
+                return;
+            }
+            onError.accept(new DataStoreException(
+                    "Conditional check failed.",
+                    "Verify the saved models."));
+        } else {
+            // Insert
+            items.put(item.getId(), item);
+            StorageItemChange.Record save = StorageItemChange.<T>builder()
+                    .item(item)
+                    .itemClass((Class<T>) item.getClass())
+                    .type(StorageItemChange.Type.SAVE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+            changeRecordStream.onNext(save);
+            onSuccess.accept(save);
+        }
     }
 
     @Override
@@ -116,7 +132,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<DataStoreException> onError
     ) {
         List<T> result = new ArrayList<>();
-        for (Model item : items) {
+        for (Model item : items.values()) {
             if (itemClass.isAssignableFrom(item.getClass())
                     && (predicate == null || predicate.evaluate(item))) {
                 result.add((T) item);
@@ -144,22 +160,23 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final Consumer<StorageItemChange.Record> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
-        for (Model savedItem : items) {
-            if (savedItem.getId().equals(item.getId())
-                    && (predicate == null || predicate.evaluate(item))) {
-                items.remove(item);
-                StorageItemChange.Record deletion = StorageItemChange.<T>builder()
-                        .item((T) savedItem)
-                        .itemClass((Class<T>) savedItem.getClass())
-                        .type(StorageItemChange.Type.DELETE)
-                        .predicate(predicate)
-                        .initiator(initiator)
-                        .build()
-                        .toRecord(storageItemChangeConverter);
-                changeRecordStream.onNext(deletion);
-                onSuccess.accept(deletion);
-                return;
-            }
+        if (items.containsKey(item.getId())
+                && (predicate == null || predicate.evaluate(item))) {
+            Model savedItem = items.remove(item.getId());
+            StorageItemChange.Record deletion = StorageItemChange.<T>builder()
+                    .item((T) savedItem)
+                    .itemClass((Class<T>) savedItem.getClass())
+                    .type(StorageItemChange.Type.DELETE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+            changeRecordStream.onNext(deletion);
+            onSuccess.accept(deletion);
+        } else {
+            onError.accept(new DataStoreException(
+                    "Item does not exist or conditional check failed.",
+                    "Verify the saved models."));
         }
     }
 
@@ -196,7 +213,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
      * Get the items that are in the storage.
      * @return Items in storage
      */
-    public List<Model> items() {
+    public Map<String, Model> items() {
         return items;
     }
 }
