@@ -19,7 +19,6 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
@@ -167,11 +166,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getTargetIdentityId()
         );
 
-        ResultListener<StorageDownloadFileResult, StorageException> resultListener =
-                ResultListener.instance(onSuccess, onError);
-
         AWSS3StorageDownloadFileOperation operation =
-                new AWSS3StorageDownloadFileOperation(storageService, request, resultListener);
+                new AWSS3StorageDownloadFileOperation(storageService, request, onSuccess, onError);
         operation.start();
 
         return operation;
@@ -205,11 +201,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getMetadata()
         );
 
-        ResultListener<StorageUploadFileResult, StorageException> resultListener =
-                ResultListener.instance(onSuccess, onError);
-
         AWSS3StorageUploadFileOperation operation =
-                new AWSS3StorageUploadFileOperation(storageService, request, resultListener);
+                new AWSS3StorageUploadFileOperation(storageService, request, onSuccess, onError);
 
         operation.start();
 
@@ -238,11 +231,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getTargetIdentityId()
         );
 
-        ResultListener<StorageRemoveResult, StorageException> resultListener =
-                ResultListener.instance(onSuccess, onError);
-
         AWSS3StorageRemoveOperation operation =
-                new AWSS3StorageRemoveOperation(storageService, executorService, request, resultListener);
+                new AWSS3StorageRemoveOperation(storageService, executorService, request, onSuccess, onError);
 
         operation.start();
 
@@ -271,11 +261,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getTargetIdentityId()
         );
 
-        ResultListener<StorageListResult, StorageException> resultListener =
-                ResultListener.instance(onSuccess, onError);
-
         AWSS3StorageListOperation operation =
-                new AWSS3StorageListOperation(storageService, executorService, request, resultListener);
+                new AWSS3StorageListOperation(storageService, executorService, request, onSuccess, onError);
 
         operation.start();
 

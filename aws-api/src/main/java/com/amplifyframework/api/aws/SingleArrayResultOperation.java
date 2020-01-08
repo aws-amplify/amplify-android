@@ -24,10 +24,11 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.logging.Logger;
 
 import java.io.IOException;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -50,7 +51,8 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener;
+    private final Consumer<GraphQLResponse<Iterable<T>>> onResponse;
+    private final Consumer<ApiException> onFailure;
 
     private Call ongoingCall;
 
@@ -60,19 +62,21 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
      * @param client OkHttp client being used to hit the endpoint
      * @param request GraphQL request being enacted
      * @param responseFactory an implementation of GsonGraphQLResponseFactory
-     * @param responseListener
-     *        listener to be invoked when response is available, or if
+     * @param onResponse Invoked when response is attained from endpoint
+     * @param onFailure Invoked upon failure to obtain response from endpoint
      */
     private SingleArrayResultOperation(
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
             @NonNull GraphQLRequest<T> request,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
+            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
         this.endpoint = endpoint;
         this.client = client;
-        this.responseListener = responseListener;
+        this.onResponse = onResponse;
+        this.onFailure = onFailure;
     }
 
     @Override
@@ -97,14 +101,10 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
                 ongoingCall.cancel();
             }
 
-            ApiException wrappedError =
-                    new ApiException(
-                        "OkHttp client failed to make a successful request.",
-                        error,
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    );
-
-            responseListener.onError(wrappedError);
+            onFailure.accept(new ApiException(
+                "OkHttp client failed to make a successful request.",
+                error, AmplifyException.TODO_RECOVERY_SUGGESTION
+            ));
         }
     }
 
@@ -128,32 +128,28 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
                 try {
                     jsonResponse = responseBody.string();
                 } catch (IOException exception) {
-                    responseListener.onError(new ApiException(
-                            "Could not retrieve the response body from the returned JSON",
-                            exception,
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                    onFailure.accept(new ApiException(
+                        "Could not retrieve the response body from the returned JSON",
+                        exception, AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
+                    return;
                 }
             }
 
             try {
-                GraphQLResponse<Iterable<T>> wrappedResponse = wrapMultiResultResponse(jsonResponse);
-
-                responseListener.onResult(wrappedResponse);
-
+                onResponse.accept(wrapMultiResultResponse(jsonResponse));
                 //TODO: Dispatch to hub
             } catch (ApiException exception) {
-                responseListener.onError(exception);
+                onFailure.accept(exception);
             }
         }
 
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException exception) {
-            responseListener.onError(new ApiException(
-                    "Could not retrieve the response body from the returned JSON",
-                    exception,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            onFailure.accept(new ApiException(
+                "Could not retrieve the response body from the returned JSON",
+                exception, AmplifyException.TODO_RECOVERY_SUGGESTION
             ));
         }
     }
@@ -163,41 +159,49 @@ public final class SingleArrayResultOperation<T> extends GraphQLOperation<T> {
         private OkHttpClient client;
         private GraphQLRequest<T> request;
         private GraphQLResponse.Factory responseFactory;
-        private ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener;
+        private Consumer<GraphQLResponse<Iterable<T>>> onResponse;
+        private Consumer<ApiException> onFailure;
 
-        Builder<T> endpoint(final String endpoint) {
-            this.endpoint = endpoint;
+        Builder<T> endpoint(@NonNull String endpoint) {
+            this.endpoint = Objects.requireNonNull(endpoint);
             return this;
         }
 
-        Builder<T> client(final OkHttpClient client) {
-            this.client = client;
+        Builder<T> client(@NonNull OkHttpClient client) {
+            this.client = Objects.requireNonNull(client);
             return this;
         }
 
-        Builder<T> request(final GraphQLRequest<T> request) {
-            this.request = request;
+        Builder<T> request(@NonNull GraphQLRequest<T> request) {
+            this.request = Objects.requireNonNull(request);
             return this;
         }
 
-        Builder<T> responseFactory(final GraphQLResponse.Factory responseFactory) {
-            this.responseFactory = responseFactory;
+        Builder<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
+            this.responseFactory = Objects.requireNonNull(responseFactory);
             return this;
         }
 
-        Builder<T> responseListener(final ResultListener<GraphQLResponse<Iterable<T>>, ApiException> responseListener) {
-            this.responseListener = responseListener;
+        Builder<T> onResponse(@NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse) {
+            this.onResponse = Objects.requireNonNull(onResponse);
+            return this;
+        }
+
+        Builder<T> onFailure(@NonNull Consumer<ApiException> onFailure) {
+            this.onFailure = Objects.requireNonNull(onFailure);
             return this;
         }
 
         @SuppressLint("SyntheticAccessor")
         SingleArrayResultOperation<T> build() {
             return new SingleArrayResultOperation<>(
-                    endpoint,
-                    client,
-                    request,
-                    responseFactory,
-                    responseListener);
+                Objects.requireNonNull(endpoint),
+                Objects.requireNonNull(client),
+                Objects.requireNonNull(request),
+                Objects.requireNonNull(responseFactory),
+                Objects.requireNonNull(onResponse),
+                Objects.requireNonNull(onFailure)
+            );
         }
     }
 }

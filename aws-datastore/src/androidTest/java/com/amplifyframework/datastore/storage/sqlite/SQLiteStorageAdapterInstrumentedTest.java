@@ -20,10 +20,9 @@ import android.database.Cursor;
 import android.os.StrictMode;
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -99,10 +98,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
         LatchedConsumer<List<ModelSchema>> setupResultConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<List<ModelSchema>, DataStoreException> setupResultListener =
-            ResultListener.instance(setupResultConsumer, EmptyConsumer.of(DataStoreException.class));
+        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
 
-        sqliteStorageAdapter.initialize(context, setupResultListener);
+        sqliteStorageAdapter.initialize(context, setupResultConsumer, errorConsumer);
 
         List<ModelSchema> setupResults = setupResultConsumer.awaitValue();
 
@@ -244,8 +242,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         saveModel(blogOwner);
 
         LatchedConsumer<DataStoreException> errorConsumer = LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record, DataStoreException> saveResultListener =
-            ResultListener.instance(EmptyConsumer.of(StorageItemChange.Record.class), errorConsumer);
+        Consumer<StorageItemChange.Record> successConsumer = EmptyConsumer.of(StorageItemChange.Record.class);
 
         final Blog blog = Blog.builder()
             .name("Alan's Blog")
@@ -253,7 +250,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .name("Susan Swanson") // What??
                 .build())
             .build();
-        sqliteStorageAdapter.save(blog, StorageItemChange.Initiator.DATA_STORE_API, saveResultListener);
+        sqliteStorageAdapter.save(blog, StorageItemChange.Initiator.DATA_STORE_API, successConsumer, errorConsumer);
 
         final String expectedError = "FOREIGN KEY constraint failed";
 
@@ -576,52 +573,48 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     }
 
     private <T extends Model> void saveModel(@NonNull T model) {
+        //noinspection ConstantConditions
         saveModel(model, null);
     }
 
     private <T extends Model> void saveModel(
-            @NonNull T model, @Nullable QueryPredicate predicate) {
+            @NonNull T model, @NonNull QueryPredicate predicate) {
         LatchedConsumer<StorageItemChange.Record> consumerOfSaveResult =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record, DataStoreException> saveListener =
-            ResultListener.instance(consumerOfSaveResult, EmptyConsumer.of(DataStoreException.class));
-
         sqliteStorageAdapter.save(
             model,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
-            saveListener
+            consumerOfSaveResult,
+            EmptyConsumer.of(DataStoreException.class)
         );
-
         consumerOfSaveResult.awaitValue();
     }
 
     private <T extends Model> void saveModelExpectingError(@NonNull T model, @NonNull QueryPredicate predicate) {
         LatchedConsumer<DataStoreException> consumerOfError =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record, DataStoreException> saveListener =
-            ResultListener.instance(EmptyConsumer.of(StorageItemChange.Record.class), consumerOfError);
-
         sqliteStorageAdapter.save(
             model,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
-            saveListener
+            EmptyConsumer.of(StorageItemChange.Record.class),
+            consumerOfError
         );
         consumerOfError.awaitValue();
     }
 
     private <T extends Model> Iterator<T> queryModel(@NonNull Class<T> modelClass) {
+        //noinspection ConstantConditions
         return queryModel(modelClass, null);
     }
 
     private <T extends Model> Iterator<T> queryModel(
-            @NonNull Class<T> modelClass, @Nullable QueryPredicate predicate) {
+            @NonNull Class<T> modelClass, @NonNull QueryPredicate predicate) {
         LatchedConsumer<Iterator<T>> queryResultConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<Iterator<T>, DataStoreException> resultListener =
-            ResultListener.instance(queryResultConsumer, EmptyConsumer.of(DataStoreException.class));
-        sqliteStorageAdapter.query(modelClass, predicate, resultListener);
+        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
+        sqliteStorageAdapter.query(modelClass, predicate, queryResultConsumer, errorConsumer);
         return queryResultConsumer.awaitValue();
     }
 
@@ -629,9 +622,8 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private <T extends Model> void deleteModel(@NonNull T model) {
         LatchedConsumer<StorageItemChange.Record> deleteConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        ResultListener<StorageItemChange.Record, DataStoreException> deleteListener =
-            ResultListener.instance(deleteConsumer, EmptyConsumer.of(DataStoreException.class));
-        sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteListener);
+        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
+        sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteConsumer, errorConsumer);
         deleteConsumer.awaitValue();
     }
 }
