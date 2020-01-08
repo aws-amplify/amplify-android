@@ -213,6 +213,18 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
+        delete(item, null, onItemDeleted, onFailureToDelete);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T extends Model> void delete(
+            @NonNull T item,
+            @Nullable QueryPredicate predicate,
+            @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
+            @NonNull Consumer<DataStoreException> onFailureToDelete) {
         sqliteStorageAdapter.delete(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,

@@ -144,6 +144,25 @@ public interface LocalStorageAdapter {
     );
 
     /**
+     * Deletes an item from storage only if the data being deleted meets the
+     * specific conditions. A {@link Consumer} will be invoked when the
+     * save operation is completed, to notify the caller of success or failure.
+     * @param item Item to delete
+     * @param initiator An identification of the actor who initiated this deletion
+     * @param predicate Predicate condition for conditional delete
+     * @param onSuccess A callback that will be invoked when deletion succeeds
+     * @param onError A callback that will be invoked when deletion fails with an error
+     * @param <T> The type of item being deleted
+     */
+    <T extends Model> void delete(
+            @NonNull T item,
+            @NonNull StorageItemChange.Initiator initiator,
+            @Nullable QueryPredicate predicate,
+            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<DataStoreException> onError
+    );
+
+    /**
      * Observe all changes to that occur to any/all objects in the storage.
      * @param onItemChange
      *        Receives a {@link StorageItemChange} notification every time

@@ -519,6 +519,37 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertTrue(blogs.isEmpty());
     }
 
+    /**
+     * Test delete with predicate. Conditional delete is useful for making sure that
+     * no data is removed with outdated assumptions.
+     * @throws DataStoreException from possible underlying DataStore exceptions
+     */
+    @Test
+    public void deleteModelWithPredicateDeletesConditionally() throws DataStoreException {
+        final BlogOwner john = BlogOwner.builder()
+                .name("John")
+                .build();
+        final BlogOwner jane = BlogOwner.builder()
+                .name("Jane")
+                .build();
+        final BlogOwner mark = BlogOwner.builder()
+                .name("Mark")
+                .build();
+        saveModel(john);
+        saveModel(jane);
+        saveModel(mark);
+
+        // Delete everybody but Mark
+        final QueryPredicate predicate = BlogOwner.NAME.ne(mark.getName());
+        deleteModel(john, predicate);
+        deleteModel(jane, predicate);
+        deleteModelExpectingError(mark, predicate); // Should not be deleted
+
+        Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        assertEquals(1, blogOwners.size());
+        assertTrue(blogOwners.contains(mark));
+    }
+
     private <T extends Model> void saveModel(@NonNull T model) {
         //noinspection ConstantConditions
         saveModel(model, null);
@@ -538,7 +569,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         consumerOfSaveResult.awaitValue();
     }
 
-    private <T extends Model> void saveModelExpectingError(@NonNull T model, @NonNull QueryPredicate predicate) {
+    private <T extends Model> void saveModelExpectingError(
+            @NonNull T model,
+            @NonNull QueryPredicate predicate
+    ) {
         LatchedConsumer<DataStoreException> consumerOfError =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
         sqliteStorageAdapter.save(
@@ -571,13 +605,37 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         return resultSet;
     }
 
-    @SuppressWarnings("UnusedReturnValue")
     private <T extends Model> void deleteModel(@NonNull T model) {
+        //noinspection ConstantConditions
+        deleteModel(model, null);
+    }
+
+    private <T extends Model> void deleteModel(
+            @NonNull T model, @NonNull QueryPredicate predicate) {
         LatchedConsumer<StorageItemChange.Record> deleteConsumer =
             LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
         Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
-        sqliteStorageAdapter.delete(model, StorageItemChange.Initiator.DATA_STORE_API, deleteConsumer, errorConsumer);
+        sqliteStorageAdapter.delete(
+                model,
+                StorageItemChange.Initiator.DATA_STORE_API,
+                deleteConsumer,
+                errorConsumer);
         deleteConsumer.awaitValue();
+    }
+
+    private <T extends Model> void deleteModelExpectingError(
+            @NonNull T model,
+            @NonNull QueryPredicate predicate
+    ) {
+        LatchedConsumer<DataStoreException> errorConsumer =
+                LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
+        sqliteStorageAdapter.delete(
+                model,
+                StorageItemChange.Initiator.DATA_STORE_API,
+                predicate,
+                EmptyConsumer.of(StorageItemChange.Record.class),
+                errorConsumer);
+        errorConsumer.awaitValue();
     }
 }
 
