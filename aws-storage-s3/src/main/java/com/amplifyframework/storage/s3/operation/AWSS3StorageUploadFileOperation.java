@@ -18,7 +18,7 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.ResultListener;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -32,13 +32,15 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
+import java.util.Objects;
 
 /**
  * An operation to upload a file from AWS S3.
  */
 public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
     private final AWSS3StorageService storageService;
-    private final ResultListener<StorageUploadFileResult, StorageException> resultListener;
+    private final Consumer<StorageUploadFileResult> onSuccess;
+    private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
     private File file;
 
@@ -46,15 +48,18 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * Constructs a new AWSS3StorageUploadFileOperation.
      * @param storageService S3 client wrapper
      * @param request upload request parameters
-     * @param resultListener Will be notified when results of upload are available
+     * @param onSuccess Will be notified when results of upload are available
+     * @param onError Notified when upload fails with an error
      */
     public AWSS3StorageUploadFileOperation(
             @NonNull AWSS3StorageService storageService,
             @NonNull AWSS3StorageUploadFileRequest request,
-            @NonNull ResultListener<StorageUploadFileResult, StorageException> resultListener) {
-        super(request);
-        this.storageService = storageService;
-        this.resultListener = resultListener;
+            @NonNull Consumer<StorageUploadFileResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        super(Objects.requireNonNull(request));
+        this.storageService = Objects.requireNonNull(storageService);
+        this.onSuccess = Objects.requireNonNull(onSuccess);
+        this.onError = Objects.requireNonNull(onError);
         this.transferObserver = null;
         this.file = null;
     }
@@ -85,7 +90,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     }
 
                 } catch (Exception exception) {
-                    resultListener.onError(new StorageException(
+                    onError.accept(new StorageException(
                         "Issue uploading file",
                         exception,
                         "See included exception for more details and suggestions to fix."
@@ -97,20 +102,21 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     public void onStateChanged(int transferId, TransferState state) {
                         // TODO: dispatch event to hub
                         if (TransferState.COMPLETED == state) {
-                            resultListener.onResult(StorageUploadFileResult.fromKey(getRequest().getKey()));
+                            onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
                         }
                     }
 
                     @SuppressWarnings("checkstyle:MagicNumber")
                     @Override
                     public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
+                        @SuppressWarnings("unused")
                         int percentage = (int) (bytesCurrent / bytesTotal * 100);
                         // TODO: dispatch event to hub
                     }
 
                     @Override
                     public void onError(int transferId, Exception exception) {
-                        resultListener.onError(new StorageException(
+                        onError.accept(new StorageException(
                             "Something went wrong with your AWS S3 Storage upload file operation",
                             exception,
                             "See attached exception for more information and suggestions"
@@ -118,7 +124,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     }
                 });
             } catch (Exception exception) {
-                resultListener.onError(new StorageException(
+                onError.accept(new StorageException(
                     "AWSMobileClient could not get user id.",
                     exception,
                     "Check whether you initialized AWSMobileClient and waited for its success callback " +
@@ -134,7 +140,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             try {
                 storageService.cancelTransfer(transferObserver);
             } catch (Exception exception) {
-                resultListener.onError(new StorageException(
+                onError.accept(new StorageException(
                     "Something went wrong while attempting to cancel your AWS S3 Storage upload file operation",
                     exception,
                     "See attached exception for more information and suggestions"
@@ -149,7 +155,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             try {
                 storageService.pauseTransfer(transferObserver);
             } catch (Exception exception) {
-                resultListener.onError(new StorageException(
+                onError.accept(new StorageException(
                     "Something went wrong while attempting to pause your AWS S3 Storage upload file operation",
                     exception,
                     "See attached exception for more information and suggestions"
@@ -164,7 +170,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             try {
                 storageService.resumeTransfer(transferObserver);
             } catch (Exception exception) {
-                resultListener.onError(new StorageException(
+                onError.accept(new StorageException(
                     "Something went wrong while attempting to resume your AWS S3 Storage upload file operation",
                     exception,
                     "See attached exception for more information and suggestions"

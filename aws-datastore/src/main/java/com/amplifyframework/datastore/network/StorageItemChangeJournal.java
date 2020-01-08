@@ -18,7 +18,6 @@ package com.amplifyframework.datastore.network;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
-import com.amplifyframework.core.ResultListener;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
@@ -85,7 +84,7 @@ final class StorageItemChangeJournal {
             // Convert the storageItemChange (that we want to store) into a record
             StorageItemChange.Record record = storageItemChange.toRecord(storageItemChangeConverter);
             // Save it.
-            localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE, ResultListener.instance(
+            localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
                 recordOfRecord -> {
                     // The return value is a record that we saved a record.
                     // So, we would have to "unwrap" it, to get the item we saved, out.
@@ -97,7 +96,7 @@ final class StorageItemChangeJournal {
                 error -> {
                     pendingStorageItemChanges.onError(error);
                     subscriber.onError(error);
-                })
+                }
             );
         }));
     }
@@ -142,15 +141,13 @@ final class StorageItemChangeJournal {
             localStorageAdapter.delete(
                 record,
                 StorageItemChange.Initiator.SYNC_ENGINE,
-                ResultListener.instance(
-                    recordOfRecord -> {
-                        // The response is a record that we deleted a record.
-                        // We would have to unpack the contained item (the record we deleted)
-                        // So, forget that. Just return the copy we received via remove() method call.
-                        subscriber.onSuccess(storageItemChange);
-                    },
-                    subscriber::onError
-                )
+                recordOfRecord -> {
+                    // The response is a record that we deleted a record.
+                    // We would have to unpack the contained item (the record we deleted)
+                    // So, forget that. Just return the copy we received via remove() method call.
+                    subscriber.onSuccess(storageItemChange);
+                },
+                subscriber::onError
             );
         }));
     }
@@ -166,7 +163,7 @@ final class StorageItemChangeJournal {
         // when they do, respond by create()ing an Observable which emits the results of a
         // query to LocalStorageAdapter, for any existing StorageItemChange.Record.
         return Observable.defer(() -> Observable.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class, ResultListener.instance(
+            localStorageAdapter.query(StorageItemChange.Record.class,
                 queryResultsIterator -> {
                     while (queryResultsIterator.hasNext()) {
                         try {
@@ -180,7 +177,7 @@ final class StorageItemChangeJournal {
                     emitter.onComplete();
                 },
                 emitter::onError
-            ));
+            );
         }));
     }
 }

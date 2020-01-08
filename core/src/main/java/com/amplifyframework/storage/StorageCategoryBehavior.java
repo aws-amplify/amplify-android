@@ -78,7 +78,7 @@ public interface StorageCategoryBehavior {
 
     /**
      * Upload local file on given path to storage.
-     * Register a listener to obtain the results of the upload.
+     * Register consumers to obtain the results of the upload.
      * @param key the unique identifier of the object in storage
      * @param local the path to a local file
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -96,7 +96,7 @@ public interface StorageCategoryBehavior {
     /**
      * Upload local file on given path to storage.
      * Specify options such as the access level the file should have.
-     * Register a listener to observe results of upload request.
+     * Register consumers to observe results of upload request.
      * @param key the unique identifier of the object in storage
      * @param local the path to a local file
      * @param options parameters specific to plugin behavior
@@ -129,7 +129,7 @@ public interface StorageCategoryBehavior {
 
     /**
      * Delete object from storage.
-     * Register a listener to get results of remove operation.
+     * Register consumers to get results of remove operation.
      * @param key the unique identifier of the object in storage
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
@@ -162,7 +162,7 @@ public interface StorageCategoryBehavior {
     /**
      * List the object identifiers under the hierarchy specified
      * by the path, relative to access level, from storage.
-     * Register a listener to observe progress.
+     * Register consumers to observe progress.
      * @param path The path in storage to list items from
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result

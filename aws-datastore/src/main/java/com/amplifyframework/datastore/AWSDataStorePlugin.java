@@ -24,8 +24,6 @@ import androidx.annotation.WorkerThread;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.ResultListener;
-import com.amplifyframework.core.StreamListener;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
@@ -142,7 +140,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @WorkerThread
     private Single<List<ModelSchema>> initializeStorageAdapter(Context context) {
         return Single.defer(() -> Single.create(emitter ->
-            sqliteStorageAdapter.initialize(context, ResultListener.instance(emitter::onSuccess, emitter::onError))
+            sqliteStorageAdapter.initialize(context, emitter::onSuccess, emitter::onError)
         ));
     }
 
@@ -180,8 +178,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API,
-            ResultConversionListener.instance(onItemSaved, onFailureToSave, this::toDataStoreItemChange));
+        save(item, null, onItemSaved, onFailureToSave);
     }
 
     /**
@@ -190,11 +187,22 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public <T extends Model> void save(
             @NonNull T item,
-            @NonNull QueryPredicate predicate,
+            @Nullable QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        sqliteStorageAdapter.save(item, StorageItemChange.Initiator.DATA_STORE_API, predicate,
-            ResultConversionListener.instance(onItemSaved, onFailureToSave, this::toDataStoreItemChange));
+        sqliteStorageAdapter.save(
+            item,
+            StorageItemChange.Initiator.DATA_STORE_API,
+            predicate,
+            recordOfSave -> {
+                try {
+                    onItemSaved.accept(toDataStoreItemChange(recordOfSave));
+                } catch (DataStoreException dataStoreException) {
+                    onFailureToSave.accept(dataStoreException);
+                }
+            },
+            onFailureToSave
+        );
     }
 
     /**
@@ -205,8 +213,18 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull T item,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
-        sqliteStorageAdapter.delete(item, StorageItemChange.Initiator.DATA_STORE_API,
-            ResultConversionListener.instance(onItemDeleted, onFailureToDelete, this::toDataStoreItemChange));
+        sqliteStorageAdapter.delete(
+            item,
+            StorageItemChange.Initiator.DATA_STORE_API,
+            recordOfDelete -> {
+                try {
+                    onItemDeleted.accept(toDataStoreItemChange(recordOfDelete));
+                } catch (DataStoreException dataStoreException) {
+                    onFailureToDelete.accept(dataStoreException);
+                }
+            },
+            onFailureToDelete
+        );
     }
 
     /**
@@ -217,7 +235,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        sqliteStorageAdapter.query(itemClass, ResultListener.instance(onQueryResults, onQueryFailure));
+        sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure);
     }
 
     /**
@@ -229,7 +247,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        sqliteStorageAdapter.query(itemClass, predicate, ResultListener.instance(onQueryResults, onQueryFailure));
+        sqliteStorageAdapter.query(itemClass, predicate, onQueryResults, onQueryFailure);
     }
 
     @NonNull
@@ -238,7 +256,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return sqliteStorageAdapter.observe(StreamListener.instance(
+        return sqliteStorageAdapter.observe(
             storageItemChangeRecord -> {
                 try {
                     onDataStoreItemChange.accept(toDataStoreItemChange(storageItemChangeRecord));
@@ -248,7 +266,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        ));
+        );
     }
 
     @NonNull
@@ -258,7 +276,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return sqliteStorageAdapter.observe(StreamListener.instance(
+        return sqliteStorageAdapter.observe(
             storageItemChangeRecord -> {
                 try {
                     if (!storageItemChangeRecord.getItemClass().equals(itemClass.getName())) {
@@ -271,7 +289,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        ));
+        );
     }
 
     @NonNull
@@ -282,7 +300,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return sqliteStorageAdapter.observe(StreamListener.instance(
+        return sqliteStorageAdapter.observe(
             storageItemChangeRecord -> {
                 try {
                     final DataStoreItemChange<T> dataStoreItemChange =
@@ -298,7 +316,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        ));
+        );
     }
 
     @SuppressWarnings("checkstyle:WhitespaceAround") // () -> {}
@@ -316,8 +334,8 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
 
     /**
      * Converts an {@link StorageItemChange.Record}, as recevied by the {@link LocalStorageAdapter}'s
-     * {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, ResultListener)} and
-     * {@link LocalStorageAdapter#delete(Model, StorageItemChange.Initiator, ResultListener)} methods'
+     * {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)} and
+     * {@link LocalStorageAdapter#delete(Model, StorageItemChange.Initiator, Consumer, Consumer)} methods'
      * callbacks, into an {@link DataStoreItemChange}, which can be returned via the public DataStore API.
      * @param record A record of change in the storage layer
      * @param <T> Type of data that was changed
@@ -374,59 +392,5 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             .type(dataStoreItemChangeType)
             .uuid(storageItemChange.changeId().toString())
             .build();
-    }
-
-    /**
-     * A listener of the {@link LocalStorageAdapter} APIs, which responds by
-     * converting received {@link StorageItemChange.Record} into {@link DataStoreItemChange}s,
-     * and emitting those on the provided data store item change listener.
-     * using the provided {@link ConversionStrategy}.
-     */
-    static final class ResultConversionListener {
-        @SuppressWarnings("checkstyle:all") private ResultConversionListener() {}
-
-        /**
-         * Creates a new ResultConversionListener.
-         * @param onSuccess Success consumer received via the public DataStore API
-         * @param onFailure Failure consumer received via the public DataStore API
-         * @param conversionStrategy A strategy to convert between storage adapter and data store api types
-         */
-        static <T extends Model> ResultListener<StorageItemChange.Record, DataStoreException> instance(
-                Consumer<DataStoreItemChange<T>> onSuccess, Consumer<DataStoreException> onFailure,
-                ConversionStrategy conversionStrategy) {
-
-            @SuppressWarnings("CodeBlock2Expr") // More readable as block
-            final Consumer<DataStoreException> errorConsumer = error -> {
-                onFailure.accept(new DataStoreException(
-                    "Oof, something went wrong.", error, "Check the attached error for details."
-                ));
-            };
-
-            final Consumer<StorageItemChange.Record> resultConsumer = result -> {
-                try {
-                    DataStoreItemChange<T> converted = conversionStrategy.convert(result);
-                    onSuccess.accept(converted);
-                } catch (DataStoreException exception) {
-                    errorConsumer.accept(exception);
-                }
-            };
-
-            return ResultListener.instance(resultConsumer, errorConsumer);
-        }
-
-        /**
-         * A strategy to convert an object from the {@link LocalStorageAdapter} into
-         * a {@link DataStoreItemChange} as exposed by the publid {@link DataStoreCategoryBehavior}.
-         */
-        interface ConversionStrategy {
-            /**
-             * Converts a record of change in the {@link LocalStorageAdapter}
-             * (a {@link StorageItemChange.Record}) into a {@link DataStoreItemChange}.
-             * @param record Record to convert
-             * @param <T> Type of data contained inside the emitted {@link DataStoreItemChange}
-             * @return An {@link DataStoreItemChange}, usable by the DataStore APIs
-             */
-            <T extends Model> DataStoreItemChange<T> convert(StorageItemChange.Record record) throws DataStoreException;
-        }
     }
 }
