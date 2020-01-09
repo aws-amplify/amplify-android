@@ -101,6 +101,8 @@ public interface AppSyncEndpoint {
     /**
      * Get notified when a create event happens on a given class.
      * @param modelClass The class of the Model we are listening on
+     * @param onSubscriptionStarted
+     *        Called when subscription over network has been established
      * @param onNextResponse
      *        A callback to receive notifications when new items are
      *        available via the subscription stream
@@ -114,6 +116,7 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable onCreate(
             @NonNull Class<T> modelClass,
+            @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted
@@ -122,6 +125,8 @@ public interface AppSyncEndpoint {
     /**
      * Get notified when an update event happens on a given class.
      * @param modelClass The class of the Model we are listening on
+     * @param onSubscriptionStarted
+     *        Called when subscription over network has been established
      * @param onNextResponse
      *        A callback to receive notifications when new items are
      *        available via the subscription stream
@@ -135,6 +140,7 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable onUpdate(
             @NonNull Class<T> modelClass,
+            @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted
@@ -143,6 +149,8 @@ public interface AppSyncEndpoint {
     /**
      * Get notified when a delete event happens on a given class.
      * @param modelClass The class of the Model we are listening on
+     * @param onSubscriptionStarted
+     *        Called when subscription over network has been established
      * @param onNextResponse
      *        A callback to receive notifications when new items are
      *        available via the subscription stream
@@ -156,6 +164,7 @@ public interface AppSyncEndpoint {
     @NonNull
     <T extends Model> Cancelable onDelete(
             @NonNull Class<T> modelClass,
+            @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted

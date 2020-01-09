@@ -426,6 +426,8 @@ public interface GraphQlBehavior {
      * @param subscriptionType
      *        The type of events for which notifications are requested
      *        (e.g. OnCreate, OnUpdate, OnDelete)
+     * @param onSubscriptionEstablished
+     *        Called when a subscription has been established over the network
      * @param onNextResponse
      *        Consumes a stream of responses on the subscription. This may be
      *        called 0..n times per subscription.
@@ -445,6 +447,7 @@ public interface GraphQlBehavior {
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete
@@ -462,6 +465,8 @@ public interface GraphQlBehavior {
      * the provided `onSubscriptionFailure` callback.
      *
      * @param graphQlRequest Wrapper for request details
+     * @param onSubscriptionEstablished
+     *        Called when a subscription has been established over the network
      * @param onNextResponse
      *        Consumes a stream of responses on the subscription. This may be
      *        called 0..n times per subscription.
@@ -480,6 +485,7 @@ public interface GraphQlBehavior {
     @Nullable
     <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete
@@ -500,6 +506,8 @@ public interface GraphQlBehavior {
      * @param subscriptionType
      *        The type of events for which notifications are requested
      *        (e.g. OnCreate, OnUpdate, OnDelete)
+     * @param onSubscriptionEstablished
+     *        Called when a subscription has been established over the network
      * @param onNextResponse
      *        Consumes a stream of responses on the subscription. This may be
      *        called 0..n times per subscription.
@@ -520,6 +528,7 @@ public interface GraphQlBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete
@@ -534,6 +543,8 @@ public interface GraphQlBehavior {
      *
      * @param apiName The name of a configured API
      * @param graphQlRequest Wrapper for request details
+     * @param onSubscriptionEstablished
+     *        Called when a subscription has been established over the network
      * @param onNextResponse
      *        Consumes a stream of responses on the subscription. This may be
      *        called 0..n times per subscription.
@@ -553,9 +564,9 @@ public interface GraphQlBehavior {
     <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete
     );
 }
-

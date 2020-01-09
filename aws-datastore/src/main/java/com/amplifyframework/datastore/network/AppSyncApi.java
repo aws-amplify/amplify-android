@@ -198,38 +198,60 @@ public final class AppSyncApi implements AppSyncEndpoint {
     @Override
     public <T extends Model> Cancelable onCreate(
             @NonNull Class<T> modelClass,
+            @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
-        return subscription(SubscriptionType.ON_CREATE, modelClass,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+        return subscription(
+            SubscriptionType.ON_CREATE,
+            modelClass,
+            onSubscriptionStarted,
+            onNextResponse,
+            onSubscriptionFailure,
+            onSubscriptionCompleted
+        );
     }
 
     @NonNull
     @Override
     public <T extends Model> Cancelable onUpdate(
             @NonNull Class<T> modelClass,
+            @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
-        return subscription(SubscriptionType.ON_UPDATE, modelClass,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+        return subscription(
+            SubscriptionType.ON_UPDATE,
+            modelClass,
+            onSubscriptionStarted,
+            onNextResponse,
+            onSubscriptionFailure,
+            onSubscriptionCompleted
+        );
     }
 
     @NonNull
     @Override
     public <T extends Model> Cancelable onDelete(
             @NonNull Class<T> modelClass,
+            @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             @NonNull Consumer<DataStoreException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
-        return subscription(SubscriptionType.ON_DELETE, modelClass,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+        return subscription(
+            SubscriptionType.ON_DELETE,
+            modelClass,
+            onSubscriptionStarted,
+            onNextResponse,
+            onSubscriptionFailure,
+            onSubscriptionCompleted
+        );
     }
 
     private <T extends Model> Cancelable subscription(
             SubscriptionType subscriptionType,
             Class<T> clazz,
+            Consumer<String> onSubscriptionStarted,
             Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNextResponse,
             Consumer<DataStoreException> onSubscriptionFailure,
             Action onSubscriptionCompleted) {
@@ -258,8 +280,13 @@ public final class AppSyncApi implements AppSyncEndpoint {
                 "Error during subscription.", failure, "Evaluate details."
             ));
 
-        final Cancelable cancelable =
-            api.subscribe(request, stringResponseConsumer, failureConsumer, onSubscriptionCompleted);
+        final Cancelable cancelable = api.subscribe(
+            request,
+            onSubscriptionStarted,
+            stringResponseConsumer,
+            failureConsumer,
+            onSubscriptionCompleted
+        );
         if (cancelable != null) {
             return cancelable;
         }
