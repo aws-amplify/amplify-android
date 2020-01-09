@@ -29,9 +29,7 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
-import com.amplifyframework.testutils.EmptyConsumer;
-import com.amplifyframework.testutils.LatchedAction;
-import com.amplifyframework.testutils.LatchedResponseConsumer;
+import com.amplifyframework.testutils.Await;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -39,6 +37,11 @@ import org.junit.Test;
 
 import java.util.Date;
 import java.util.List;
+
+import io.reactivex.Observable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposables;
+import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -48,7 +51,6 @@ import static org.junit.Assert.assertTrue;
  * Tests the DataStore API Interface.
  */
 @Ignore("Multiple tests can't subscribe in a single process right now.")
-@SuppressWarnings("magicnumber")
 public final class AppSyncApiInstrumentationTest {
     private static AppSyncApi api;
 
@@ -64,10 +66,11 @@ public final class AppSyncApiInstrumentationTest {
 
     /**
      * Tests the operations in AppSyncApi.
+     * @throws DataStoreException If any call to AppSync endpoint fails to return a response
      */
     @Test
-    @SuppressWarnings("MethodLength")
-    public void testAllOperations() {
+    @SuppressWarnings({"MethodLength", "checkstyle:MagicNumber"})
+    public void testAllOperations() throws DataStoreException {
         Long startTime = new Date().getTime();
 
         // Create simple model with no relationship
@@ -83,7 +86,7 @@ public final class AppSyncApiInstrumentationTest {
         assertEquals(owner.getId(), blogOwnerCreateResult.getSyncMetadata().getId());
 
         // Subscribe to Blog creations
-        Subscription<Blog> subscription = Subscription.onCreate(Blog.class);
+        Observable<GraphQLResponse<ModelWithMetadata<Blog>>> blogCreations = onCreate(Blog.class);
 
         // Now, actually create a Blog
         Blog blog = Blog.builder()
@@ -104,9 +107,11 @@ public final class AppSyncApiInstrumentationTest {
 
         // Validate that subscription picked up the mutation
         // & End the subscription since we're done with.
-        assertEquals(blogCreateResult, subscription.awaitNextItem());
-        subscription.cancel();
-        subscription.awaitSubscriptionCompletion();
+        TestObserver<ModelWithMetadata<Blog>> blogCreationSubscriber = TestObserver.create();
+        blogCreations
+            .map(GraphQLResponse::getData)
+            .subscribe(blogCreationSubscriber);
+        blogCreationSubscriber.assertValue(blogCreateResult);
 
         // Create Posts which Blog hasMany of
         Post post1 = Post.builder()
@@ -165,7 +170,7 @@ public final class AppSyncApiInstrumentationTest {
         assertTrue(post1DeleteResult.getSyncMetadata().isDeleted());
 
         // Try to delete a post with a bad version number
-        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingErrors(Post.class, post2.getId(), 0);
+        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(Post.class, post2.getId(), 0);
         assertEquals("Conflict resolver rejects mutation.", post2DeleteErrors.get(0).getMessage());
 
         // Run sync on Blogs
@@ -188,14 +193,12 @@ public final class AppSyncApiInstrumentationTest {
      * @param model Model to create in remote App Sync API
      * @param <T> Type of model being created
      * @return Endpoint's version of the model, along with metadata about the model
+     * @throws DataStoreException If API create call fails to render any response from AppSync endpoint
      */
     @NonNull
-    private <T extends Model> ModelWithMetadata<T> create(@NonNull T model) {
-        LatchedResponseConsumer<ModelWithMetadata<T>> createdItemConsumer =
-            LatchedResponseConsumer.instance();
-        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
-        api.create(model, createdItemConsumer, failureConsumer);
-        return createdItemConsumer.awaitResponseData();
+    private <T extends Model> ModelWithMetadata<T> create(@NonNull T model) throws DataStoreException {
+        return awaitResponseData((onResult, onError) ->
+            api.create(model, onResult, onError));
     }
 
     /**
@@ -204,15 +207,14 @@ public final class AppSyncApiInstrumentationTest {
      * @param version Current version of the model that we (the client) know about
      * @param <T> The type of model being updated
      * @return Server's version of the model after update, along with new metadata
+     * @throws DataStoreException If API update call fails to render any response from AppSync endpoint
      */
     @SuppressWarnings("SameParameterValue") // Keep details in the actual test.
     @NonNull
-    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version) {
-        LatchedResponseConsumer<ModelWithMetadata<T>> updatedItemConsumer =
-            LatchedResponseConsumer.instance();
-        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
-        api.update(model, version, updatedItemConsumer, failureConsumer);
-        return updatedItemConsumer.awaitResponseData();
+    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
+            throws DataStoreException {
+        return awaitResponseData((onResult, onError) ->
+            api.update(model, version, onResult, onError));
     }
 
     /**
@@ -222,15 +224,14 @@ public final class AppSyncApiInstrumentationTest {
      * @param version The version of the model being deleted as understood by client
      * @param <T> Type of model being deleted
      * @return A record of the item that was deleted from endpoint, along with metadata about the deletion
+     * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
     @SuppressWarnings("SameParameterValue") // Reads better with details in one place
     private <T extends Model> ModelWithMetadata<T> delete(
-            @NonNull Class<T> clazz, String modelId, int version) {
-        LatchedResponseConsumer<ModelWithMetadata<T>> deleteResultConsumer =
-            LatchedResponseConsumer.instance();
-        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
-        api.delete(clazz, modelId, version, deleteResultConsumer, failureConsumer);
-        return deleteResultConsumer.awaitResponseData();
+            @NonNull Class<T> clazz, String modelId, int version)
+            throws DataStoreException {
+        return awaitResponseData((onResult, onError) ->
+            api.delete(clazz, modelId, version, onResult, onError));
     }
 
     /**
@@ -241,15 +242,16 @@ public final class AppSyncApiInstrumentationTest {
      * @param version Version of item for which deleted is attempted
      * @param <T> Type of item for which delete is attempted
      * @return List of GraphQLResponse.Error which explain why delete failed
+     * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
     @SuppressWarnings("SameParameterValue") // It'll read better if we keep details in the call line
-    private <T extends Model> List<GraphQLResponse.Error> deleteExpectingErrors(
-            @NonNull Class<T> clazz, String modelId, int version) {
-        LatchedResponseConsumer<ModelWithMetadata<T>> deleteResultConsumer =
-            LatchedResponseConsumer.instance();
-        Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
-        api.delete(clazz, modelId, version, deleteResultConsumer, failureConsumer);
-        return deleteResultConsumer.awaitErrorsInNextResponse();
+    private <T extends Model> List<GraphQLResponse.Error> deleteExpectingResponseErrors(
+            @NonNull Class<T> clazz, String modelId, int version)
+            throws DataStoreException {
+        return awaitResponseErrors(
+            (Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult, Consumer<DataStoreException> onError) ->
+                api.delete(clazz, modelId, version, onResult, onError)
+        );
     }
 
     /**
@@ -258,66 +260,54 @@ public final class AppSyncApiInstrumentationTest {
      * @param lastSyncTime Last time a sync occurred
      * @param <T> Type of models
      * @return An iterable collection of models with metadata describing models state on remote endpoint
+     * @throws DataStoreException If API sync fails to render and response from AppSync endpoint
      */
     private <T extends Model> Iterable<ModelWithMetadata<T>> sync(
-            @NonNull Class<T> clazz, @Nullable Long lastSyncTime) {
-        LatchedResponseConsumer<Iterable<ModelWithMetadata<T>>> syncConsumer =
-            LatchedResponseConsumer.instance();
-        api.sync(clazz, lastSyncTime, syncConsumer, EmptyConsumer.of(DataStoreException.class));
-        return syncConsumer.awaitResponseData();
+            @NonNull Class<T> clazz, @Nullable Long lastSyncTime) throws DataStoreException {
+        return awaitResponseData((onResult, onError) ->
+            api.sync(clazz, lastSyncTime, onResult, onError));
     }
 
-    static final class Subscription<T extends Model> {
-        private final Cancelable cancelable;
-        private final LatchedResponseConsumer<ModelWithMetadata<T>> responseConsumer;
-        private final LatchedAction completionAction;
-
-        private Subscription(
-                Cancelable cancelable,
-                LatchedResponseConsumer<ModelWithMetadata<T>> responseConsumer,
-                LatchedAction completionAction) {
-            this.cancelable = cancelable;
-            this.responseConsumer = responseConsumer;
-            this.completionAction = completionAction;
+    private <T> T awaitResponseData(
+            Await.ResultErrorEmitter<GraphQLResponse<T>, DataStoreException> resultErrorEmitter)
+            throws DataStoreException {
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        if (response.hasErrors()) {
+            String firstErrorMessage = response.getErrors().get(0).getMessage();
+            throw new DataStoreException("Response contained errors: " + firstErrorMessage, "Check request.");
+        } else if (!response.hasData()) {
+            throw new DataStoreException("Response had no data.", "Check request.");
         }
+        return response.getData();
+    }
 
-        /**
-         * Being a new subscription to model creations.
-         * @param <T> Type of model being monitored
-         * @param clazz Class of model being monitored
-         * @return A subscription for the model class
-         */
-        @SuppressWarnings("SameParameterValue") // Keep details in the @Test method
-        @NonNull
-        static <T extends Model> Subscription<T> onCreate(Class<T> clazz) {
-            Consumer<String> onStart = EmptyConsumer.of(String.class);
-            LatchedResponseConsumer<ModelWithMetadata<T>> onItem = LatchedResponseConsumer.instance();
-            LatchedAction onComplete = LatchedAction.instance();
-            Consumer<DataStoreException> onFailure = EmptyConsumer.of(DataStoreException.class);
-            Cancelable cancelable = api.onCreate(clazz, onStart, onItem, onFailure, onComplete);
-            return new Subscription<>(cancelable, onItem, onComplete);
+    @SuppressWarnings("UnusedReturnValue")
+    private <T> List<GraphQLResponse.Error> awaitResponseErrors(
+            Await.ResultErrorEmitter<GraphQLResponse<T>, DataStoreException> resultErrorEmitter)
+            throws DataStoreException {
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        if (!response.hasErrors()) {
+            throw new DataStoreException("Response did not contain any errors.", "Was it supposed to?");
         }
+        return response.getErrors();
+    }
 
-        /**
-         * Cancel the subscription.
-         */
-        void cancel() {
-            cancelable.cancel();
-        }
-
-        /**
-         * Await the next item that arrives on the subscription.
-         * @return Next item on subscription
-         */
-        ModelWithMetadata<T> awaitNextItem() {
-            return responseConsumer.awaitResponseData();
-        }
-
-        /**
-         * Wait for the subscription to complete.
-         */
-        void awaitSubscriptionCompletion() {
-            completionAction.awaitCall();
-        }
+    private <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(
+            @SuppressWarnings("SameParameterValue") @NonNull Class<T> clazz) {
+        return Observable.create(emitter -> {
+            CompositeDisposable disposable = new CompositeDisposable();
+            emitter.setDisposable(disposable);
+            Await.result((onSubscriptionStarted, ignored) -> {
+                Cancelable cancelable = api.onCreate(
+                    clazz,
+                    onSubscriptionStarted::accept,
+                    emitter::onNext,
+                    emitter::onError,
+                    emitter::onComplete
+                );
+                disposable.add(Disposables.fromAction(cancelable::cancel));
+            });
+        });
     }
 }
+

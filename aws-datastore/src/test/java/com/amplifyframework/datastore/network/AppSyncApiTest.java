@@ -22,8 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.EmptyConsumer;
-import com.amplifyframework.testutils.LatchedConsumer;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -71,14 +70,19 @@ public final class AppSyncApiTest {
     /**
      * Validates the construction of a base-sync query.
      * @throws JSONException On bad request JSON found in API category call
+     * @throws DataStoreException If no valid response returned from AppSync endpoint during sync
      */
     @Test
-    public void validateBaseSyncQueryGen() throws JSONException {
-        // Request a sync. Await its completion using a test latch.
-        final LatchedConsumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> syncConsumer =
-            LatchedConsumer.instance();
-        endpoint.sync(BlogOwner.class, null, syncConsumer, EmptyConsumer.of(DataStoreException.class));
-        syncConsumer.awaitValue();
+    public void validateBaseSyncQueryGen() throws JSONException, DataStoreException {
+        //noinspection CodeBlock2Expr
+        Await.result(
+            (
+                Consumer<GraphQLResponse<Iterable<ModelWithMetadata<BlogOwner>>>> onResult,
+                Consumer<DataStoreException> onError
+            ) -> {
+                endpoint.sync(BlogOwner.class, null, onResult, onError);
+            }
+        );
 
         // Now, capture the request argument on API, so we can see what was passed.
         // Recall that we pass a raw doc to API.

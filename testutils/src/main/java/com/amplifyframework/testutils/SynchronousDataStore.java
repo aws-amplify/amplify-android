@@ -52,11 +52,11 @@ public final class SynchronousDataStore {
      * Saves an item into the DataStore.
      * @param item Item to save
      * @param <T> The type of item being saved
+     * @throws DataStoreException On failure saving item into DataStore
      */
-    public <T extends Model> void save(@NonNull T item) {
-        LatchedConsumer<DataStoreItemChange<T>> saveConsumer = LatchedConsumer.instance();
-        Amplify.DataStore.save(item, saveConsumer, EmptyConsumer.of(DataStoreException.class));
-        saveConsumer.awaitValue();
+    public <T extends Model> void save(@NonNull T item) throws DataStoreException {
+        awaitDataStoreItemChange((onResult, onError) ->
+            Amplify.DataStore.save(item, onResult, onError));
     }
 
     /**
@@ -66,13 +66,13 @@ public final class SynchronousDataStore {
      * @param <T> The type of item being accessed
      * @return An item with the provided class and ID, if present in DataStore
      * @throws NoSuchElementException If there is no matching item in the DataStore
+     * @throws DataStoreException On failure querying data store
      */
     @NonNull
-    public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) {
-        LatchedConsumer<Iterator<T>> queryConsumer = LatchedConsumer.instance();
-        Amplify.DataStore.query(clazz, queryConsumer, EmptyConsumer.of(DataStoreException.class));
+    public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) throws DataStoreException {
+        final Iterator<T> iterator = awaitIterator((onResult, onError) ->
+            Amplify.DataStore.query(clazz, onResult, onError));
 
-        final Iterator<T> iterator = queryConsumer.awaitValue();
         while (iterator.hasNext()) {
             T value = iterator.next();
             if (value.getId().equals(itemId)) {
@@ -81,5 +81,20 @@ public final class SynchronousDataStore {
         }
 
         throw new NoSuchElementException("No item in DataStore with class = " + clazz + " and id = " + itemId);
+    }
+
+    // Syntax fluff to get rid of type bounds at location of call
+    @SuppressWarnings("UnusedReturnValue")
+    private <T extends Model> DataStoreItemChange<T> awaitDataStoreItemChange(
+            Await.ResultErrorEmitter<DataStoreItemChange<T>, DataStoreException> resultErrorEmitter)
+            throws DataStoreException {
+        return Await.result(resultErrorEmitter);
+    }
+
+    // Syntax fluff to get rid of type bounds at location of call
+    private <T extends Model> Iterator<T> awaitIterator(
+            Await.ResultErrorEmitter<Iterator<T>, DataStoreException> resultErrorEmitter)
+            throws DataStoreException {
+        return Await.result(resultErrorEmitter);
     }
 }

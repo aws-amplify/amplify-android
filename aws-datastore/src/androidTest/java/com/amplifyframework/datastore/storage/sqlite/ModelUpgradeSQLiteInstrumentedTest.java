@@ -15,17 +15,14 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.content.Context;
 import android.os.StrictMode;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
-import com.amplifyframework.testutils.EmptyConsumer;
-import com.amplifyframework.testutils.LatchedConsumer;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.util.CollectionUtils;
 
 import org.junit.After;
@@ -36,6 +33,7 @@ import org.junit.Test;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -46,7 +44,6 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
-    private Context context;
     private SQLiteStorageAdapter sqliteStorageAdapter;
     private AmplifyCliGeneratedModelProvider modelProvider;
     private RandomVersionModelProvider modelProviderThatUpgradesVersion;
@@ -57,11 +54,11 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+            .detectLeakedSqlLiteObjects()
+            .detectLeakedClosableObjects()
+            .penaltyLog()
+            .penaltyDeath()
+            .build());
     }
 
     /**
@@ -69,8 +66,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
      */
     @Before
     public void setUp() {
-        context = ApplicationProvider.getApplicationContext();
-        context.deleteDatabase(DATABASE_NAME);
+        getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
         modelProviderThatUpgradesVersion = RandomVersionModelProvider.singletonInstance();
@@ -83,7 +79,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @After
     public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
-        context.deleteDatabase(DATABASE_NAME);
+        getApplicationContext().deleteDatabase(DATABASE_NAME);
     }
 
     /**
@@ -93,15 +89,14 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @Test
     public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws DataStoreException {
         // Initialize StorageAdapter with models
-        LatchedConsumer<List<ModelSchema>> firstInitializationConsumer =
-                LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
-
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
-        sqliteStorageAdapter.initialize(context, firstInitializationConsumer, errorConsumer);
-
+        List<ModelSchema> firstResults = Await.result(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.initialize(getApplicationContext(), onResult, onError)
+        );
         // Assert if initialize succeeds.
-        assertFalse(CollectionUtils.isNullOrEmpty(firstInitializationConsumer.awaitValue()));
+        assertFalse(CollectionUtils.isNullOrEmpty(firstResults));
 
         // Assert if version is stored correctly
         String expectedVersion = modelProvider.version();
@@ -122,10 +117,12 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProviderThatUpgradesVersion);
 
         // Now, initialize storage adapter with the new models
-        LatchedConsumer<List<ModelSchema>> secondInitializationConsumer =
-            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.initialize(context, secondInitializationConsumer, errorConsumer);
-        assertFalse(CollectionUtils.isNullOrEmpty(secondInitializationConsumer.awaitValue()));
+        List<ModelSchema> secondResults = Await.result(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.initialize(getApplicationContext(), onResult, onError)
+        );
+        assertFalse(CollectionUtils.isNullOrEmpty(secondResults));
 
         // Check if the new version is stored in local storage.
         expectedVersion = modelProviderThatUpgradesVersion.version();

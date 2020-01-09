@@ -20,6 +20,7 @@ import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Sleep;
@@ -78,9 +79,12 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     /**
      * Save a BlogOwner via DataStore, wait a bit, check API to see if the BlogOwner is there, remotely.
+     * @throws DataStoreException On failure to save item into DataStore (first step)
+     * @throws ApiException On failure to retrieve a valid response from API when checking
+     *                      for remote presence of saved item
      */
     @Test
-    public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() {
+    public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() throws DataStoreException, ApiException {
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
@@ -102,14 +106,17 @@ public final class AWSDataStorePluginInstrumentedTest {
      * The sync engine should receive mutations for its managed models, through its
      * subscriptions. When we change a model remotely, the sync engine should respond
      * by processing the subscription event and saving the model locally.
+     * @throws ApiException On failure to obtain valid response from endpoint while arranging data (first step)
+     * @throws DataStoreException On failure to query the local data store for
+     *                            local presence of arranged data (second step)
      */
     @Ignore(
         "This test is broken, until support for _version is added. " +
         "The local version will be the original created version, not the " +
-        "updated version, since the client is not passing _version right nowl."
+        "updated version, since the client is not passing _version right now."
     )
     @Test
-    public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() {
+    public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() throws ApiException, DataStoreException {
         // Create a record for a blog owner, with a misspelling in the last name
         BlogOwner remoteOwner = BlogOwner.builder()
             .name("Jameson Willlllliams")

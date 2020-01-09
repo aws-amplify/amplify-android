@@ -16,7 +16,9 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.testutils.SynchronousApi;
 import com.amplifyframework.testutils.TestAssets;
 
@@ -27,6 +29,8 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
 
@@ -67,14 +71,15 @@ public final class GraphQLInstrumentationTest {
      * 3. Post a comment about the event, validate that comment;
      * 4. Expect the comment to arrive on the subscription;
      * 5. Validate that the subscription can be torn down gracefully.
+     * @throws ApiException On failure to obtain a valid response from endpoint
      */
     @Test
-    public void subscriptionReceivesMutation() {
+    public void subscriptionReceivesMutation() throws ApiException {
         // Create an event
         String eventId = createEvent();
 
         // Start listening for comments on that event
-        SynchronousApi.Subscription<Comment> subscription = api.onCreate(
+        TestObserver<GraphQLResponse<Comment>> observer = api.onCreate(
             API_NAME,
             new GraphQLRequest<>(
                 TestAssets.readAsString("subscribe-event-comments.graphql"),
@@ -82,25 +87,25 @@ public final class GraphQLInstrumentationTest {
                 Comment.class,
                 new GsonVariablesSerializer()
             )
-        );
-        subscription.awaitSubscriptionStarted();
+        ).test();
 
         // Create a comment
         createComment(eventId);
 
         // Validate that the comment was received over the subscription
-        assertEquals("It's going to be fun!", subscription.awaitFirstValue().content());
+        Comment firstValue = observer.awaitCount(1).values().get(0).getData();
+        assertEquals("It's going to be fun!", firstValue.content());
 
         // Cancel the subscription.
-        subscription.cancel();
-        subscription.awaitSubscriptionCompletion();
+        observer.dispose();
     }
 
     /**
      * Creates a comment, associated to an event whose ID is {@see eventId}.
      * @param eventId ID of event to which this comment will be associated
+     * @throws ApiException On failure to obtain a valid response from endpoint
      */
-    private void createComment(String eventId) {
+    private void createComment(String eventId) throws ApiException {
         String commentId = UUID.randomUUID().toString();
 
         final Map<String, Object> variables = new HashMap<>();
@@ -126,8 +131,9 @@ public final class GraphQLInstrumentationTest {
      * Validate the response to ensure that what was created is what we requested.
      * @return The unique ID of the newly created event. This ID may be used
      *         to associate comments to this event object.
+     * @throws ApiException On failure to obtain a valid response from endpoint
      */
-    private String createEvent() {
+    private String createEvent() throws ApiException {
         // Arrange a creation request, including a map of plug-able variables
         final Map<String, Object> variables = new HashMap<>();
         variables.put("name", "Pizza Party");
@@ -217,3 +223,4 @@ public final class GraphQLInstrumentationTest {
         }
     }
 }
+
