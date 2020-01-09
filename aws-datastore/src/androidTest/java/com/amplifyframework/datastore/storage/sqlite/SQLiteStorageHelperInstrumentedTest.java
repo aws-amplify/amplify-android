@@ -141,6 +141,7 @@ public class SQLiteStorageHelperInstrumentedTest {
                 cursor.moveToNext();
             }
         }
+        cursor.close();
         return tableNamesFromDatabase;
     }
 
