@@ -40,6 +40,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
+import io.reactivex.observers.TestObserver;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -69,10 +71,11 @@ public final class CodeGenerationInstrumentationTest {
      * Mutates an object, and then queries for its value back. Asserts that the two values are the same.
      * This tests our ability to generate GraphQL queries at runtime, from model primitives,
      * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void queryMatchesMutationResult() {
+    public void queryMatchesMutationResult() throws ApiException {
         // Create a Person
         Person david = Person.builder()
             .firstName("David")
@@ -90,9 +93,10 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Tests the code generation for LIST query with a predicate.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @Test
-    public void queryListWithPredicate() {
+    public void queryListWithPredicate() throws ApiException {
         final List<Person> matchingPeople = api.list(
             PERSON_API_NAME,
             Person.class,
@@ -109,22 +113,23 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Tests the code generation for LIST query without a predicate.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @SuppressWarnings("checkstyle:MagicNumber") // test table configured to have at least 3 items
     @Test
-    public void queryListWithoutPredicate() {
+    public void queryListWithoutPredicate() throws ApiException {
         final List<Person> queryResults = api.list(PERSON_API_NAME, Person.class);
         assertTrue(queryResults.size() > 3);
     }
 
     /**
      * Tests that a subscription can receive an event when a create mutation takes place.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @Test
-    public void subscribeReceivesMutationEvent() {
-        SynchronousApi.Subscription<Person> subscription =
-            api.onCreate(PERSON_API_NAME, Person.class);
-        subscription.awaitSubscriptionStarted();
+    public void subscribeReceivesMutationEvent() throws ApiException {
+        TestObserver<GraphQLResponse<Person>> observer =
+            api.onCreate(PERSON_API_NAME, Person.class).test();
 
         Person johnDoe = Person.builder()
             .firstName("John")
@@ -133,14 +138,12 @@ public final class CodeGenerationInstrumentationTest {
         api.create(PERSON_API_NAME, johnDoe);
 
         // Validate that subscription received the newly created person.
-        Person firstPersonOnSubscription = subscription.awaitFirstValue();
+        Person firstPersonOnSubscription = observer.awaitCount(1).values().get(0).getData();
         assertEquals(johnDoe.getFirstName(), firstPersonOnSubscription.getFirstName());
         assertEquals(johnDoe.getLastName(), firstPersonOnSubscription.getLastName());
 
-        // Cancel the subscription, and ensure that onComplete()
-        // is called as a response to canceling the operation.
-        subscription.cancel();
-        subscription.awaitSubscriptionCompletion();
+        // Cancel the subscription
+        observer.dispose();
     }
 
     /**
@@ -153,15 +156,18 @@ public final class CodeGenerationInstrumentationTest {
         long startTime = SystemClock.elapsedRealtime();
 
         // Act: try to create a subscription
-        SynchronousApi.Subscription<PrivateNote> subscription =
-            api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class);
+        TestObserver<GraphQLResponse<PrivateNote>> observer = TestObserver.create();
+            api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class)
+                .subscribe(observer);
+        List<Throwable> errors = observer.errors();
 
         // Assert: it failed with a connection_error
-        Throwable exception = subscription.awaitSubscriptionFailure();
-        assertTrue(exception instanceof ApiException);
-        assertNotNull(exception.getMessage());
-        assertTrue(exception.getMessage().contains("connection_error"));
-
+        assertEquals(1, errors.size());
+        Throwable throwable = errors.get(0);
+        assertTrue(throwable instanceof ApiException);
+        assertNotNull(throwable.getMessage());
+        assertTrue(throwable.getMessage().contains("connection_error"));
+        //
         // A connection error should take less than a second to be reported
         long acceptableDurationMs = TimeUnit.SECONDS.toMillis(1);
         long actualApiCallDurationMs = SystemClock.elapsedRealtime() - startTime;
@@ -171,10 +177,11 @@ public final class CodeGenerationInstrumentationTest {
     /**
      * Creates an object and tries to update it with a false condition on the existing data which should fail to
      * ensure mutation condition filtering works. Then it sends a correct condition to delete which should succeed.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void mutationFailsInvalidConditionAndPassesCorrectCondition() {
+    public void mutationFailsInvalidConditionAndPassesCorrectCondition() throws ApiException {
         Person person = Person.builder()
             .firstName("David")
             .lastName("Daudelin")
@@ -200,13 +207,13 @@ public final class CodeGenerationInstrumentationTest {
      * successful query, mutations, subscription.
      * TODO: Add mutate with condition and list with predicate since those are the ones
      *       that actually use the original model name
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @Test
-    public void belongsToRelationship() {
+    public void belongsToRelationship() throws ApiException {
         // Subscribe to creation events for any Projectfields
-        SynchronousApi.Subscription<Projectfields> subscription =
-            api.onCreate(PROJECT_API_NAME, Projectfields.class);
-        subscription.awaitSubscriptionStarted();
+        TestObserver<GraphQLResponse<Projectfields>> observer =
+            api.onCreate(PROJECT_API_NAME, Projectfields.class).test();
 
         // Create a team
         Team team = Team.builder()
@@ -230,21 +237,20 @@ public final class CodeGenerationInstrumentationTest {
         );
 
         // Validate that subscription received the newly created team, too.
-        Projectfields projectfieldsOnSubscription = subscription.awaitFirstValue();
+        Projectfields projectfieldsOnSubscription = observer.awaitCount(1).values().get(0).getData();
         assertEquals(projectfields.getName(), projectfieldsOnSubscription.getName());
         assertEquals(team, projectfieldsOnSubscription.getTeam());
 
-        // We're done using the subscription, so cancel it.
-        // As a result of cancellation, it should fire the onComplete action.
-        subscription.cancel();
-        subscription.awaitSubscriptionCompletion();
+        // Cancel the subscription
+        observer.dispose();
     }
 
     /**
      * Tests the code generation for HAS_MANY relationship.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @Test
-    public void hasManyRelationship() {
+    public void hasManyRelationship() throws ApiException {
         // Create a blog.
         Blog blog = Blog.builder()
             .name("All Things Amplify")
@@ -278,10 +284,11 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Tests the code generation for HAS_ONE relationship.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void hasOneRelationship() {
+    public void hasOneRelationship() throws ApiException {
         // Create a blog
         Blog blog = Blog.builder()
             .name("Necessary blog for post")
@@ -320,9 +327,10 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Tests the code generation for a Many to Many relationship simulated through two HasMany relationships.
+     * @throws ApiException On failure to obtain valid response from endpoint
      */
     @Test
-    public void manyToManyRelationship() {
+    public void manyToManyRelationship() throws ApiException {
         // Create a blog.
         Blog blog = Blog.builder()
             .name("Necessary blog for post")
@@ -362,3 +370,4 @@ public final class CodeGenerationInstrumentationTest {
         assertEquals(post.getId(), queriedUser.getPosts().get(0).getPost().getId());
     }
 }
+

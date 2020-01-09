@@ -20,5 +20,6 @@ dependencies {
     implementation project(path: ':core')
     implementation dependency.junit
     implementation dependency.androidx.test.core
+    implementation dependency.rxjava
 }
 

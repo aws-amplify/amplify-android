@@ -15,12 +15,10 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.content.Context;
 import android.database.Cursor;
 import android.os.StrictMode;
 import android.util.Log;
 import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
@@ -35,8 +33,7 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
-import com.amplifyframework.testutils.EmptyConsumer;
-import com.amplifyframework.testutils.LatchedConsumer;
+import com.amplifyframework.testutils.Await;
 
 import org.junit.After;
 import org.junit.Before;
@@ -51,6 +48,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -67,7 +65,6 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
-    private Context context;
     private SQLiteStorageAdapter sqliteStorageAdapter;
 
     /**
@@ -85,22 +82,19 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Setup the required information for SQLiteStorageHelper construction.
+     * @throws DataStoreException If initialization of storage adapter fails
      */
     @Before
-    public void setUp() {
-        context = ApplicationProvider.getApplicationContext();
-        context.deleteDatabase(DATABASE_NAME);
+    public void setUp() throws DataStoreException {
+        getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         ModelProvider modelProvider = AmplifyModelProvider.getInstance();
         sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
-
-        LatchedConsumer<List<ModelSchema>> setupResultConsumer =
-            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
-
-        sqliteStorageAdapter.initialize(context, setupResultConsumer, errorConsumer);
-
-        List<ModelSchema> setupResults = setupResultConsumer.awaitValue();
+        List<ModelSchema> setupResults = Await.result(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.initialize(getApplicationContext(), onResult, onError)
+        );
 
         List<Class<? extends Model>> expectedModels = new ArrayList<>(modelProvider.models());
         expectedModels.add(StorageItemChange.Record.class); // Internal
@@ -115,14 +109,15 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     @After
     public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
-        context.deleteDatabase(DATABASE_NAME);
+        getApplicationContext().deleteDatabase(DATABASE_NAME);
     }
 
     /**
      * Assert that save stores item in the SQLite database correctly.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void saveModelUpdatesData() {
+    public void saveModelUpdatesData() throws DataStoreException {
         // Triggers an insert
         final BlogOwner raphael = BlogOwner.builder()
             .name("Raphael Kim")
@@ -226,16 +221,14 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert that foreign key constraint is enforced.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void saveModelWithInvalidForeignKey() {
+    public void saveModelWithInvalidForeignKey() throws DataStoreException {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
         saveModel(blogOwner);
-
-        LatchedConsumer<DataStoreException> errorConsumer = LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        Consumer<StorageItemChange.Record> successConsumer = EmptyConsumer.of(StorageItemChange.Record.class);
 
         final Blog blog = Blog.builder()
             .name("Alan's Blog")
@@ -243,11 +236,9 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .name("Susan Swanson") // What??
                 .build())
             .build();
-        sqliteStorageAdapter.save(blog, StorageItemChange.Initiator.DATA_STORE_API, successConsumer, errorConsumer);
+        Throwable actualError = saveModelExpectingError(blog);
 
         final String expectedError = "FOREIGN KEY constraint failed";
-
-        Throwable actualError = errorConsumer.awaitValue();
         assertNotNull(actualError.getCause());
         assertNotNull(actualError.getCause().getMessage());
         assertThat(Log.getStackTraceString(actualError), containsString(expectedError));
@@ -255,9 +246,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test save with SQL injection.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void saveModelWithMaliciousInputs() {
+    public void saveModelWithMaliciousInputs() throws DataStoreException {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Jane'); DROP TABLE Person; --")
             .build();
@@ -270,9 +262,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Test save with predicate. Conditional write is useful for making sure that
      * no data is overwritten with outdated assumptions.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void saveModelWithPredicateUpdatesConditionally() {
+    public void saveModelWithPredicateUpdatesConditionally() throws DataStoreException {
         final BlogOwner john = BlogOwner.builder()
                 .name("John")
                 .build();
@@ -299,6 +292,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
                 .build();
         saveModel(newJohn, predicate);
         saveModel(newJane, predicate);
+        //noinspection ThrowableNotThrown
         saveModelExpectingError(newMark, predicate); // Should not update
 
         final Set<BlogOwner> expectedBlogOwners = new HashSet<>(Arrays.asList(
@@ -312,9 +306,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test querying the saved item in the SQLite database.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void querySavedDataWithSingleItem() {
+    public void querySavedDataWithSingleItem() throws DataStoreException {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
@@ -326,9 +321,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test querying the saved item in the SQLite database.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void querySavedDataWithMultipleItems() {
+    public void querySavedDataWithMultipleItems() throws DataStoreException {
         final Set<BlogOwner> savedModels = new HashSet<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -346,9 +342,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Test that querying the saved item with a foreign key
      * also populates that instance variable with object.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void querySavedDataWithForeignKey() {
+    public void querySavedDataWithForeignKey() throws DataStoreException {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
@@ -368,10 +365,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Test querying the saved item in the SQLite database with
      * predicate conditions.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @SuppressWarnings("checkstyle:MagicNumber") // For predicates, arbitrarily decide some business rules
     @Test
-    public void querySavedDataWithNumericalPredicates() {
+    public void querySavedDataWithNumericalPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -401,10 +399,11 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Test querying the saved item in the SQLite database with
      * predicate conditions.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @SuppressWarnings("checkstyle:MagicNumber") // For predicates, arbitrarily decide some business rules
     @Test
-    public void querySavedDataWithStringPredicates() {
+    public void querySavedDataWithStringPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
@@ -432,9 +431,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test querying with predicate condition on connected model.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void querySavedDataWithPredicatesOnForeignKey() {
+    public void querySavedDataWithPredicatesOnForeignKey() throws DataStoreException {
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Jane Doe")
             .build();
@@ -452,9 +452,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Test query with SQL injection.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void queryWithMaliciousPredicates() {
+    public void queryWithMaliciousPredicates() throws DataStoreException {
         final BlogOwner jane = BlogOwner.builder()
             .name("Jane Doe")
             .build();
@@ -470,9 +471,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
 
     /**
      * Assert that delete deletes item in the SQLite database correctly.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void deleteModelDeletesData() {
+    public void deleteModelDeletesData() throws DataStoreException {
         // Triggers an insert
         final BlogOwner raphael = BlogOwner.builder()
             .name("Raphael Kim")
@@ -490,9 +492,10 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Assert that delete deletes item in the SQLite database without
      * violating foreign key constraints.
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
-    public void deleteModelCascades() {
+    public void deleteModelCascades() throws DataStoreException {
         // Triggers an insert
         final BlogOwner raphael = BlogOwner.builder()
                 .name("Raphael Kim")
@@ -522,7 +525,7 @@ public final class SQLiteStorageAdapterInstrumentedTest {
     /**
      * Test delete with predicate. Conditional delete is useful for making sure that
      * no data is removed with outdated assumptions.
-     * @throws DataStoreException from possible underlying DataStore exceptions
+     * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
     @Test
     public void deleteModelWithPredicateDeletesConditionally() throws DataStoreException {
@@ -550,54 +553,58 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         assertTrue(blogOwners.contains(mark));
     }
 
-    private <T extends Model> void saveModel(@NonNull T model) {
+    private <T extends Model> void saveModel(@NonNull T model) throws DataStoreException {
         //noinspection ConstantConditions
         saveModel(model, null);
     }
 
     private <T extends Model> void saveModel(
+            @NonNull T model, @NonNull QueryPredicate predicate) throws DataStoreException {
+        Await.result(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.save(
+                    model,
+                    StorageItemChange.Initiator.DATA_STORE_API,
+                    predicate,
+                    onResult,
+                    onError
+                )
+        );
+    }
+
+    private <T extends Model> DataStoreException saveModelExpectingError(@NonNull T model) {
+        //noinspection ConstantConditions
+        return saveModelExpectingError(model, null);
+    }
+
+    private <T extends Model> DataStoreException saveModelExpectingError(
             @NonNull T model, @NonNull QueryPredicate predicate) {
-        LatchedConsumer<StorageItemChange.Record> consumerOfSaveResult =
-            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.save(
-            model,
-            StorageItemChange.Initiator.DATA_STORE_API,
-            predicate,
-            consumerOfSaveResult,
-            EmptyConsumer.of(DataStoreException.class)
+        return Await.error(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.save(
+                    model,
+                    StorageItemChange.Initiator.DATA_STORE_API,
+                    predicate,
+                    onResult,
+                    onError
+                )
         );
-        consumerOfSaveResult.awaitValue();
     }
 
-    private <T extends Model> void saveModelExpectingError(
-            @NonNull T model,
-            @NonNull QueryPredicate predicate
-    ) {
-        LatchedConsumer<DataStoreException> consumerOfError =
-            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.save(
-            model,
-            StorageItemChange.Initiator.DATA_STORE_API,
-            predicate,
-            EmptyConsumer.of(StorageItemChange.Record.class),
-            consumerOfError
-        );
-        consumerOfError.awaitValue();
-    }
-
-    private <T extends Model> Set<T> queryModel(@NonNull Class<T> modelClass) {
+    private <T extends Model> Set<T> queryModel(@NonNull Class<T> modelClass) throws DataStoreException {
         //noinspection ConstantConditions
         return queryModel(modelClass, null);
     }
 
     private <T extends Model> Set<T> queryModel(
-            @NonNull Class<T> modelClass, @NonNull QueryPredicate predicate) {
-        LatchedConsumer<Iterator<T>> queryResultConsumer =
-            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
-        sqliteStorageAdapter.query(modelClass, predicate, queryResultConsumer, errorConsumer);
-        Iterator<T> resultIterator = queryResultConsumer.awaitValue();
-
+            @NonNull Class<T> modelClass, @NonNull QueryPredicate predicate) throws DataStoreException {
+        Iterator<T> resultIterator = Await.result(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<Iterator<T>> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.query(modelClass, predicate, onResult, onError)
+        );
         final Set<T> resultSet = new HashSet<>();
         while (resultIterator.hasNext()) {
             resultSet.add(resultIterator.next());
@@ -605,37 +612,39 @@ public final class SQLiteStorageAdapterInstrumentedTest {
         return resultSet;
     }
 
-    private <T extends Model> void deleteModel(@NonNull T model) {
+    private <T extends Model> void deleteModel(@NonNull T model) throws DataStoreException {
         //noinspection ConstantConditions
         deleteModel(model, null);
     }
 
     private <T extends Model> void deleteModel(
-            @NonNull T model, @NonNull QueryPredicate predicate) {
-        LatchedConsumer<StorageItemChange.Record> deleteConsumer =
-            LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        Consumer<DataStoreException> errorConsumer = EmptyConsumer.of(DataStoreException.class);
-        sqliteStorageAdapter.delete(
-                model,
-                StorageItemChange.Initiator.DATA_STORE_API,
-                deleteConsumer,
-                errorConsumer);
-        deleteConsumer.awaitValue();
+            @NonNull T model, @NonNull QueryPredicate predicate) throws DataStoreException {
+        Await.result(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.delete(
+                    model,
+                    StorageItemChange.Initiator.DATA_STORE_API,
+                    predicate,
+                    onResult,
+                    onError
+                )
+        );
     }
 
     private <T extends Model> void deleteModelExpectingError(
             @NonNull T model,
-            @NonNull QueryPredicate predicate
-    ) {
-        LatchedConsumer<DataStoreException> errorConsumer =
-                LatchedConsumer.instance(SQLITE_OPERATION_TIMEOUT_MS);
-        sqliteStorageAdapter.delete(
-                model,
-                StorageItemChange.Initiator.DATA_STORE_API,
-                predicate,
-                EmptyConsumer.of(StorageItemChange.Record.class),
-                errorConsumer);
-        errorConsumer.awaitValue();
+            @NonNull QueryPredicate predicate) {
+        Await.error(
+            SQLITE_OPERATION_TIMEOUT_MS,
+            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+                sqliteStorageAdapter.delete(
+                    model,
+                    StorageItemChange.Initiator.DATA_STORE_API,
+                    predicate,
+                    onResult,
+                    onError
+                )
+        );
     }
 }
-

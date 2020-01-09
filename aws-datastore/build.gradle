@@ -33,6 +33,7 @@ dependencies {
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
 
+    androidTestImplementation project(path: ':aws-api')
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':aws-api')
@@ -40,5 +41,6 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestImplementation dependency.rxjava
 }
 
