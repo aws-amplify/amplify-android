@@ -19,9 +19,6 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.testutils.EmptyConsumer;
-import com.amplifyframework.testutils.LatchedConsumer;
 import com.amplifyframework.testutils.SynchronousApi;
 
 import org.json.JSONException;
@@ -42,9 +39,10 @@ public final class RestApiInstrumentationTest {
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
      * @throws AmplifyException if configuration fails
+     * @throws TestAWSMobileClient.InitializationError If AWS Mobile Client initialization fails
      */
     @BeforeClass
-    public static void onceBeforeTests() throws AmplifyException {
+    public static void onceBeforeTests() throws AmplifyException, TestAWSMobileClient.InitializationError {
         AmplifyTestConfigurator.configureIfNotConfigured();
         api = SynchronousApi.singleton();
         TestAWSMobileClient.initialize();
@@ -52,10 +50,11 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make api Rest call in none auth.
-     * @throws JSONException Exception is thrown if JSON parsing fails.
+     * @throws JSONException If JSON parsing of arranged data fails
+     * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    public void getRequestWithNoAuth() throws JSONException {
+    public void getRequestWithNoAuth() throws JSONException, ApiException {
         RestResponse responseData =
             api.get("nonAuthApi", new RestOptions("simplesuccess"));
 
@@ -73,10 +72,11 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make POST api Rest call in none auth.
-     * @throws JSONException Exception is thrown if JSON parsing fails.
+     * @throws JSONException If JSON parsing of arranged data fails
+     * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    public void postRequestWithNoAuth() throws JSONException {
+    public void postRequestWithNoAuth() throws JSONException, ApiException {
         final RestOptions options = new RestOptions("simplesuccess", "sample body".getBytes());
         final RestResponse response = api.post("nonAuthApi", options);
 
@@ -95,10 +95,11 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make api Rest call in api key as auth type.
-     * @throws JSONException Exception is thrown if JSON parsing fails.
+     * @throws JSONException If JSON parsing of arranged data fails
+     * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    public void getRequestWithApiKey() throws JSONException {
+    public void getRequestWithApiKey() throws JSONException, ApiException {
         final RestResponse response =
             api.get("apiKeyApi", new RestOptions("simplesuccessapikey"));
 
@@ -116,24 +117,27 @@ public final class RestApiInstrumentationTest {
 
     /**
      * Test whether we can make api Rest call in IAM as auth type.
+     * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    public void getRequestWithIAM() {
-        final RestOptions options = RestOptions.builder().addPath("items").build();
-        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        Amplify.API.get("iamAuthApi", options, responseConsumer, EmptyConsumer.of(ApiException.class));
-        assertNotNull("Should return non-null data", responseConsumer.awaitValue().getData());
+    public void getRequestWithIAM() throws ApiException {
+        RestOptions options = RestOptions.builder()
+            .addPath("items")
+            .build();
+        RestResponse response = api.get("iamAuthApi", options);
+        assertNotNull("Should return non-null data", response.getData());
     }
 
     /**
      * Test whether we can get failed response for access denied.
+     * @throws ApiException On failure to obtain a valid response from API endpoint
      */
     @Test
-    public void getRequestWithIAMFailedAccess() {
-        final RestOptions options = RestOptions.builder().addPath("invalidPath").build();
-        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        Amplify.API.get("iamAuthApi", options, responseConsumer, EmptyConsumer.of(ApiException.class));
-        RestResponse response = responseConsumer.awaitValue();
+    public void getRequestWithIAMFailedAccess() throws ApiException {
+        RestOptions options = RestOptions.builder()
+            .addPath("invalidPath")
+            .build();
+        RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
         assertFalse("Response should be unsuccessful", response.getCode().isSucessful());
     }

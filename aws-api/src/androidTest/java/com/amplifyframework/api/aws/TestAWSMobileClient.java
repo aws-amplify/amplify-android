@@ -15,12 +15,11 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.testutils.Await;
+
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.UserStateDetails;
-
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
@@ -28,37 +27,31 @@ final class TestAWSMobileClient {
     @SuppressWarnings("checkstyle:all") private TestAWSMobileClient() {}
 
     @SuppressWarnings("UnusedReturnValue")
-    static UserStateDetails initialize() {
-        final CountDownLatch latch = new CountDownLatch(1);
-        final AtomicReference<UserStateDetails> userStateDetailsContainer = new AtomicReference<>();
-        final AtomicReference<Exception> errorContainer = new AtomicReference<>(null);
-
-        AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
-            @Override
-            public void onResult(UserStateDetails userStateDetails) {
-                userStateDetailsContainer.set(userStateDetails);
-                latch.countDown();
-            }
-
-            @Override
-            @SuppressWarnings("ParameterName")
-            public void onError(Exception initializationError) {
-                errorContainer.set(initializationError);
-                latch.countDown();
-            }
-        });
+    static UserStateDetails initialize() throws InitializationError {
         try {
-            latch.await();
-        } catch (InterruptedException interruptedException) {
-            errorContainer.set(interruptedException);
-        }
+            return Await.<UserStateDetails, Exception>result((onResult, onError) ->
+                AWSMobileClient.getInstance().initialize(getApplicationContext(), new Callback<UserStateDetails>() {
+                    @Override
+                    public void onResult(UserStateDetails userStateDetails) {
+                        onResult.accept(userStateDetails);
+                    }
 
-        if (null != errorContainer.get()) {
-            throw new RuntimeException("Error while initializing mobile client", errorContainer.get());
-        } else if (latch.getCount() != 0) {
-            throw new RuntimeException("Failed to initialize mobile client.");
+                    @Override
+                    public void onError(Exception initializationError) {
+                        onError.accept(initializationError);
+                    }
+                })
+            );
+        } catch (Exception initializationError) {
+            throw new InitializationError(initializationError);
         }
+    }
 
-        return userStateDetailsContainer.get();
+    static final class InitializationError extends Exception {
+        private static final long serialVersionUID = 1L;
+
+        InitializationError(Throwable cause) {
+            super("Failed to initialize TestAWSMobileClient.", cause);
+        }
     }
 }
