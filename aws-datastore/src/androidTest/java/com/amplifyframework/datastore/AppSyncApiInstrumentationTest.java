@@ -290,11 +290,12 @@ public final class AppSyncApiInstrumentationTest {
         @SuppressWarnings("SameParameterValue") // Keep details in the @Test method
         @NonNull
         static <T extends Model> Subscription<T> onCreate(Class<T> clazz) {
-            LatchedResponseConsumer<ModelWithMetadata<T>> itemConsumer = LatchedResponseConsumer.instance();
-            LatchedAction completionAction = LatchedAction.instance();
-            Consumer<DataStoreException> failureConsumer = EmptyConsumer.of(DataStoreException.class);
-            Cancelable cancelable = api.onCreate(clazz, itemConsumer, failureConsumer, completionAction);
-            return new Subscription<>(cancelable, itemConsumer, completionAction);
+            Consumer<String> onStart = EmptyConsumer.of(String.class);
+            LatchedResponseConsumer<ModelWithMetadata<T>> onItem = LatchedResponseConsumer.instance();
+            LatchedAction onComplete = LatchedAction.instance();
+            Consumer<DataStoreException> onFailure = EmptyConsumer.of(DataStoreException.class);
+            Cancelable cancelable = api.onCreate(clazz, onStart, onItem, onFailure, onComplete);
+            return new Subscription<>(cancelable, onItem, onComplete);
         }
 
         /**

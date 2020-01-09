@@ -15,9 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
+import android.os.SystemClock;
+
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.annotations.BelongsTo;
+import com.amplifyframework.testmodels.noteswithauth.PrivateNote;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testmodels.ratingsblog.Blog;
@@ -34,8 +38,10 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -45,6 +51,7 @@ public final class CodeGenerationInstrumentationTest {
     private static final String PERSON_API_NAME = "personApi";
     private static final String PROJECT_API_NAME = "projectApi";
     private static final String BLOG_API_NAME = "blogApi";
+    private static final String NOTES_WITH_AUTH_API_NAME = "notesWithAuthApi";
 
     private static SynchronousApi api;
 
@@ -117,6 +124,7 @@ public final class CodeGenerationInstrumentationTest {
     public void subscribeReceivesMutationEvent() {
         SynchronousApi.Subscription<Person> subscription =
             api.onCreate(PERSON_API_NAME, Person.class);
+        subscription.awaitSubscriptionStarted();
 
         Person johnDoe = Person.builder()
             .firstName("John")
@@ -133,6 +141,31 @@ public final class CodeGenerationInstrumentationTest {
         // is called as a response to canceling the operation.
         subscription.cancel();
         subscription.awaitSubscriptionCompletion();
+    }
+
+    /**
+     * Tests that attempting to subscribe to an API which is protected by Cognito User Pool auth will fail if the user
+     * is unauthenticated. Also checks that the connection error is returned quickly without waiting for a timeout.
+     */
+    @Test
+    public void subscribeFailsWithoutProperAuth() {
+        // Start timing the subscription call.
+        long startTime = SystemClock.elapsedRealtime();
+
+        // Act: try to create a subscription
+        SynchronousApi.Subscription<PrivateNote> subscription =
+            api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class);
+
+        // Assert: it failed with a connection_error
+        Throwable exception = subscription.awaitSubscriptionFailure();
+        assertTrue(exception instanceof ApiException);
+        assertNotNull(exception.getMessage());
+        assertTrue(exception.getMessage().contains("connection_error"));
+
+        // A connection error should take less than a second to be reported
+        long acceptableDurationMs = TimeUnit.SECONDS.toMillis(1);
+        long actualApiCallDurationMs = SystemClock.elapsedRealtime() - startTime;
+        assertTrue(actualApiCallDurationMs < acceptableDurationMs);
     }
 
     /**
@@ -173,6 +206,7 @@ public final class CodeGenerationInstrumentationTest {
         // Subscribe to creation events for any Projectfields
         SynchronousApi.Subscription<Projectfields> subscription =
             api.onCreate(PROJECT_API_NAME, Projectfields.class);
+        subscription.awaitSubscriptionStarted();
 
         // Create a team
         Team team = Team.builder()

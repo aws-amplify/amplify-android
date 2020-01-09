@@ -48,6 +48,8 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import okhttp3.OkHttpClient;
 
@@ -59,6 +61,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     private final Map<String, ClientDetails> apiDetails;
     private final GraphQLResponse.Factory gqlResponseFactory;
     private final ApiAuthProviders authProvider;
+    private final ExecutorService executorService;
 
     private final Set<String> restApis;
     private final Set<String> gqlApis;
@@ -87,6 +90,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.authProvider = Objects.requireNonNull(apiAuthProvider);
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
+        this.executorService = Executors.newCachedThreadPool();
     }
 
     @NonNull
@@ -379,6 +383,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
@@ -389,14 +394,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             onSubscriptionFailure.accept(exception);
             return null;
         }
-        return subscribe(apiName, modelClass, subscriptionType,
-            onNextResponse, onSubscriptionFailure, onSubscriptionComplete);
+        return subscribe(
+            apiName,
+            modelClass,
+            subscriptionType,
+            onSubscriptionEstablished,
+            onNextResponse,
+            onSubscriptionFailure,
+            onSubscriptionComplete
+        );
     }
 
     @Nullable
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
@@ -407,7 +420,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             onSubscriptionFailure.accept(exception);
             return null;
         }
-        return subscribe(apiName, graphQLRequest, onNextResponse, onSubscriptionFailure, onSubscriptionComplete);
+        return subscribe(
+            apiName,
+            graphQLRequest,
+            onSubscriptionEstablished,
+            onNextResponse,
+            onSubscriptionFailure,
+            onSubscriptionComplete
+        );
     }
 
     @Nullable
@@ -416,25 +436,29 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
+        final GraphQLRequest<T> request;
         try {
-            return subscribe(
-                    apiName,
-                    AppSyncGraphQLRequestFactory.buildSubscription(
-                            modelClass,
-                            subscriptionType,
-                            authProvider.getCognitoUserPoolsAuthProvider()
-                    ),
-                    onNextResponse,
-                    onSubscriptionFailure,
-                    onSubscriptionComplete
+            request = AppSyncGraphQLRequestFactory.buildSubscription(
+                modelClass,
+                subscriptionType,
+                authProvider.getCognitoUserPoolsAuthProvider()
             );
-        } catch (ApiException exception) {
-            onSubscriptionFailure.accept(exception);
+        } catch (ApiException errorBuildingRequest) {
+            onSubscriptionFailure.accept(errorBuildingRequest);
             return null;
         }
+        return subscribe(
+            apiName,
+            request,
+            onSubscriptionEstablished,
+            onNextResponse,
+            onSubscriptionFailure,
+            onSubscriptionComplete
+        );
     }
 
     @Nullable
@@ -442,6 +466,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
@@ -463,6 +488,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .client(clientDetails.okHttpClient())
                 .graphQLRequest(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
+                .executorService(executorService)
+                .onSubscriptionStarted(onSubscriptionEstablished)
                 .onNextItem(onNextResponse)
                 .onSubscriptionError(onSubscriptionFailure)
                 .onSubscriptionComplete(onSubscriptionComplete)

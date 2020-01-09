@@ -253,9 +253,11 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T extends Model> Subscription<T> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
-        return createSubscription((onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
-            Amplify.API.subscribe(apiName, clazz, SubscriptionType.ON_CREATE,
-                onNextResponse, onSubscriptionFailure, onSubscriptionCompleted));
+        return createSubscription(
+            (onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
+                Amplify.API.subscribe(apiName, clazz, SubscriptionType.ON_CREATE,
+                    onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted)
+        );
     }
 
     /**
@@ -267,22 +269,27 @@ public final class SynchronousApi {
      */
     @NonNull
     public <T> Subscription<T> onCreate(@NonNull String apiName, @NonNull GraphQLRequest<T> request) {
-        return createSubscription((onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
-            Amplify.API.subscribe(apiName, request, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted));
+        return createSubscription(
+            (onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
+                Amplify.API.subscribe(apiName, request,
+                    onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted)
+        );
     }
 
     private <T> Subscription<T> createSubscription(SubscriptionCreationMethod<T> method) {
+        LatchedConsumer<String> startConsumer = LatchedConsumer.instance();
         LatchedResponseConsumer<T> streamItemConsumer = LatchedResponseConsumer.instance();
         LatchedAction streamCompletionAction = LatchedAction.instance();
         LatchedConsumer<ApiException> errorConsumer = LatchedConsumer.instance();
 
         final Cancelable cancelable =
-            method.streamWith(streamItemConsumer, errorConsumer, streamCompletionAction);
+            method.streamWith(startConsumer, streamItemConsumer, errorConsumer, streamCompletionAction);
         if (cancelable == null) {
             throw new RuntimeException("Got a null operation back from API subscribe.");
         }
 
         return new Subscription<>(
+            startConsumer,
             streamItemConsumer,
             errorConsumer,
             streamCompletionAction,
@@ -311,6 +318,7 @@ public final class SynchronousApi {
 
     interface SubscriptionCreationMethod<T> {
         Cancelable streamWith(
+            Consumer<String> onSubscriptionStarted,
             Consumer<GraphQLResponse<T>> onNextResponse,
             Consumer<ApiException> onSubscriptionFailure,
             Action onSubscriptionCompleted
@@ -324,20 +332,34 @@ public final class SynchronousApi {
      */
     @SuppressWarnings("unused")
     public static final class Subscription<T> {
+        private final LatchedConsumer<String> startConsumer;
         private final LatchedResponseConsumer<T> itemConsumer;
         private final LatchedConsumer<ApiException> errorConsumer;
         private final LatchedAction completionAction;
         private final Cancelable cancellationMethod;
 
         Subscription(
+                @NonNull LatchedConsumer<String> startConsumer,
                 @NonNull LatchedResponseConsumer<T> itemConsumer,
                 @NonNull LatchedConsumer<ApiException> errorConsumer,
                 @NonNull LatchedAction completionAction,
                 @NonNull Cancelable cancellationMethod) {
+            this.startConsumer = startConsumer;
             this.itemConsumer = itemConsumer;
             this.errorConsumer = errorConsumer;
             this.completionAction = completionAction;
             this.cancellationMethod = cancellationMethod;
+        }
+
+        /**
+         * Awaits the subscription establishment, and returns the ID of the
+         * newly started subscription.
+         * @return ID of newly started subscription
+         */
+        @SuppressWarnings("UnusedReturnValue")
+        @NonNull
+        public String awaitSubscriptionStarted() {
+            return startConsumer.awaitValue();
         }
 
         /**

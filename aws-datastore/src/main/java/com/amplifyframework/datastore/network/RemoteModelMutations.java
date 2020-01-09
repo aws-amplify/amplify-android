@@ -126,11 +126,16 @@ final class RemoteModelMutations {
                 return this;
             }
 
+            @SuppressWarnings("checkstyle:WhitespaceAround")
             @SuppressLint("SyntheticAccessor")
             Subscription begin() throws DataStoreException {
+                final Consumer<String> onStarted = ignored -> {};
+
                 final Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNext =
                     itemConsumer(commonEmitter, modelClass, subscriptionType);
+
                 final Consumer<DataStoreException> onFailure = commonEmitter::onError;
+
                 final Action onComplete = () -> LOG.info(String.format(
                     "Subscription to %s:%s is completed.", modelClass.getSimpleName(), subscriptionType
                 ));
@@ -138,13 +143,13 @@ final class RemoteModelMutations {
                 final Cancelable cancelable;
                 switch (subscriptionType) {
                     case ON_UPDATE:
-                        cancelable = appSyncEndpoint.onUpdate(modelClass, onNext, onFailure, onComplete);
+                        cancelable = appSyncEndpoint.onUpdate(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     case ON_DELETE:
-                        cancelable = appSyncEndpoint.onDelete(modelClass, onNext, onFailure, onComplete);
+                        cancelable = appSyncEndpoint.onDelete(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     case ON_CREATE:
-                        cancelable = appSyncEndpoint.onCreate(modelClass, onNext, onFailure, onComplete);
+                        cancelable = appSyncEndpoint.onCreate(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     default:
                         throw new DataStoreException(

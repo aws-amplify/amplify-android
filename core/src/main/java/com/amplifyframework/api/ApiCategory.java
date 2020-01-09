@@ -194,22 +194,24 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return getSelectedPlugin().subscribe(modelClass, subscriptionType,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+            onSubscriptionEstablished, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
     }
 
     @Nullable
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return getSelectedPlugin().subscribe(graphQlRequest,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+            onSubscriptionEstablished, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
     }
 
     @Nullable
@@ -218,11 +220,12 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return getSelectedPlugin().subscribe(apiName, modelClass, subscriptionType,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+            onSubscriptionEstablished, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
     }
 
     @Nullable
@@ -230,11 +233,12 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<String> onSubscriptionEstablished,
             @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionCompleted) {
         return getSelectedPlugin().subscribe(apiName, graphQlRequest,
-            onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
+            onSubscriptionEstablished, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted);
     }
 
     @Nullable

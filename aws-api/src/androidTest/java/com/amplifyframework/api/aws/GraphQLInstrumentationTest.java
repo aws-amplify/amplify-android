@@ -83,6 +83,7 @@ public final class GraphQLInstrumentationTest {
                 new GsonVariablesSerializer()
             )
         );
+        subscription.awaitSubscriptionStarted();
 
         // Create a comment
         createComment(eventId);
