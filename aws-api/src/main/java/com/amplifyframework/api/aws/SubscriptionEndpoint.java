@@ -25,6 +25,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.StreamListener;
+import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -128,7 +129,8 @@ final class SubscriptionEndpoint {
             .addHeader("Sec-WebSocket-Protocol", "graphql-ws")
             .build();
 
-        webSocket = new OkHttpClient.Builder()
+        return new OkHttpClient.Builder()
+            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
             .retryOnConnectionFailure(true)
             .build()
             .newWebSocket(request, new WebSocketListener() {
@@ -153,8 +155,6 @@ final class SubscriptionEndpoint {
                     notifyError(failure);
                 }
             });
-
-        return webSocket;
     }
 
     private void sendConnectionInit(WebSocket webSocket) {
