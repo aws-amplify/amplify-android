@@ -19,7 +19,10 @@ import android.content.Context;
 import android.content.Intent;
 
 import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.util.UserAgent;
 
+import com.amazonaws.ClientConfiguration;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
@@ -59,7 +62,7 @@ public final class AWSS3StorageService {
     public AWSS3StorageService(Region region, Context context, String bucket, boolean transferAcceleration) {
         this.context = context;
         this.bucket = bucket;
-        this.client = new AmazonS3Client(AWSMobileClient.getInstance(), region);
+        this.client = createS3Client(region);
 
         if (transferAcceleration) {
             client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(true).build());
@@ -69,6 +72,13 @@ public final class AWSS3StorageService {
                                 .context(this.context)
                                 .s3Client(client)
                                 .build();
+    }
+
+    private AmazonS3Client createS3Client(Region region) {
+        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+        ClientConfiguration configuration = new ClientConfiguration();
+        configuration.setUserAgent(UserAgent.string());
+        return new AmazonS3Client(credentialsProvider, region, configuration);
     }
 
     /**

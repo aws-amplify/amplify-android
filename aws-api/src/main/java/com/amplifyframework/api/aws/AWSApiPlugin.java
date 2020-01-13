@@ -39,6 +39,7 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONObject;
 
@@ -113,6 +114,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final ApiConfiguration apiConfiguration = entry.getValue();
             final EndpointType endpointType = apiConfiguration.getEndpointType();
             final OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
             if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
             }
