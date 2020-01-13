@@ -27,6 +27,7 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.util.UserAgent;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -157,6 +158,7 @@ final class SubscriptionEndpoint {
             .build();
 
         return new OkHttpClient.Builder()
+            .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
             .retryOnConnectionFailure(true)
             .build()
             .newWebSocket(request, new WebSocketListener() {
