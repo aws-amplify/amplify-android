@@ -24,7 +24,7 @@
     <property name="fileExtensions" value="java" />
 
     <!-- Check that source files have a license header. -->
-    <module name="Header">
+    <module name="RegexpHeader">
         <property name="headerFile" value="configuration/java.header" />
     </module>
 
