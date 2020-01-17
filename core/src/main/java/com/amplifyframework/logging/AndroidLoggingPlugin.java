@@ -19,6 +19,9 @@ import android.content.Context;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+
+import com.amplifyframework.AmplifyException;
 
 import org.json.JSONObject;
 
@@ -64,12 +67,19 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
         return "AndroidLoggingPlugin";
     }
 
+    @WorkerThread
     @Override
     public void configure(
             @NonNull JSONObject pluginConfiguration,
             @NonNull Context context)
             throws LoggingException {
         // In the future, accept a log level configuration from JSON?
+    }
+
+    @WorkerThread
+    @Override
+    public void release(@NonNull Context context) throws AmplifyException {
+        // Nothing to be released?
     }
 
     @Nullable

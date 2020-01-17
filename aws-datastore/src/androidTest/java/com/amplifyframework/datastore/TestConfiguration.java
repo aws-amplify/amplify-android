@@ -26,11 +26,19 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.datastore.test.R.raw;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 final class TestConfiguration {
+    private static final long SETUP_TIME_SEC = 5L;
+
     private static TestConfiguration singleton;
     private final AWSDataStorePlugin plugin;
 
+    @SuppressWarnings("checkstyle:WhitespaceAround") // -> {}
     private TestConfiguration(Context context) throws AmplifyException {
+        final CountDownLatch latch = new CountDownLatch(1);
+
         plugin = AWSDataStorePlugin.forModels(AmplifyModelProvider.getInstance());
 
         // We need to use an API plugin, so that we can validate remote sync.
@@ -39,7 +47,13 @@ final class TestConfiguration {
 
         AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
         amplifyConfiguration.populateFromConfigFile(context, raw.amplifyconfiguration);
-        Amplify.configure(amplifyConfiguration, context);
+        Amplify.configure(amplifyConfiguration, context, latch::countDown, failure -> {});
+
+        try {
+            latch.await(SETUP_TIME_SEC, TimeUnit.SECONDS);
+        } catch (InterruptedException interruptedException) {
+            throw new RuntimeException(interruptedException);
+        }
     }
 
     /**

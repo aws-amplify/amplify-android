@@ -16,6 +16,8 @@
 package com.amplifyframework.core.plugin;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryTypeable;
@@ -41,7 +43,16 @@ public interface Plugin<E> extends CategoryTypeable {
      * @param context An Android Context
      * @throws AmplifyException an error is encountered during configuration.
      */
+    @WorkerThread
     void configure(JSONObject pluginConfiguration, Context context) throws AmplifyException;
+
+    /**
+     * Releases resources used by the plugin.
+     * @param context An Android Context
+     * @throws AmplifyException an error is encountered while releasing resources
+     */
+    @WorkerThread
+    void release(@NonNull Context context) throws AmplifyException;
 
     /**
      * Returns escape hatch for plugin to enable lower-level client use-cases.

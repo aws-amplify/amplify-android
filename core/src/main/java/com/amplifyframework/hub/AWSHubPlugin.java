@@ -20,6 +20,9 @@ import android.os.Handler;
 import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
+
+import com.amplifyframework.AmplifyException;
 
 import org.json.JSONObject;
 
@@ -127,9 +130,14 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
         return "awsHubPlugin";
     }
 
+    @WorkerThread
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) {
+    }
 
+    @WorkerThread
+    @Override
+    public void release(@NonNull Context context) throws AmplifyException {
     }
 
     @Override

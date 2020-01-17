@@ -17,7 +17,9 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
@@ -175,6 +177,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     /**
      * {@inheritDoc}
      */
+    @WorkerThread
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws AnalyticsException {
 
@@ -224,6 +227,12 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
                 pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
         autoEventSubmitter.start();
+    }
+
+    @WorkerThread
+    @Override
+    public void release(@NonNull Context context) throws AmplifyException {
+        // TODO: implement
     }
 
     /**

@@ -99,6 +99,7 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
      * {@inheritDoc}
      */
     @SuppressLint("CheckResult")
+    @WorkerThread
     @Override
     public void configure(
             @Nullable JSONObject pluginConfigurationJson,
@@ -121,6 +122,12 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .blockingGet();
+    }
+
+    @WorkerThread
+    @Override
+    public void release(@NonNull Context context) throws AmplifyException {
+        // TODO: implement
     }
 
     private void startModelSynchronization(AWSDataStorePluginConfiguration.SyncMode syncMode) {

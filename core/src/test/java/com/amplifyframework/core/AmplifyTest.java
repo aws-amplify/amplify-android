@@ -19,6 +19,7 @@ import android.content.Context;
 import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -101,11 +102,18 @@ public class AmplifyTest {
             return uuid;
         }
 
+        @WorkerThread
         @Override
         public void configure(
                 @NonNull final JSONObject pluginConfiguration,
                 final Context context) {
             // No configuration for this one. Cool, huh?
+        }
+
+        @WorkerThread
+        @Override
+        public void release(@NonNull Context context) throws AmplifyException {
+            // No release for this one.
         }
 
         @Override

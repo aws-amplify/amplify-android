@@ -32,31 +32,48 @@ import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
- * This is the top-level customer-facing interface to the Amplify
- * framework.
+ * This is the top-level entry-point to the Amplify framework. Amplify is a declarative,
+ * high-level framework used to fulfill common mobile application use cases.
  *
- * The Amplify System has the following responsibilities:
+ * Capabilities are organized into "Categories," and categories may be fulfilled by
+ * using a particular plugin, that implements the category's API. AWS provides plug-ins
+ * to fulfill the category APIs using AWS backend resources, but other plugins may
+ * be developed, or may already be available.
  *
- * 1) Add, Get and Remove Category plugins with the Amplify System
- * 2) Configure and reset the Amplify System with the information
- * from the amplifyconfiguration.json.
- *
- * Configure using amplifyconfiguration.json
+ * A user interacts with Amplify by adding plugins, and configuring the framework for use:
  * <pre>
- *     {@code
- *      Amplify.configure(getApplicationContext());
- *     }
+ *     Amplify.addPlugin(new AWSS3StoragePlugin());
+ *     Amplify.addPlugin(new AWSAPIPlugin());
+ *     Amplify.configure(
+ *         getApplicationContext(),
+ *         () -> Log.i(TAG, "Ready to use."),
+ *         failure -> Log.e(TAG, "Failed to configure Amplify framework.", failure)
+ *     );
+ * </pre>
+ *
+ * When you're done using the Amplify framework, you can release its resources, to
+ * free memory:
+ * <pre>
+ *     Amplify.release(
+ *         getApplicationContext(),
+ *         () -> Log.i(TAG, "Releases resources used by Amplify."),
+ *         failure -> Log.e(TAG, "Failed to release resources used by Amplify.")
+ *     );
  * </pre>
  */
 public final class Amplify {
     // These static references provide an entry point to the different categories.
-    // For example, you can call storage operations through Amplify.Storage.list(String path).
+    // For example, you can call storage operations like Amplify.Storage.list(String path).
     @SuppressWarnings("checkstyle:all") public static final AnalyticsCategory Analytics = new AnalyticsCategory();
     @SuppressWarnings("checkstyle:all") public static final ApiCategory API = new ApiCategory();
     @SuppressWarnings("checkstyle:all") public static final LoggingCategory Logging = new LoggingCategory();
@@ -66,8 +83,7 @@ public final class Amplify {
 
     private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
-    // Used as a synchronization locking object. Set to true once configure() is complete.
-    private static final AtomicBoolean CONFIGURATION_LOCK = new AtomicBoolean(false);
+    private static final ExecutorService THREAD_POOL = Executors.newCachedThreadPool();
 
     /**
      * Dis-allows instantiation of this utility class.
@@ -88,45 +104,171 @@ public final class Amplify {
     }
 
     /**
-     * Read the configuration from amplifyconfiguration.json file.
-     * @param context Android context required to read the contents of file
-     * @throws AmplifyException thrown when already configured or there is no plugin found for a configuration
+     * Configures Amplify using the configuration found in your project's
+     * `src/main/res/raw/amplifyconfiguration.json`.
+     * @param context An Android Context
+     * @param onConfigured Called if configuration succeeds, and Amplify is ready for use
+     * @param onFailure Invoked with an {@link AmplifyException} if the framework is already
+     *                  configured, or if `amplifyconfiguration.json` is absent, malformed,
+     *                  or contains configuration for which no plugin has been added.
      */
-    public static void configure(@NonNull Context context) throws AmplifyException {
-        AmplifyConfiguration config = new AmplifyConfiguration();
-        config.populateFromConfigFile(context);
-        configure(config, context);
+    public static synchronized void configure(
+            @NonNull Context context,
+            @NonNull Action onConfigured,
+            @NonNull Consumer<AmplifyException> onFailure) {
+        try {
+            Objects.requireNonNull(context);
+            Objects.requireNonNull(onConfigured);
+            Objects.requireNonNull(onFailure);
+        } catch (NullPointerException nullArgumentException) {
+            onFailure.accept(new AmplifyException(
+                "A null value was provided to configure(Context, Action, Consumer).",
+                nullArgumentException,
+                "Ensure that all parameters are non-null."
+            ));
+            return;
+        }
+
+        final AmplifyConfiguration config = new AmplifyConfiguration();
+        try {
+            config.populateFromConfigFile(context);
+        } catch (AmplifyException configurationFailure) {
+            onFailure.accept(configurationFailure);
+            return;
+        }
+
+        configure(config, context, onConfigured, onFailure);
     }
 
     /**
-     * Configure Amplify with AmplifyConfiguration object.
-     * @param configuration AmplifyConfiguration object for configuration via code
+     * Configures Amplify from an {@link AmplifyConfiguration} object.
+     * @param configuration An Amplify configuration
      * @param context An Android Context
-     * @throws AmplifyException thrown when already configured or there is no configuration found for a plugin
+     * @param onConfigured Called if configuration succeeds, and Amplify is ready for use
+     * @param onFailure Invoked with an {@link AmplifyException} if the framework is already
+     *                  configured, or if `amplifyconfiguration.json` is absent, malformed,
+     *                  or contains configuration for which no plugin has been added.
      */
-    public static void configure(@NonNull final AmplifyConfiguration configuration, @NonNull Context context)
-            throws AmplifyException {
-        Objects.requireNonNull(configuration);
-        Objects.requireNonNull(context);
+    public static synchronized void configure(
+            @NonNull AmplifyConfiguration configuration,
+            @NonNull Context context,
+            @NonNull Action onConfigured,
+            @NonNull Consumer<AmplifyException> onFailure) {
+        try {
+            Objects.requireNonNull(configuration);
+            Objects.requireNonNull(context);
+            Objects.requireNonNull(onConfigured);
+            Objects.requireNonNull(onFailure);
+        } catch (NullPointerException nullArgumentException) {
+            onFailure.accept(new AmplifyException(
+                "Passed a null argument to configure(AmplifyConfiguration, Context, Action, Consumer).",
+                nullArgumentException,
+                "Verify that all arguments are non-null."
+            ));
+            return;
+        }
 
-        synchronized (CONFIGURATION_LOCK) {
-            if (CONFIGURATION_LOCK.get()) {
-                throw new AmplifyException(
-                    "The client issued a subsequent call to `Amplify.configure` after the first had already succeeded.",
-                        "Be sure to only call Amplify.configure once"
-                );
+        final CountDownLatch pendingInitializations = new CountDownLatch(CATEGORIES.size());
+        final List<AmplifyException> failures = new ArrayList<>();
+
+        for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
+            if (category.getPlugins().size() <= 0) {
+                pendingInitializations.countDown();
+                continue;
             }
 
-            for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
-                if (category.getPlugins().size() > 0) {
+            THREAD_POOL.execute(() -> {
+                try {
                     CategoryConfiguration categoryConfiguration =
                         configuration.forCategoryType(category.getCategoryType());
                     category.configure(categoryConfiguration, context);
+                } catch (AmplifyException configurationError) {
+                    failures.add(configurationError);
+                } finally {
+                    pendingInitializations.countDown();
                 }
+            });
+        }
+
+        THREAD_POOL.execute(() -> {
+            try {
+                pendingInitializations.await();
+            } catch (InterruptedException interruptedException) {
+                failures.add(new AmplifyException(
+                    "Interrupted while waiting for category configuration.",
+                    interruptedException,
+                    "One of your plugins may be hanging during configuration."
+                ));
             }
 
-            CONFIGURATION_LOCK.set(true);
+            if (failures.isEmpty()) {
+                onConfigured.call();
+            } else {
+                onFailure.accept(failures.get(0));
+            }
+        });
+    }
+
+    /**
+     * Releases all resources used by the Amplify framework.
+     * @param context An Android Context
+     * @param onReleased Called when all resources have been resources
+     * @param onFailure Called upon failure to release Amplify resources
+     */
+    public static synchronized void release(
+            @NonNull Context context,
+            @NonNull Action onReleased,
+            @NonNull Consumer<AmplifyException> onFailure) {
+        try {
+            Objects.requireNonNull(context);
+            Objects.requireNonNull(onReleased);
+            Objects.requireNonNull(onFailure);
+        } catch (NullPointerException nullArgumentException) {
+            onFailure.accept(new AmplifyException(
+                "Passed a null argument to release(Context, Action, Consumer).",
+                nullArgumentException,
+                "Verify that all arguments passed are non-null."
+            ));
+            return;
         }
+
+        final CountDownLatch pendingReleases = new CountDownLatch(CATEGORIES.size());
+        final List<AmplifyException> failures = new ArrayList<>();
+
+        for (Category<? extends Plugin<?>> category : CATEGORIES.values()) {
+            if (category.getPlugins().size() <= 0) {
+                pendingReleases.countDown();
+                continue;
+            }
+
+            THREAD_POOL.execute(() -> {
+                try {
+                    category.release(context);
+                } catch (AmplifyException configurationError) {
+                    failures.add(configurationError);
+                } finally {
+                    pendingReleases.countDown();
+                }
+            });
+        }
+
+        THREAD_POOL.execute(() -> {
+            try {
+                pendingReleases.await();
+            } catch (InterruptedException interruptedException) {
+                failures.add(new AmplifyException(
+                    "Interrupted while waiting for category release.",
+                    interruptedException,
+                    "One of your plugins may be hanging during release."
+                ));
+            }
+
+            if (failures.isEmpty()) {
+                onReleased.call();
+            } else {
+                onFailure.accept(failures.get(0));
+            }
+        });
     }
 
     /**
@@ -137,7 +279,8 @@ public final class Amplify {
      * @throws AmplifyException when a plugin cannot be registered for the category type it belongs to
      *                         or when when the plugin's category type is not supported by Amplify.
      */
-    public static <P extends Plugin<?>> void addPlugin(@NonNull final P plugin) throws AmplifyException {
+    public static synchronized <P extends Plugin<?>> void addPlugin(@NonNull final P plugin)
+            throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.ADD);
     }
 
@@ -148,7 +291,8 @@ public final class Amplify {
      * @throws AmplifyException On failure to remove a plugin
      */
     @SuppressWarnings("WeakerAccess")
-    public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws AmplifyException {
+    public static synchronized <P extends Plugin<?>> void removePlugin(@NonNull final P plugin)
+            throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
     }
 
@@ -156,34 +300,32 @@ public final class Amplify {
     private static <P extends Plugin<?>> void updatePluginRegistry(
             final P plugin, final RegistryUpdateType registryUpdateType) throws AmplifyException {
 
-        synchronized (CONFIGURATION_LOCK) {
-            if (TextUtils.isEmpty(plugin.getPluginKey())) {
-                throw new AmplifyException(
-                        "Plugin key was missing for + " + plugin.getClass().getSimpleName(),
-                        "This should never happen - contact the plugin developers to find out why this is."
-                );
-            } else if (!CATEGORIES.containsKey(plugin.getCategoryType())) {
-                throw new AmplifyException("Plugin category does not exist. ",
-                    "Verify that the library version is correct and supports the plugin's category.");
-            }
+        if (TextUtils.isEmpty(plugin.getPluginKey())) {
+            throw new AmplifyException(
+                    "Plugin key was missing for + " + plugin.getClass().getSimpleName(),
+                    "This should never happen - contact the plugin developers to find out why this is."
+            );
+        } else if (!CATEGORIES.containsKey(plugin.getCategoryType())) {
+            throw new AmplifyException("Plugin category does not exist. ",
+                "Verify that the library version is correct and supports the plugin's category.");
+        }
 
-            Category<P> category;
-            try {
-                category = (Category<P>) CATEGORIES.get(plugin.getCategoryType());
-            } catch (ClassCastException classCastException) {
-                // will throw in a moment...
-                category = null;
-            }
-            if (category == null) {
-                throw new AmplifyException("A plugin is being added to the wrong category",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION);
-            }
+        Category<P> category;
+        try {
+            category = (Category<P>) CATEGORIES.get(plugin.getCategoryType());
+        } catch (ClassCastException classCastException) {
+            // will throw in a moment...
+            category = null;
+        }
+        if (category == null) {
+            throw new AmplifyException("A plugin is being added to the wrong category",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
+        }
 
-            if (RegistryUpdateType.REMOVE.equals(registryUpdateType)) {
-                category.removePlugin(plugin);
-            } else {
-                category.addPlugin(plugin);
-            }
+        if (RegistryUpdateType.REMOVE.equals(registryUpdateType)) {
+            category.removePlugin(plugin);
+        } else {
+            category.addPlugin(plugin);
         }
     }
 

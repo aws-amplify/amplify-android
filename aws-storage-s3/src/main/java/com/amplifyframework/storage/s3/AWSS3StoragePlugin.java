@@ -17,7 +17,9 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
@@ -77,6 +79,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         return AWS_S3_STORAGE_PLUGIN_KEY;
     }
 
+    @WorkerThread
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws StorageException {
         String regionStr;
@@ -133,6 +136,12 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         }
 
         this.defaultAccessLevel = StorageAccessLevel.PUBLIC; // This will be passed in the config in the future
+    }
+
+    @WorkerThread
+    @Override
+    public void release(@NonNull Context context) throws AmplifyException {
+        // TODO: implement
     }
 
     @NonNull

@@ -44,20 +44,25 @@ import static org.junit.Assert.assertTrue;
 public final class HubInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core:test");
 
+    private static final long SETUP_TIME_SEC = 5L;
     private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS = 100;
 
     /**
      * Before any test is run, configure Amplify to use an
      * {@link AWSHubPlugin} to satisfy the Hub category.
      * @throws AmplifyException from Amplify configuration
+     * @throws InterruptedException If configuration latch is interrupted while awaiting completion
      */
+    @SuppressWarnings("checkstyle:WhitespaceAround") // -> {}
     @BeforeClass
-    public static void configureAmplify() throws AmplifyException {
+    public static void configureAmplify() throws AmplifyException, InterruptedException {
+        final CountDownLatch latch = new CountDownLatch(1);
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSHubPlugin());
-        Amplify.configure(configuration, context);
+        Amplify.configure(configuration, context, latch::countDown, failure -> {});
+        latch.await(SETUP_TIME_SEC, TimeUnit.SECONDS);
     }
 
     /**

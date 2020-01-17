@@ -17,6 +17,7 @@ package com.amplifyframework.core.category;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.plugin.Plugin;
@@ -43,7 +44,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
     /**
      * Flag to remember that the category is already configured by Amplify
-     * and throw an error if configure method is called again.
+     * and throw an error if configuration method is called again.
      */
     private boolean isConfigured;
 
@@ -61,7 +62,9 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param context An Android Context
      * @throws AmplifyException if already configured
      */
-    public final void configure(CategoryConfiguration configuration, Context context)
+    @WorkerThread
+    public final void configure(
+            @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         if (isConfigured) {
             throw new AmplifyException("Amplify was already configured",
@@ -76,6 +79,27 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         }
 
         isConfigured = true;
+    }
+
+    /**
+     * Releases resources used by the category.
+     * @param context An Android Context
+     * @throws AmplifyException On failure to release resources
+     */
+    @WorkerThread
+    public final void release(@NonNull Context context) throws AmplifyException {
+        if (!isConfigured) {
+            throw new AmplifyException(
+                "Amplify is not configured, nothing to release.",
+                "Did you configure it yet?"
+            );
+        }
+
+        for (P plugin : getPlugins()) {
+            plugin.release(context);
+        }
+
+        isConfigured = false;
     }
 
     /**
@@ -153,4 +177,3 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         return getPlugins().iterator().next();
     }
 }
-

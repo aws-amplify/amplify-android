@@ -20,8 +20,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
@@ -99,6 +101,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return "awsAPIPlugin";
     }
 
+    @WorkerThread
     @Override
     public void configure(@NonNull JSONObject pluginConfigurationJson, @Nullable Context context) throws ApiException {
         // Null-check for configuration is done inside readFrom method
@@ -127,6 +130,12 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             }
             apiDetails.put(apiName, new ClientDetails(apiConfiguration, okHttpClient, subscriptionEndpoint));
         }
+    }
+
+    @WorkerThread
+    @Override
+    public void release(@NonNull Context context) throws AmplifyException {
+        // TODO: implement
     }
 
     @NonNull

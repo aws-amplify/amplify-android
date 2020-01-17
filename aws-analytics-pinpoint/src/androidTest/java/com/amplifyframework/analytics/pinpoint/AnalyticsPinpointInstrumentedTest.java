@@ -37,6 +37,7 @@ import org.junit.Test;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
@@ -47,28 +48,33 @@ import static org.junit.Assert.assertTrue;
  * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
  */
 public class AnalyticsPinpointInstrumentedTest {
-
-    /**
-     * Log tag for the test class.
-     */
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
+
+    private static final long SETUP_TIME_SECONDS = 5L;
     private static final int EVENT_FLUSH_TIMEOUT = 60;
     private static final int EVENT_FLUSH_WAIT = 2;
+
     private static AmazonPinpointAnalyticsPlugin plugin;
     private static AnalyticsClient analyticsClient;
 
     /**
      * Configure the Amplify framework.
      * @throws AmplifyException From Amplify configuration.
+     * @throws InterruptedException If configuration latch is interrupted while waiting
      */
+    @SuppressWarnings("checkstyle:WhitespaceAround") // -> {}
     @BeforeClass
-    public static void setUp() throws AmplifyException {
+    public static void setUp() throws AmplifyException, InterruptedException {
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         plugin = new AmazonPinpointAnalyticsPlugin();
+
+        final CountDownLatch latch = new CountDownLatch(1);
         Amplify.addPlugin(plugin);
-        Amplify.configure(configuration, context);
+        Amplify.configure(configuration, context, latch::countDown, failure -> {});
+        latch.await(SETUP_TIME_SECONDS, TimeUnit.SECONDS);
+
         analyticsClient = plugin.getAnalyticsClient();
     }
 

@@ -23,12 +23,17 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+
 /**
  * A little test utility to wrap Amplify configuration, so that we only attempt it
  * once per process. (The Amplify configure() method will throw an exception if you
  * try to re-configure it.)
  */
 final class AmplifyTestConfigurator {
+    private static final long SETUP_TIME_SECS = 5L;
+
     private static boolean alreadyConfigured = false;
 
     @SuppressWarnings("checkstyle:all") private AmplifyTestConfigurator() {}
@@ -37,16 +42,25 @@ final class AmplifyTestConfigurator {
      * Gets the singleton instance of Amplify, configured for the API
      * plugin tests.
      */
+    @SuppressWarnings("checkstyle:WhitespaceAround") // {} in lambda
     static synchronized void configureIfNotConfigured() throws AmplifyException {
         if (alreadyConfigured) {
             return;
         }
 
+        final CountDownLatch latch = new CountDownLatch(1);
+
         Context context = ApplicationProvider.getApplicationContext();
         AmplifyConfiguration configuration = new AmplifyConfiguration();
         configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
-        Amplify.configure(configuration, context);
+        Amplify.configure(configuration, context, latch::countDown, failure -> {});
+
+        try {
+            latch.await(SETUP_TIME_SECS, TimeUnit.SECONDS);
+        } catch (InterruptedException interruptedException) {
+            throw new RuntimeException(interruptedException);
+        }
 
         alreadyConfigured = true;
     }
