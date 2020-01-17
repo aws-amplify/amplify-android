@@ -13,20 +13,15 @@
  * permissions and limitations under the License.
  */
 
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-
 buildscript {
     repositories {
         google()
         jcenter()
     }
+
     dependencies {
         classpath 'com.android.tools.build:gradle:3.5.3'
-        classpath 'com.amazonaws:aws-devicefarm-gradle-plugin:1.3'
         classpath 'me.tatarka:gradle-retrolambda:3.7.1'
-
-        // NOTE: Do not place your application dependencies here; they belong
-        // in the individual module build.gradle files
     }
 }
 
@@ -48,7 +43,87 @@ task clean(type: Delete) {
 }
 
 ext {
+    buildToolsVersion = "29.0.2"
+    compileSdkVersion = 29
+    minSdkVersion = 15
+    targetSdkVersion = 29
+
     awsSdkVersion = '2.16.6'
-    rxJava2Version = '2.2.13'
+    dependency = [
+        androidx: [
+            v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
+            annotation: 'androidx.annotation:annotation:1.1.0',
+            appcompat: 'androidx.appcompat:appcompat:1.1.0',
+            core: 'androidx.core:core:1.1.0',
+            test: [
+                core: 'androidx.test:core:1.2.0',
+                runner: 'androidx.test:runner:1.2.0',
+                junit: 'androidx.test.ext:junit:1.1.1'
+            ]
+        ],
+        aws: [
+            s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
+            authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
+            pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
+            mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion"
+        ],
+        okhttp: 'com.squareup.okhttp3:okhttp:4.3.0',
+        gson: 'com.google.code.gson:gson:2.8.6',
+        rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
+        rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
+
+        junit: 'junit:junit:4.13',
+        mockito: 'org.mockito:mockito-core:3.1.0',
+        robolectric: 'org.robolectric:robolectric:4.3.1'
+    ]
+}
+
+subprojects { project ->
+    afterEvaluate {
+        configureAndroidLibrary(project)
+    }
+}
+
+private void configureAndroidLibrary(Project project) {
+    project.apply plugin: 'me.tatarka.retrolambda'
+    project.retrolambda.jvmArgs += '-Dretrolambda.quiet=true'
+
+    project.android {
+        buildToolsVersion rootProject.ext.buildToolsVersion
+        compileSdkVersion rootProject.ext.compileSdkVersion
+
+        defaultConfig {
+            minSdkVersion rootProject.ext.minSdkVersion
+            targetSdkVersion rootProject.ext.targetSdkVersion
+            versionCode rootProject.findProperty('VERSION_CODE').toInteger()
+            versionName rootProject.findProperty('VERSION_NAME')
+            testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+            consumerProguardFiles 'proguard-rules.pro'
+
+            testOptions {
+                unitTests {
+                    includeAndroidResources = true
+                }
+            }
+        }
+
+        lintOptions {
+            warningsAsErrors true
+            abortOnError true
+            enable 'UnusedResources'
+        }
+
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+
+        buildTypes {
+            release {
+                minifyEnabled true
+                proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            }
+        }
+    }
 }
 
