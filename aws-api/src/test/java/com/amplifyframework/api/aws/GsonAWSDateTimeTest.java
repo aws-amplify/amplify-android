@@ -15,15 +15,18 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.api.aws.internal.AWSDateTypeAdapter;
+import com.amplifyframework.api.aws.scalar.AWSDate;
+import com.amplifyframework.api.aws.scalar.AWSDateTime;
+import com.amplifyframework.api.aws.scalar.AWSTemporalTypeAdapter;
+import com.amplifyframework.api.aws.scalar.AWSTime;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.junit.BeforeClass;
+import com.google.gson.JsonSyntaxException;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Calendar;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.SimpleTimeZone;
 import java.util.TimeZone;
@@ -54,34 +57,37 @@ public class GsonAWSDateTimeTest {
     /**
      * Configure gson to use the correct custom type adapter for Date class.
      */
-    @BeforeClass
-    public static void setup() {
+    @Before
+    public void setup() {
         gson = new GsonBuilder()
-                .registerTypeAdapter(Date.class, new AWSDateTypeAdapter())
+                .registerTypeAdapterFactory(new AWSTemporalTypeAdapter())
                 .create();
     }
 
     /**
-     * Test that a string containing just date can be parsed to Date.
+     * Test that a string containing just date can be parsed correctly.
      *
      * Amplify will assume local timezone if none is specified. This
      * means that time (in UNIX epoch) is ACTUALLY being affected by
      * the local timezone of the machine that is parsing the string.
+     *
+     * This means that the actual value of time being stored (Unix Epoch)
+     * will be changed upon deserialization by local timezone offset.
      */
     @Test
     public void testDateWithoutOffset() {
         cal = new GregorianCalendar(DEFAULT_TIME_ZONE);
-        resetFields(cal);
+        cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
         cal.set(Calendar.DAY_OF_MONTH, 11);
-        Date date = cal.getTime();
+        AWSDate expected = new AWSDate(cal.getTimeZone(), cal.getTimeInMillis());
 
         final String json = "\"2020-01-11\"";
-        Date deserialized = gson.fromJson(json, Date.class);
-        assertEquals(date, deserialized);
+        AWSDate deserialized = gson.fromJson(json, AWSDate.class);
+        assertEquals(expected, deserialized);
 
-//        String serialized = gson.toJson(date);
+//        String serialized = gson.toJson(expected);
 //        /*
 //         * They cannot be exactly same because date will
 //         * pick up local timezone if none is specified.
@@ -95,60 +101,35 @@ public class GsonAWSDateTimeTest {
 
     /**
      * Test that a string containing date and offset can be parsed
-     * to Date object with the same UNIX epoch.
+     * to AWSDate object with the same date.
      */
     @Test
     public void testDateWithOffset() {
         TimeZone gmtPlus2 = TimeZone.getTimeZone("GMT+02");
         cal = new GregorianCalendar(gmtPlus2);
-        resetFields(cal);
+        cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
         cal.set(Calendar.DAY_OF_MONTH, 11);
-        Date date = cal.getTime();
+        AWSDate expected = new AWSDate(cal.getTimeZone(), cal.getTimeInMillis());
 
         final String json = "\"2020-01-11+02:00\"";
-        Date deserialized = gson.fromJson(json, Date.class);
-        assertEquals(date, deserialized);
+        AWSDate deserialized = gson.fromJson(json, AWSDate.class);
+        assertEquals(expected, deserialized);
 
-//        String serialized = gson.toJson(date);
-//        /*
-//         * They cannot be exactly same because date will
-//         * always serialize to local timezone. Java.util.Date
-//         * does NOT remember any timezone; just unix epoch.
-//         *
-//         * Should be "2020-01-10T14:00-08:00" if running from PST.
-//         */
-//        assertEquals(json, serialized);
+        String serialized = gson.toJson(expected);
+        assertEquals(json, serialized);
     }
 
     /**
-     * Test that a DateTime string can be parsed to Date.
-     *
-     * Even though the specs for AppSync scalar requires offset to be
-     * present on DateTime entity, Amplify will assume local timezone
-     * if none is specified. This means that time (in UNIX epoch) is
-     * ACTUALLY being affected by the local timezone of the machine
-     * that is parsing the string.
-     *
-     * This should be avoided by following the AppSync guideline to
-     * compulsorily appending timezone offset to AWSDateTime.
+     * Test that a AWSDateTime string cannot be parsed without a valid
+     * timezone offset. AppSync specifies timezone offset to be
+     * compulsory in AWSDateTime scalar.
      */
-    @Test
+    @Test(expected = JsonSyntaxException.class)
     public void testDateTimeWithoutOffset() {
-        cal = new GregorianCalendar(DEFAULT_TIME_ZONE);
-        resetFields(cal);
-        cal.set(Calendar.YEAR, 2020);
-        cal.set(Calendar.MONTH, Calendar.JANUARY);
-        cal.set(Calendar.DAY_OF_MONTH, 11);
-        cal.set(Calendar.HOUR_OF_DAY, 12);
-        cal.set(Calendar.MINUTE, 34);
-        cal.set(Calendar.SECOND, 56);
-        Date date = cal.getTime();
-
         final String json = "\"2020-01-11T12:34:56\"";
-        Date deserialized = gson.fromJson(json, Date.class);
-        assertEquals(date, deserialized);
+        gson.fromJson(json, AWSDateTime.class);
     }
 
     /**
@@ -166,21 +147,14 @@ public class GsonAWSDateTimeTest {
         cal.set(Calendar.MINUTE, 34);
         cal.set(Calendar.SECOND, 56);
         cal.set(Calendar.MILLISECOND, 789);
-        Date date = cal.getTime();
+        AWSDateTime expected = new AWSDateTime(cal.getTimeZone(), cal.getTimeInMillis());
 
         final String json = "\"2020-01-11T12:34:56.789-04:00\"";
-        Date deserialized = gson.fromJson(json, Date.class);
-        assertEquals(date, deserialized);
+        AWSDateTime deserialized = gson.fromJson(json, AWSDateTime.class);
+        assertEquals(expected, deserialized);
 
-//        String serialized = gson.toJson(date);
-//        /*
-//         * They cannot be exactly same because date will
-//         * always serialize to local timezone. Java.util.Date
-//         * does NOT remember any timezone; just unix epoch.
-//         *
-//         * Should be "2020-01-11T08:34:56:789-08:00" if running from PST.
-//         */
-//        assertEquals(json, serialized);
+        String serialized = gson.toJson(expected);
+        assertEquals(json, serialized);
     }
 
     /**
@@ -195,37 +169,77 @@ public class GsonAWSDateTimeTest {
         long offsetInMillis = TimeUnit.SECONDS.toMillis(30);
         TimeZone custom = new SimpleTimeZone((int) offsetInMillis, "custom");
         cal = new GregorianCalendar(custom);
-        resetFields(cal);
+        cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
         cal.set(Calendar.DAY_OF_MONTH, 11);
         cal.set(Calendar.HOUR_OF_DAY, 12);
         cal.set(Calendar.MINUTE, 34);
         cal.set(Calendar.SECOND, 56);
-        Date date = cal.getTime();
+        AWSDateTime expected = new AWSDateTime(cal.getTimeZone(), cal.getTimeInMillis());
 
         final String json = "\"2020-01-11T12:34:56+00:00:30\"";
-        Date deserialized = gson.fromJson(json, Date.class);
-        assertEquals(date, deserialized);
+        AWSDateTime deserialized = gson.fromJson(json, AWSDateTime.class);
+        assertEquals(expected, deserialized);
 
-//        String serialized = gson.toJson(date);
+        String serialized = gson.toJson(expected);
+        assertEquals(json, serialized);
+    }
+
+    /**
+     * Test that a string containing just time can be parsed correctly.
+     *
+     * Amplify will assume local timezone if none is specified. This
+     * means that time (in UNIX epoch) is ACTUALLY being affected by
+     * the local timezone of the machine that is parsing the string.
+     *
+     * This means that the actual value of time being stored (Unix Epoch)
+     * will be changed upon deserialization by local timezone offset.
+     */
+    @Test
+    public void testTimeWithoutOffset() {
+        cal = new GregorianCalendar(DEFAULT_TIME_ZONE);
+        cal.setTimeInMillis(0);
+        cal.set(Calendar.HOUR_OF_DAY, 12);
+        cal.set(Calendar.MINUTE, 34);
+        cal.set(Calendar.SECOND, 56);
+        AWSTime expected = new AWSTime(cal.getTimeZone(), cal.getTimeInMillis());
+
+        final String json = "\"12:34:56\"";
+        AWSTime deserialized = gson.fromJson(json, AWSTime.class);
+        assertEquals(expected, deserialized);
+
+//        String serialized = gson.toJson(expected);
 //        /*
 //         * They cannot be exactly same because date will
-//         * always serialize to local timezone. Java.util.Date
-//         * does NOT remember any timezone; just unix epoch.
+//         * pick up local timezone if none is specified.
+//         * Local timezone is dependent on the machine
+//         * this test is running on.
 //         *
-//         * Should be "2020-01-11T04:34:26-08:00" if running from PST.
+//         * Should be "2020-01-11-08:00" if running from PST.
 //         */
 //        assertEquals(json, serialized);
     }
 
-    private void resetFields(Calendar calendar) {
-        calendar.set(Calendar.YEAR, 0);
-        calendar.set(Calendar.MONTH, 0);
-        calendar.set(Calendar.DAY_OF_MONTH, 0);
-        calendar.set(Calendar.HOUR_OF_DAY, 0);
-        calendar.set(Calendar.MINUTE, 0);
-        calendar.set(Calendar.SECOND, 0);
-        calendar.set(Calendar.MILLISECOND, 0);
+    /**
+     * Test that a string containing time and offset can be parsed
+     * to AWSTime object with the same time of the day.
+     */
+    @Test
+    public void testTimeWithOffset() {
+        TimeZone gmtPlus2 = TimeZone.getTimeZone("GMT+02");
+        cal = new GregorianCalendar(gmtPlus2);
+        cal.setTimeInMillis(0);
+        cal.set(Calendar.HOUR_OF_DAY, 12);
+        cal.set(Calendar.MINUTE, 34);
+        cal.set(Calendar.SECOND, 56);
+        AWSTime expected = new AWSTime(cal.getTimeZone(), cal.getTimeInMillis());
+
+        final String json = "\"12:34:56+02:00\"";
+        AWSTime deserialized = gson.fromJson(json, AWSTime.class);
+        assertEquals(expected, deserialized);
+
+        String serialized = gson.toJson(expected);
+        assertEquals(json, serialized);
     }
 }
