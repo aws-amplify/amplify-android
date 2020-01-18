@@ -60,6 +60,7 @@ jobs:
     working_directory: ~/amplify-android-home
     docker:
       - image: circleci/android:api-29
+    resource_class: xlarge
     environment:
       JVM_OPTS: -Xmx3200m
     steps:
