@@ -14,73 +14,31 @@
  */
 
 apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/retrolambda.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/android-lint.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-android {
-    compileSdkVersion 29
-
-    defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles 'consumer-rules.pro'
-    }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-}
-
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-    implementation 'io.reactivex.rxjava2:rxandroid:2.1.1'
-    implementation "io.reactivex.rxjava2:rxjava:$rxJava2Version"
     implementation project(':core')
+    implementation dependency.androidx.appcompat
+    implementation dependency.gson
+    implementation dependency.rxjava
+    implementation dependency.rxandroid
 
-    /**
-     * The following Gson dependencies are used for converting
-     * raw item read from SQLite tables into strongly typed Java
-     * objects by the DataStore.
-     */
-    implementation "com.google.code.gson:gson:2.8.6"
-
-    testImplementation 'junit:junit:4.12'
-    testImplementation'org.mockito:mockito-core:3.1.0'
-    testImplementation('org.robolectric:robolectric:4.3.1') {
+    testImplementation project(path: ':testmodels')
+    testImplementation project(path: ':testutils')
+    testImplementation dependency.junit
+    testImplementation dependency.mockito
+    testImplementation (dependency.robolectric) {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(path: ':testmodels')
-    testImplementation project(path: ':testutils')
 
-    // Required for instrumented tests
-    androidTestImplementation 'androidx.annotation:annotation:1.1.0'
-    androidTestImplementation 'androidx.test:core:1.2.0' // Core Library
-    androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
-    androidTestImplementation project(path: ':aws-api')
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')
+    androidTestImplementation project(path: ':aws-api')
+    androidTestImplementation dependency.androidx.annotation
+    androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.androidx.test.junit
 }
 

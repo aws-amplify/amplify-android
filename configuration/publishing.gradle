@@ -222,7 +222,7 @@ afterEvaluate { project ->
                 groupId GROUP
                 artifactId POM_ARTIFACT_ID
                 version VERSION_NAME
-                artifact(bundleReleaseAar)
+                artifact("${buildDir}/outputs/aar/${artifactId}-release.aar")
             }
         }
     }
