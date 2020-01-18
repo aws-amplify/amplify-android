@@ -64,8 +64,8 @@ public class AnalyticsPinpointInstrumentedTest {
     @BeforeClass
     public static void setUp() throws AmplifyException {
         Context context = ApplicationProvider.getApplicationContext();
-        AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
+        AmplifyConfiguration configuration =
+            AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
         plugin = new AmazonPinpointAnalyticsPlugin();
         Amplify.addPlugin(plugin);
         Amplify.configure(configuration, context);

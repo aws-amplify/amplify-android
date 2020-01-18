@@ -43,8 +43,8 @@ final class AmplifyTestConfigurator {
         }
 
         Context context = ApplicationProvider.getApplicationContext();
-        AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
+        AmplifyConfiguration configuration =
+            AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.configure(configuration, context);
 

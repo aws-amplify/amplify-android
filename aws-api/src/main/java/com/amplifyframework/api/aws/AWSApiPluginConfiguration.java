@@ -15,10 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import java.util.Collections;
+import com.amplifyframework.util.Immutable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -29,16 +32,18 @@ import java.util.Objects;
 public final class AWSApiPluginConfiguration {
     private final Map<String, ApiConfiguration> apiDetails;
 
-    AWSApiPluginConfiguration(Builder builder) {
-        this.apiDetails = builder.getApiDetails();
+    private AWSApiPluginConfiguration(@NonNull Map<String, ApiConfiguration> apiDetails) {
+        this.apiDetails = new HashMap<>();
+        this.apiDetails.putAll(apiDetails);
     }
 
     /**
      * Gets API configuration associated with given name.
      * @param name API name
-     * @return API configuration associated with name
+     * @return API configuration associated with name, null if there is no config
      */
-    public ApiConfiguration getApi(@NonNull String name) {
+    @Nullable
+    ApiConfiguration getApi(@SuppressWarnings("SameParameterValue") @NonNull String name) {
         return apiDetails.get(name);
     }
 
@@ -46,8 +51,9 @@ public final class AWSApiPluginConfiguration {
      * Gets all of the API configurations.
      * @return list of every API configurations
      */
-    public Map<String, ApiConfiguration> getApis() {
-        return apiDetails;
+    @NonNull
+    Map<String, ApiConfiguration> getApis() {
+        return Immutable.of(apiDetails);
     }
 
     @Override
@@ -66,13 +72,15 @@ public final class AWSApiPluginConfiguration {
 
     @Override
     public int hashCode() {
-        return apiDetails != null ? apiDetails.hashCode() : 0;
+        return apiDetails.hashCode();
     }
 
     /**
      * Gets a configuration builder instance.
      * @return A configuration builder instance
      */
+    @SuppressLint("SyntheticAccessor")
+    @NonNull
     public static Builder builder() {
         return new Builder();
     }
@@ -83,12 +91,8 @@ public final class AWSApiPluginConfiguration {
     public static final class Builder {
         private Map<String, ApiConfiguration> apiDetails;
 
-        Builder() {
+        private Builder() {
             Builder.this.apiDetails = new HashMap<>();
-        }
-
-        Map<String, ApiConfiguration> getApiDetails() {
-            return Collections.unmodifiableMap(Builder.this.apiDetails);
         }
 
         /**
@@ -97,7 +101,9 @@ public final class AWSApiPluginConfiguration {
          * @param apiConfiguration Configuration for the API
          * @return Current builder instance, for fluent method chaining
          */
-        public Builder addApi(String apiName, ApiConfiguration apiConfiguration) {
+        @SuppressWarnings("UnusedReturnValue")
+        @NonNull
+        Builder addApi(@NonNull String apiName, @NonNull ApiConfiguration apiConfiguration) {
             Objects.requireNonNull(apiName);
             Objects.requireNonNull(apiConfiguration);
             Builder.this.apiDetails.put(apiName, apiConfiguration);
@@ -109,8 +115,10 @@ public final class AWSApiPluginConfiguration {
          * that have been provided to the current builder instance.
          * @return A new immutable AWSApiPluginConfiguration instance.
          */
+        @SuppressLint("SyntheticAccessor")
+        @NonNull
         public AWSApiPluginConfiguration build() {
-            return new AWSApiPluginConfiguration(Builder.this);
+            return new AWSApiPluginConfiguration(Builder.this.apiDetails);
         }
     }
 }

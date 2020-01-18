@@ -15,6 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -30,12 +31,13 @@ final class ApiConfiguration {
     private final AuthorizationType authorizationType;
     private final String apiKey;
 
-    ApiConfiguration(Builder builder) {
-        this.endpointType = builder.getEndpointType();
-        this.endpoint = builder.getEndpoint();
-        this.region = builder.getRegion();
-        this.authorizationType = builder.getAuthorizationType();
-        this.apiKey = builder.getApiKey();
+    @SuppressLint("SyntheticAccessor")
+    private ApiConfiguration(Builder builder) {
+        this.endpointType = builder.endpointType;
+        this.endpoint = builder.endpoint;
+        this.region = builder.region;
+        this.authorizationType = builder.authorizationType;
+        this.apiKey = builder.apiKey;
     }
 
     EndpointType getEndpointType() {
@@ -84,6 +86,7 @@ final class ApiConfiguration {
             return Builder.this;
         }
 
+        @SuppressWarnings("unused")
         Builder authorizationType(@NonNull String string) {
             return Builder.this.authorizationType(AuthorizationType.from(string));
         }
@@ -98,31 +101,12 @@ final class ApiConfiguration {
             return Builder.this;
         }
 
+        @SuppressLint("SyntheticAccessor")
         ApiConfiguration build() {
             Objects.requireNonNull(Builder.this.endpoint);
             Objects.requireNonNull(Builder.this.region);
             Objects.requireNonNull(Builder.this.authorizationType);
             return new ApiConfiguration(Builder.this);
-        }
-
-        EndpointType getEndpointType() {
-            return Builder.this.endpointType;
-        }
-
-        String getEndpoint() {
-            return Builder.this.endpoint;
-        }
-
-        String getRegion() {
-            return Builder.this.region;
-        }
-
-        AuthorizationType getAuthorizationType() {
-            return Builder.this.authorizationType;
-        }
-
-        String getApiKey() {
-            return Builder.this.apiKey;
         }
     }
 }
