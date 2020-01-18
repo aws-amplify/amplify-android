@@ -16,6 +16,21 @@ commands:
             cd ~/amplify-android-home
             yes | sdkmanager --licenses && yes | sdkmanager --update
             ~/gradle-5.4.1/bin/gradle wrapper
+  early_return_for_forked_pull_requests:
+    description: >-
+      If this build is from a fork, stop executing the current job and return success.
+      This is useful to avoid steps that will fail due to missing credentials.
+    steps:
+      - run:
+          name: Early return if this build is from a forked PR
+          command: |
+            if [ -n "$CIRCLE_PR_NUMBER" ]; then
+                echo "Nothing to do for forked PRs, so marking this step successful"
+                circleci step halt
+            elif [ -z "${AWS_ACCESS_KEY_ID_TEST}" -o -z "${AWS_SECRET_ACCESS_KEY_TEST}" ]; then
+                echo "No AWS credentials in test environment. Integration tests won't run." 1>&2
+                exit 1
+            fi
   configure_aws:
     description: >-
       install aws cli and configure android aws release profile
@@ -66,7 +81,6 @@ jobs:
     steps:
       - checkout
       - generate_gradle_wrapper
-      - configure_aws
       - run:
           name: Build the project
           command: bash gradlew build
@@ -86,6 +100,7 @@ jobs:
     steps:
       - checkout
       - generate_gradle_wrapper
+      - early_return_for_forked_pull_requests
       - configure_aws
       - setup_emulator
       - run:
