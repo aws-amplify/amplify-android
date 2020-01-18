@@ -14,65 +14,30 @@
  */
 
 apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/retrolambda.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/android-lint.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-android {
-    compileSdkVersion 29
-
-    defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
-
-        // Specifies the fully-qualified class name of the test instrumentation runner.
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-}
-
 dependencies {
-    implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.annotation:annotation:1.1.0'
+    implementation dependency.androidx.v4support
+    implementation dependency.androidx.annotation
 
-    testImplementation 'junit:junit:4.12'
-    testImplementation('org.robolectric:robolectric:4.3.1') {
-        // https://github.com/robolectric/robolectric/issues/5245
-        exclude group: 'com.google.auto.service', module: 'auto-service'
-    }
-    testImplementation "androidx.test:core:1.2.0"
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {
         transitive = false
     }
+    testImplementation dependency.junit
+    testImplementation (dependency.robolectric) {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+    }
+    testImplementation dependency.androidx.test.core
 
-    // Required for instrumented tests
-    androidTestImplementation 'androidx.annotation:annotation:1.1.0'
-    androidTestImplementation 'androidx.test:core:1.2.0' // Core Library
-    androidTestImplementation 'androidx.test:runner:1.2.0' // Test Runner
-    androidTestImplementation 'androidx.test.ext:junit:1.1.1' // Assertions
     androidTestImplementation(project(path: ':testutils')) {
         transitive = false
     }
+    androidTestImplementation dependency.androidx.annotation
+    androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.androidx.test.junit
 }
 

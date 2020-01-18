@@ -14,39 +14,15 @@
  */
 
 apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/retrolambda.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/android-lint.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
-android {
-    compileSdkVersion 29
-
-    defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-}
-
 dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
     implementation project(path: ':core')
-
-    implementation "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion"
-    implementation ("com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion") { transitive = true }
+    implementation dependency.androidx.appcompat
+    implementation dependency.aws.s3
+    implementation (dependency.aws.mobileclient) {
+        transitive = true
+    }
 }
 

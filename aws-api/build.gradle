@@ -14,69 +14,34 @@
  */
 
 apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/retrolambda.gradle")
 apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/android-lint.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
-
-android {
-    compileSdkVersion 29
-
-    defaultConfig {
-        minSdkVersion 15
-        targetSdkVersion 29
-        versionCode 1
-        versionName "1.0"
-
-        // Specifies the fully-qualified class name of the test instrumentation runner.
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-        }
-    }
-
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
-        }
-    }
-
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-}
 
 dependencies {
     api project(':core')
 
-    implementation "androidx.appcompat:appcompat:1.1.0"
-    implementation "com.squareup.okhttp3:okhttp:4.2.2"
-    implementation "com.google.code.gson:gson:2.8.6"
+    implementation dependency.androidx.appcompat
+    implementation dependency.okhttp
+    implementation dependency.gson
 
-    // AWS dependencies
-    implementation "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion"
-    implementation ("com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion") { transitive = true }
+    implementation dependency.aws.authcore
+    implementation (dependency.aws.mobileclient) {
+        transitive = true
+    }
 
-    // Unit test dependencies
-    testImplementation "junit:junit:4.12"
-    testImplementation'org.mockito:mockito-core:3.1.0'
-    testImplementation('org.robolectric:robolectric:4.3.1') {
+    testImplementation project(path: ':testutils')
+    testImplementation project(path: ':testmodels')
+    testImplementation dependency.junit
+    testImplementation dependency.mockito
+    testImplementation (dependency.robolectric) {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
-    testImplementation project(path: ':testutils')
-    testImplementation project(path: ':testmodels')
 
-    // Instrumentation test dependencies
-    androidTestImplementation "androidx.test:core:1.2.0" // Core Library
-    androidTestImplementation "androidx.test:runner:1.2.0" // Test Runner
-    androidTestImplementation "androidx.test.ext:junit:1.1.1"
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation project(path: ':testmodels')
+    androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.androidx.test.junit
 }
 
