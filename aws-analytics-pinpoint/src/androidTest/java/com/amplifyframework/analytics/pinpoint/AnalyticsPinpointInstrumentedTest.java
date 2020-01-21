@@ -15,9 +15,6 @@
 
 package com.amplifyframework.analytics.pinpoint;
 
-import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
