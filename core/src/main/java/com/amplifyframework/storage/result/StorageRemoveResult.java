@@ -22,7 +22,6 @@ import com.amplifyframework.core.async.Result;
 
 import java.util.Objects;
 
-
 /**
  * A result of a remove operation on the Storage category.
  */

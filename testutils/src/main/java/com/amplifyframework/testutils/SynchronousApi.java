@@ -25,9 +25,7 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -35,6 +33,10 @@ import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import io.reactivex.Observable;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposables;
 
 /**
  * A utility to perform synchronous calls to the {@link ApiCategory}.
@@ -65,9 +67,10 @@ public final class SynchronousApi {
      * @param model A model to be created on API
      * @param <T> The type of model
      * @return The instance of the model as created on endpoint
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T extends Model> T create(@NonNull String apiName, @NonNull T model) {
+    public <T extends Model> T create(@NonNull String apiName, @NonNull T model) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.mutate(apiName, model, MutationType.CREATE, onResponse, onFailure));
     }
@@ -77,9 +80,10 @@ public final class SynchronousApi {
      * @param model Model to create in remote API
      * @param <T> The type of the model
      * @return The endpoint's understanding of what was created
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T extends Model> T create(@NonNull T model) {
+    public <T extends Model> T create(@NonNull T model) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.mutate(model, MutationType.CREATE, onResponse, onFailure));
     }
@@ -90,9 +94,10 @@ public final class SynchronousApi {
      * @param request A GraphQL creation request
      * @param <T> Type of object being created
      * @return The endpoint's understanding of the thing that was created
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T> T create(@NonNull String apiName, @NonNull GraphQLRequest<T> request) {
+    public <T> T create(@NonNull String apiName, @NonNull GraphQLRequest<T> request) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.mutate(apiName, request, onResponse, onFailure));
     }
@@ -104,10 +109,11 @@ public final class SynchronousApi {
      * @param predicate Conditions to check on existing model in endpoint, before applying updates
      * @param <T> The type of model being updated
      * @return The server's understanding of the model, after the update
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
     public <T extends Model> T update(
-            @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) {
+            @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
     }
@@ -118,9 +124,10 @@ public final class SynchronousApi {
      * @param model Updated copy of model
      * @param <T> The type of model being updated
      * @return The updated item as understood by the API endpoint
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T extends Model> T update(@NonNull T model) {
+    public <T extends Model> T update(@NonNull T model) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.mutate(model, MutationType.UPDATE, onResponse, onFailure));
     }
@@ -133,10 +140,11 @@ public final class SynchronousApi {
      * @param predicate Only update the model if these conditions are met on existing data
      * @param <T> The type of model being updated
      * @return Errors contained in the endpoint's response, detailing why the update didn't succeed
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
     public <T extends Model> List<GraphQLResponse.Error> updateExpectingErrors(
-            @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) {
+            @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
         return this.<T>awaitResponseErrors((onResponse, onFailure) ->
             Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
     }
@@ -148,10 +156,11 @@ public final class SynchronousApi {
      * @param modelId The ID of the model being searched
      * @param <T> The type of the model being searched
      * @return A result, if available
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
     public <T extends Model> T get(
-            @NonNull final String apiName, @NonNull Class<T> clazz, @NonNull String modelId) {
+            @NonNull final String apiName, @NonNull Class<T> clazz, @NonNull String modelId) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.query(apiName, clazz, modelId, onResponse, onFailure));
     }
@@ -163,9 +172,10 @@ public final class SynchronousApi {
      * @param modelId The ID of the specific model instance being queried
      * @param <T> Type of model being queried
      * @return If available, an exact match for the queried class and ID
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String modelId) {
+    public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String modelId) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.query(clazz, modelId, onResponse, onFailure));
     }
@@ -175,12 +185,12 @@ public final class SynchronousApi {
      * @param apiName A configured REST API
      * @param options REST options for GET
      * @return REST Response
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public RestResponse get(@NonNull String apiName, @NonNull RestOptions options) {
-        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        Amplify.API.get(apiName, options, responseConsumer, EmptyConsumer.of(ApiException.class));
-        return responseConsumer.awaitValue();
+    public RestResponse get(@NonNull String apiName, @NonNull RestOptions options) throws ApiException {
+        return awaitRestResponse((onResponse, onFailure) ->
+            Amplify.API.get(apiName, options, onResponse, onFailure));
     }
 
     /**
@@ -188,12 +198,12 @@ public final class SynchronousApi {
      * @param apiName One of the configured endpoints APIs
      * @param options POST options
      * @return REST Response
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public RestResponse post(@NonNull String apiName, @NonNull RestOptions options) {
-        LatchedConsumer<RestResponse> responseConsumer = LatchedConsumer.instance();
-        Amplify.API.post(apiName, options, responseConsumer, EmptyConsumer.of(ApiException.class));
-        return responseConsumer.awaitValue();
+    public RestResponse post(@NonNull String apiName, @NonNull RestOptions options) throws ApiException {
+        return awaitRestResponse((onResponse, onFailure) ->
+            Amplify.API.post(apiName, options, onResponse, onFailure));
     }
 
     /**
@@ -203,12 +213,13 @@ public final class SynchronousApi {
      * @param predicate A querying predicate to match against models of the requested class
      * @param <T> The type of models being listed
      * @return A list of models of the requested type, that match the predicate
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
     public <T extends Model> List<T> list(
             @NonNull String apiName,
             @NonNull Class<T> clazz,
-            @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate) {
+            @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate) throws ApiException {
         final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) ->
             Amplify.API.query(apiName, clazz, predicate, onResponse, onFailure));
         final List<T> results = new ArrayList<>();
@@ -224,9 +235,10 @@ public final class SynchronousApi {
      * @param clazz The class of models being queried
      * @param <T> The type of models being queried
      * @return A list of all models of the requested class
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T extends Model> List<T> list(@NonNull String apiName, @NonNull Class<T> clazz) {
+    public <T extends Model> List<T> list(@NonNull String apiName, @NonNull Class<T> clazz) throws ApiException {
         //noinspection ConstantConditions To save boiler plate, we do this internally.
         return list(apiName, clazz, null);
     }
@@ -237,9 +249,10 @@ public final class SynchronousApi {
      * @param modelToDelete Model to be deleted from endpoint
      * @param <T> Type of model being deleted
      * @return The endpoint's view of the model that was deleted
+     * @throws ApiException If unable to obtain response from endpoint
      */
     @NonNull
-    public <T extends Model> T delete(@NonNull String apiName, @NonNull T modelToDelete) {
+    public <T extends Model> T delete(@NonNull String apiName, @NonNull T modelToDelete) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
             Amplify.API.mutate(apiName, modelToDelete, MutationType.DELETE, onResponse, onFailure));
     }
@@ -249,15 +262,28 @@ public final class SynchronousApi {
      * @param apiName One of the configured API endpoints
      * @param clazz Class of model for which you want notifications when they're created
      * @param <T> The type of model for which creation notifications will be dispatched
-     * @return A Cancelable interface that can be used to end the subscription
+     * @return An Observable that can be used to observe the subscription data
      */
     @NonNull
-    public <T extends Model> Subscription<T> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
-        return createSubscription(
-            (onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
-                Amplify.API.subscribe(apiName, clazz, SubscriptionType.ON_CREATE,
-                    onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted)
-        );
+    public <T extends Model> Observable<GraphQLResponse<T>> onCreate(@NonNull String apiName, @NonNull Class<T> clazz) {
+        return Observable.create(emitter -> {
+            CompositeDisposable disposable = new CompositeDisposable();
+            emitter.setDisposable(disposable);
+            Await.<String, ApiException>result((onSubscriptionStarted, onError) -> {
+                Cancelable cancelable = Amplify.API.subscribe(
+                    apiName,
+                    clazz,
+                    SubscriptionType.ON_CREATE,
+                    onSubscriptionStarted,
+                    emitter::onNext,
+                    onError,
+                    emitter::onComplete
+                );
+                if (cancelable != null) {
+                    disposable.add(Disposables.fromAction(cancelable::cancel));
+                }
+            });
+        });
     }
 
     /**
@@ -265,154 +291,58 @@ public final class SynchronousApi {
      * @param apiName One of the configured APIs
      * @param request A GraphQL subscription request
      * @param <T> Type of object for which creation notifications are generated
-     * @return A subscription object representing this ongoing subscription
+     * @return An observable with which creations may be observed
      */
     @NonNull
-    public <T> Subscription<T> onCreate(@NonNull String apiName, @NonNull GraphQLRequest<T> request) {
-        return createSubscription(
-            (onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted) ->
-                Amplify.API.subscribe(apiName, request,
-                    onSubscriptionStarted, onNextResponse, onSubscriptionFailure, onSubscriptionCompleted)
-        );
+    public <T> Observable<GraphQLResponse<T>> onCreate(@NonNull String apiName, @NonNull GraphQLRequest<T> request) {
+        return Observable.create(emitter -> {
+            CompositeDisposable disposable = new CompositeDisposable();
+            emitter.setDisposable(disposable);
+            Await.<String, ApiException>result((onSubscriptionStarted, onError) -> {
+                Cancelable cancelable = Amplify.API.subscribe(
+                    apiName,
+                    request,
+                    onSubscriptionStarted,
+                    emitter::onNext,
+                    onError,
+                    emitter::onComplete
+                );
+                if (cancelable != null) {
+                    disposable.add(Disposables.fromAction(cancelable::cancel));
+                }
+            });
+        });
     }
 
-    private <T> Subscription<T> createSubscription(SubscriptionCreationMethod<T> method) {
-        LatchedConsumer<String> startConsumer = LatchedConsumer.instance();
-        LatchedResponseConsumer<T> streamItemConsumer = LatchedResponseConsumer.instance();
-        LatchedAction streamCompletionAction = LatchedAction.instance();
-        LatchedConsumer<ApiException> errorConsumer = LatchedConsumer.instance();
-
-        final Cancelable cancelable =
-            method.streamWith(startConsumer, streamItemConsumer, errorConsumer, streamCompletionAction);
-        if (cancelable == null) {
-            throw new RuntimeException("Got a null operation back from API subscribe.");
+    // Syntax fluff to get rid of type bounds when calling Await.result(...).
+    private <T> T awaitResponseData(
+            Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
+            throws ApiException {
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        if (response.hasErrors()) {
+            String firstErrorMessage = response.getErrors().get(0).getMessage();
+            throw new RuntimeException("Response has error:" + firstErrorMessage);
+        } else if (response.getData() == null) {
+            throw new RuntimeException("Response data was null.");
         }
-
-        return new Subscription<>(
-            startConsumer,
-            streamItemConsumer,
-            errorConsumer,
-            streamCompletionAction,
-            cancelable
-        );
+        return response.getData();
     }
 
-    private <T> T awaitResponseData(AsyncOperation<T> operation) {
-        LatchedResponseConsumer<T> responseConsumer = LatchedResponseConsumer.instance();
-        operation.respondWith(responseConsumer, EmptyConsumer.of(ApiException.class));
-        return responseConsumer.awaitResponseData();
+    // Syntax fluff to await GraphQL errors
+    private <T> List<GraphQLResponse.Error> awaitResponseErrors(
+            Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
+            throws ApiException {
+        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        if (!response.hasErrors()) {
+            throw new RuntimeException("No errors in response.");
+        }
+        return response.getErrors();
     }
 
-    private <T> List<GraphQLResponse.Error> awaitResponseErrors(AsyncOperation<T> operation) {
-        LatchedResponseConsumer<T> responseConsumer = LatchedResponseConsumer.instance();
-        operation.respondWith(responseConsumer, EmptyConsumer.of(ApiException.class));
-        return responseConsumer.awaitErrorsInNextResponse();
-    }
-
-    interface AsyncOperation<T> {
-        void respondWith(
-            Consumer<GraphQLResponse<T>> onResponse,
-            Consumer<ApiException> onFailure
-        );
-    }
-
-    interface SubscriptionCreationMethod<T> {
-        Cancelable streamWith(
-            Consumer<String> onSubscriptionStarted,
-            Consumer<GraphQLResponse<T>> onNextResponse,
-            Consumer<ApiException> onSubscriptionFailure,
-            Action onSubscriptionCompleted
-        );
-    }
-
-    /**
-     * A subscription instance provides synchronous methods to interact
-     * with an ongoing background subscription.
-     * @param <T> Type of data that is subscribed
-     */
-    @SuppressWarnings("unused")
-    public static final class Subscription<T> {
-        private final LatchedConsumer<String> startConsumer;
-        private final LatchedResponseConsumer<T> itemConsumer;
-        private final LatchedConsumer<ApiException> errorConsumer;
-        private final LatchedAction completionAction;
-        private final Cancelable cancellationMethod;
-
-        Subscription(
-                @NonNull LatchedConsumer<String> startConsumer,
-                @NonNull LatchedResponseConsumer<T> itemConsumer,
-                @NonNull LatchedConsumer<ApiException> errorConsumer,
-                @NonNull LatchedAction completionAction,
-                @NonNull Cancelable cancellationMethod) {
-            this.startConsumer = startConsumer;
-            this.itemConsumer = itemConsumer;
-            this.errorConsumer = errorConsumer;
-            this.completionAction = completionAction;
-            this.cancellationMethod = cancellationMethod;
-        }
-
-        /**
-         * Awaits the subscription establishment, and returns the ID of the
-         * newly started subscription.
-         * @return ID of newly started subscription
-         */
-        @SuppressWarnings("UnusedReturnValue")
-        @NonNull
-        public String awaitSubscriptionStarted() {
-            return startConsumer.awaitValue();
-        }
-
-        /**
-         * Await the first value that arrives on the subscription.
-         * Its response envelope must not contain any errors.
-         * @return The first value received on the subscription
-         */
-        @NonNull
-        public T awaitFirstValue() {
-            return itemConsumer.awaitResponseData();
-        }
-
-        /**
-         * Await values to arrive in responses. Respones must not contain errors.
-         * @param count Number of values to await
-         * @return The values
-         */
-        @NonNull
-        public List<T> awaitValues(int count) {
-            return Immutable.of(itemConsumer.awaitResponseData(count));
-        }
-
-        /**
-         * Await the next response, and validate that it contains errors,
-         * and return them.
-         * @return The errors in the next response
-         */
-        @NonNull
-        public List<GraphQLResponse.Error> awaitNextResponseErrors() {
-            return Immutable.of(itemConsumer.awaitErrorsInNextResponse());
-        }
-
-        /**
-         * Wait for the subscription to complete.
-         */
-        public void awaitSubscriptionCompletion() {
-            completionAction.awaitCall();
-        }
-
-        /**
-         * Await a failure of the subscription.
-         * @return The failure
-         */
-        @NonNull
-        public Throwable awaitSubscriptionFailure() {
-            return errorConsumer.awaitValue();
-        }
-
-        /**
-         * Cancel the subscription.
-         */
-        public void cancel() {
-            cancellationMethod.cancel();
-        }
+    // Syntax fluff to get rid of type bounds on REST calls
+    private RestResponse awaitRestResponse(
+            Await.ResultErrorEmitter<RestResponse, ApiException> resultErrorEmitter)
+            throws ApiException {
+        return Await.result(resultErrorEmitter);
     }
 }

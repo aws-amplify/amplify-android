@@ -51,8 +51,9 @@ public final class Resources {
      * @param path Relative path of the test resource
      * @return Contents of the test resource as a string, if it is
      *         available
+     * @throws RuntimeException If resource at path does not exist or cannot be read
      */
-    public static String readAsString(final String path) {
+    public static String readAsString(final String path) throws RuntimeException {
         try {
             final String pathWithResourceBase = RESOURCE_BASE + "/" + path;
             final InputStream inputStream = new FileInputStream(pathWithResourceBase);
@@ -97,9 +98,10 @@ public final class Resources {
      * @param path Relative path of the test resource
      * @return Contents of the test resource as a JSONObject, if it is
      *         available
+     * @throws RuntimeException If resource at path does not exist or cannot be read
      */
     @NonNull
-    public static JSONObject readAsJson(String path) {
+    public static JSONObject readAsJson(String path) throws RuntimeException {
         try {
             return new JSONObject(readAsString(path));
         } catch (JSONException jsonException) {

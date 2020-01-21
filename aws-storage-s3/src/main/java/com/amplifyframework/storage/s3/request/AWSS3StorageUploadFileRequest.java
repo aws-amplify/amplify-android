@@ -32,7 +32,6 @@ public final class AWSS3StorageUploadFileRequest {
     private final String contentType;
     private final Map<String, String> metadata;
 
-
     /**
      * Constructs a new AWSS3StorageUploadFileRequest.
      * @param key key for item to upload

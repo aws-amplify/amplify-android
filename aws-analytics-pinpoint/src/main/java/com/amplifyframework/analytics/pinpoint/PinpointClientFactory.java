@@ -20,7 +20,9 @@ import android.content.Context;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
+import com.amplifyframework.util.UserAgent;
 
+import com.amazonaws.ClientConfiguration;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.UserStateDetails;
@@ -76,6 +78,9 @@ final class PinpointClientFactory {
             throw new RuntimeException("Failed to initialize mobile client: " + exception.getLocalizedMessage());
         }
 
+        ClientConfiguration clientConfiguration = new ClientConfiguration();
+        clientConfiguration.setUserAgent(UserAgent.string());
+
         // Construct configuration using information from the configure method
         PinpointConfiguration pinpointConfiguration = new PinpointConfiguration(
                 context,
@@ -83,7 +88,7 @@ final class PinpointClientFactory {
                 Regions.fromName(pinpointAnalyticsPluginConfiguration.getRegion()),
                 ChannelType.GCM,
                 AWSMobileClient.getInstance()
-        );
+        ).withClientConfiguration(clientConfiguration);
 
         pinpointManager = new PinpointManager(pinpointConfiguration);
         return pinpointManager.getAnalyticsClient();
