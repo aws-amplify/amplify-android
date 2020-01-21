@@ -108,6 +108,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Retrieve a plugin by its key.
      * @param pluginKey A key that identifies a plugin implementation
      * @return The plugin object associated to pluginKey, if registered
+     * @throws IllegalStateException If there is no plugin with the given key
      */
     public final P getPlugin(@NonNull final String pluginKey) {
         if (plugins.containsKey(pluginKey)) {
@@ -131,6 +132,9 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     /**
      * Obtain the registered plugin for this category.
      * @return The only registered plugin for this category
+     * @throws IllegalStateException
+     *         If the category is not configured, or if there are no
+     *         plugins associated to the category
      */
     protected final P getSelectedPlugin() {
         if (!isConfigured) {

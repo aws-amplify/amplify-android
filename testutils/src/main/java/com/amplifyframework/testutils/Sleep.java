@@ -26,8 +26,9 @@ public final class Sleep {
     /**
      * Sleeps the thread of execution for a duration of milliseconds.
      * @param duration Duration of time to sleep
+     * @throws RuntimeException If thread is interrupted while sleeping
      */
-    public static void milliseconds(long duration) {
+    public static void milliseconds(long duration) throws RuntimeException {
         try {
             Thread.sleep(duration);
         } catch (InterruptedException interruptedException) {
