@@ -16,6 +16,7 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
+import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
@@ -33,108 +34,114 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
 /**
- * AmplifyConfiguration parses the configuration from the
- * amplifyconfiguration.json file and stores in the in-memory objects
- * for the different Amplify plugins to use.
+ * AmplifyConfiguration serves as the top-level configuration object for the
+ * Amplify framework. It is usually populated from amplifyconfiguration.json.
+ * Contains all configurations for all categories and plugins used by system.
  */
 public final class AmplifyConfiguration {
-
     private static final String DEFAULT_IDENTIFIER = "amplifyconfiguration";
 
     private final Map<String, CategoryConfiguration> categoryConfigurations;
 
     /**
      * Constructs a new AmplifyConfiguration object.
+     * @param configs Category configurations
      */
-    public AmplifyConfiguration() {
-        AnalyticsCategoryConfiguration analytics = new AnalyticsCategoryConfiguration();
-        ApiCategoryConfiguration api = new ApiCategoryConfiguration();
-        DataStoreCategoryConfiguration dataStore = new DataStoreCategoryConfiguration();
-        HubCategoryConfiguration hub = new HubCategoryConfiguration();
-        LoggingCategoryConfiguration logging = new LoggingCategoryConfiguration();
-        StorageCategoryConfiguration storage = new StorageCategoryConfiguration();
-
-        Map<String, CategoryConfiguration> modifiableCategoryConfigurations = new HashMap<>();
-        modifiableCategoryConfigurations.put(analytics.getCategoryType().getConfigurationKey(), analytics);
-        modifiableCategoryConfigurations.put(api.getCategoryType().getConfigurationKey(), api);
-        modifiableCategoryConfigurations.put(dataStore.getCategoryType().getConfigurationKey(), dataStore);
-        modifiableCategoryConfigurations.put(hub.getCategoryType().getConfigurationKey(), hub);
-        modifiableCategoryConfigurations.put(logging.getCategoryType().getConfigurationKey(), logging);
-        modifiableCategoryConfigurations.put(storage.getCategoryType().getConfigurationKey(), storage);
-        categoryConfigurations = Immutable.of(modifiableCategoryConfigurations);
+    @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
+    public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
+        this.categoryConfigurations = new HashMap<>();
+        this.categoryConfigurations.putAll(configs);
     }
 
     /**
-     * Populates all configuration objects from the amplifyconfiguration.json file.
+     * Creates an AmplifyConfiguration from an amplifyconfiguration.json file.
      * @param context Context needed for reading JSON file
+     * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
      */
-    public void populateFromConfigFile(Context context) throws AmplifyException {
-        populateFromConfigFile(context, getConfigResourceId(context));
+    @SuppressWarnings("WeakerAccess")
+    @NonNull
+    public static AmplifyConfiguration fromConfigFile(@NonNull Context context) throws AmplifyException {
+        return fromConfigFile(context, getConfigResourceId(context));
     }
 
     /**
-     * Populate the the configuration from a particular configuration file.
+     * Creates an AmplifyConfiguration from a particular configuration file.
      * @param context Android Context
      * @param configFileResourceId
      *        The Android resource ID of a raw resource which contains
      *        an amplify configuration as JSON
+     * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
      */
-    public void populateFromConfigFile(Context context, @RawRes int configFileResourceId) throws AmplifyException {
-        JSONObject json = readInputJson(context, configFileResourceId);
+    @NonNull
+    public static AmplifyConfiguration fromConfigFile(
+            @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
+        final List<CategoryConfiguration> possibleConfigs = Arrays.asList(
+            new AnalyticsCategoryConfiguration(),
+            new ApiCategoryConfiguration(),
+            new DataStoreCategoryConfiguration(),
+            new HubCategoryConfiguration(),
+            new LoggingCategoryConfiguration(),
+            new StorageCategoryConfiguration()
+        );
 
+        final JSONObject json = readInputJson(context, configFileResourceId);
+
+        final Map<String, CategoryConfiguration> actualConfigs = new HashMap<>();
         try {
-            for (HashMap.Entry<String, CategoryConfiguration> entry : categoryConfigurations.entrySet()) {
-                final String categoryJsonKey = entry.getKey();
-                final CategoryConfiguration categoryConfig = entry.getValue();
-
+            for (CategoryConfiguration possibleConfig : possibleConfigs) {
+                String categoryJsonKey = possibleConfig.getCategoryType().getConfigurationKey();
                 if (json.has(categoryJsonKey)) {
-                    categoryConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
+                    possibleConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
+                    actualConfigs.put(categoryJsonKey, possibleConfig);
                 }
             }
         } catch (JSONException error) {
             throw new AmplifyException(
-                    "Could not parse amplifyconfiguration.json ",
-                    error,
-                    "Check any modifications made to the file."
+                "Could not parse amplifyconfiguration.json ",
+                error, "Check any modifications made to the file."
+            );
+        }
+        return new AmplifyConfiguration(Immutable.of(actualConfigs));
+    }
+
+    private static int getConfigResourceId(Context context) throws AmplifyException {
+        try {
+            return context.getResources()
+                .getIdentifier(DEFAULT_IDENTIFIER, "raw", context.getPackageName());
+        } catch (Exception exception) {
+            throw new AmplifyException(
+                "Failed to read " + DEFAULT_IDENTIFIER + ".",
+                exception, "Please check that it is correctly formed."
             );
         }
     }
 
-    private static int getConfigResourceId(Context context) {
-        try {
-            return context.getResources().getIdentifier(DEFAULT_IDENTIFIER,
-                    "raw", context.getPackageName());
-        } catch (Exception exception) {
-            throw new RuntimeException(
-                    "Failed to read " + DEFAULT_IDENTIFIER
-                            + " please check that it is correctly formed.",
-                    exception);
+    private static JSONObject readInputJson(Context context, int resourceId) throws AmplifyException {
+        final InputStream inputStream =
+            context.getResources().openRawResource(resourceId);
+        final Scanner in = new Scanner(inputStream);
+        final StringBuilder sb = new StringBuilder();
+        while (in.hasNextLine()) {
+            sb.append(in.nextLine());
         }
-    }
+        in.close();
 
-    private JSONObject readInputJson(Context context, int resourceId) {
         try {
-            final InputStream inputStream = context.getResources().openRawResource(
-                    resourceId);
-            final Scanner in = new Scanner(inputStream);
-            final StringBuilder sb = new StringBuilder();
-            while (in.hasNextLine()) {
-                sb.append(in.nextLine());
-            }
-            in.close();
-
             return new JSONObject(sb.toString());
-        } catch (Exception exception) {
-            throw new RuntimeException(
-                    "Failed to read " + DEFAULT_IDENTIFIER + " please check that it is correctly formed.",
-                    exception);
+        } catch (JSONException jsonError) {
+            throw new AmplifyException(
+                "Failed to read " + DEFAULT_IDENTIFIER + ".",
+                jsonError, "Please check that it is correctly formed."
+            );
         }
     }
 
@@ -144,13 +151,18 @@ public final class AmplifyConfiguration {
      * @return Requested category configuration object
      * @throws AmplifyException If there is a problem in the config file
      */
-    public CategoryConfiguration forCategoryType(final CategoryType categoryType) throws AmplifyException {
-        if (categoryConfigurations.containsKey(categoryType.getConfigurationKey())) {
-            return categoryConfigurations.get(categoryType.getConfigurationKey());
-        } else {
-            throw new AmplifyException("Unknown/bad category type: " + categoryType,
-                    "Be sure to use one of the supported Categories in your current version of Amplify");
+    @SuppressWarnings("WeakerAccess")
+    @NonNull
+    public CategoryConfiguration forCategoryType(@NonNull CategoryType categoryType) throws AmplifyException {
+        final CategoryConfiguration categoryConfiguration =
+            categoryConfigurations.get(categoryType.getConfigurationKey());
+        if (categoryConfiguration == null) {
+            throw new AmplifyException(
+                "Unknown/bad category type: " + categoryType,
+                "Be sure to use one of the supported Categories in your current version of Amplify"
+            );
         }
+        return categoryConfiguration;
     }
 }
 

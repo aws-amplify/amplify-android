@@ -37,8 +37,8 @@ final class TestConfiguration {
         Amplify.addPlugin(new AWSApiPlugin());
         Amplify.addPlugin(plugin);
 
-        AmplifyConfiguration amplifyConfiguration = new AmplifyConfiguration();
-        amplifyConfiguration.populateFromConfigFile(context, raw.amplifyconfiguration);
+        AmplifyConfiguration amplifyConfiguration =
+            AmplifyConfiguration.fromConfigFile(context, raw.amplifyconfiguration);
         Amplify.configure(amplifyConfiguration, context);
     }
 

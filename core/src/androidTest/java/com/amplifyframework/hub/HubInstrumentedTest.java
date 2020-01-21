@@ -54,8 +54,8 @@ public final class HubInstrumentedTest {
     @BeforeClass
     public static void configureAmplify() throws AmplifyException {
         Context context = ApplicationProvider.getApplicationContext();
-        AmplifyConfiguration configuration = new AmplifyConfiguration();
-        configuration.populateFromConfigFile(context, R.raw.amplifyconfiguration);
+        AmplifyConfiguration configuration =
+            AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.addPlugin(new AWSHubPlugin());
         Amplify.configure(configuration, context);
     }
