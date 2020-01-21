@@ -25,7 +25,8 @@ import android.os.Bundle;
 import android.util.Log;
 import androidx.lifecycle.Lifecycle;
 
-import com.amazonaws.mobile.auth.core.internal.util.ThreadUtils;
+import com.amplifyframework.util.ThreadUtils;
+
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 
