@@ -39,6 +39,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -63,12 +64,11 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     @BeforeClass
     public static void setUp() throws AmplifyException {
-        Context context = ApplicationProvider.getApplicationContext();
-        AmplifyConfiguration configuration =
-            AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
-        plugin = new AmazonPinpointAnalyticsPlugin();
+        AmplifyConfiguration configuration = new AmplifyConfiguration();
+        configuration.populateFromConfigFile(getApplicationContext(), R.raw.amplifyconfiguration);
+        plugin = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
         Amplify.addPlugin(plugin);
-        Amplify.configure(configuration, context);
+        Amplify.configure(configuration, getApplicationContext());
         analyticsClient = plugin.getAnalyticsClient();
     }
 

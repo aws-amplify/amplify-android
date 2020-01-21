@@ -24,6 +24,8 @@ import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
 
+import androidx.lifecycle.Lifecycle;
+
 import com.amazonaws.mobile.auth.core.internal.util.ThreadUtils;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
@@ -39,12 +41,12 @@ import java.util.WeakHashMap;
  * is needed. Just be sure to call through to the super method so that this class
  * will still behave as intended.
  **/
-public class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
+public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
     private static final String ACTION_SCREEN_OFF = "android.intent.action.SCREEN_OFF";
     private boolean inForeground = false;
     /** Tracks the lifecycle of activities that have not stopped (including those restarted). */
-    private WeakHashMap<Activity, String> activityLifecycleStateMap = new WeakHashMap<>();
+    private WeakHashMap<Activity, Lifecycle.State> activityLifecycleStateMap = new WeakHashMap<>();
     final ScreenOffReceiver screenOffReceiver;
     private SessionClient sessionClient;
     private AnalyticsClient analyticsClient;
@@ -76,26 +78,26 @@ public class AutoSessionTracker implements Application.ActivityLifecycleCallback
     public void onActivityCreated(final Activity activity, final Bundle bundle) {
         Log.d(LOG_TAG, "onActivityCreated " + activity.getLocalClassName());
         handleOnCreateOrOnStartToHandleApplicationEnteredForeground();
-        activityLifecycleStateMap.put(activity, "created");
+        activityLifecycleStateMap.put(activity, Lifecycle.State.CREATED);
     }
 
     @Override
     public void onActivityStarted(final Activity activity) {
         Log.d(LOG_TAG, "onActivityStarted " + activity.getLocalClassName());
         handleOnCreateOrOnStartToHandleApplicationEnteredForeground();
-        activityLifecycleStateMap.put(activity, "started");
+        activityLifecycleStateMap.put(activity, Lifecycle.State.STARTED);
     }
 
     @Override
     public void onActivityResumed(final Activity activity) {
         Log.d(LOG_TAG, "onActivityResumed " + activity.getLocalClassName());
-        activityLifecycleStateMap.put(activity, "resumed");
+        activityLifecycleStateMap.put(activity, Lifecycle.State.RESUMED);
     }
 
     @Override
     public void onActivityPaused(final Activity activity) {
         Log.d(LOG_TAG, "onActivityPaused " + activity.getLocalClassName());
-        activityLifecycleStateMap.put(activity, "paused");
+        activityLifecycleStateMap.put(activity, Lifecycle.State.RESUMED);
     }
 
     @Override
@@ -119,18 +121,7 @@ public class AutoSessionTracker implements Application.ActivityLifecycleCallback
             Log.wtf(LOG_TAG, "Destroyed activity present in activityLifecycleMap!?");
             activityLifecycleStateMap.remove(activity);
         }
-    }
-
-    /**
-     * Call this method when your Application trims memory.
-     * @param level the level passed through from Application.onTrimMemory().
-     */
-    public void handleOnTrimMemory(final int level) {
-        Log.d(LOG_TAG, "onTrimMemory " + level);
-        // If no activities are running and the app has gone into the background.
-        if (level >= Application.TRIM_MEMORY_UI_HIDDEN) {
-            checkForApplicationEnteredBackground();
-        }
+        checkForApplicationEnteredBackground();
     }
 
     class ScreenOffReceiver extends BroadcastReceiver {
