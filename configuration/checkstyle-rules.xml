@@ -30,6 +30,16 @@
 
     <!-- Complain if files become too long by count of lines. -->
     <module name="FileLength" />
+    <!--
+        Lines should be short, for reading ergonomics. We believe
+        Checkstyle's default of 80 is overly aggressive for Java,
+        which is a syntactically verbose language. 120 is already
+        way too long for ergonomics, but allows some wiggle room for
+        special circumstances, such as where Java is overly verbose.
+    -->
+    <module name="LineLength">
+        <property name="max" value="120" />
+    </module>
 
     <!-- We don't use tab characters, here. -->
     <module name="FileTabCharacter" />
@@ -88,17 +98,6 @@
             more legible pieces.
         -->
         <module name="MethodLength" />
-
-        <!--
-            Lines should be short, for reading ergonomics. We believe
-            Checkstyle's default of 80 is overly aggressive for Java,
-            which is a syntactically verbose language. 120 is already
-            way too long for ergonomics, but allows some wiggle room for
-            special circumstances, such as where Java is overly verbose.
-        -->
-        <module name="LineLength">
-            <property name="max" value="120" />
-        </module>
 
         <!-- "Standard" rules regarding annotation positioning. -->
         <module name="AnnotationLocation" />
@@ -206,7 +205,6 @@
         <module name="JavadocMethod">
             <property name="scope" value="protected" />
             <property name="validateThrows" value="true" />
-            <property name="allowUndeclaredRTE" value="true" />
         </module>
         <!--
             public and protected class/interface definitions should
