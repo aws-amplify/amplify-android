@@ -23,7 +23,6 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
-
 import androidx.lifecycle.Lifecycle;
 
 import com.amazonaws.mobile.auth.core.internal.util.ThreadUtils;
@@ -44,17 +43,17 @@ import java.util.WeakHashMap;
 public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
     private static final String ACTION_SCREEN_OFF = "android.intent.action.SCREEN_OFF";
+    private final ScreenOffReceiver screenOffReceiver;
+    private final SessionClient sessionClient;
+    private final AnalyticsClient analyticsClient;
     private boolean inForeground = false;
     /** Tracks the lifecycle of activities that have not stopped (including those restarted). */
     private WeakHashMap<Activity, Lifecycle.State> activityLifecycleStateMap = new WeakHashMap<>();
-    final ScreenOffReceiver screenOffReceiver;
-    private SessionClient sessionClient;
-    private AnalyticsClient analyticsClient;
 
     /**
      * Constructor. Registers to receive activity lifecycle events.
-     * @param analyticsClient
-     * @param sessionClient
+     * @param analyticsClient Amazon pinpoint analytics client
+     * @param sessionClient Amazon pinpoint session client
      */
     public AutoSessionTracker(final AnalyticsClient analyticsClient,
                               final SessionClient sessionClient) {
@@ -124,13 +123,6 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
         checkForApplicationEnteredBackground();
     }
 
-    class ScreenOffReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            checkForApplicationEnteredBackground();
-        }
-    }
-
     /**
      * Called back when your application enters the Foreground.
      */
@@ -169,5 +161,12 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
                 applicationEnteredBackground();
             }
         });
+    }
+
+    class ScreenOffReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            checkForApplicationEnteredBackground();
+        }
     }
 }
