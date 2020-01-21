@@ -38,8 +38,9 @@ public final class TestAssets {
      * Reads a test asset as a string.
      * @param name Name of asset in the assets dir
      * @return The string contents of the named asset
+     * @throws RuntimeException If test asset contents cannot be read
      */
-    public static String readAsString(final String name) {
+    public static String readAsString(final String name) throws RuntimeException {
         try {
             final Context context = ApplicationProvider.getApplicationContext();
             final InputStream inputStream = context.getAssets().open(name);
@@ -53,7 +54,6 @@ public final class TestAssets {
             }
 
             return stringBuilder.toString();
-
         } catch (final IOException ioException) {
             throw new RuntimeException("Failed to load asset " + name, ioException);
         }
