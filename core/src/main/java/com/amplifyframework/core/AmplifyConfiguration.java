@@ -54,6 +54,7 @@ public final class AmplifyConfiguration {
      * Constructs a new AmplifyConfiguration object.
      * @param configs Category configurations
      */
+    @SuppressWarnings("WeakerAccess") // These are created and accessed as public API
     public AmplifyConfiguration(@NonNull Map<String, CategoryConfiguration> configs) {
         this.categoryConfigurations = new HashMap<>();
         this.categoryConfigurations.putAll(configs);
@@ -80,7 +81,6 @@ public final class AmplifyConfiguration {
      * @return An Amplify configuration instance
      * @throws AmplifyException If there is a problem in the config file
      */
-    @SuppressWarnings("WeakerAccess")
     @NonNull
     public static AmplifyConfiguration fromConfigFile(
             @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
@@ -154,15 +154,15 @@ public final class AmplifyConfiguration {
     @SuppressWarnings("WeakerAccess")
     @NonNull
     public CategoryConfiguration forCategoryType(@NonNull CategoryType categoryType) throws AmplifyException {
-        if (categoryConfigurations.containsKey(categoryType.getConfigurationKey())) {
-            //noinspection ConstantConditions We never populate null values in this map, and key does exist (above)
-            return categoryConfigurations.get(categoryType.getConfigurationKey());
-        } else {
+        final CategoryConfiguration categoryConfiguration =
+            categoryConfigurations.get(categoryType.getConfigurationKey());
+        if (categoryConfiguration == null) {
             throw new AmplifyException(
                 "Unknown/bad category type: " + categoryType,
                 "Be sure to use one of the supported Categories in your current version of Amplify"
             );
         }
+        return categoryConfiguration;
     }
 }
 
