@@ -47,7 +47,7 @@ final class PinpointClientFactory {
     private PinpointClientFactory() {
     }
 
-    static AnalyticsClient create(Context context,
+    static PinpointManager create(Context context,
                                   AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration)
             throws AnalyticsException {
         final PinpointManager pinpointManager;
@@ -91,6 +91,6 @@ final class PinpointClientFactory {
         ).withClientConfiguration(clientConfiguration);
 
         pinpointManager = new PinpointManager(pinpointConfiguration);
-        return pinpointManager.getAnalyticsClient();
+        return pinpointManager;
     }
 }
