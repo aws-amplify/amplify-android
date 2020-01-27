@@ -23,8 +23,12 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.InitializationStatus;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.test.R.raw;
+import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
+import com.amplifyframework.testutils.Await;
 
 final class TestConfiguration {
     private static TestConfiguration singleton;
@@ -39,7 +43,34 @@ final class TestConfiguration {
 
         AmplifyConfiguration amplifyConfiguration =
             AmplifyConfiguration.fromConfigFile(context, raw.amplifyconfiguration);
-        Amplify.configure(amplifyConfiguration, context);
+
+        /*
+         * Currently, initialization of categories is async, and there is no synchronization.
+         * So, in order for our tests to work correctly, we have to wait for DataStore initialization
+         * before calling any of the DataStore category behaviors.
+         * See a discussion in https://github.com/aws-amplify/amplify-android/issues/215.
+         */
+
+        // Configure Amplify, and wait for DataStore to be ready.
+        Await.result((onResult, onError) -> {
+            // Listen for initialization success messages
+            Amplify.Hub.subscribe(HubChannel.DATASTORE, event -> {
+                // When we get one, end the Await call by firing a result
+                if (InitializationStatus.SUCCEEDED.toString().equals(event.getName())) {
+                    onResult.accept(CategoryType.DATASTORE);
+                // When we see a failure, end the await by firing onError
+                } else if (InitializationStatus.FAILED.toString().equals(event.getName())) {
+                    onError.accept(new RuntimeException(String.valueOf(event.getData())));
+                }
+            });
+            // Now that we're listening for it ... configure Amplify and begin initialization
+            try {
+                Amplify.configure(amplifyConfiguration, context);
+            } catch (AmplifyException configurationFailure) {
+                // If the configuration fails before even initialization begins, kill the Await with onError.
+                onError.accept(new RuntimeException("Configuration failed.", configurationFailure));
+            }
+        });
     }
 
     /**

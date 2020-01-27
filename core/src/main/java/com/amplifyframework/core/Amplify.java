@@ -28,6 +28,8 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Immutable;
@@ -35,6 +37,8 @@ import com.amplifyframework.util.Immutable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -68,6 +72,9 @@ public final class Amplify {
 
     // Used as a synchronization locking object. Set to true once configure() is complete.
     private static final AtomicBoolean CONFIGURATION_LOCK = new AtomicBoolean(false);
+
+    // An executor on which categories may be initialized.
+    private static final ExecutorService INITIALIZATION_POOL = Executors.newFixedThreadPool(CATEGORIES.size());
 
     /**
      * Dis-allows instantiation of this utility class.
@@ -120,11 +127,28 @@ public final class Amplify {
                     CategoryConfiguration categoryConfiguration =
                         configuration.forCategoryType(category.getCategoryType());
                     category.configure(categoryConfiguration, context);
+                    beginInitialization(category, context);
                 }
             }
 
             CONFIGURATION_LOCK.set(true);
         }
+    }
+
+    private static void beginInitialization(@NonNull Category<? extends Plugin<?>> category, @NonNull Context context) {
+        INITIALIZATION_POOL.execute(() -> {
+            HubChannel hubChannel = HubChannel.forCategoryType(category.getCategoryType());
+            category.initialize(context, categoryInitializationResult -> {
+                if (categoryInitializationResult.isSuccessful()) {
+                    Hub.publish(hubChannel, HubEvent.create(InitializationStatus.SUCCEEDED.toString()));
+                    return;
+                }
+                Hub.publish(hubChannel, HubEvent.create(
+                    InitializationStatus.FAILED.toString(),
+                    categoryInitializationResult.getPluginInitializationFailures()
+                ));
+            });
+        });
     }
 
     /**
@@ -145,7 +169,6 @@ public final class Amplify {
      * @param <P> The type of the plugin being removed
      * @throws AmplifyException On failure to remove a plugin
      */
-    @SuppressWarnings("WeakerAccess")
     public static <P extends Plugin<?>> void removePlugin(@NonNull final P plugin) throws AmplifyException {
         updatePluginRegistry(plugin, RegistryUpdateType.REMOVE);
     }
@@ -189,4 +212,5 @@ public final class Amplify {
         ADD,
         REMOVE
     }
+
 }
