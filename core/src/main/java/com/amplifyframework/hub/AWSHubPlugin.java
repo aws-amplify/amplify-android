@@ -136,10 +136,9 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
 
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
-
     }
 
-    @NonNull
+    @Nullable
     @Override
     public Void getEscapeHatch() {
         return null;

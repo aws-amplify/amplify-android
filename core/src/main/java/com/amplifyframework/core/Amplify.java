@@ -139,7 +139,7 @@ public final class Amplify {
         INITIALIZATION_POOL.execute(() -> {
             HubChannel hubChannel = HubChannel.forCategoryType(category.getCategoryType());
             category.initialize(context, categoryInitializationResult -> {
-                if (categoryInitializationResult.isSuccessful()) {
+                if (categoryInitializationResult.isSuccess()) {
                     Hub.publish(hubChannel, HubEvent.create(InitializationStatus.SUCCEEDED.toString()));
                     return;
                 }

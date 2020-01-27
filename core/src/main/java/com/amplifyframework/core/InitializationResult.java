@@ -75,7 +75,7 @@ public final class InitializationResult {
      * Checks if the result is a success result.
      * @return True if the result is success, false otherwise
      */
-    public boolean isSuccessful() {
+    public boolean isSuccess() {
         return InitializationStatus.SUCCEEDED.equals(initializationStatus);
     }
 

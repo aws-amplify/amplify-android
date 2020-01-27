@@ -83,7 +83,7 @@ public final class CategoryInitializationResult {
      * Checks if the initialization is a success.
      * @return True if the category was initialized successfully.
      */
-    public boolean isSuccessful() {
+    public boolean isSuccess() {
         return InitializationStatus.SUCCEEDED.equals(initializationStatus);
     }
 
@@ -127,8 +127,8 @@ public final class CategoryInitializationResult {
      * @return A map of plugin names to plugin initialization results, only for those that succeeded.
      */
     @NonNull
-    public Set<String> getSuccessPlugins() {
-        return filterPluginResults(entry -> entry.getValue().isSuccessful());
+    public Set<String> getSuccessfulPlugins() {
+        return filterPluginResults(entry -> entry.getValue().isSuccess());
     }
 
     private Set<String> filterPluginResults(

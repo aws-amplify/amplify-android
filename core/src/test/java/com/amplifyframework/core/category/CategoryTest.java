@@ -48,7 +48,7 @@ public final class CategoryTest {
         CategoryInitializationResult result = Await.result((onResult, ignored) -> {
             category.initialize(getApplicationContext(), onResult);
         });
-        assertEquals(1, result.getSuccessPlugins().size());
+        assertEquals(1, result.getSuccessfulPlugins().size());
         assertEquals(0, result.getFailedPlugins().size());
     }
 
@@ -67,7 +67,7 @@ public final class CategoryTest {
             category.initialize(getApplicationContext(), onResult);
         });
 
-        assertEquals(0, categoryInitializationResult.getSuccessPlugins().size());
+        assertEquals(0, categoryInitializationResult.getSuccessfulPlugins().size());
         Set<String> failedPlugins = categoryInitializationResult.getFailedPlugins();
         assertEquals(1, failedPlugins.size());
         assertEquals("BadInitLoggingPlugin", failedPlugins.iterator().next());
