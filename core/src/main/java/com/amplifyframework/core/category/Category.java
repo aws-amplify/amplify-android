@@ -19,11 +19,14 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.InitializationResult;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.util.Immutable;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -62,7 +65,8 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param context An Android Context
      * @throws AmplifyException if already configured
      */
-    public final void configure(@NonNull CategoryConfiguration configuration, @NonNull Context context)
+    public final synchronized void configure(
+            @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         synchronized (configurationState) {
             validateConfigurationState(ConfigurationState.NOT_CONFIGURED);
@@ -75,6 +79,40 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
             configurationState.set(ConfigurationState.CONFIGURED);
         }
+    }
+
+    /**
+     * Checks if this category has been configured, yet.
+     * @return True if this category has been configured, false otherwise
+     */
+    public final boolean isConfigured() {
+        return ConfigurationState.CONFIGURED.equals(configurationState.get());
+    }
+
+    /**
+     * Initialize the category. This asynchronous call is made only after
+     * the category has been successfully configured. Whereas configuration is a short-lived
+     * synchronous phase of setup, initialization may require disk/network resources, etc.
+     * @param context An Android Context
+     * @param onInitializationAttempted Called when initialization has been attempted.
+     *                                  The result contains information about each plugin,
+     *                                  and whether or not its initialization succeeded.
+     */
+    public final synchronized void initialize(
+            @NonNull Context context,
+            @NonNull Consumer<CategoryInitializationResult> onInitializationAttempted) {
+        Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
+        for (P plugin : getPlugins()) {
+            InitializationResult result;
+            try {
+                plugin.initialize(context);
+                result = InitializationResult.success();
+            } catch (AmplifyException pluginInitializationFailure) {
+                result = InitializationResult.failure(pluginInitializationFailure);
+            }
+            pluginInitializationResults.put(plugin.getPluginKey(), result);
+        }
+        onInitializationAttempted.accept(CategoryInitializationResult.with(pluginInitializationResults));
     }
 
     /**
@@ -176,3 +214,4 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         CONFIGURED
     }
 }
+

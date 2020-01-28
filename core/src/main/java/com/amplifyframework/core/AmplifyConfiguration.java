@@ -61,6 +61,43 @@ public final class AmplifyConfiguration {
     }
 
     /**
+     * Build an {@link AmplifyConfiguration} directly from an {@link JSONObject}.
+     * Users should prefer loading from resources files via {@link #fromConfigFile(Context)},
+     * or {@link #fromConfigFile(Context, int)}.
+     * @param json A JSON object
+     * @return An AmplifyConfiguration
+     * @throws AmplifyException If the JSON does not represent a valid AmplifyConfiguration
+     */
+    @NonNull
+    public static AmplifyConfiguration fromJson(@NonNull JSONObject json) throws AmplifyException {
+        final List<CategoryConfiguration> possibleConfigs = Arrays.asList(
+            new AnalyticsCategoryConfiguration(),
+            new ApiCategoryConfiguration(),
+            new DataStoreCategoryConfiguration(),
+            new HubCategoryConfiguration(),
+            new LoggingCategoryConfiguration(),
+            new StorageCategoryConfiguration()
+        );
+
+        final Map<String, CategoryConfiguration> actualConfigs = new HashMap<>();
+        try {
+            for (CategoryConfiguration possibleConfig : possibleConfigs) {
+                String categoryJsonKey = possibleConfig.getCategoryType().getConfigurationKey();
+                if (json.has(categoryJsonKey)) {
+                    possibleConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
+                    actualConfigs.put(categoryJsonKey, possibleConfig);
+                }
+            }
+        } catch (JSONException error) {
+            throw new AmplifyException(
+                "Could not parse amplifyconfiguration.json ",
+                error, "Check any modifications made to the file."
+            );
+        }
+        return new AmplifyConfiguration(Immutable.of(actualConfigs));
+    }
+
+    /**
      * Creates an AmplifyConfiguration from an amplifyconfiguration.json file.
      * @param context Context needed for reading JSON file
      * @return An Amplify configuration instance
@@ -84,33 +121,7 @@ public final class AmplifyConfiguration {
     @NonNull
     public static AmplifyConfiguration fromConfigFile(
             @NonNull Context context, @RawRes int configFileResourceId) throws AmplifyException {
-        final List<CategoryConfiguration> possibleConfigs = Arrays.asList(
-            new AnalyticsCategoryConfiguration(),
-            new ApiCategoryConfiguration(),
-            new DataStoreCategoryConfiguration(),
-            new HubCategoryConfiguration(),
-            new LoggingCategoryConfiguration(),
-            new StorageCategoryConfiguration()
-        );
-
-        final JSONObject json = readInputJson(context, configFileResourceId);
-
-        final Map<String, CategoryConfiguration> actualConfigs = new HashMap<>();
-        try {
-            for (CategoryConfiguration possibleConfig : possibleConfigs) {
-                String categoryJsonKey = possibleConfig.getCategoryType().getConfigurationKey();
-                if (json.has(categoryJsonKey)) {
-                    possibleConfig.populateFromJSON(json.getJSONObject(categoryJsonKey));
-                    actualConfigs.put(categoryJsonKey, possibleConfig);
-                }
-            }
-        } catch (JSONException error) {
-            throw new AmplifyException(
-                "Could not parse amplifyconfiguration.json ",
-                error, "Check any modifications made to the file."
-            );
-        }
-        return new AmplifyConfiguration(Immutable.of(actualConfigs));
+        return fromJson(readInputJson(context, configFileResourceId));
     }
 
     private static int getConfigResourceId(Context context) throws AmplifyException {

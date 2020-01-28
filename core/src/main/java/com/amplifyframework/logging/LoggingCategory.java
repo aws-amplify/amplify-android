@@ -17,6 +17,7 @@ package com.amplifyframework.logging;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -28,6 +29,20 @@ import com.amplifyframework.core.category.CategoryType;
  * LoggingCategory class.
  */
 public final class LoggingCategory extends Category<LoggingPlugin<?>> implements LoggingCategoryBehavior {
+    private final LoggingPlugin<?> defaultPlugin;
+
+    /**
+     * Constructs a logging category.
+     */
+    public LoggingCategory() {
+        this(new AndroidLoggingPlugin());
+    }
+
+    @VisibleForTesting
+    LoggingCategory(LoggingPlugin<?> defaultPlugin) {
+        super();
+        this.defaultPlugin = defaultPlugin;
+    }
 
     @NonNull
     @Override
@@ -55,10 +70,10 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @NonNull
     private LoggingPlugin<?> getLoggingPlugin() {
-        try {
-            return getSelectedPlugin(); // If someone added a plugin, use it
-        } catch (IllegalStateException pluginAccessException) {
-            return new AndroidLoggingPlugin(); // Otherwise, fallback to ours.
+        if (!super.isConfigured() || super.getPlugins().isEmpty()) {
+            return defaultPlugin;
+        } else {
+            return super.getSelectedPlugin();
         }
     }
 }

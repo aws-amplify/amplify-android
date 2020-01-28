@@ -17,38 +17,47 @@ package com.amplifyframework.core.category;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
 
-final class FakePlugin<T> implements Plugin<T> {
-    private final String pluginKey;
+import java.util.Objects;
+
+@SuppressWarnings("unused")
+final class SimplePlugin<T> implements Plugin<T> {
+
     private final T escapeHatch;
     private final CategoryType categoryType;
     private JSONObject pluginConfiguration;
     private Context context;
 
-    private FakePlugin(String pluginKey, T escapeHatch, CategoryType categoryType) {
-        this.pluginKey = pluginKey;
+    private SimplePlugin(@Nullable T escapeHatch, @NonNull CategoryType categoryType) {
         this.escapeHatch = escapeHatch;
         this.categoryType = categoryType;
     }
 
-    static <T> Builder<T> builder() {
-        return new Builder<>();
+    @SuppressWarnings("SameParameterValue")
+    static SimplePlugin<Void> type(@NonNull CategoryType categoryType) {
+        Objects.requireNonNull(categoryType);
+        return new SimplePlugin<>(null, categoryType);
+    }
+
+    static <T> SimplePlugin<T> instance(@NonNull T escapeHatch, @NonNull CategoryType categoryType) {
+        Objects.requireNonNull(escapeHatch);
+        Objects.requireNonNull(categoryType);
+        return new SimplePlugin<>(escapeHatch, categoryType);
     }
 
     @NonNull
     @Override
     public String getPluginKey() {
-        return pluginKey;
+        return SimplePlugin.class.getSimpleName();
     }
 
-    @SuppressWarnings("RedundantThrows")
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException {
+    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
         this.pluginConfiguration = pluginConfiguration;
         this.context = context;
     }
@@ -58,46 +67,25 @@ final class FakePlugin<T> implements Plugin<T> {
         this.context = context;
     }
 
+    @Nullable
     @Override
     public T getEscapeHatch() {
         return escapeHatch;
     }
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return categoryType;
     }
 
-    JSONObject getPluginConfiguration() {
-        return pluginConfiguration;
-    }
-
+    @Nullable
     Context getContext() {
         return context;
     }
 
-    static final class Builder<T> {
-        private String pluginKey;
-        private T escapeHatch;
-        private CategoryType categoryType;
-
-        Builder<T> pluginKey(String pluginKey) {
-            this.pluginKey = pluginKey;
-            return this;
-        }
-
-        Builder<T> escapeHatch(T escapeHatch) {
-            this.escapeHatch = escapeHatch;
-            return this;
-        }
-
-        Builder<T> categoryType(CategoryType categoryType) {
-            this.categoryType = categoryType;
-            return this;
-        }
-
-        FakePlugin<T> build() {
-            return new FakePlugin<>(pluginKey, escapeHatch, categoryType);
-        }
+    @Nullable
+    JSONObject getPluginConfiguration() {
+        return pluginConfiguration;
     }
 }

@@ -139,10 +139,10 @@ public final class AWSDataStorePluginInstrumentedTest {
 
     /**
      * Drop all tables and database, terminate and delete the database.
-     * @throws DataStoreException from terminate if anything goes wrong
+     * @throws AmplifyException from terminate if anything goes wrong
      */
     @AfterClass
-    public static void tearDown() throws DataStoreException {
+    public static void tearDown() throws AmplifyException {
         awsDataStorePlugin.terminate();
         context.deleteDatabase(DATABASE_NAME);
     }

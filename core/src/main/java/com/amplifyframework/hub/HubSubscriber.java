@@ -29,5 +29,5 @@ public interface HubSubscriber {
      * Called to notify that there is a new event available in the Hub.
      * @param hubEvent A hub event
      */
-    void onEvent(@NonNull HubEvent hubEvent);
+    void onEvent(@NonNull HubEvent<?> hubEvent);
 }

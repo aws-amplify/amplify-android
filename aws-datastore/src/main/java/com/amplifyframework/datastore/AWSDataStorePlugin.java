@@ -25,10 +25,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.network.AppSyncApi;
 import com.amplifyframework.datastore.network.SyncEngine;
@@ -40,17 +38,13 @@ import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import org.json.JSONObject;
 
 import java.util.Iterator;
-import java.util.List;
 
-import io.reactivex.Single;
-import io.reactivex.SingleEmitter;
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.schedulers.Schedulers;
+import io.reactivex.Completable;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
-public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
+public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -109,45 +103,46 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
         } catch (DataStoreException badConfigException) {
             throw new DataStoreException(
                 "There was an issue configuring the plugin from the amplifyconfiguration.json",
-                    badConfigException,
-                    "Check the attached exception for more details and " +
+                badConfigException,
+                "Check the attached exception for more details and " +
                     "be sure you are only calling Amplify.configure once"
             );
         }
-
-        //noinspection ResultOfMethodCallIgnored
-        initializeStorageAdapter(context)
-            .doOnSuccess(modelSchemas -> startModelSynchronization(pluginConfiguration.getSyncMode()))
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .blockingGet();
     }
 
-    private void startModelSynchronization(AWSDataStorePluginConfiguration.SyncMode syncMode) {
-        if (AWSDataStorePluginConfiguration.SyncMode.SYNC_WITH_API.equals(syncMode)) {
-            syncEngine.start();
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) {
+        initializeStorageAdapter(context)
+            .andThen(startModelSynchronization(pluginConfiguration.getSyncMode()))
+            .blockingAwait();
+    }
+
+    private Completable startModelSynchronization(AWSDataStorePluginConfiguration.SyncMode syncMode) {
+        if (!AWSDataStorePluginConfiguration.SyncMode.SYNC_WITH_API.equals(syncMode)) {
+            return Completable.complete();
+        } else {
+            return Completable.fromAction(syncEngine::start);
         }
     }
 
     /**
-     * Initializes the storage adapter, and gets the result as a {@link Single}.
+     * Initializes the storage adapter, and gets the result as a {@link Completable}.
      * @param context An Android Context
-     * @return A single which will initialize the storage adapter when subscribed.
-     *         Single completes successfully by emitting the list of model schema
-     *         that will be managed by the storage adapter. Single completed with
-     *         error by emitting an error via {@link SingleEmitter#onError(Throwable)}.
+     * @return A Completable which will initialize the storage adapter when subscribed.
      */
     @WorkerThread
-    private Single<List<ModelSchema>> initializeStorageAdapter(Context context) {
-        return Single.defer(() -> Single.create(emitter ->
-            sqliteStorageAdapter.initialize(context, emitter::onSuccess, emitter::onError)
+    private Completable initializeStorageAdapter(Context context) {
+        return Completable.defer(() -> Completable.create(emitter ->
+            sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(), emitter::onError)
         ));
     }
 
     /**
      * Terminate use of the plugin.
+     * @throws AmplifyException On failure to terminate use of the plugin
      */
-    synchronized void terminate() throws DataStoreException {
+    synchronized void terminate() throws AmplifyException {
         syncEngine.stop();
         sqliteStorageAdapter.terminate();
     }
@@ -159,15 +154,6 @@ public final class AWSDataStorePlugin implements DataStorePlugin<Void> {
     @Override
     public Void getEscapeHatch() {
         return null;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @NonNull
-    @Override
-    public CategoryType getCategoryType() {
-        return CategoryType.DATASTORE;
     }
 
     /**

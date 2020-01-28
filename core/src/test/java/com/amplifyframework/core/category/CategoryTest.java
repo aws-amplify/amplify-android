@@ -18,6 +18,9 @@ package com.amplifyframework.core.category;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.BadInitLoggingPlugin;
+import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.RandomString;
 
 import org.json.JSONException;
@@ -28,13 +31,18 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Collections;
+import java.util.Set;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
+/**
+ * Tests the plugin management and initialization facilities of the {@link Category}.
+ */
 @RunWith(RobolectricTestRunner.class)
 public final class CategoryTest {
+
     /**
      * When a single plugin is added, it gets configured via the call to
      * {@link Category#configure(CategoryConfiguration, Context)}, and can then be accessed
@@ -115,4 +123,44 @@ public final class CategoryTest {
             .categoryType(categoryType)
             .build());
     }
+
+    /**
+     * Validate the behavior of a successful category initialization.
+     * @throws AmplifyException not expected; possible from addPlugin(), configure(), etc.
+     */
+    @Test
+    public void successfulCategoryInitialization() throws AmplifyException {
+        Category<Plugin<Void>> category = SimpleCategory.type(CategoryType.DATASTORE);
+        category.addPlugin(SimplePlugin.type(CategoryType.DATASTORE));
+        category.configure(SimpleCategoryConfiguration.type(CategoryType.DATASTORE), getApplicationContext());
+
+        //noinspection CodeBlock2Expr Easier to read as block
+        CategoryInitializationResult result = Await.result((onResult, ignored) -> {
+            category.initialize(getApplicationContext(), onResult);
+        });
+        assertEquals(1, result.getSuccessfulPlugins().size());
+        assertEquals(0, result.getFailedPlugins().size());
+    }
+
+    /**
+     * Validate the behavior of a category failing to initialize.
+     * @throws AmplifyException On addPlugin() of configure(), not expected
+     */
+    @Test
+    public void failedCategoryInitialization() throws AmplifyException {
+        Category<Plugin<Void>> category = SimpleCategory.type(CategoryType.LOGGING);
+        category.addPlugin(BadInitLoggingPlugin.instance());
+        category.configure(SimpleCategoryConfiguration.type(CategoryType.LOGGING), getApplicationContext());
+
+        //noinspection CodeBlock2Expr Easier to read as a block
+        CategoryInitializationResult categoryInitializationResult = Await.result((onResult, ignored) -> {
+            category.initialize(getApplicationContext(), onResult);
+        });
+
+        assertEquals(0, categoryInitializationResult.getSuccessfulPlugins().size());
+        Set<String> failedPlugins = categoryInitializationResult.getFailedPlugins();
+        assertEquals(1, failedPlugins.size());
+        assertEquals("BadInitLoggingPlugin", failedPlugins.iterator().next());
+    }
 }
+
