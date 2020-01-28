@@ -43,8 +43,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class HubInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core:test");
-
-    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS = 100;
+    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_MS = 100;
 
     /**
      * Before any test is run, configure Amplify to use an
@@ -65,20 +64,20 @@ public final class HubInstrumentedTest {
      * used to unsubscribe from the hub.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
-     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException, HubException {
+    public void subscriptionTokenCanBeUsedToUnsubscribe() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
-        final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE,
-            event -> waitUntilSubscriptionIsReceived.countDown());
+        final SubscriptionToken token =
+            Amplify.Hub.subscribe(HubChannel.STORAGE, event -> waitUntilSubscriptionIsReceived.countDown());
         assertNotNull(token);
 
         Amplify.Hub.unsubscribe(token);
 
-        assertFalse("Expecting no subscription to be received within the given time.",
-                waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
-                        TimeUnit.MILLISECONDS));
+        assertFalse(
+            "Expecting no subscription to be received within the given time.",
+            waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
     }
 
 
@@ -86,10 +85,9 @@ public final class HubInstrumentedTest {
      * Validates that a subscriber will receive a published event.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
-     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void isSubscriptionReceived() throws InterruptedException, HubException {
+    public void isSubscriptionReceived() throws InterruptedException {
         final CountDownLatch waitUntilSubscriptionIsReceived = new CountDownLatch(1);
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
@@ -100,11 +98,12 @@ public final class HubInstrumentedTest {
         });
 
         Amplify.Hub.publish(HubChannel.STORAGE,
-                new HubEvent("weatherString", "Too Cold in Seattle."));
+            HubEvent.create("weatherString", "Too Cold in Seattle."));
 
-        assertTrue("Subscription not received within the expected time.",
-                waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
-                        TimeUnit.MILLISECONDS));
+        assertTrue(
+            "Subscription not received within the expected time.",
+            waitUntilSubscriptionIsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
 
         Amplify.Hub.unsubscribe(token);
     }
@@ -114,10 +113,9 @@ public final class HubInstrumentedTest {
      * from the hub, once it has unsubscribed.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
-     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException, HubException {
+    public void noSubscriptionReceivedAfterUnsubscribe() throws InterruptedException {
         final CountDownLatch subscriptionReceived = new CountDownLatch(1);
 
         final SubscriptionToken token = Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
@@ -128,11 +126,12 @@ public final class HubInstrumentedTest {
         Amplify.Hub.unsubscribe(token);
 
         Amplify.Hub.publish(HubChannel.STORAGE,
-                new HubEvent("weatherString", "Too Cold in Seattle"));
+            HubEvent.create("weatherString", "Too Cold in Seattle"));
 
-        assertFalse("Expecting no subscription to be received within the given time.",
-                    subscriptionReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
-                            TimeUnit.MILLISECONDS));
+        assertFalse(
+            "Expecting no subscription to be received within the given time.",
+            subscriptionReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
     }
 
     /**
@@ -140,10 +139,9 @@ public final class HubInstrumentedTest {
      * multiple publications.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
-     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void multiplePublications() throws InterruptedException, HubException {
+    public void multiplePublications() throws InterruptedException {
         final int numPublications = 10;
         final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
         final List<Integer> subscriptionsReceived = new ArrayList<>();
@@ -157,13 +155,13 @@ public final class HubInstrumentedTest {
         });
 
         for (int i = 0; i < numPublications; i++) {
-            Amplify.Hub.publish(HubChannel.STORAGE,
-                    new HubEvent("weatherInteger:" + i, i));
+            Amplify.Hub.publish(HubChannel.STORAGE, HubEvent.create("weatherInteger:" + i, i));
         }
 
-        assertTrue("Expecting to receive all " + numPublications + " subscriptions.",
-                    allSubscriptionsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
-                            TimeUnit.MILLISECONDS));
+        assertTrue(
+            "Expecting to receive all " + numPublications + " subscriptions.",
+            allSubscriptionsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
 
         Collections.sort(subscriptionsReceived);
         int expectedMessageValue = 0;
@@ -180,10 +178,9 @@ public final class HubInstrumentedTest {
      * multiple events of different types.
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
-     * @throws HubException from underlying Hub exceptions
      */
     @Test
-    public void multiplePublicationsMultipleDataTypes() throws InterruptedException, HubException {
+    public void multiplePublicationsMultipleDataTypes() throws InterruptedException {
         final int numPublications = 10;
         final int numDataTypes = 2;
         final CountDownLatch allSubscriptionsReceived = new CountDownLatch(numPublications);
@@ -205,14 +202,15 @@ public final class HubInstrumentedTest {
 
         for (int i = 0; i < numPublications / numDataTypes; i++) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    new HubEvent("weatherInteger:" + i, i));
+                HubEvent.create("weatherInteger:" + i, i));
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    new HubEvent("weatherString:" + i, stringSubscriptionValue));
+                HubEvent.create("weatherString:" + i, stringSubscriptionValue));
         }
 
-        assertTrue("Expecting to receive all " + numPublications + " subscriptions.",
-                    allSubscriptionsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_IN_MILLISECONDS,
-                            TimeUnit.MILLISECONDS));
+        assertTrue(
+            "Expecting to receive all " + numPublications + " subscriptions.",
+            allSubscriptionsReceived.await(SUBSCRIPTION_RECEIVE_TIMEOUT_MS, TimeUnit.MILLISECONDS)
+        );
 
         Collections.sort(integerSubscriptionsReceived);
         int expectedIntegerSubscriptionValue = 0;

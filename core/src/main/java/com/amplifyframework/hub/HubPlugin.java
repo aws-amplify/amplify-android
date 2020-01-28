@@ -15,6 +15,11 @@
 
 package com.amplifyframework.hub;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -26,9 +31,14 @@ import com.amplifyframework.core.plugin.Plugin;
  *            implementation-specific operations with the event hub
  */
 public abstract class HubPlugin<E> implements HubCategoryBehavior, Plugin<E> {
+    @NonNull
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.HUB;
     }
-}
 
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) throws AmplifyException {
+    }
+}

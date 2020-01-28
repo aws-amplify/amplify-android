@@ -1,0 +1,13 @@
+{
+  "userAgent": "aws-amplify-cli/2.0",
+  "version": "1.0",
+  "logging": {
+    "plugins": {
+      "SimpleLoggingPlugin": {
+      },
+      "BadInitLoggingPlugin": {
+      }
+    }
+  }
+}
+

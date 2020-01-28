@@ -27,7 +27,6 @@ import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.hub.HubException;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.regions.Regions;
@@ -131,16 +130,9 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             } else if (entry.getValue() instanceof DoubleProperty) {
                 analyticsClient.addGlobalMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
             } else {
-                try {
-                    Amplify.Hub.publish(HubChannel.ANALYTICS, new HubEvent("Analytics.registerGlobalProperties",
-                            "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
-                                    " only StringProperty or DoubleProperty. Refer to the documentation for details."));
-                } catch (HubException hubException) {
-                    throw new AnalyticsException("Failed to publish global property registration failure to the Hub.",
-                            hubException, "Attempt was made to register invalid property type. " +
-                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
-                            " Refer to the documentation for details.");
-                }
+                Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent.create("Analytics.registerGlobalProperties",
+                    "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
+                        " only StringProperty or DoubleProperty. Refer to the documentation for details."));
             }
         }
     }
@@ -167,6 +159,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     /**
      * {@inheritDoc}
      */
+    @NonNull
     @Override
     public String getPluginKey() {
         return "amazonPinpointAnalyticsPlugin";
@@ -176,7 +169,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, Context context) throws AnalyticsException {
+    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws AnalyticsException {
 
         AmazonPinpointAnalyticsPluginConfiguration.Builder configurationBuilder =
                 AmazonPinpointAnalyticsPluginConfiguration.builder();

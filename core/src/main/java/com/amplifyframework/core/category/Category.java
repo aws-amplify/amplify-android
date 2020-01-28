@@ -19,10 +19,13 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.InitializationResult;
 import com.amplifyframework.core.plugin.Plugin;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -61,7 +64,8 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param context An Android Context
      * @throws AmplifyException if already configured
      */
-    public final void configure(CategoryConfiguration configuration, Context context)
+    public final synchronized void configure(
+            @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         if (isConfigured) {
             throw new AmplifyException("Amplify was already configured",
@@ -71,11 +75,44 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         for (P plugin : getPlugins()) {
             String pluginKey = plugin.getPluginKey();
             JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
-
             plugin.configure(pluginConfig, context);
         }
 
         isConfigured = true;
+    }
+
+    /**
+     * Checks if this category has been configured, yet.
+     * @return True if this category has been configured, false otherwise
+     */
+    public final boolean isConfigured() {
+        return isConfigured;
+    }
+
+    /**
+     * Initialize the category. This asynchronous call is made only after
+     * the category has been successfully configured. Whereas configuration is a short-lived
+     * synchronous phase of setup, initialization may require disk/network resources, etc.
+     * @param context An Android Context
+     * @param onInitializationAttempted Called when initialization has been attempted.
+     *                                  The result contains information about each plugin,
+     *                                  and whether or not its initialization succeeded.
+     */
+    public final synchronized void initialize(
+            @NonNull Context context,
+            @NonNull Consumer<CategoryInitializationResult> onInitializationAttempted) {
+        Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
+        for (P plugin : getPlugins()) {
+            InitializationResult result;
+            try {
+                plugin.initialize(context);
+                result = InitializationResult.success();
+            } catch (AmplifyException pluginInitializationFailure) {
+                result = InitializationResult.failure(pluginInitializationFailure);
+            }
+            pluginInitializationResults.put(plugin.getPluginKey(), result);
+        }
+        onInitializationAttempted.accept(CategoryInitializationResult.with(pluginInitializationResults));
     }
 
     /**
@@ -99,6 +136,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @param plugin A plugin to remove
      */
     public final void removePlugin(@NonNull P plugin) {
+        //noinspection StatementWithEmptyBody
         if (plugins.remove(plugin.getPluginKey()) == null) {
             // TODO: Fail silently for now, matching iOS - potentially publish on Hub in the future.
         }
@@ -110,9 +148,11 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @return The plugin object associated to pluginKey, if registered
      * @throws IllegalStateException If there is no plugin with the given key
      */
+    @NonNull
     public final P getPlugin(@NonNull final String pluginKey) {
-        if (plugins.containsKey(pluginKey)) {
-            return plugins.get(pluginKey);
+        P plugin = plugins.get(pluginKey);
+        if (plugin != null) {
+            return plugin;
         } else {
             throw new IllegalStateException(
                     "Tried to get a plugin but that plugin was not present." +
@@ -125,6 +165,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Gets the set of plugins associated with the Category.
      * @return The set of plugins associated to the Category
      */
+    @NonNull
     public final Set<P> getPlugins() {
         return new HashSet<>(plugins.values());
     }
@@ -136,6 +177,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      *         If the category is not configured, or if there are no
      *         plugins associated to the category
      */
+    @NonNull
     protected final P getSelectedPlugin() {
         if (!isConfigured) {
             throw new IllegalStateException("This category is not yet configured." +
@@ -157,4 +199,3 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         return getPlugins().iterator().next();
     }
 }
-

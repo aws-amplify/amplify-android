@@ -15,8 +15,11 @@
 
 package com.amplifyframework.logging;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -32,5 +35,10 @@ public abstract class LoggingPlugin<E> implements LoggingCategoryBehavior, Plugi
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.LOGGING;
+    }
+
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) throws AmplifyException {
     }
 }
