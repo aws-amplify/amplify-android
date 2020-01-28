@@ -15,6 +15,11 @@
 
 package com.amplifyframework.analytics;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -25,9 +30,15 @@ import com.amplifyframework.core.plugin.Plugin;
  * @param <E> The type of class returned by the plugin implementation to be used as an escape hatch
  */
 public abstract class AnalyticsPlugin<E> implements AnalyticsCategoryBehavior, Plugin<E> {
+    @NonNull
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.ANALYTICS;
+    }
+
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) throws AmplifyException {
     }
 }
 

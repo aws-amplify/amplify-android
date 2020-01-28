@@ -15,6 +15,12 @@
 
 package com.amplifyframework.datastore;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
 /**
@@ -22,5 +28,15 @@ import com.amplifyframework.core.plugin.Plugin;
  * @param <E> The class type of the escape hatch which a subclass shall
  *            make available, to perform low-level implementation-specific operations.
  */
-public interface DataStorePlugin<E> extends DataStoreCategoryBehavior, Plugin<E> {
+public abstract class DataStorePlugin<E> implements DataStoreCategoryBehavior, Plugin<E> {
+    @NonNull
+    @Override
+    public final CategoryType getCategoryType() {
+        return CategoryType.DATASTORE;
+    }
+
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) throws AmplifyException {
+    }
 }

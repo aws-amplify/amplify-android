@@ -36,6 +36,6 @@ public interface HubEventFilter {
      * @return true if the event meets your criteria,
      *         false otherwise.
      */
-    boolean filter(@NonNull HubEvent hubEvent);
+    boolean filter(@NonNull HubEvent<?> hubEvent);
 }
 

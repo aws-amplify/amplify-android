@@ -53,12 +53,13 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
     }
 
     @Override
-    public void publish(@NonNull final HubChannel hubChannel, @NonNull final HubEvent hubEvent) {
+    public <T> void publish(@NonNull final HubChannel hubChannel, @NonNull final HubEvent<T> hubEvent) {
         executorService.submit(() -> {
             final Set<HubSubscription> safeSubscriptions = new HashSet<>();
             synchronized (subscriptionsLock) {
-                if (subscriptionsByChannel.containsKey(hubChannel)) {
-                    safeSubscriptions.addAll(subscriptionsByChannel.get(hubChannel));
+                final Set<HubSubscription> channelSubscriptions = subscriptionsByChannel.get(hubChannel);
+                if (channelSubscriptions != null) {
+                    safeSubscriptions.addAll(channelSubscriptions);
                 }
             }
 
@@ -95,10 +96,14 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
         synchronized (subscriptionsLock) {
             subscriptionsByToken.put(token, hubSubscription);
 
-            if (!subscriptionsByChannel.containsKey(hubChannel)) {
-                subscriptionsByChannel.put(hubChannel, new HashSet<>());
+            Set<HubSubscription> existingSubscriptions = subscriptionsByChannel.get(hubChannel);
+            if (existingSubscriptions == null) {
+                Set<HubSubscription> subscriptionsToAdd = new HashSet<>();
+                subscriptionsToAdd.add(hubSubscription);
+                subscriptionsByChannel.put(hubChannel, subscriptionsToAdd);
+            } else {
+                existingSubscriptions.add(hubSubscription);
             }
-            subscriptionsByChannel.get(hubChannel).add(hubSubscription);
         }
 
         return token;
@@ -116,22 +121,24 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
 
             // Now that we have a handle to the subscription, figure out which channel
             final HubChannel channelToUpdate = subscriptionBeingEnded.getHubChannel();
-            if (subscriptionsByChannel.containsKey(channelToUpdate)) {
-                subscriptionsByChannel.get(channelToUpdate).remove(subscriptionBeingEnded);
+            final Set<HubSubscription> channelSubscriptions = subscriptionsByChannel.get(channelToUpdate);
+            if (channelSubscriptions != null) {
+                channelSubscriptions.remove(subscriptionBeingEnded);
             }
         }
     }
 
+    @NonNull
     @Override
     public String getPluginKey() {
         return "awsHubPlugin";
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, Context context) {
-
+    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
     }
 
+    @Nullable
     @Override
     public Void getEscapeHatch() {
         return null;

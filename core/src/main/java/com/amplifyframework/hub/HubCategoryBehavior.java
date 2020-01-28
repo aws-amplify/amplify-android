@@ -29,10 +29,11 @@ public interface HubCategoryBehavior {
      * Publish an event to the specified channel.
      * @param hubChannel The channel on which to dispatch the event
      * @param hubEvent The event to send
-     * @throws HubException if the publication fails
+     * @throws RuntimeException If publication fails
+     * @param <T> Type of data in the event
      */
-    void publish(@NonNull HubChannel hubChannel,
-                 @NonNull HubEvent hubEvent) throws HubException;
+    <T> void publish(@NonNull HubChannel hubChannel,
+                     @NonNull HubEvent<T> hubEvent) throws RuntimeException;
 
     /**
      * Subscribe to Hub events that arrive on a particular channel.
@@ -42,6 +43,7 @@ public interface HubCategoryBehavior {
      *         The token can be used with {@link #unsubscribe(SubscriptionToken)}
      *         to cancel the subscription.
      */
+    @NonNull
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                 @NonNull HubSubscriber hubSubscriber);
 
@@ -60,6 +62,7 @@ public interface HubCategoryBehavior {
      *         {@link #unsubscribe(SubscriptionToken)} to cancel the
      *         subscription.
      */
+    @NonNull
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                 @Nullable HubEventFilter hubEventFilter,
                                 @NonNull HubSubscriber hubSubscriber);

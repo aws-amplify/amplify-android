@@ -31,18 +31,26 @@ import com.amplifyframework.core.category.CategoryType;
  * notification of a file download.
  */
 public final class HubCategory extends Category<HubPlugin<?>> implements HubCategoryBehavior {
+    private final HubPlugin<?> defaultPlugin;
+
+    /**
+     * Constructs a Hub Category.
+     */
+    public HubCategory() {
+        super();
+        this.defaultPlugin = new AWSHubPlugin();
+    }
 
     @Override
-    public void publish(@NonNull HubChannel hubChannel, @NonNull HubEvent hubEvent)
-            throws HubException {
-        getSelectedPlugin().publish(hubChannel, hubEvent);
+    public <T> void publish(@NonNull HubChannel hubChannel, @NonNull HubEvent<T> hubEvent) {
+        getHubPlugin().publish(hubChannel, hubEvent);
     }
 
     @NonNull
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @NonNull HubSubscriber hubSubscriber) {
-        return getSelectedPlugin().subscribe(hubChannel, hubSubscriber);
+        return getHubPlugin().subscribe(hubChannel, hubSubscriber);
     }
 
     @NonNull
@@ -50,12 +58,12 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @Nullable HubEventFilter hubEventFilter,
                                        @NonNull HubSubscriber hubSubscriber) {
-        return getSelectedPlugin().subscribe(hubChannel, hubEventFilter, hubSubscriber);
+        return getHubPlugin().subscribe(hubChannel, hubEventFilter, hubSubscriber);
     }
 
     @Override
     public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
-        getSelectedPlugin().unsubscribe(subscriptionToken);
+        getHubPlugin().unsubscribe(subscriptionToken);
     }
 
     @NonNull
@@ -89,5 +97,13 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
         };
 
         return subscribe(channel, event -> true, transformingListener);
+    }
+
+    private HubPlugin<?> getHubPlugin() {
+        if (!super.isConfigured() || super.getPlugins().isEmpty()) {
+            return defaultPlugin;
+        } else {
+            return super.getSelectedPlugin();
+        }
     }
 }

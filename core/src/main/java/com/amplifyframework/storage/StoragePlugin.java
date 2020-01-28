@@ -15,6 +15,11 @@
 
 package com.amplifyframework.storage;
 
+import android.content.Context;
+import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
+
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 
@@ -25,8 +30,14 @@ import com.amplifyframework.core.plugin.Plugin;
  * @param <E> The class type of the escape hatch provided by the plugin
  */
 public abstract class StoragePlugin<E> implements StorageCategoryBehavior, Plugin<E> {
+    @NonNull
     @Override
     public final CategoryType getCategoryType() {
         return CategoryType.STORAGE;
+    }
+
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) throws AmplifyException {
     }
 }
