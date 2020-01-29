@@ -21,8 +21,10 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -34,7 +36,8 @@ import java.util.concurrent.ExecutorService;
  */
 
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
-    private final AWSS3StorageService storageService;
+    private final IdentityIdProvider identityIdProvider;
+    private final StorageService storageService;
     private final ExecutorService executorService;
     private final Consumer<StorageListResult> onSuccess;
     private final Consumer<StorageException> onError;
@@ -48,12 +51,14 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
      * @param onError notified when list results cannot be obtained due to error
      */
     public AWSS3StorageListOperation(
-            @NonNull AWSS3StorageService storageService,
+            @NonNull IdentityIdProvider identityIdProvider,
+            @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageListRequest request,
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError) {
         super(request);
+        this.identityIdProvider = identityIdProvider;
         this.storageService = storageService;
         this.executorService = executorService;
         this.onSuccess = onSuccess;
@@ -67,7 +72,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
             String identityId;
 
             try {
-                identityId = AWSMobileClient.getInstance().getIdentityId();
+                identityId = identityIdProvider.getIdentityId();
 
                 try {
                     StorageListResult result = storageService.listFiles(

@@ -18,18 +18,17 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
-import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
-
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
 
@@ -38,7 +37,8 @@ import java.io.File;
  */
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
-    private final AWSS3StorageService storageService;
+    private final IdentityIdProvider identityIdProvider;
+    private final StorageService storageService;
     private final Consumer<StorageDownloadFileResult> onResult;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
@@ -52,11 +52,13 @@ public final class AWSS3StorageDownloadFileOperation
      * @param onError Notified upon download error
      */
     public AWSS3StorageDownloadFileOperation(
-            @NonNull AWSS3StorageService storageService,
+            @NonNull IdentityIdProvider identityIdProvider,
+            @NonNull StorageService storageService,
             @NonNull AWSS3StorageDownloadFileRequest request,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError) {
         super(request);
+        this.identityIdProvider = identityIdProvider;
         this.storageService = storageService;
         this.onResult = onSuccess;
         this.onError = onError;
@@ -69,63 +71,52 @@ public final class AWSS3StorageDownloadFileOperation
     public void start() {
         // Only start if it hasn't already been started
         if (transferObserver == null) {
-            String identityId;
+            String identityId = identityIdProvider.getIdentityId();
+
+            String serviceKey = S3RequestUtils.getServiceKey(
+                    getRequest().getAccessLevel(),
+                    identityId,
+                    getRequest().getKey(),
+                    getRequest().getTargetIdentityId()
+            );
+
+            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
 
             try {
-                identityId = AWSMobileClient.getInstance().getIdentityId();
-
-                String serviceKey = S3RequestUtils.getServiceKey(
-                        getRequest().getAccessLevel(),
-                        identityId,
-                        getRequest().getKey(),
-                        getRequest().getTargetIdentityId()
-                );
-
-                this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
-
-                try {
-                    transferObserver = storageService.downloadToFile(serviceKey, file);
-                } catch (Exception exception) {
-                    onError.accept(new StorageException(
-                            "Issue downloading file",
-                            exception,
-                            "See included exception for more details and suggestions to fix."
-                    ));
-                }
-
-                transferObserver.setTransferListener(new TransferListener() {
-                    @Override
-                    public void onStateChanged(int transferId, TransferState state) {
-                        if (TransferState.COMPLETED == state) {
-                            onResult.accept(StorageDownloadFileResult.fromFile(file));
-                        }
-                    }
-
-                    @SuppressWarnings("checkstyle:MagicNumber")
-                    @Override
-                    public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
-                        @SuppressWarnings("unused")
-                        int percentage = (int) (bytesCurrent / bytesTotal * 100);
-                        // TODO: dispatch event to hub
-                    }
-
-                    @Override
-                    public void onError(int transferId, Exception exception) {
-                        onError.accept(new StorageException(
-                            "Something went wrong with your AWS S3 Storage download file operation",
-                            exception,
-                            "See attached exception for more information and suggestions"
-                        ));
-                    }
-                });
+                transferObserver = storageService.downloadToFile(serviceKey, file);
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                        "AWSMobileClient could not get user id.",
+                        "Issue downloading file",
                         exception,
-                        "Check whether you initialized AWSMobileClient and waited for its success callback " +
-                                "before calling Amplify config."
+                        "See included exception for more details and suggestions to fix."
                 ));
             }
+
+            transferObserver.setTransferListener(new TransferListener() {
+                @Override
+                public void onStateChanged(int transferId, TransferState state) {
+                    if (TransferState.COMPLETED == state) {
+                        onResult.accept(StorageDownloadFileResult.fromFile(file));
+                    }
+                }
+
+                @SuppressWarnings("checkstyle:MagicNumber")
+                @Override
+                public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
+                    @SuppressWarnings("unused")
+                    int percentage = (int) (bytesCurrent / bytesTotal * 100);
+                    // TODO: dispatch event to hub
+                }
+
+                @Override
+                public void onError(int transferId, Exception exception) {
+                    onError.accept(new StorageException(
+                        "Something went wrong with your AWS S3 Storage download file operation",
+                        exception,
+                        "See attached exception for more information and suggestions"
+                    ));
+                }
+            });
         }
     }
 

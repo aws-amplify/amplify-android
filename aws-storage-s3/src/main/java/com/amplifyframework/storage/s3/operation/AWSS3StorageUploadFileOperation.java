@@ -18,18 +18,17 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
-import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
-
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
 import java.util.Objects;
@@ -38,7 +37,8 @@ import java.util.Objects;
  * An operation to upload a file from AWS S3.
  */
 public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
-    private final AWSS3StorageService storageService;
+    private final IdentityIdProvider identityIdProvider;
+    private final StorageService storageService;
     private final Consumer<StorageUploadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
@@ -52,11 +52,13 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
      * @param onError Notified when upload fails with an error
      */
     public AWSS3StorageUploadFileOperation(
-            @NonNull AWSS3StorageService storageService,
+            @NonNull IdentityIdProvider identityIdProvider,
+            @NonNull StorageService storageService,
             @NonNull AWSS3StorageUploadFileRequest request,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError) {
         super(Objects.requireNonNull(request));
+        this.identityIdProvider = Objects.requireNonNull(identityIdProvider);
         this.storageService = Objects.requireNonNull(storageService);
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
@@ -72,7 +74,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             String identityId;
 
             try {
-                identityId = AWSMobileClient.getInstance().getIdentityId();
+                identityId = identityIdProvider.getIdentityId();
 
                 String serviceKey = S3RequestUtils.getServiceKey(
                         getRequest().getAccessLevel(),

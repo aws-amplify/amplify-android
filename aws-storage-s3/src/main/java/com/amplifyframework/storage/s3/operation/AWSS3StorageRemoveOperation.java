@@ -21,11 +21,10 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
-import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
-
-import com.amazonaws.mobile.client.AWSMobileClient;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -34,7 +33,8 @@ import java.util.concurrent.ExecutorService;
  * An operation to remove a file from AWS S3.
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
-    private final AWSS3StorageService storageService;
+    private final IdentityIdProvider identityIdProvider;
+    private final StorageService storageService;
     private final ExecutorService executorService;
     private final Consumer<StorageRemoveResult> onSuccess;
     private final Consumer<StorageException> onError;
@@ -48,12 +48,14 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * @param onError notified when remove operation does not complete due to error
      */
     public AWSS3StorageRemoveOperation(
-            @NonNull AWSS3StorageService storageService,
+            @NonNull IdentityIdProvider identityIdProvider,
+            @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageRemoveRequest request,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
             @NonNull Consumer<StorageException> onError) {
         super(Objects.requireNonNull(request));
+        this.identityIdProvider = Objects.requireNonNull(identityIdProvider);
         this.storageService = Objects.requireNonNull(storageService);
         this.executorService = Objects.requireNonNull(executorService);
         this.onSuccess = Objects.requireNonNull(onSuccess);
@@ -67,7 +69,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
             String identityId;
 
             try {
-                identityId = AWSMobileClient.getInstance().getIdentityId();
+                identityId = identityIdProvider.getIdentityId();
 
                 try {
                     storageService.deleteObject(

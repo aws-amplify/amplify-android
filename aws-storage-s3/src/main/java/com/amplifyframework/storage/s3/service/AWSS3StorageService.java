@@ -42,7 +42,7 @@ import java.util.Map;
 /**
  * A representation of an S3 backend service endpoint.
  */
-public final class AWSS3StorageService {
+public final class AWSS3StorageService implements StorageService {
 
     private final Context context;
     private final String bucket;
