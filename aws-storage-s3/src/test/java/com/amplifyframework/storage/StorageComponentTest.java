@@ -83,8 +83,10 @@ public class StorageComponentTest {
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
             listener.onStateChanged(0, TransferState.COMPLETED);
-            // return what?
-        }).when(transferObserver.setTransferListener(any(TransferListener.class)));
+            return null;
+        })
+        .when(transferObserver)
+        .setTransferListener(any(TransferListener.class));
 
         StorageDownloadFileResult result =
             Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) -> {
@@ -96,6 +98,6 @@ public class StorageComponentTest {
                 );
             });
 
-        assertEquals("expected file name", result.getFile());
+        assertEquals(toLocalPath, result.getFile().toString());
     }
 }
