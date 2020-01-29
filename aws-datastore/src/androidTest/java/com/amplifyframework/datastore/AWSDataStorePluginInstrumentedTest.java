@@ -21,18 +21,19 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.Sleep;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.SynchronousApi;
 import com.amplifyframework.testutils.SynchronousDataStore;
 
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
-
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,12 +45,12 @@ import static org.junit.Assert.assertEquals;
  */
 public final class AWSDataStorePluginInstrumentedTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
-    private static final long DATA_STORE_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
-    private static final long NETWORK_OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
     private static SynchronousApi api;
     private static SynchronousDataStore dataStore;
+    private static HubAccumulator outboundModelEventAccumulator;
+    private static HubAccumulator inboundModelEventAccumulator;
 
     /**
      * Enable strict mode for catching SQLite leaks.
@@ -75,6 +76,30 @@ public final class AWSDataStorePluginInstrumentedTest {
         context = ApplicationProvider.getApplicationContext();
         api = SynchronousApi.singleton();
         dataStore = SynchronousDataStore.singleton();
+        outboundModelEventAccumulator = HubAccumulator.create(HubChannel.DATASTORE, event ->
+            DataStoreChannelEventName.PUBLISHED_TO_CLOUD.toString().equals(event.getName())
+        );
+        inboundModelEventAccumulator = HubAccumulator.create(HubChannel.DATASTORE, event ->
+            DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(event.getName())
+        );
+    }
+
+    /**
+     * Before each test, clear and restart the hub event accumulators.
+     */
+    @Before
+    public void beforeEachIndividualTest() {
+        outboundModelEventAccumulator.stop().clear().start();
+        inboundModelEventAccumulator.stop().clear().start();
+    }
+
+    /**
+     * After each test, stop and clear the hub event accumulators.
+     */
+    @After
+    public void afterEachIndividualTest() {
+        outboundModelEventAccumulator.stop().clear();
+        inboundModelEventAccumulator.stop().clear();
     }
 
     /**
@@ -91,8 +116,8 @@ public final class AWSDataStorePluginInstrumentedTest {
             .build();
         dataStore.save(localCharley);
 
-        // Wait a bit. TODO: this is lame; how to tell deterministically when sync engine has sync'd?
-        Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
+        // Wait for a Hub event telling us that our Charley model got published to the cloud.
+        outboundModelEventAccumulator.takeOne();
 
         // Try to get Charley from the backend.
         BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
@@ -129,8 +154,9 @@ public final class AWSDataStorePluginInstrumentedTest {
             .name("Jameson Williams")
             .build());
 
-        // Wait for sync. TODO: super lame. Get a deterministic event-driven hook for this.
-        Sleep.milliseconds(NETWORK_OP_TIMEOUT_MS + DATA_STORE_OP_TIMEOUT_MS);
+        // Wait for a Hub event letting us know that our local Jameson models were published to cloud
+        // One event for create(), one event for update() = 2 events.
+        inboundModelEventAccumulator.take(2);
 
         // Jameson should be in the local DataStore, and last name should be updated.
         BlogOwner localOwner = dataStore.get(BlogOwner.class, remoteOwner.getId());
