@@ -28,6 +28,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.AmplifyExecutors;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
@@ -67,7 +68,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -132,7 +132,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
-        this.threadPool = Executors.newCachedThreadPool();
+        this.threadPool = AmplifyExecutors.standard();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.create();
@@ -162,7 +162,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
 
-        threadPool.submit(() -> {
+        threadPool.execute(() -> {
             try {
                 final Set<Class<? extends Model>> models = new HashSet<>();
                 // StorageItemChange.Record.class is an internal system event
@@ -548,9 +548,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             }
             if (itemChangeSubject != null) {
                 itemChangeSubject.onComplete();
-            }
-            if (threadPool != null) {
-                threadPool.shutdown();
             }
             if (databaseConnectionHandle != null) {
                 databaseConnectionHandle.close();

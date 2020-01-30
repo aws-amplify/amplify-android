@@ -38,7 +38,6 @@ import java.util.Objects;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * Synchronizes changed data between the {@link LocalStorageAdapter}
@@ -54,7 +53,7 @@ import io.reactivex.schedulers.Schedulers;
  * {@link ApiCategoryBehavior#mutate(String, Model, QueryPredicate, MutationType, Consumer, Consumer)} .
  *
  * Meanwhile, the SyncEngine also subscribes to remote changes via the
- * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, Consumer, Consumer, Action)} operations.
+ * {@link ApiCategoryBehavior#subscribe(String, GraphQLRequest, Consumer, Consumer, Consumer, Action)} operations.
  * Remote changes are written into the local storage without going into the journal.
  */
 // The generics get intense, so we use MODEL and SIC instead of just M and S.
@@ -105,8 +104,8 @@ public final class SyncEngine {
     private void startModelSubscriptions() {
         observationsToDispose.add(
             remoteModelMutations.observe()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
+                .subscribeOn(DataStoreSchedulers.standard())
+                .observeOn(DataStoreSchedulers.standard())
                 .flatMapSingle(this::applyMutationToLocalStorage)
                 .subscribe(
                     savedMutation -> LOG.info("Successfully applied remote mutation, locally:"),
@@ -146,8 +145,8 @@ public final class SyncEngine {
     private void startDrainingChangeJournal() {
         observationsToDispose.add(
             storageItemChangeJournal.observe()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
+                .subscribeOn(DataStoreSchedulers.standard())
+                .observeOn(DataStoreSchedulers.standard())
                 .flatMapSingle(this::publishToNetwork)
                 .flatMapSingle(storageItemChangeJournal::remove)
                 .subscribe(
@@ -172,8 +171,8 @@ public final class SyncEngine {
                 // Don't continue if the storage change was caused by the sync engine itself
                 return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
             })
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
+            .subscribeOn(DataStoreSchedulers.standard())
+            .observeOn(DataStoreSchedulers.standard())
             .flatMapSingle(storageItemChangeJournal::enqueue)
             .subscribe(
                 pendingChange -> LOG.info("Successfully enqueued " + pendingChange),

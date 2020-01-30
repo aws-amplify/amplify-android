@@ -20,7 +20,6 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import io.reactivex.Completable;
-import io.reactivex.schedulers.Schedulers;
 
 /**
  * "Hydrates" the local DataStore, using model metadata receive from the
@@ -47,8 +46,8 @@ final class DataHydration {
     Completable hydrate() {
         // Observe the remote model states,
         return remoteModelState.observe()
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
+            .subscribeOn(DataStoreSchedulers.standard())
+            .observeOn(DataStoreSchedulers.standard())
             // For each model state, provide it as an input to a completable operation
             .flatMapCompletable(modelWithMetadata ->
                 // Save the metadata if the data save succeeds

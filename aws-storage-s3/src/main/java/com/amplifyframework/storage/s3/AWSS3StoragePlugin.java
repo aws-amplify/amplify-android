@@ -19,6 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.AmplifyExecutors;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
@@ -50,7 +51,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * A plugin for the storage category which uses S3 as a storage
@@ -68,7 +68,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
      */
     public AWSS3StoragePlugin() {
         super();
-        this.executorService = Executors.newCachedThreadPool();
+        this.executorService = AmplifyExecutors.standard();
     }
 
     @NonNull

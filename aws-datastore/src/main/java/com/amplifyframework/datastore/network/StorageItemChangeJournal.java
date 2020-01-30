@@ -28,7 +28,6 @@ import java.util.Objects;
 
 import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 /*
@@ -112,8 +111,8 @@ final class StorageItemChangeJournal {
     @NonNull
     Observable<StorageItemChange<? extends Model>> observe() {
         return pendingStorageItemChanges
-            .observeOn(Schedulers.io())
-            .subscribeOn(Schedulers.io())
+            .observeOn(DataStoreSchedulers.standard())
+            .subscribeOn(DataStoreSchedulers.standard())
             .startWith(previouslyUnprocessedChanges())
             .filter(storageItemChange -> {
                 return !StorageItemChange.Initiator.SYNC_ENGINE.equals(storageItemChange.initiator());

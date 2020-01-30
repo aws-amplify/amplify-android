@@ -17,6 +17,7 @@ package com.amplifyframework.core.reachability;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.async.AmplifyExecutors;
 import com.amplifyframework.core.async.Cancelable;
 
 import java.util.HashMap;
@@ -24,8 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
@@ -46,7 +46,7 @@ public final class PeriodicReachabilityChecker implements Reachability {
 
     private final Map<Host, Set<OnHostReachableAction>> actions;
     private final Object actionsLock;
-    private final Executor workExecutor;
+    private final ExecutorService workExecutorService;
     private final long scanTimeMs;
     private final ScheduledExecutorService periodicCheckScheduler;
     private ScheduledFuture<?> periodicCheck;
@@ -54,9 +54,9 @@ public final class PeriodicReachabilityChecker implements Reachability {
     private PeriodicReachabilityChecker(long scanTimeMs) {
         this.actions = new HashMap<>();
         this.actionsLock = new Object();
-        this.workExecutor = Executors.newCachedThreadPool();
+        this.workExecutorService = AmplifyExecutors.standard();
         this.scanTimeMs = scanTimeMs;
-        this.periodicCheckScheduler = Executors.newSingleThreadScheduledExecutor();
+        this.periodicCheckScheduler = AmplifyExecutors.periodic();
         this.periodicCheck = null;
     }
 
@@ -148,7 +148,7 @@ public final class PeriodicReachabilityChecker implements Reachability {
 
     private void fulfillActions(@NonNull final Host host) {
         for (final OnHostReachableAction action : copyActions(host)) {
-            workExecutor.execute(() -> {
+            workExecutorService.execute(() -> {
                 removeAction(host, action);
                 action.onHostReachable(host);
             });
@@ -194,7 +194,7 @@ public final class PeriodicReachabilityChecker implements Reachability {
 
     private void checkReachability(@NonNull final Set<Host> hosts) {
         for (final Host host : hosts) {
-            workExecutor.execute(() -> {
+            workExecutorService.execute(() -> {
                 if (host.isReachable()) {
                     fulfillActions(host);
                 }

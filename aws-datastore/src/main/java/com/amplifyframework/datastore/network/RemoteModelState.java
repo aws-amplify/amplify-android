@@ -32,7 +32,6 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.schedulers.Schedulers;
 
 @SuppressWarnings("unused") // one sec
 final class RemoteModelState {
@@ -56,8 +55,8 @@ final class RemoteModelState {
         // Get an observable stream of the set of model classes.
         return Observable.fromIterable(modelProvider.models())
             // Heavy network traffic, we require this to be done on IO scheduler.
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
+            .subscribeOn(DataStoreSchedulers.standard())
+            .observeOn(DataStoreSchedulers.standard())
             // For each, get an Iterable<ModelWithMetadata<T>>, the result of a network sync
             .flatMapSingle(model -> syncModel(model, null))
             // Okay, but we want to flatten the Iterable back onto our Observable stream.

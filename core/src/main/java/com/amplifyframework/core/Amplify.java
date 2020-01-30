@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.core.async.AmplifyExecutors;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
@@ -38,7 +39,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -74,7 +74,7 @@ public final class Amplify {
     private static final AtomicBoolean CONFIGURATION_LOCK = new AtomicBoolean(false);
 
     // An executor on which categories may be initialized.
-    private static final ExecutorService INITIALIZATION_POOL = Executors.newFixedThreadPool(CATEGORIES.size());
+    private static final ExecutorService INITIALIZATION_POOL = AmplifyExecutors.standard();
 
     /**
      * Dis-allows instantiation of this utility class.
@@ -212,5 +212,4 @@ public final class Amplify {
         ADD,
         REMOVE
     }
-
 }

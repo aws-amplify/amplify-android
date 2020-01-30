@@ -19,6 +19,7 @@ import android.content.Context;
 
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.async.AmplifyExecutors;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
@@ -88,7 +89,9 @@ final class PinpointClientFactory {
                 Regions.fromName(pinpointAnalyticsPluginConfiguration.getRegion()),
                 ChannelType.GCM,
                 AWSMobileClient.getInstance()
-        ).withClientConfiguration(clientConfiguration);
+            )
+            .withClientConfiguration(clientConfiguration)
+            .withExecutor(AmplifyExecutors.standard());
 
         pinpointManager = new PinpointManager(pinpointConfiguration);
         return pinpointManager.getAnalyticsClient();

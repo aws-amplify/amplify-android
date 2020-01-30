@@ -16,10 +16,10 @@
 package com.amplifyframework.hub;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.amplifyframework.core.async.AmplifyExecutors;
 
 import org.json.JSONObject;
 
@@ -29,7 +29,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * An implementation of the {@link HubPlugin} which dispatches messages via
@@ -40,16 +39,13 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
     private final Map<SubscriptionToken, HubSubscription> subscriptionsByToken;
     private final Map<HubChannel, Set<HubSubscription>> subscriptionsByChannel;
     private final Object subscriptionsLock;
-
     private final ExecutorService executorService;
-    private final Handler mainHandler;
 
     AWSHubPlugin() {
         this.subscriptionsByToken = new HashMap<>();
         this.subscriptionsByChannel = new HashMap<>();
         this.subscriptionsLock = new Object();
-        this.executorService = Executors.newCachedThreadPool();
-        this.mainHandler = new Handler(Looper.getMainLooper());
+        this.executorService = AmplifyExecutors.standard();
     }
 
     @Override
@@ -69,7 +65,7 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
                     continue;
                 }
 
-                mainHandler.post(() -> subscription.getHubSubscriber().onEvent(hubEvent));
+                subscription.getHubSubscriber().onEvent(hubEvent);
             }
         });
     }

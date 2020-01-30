@@ -37,6 +37,7 @@ import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.AmplifyExecutors;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.util.UserAgent;
@@ -50,8 +51,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
+import okhttp3.Dispatcher;
 import okhttp3.OkHttpClient;
 
 /**
@@ -91,7 +92,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         this.authProvider = Objects.requireNonNull(apiAuthProvider);
         this.restApis = new HashSet<>();
         this.gqlApis = new HashSet<>();
-        this.executorService = Executors.newCachedThreadPool();
+        this.executorService = AmplifyExecutors.standard();
     }
 
     @NonNull
@@ -113,12 +114,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             final String apiName = entry.getKey();
             final ApiConfiguration apiConfiguration = entry.getValue();
             final EndpointType endpointType = apiConfiguration.getEndpointType();
-            final OkHttpClient.Builder builder = new OkHttpClient.Builder();
-            builder.addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string));
+
+            final OkHttpClient.Builder builder = new OkHttpClient.Builder()
+                .addNetworkInterceptor(UserAgentInterceptor.using(UserAgent::string))
+                .dispatcher(new Dispatcher(executorService));
             if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
             }
             final OkHttpClient okHttpClient = builder.build();
+
             final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);
             if (EndpointType.REST.equals(endpointType)) {
