@@ -19,16 +19,14 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
-import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
-import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
-import com.amazonaws.mobile.client.AWSMobileClient;
-
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -36,7 +34,6 @@ import java.util.concurrent.ExecutorService;
  */
 
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
-    private final IdentityIdProvider identityIdProvider;
     private final StorageService storageService;
     private final ExecutorService executorService;
     private final Consumer<StorageListResult> onSuccess;
@@ -51,14 +48,13 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
      * @param onError notified when list results cannot be obtained due to error
      */
     public AWSS3StorageListOperation(
-            @NonNull IdentityIdProvider identityIdProvider,
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageListRequest request,
             @NonNull Consumer<StorageListResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         super(request);
-        this.identityIdProvider = identityIdProvider;
         this.storageService = storageService;
         this.executorService = executorService;
         this.onSuccess = onSuccess;
@@ -69,35 +65,21 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
     @Override
     public void start() {
         executorService.submit(() -> {
-            String identityId;
-
             try {
-                identityId = identityIdProvider.getIdentityId();
+                List<StorageItem> listedItems = storageService.listFiles(
+                    S3RequestUtils.getServiceKey(
+                        getRequest().getAccessLevel(),
+                        getRequest().getTargetIdentityId(),
+                        getRequest().getPath()
+                    )
+                );
 
-                try {
-                    StorageListResult result = storageService.listFiles(
-                        S3RequestUtils.getServiceKey(
-                            getRequest().getAccessLevel(),
-                            identityId,
-                            getRequest().getPath(),
-                            getRequest().getTargetIdentityId()
-                        )
-                    );
-
-                    onSuccess.accept(result);
-                } catch (Exception exception) {
-                    onError.accept(new StorageException(
-                        "Something went wrong with your AWS S3 Storage list operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                }
+                onSuccess.accept(StorageListResult.fromItems(listedItems));
             } catch (Exception exception) {
                 onError.accept(new StorageException(
-                    "AWSMobileClient could not get user id.",
+                    "Something went wrong with your AWS S3 Storage list operation",
                     exception,
-                    "Check whether you initialized AWSMobileClient and waited for its success callback " +
-                            "before calling Amplify config."
+                    "See attached exception for more information and suggestions"
                 ));
             }
         });

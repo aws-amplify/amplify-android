@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.request;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
@@ -33,9 +35,9 @@ public final class AWSS3StorageListRequest {
      *                         (to override it from assuming the currently logged in user)
      */
     public AWSS3StorageListRequest(
-            String path,
-            StorageAccessLevel accessLevel,
-            String targetIdentityId
+            @NonNull String path,
+            @NonNull StorageAccessLevel accessLevel,
+            @NonNull String targetIdentityId
     ) {
         this.path = path;
         this.accessLevel = accessLevel;
@@ -46,6 +48,7 @@ public final class AWSS3StorageListRequest {
      * Gets the access level.
      * @return Access level
      */
+    @NonNull
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -54,6 +57,7 @@ public final class AWSS3StorageListRequest {
      * Gets the path.
      * @return path
      */
+    @NonNull
     public String getPath() {
         return path;
     }
@@ -62,6 +66,7 @@ public final class AWSS3StorageListRequest {
      * Gets the target identity id.
      * @return target identity id
      */
+    @NonNull
     public String getTargetIdentityId() {
         return targetIdentityId;
     }

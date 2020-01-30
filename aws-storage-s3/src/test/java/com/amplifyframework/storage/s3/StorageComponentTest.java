@@ -1,23 +1,38 @@
-package com.amplifyframework.storage;
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.storage.StorageCategory;
+import com.amplifyframework.storage.StorageCategoryConfiguration;
+import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
-import com.amplifyframework.storage.s3.AWSS3StoragePlugin;
-import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.RandomString;
 
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -36,12 +51,22 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+/**
+ * Test that storage category correctly invokes the methods via
+ * AWSS3StoragePlugin.
+ */
 @RunWith(RobolectricTestRunner.class)
-public class StorageComponentTest {
+public final class StorageComponentTest {
 
     private StorageCategory storage;
     private StorageService storageService;
 
+    /**
+     * Sets up Storage category by registering a mock AWSS3StoragePlugin
+     * instance to Amplify and configuring.
+     * @throws AmplifyException if Amplify fails to configure with mock
+     *         Storage category configuration.
+     */
     @Before
     public void setup() throws AmplifyException {
         this.storage = new StorageCategory();
@@ -68,6 +93,12 @@ public class StorageComponentTest {
         return configuration;
     }
 
+    /**
+     * Test that calling download file method from Storage category correctly
+     * invokes the registered AWSS3StoragePlugin instance and returns a
+     * {@link StorageDownloadFileResult} with correct file path.
+     * @throws StorageException when an error is encountered while downloading
+     */
     @Test
     public void testDownloadToFileGetsFile() throws StorageException {
         final String fromRemoteKey = RandomString.string();
@@ -76,9 +107,9 @@ public class StorageComponentTest {
         // Since we use a mock StorageService, it will return a null
         // result by default. We need a non-null transfer observer.
         // One option is to mock that, too.
-        TransferObserver transferObserver = mock(TransferObserver.class);
+        TransferObserver observer = mock(TransferObserver.class);
         when(storageService.downloadToFile(anyString(), any(File.class)))
-                .thenReturn(transferObserver);
+                .thenReturn(observer);
 
         // Since we use a mock TransferObserver, it has no internal logic
         // to know to call back the listener! So, we simulate the success
@@ -88,22 +119,28 @@ public class StorageComponentTest {
             listener.onStateChanged(0, TransferState.COMPLETED);
             return null;
         })
-                .when(transferObserver)
+                .when(observer)
                 .setTransferListener(any(TransferListener.class));
 
         StorageDownloadFileResult result =
-                Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) -> {
+                Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) ->
                     storage.downloadFile(
-                            fromRemoteKey,
-                            toLocalPath,
-                            onResult,
-                            onError
-                    );
-                });
+                        fromRemoteKey,
+                        toLocalPath,
+                        onResult,
+                        onError
+                    )
+                );
 
         assertEquals(toLocalPath, result.getFile().toString());
     }
 
+    /**
+     * Test that calling upload file method from Storage category correctly
+     * invokes the registered AWSS3StoragePlugin instance and returns a
+     * {@link StorageUploadFileResult} with correct remote key.
+     * @throws StorageException when an error is encountered while uploading
+     */
     @Test
     public void testUploadFileGetsKey() throws StorageException {
         final String toRemoteKey = RandomString.string();
@@ -112,9 +149,9 @@ public class StorageComponentTest {
         // Since we use a mock StorageService, it will return a null
         // result by default. We need a non-null transfer observer.
         // One option is to mock that, too.
-        TransferObserver transferObserver = mock(TransferObserver.class);
+        TransferObserver observer = mock(TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class)))
-                .thenReturn(transferObserver);
+                .thenReturn(observer);
 
         // Since we use a mock TransferObserver, it has no internal logic
         // to know to call back the listener! So, we simulate the success
@@ -124,26 +161,33 @@ public class StorageComponentTest {
             listener.onStateChanged(0, TransferState.COMPLETED);
             return null;
         })
-                .when(transferObserver)
+                .when(observer)
                 .setTransferListener(any(TransferListener.class));
 
         StorageUploadFileResult result =
-                Await.<StorageUploadFileResult, StorageException>result((onResult, onError) -> {
+                Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
                     storage.uploadFile(
-                            toRemoteKey,
-                            fromLocalPath,
-                            onResult,
-                            onError
-                    );
-                });
+                        toRemoteKey,
+                        fromLocalPath,
+                        onResult,
+                        onError
+                    )
+                );
 
         assertEquals(toRemoteKey, result.getKey());
     }
 
+    /**
+     * Test that calling list method from Storage category correctly
+     * invokes the registered AWSS3StoragePlugin instance and returns a
+     * {@link StorageListResult} with list of stored items.
+     * @throws StorageException when an error is encountered while listing
+     *         files inside storage
+     */
     @Test
     public void testListObject() throws StorageException {
         final String path = RandomString.string();
-        final StorageListResult.Item item = new StorageListResult.Item(
+        final StorageItem item = new StorageItem(
                 RandomString.string(),
                 0L,
                 new Date(),
@@ -152,32 +196,39 @@ public class StorageComponentTest {
         );
 
         when(storageService.listFiles(anyString()))
-                .thenReturn(StorageListResult.fromItems(Collections.singletonList(item)));
+                .thenReturn(Collections.singletonList(item));
 
         StorageListResult result =
-                Await.<StorageListResult, StorageException>result((onResult, onError) -> {
+                Await.<StorageListResult, StorageException>result((onResult, onError) ->
                     storage.list(
-                            path,
-                            onResult,
-                            onError
-                    );
-                });
+                        path,
+                        onResult,
+                        onError
+                    )
+                );
 
         assertEquals(item, result.getItems().get(0));
     }
 
+    /**
+     * Test that calling remove method from Storage category correctly
+     * invokes the registered AWSS3StoragePlugin instance and returns a
+     * {@link StorageRemoveResult} with key of removed item.
+     * @throws StorageException when an error is encountered while deleting
+     *         file from storage
+     */
     @Test
     public void testRemoveObjectGetsKey() throws StorageException {
         final String remoteKey = RandomString.string();
 
         StorageRemoveResult result =
-                Await.<StorageRemoveResult, StorageException>result((onResult, onError) -> {
+                Await.<StorageRemoveResult, StorageException>result((onResult, onError) ->
                     storage.remove(
-                            remoteKey,
-                            onResult,
-                            onError
-                    );
-                });
+                        remoteKey,
+                        onResult,
+                        onError
+                    )
+                );
 
         assertEquals(remoteKey, result.getKey());
     }

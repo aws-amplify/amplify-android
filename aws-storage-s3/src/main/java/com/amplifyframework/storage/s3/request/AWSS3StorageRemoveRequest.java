@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.request;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
@@ -33,9 +35,9 @@ public final class AWSS3StorageRemoveRequest {
      *                         (to override it from assuming the currently logged in user)
      */
     public AWSS3StorageRemoveRequest(
-            String key,
-            StorageAccessLevel accessLevel,
-            String targetIdentityId
+            @NonNull String key,
+            @NonNull StorageAccessLevel accessLevel,
+            @NonNull String targetIdentityId
     ) {
         this.key = key;
         this.accessLevel = accessLevel;
@@ -46,6 +48,7 @@ public final class AWSS3StorageRemoveRequest {
      * Gets the access level.
      * @return Access level
      */
+    @NonNull
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -54,6 +57,7 @@ public final class AWSS3StorageRemoveRequest {
      * Gets the storage key.
      * @return key
      */
+    @NonNull
     public String getKey() {
         return key;
     }
@@ -62,6 +66,7 @@ public final class AWSS3StorageRemoveRequest {
      * Gets the target identity id.
      * @return target identity id
      */
+    @NonNull
     public String getTargetIdentityId() {
         return targetIdentityId;
     }

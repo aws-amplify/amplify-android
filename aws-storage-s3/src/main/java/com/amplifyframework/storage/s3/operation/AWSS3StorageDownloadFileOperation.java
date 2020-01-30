@@ -18,17 +18,17 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
-import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
 
@@ -37,7 +37,6 @@ import java.io.File;
  */
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
-    private final IdentityIdProvider identityIdProvider;
     private final StorageService storageService;
     private final Consumer<StorageDownloadFileResult> onResult;
     private final Consumer<StorageException> onError;
@@ -52,13 +51,12 @@ public final class AWSS3StorageDownloadFileOperation
      * @param onError Notified upon download error
      */
     public AWSS3StorageDownloadFileOperation(
-            @NonNull IdentityIdProvider identityIdProvider,
             @NonNull StorageService storageService,
             @NonNull AWSS3StorageDownloadFileRequest request,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         super(request);
-        this.identityIdProvider = identityIdProvider;
         this.storageService = storageService;
         this.onResult = onSuccess;
         this.onError = onError;
@@ -71,13 +69,10 @@ public final class AWSS3StorageDownloadFileOperation
     public void start() {
         // Only start if it hasn't already been started
         if (transferObserver == null) {
-            String identityId = identityIdProvider.getIdentityId();
-
             String serviceKey = S3RequestUtils.getServiceKey(
                     getRequest().getAccessLevel(),
-                    identityId,
-                    getRequest().getKey(),
-                    getRequest().getTargetIdentityId()
+                    getRequest().getTargetIdentityId(),
+                    getRequest().getKey()
             );
 
             this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
