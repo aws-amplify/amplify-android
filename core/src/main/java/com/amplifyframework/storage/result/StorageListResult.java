@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.result;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.Result;
@@ -74,7 +75,12 @@ public final class StorageListResult implements Result {
          *             ETag reflects only changes to the contents of an object, not its metadata.
          * @param pluginResults Additional results specific to the plugin.
          */
-        public Item(String key, long size, Date lastModified, String eTag, Object pluginResults) {
+        public Item(
+                @NonNull String key,
+                @NonNull long size,
+                @NonNull Date lastModified,
+                @NonNull String eTag,
+                @Nullable Object pluginResults) {
             this.key = key;
             this.size = size;
             this.lastModified = lastModified;
@@ -86,6 +92,7 @@ public final class StorageListResult implements Result {
          * Get unique identifier of the object in storage.
          * @return Unique identifier of the object in storage.
          */
+        @NonNull
         public String getKey() {
             return key;
         }
@@ -94,6 +101,7 @@ public final class StorageListResult implements Result {
          * Get size in bytes of the object.
          * @return Size in bytes of the object
          */
+        @NonNull
         public long getSize() {
             return size;
         }
@@ -102,6 +110,7 @@ public final class StorageListResult implements Result {
          * Get the date the Object was Last Modified.
          * @return The date the Object was Last Modified
          */
+        @NonNull
         public Date getLastModified() {
             return lastModified;
         }
@@ -110,6 +119,7 @@ public final class StorageListResult implements Result {
          * Get an MD5 hash of the object.
          * @return An MD5 hash of the object
          */
+        @NonNull
         public String getETag() {
             return eTag;
         }
@@ -118,6 +128,7 @@ public final class StorageListResult implements Result {
          * Get additional results specific to the plugin.
          * @return Additional results specific to the plugin.
          */
+        @Nullable
         public Object getPluginResults() {
             return pluginResults;
         }

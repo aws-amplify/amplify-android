@@ -9,6 +9,9 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.result.StorageRemoveResult;
+import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.AWSS3StoragePlugin;
 import com.amplifyframework.storage.s3.IdentityIdProvider;
 import com.amplifyframework.storage.s3.service.StorageService;
@@ -23,6 +26,8 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
+import java.util.Collections;
+import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
@@ -64,18 +69,16 @@ public class StorageComponentTest {
     }
 
     @Test
-    public void downloadExistingFile() throws StorageException {
-        // TODO: what is a local path on Android? What's the protocol:// ?
-        // assets:// or file:// ?
-        String fromRemoteKey = RandomString.string();
-        String toLocalPath = RandomString.string();
+    public void testDownloadToFileGetsFile() throws StorageException {
+        final String fromRemoteKey = RandomString.string();
+        final String toLocalPath = RandomString.string();
 
         // Since we use a mock StorageService, it will return a null
         // result by default. We need a non-null transfer observer.
         // One option is to mock that, too.
         TransferObserver transferObserver = mock(TransferObserver.class);
         when(storageService.downloadToFile(anyString(), any(File.class)))
-            .thenReturn(transferObserver);
+                .thenReturn(transferObserver);
 
         // Since we use a mock TransferObserver, it has no internal logic
         // to know to call back the listener! So, we simulate the success
@@ -85,19 +88,97 @@ public class StorageComponentTest {
             listener.onStateChanged(0, TransferState.COMPLETED);
             return null;
         })
-        .when(transferObserver)
-        .setTransferListener(any(TransferListener.class));
+                .when(transferObserver)
+                .setTransferListener(any(TransferListener.class));
 
         StorageDownloadFileResult result =
-            Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) -> {
-                storage.downloadFile(
-                    fromRemoteKey,
-                    toLocalPath,
-                    onResult,
-                    onError
-                );
-            });
+                Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) -> {
+                    storage.downloadFile(
+                            fromRemoteKey,
+                            toLocalPath,
+                            onResult,
+                            onError
+                    );
+                });
 
         assertEquals(toLocalPath, result.getFile().toString());
+    }
+
+    @Test
+    public void testUploadFileGetsKey() throws StorageException {
+        final String toRemoteKey = RandomString.string();
+        final String fromLocalPath = RandomString.string();
+
+        // Since we use a mock StorageService, it will return a null
+        // result by default. We need a non-null transfer observer.
+        // One option is to mock that, too.
+        TransferObserver transferObserver = mock(TransferObserver.class);
+        when(storageService.uploadFile(anyString(), any(File.class)))
+                .thenReturn(transferObserver);
+
+        // Since we use a mock TransferObserver, it has no internal logic
+        // to know to call back the listener! So, we simulate the success
+        // callback, as part of our "happy path" test.
+        doAnswer(invocation -> {
+            TransferListener listener = invocation.getArgument(0);
+            listener.onStateChanged(0, TransferState.COMPLETED);
+            return null;
+        })
+                .when(transferObserver)
+                .setTransferListener(any(TransferListener.class));
+
+        StorageUploadFileResult result =
+                Await.<StorageUploadFileResult, StorageException>result((onResult, onError) -> {
+                    storage.uploadFile(
+                            toRemoteKey,
+                            fromLocalPath,
+                            onResult,
+                            onError
+                    );
+                });
+
+        assertEquals(toRemoteKey, result.getKey());
+    }
+
+    @Test
+    public void testListObject() throws StorageException {
+        final String path = RandomString.string();
+        final StorageListResult.Item item = new StorageListResult.Item(
+                RandomString.string(),
+                0L,
+                new Date(),
+                RandomString.string(),
+                null
+        );
+
+        when(storageService.listFiles(anyString()))
+                .thenReturn(StorageListResult.fromItems(Collections.singletonList(item)));
+
+        StorageListResult result =
+                Await.<StorageListResult, StorageException>result((onResult, onError) -> {
+                    storage.list(
+                            path,
+                            onResult,
+                            onError
+                    );
+                });
+
+        assertEquals(item, result.getItems().get(0));
+    }
+
+    @Test
+    public void testRemoveObjectGetsKey() throws StorageException {
+        final String remoteKey = RandomString.string();
+
+        StorageRemoveResult result =
+                Await.<StorageRemoveResult, StorageException>result((onResult, onError) -> {
+                    storage.remove(
+                            remoteKey,
+                            onResult,
+                            onError
+                    );
+                });
+
+        assertEquals(remoteKey, result.getKey());
     }
 }
