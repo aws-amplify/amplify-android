@@ -22,6 +22,7 @@ dependencies {
 
     implementation dependency.androidx.appcompat
     implementation dependency.okhttp
+    implementation dependency.conscrypt
     implementation dependency.gson
 
     implementation dependency.aws.authcore

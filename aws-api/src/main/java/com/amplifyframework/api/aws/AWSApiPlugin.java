@@ -106,6 +106,8 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         AWSApiPluginConfiguration pluginConfig =
                 AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
 
+        ConscryptLoader.load();
+
         final InterceptorFactory interceptorFactory =
                 new AppSyncSigV4SignerInterceptorFactory(authProvider);
 

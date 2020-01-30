@@ -68,6 +68,7 @@ ext {
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion"
         ],
         okhttp: 'com.squareup.okhttp3:okhttp:4.3.1',
+        conscrypt: 'org.conscrypt:conscrypt-android:2.2.1',
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
