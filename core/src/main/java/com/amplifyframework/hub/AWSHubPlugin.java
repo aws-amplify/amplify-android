@@ -16,8 +16,6 @@
 package com.amplifyframework.hub;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -36,25 +34,24 @@ import java.util.concurrent.Executors;
  * an {@link ExecutorService}.
  */
 public final class AWSHubPlugin extends HubPlugin<Void> {
-
     private final Map<SubscriptionToken, HubSubscription> subscriptionsByToken;
     private final Map<HubChannel, Set<HubSubscription>> subscriptionsByChannel;
     private final Object subscriptionsLock;
-
     private final ExecutorService executorService;
-    private final Handler mainHandler;
 
-    AWSHubPlugin() {
+    /**
+     * Constructs a new AWSHubPlugin.
+     */
+    public AWSHubPlugin() {
+        this.executorService = Executors.newCachedThreadPool();
         this.subscriptionsByToken = new HashMap<>();
         this.subscriptionsByChannel = new HashMap<>();
         this.subscriptionsLock = new Object();
-        this.executorService = Executors.newCachedThreadPool();
-        this.mainHandler = new Handler(Looper.getMainLooper());
     }
 
     @Override
     public <T> void publish(@NonNull final HubChannel hubChannel, @NonNull final HubEvent<T> hubEvent) {
-        executorService.submit(() -> {
+        executorService.execute(() -> {
             final Set<HubSubscription> safeSubscriptions = new HashSet<>();
             synchronized (subscriptionsLock) {
                 final Set<HubSubscription> channelSubscriptions = subscriptionsByChannel.get(hubChannel);
@@ -68,8 +65,7 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
                         !subscription.getHubEventFilter().filter(hubEvent)) {
                     continue;
                 }
-
-                mainHandler.post(() -> subscription.getHubSubscriber().onEvent(hubEvent));
+                executorService.execute(() -> subscription.getHubSubscriber().onEvent(hubEvent));
             }
         });
     }

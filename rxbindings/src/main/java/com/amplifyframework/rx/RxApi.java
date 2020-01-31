@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,18 +13,13 @@
  * permissions and limitations under the License.
  */
 
-include ':core'
+package com.amplifyframework.rx;
 
-// Plugin Modules
-include ':aws-analytics-pinpoint'
-include ':aws-api'
-include ':aws-storage-s3'
-include ':aws-datastore'
+import com.amplifyframework.api.ApiCategoryBehavior;
 
-// Test Utilities and assets
-include ':testutils'
-include ':testmodels'
-
-// Bindings and accessory modules
-include ':rxbindings'
-
+/**
+ * An Rx-idiomatic expression of Amplify's {@link ApiCategoryBehavior}s.
+ */
+@SuppressWarnings("WeakerAccess") // This is a public API.
+public interface RxApi extends RxRestApi, RxGraphQlApi {
+}
