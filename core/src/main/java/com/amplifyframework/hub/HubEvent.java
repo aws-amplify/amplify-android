@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import java.util.Objects;
 import java.util.UUID;
 
 /**
@@ -54,6 +55,19 @@ public final class HubEvent<T> {
     }
 
     /**
+     * Create a Hub event from an enumerated value.
+     * The {@link Enum#toString()} method will be used to generate the event name.
+     * @param enumerated An enumerated value
+     * @param <E> Type of enumeration
+     * @return A Hub event with the enumerate value's string representation as the event name
+     */
+    @NonNull
+    public static <E extends Enum<E>> HubEvent<?> create(@NonNull E enumerated) {
+        Objects.requireNonNull(enumerated);
+        return new HubEvent<>(enumerated.toString(), null);
+    }
+
+    /**
      * Creates a Hub event with a name and associated data.
      * @param name Name for the event
      * @param data Data associated with the event
@@ -63,6 +77,21 @@ public final class HubEvent<T> {
     @NonNull
     public static <T> HubEvent<T> create(@NonNull String name, @NonNull T data) {
         return new HubEvent<>(name, data);
+    }
+
+    /**
+     * Creates a Hub event from an enum (to generate the event name) and a data item.
+     * @param enumerated An enumeration value
+     * @param data Data to populate in event
+     * @param <E> An enumeration type, {@link Enum#toString()} will be used to generate the event name
+     * @param <T> Type of event data
+     * @return A HubEvent
+     */
+    @NonNull
+    public static <T, E extends Enum<E>> HubEvent<T> create(@NonNull E enumerated, @NonNull T data) {
+        Objects.requireNonNull(enumerated);
+        Objects.requireNonNull(data);
+        return new HubEvent<>(enumerated.toString(), data);
     }
 
     /**
