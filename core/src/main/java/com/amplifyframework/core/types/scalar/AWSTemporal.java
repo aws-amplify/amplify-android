@@ -13,11 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws.scalar;
+package com.amplifyframework.core.types.scalar;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 import androidx.core.util.ObjectsCompat;
 
 import java.text.ParseException;
@@ -44,11 +43,11 @@ import java.util.concurrent.TimeUnit;
  *
  * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html">AWS AppSync Defined Scalars</a>
  */
-abstract class AWSTemporal implements Comparable<AWSTemporal> {
-    @VisibleForTesting static final String UTC = "UTC";
-    @VisibleForTesting static final TimeZone UTC_TIMEZONE = TimeZone.getTimeZone(UTC);
-    @VisibleForTesting static final char UTC_INDICATOR = 'Z';
-    @VisibleForTesting static final String EXTENDED_TIMEZONE_ID = "extended-tz";
+public abstract class AWSTemporal implements Comparable<AWSTemporal> {
+    private static final String UTC = "UTC";
+    private static final TimeZone UTC_TIMEZONE = TimeZone.getTimeZone(UTC);
+    private static final char UTC_INDICATOR = 'Z';
+    private static final String EXTENDED_TIMEZONE_ID = "extended-tz";
 
     private final Calendar calendar;
 

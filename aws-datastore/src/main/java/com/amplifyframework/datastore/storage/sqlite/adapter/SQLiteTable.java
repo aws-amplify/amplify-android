@@ -19,9 +19,9 @@ import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PrimaryKey;
-import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.core.model.types.SqliteDataType;
-import com.amplifyframework.core.model.types.internal.TypeConverter;
+import com.amplifyframework.core.types.JavaFieldType;
+import com.amplifyframework.core.types.SqliteDataType;
+import com.amplifyframework.core.types.internal.TypeConverter;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Collections;

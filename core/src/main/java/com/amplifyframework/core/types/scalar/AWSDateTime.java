@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws.scalar;
+package com.amplifyframework.core.types.scalar;
 
 import androidx.annotation.NonNull;
 
@@ -133,6 +133,18 @@ public final class AWSDateTime extends AWSTemporal {
      */
     public int getMillisecond() {
         return get(Calendar.MILLISECOND);
+    }
+
+    /**
+     * Creates an instance of AWSDateTime representing current time.
+     * @return an instance of AWSDateTime representing current time
+     */
+    @NonNull
+    public static AWSDateTime now() {
+        return new AWSDateTime(
+                new Date(System.currentTimeMillis()),
+                TimeZone.getDefault()
+        );
     }
 
     /**

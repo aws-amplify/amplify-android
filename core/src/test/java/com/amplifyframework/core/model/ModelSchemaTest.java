@@ -16,7 +16,7 @@
 package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.core.types.JavaFieldType;
 import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Test;

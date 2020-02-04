@@ -15,6 +15,11 @@
 
 package com.amplifyframework.api.aws.scalar;
 
+import com.amplifyframework.core.types.scalar.AWSDate;
+import com.amplifyframework.core.types.scalar.AWSDateTime;
+import com.amplifyframework.core.types.scalar.AWSTemporal;
+import com.amplifyframework.core.types.scalar.AWSTime;
+
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.TypeAdapter;

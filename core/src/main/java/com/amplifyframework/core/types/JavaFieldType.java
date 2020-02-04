@@ -13,11 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.types;
+package com.amplifyframework.core.types;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.types.scalar.AWSDate;
+import com.amplifyframework.core.types.scalar.AWSDateTime;
+import com.amplifyframework.core.types.scalar.AWSTime;
 
 /**
  * Enumerate the types used in the fields
@@ -52,12 +55,17 @@ public enum JavaFieldType {
     /**
      * Represents the java.util.Date data type.
      */
-    DATE(java.util.Date.class.getSimpleName()),
+    DATE(AWSDate.class.getSimpleName()),
 
     /**
      * Represents the java.sql.Time data type.
      */
-    TIME(java.sql.Time.class.getSimpleName()),
+    TIME(AWSTime.class.getSimpleName()),
+
+    /**
+     * Represents the java.sql.Time data type.
+     */
+    DATE_TIME(AWSDateTime.class.getSimpleName()),
 
     /**
      * Represents the Enum type.

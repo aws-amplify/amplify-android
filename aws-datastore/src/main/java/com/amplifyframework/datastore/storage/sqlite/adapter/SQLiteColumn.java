@@ -16,7 +16,7 @@
 package com.amplifyframework.datastore.storage.sqlite.adapter;
 
 import com.amplifyframework.core.model.PrimaryKey;
-import com.amplifyframework.core.model.types.SqliteDataType;
+import com.amplifyframework.core.types.SqliteDataType;
 
 /**
  * Adapts a {@link com.amplifyframework.core.model.ModelField}

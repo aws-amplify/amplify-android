@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws.scalar;
+package com.amplifyframework.core.types.scalar;
 
 import androidx.annotation.NonNull;
 

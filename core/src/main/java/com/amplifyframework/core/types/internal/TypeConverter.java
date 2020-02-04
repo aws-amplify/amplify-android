@@ -13,13 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.types.internal;
+package com.amplifyframework.core.types.internal;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.model.types.AWSAppSyncScalarType;
-import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.core.model.types.SqliteDataType;
+import com.amplifyframework.core.types.AWSAppSyncScalarType;
+import com.amplifyframework.core.types.JavaFieldType;
+import com.amplifyframework.core.types.SqliteDataType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -48,7 +48,7 @@ public final class TypeConverter {
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.BOOLEAN, JavaFieldType.BOOLEAN);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE, JavaFieldType.DATE);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIME, JavaFieldType.TIME);
-        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE_TIME, JavaFieldType.DATE);
+        AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_DATE_TIME, JavaFieldType.DATE_TIME);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_TIMESTAMP, JavaFieldType.LONG);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_EMAIL, JavaFieldType.STRING);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_JSON, JavaFieldType.STRING);

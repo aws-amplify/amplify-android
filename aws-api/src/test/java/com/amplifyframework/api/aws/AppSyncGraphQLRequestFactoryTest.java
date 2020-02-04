@@ -20,6 +20,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.types.scalar.AWSDate;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.Resources;
@@ -92,7 +93,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
             .firstName("Tony")
             .lastName("Swanson")
             .age(19)
-            .dob(new Date(2000, 1, 15))
+            .dob(new AWSDate(new Date(2000, 1, 15)))
             .id(expectedId)
             .relationship(MaritalStatus.single)
             .build();

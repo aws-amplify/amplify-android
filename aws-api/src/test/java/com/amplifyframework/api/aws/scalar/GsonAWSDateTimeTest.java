@@ -15,6 +15,10 @@
 
 package com.amplifyframework.api.aws.scalar;
 
+import com.amplifyframework.core.types.scalar.AWSDate;
+import com.amplifyframework.core.types.scalar.AWSDateTime;
+import com.amplifyframework.core.types.scalar.AWSTime;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.junit.Before;
@@ -64,7 +68,8 @@ public class GsonAWSDateTimeTest {
      */
     @Test
     public void testDateWithoutOffset() {
-        cal = new GregorianCalendar(AWSTemporal.UTC_TIMEZONE);
+        TimeZone utc = TimeZone.getTimeZone("UTC");
+        cal = new GregorianCalendar(utc);
         cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
@@ -169,7 +174,8 @@ public class GsonAWSDateTimeTest {
      */
     @Test
     public void testTimeWithoutOffset() {
-        cal = new GregorianCalendar(AWSTemporal.UTC_TIMEZONE);
+        TimeZone utc = TimeZone.getTimeZone("UTC");
+        cal = new GregorianCalendar(utc);
         cal.setTimeInMillis(0);
         cal.set(Calendar.HOUR_OF_DAY, 12);
         cal.set(Calendar.MINUTE, 34);
