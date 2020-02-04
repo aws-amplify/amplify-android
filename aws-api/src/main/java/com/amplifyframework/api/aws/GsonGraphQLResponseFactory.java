@@ -19,8 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.scalar.AWSTemporalTypeAdapter;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.types.scalar.AWSDate;
+import com.amplifyframework.core.types.scalar.AWSDateTime;
+import com.amplifyframework.core.types.scalar.AWSTime;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -62,7 +64,9 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private static Gson defaultGsonInstance() {
         return new GsonBuilder()
                 .registerTypeAdapter(List.class, new GsonListDeserializer())
-                .registerTypeAdapterFactory(new AWSTemporalTypeAdapter())
+                .registerTypeAdapter(AWSDate.class, new NullSafeParseAdapter<>(AWSDate::parse))
+                .registerTypeAdapter(AWSTime.class, new NullSafeParseAdapter<>(AWSTime::parse))
+                .registerTypeAdapter(AWSDateTime.class, new NullSafeParseAdapter<>(AWSDateTime::parse))
                 .create();
     }
 

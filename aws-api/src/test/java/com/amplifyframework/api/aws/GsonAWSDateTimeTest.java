@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.aws.scalar;
+package com.amplifyframework.api.aws;
 
 import com.amplifyframework.core.types.scalar.AWSDate;
 import com.amplifyframework.core.types.scalar.AWSDateTime;
@@ -43,7 +43,6 @@ import static org.junit.Assert.assertEquals;
  */
 @SuppressWarnings("MagicNumber")
 public class GsonAWSDateTimeTest {
-    private static Calendar cal;
     private static Gson gson;
 
     /**
@@ -52,7 +51,9 @@ public class GsonAWSDateTimeTest {
     @Before
     public void setup() {
         gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new AWSTemporalTypeAdapter())
+                .registerTypeAdapter(AWSDate.class, new NullSafeParseAdapter<>(AWSDate::parse))
+                .registerTypeAdapter(AWSTime.class, new NullSafeParseAdapter<>(AWSTime::parse))
+                .registerTypeAdapter(AWSDateTime.class, new NullSafeParseAdapter<>(AWSDateTime::parse))
                 .create();
     }
 
@@ -69,7 +70,7 @@ public class GsonAWSDateTimeTest {
     @Test
     public void testDateWithoutOffset() {
         TimeZone utc = TimeZone.getTimeZone("UTC");
-        cal = new GregorianCalendar(utc);
+        Calendar cal = new GregorianCalendar(utc);
         cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
@@ -93,7 +94,7 @@ public class GsonAWSDateTimeTest {
     @Test
     public void testDateWithOffset() {
         TimeZone gmtPlus2 = TimeZone.getTimeZone("GMT+02");
-        cal = new GregorianCalendar(gmtPlus2);
+        Calendar cal = new GregorianCalendar(gmtPlus2);
         cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
@@ -115,7 +116,7 @@ public class GsonAWSDateTimeTest {
     @Test
     public void testDateTimeWithMilliseconds() {
         TimeZone gmtMinus4 = TimeZone.getTimeZone("GMT-04");
-        cal = new GregorianCalendar(gmtMinus4);
+        Calendar cal = new GregorianCalendar(gmtMinus4);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
         cal.set(Calendar.DAY_OF_MONTH, 11);
@@ -144,7 +145,7 @@ public class GsonAWSDateTimeTest {
         // +30 seconds custom timezone
         long offsetInMillis = TimeUnit.SECONDS.toMillis(30);
         TimeZone custom = new SimpleTimeZone((int) offsetInMillis, "custom");
-        cal = new GregorianCalendar(custom);
+        Calendar cal = new GregorianCalendar(custom);
         cal.setTimeInMillis(0);
         cal.set(Calendar.YEAR, 2020);
         cal.set(Calendar.MONTH, Calendar.JANUARY);
@@ -175,7 +176,7 @@ public class GsonAWSDateTimeTest {
     @Test
     public void testTimeWithoutOffset() {
         TimeZone utc = TimeZone.getTimeZone("UTC");
-        cal = new GregorianCalendar(utc);
+        Calendar cal = new GregorianCalendar(utc);
         cal.setTimeInMillis(0);
         cal.set(Calendar.HOUR_OF_DAY, 12);
         cal.set(Calendar.MINUTE, 34);
@@ -199,7 +200,7 @@ public class GsonAWSDateTimeTest {
     @Test
     public void testTimeWithOffset() {
         TimeZone gmtPlus2 = TimeZone.getTimeZone("GMT+02");
-        cal = new GregorianCalendar(gmtPlus2);
+        Calendar cal = new GregorianCalendar(gmtPlus2);
         cal.setTimeInMillis(0);
         cal.set(Calendar.HOUR_OF_DAY, 12);
         cal.set(Calendar.MINUTE, 34);
