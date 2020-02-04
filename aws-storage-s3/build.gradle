@@ -26,6 +26,7 @@ dependencies {
     }
 
     testImplementation project(path: ':testutils')
+    testImplementation dependency.androidx.test.core
     testImplementation dependency.junit
     testImplementation dependency.mockito
     testImplementation dependency.robolectric

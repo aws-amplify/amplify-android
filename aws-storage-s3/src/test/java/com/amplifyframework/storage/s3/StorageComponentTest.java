@@ -15,7 +15,7 @@
 
 package com.amplifyframework.storage.s3;
 
-import android.content.Context;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.storage.StorageCategory;
@@ -74,19 +74,18 @@ public final class StorageComponentTest {
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
         IdentityIdProvider identityIdProvider = RandomString::string;
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, identityIdProvider));
-        this.storage.configure(buildConfiguration(), mock(Context.class));
+        this.storage.configure(buildConfiguration(), ApplicationProvider.getApplicationContext());
     }
 
     private static StorageCategoryConfiguration buildConfiguration() {
         StorageCategoryConfiguration configuration = new StorageCategoryConfiguration();
-        JSONObject storageJson;
         try {
-            storageJson = new JSONObject()
-                .put("plugins", new JSONObject()
+            configuration.populateFromJSON(
+                new JSONObject().put("plugins", new JSONObject()
                     .put("awsS3StoragePlugin", new JSONObject()
                         .put("region", "us-east-1")
-                        .put("bucket", "hamburger-bucket")));
-            configuration.populateFromJSON(storageJson);
+                        .put("bucket", "hamburger-bucket")))
+            );
         } catch (JSONException jsonException) {
             throw new RuntimeException(jsonException);
         }
@@ -118,8 +117,7 @@ public final class StorageComponentTest {
             TransferListener listener = invocation.getArgument(0);
             listener.onStateChanged(0, TransferState.COMPLETED);
             return null;
-        })
-                .when(observer)
+        }).when(observer)
                 .setTransferListener(any(TransferListener.class));
 
         StorageDownloadFileResult result =
@@ -136,6 +134,44 @@ public final class StorageComponentTest {
     }
 
     /**
+     * Test that calling download file method from Storage category fails
+     * successfully when {@link TransferListener} emits an error.
+     */
+    @Test
+    public void testDownloadError() {
+        final StorageException testError = new StorageException(
+            "Test error message",
+            "Test recovery message"
+        );
+
+        final String fromRemoteKey = RandomString.string();
+        final String toLocalPath = RandomString.string();
+
+        TransferObserver observer = mock(TransferObserver.class);
+        when(storageService.downloadToFile(anyString(), any(File.class)))
+                .thenReturn(observer);
+
+        doAnswer(invocation -> {
+            TransferListener listener = invocation.getArgument(0);
+            listener.onError(0, testError);
+            return null;
+        }).when(observer)
+                .setTransferListener(any(TransferListener.class));
+
+        StorageException error =
+                Await.<StorageDownloadFileResult, StorageException>error((onResult, onError) ->
+                    storage.downloadFile(
+                        fromRemoteKey,
+                        toLocalPath,
+                        onResult,
+                        onError
+                    )
+                );
+
+        assertEquals(testError, error.getCause());
+    }
+
+    /**
      * Test that calling upload file method from Storage category correctly
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageUploadFileResult} with correct remote key.
@@ -146,22 +182,15 @@ public final class StorageComponentTest {
         final String toRemoteKey = RandomString.string();
         final String fromLocalPath = RandomString.string();
 
-        // Since we use a mock StorageService, it will return a null
-        // result by default. We need a non-null transfer observer.
-        // One option is to mock that, too.
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class)))
                 .thenReturn(observer);
 
-        // Since we use a mock TransferObserver, it has no internal logic
-        // to know to call back the listener! So, we simulate the success
-        // callback, as part of our "happy path" test.
         doAnswer(invocation -> {
             TransferListener listener = invocation.getArgument(0);
             listener.onStateChanged(0, TransferState.COMPLETED);
             return null;
-        })
-                .when(observer)
+        }).when(observer)
                 .setTransferListener(any(TransferListener.class));
 
         StorageUploadFileResult result =
@@ -175,6 +204,44 @@ public final class StorageComponentTest {
                 );
 
         assertEquals(toRemoteKey, result.getKey());
+    }
+
+    /**
+     * Test that calling upload file method from Storage category fails
+     * successfully when {@link TransferListener} emits an error.
+     */
+    @Test
+    public void testUploadError() {
+        final StorageException testError = new StorageException(
+                "Test error message",
+                "Test recovery message"
+        );
+
+        final String toRemoteKey = RandomString.string();
+        final String fromLocalPath = RandomString.string();
+
+        TransferObserver observer = mock(TransferObserver.class);
+        when(storageService.uploadFile(anyString(), any(File.class)))
+                .thenReturn(observer);
+
+        doAnswer(invocation -> {
+            TransferListener listener = invocation.getArgument(0);
+            listener.onError(0, testError);
+            return null;
+        }).when(observer)
+                .setTransferListener(any(TransferListener.class));
+
+        StorageException error =
+                Await.<StorageUploadFileResult, StorageException>error((onResult, onError) ->
+                    storage.uploadFile(
+                        toRemoteKey,
+                        fromLocalPath,
+                        onResult,
+                        onError
+                    )
+                );
+
+        assertEquals(testError, error.getCause());
     }
 
     /**

@@ -17,6 +17,7 @@ package com.amplifyframework.storage;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.Date;
 
@@ -44,7 +45,8 @@ public final class StorageItem {
             long size,
             @NonNull Date lastModified,
             @NonNull String eTag,
-            @Nullable Object pluginResults) {
+            @Nullable Object pluginResults
+    ) {
         this.key = key;
         this.size = size;
         this.lastModified = lastModified;
@@ -94,5 +96,53 @@ public final class StorageItem {
     @Nullable
     public Object getPluginResults() {
         return pluginResults;
+    }
+
+    @Override
+    @NonNull
+    public String toString() {
+        return "StorageItem{" +
+                "key='" + key + '\'' +
+                ", size=" + size +
+                ", lastModified=" + lastModified.toString() +
+                ", eTag='" + eTag + '\'' +
+                ", pluginResults=" + pluginResults +
+                '}';
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof StorageItem)) {
+            return false;
+        }
+
+        StorageItem that = (StorageItem) obj;
+        if (!ObjectsCompat.equals(key, that.key)) {
+            return false;
+        }
+        if (size != that.size) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(lastModified, that.lastModified)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(eTag, that.eTag)) {
+            return false;
+        }
+        return ObjectsCompat.equals(pluginResults, that.pluginResults);
+    }
+
+    @Override
+    @SuppressWarnings("MagicNumber")
+    public int hashCode() {
+        int result = key.hashCode();
+        result = 31 * result + (int) size;
+        result = 31 * result + lastModified.hashCode();
+        result = 31 * result + eTag.hashCode();
+        result = 31 * result + (pluginResults != null ? pluginResults.hashCode() : 0);
+        return result;
     }
 }
