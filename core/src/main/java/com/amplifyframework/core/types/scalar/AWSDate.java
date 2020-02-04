@@ -139,7 +139,7 @@ public final class AWSDate extends AWSTemporal {
         calendar.set(Calendar.MONTH, month - 1);
         calendar.set(Calendar.DAY_OF_MONTH, day);
 
-        return new AWSDate(calendar.getTime());
+        return new AWSDate(calendar.getTime(), calendar.getTimeZone());
     }
 
     @Override

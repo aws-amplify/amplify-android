@@ -152,7 +152,7 @@ public final class AWSTime extends AWSTemporal {
         calendar.set(Calendar.SECOND, second);
         calendar.set(Calendar.MILLISECOND, millisecond);
 
-        return new AWSTime(calendar.getTime());
+        return new AWSTime(calendar.getTime(), calendar.getTimeZone());
     }
 
     @Override
