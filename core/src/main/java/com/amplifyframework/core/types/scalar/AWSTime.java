@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import java.text.ParseException;
 import java.text.ParsePosition;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -41,14 +40,18 @@ import java.util.TimeZone;
  */
 public final class AWSTime extends AWSTemporal {
 
-    private static final Set<Integer> COMPONENTS =
-        new HashSet<>(Arrays.asList(
-            Calendar.HOUR_OF_DAY,
-            Calendar.MINUTE,
-            Calendar.SECOND,
-            Calendar.MILLISECOND,
-            Calendar.ZONE_OFFSET
-        ));
+    private static final Set<Integer> COMPONENTS = new HashSet<>();
+
+    static {
+        COMPONENTS.add(Calendar.YEAR);
+        COMPONENTS.add(Calendar.MONTH);
+        COMPONENTS.add(Calendar.DAY_OF_MONTH);
+        COMPONENTS.add(Calendar.HOUR_OF_DAY);
+        COMPONENTS.add(Calendar.MINUTE);
+        COMPONENTS.add(Calendar.SECOND);
+        COMPONENTS.add(Calendar.MILLISECOND);
+        COMPONENTS.add(Calendar.ZONE_OFFSET);
+    }
 
     /**
      * Instantiate an AWSTime from another AWSTemporal instance.
