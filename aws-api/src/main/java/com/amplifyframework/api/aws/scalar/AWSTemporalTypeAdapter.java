@@ -26,7 +26,6 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.text.ParseException;
-import java.text.ParsePosition;
 
 /**
  * Factory to be registered with GSON when dealing with AWS AppSync
@@ -65,9 +64,18 @@ public final class AWSTemporalTypeAdapter implements TypeAdapterFactory {
                 }
                 final String json = in.nextString();
                 try {
-                    return AWSDateTimeUtils.parse(json, new ParsePosition(0), rawType);
+                    if (AWSDate.class.equals(rawType)) {
+                        return AWSDate.parse(json);
+                    }
+                    if (AWSTime.class.equals(rawType)) {
+                        return AWSTime.parse(json);
+                    }
+                    if (AWSDateTime.class.equals(rawType)) {
+                        return AWSDateTime.parse(json);
+                    }
+                    return null;
                 } catch (ParseException error) {
-                    throw new JsonSyntaxException(json, error);
+                    throw new JsonSyntaxException("Encountered an error while parsing " + json, error);
                 }
             }
         };

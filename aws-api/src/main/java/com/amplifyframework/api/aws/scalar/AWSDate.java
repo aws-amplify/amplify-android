@@ -17,8 +17,15 @@ package com.amplifyframework.api.aws.scalar;
 
 import androidx.annotation.NonNull;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -32,14 +39,47 @@ import java.util.TimeZone;
  *
  * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html">AWS AppSync Defined Scalars</a>
  */
-public class AWSDate extends AWSTemporal {
+public final class AWSDate extends AWSTemporal {
+
+    private static final Set<Integer> COMPONENTS =
+        new HashSet<>(Arrays.asList(
+            Calendar.YEAR,
+            Calendar.MONTH,
+            Calendar.DAY_OF_MONTH,
+            Calendar.ZONE_OFFSET
+        ));
+
     /**
-     * Constructs an instance of AWSDate.
-     * @param timezone Timezone to associate with this date
-     * @param time Milliseconds past since UNIX Epoch
+     * Instantiate an AWSDate from another AWSTemporal instance.
+     * @param scalar An instance of AWSTemporal class
      */
-    public AWSDate(@NonNull TimeZone timezone, long time) {
-        super(timezone, time);
+    public AWSDate(@NonNull AWSTemporal scalar) {
+        super(scalar);
+    }
+
+    /**
+     * Instantiate an AWSDate from {@link Date} with UTC timezone.
+     * @param date Java 7 Date instance
+     */
+    public AWSDate(@NonNull Date date) {
+        super(date);
+    }
+
+    /**
+     * Instantiate an AWSDate from {@link Date} with specific
+     * timezone to associate.
+     * @param date Java 7 Date instance
+     * @param timezone Timezone to associate with this date
+     */
+    public AWSDate(@NonNull Date date,
+                   @NonNull TimeZone timezone) {
+        super(date, timezone);
+    }
+
+    @Override
+    @NonNull
+    Set<Integer> getCalendarComponentFields() {
+        return COMPONENTS;
     }
 
     /**
@@ -66,33 +106,50 @@ public class AWSDate extends AWSTemporal {
         return get(Calendar.DAY_OF_MONTH);
     }
 
+    /**
+     * Parses a string following "YYYY-MM-DDZ" format into an
+     * instance of {@link AWSDate} with equivalent UNIX epoch time.
+     * @param date String to be parsed
+     * @return Instance of AWSDate
+     * @throws ParseException if an error is encountered while parsing
+     */
+    @NonNull
+    @SuppressWarnings("MagicNumber")
+    public static AWSDate parse(@NonNull String date) throws ParseException {
+        ParsePosition pos = new ParsePosition(0);
+
+        int year = parseInt(date, pos, 4);
+        if (!verifyCharAt(date, pos, '-')) {
+            throw new ParseException("Expected `-`.", pos.getIndex());
+        }
+
+        int month = parseInt(date, pos, 2);
+        if (!verifyCharAt(date, pos, '-')) {
+            throw new ParseException("Expected `-`.", pos.getIndex());
+        }
+
+        int day = parseInt(date, pos, 2);
+
+        TimeZone timezone = parseTimeZone(date, pos);
+
+        Calendar calendar = new GregorianCalendar(timezone);
+        calendar.setLenient(false);
+        calendar.setTimeInMillis(0);
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, day);
+
+        return new AWSDate(calendar.getTime());
+    }
+
     @Override
     @NonNull
     public String toString() {
-        String timezone = AWSDateTimeUtils.format(getTimeZone());
+        String timezone = formatTimeZone(getTimeZone());
         return String.format(Locale.US, "%04d-%02d-%02d%s",
                 getYear(),
                 getMonth() + 1,
                 getDayOfMonth(),
                 timezone);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof AWSDate)) {
-            return false;
-        }
-
-        AWSDate that = (AWSDate) obj;
-        if (this.getTimeZone().getRawOffset() != that.getTimeZone().getRawOffset()) {
-            return false;
-        }
-        if (this.getYear() != that.getYear()) {
-            return false;
-        }
-        if (this.getMonth() != that.getMonth()) {
-            return false;
-        }
-        return this.getDayOfMonth() == that.getDayOfMonth();
     }
 }

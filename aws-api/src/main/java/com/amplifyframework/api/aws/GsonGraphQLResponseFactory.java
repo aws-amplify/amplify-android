@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.scalar.AWSTemporalTypeAdapter;
@@ -45,18 +47,23 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
      * Default constructor using default Gson object.
      */
     GsonGraphQLResponseFactory() {
-        this(new GsonBuilder()
-                .registerTypeAdapter(List.class, new GsonListDeserializer())
-                .registerTypeAdapterFactory(new AWSTemporalTypeAdapter())
-                .create());
+        this(defaultGsonInstance());
     }
 
     /**
      * Constructor using customized Gson object.
      * @param gson custom Gson object
      */
-    GsonGraphQLResponseFactory(Gson gson) {
+    private GsonGraphQLResponseFactory(@NonNull Gson gson) {
         this.gson = gson;
+    }
+
+    @NonNull
+    private static Gson defaultGsonInstance() {
+        return new GsonBuilder()
+                .registerTypeAdapter(List.class, new GsonListDeserializer())
+                .registerTypeAdapterFactory(new AWSTemporalTypeAdapter())
+                .create();
     }
 
     @Override

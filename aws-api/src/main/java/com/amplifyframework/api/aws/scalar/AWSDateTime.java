@@ -17,7 +17,15 @@ package com.amplifyframework.api.aws.scalar;
 
 import androidx.annotation.NonNull;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -30,68 +38,192 @@ import java.util.TimeZone;
  *
  * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html">AWS AppSync Defined Scalars</a>
  */
-public final class AWSDateTime extends AWSDate {
-    private final AWSTime time;
+public final class AWSDateTime extends AWSTemporal {
+
+    private static final Set<Integer> COMPONENTS =
+        new HashSet<>(Arrays.asList(
+            Calendar.YEAR,
+            Calendar.MONTH,
+            Calendar.DAY_OF_MONTH,
+            Calendar.HOUR_OF_DAY,
+            Calendar.MINUTE,
+            Calendar.SECOND,
+            Calendar.MILLISECOND,
+            Calendar.ZONE_OFFSET
+        ));
 
     /**
-     * Constructs an instance of AWSDateTime.
-     * @param timezone Timezone to associate with this datetime
-     * @param time Milliseconds past since UNIX Epoch
+     * Instantiate an AWSDateTime from another AWSTemporal instance.
+     * @param scalar An instance of AWSTemporal class
      */
-    public AWSDateTime(@NonNull TimeZone timezone, long time) {
-        super(timezone, time);
-        this.time = new AWSTime(timezone, time);
+    public AWSDateTime(@NonNull AWSTemporal scalar) {
+        super(scalar);
     }
 
     /**
-     * Returns the hour value stored in this time.
+     * Instantiate an AWSDateTime from {@link Date} with UTC timezone.
+     * @param date Java 7 Date instance
+     */
+    public AWSDateTime(@NonNull Date date) {
+        super(date);
+    }
+
+    /**
+     * Instantiate an AWSDateTime from {@link Date} with specific
+     * timezone to associate.
+     * @param date Java 7 Date instance
+     * @param timezone Timezone to associate with this date
+     */
+    public AWSDateTime(@NonNull Date date,
+                       @NonNull TimeZone timezone) {
+        super(date, timezone);
+    }
+
+    /**
+     * Returns the year value stored in this datetime.
+     * @return the year value
+     */
+    public int getYear() {
+        return get(Calendar.YEAR);
+    }
+
+    /**
+     * Returns the month value stored in this datetime.
+     * @return the month value
+     */
+    public int getMonth() {
+        return get(Calendar.MONTH);
+    }
+
+    /**
+     * Returns the day of month value stored in this datetime.
+     * @return the day of month value
+     */
+    public int getDayOfMonth() {
+        return get(Calendar.DAY_OF_MONTH);
+    }
+
+    /**
+     * Returns the hour value stored in this datetime.
      * @return the hour value
      */
     public int getHour() {
-        return time.getHour();
+        return get(Calendar.HOUR_OF_DAY);
     }
 
     /**
-     * Returns the minute value stored in this time.
+     * Returns the minute value stored in this datetime.
      * @return the minute value
      */
     public int getMinute() {
-        return time.getMinute();
+        return get(Calendar.MINUTE);
     }
 
     /**
-     * Returns the second value stored in this time.
+     * Returns the second value stored in this datetime.
      * @return the second value
      */
     public int getSecond() {
-        return time.getSecond();
+        return get(Calendar.SECOND);
     }
 
     /**
-     * Returns the millisecond value stored in this time.
+     * Returns the millisecond value stored in this datetime.
      * @return the millisecond value
      */
     public int getMillisecond() {
-        return time.getMillisecond();
+        return get(Calendar.MILLISECOND);
+    }
+
+    /**
+     * Parses a string following "YYYY-MM-DDThh:mm:ss:SSSZ" format into an
+     * instance of {@link AWSDateTime} with equivalent UNIX epoch time.
+     * @param date String to be parsed
+     * @return Instance of AWSDateTime
+     * @throws ParseException if an error is encountered while parsing
+     */
+    @NonNull
+    @SuppressWarnings("MagicNumber")
+    public static AWSDateTime parse(@NonNull String date) throws ParseException {
+        ParsePosition pos = new ParsePosition(0);
+
+        int second = 0;
+        int millisecond = 0;
+
+        int year = parseInt(date, pos, 4);
+        if (!verifyCharAt(date, pos, '-')) {
+            throw new ParseException("Expected `-`.", pos.getIndex());
+        }
+
+        int month = parseInt(date, pos, 2);
+        if (!verifyCharAt(date, pos, '-')) {
+            throw new ParseException("Expected `-`.", pos.getIndex());
+        }
+
+        int day = parseInt(date, pos, 2);
+        if (!verifyCharAt(date, pos, 'T')) {
+            throw new ParseException("Expected `T`.", pos.getIndex());
+        }
+
+        int hour = parseInt(date, pos, 2);
+        if (!verifyCharAt(date, pos, ':')) {
+            throw new ParseException("Expected `:`.", pos.getIndex());
+        }
+
+        int minute = parseInt(date, pos, 2);
+
+        // seconds and milliseconds fields are optional
+        if (pos.getIndex() < date.length() && verifyCharAt(date, pos, ':')) {
+            second = parseInt(date, pos, 2);
+            if (pos.getIndex() < date.length() && verifyCharAt(date, pos, '.')) {
+                millisecond = parseInt(date, pos, 3);
+            }
+        }
+
+        TimeZone timezone = parseTimeZone(date, pos);
+
+        Calendar calendar = new GregorianCalendar(timezone);
+        calendar.setLenient(false);
+        calendar.set(Calendar.YEAR, year);
+        calendar.set(Calendar.MONTH, month - 1);
+        calendar.set(Calendar.DAY_OF_MONTH, day);
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, second);
+        calendar.set(Calendar.MILLISECOND, millisecond);
+
+        return new AWSDateTime(calendar.getTime());
+    }
+
+    @NonNull
+    @Override
+    Set<Integer> getCalendarComponentFields() {
+        return COMPONENTS;
     }
 
     @Override
     @NonNull
     public String toString() {
-        return String.format(Locale.US, "%04d-%02d-%02dT%s",
+        int second = getSecond();
+        int millis = getMillisecond();
+        String timezone = formatTimeZone(getTimeZone());
+
+        String optional;
+        if (millis > 0) {
+            optional = String.format(Locale.US, ":%02d.%03d", second, millis);
+        } else if (second > 0) {
+            optional = String.format(Locale.US, ":%02d", second);
+        } else {
+            optional = "";
+        }
+
+        return String.format(Locale.US, "%04d-%02d-%02dT%02d:%02d%s%s",
                 getYear(),
                 getMonth() + 1,
                 getDayOfMonth(),
-                time.toString());
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof AWSDateTime)) {
-            return false;
-        }
-
-        AWSDateTime that = (AWSDateTime) obj;
-        return this.getTime() == that.getTime();
+                getHour(),
+                getMinute(),
+                optional,
+                timezone);
     }
 }

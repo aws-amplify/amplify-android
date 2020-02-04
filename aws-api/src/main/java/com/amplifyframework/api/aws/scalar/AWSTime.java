@@ -17,8 +17,15 @@ package com.amplifyframework.api.aws.scalar;
 
 import androidx.annotation.NonNull;
 
+import java.text.ParseException;
+import java.text.ParsePosition;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.TimeZone;
 
 /**
@@ -32,14 +39,42 @@ import java.util.TimeZone;
  *
  * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html">AWS AppSync Defined Scalars</a>
  */
-public class AWSTime extends AWSTemporal {
+public final class AWSTime extends AWSTemporal {
+
+    private static final Set<Integer> COMPONENTS =
+        new HashSet<>(Arrays.asList(
+            Calendar.HOUR_OF_DAY,
+            Calendar.MINUTE,
+            Calendar.SECOND,
+            Calendar.MILLISECOND,
+            Calendar.ZONE_OFFSET
+        ));
+
     /**
-     * Constructs an instance of AWSTime.
-     * @param timezone Timezone to associate with this date
-     * @param time Milliseconds past since UNIX Epoch
+     * Instantiate an AWSTime from another AWSTemporal instance.
+     * @param scalar An instance of AWSTemporal class
      */
-    public AWSTime(final TimeZone timezone, long time) {
-        super(timezone, time);
+    public AWSTime(@NonNull AWSTemporal scalar) {
+        super(scalar);
+    }
+
+    /**
+     * Instantiate an AWSTime from {@link Date} with UTC timezone.
+     * @param date Java 7 Date instance
+     */
+    public AWSTime(@NonNull Date date) {
+        super(date);
+    }
+
+    /**
+     * Instantiate an AWSTime from {@link Date} with specific
+     * timezone to associate.
+     * @param date Java 7 Date instance
+     * @param timezone Timezone to associate with this date
+     */
+    public AWSTime(@NonNull Date date,
+                   @NonNull TimeZone timezone) {
+        super(date, timezone);
     }
 
     /**
@@ -74,6 +109,55 @@ public class AWSTime extends AWSTemporal {
         return get(Calendar.MILLISECOND);
     }
 
+    /**
+     * Parses a string following "hh:mm:ss.SSSZ" format into an
+     * instance of {@link AWSTime} with equivalent UNIX epoch time.
+     * @param time String to be parsed
+     * @return Instance of AWSTime
+     * @throws ParseException if an error is encountered while parsing
+     */
+    @NonNull
+    @SuppressWarnings("MagicNumber")
+    public static AWSTime parse(@NonNull String time) throws ParseException {
+        ParsePosition pos = new ParsePosition(0);
+
+        int second = 0;
+        int millisecond = 0;
+
+        int hour = parseInt(time, pos, 2);
+        if (!verifyCharAt(time, pos, ':')) {
+            throw new ParseException("Expected `:`.", pos.getIndex());
+        }
+
+        int minute = parseInt(time, pos, 2);
+
+        // seconds and milliseconds fields are optional
+        if (pos.getIndex() < time.length() && verifyCharAt(time, pos, ':')) {
+            second = parseInt(time, pos, 2);
+            if (pos.getIndex() < time.length() && verifyCharAt(time, pos, '.')) {
+                millisecond = parseInt(time, pos, 3);
+            }
+        }
+
+        TimeZone timezone = parseTimeZone(time, pos);
+
+        Calendar calendar = new GregorianCalendar(timezone);
+        calendar.clear();
+        calendar.setLenient(false);
+        calendar.set(Calendar.HOUR_OF_DAY, hour);
+        calendar.set(Calendar.MINUTE, minute);
+        calendar.set(Calendar.SECOND, second);
+        calendar.set(Calendar.MILLISECOND, millisecond);
+
+        return new AWSTime(calendar.getTime());
+    }
+
+    @Override
+    @NonNull
+    Set<Integer> getCalendarComponentFields() {
+        return COMPONENTS;
+    }
+
     @Override
     @NonNull
     public String toString() {
@@ -81,7 +165,7 @@ public class AWSTime extends AWSTemporal {
         int minute = getMinute();
         int second = getSecond();
         int millis = getMillisecond();
-        String timezone = AWSDateTimeUtils.format(getTimeZone());
+        String timezone = formatTimeZone(getTimeZone());
 
         if (millis > 0) {
             return String.format(Locale.US, "%02d:%02d:%02d.%03d%s", hour, minute, second, millis, timezone);
@@ -90,27 +174,5 @@ public class AWSTime extends AWSTemporal {
             return String.format(Locale.US, "%02d:%02d:%02d%s", hour, minute, second, timezone);
         }
         return String.format(Locale.US, "%02d:%02d%s", hour, minute, timezone);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (!(obj instanceof AWSTime)) {
-            return false;
-        }
-
-        AWSTime that = (AWSTime) obj;
-        if (this.getTimeZone().getRawOffset() != that.getTimeZone().getRawOffset()) {
-            return false;
-        }
-        if (this.getHour() != that.getHour()) {
-            return false;
-        }
-        if (this.getMinute() != that.getMinute()) {
-            return false;
-        }
-        if (this.getSecond() != that.getSecond()) {
-            return false;
-        }
-        return this.getMillisecond() == that.getMillisecond();
     }
 }
