@@ -15,8 +15,13 @@
 
 package com.amplifyframework.storage.options;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
+
+import java.util.Objects;
 
 /**
  * Options to specify attributes of list API invocation.
@@ -25,7 +30,7 @@ public final class StorageListOptions implements Options {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
-    StorageListOptions(final Builder builder) {
+    private StorageListOptions(final Builder builder) {
         this.accessLevel = builder.getAccessLevel();
         this.targetIdentityId = builder.getTargetIdentityId();
     }
@@ -34,6 +39,7 @@ public final class StorageListOptions implements Options {
      * Gets the storage access level.
      * @return Storage access level
      */
+    @Nullable
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -42,6 +48,7 @@ public final class StorageListOptions implements Options {
      * Gets the target identity id.
      * @return target identity id
      */
+    @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
     }
@@ -51,8 +58,26 @@ public final class StorageListOptions implements Options {
      * which may be used to configure and build an immutable {@link StorageListOptions} object.
      * @return Builder used to construct {@link StorageListOptions}
      */
+    @NonNull
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Factory method to create builder which is configured to prepare
+     * object instances with the same field values as the provided
+     * options. This can be used as a starting ground to create a
+     * new clone of the provided options, which shares some common
+     * configuration.
+     * @param options Options to populate into a new builder configuration
+     * @return A Builder instance that has been configured using the
+     *         values in the provided options
+     */
+    @NonNull
+    public static Builder from(@NonNull final StorageListOptions options) {
+        return builder()
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -60,6 +85,7 @@ public final class StorageListOptions implements Options {
      * {@link StorageListOptions}.
      * @return Default storage list options instance
      */
+    @NonNull
     public static StorageListOptions defaultInstance() {
         return builder().build();
     }
@@ -69,20 +95,17 @@ public final class StorageListOptions implements Options {
      * fluent configuration methods.
      */
     public static final class Builder {
-
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
-
-        Builder() {
-        }
 
         /**
          * Configures the storage access level.
          * @param accessLevel Storage access level
          * @return Builder instance for fluent chaining
          */
-        public Builder accessLevel(StorageAccessLevel accessLevel) {
-            this.accessLevel = accessLevel;
+        @NonNull
+        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
+            this.accessLevel = Objects.requireNonNull(accessLevel);
             return this;
         }
 
@@ -91,17 +114,10 @@ public final class StorageListOptions implements Options {
          * @param targetIdentityId target identity ID
          * @return current Builder instance, for fluent chaining
          */
-        public Builder targetIdentityId(String targetIdentityId) {
-            this.targetIdentityId = targetIdentityId;
+        @NonNull
+        public Builder targetIdentityId(@NonNull String targetIdentityId) {
+            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
             return this;
-        }
-
-        StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        String getTargetIdentityId() {
-            return targetIdentityId;
         }
 
         /**
@@ -110,8 +126,19 @@ public final class StorageListOptions implements Options {
          * {@link StorageListOptions.Builder} instance, via prior method calls.
          * @return A new immutable instance of {@link StorageListOptions}.
          */
+        @NonNull
         public StorageListOptions build() {
             return new StorageListOptions(this);
+        }
+
+        @Nullable
+        StorageAccessLevel getAccessLevel() {
+            return accessLevel;
+        }
+
+        @Nullable
+        String getTargetIdentityId() {
+            return targetIdentityId;
         }
     }
 }

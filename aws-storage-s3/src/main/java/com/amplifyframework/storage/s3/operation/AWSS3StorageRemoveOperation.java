@@ -22,10 +22,8 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
-import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
-
-import com.amazonaws.mobile.client.AWSMobileClient;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -34,7 +32,7 @@ import java.util.concurrent.ExecutorService;
  * An operation to remove a file from AWS S3.
  */
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
-    private final AWSS3StorageService storageService;
+    private final StorageService storageService;
     private final ExecutorService executorService;
     private final Consumer<StorageRemoveResult> onSuccess;
     private final Consumer<StorageException> onError;
@@ -48,11 +46,12 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * @param onError notified when remove operation does not complete due to error
      */
     public AWSS3StorageRemoveOperation(
-            @NonNull AWSS3StorageService storageService,
+            @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageRemoveRequest request,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         super(Objects.requireNonNull(request));
         this.storageService = Objects.requireNonNull(storageService);
         this.executorService = Objects.requireNonNull(executorService);
@@ -64,29 +63,16 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     @Override
     public void start() {
         executorService.submit(() -> {
-            String identityId;
-
             try {
-                identityId = AWSMobileClient.getInstance().getIdentityId();
+                storageService.deleteObject(
+                    S3RequestUtils.getServiceKey(
+                        getRequest().getAccessLevel(),
+                        getRequest().getTargetIdentityId(),
+                        getRequest().getKey()
+                    )
+                );
 
-                try {
-                    storageService.deleteObject(
-                        S3RequestUtils.getServiceKey(
-                            getRequest().getAccessLevel(),
-                            identityId,
-                            getRequest().getKey(),
-                            getRequest().getTargetIdentityId()
-                        )
-                    );
-
-                    onSuccess.accept(StorageRemoveResult.fromKey(getRequest().getKey()));
-                } catch (Exception exception) {
-                    onError.accept(new StorageException(
-                        "Something went wrong with your AWS S3 Storage remove operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                }
+                onSuccess.accept(StorageRemoveResult.fromKey(getRequest().getKey()));
             } catch (Exception exception) {
                 onError.accept(new StorageException(
                     "Something went wrong with your AWS S3 Storage remove operation",
