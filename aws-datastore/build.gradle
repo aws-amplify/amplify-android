@@ -18,7 +18,7 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
-    implementation project(':core')
+    implementation project(path: ':core')
     implementation dependency.androidx.appcompat
     implementation dependency.gson
     implementation dependency.rxjava
