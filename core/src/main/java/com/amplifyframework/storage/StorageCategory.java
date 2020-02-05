@@ -52,7 +52,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String key,
             @NonNull String local,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().downloadFile(key, local, onSuccess, onError);
     }
 
@@ -63,7 +64,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String local,
             @NonNull StorageDownloadFileOptions options,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().downloadFile(key, local, options, onSuccess, onError);
     }
 
@@ -73,7 +75,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String key,
             @NonNull String local,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().uploadFile(key, local, onSuccess, onError);
     }
 
@@ -84,7 +87,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String local,
             @NonNull StorageUploadFileOptions options,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().uploadFile(key, local, options, onSuccess, onError);
     }
 
@@ -93,7 +97,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().remove(key, onSuccess, onError);
     }
 
@@ -103,7 +108,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String key,
             @NonNull StorageRemoveOptions options,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().remove(key, options, onSuccess, onError);
     }
 
@@ -112,7 +118,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull Consumer<StorageListResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().list(path, onSuccess, onError);
     }
 
@@ -122,7 +129,8 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
             @NonNull String path,
             @NonNull StorageListOptions options,
             @NonNull Consumer<StorageListResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return getSelectedPlugin().list(path, options, onSuccess, onError);
     }
 }

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.request;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
@@ -36,10 +38,11 @@ public final class AWSS3StorageDownloadFileRequest {
      *                         (to override it from assuming the currently logged in user)
      */
     public AWSS3StorageDownloadFileRequest(
-            String key,
-            String local,
-            StorageAccessLevel accessLevel,
-            String targetIdentityId) {
+            @NonNull String key,
+            @NonNull String local,
+            @NonNull StorageAccessLevel accessLevel,
+            @NonNull String targetIdentityId
+    ) {
         this.key = key;
         this.local = local;
         this.accessLevel = accessLevel;
@@ -50,6 +53,7 @@ public final class AWSS3StorageDownloadFileRequest {
      * Gets the access level.
      * @return Access level
      */
+    @NonNull
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -58,6 +62,7 @@ public final class AWSS3StorageDownloadFileRequest {
      * Gets the storage key.
      * @return key
      */
+    @NonNull
     public String getKey() {
         return key;
     }
@@ -66,6 +71,7 @@ public final class AWSS3StorageDownloadFileRequest {
      * Gets the target identity id.
      * @return target identity id
      */
+    @NonNull
     public String getTargetIdentityId() {
         return targetIdentityId;
     }
@@ -74,6 +80,7 @@ public final class AWSS3StorageDownloadFileRequest {
      * Gets the local file path where the object should be saved.
      * @return local file path
      */
+    @NonNull
     public String getLocal() {
         return local;
     }
