@@ -23,19 +23,23 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.testutils.Await;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.util.Date;
+
+import static org.junit.Assert.assertEquals;
 
 public final class AWSS3StoragePluginInstrumentationTest {
     private static final String TAG = AWSS3StoragePluginInstrumentationTest.class.getSimpleName();
+
+    private final String filename = "test-" + new Date().getTime();
 
     /**
      * Setup the Android application context.
@@ -47,44 +51,38 @@ public final class AWSS3StoragePluginInstrumentationTest {
     }
 
     @Test
-    public void testUploadPublicAccess() {
+    public void testUploadPublicAccess() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Write a random file to cache directory
-        final String message = RandomString.string();
-        File sampleFile = new File(context.getCacheDir(), "sample.txt");
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(sampleFile));
-            writer.append(message);
-            writer.close();
-        } catch(IOException error) {
-            Log.e(TAG, error.getMessage());
+        File sampleFile = new File(context.getCacheDir(), filename);
+        sampleFile.createNewFile();
+        if (sampleFile.exists() && sampleFile.isFile()) {
+            Log.i(TAG, "filename: " + sampleFile.getName() + " exists!");
         }
 
-        Amplify.Storage.uploadFile(
-                "test-key",
-                sampleFile.getAbsolutePath(),
-                onSuccess -> Log.i(TAG, "Successfully uploaded: " + onSuccess.getKey()),
-                onError -> {
-                    onError.printStackTrace();
-                    throw new RuntimeException();
-                }
+        StorageUploadFileResult result = Await.<StorageUploadFileResult, StorageException>result(
+                (onResult, onError) ->
+                Amplify.Storage.uploadFile(
+                        sampleFile.getName(),
+                        sampleFile.getAbsolutePath(),
+                        onResult,
+                        onError
+                )
         );
+
+        assertEquals(filename, result.getKey());
     }
 
     @Test
-    public void testUploadPrivateAccess() {
+    public void testUploadPrivateAccess() throws Exception {
         Context context = ApplicationProvider.getApplicationContext();
 
         // Write a random file to cache directory
-        final String message = RandomString.string();
-        File sampleFile = new File(context.getCacheDir(), "sample.txt");
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(sampleFile));
-            writer.append(message);
-            writer.close();
-        } catch(IOException error) {
-            Log.e(TAG, error.getMessage());
+        File sampleFile = new File(context.getCacheDir(), filename);
+        sampleFile.createNewFile();
+        if (sampleFile.exists() && sampleFile.isFile()) {
+            Log.i(TAG, "filename: " + sampleFile.getName() + " exists!");
         }
 
         StorageUploadFileOptions options = StorageUploadFileOptions.builder()
@@ -92,14 +90,11 @@ public final class AWSS3StoragePluginInstrumentationTest {
                 .build();
 
         Amplify.Storage.uploadFile(
-                "test-key",
+                sampleFile.getName(),
                 sampleFile.getAbsolutePath(),
                 options,
-                onSuccess -> Log.i(TAG, "Successfully uploaded: " + onSuccess.getKey()),
-                onError -> {
-                    onError.printStackTrace();
-                    throw new RuntimeException();
-                }
+                result -> Log.i(TAG, "Successfully uploaded: " + result.getKey()),
+                error -> Log.e(TAG, "Error: " + error.getMessage())
         );
     }
 }

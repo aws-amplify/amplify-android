@@ -16,9 +16,13 @@
 package com.amplifyframework.storage.s3.operation;
 
 import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -31,6 +35,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.Objects;
 
 /**
@@ -41,7 +46,6 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
     private final Consumer<StorageUploadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
-    private File file;
 
     /**
      * Constructs a new AWSS3StorageUploadFileOperation.
@@ -61,63 +65,45 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
         this.transferObserver = null;
-        this.file = null;
     }
 
     @SuppressLint("SyntheticAccessor")
     @Override
     public void start() {
         // Only start if it hasn't already been started
-        if (transferObserver == null) {
+        if (transferObserver != null) {
+            return;
+        }
 
-            String serviceKey = S3RequestUtils.getServiceKey(
-                    getRequest().getAccessLevel(),
-                    getRequest().getTargetIdentityId(),
-                    getRequest().getKey()
-            );
-            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
+        String serviceKey = S3RequestUtils.getServiceKey(
+                getRequest().getAccessLevel(),
+                getRequest().getTargetIdentityId(),
+                getRequest().getKey()
+        );
 
-            try {
-                if (getRequest().getMetadata().isEmpty()) {
-                    transferObserver = storageService.uploadFile(serviceKey, file);
-                } else {
-                    transferObserver = storageService.uploadFile(serviceKey, file, getRequest().getMetadata());
-                }
+        File file = new File(getRequest().getLocal());
+        if (!file.exists() || file.isDirectory()) {
+            onError.accept(new StorageException(
+                "This file does not exist or is a directory.",
+                new FileNotFoundException(),
+                "Verify that the local path is valid."
+            ));
+            return;
+        }
 
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                    "Issue uploading file",
-                    exception,
-                    "See included exception for more details and suggestions to fix."
-                ));
+        try {
+            if (getRequest().getMetadata().isEmpty()) {
+                transferObserver = storageService.uploadFile(serviceKey, file);
+            } else {
+                transferObserver = storageService.uploadFile(serviceKey, file, getRequest().getMetadata());
             }
-
-            transferObserver.setTransferListener(new TransferListener() {
-                @Override
-                public void onStateChanged(int transferId, TransferState state) {
-                    // TODO: dispatch event to hub
-                    if (TransferState.COMPLETED == state) {
-                        onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
-                    }
-                }
-
-                @SuppressWarnings("checkstyle:MagicNumber")
-                @Override
-                public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
-                    @SuppressWarnings("unused")
-                    int percentage = (int) (bytesCurrent / bytesTotal * 100);
-                    // TODO: dispatch event to hub
-                }
-
-                @Override
-                public void onError(int transferId, Exception exception) {
-                    onError.accept(new StorageException(
-                        "Something went wrong with your AWS S3 Storage upload file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                }
-            });
+            transferObserver.setTransferListener(new UploadTransferListener());
+        } catch (Exception exception) {
+            onError.accept(new StorageException(
+                "Issue uploading file.",
+                exception,
+                "See included exception for more details and suggestions to fix."
+            ));
         }
     }
 
@@ -163,6 +149,39 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     "See attached exception for more information and suggestions"
                 ));
             }
+        }
+    }
+
+    private final class UploadTransferListener implements TransferListener {
+        @Override
+        public void onStateChanged(int transferId, TransferState state) {
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create("uploadState", state));
+            if (TransferState.COMPLETED == state) {
+                onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
+            }
+        }
+
+        @SuppressWarnings("checkstyle:MagicNumber")
+        @Override
+        public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
+            final float progress;
+            if (bytesTotal != 0) {
+                progress = (float) bytesCurrent / bytesTotal;
+            } else {
+                progress = 1f;
+            }
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create("uploadProgress", progress));
+        }
+
+        @Override
+        public void onError(int transferId, Exception exception) {
+            onError.accept(new StorageException(
+                    "Something went wrong with your AWS S3 Storage upload file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+            ));
         }
     }
 }
