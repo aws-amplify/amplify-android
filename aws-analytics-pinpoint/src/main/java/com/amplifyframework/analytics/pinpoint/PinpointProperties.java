@@ -57,17 +57,17 @@ public final class PinpointProperties extends Properties {
             metrics = new HashMap<>();
         }
 
-        Builder add(String key, String value) {
+        public Builder add(String key, String value) {
             attributes.put(key, value);
             return this;
         }
 
-        Builder add(String key, Double value) {
+        public Builder add(String key, Double value) {
             metrics.put(key, value);
             return this;
         }
 
-        PinpointProperties build() {
+        public PinpointProperties build() {
             return new PinpointProperties(this);
         }
     }
