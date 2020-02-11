@@ -28,7 +28,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 /**
  * Instrumentation test to confirm that Storage Download behaves
@@ -36,19 +35,12 @@ import java.io.IOException;
  */
 public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrumentationTestBase {
 
-    private static final String UPLOAD_NAME = "upload-test-" + System.currentTimeMillis();
     private static final long UPLOAD_SIZE = 100L;
-    private static final File UPLOAD_FILE;
 
-    static {
-        try {
-            UPLOAD_FILE = createTempFile(UPLOAD_NAME, UPLOAD_SIZE);
-        } catch (IOException error) {
-            throw new RuntimeException("Failed to set up downloadable file.");
-        }
-    }
+    private final String uploadName = "upload-test-" + System.currentTimeMillis();
+    private File uploadFile;
 
-    private final String downloadedName = "download-test-" + System.currentTimeMillis();
+    private final String destination = "download-test-" + System.currentTimeMillis();
     private File downloadFile;
 
     /**
@@ -58,7 +50,8 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
     @Before
     public void setUp() throws Exception {
         signOut();
-        downloadFile = createTempFile(downloadedName);
+        downloadFile = createTempFile(destination);
+        uploadFile = createTempFile(uploadName, UPLOAD_SIZE);
     }
 
     /**
@@ -227,8 +220,8 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
                 .build();
         Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
                 Amplify.Storage.uploadFile(
-                        UPLOAD_FILE.getName(),
-                        UPLOAD_FILE.getAbsolutePath(),
+                        uploadFile.getName(),
+                        uploadFile.getAbsolutePath(),
                         uploadOptions,
                         onResult,
                         onError
@@ -248,18 +241,18 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
         StorageDownloadFileResult result =
                 Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) ->
                 Amplify.Storage.downloadFile(
-                        UPLOAD_NAME,
+                        uploadName,
                         downloadTo.getAbsolutePath(),
                         downloadOptions,
                         onResult,
                         onError
                 )
         );
-        TestUtils.assertFileEqualsFile(UPLOAD_FILE, result.getFile());
+        TestUtils.assertFileEqualsFile(uploadFile, result.getFile());
     }
 
     private void cleanUp(StorageAccessLevel accessLevel) {
-        String s3key = getS3Key(accessLevel, UPLOAD_NAME);
+        String s3key = getS3Key(accessLevel, uploadName);
         cleanUpS3Object(s3key);
     }
 }

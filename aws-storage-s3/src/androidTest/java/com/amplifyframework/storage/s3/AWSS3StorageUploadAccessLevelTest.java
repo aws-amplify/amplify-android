@@ -36,7 +36,6 @@ import static org.junit.Assert.assertEquals;
 public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentationTestBase {
 
     private final String filename = "test-" + System.currentTimeMillis();
-
     private File fileToUpload;
 
     /**
