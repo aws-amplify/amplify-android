@@ -24,22 +24,27 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
+import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageDownloadFileOperation;
+import com.amplifyframework.storage.s3.operation.AWSS3StorageGetUrlOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageListOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageRemoveOperation;
 import com.amplifyframework.storage.s3.operation.AWSS3StorageUploadFileOperation;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageGetUrlRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
@@ -63,6 +68,7 @@ import java.util.concurrent.Executors;
 public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
+    private static final int DEFAULT_URL_EXPIRE_IN_SECONDS = 5;
 
     private final StorageService.Factory storageServiceFactory;
     private final IdentityIdProvider identityIdProvider;
@@ -153,13 +159,50 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             );
         }
 
-        this.defaultAccessLevel = StorageAccessLevel.PUBLIC; // This will be passed in the config in the future
+        // These will be passed in the config in the future
+        this.defaultAccessLevel = StorageAccessLevel.PUBLIC;
     }
 
     @NonNull
     @Override
     public AmazonS3Client getEscapeHatch() {
         return ((AWSS3StorageService) storageService).getClient();
+    }
+
+    @NonNull
+    @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull String key,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getUrl(key, StorageGetUrlOptions.defaultInstance(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull String key,
+            @NonNull StorageGetUrlOptions options,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        AWSS3StorageGetUrlRequest request = new AWSS3StorageGetUrlRequest(
+                key,
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId() != null
+                        ? options.getTargetIdentityId()
+                        : getUserIdentityId(),
+                options.getExpires() != 0
+                        ? options.getExpires()
+                        : DEFAULT_URL_EXPIRE_IN_SECONDS
+        );
+
+        AWSS3StorageGetUrlOperation operation =
+                new AWSS3StorageGetUrlOperation(storageService, request, onSuccess, onError);
+        operation.start();
+
+        return operation;
     }
 
     @NonNull

@@ -1,0 +1,89 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.storage.s3.operation;
+
+import android.annotation.SuppressLint;
+import androidx.annotation.NonNull;
+
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.operation.StorageGetUrlOperation;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
+import com.amplifyframework.storage.s3.request.AWSS3StorageGetUrlRequest;
+import com.amplifyframework.storage.s3.service.StorageService;
+import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+
+import java.net.URL;
+
+/**
+ * An operation to retrieve pre-signed object URL from AWS S3.
+ */
+public final class AWSS3StorageGetUrlOperation
+        extends StorageGetUrlOperation<AWSS3StorageGetUrlRequest> {
+    private final StorageService storageService;
+    private final Consumer<StorageGetUrlResult> onResult;
+    private final Consumer<StorageException> onError;
+
+    /**
+     * Constructs a new AWSS3StorageGetUrlOperation.
+     * @param storageService S3 client wrapper
+     * @param request getUrl request parameters
+     * @param onSuccess Notified when URL is generated.
+     * @param onError Notified upon URL generation error
+     */
+    public AWSS3StorageGetUrlOperation(
+            @NonNull StorageService storageService,
+            @NonNull AWSS3StorageGetUrlRequest request,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError
+    ) {
+        super(request);
+        this.storageService = storageService;
+        this.onResult = onSuccess;
+        this.onError = onError;
+    }
+
+    @SuppressLint("SyntheticAccessor")
+    @Override
+    public void start() {
+        try {
+            // Obtain S3 service key for storage service
+            String serviceKey = S3RequestUtils.getServiceKey(
+                    getRequest().getAccessLevel(),
+                    getRequest().getTargetIdentityId(),
+                    getRequest().getKey()
+            );
+
+            try {
+                URL url = storageService.getPresignedUrl(serviceKey, getRequest().getExpires());
+                onResult.accept(StorageGetUrlResult.fromUrl(url));
+            } catch (Exception exception) {
+                onError.accept(new StorageException(
+                        "Encountered an issue while generating pre-signed URL",
+                        exception,
+                        "See included exception for more details and suggestions to fix."
+                ));
+            }
+        } catch (Exception exception) {
+            onError.accept(new StorageException(
+                    "AWSMobileClient could not get user id.",
+                    exception,
+                    "Check whether you initialized AWSMobileClient and waited for its success callback " +
+                            "before calling Amplify config."
+            ));
+        }
+    }
+}
