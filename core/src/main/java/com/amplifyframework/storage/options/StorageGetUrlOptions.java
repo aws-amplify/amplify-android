@@ -80,7 +80,8 @@ public final class StorageGetUrlOptions implements Options {
     public static Builder from(StorageGetUrlOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+            .targetIdentityId(options.getTargetIdentityId())
+            .expires(options.getExpires());
     }
 
     /**
@@ -100,9 +101,6 @@ public final class StorageGetUrlOptions implements Options {
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
         private int expires;
-
-        Builder() {
-        }
 
         /**
          * Configures the storage access level to set on new

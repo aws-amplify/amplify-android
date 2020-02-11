@@ -22,7 +22,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
-import com.amplifyframework.storage.s3.request.AWSS3StorageGetUrlRequest;
+import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
@@ -32,8 +32,8 @@ import java.util.concurrent.ExecutorService;
 /**
  * An operation to retrieve pre-signed object URL from AWS S3.
  */
-public final class AWSS3StorageGetUrlOperation
-        extends StorageGetUrlOperation<AWSS3StorageGetUrlRequest> {
+public final class AWSS3StorageGetPresignedUrlOperation
+        extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
     private final Consumer<StorageGetUrlResult> onResult;
@@ -48,10 +48,10 @@ public final class AWSS3StorageGetUrlOperation
      * @param onSuccess Notified when URL is generated.
      * @param onError Notified upon URL generation error
      */
-    public AWSS3StorageGetUrlOperation(
+    public AWSS3StorageGetPresignedUrlOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
-            @NonNull AWSS3StorageGetUrlRequest request,
+            @NonNull AWSS3StorageGetPresignedUrlRequest request,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {

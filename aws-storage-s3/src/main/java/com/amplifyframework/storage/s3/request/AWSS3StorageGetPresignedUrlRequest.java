@@ -21,7 +21,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
  * Parameters to provide to S3 that describe a request to retrieve
  * pre-signed object URL.
  */
-public final class AWSS3StorageGetUrlRequest {
+public final class AWSS3StorageGetPresignedUrlRequest {
     private final String key;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
@@ -35,7 +35,7 @@ public final class AWSS3StorageGetUrlRequest {
      *                         (to override it from assuming the currently logged in user)
      * @param expires The number of seconds before the URL expires
      */
-    public AWSS3StorageGetUrlRequest(
+    public AWSS3StorageGetPresignedUrlRequest(
             String key,
             StorageAccessLevel accessLevel,
             String targetIdentityId,
