@@ -113,11 +113,6 @@ final class TestConfiguration {
         }
     }
 
-    private static int getConfigResourceId(Context context, String identifier) {
-        return context.getResources().getIdentifier(identifier,
-                "raw", context.getPackageName());
-    }
-
     @NonNull
     AWSS3StoragePlugin plugin() {
         return plugin;
