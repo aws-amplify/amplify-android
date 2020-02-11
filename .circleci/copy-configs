@@ -16,20 +16,48 @@ readonly config_bucket='amplify-circleci-android-payload'
 # So, use two simple arrays and join on index.
 # sources are remote URLs, targets are local file paths
 readonly sources=(
-    "s3://$config_bucket/awsconfiguration-analytics.json"
-    "s3://$config_bucket/amplifyconfiguration-analytics.json"
-    "s3://$config_bucket/amplifyconfiguration-core.json"
-    "s3://$config_bucket/amplifyconfiguration-api.json"
-    "s3://$config_bucket/awsconfiguration-api.json"
-    "s3://$config_bucket/amplifyconfiguration-datastore.json"
+    "s3://$config_bucket/testconfiguration.json"
+
+    # Core
+    "s3://$config_bucket/Core/amplifyconfiguration.json"
+
+    # Analytics
+    "s3://$config_bucket/Analytics/amplifyconfiguration.json"
+    "s3://$config_bucket/Analytics/awsconfiguration.json"
+
+    # API
+    "s3://$config_bucket/API/amplifyconfiguration.json"
+    "s3://$config_bucket/API/awsconfiguration.json"
+
+    # DataStore
+    "s3://$config_bucket/DataStore/amplifyconfiguration.json"
+    "s3://$config_bucket/DataStore/awsconfiguration.json"
+
+    # Storage
+    "s3://$config_bucket/Storage/amplifyconfiguration.json"
+    "s3://$config_bucket/Storage/awsconfiguration.json"
 )
 readonly targets=(
-    "aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json"
-    "aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json"
+    "testutils/src/main/res/raw/testconfiguration.json"
+
+    # Core
     "core/src/androidTest/res/raw/amplifyconfiguration.json"
+
+    # Analytics
+    "aws-analytics-pinpoint/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-analytics-pinpoint/src/androidTest/res/raw/awsconfiguration.json"
+
+    # API
     "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-api/src/androidTest/res/raw/awsconfiguration.json"
+
+    # DataStore
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-datastore/src/androidTest/res/raw/awsconfiguration.json"
+
+    # Storage
+    "aws-storage-s3/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-storage-s3/src/androidTest/res/raw/awsconfiguration.json"
 )
 
 # Compute indices into the arrays.
