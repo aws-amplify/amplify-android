@@ -18,39 +18,15 @@ package com.amplifyframework.storage.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
-
-import java.util.Objects;
 
 /**
  * Options to specify attributes of list API invocation.
  */
-public final class StorageListOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageListOptions extends StorageOptions {
 
     private StorageListOptions(final Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    @Nullable
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Gets the target identity id.
-     * @return target identity id
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
     /**
@@ -104,8 +80,8 @@ public final class StorageListOptions implements Options {
          * @return Builder instance for fluent chaining
          */
         @NonNull
-        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
-            this.accessLevel = Objects.requireNonNull(accessLevel);
+        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
             return this;
         }
 
@@ -115,8 +91,8 @@ public final class StorageListOptions implements Options {
          * @return current Builder instance, for fluent chaining
          */
         @NonNull
-        public Builder targetIdentityId(@NonNull String targetIdentityId) {
-            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
+        public Builder targetIdentityId(@Nullable String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
             return this;
         }
 
@@ -132,12 +108,12 @@ public final class StorageListOptions implements Options {
         }
 
         @Nullable
-        StorageAccessLevel getAccessLevel() {
+        public StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
         @Nullable
-        String getTargetIdentityId() {
+        public String getTargetIdentityId() {
             return targetIdentityId;
         }
     }

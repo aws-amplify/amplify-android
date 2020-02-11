@@ -18,7 +18,6 @@ package com.amplifyframework.storage.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.util.Immutable;
 
@@ -29,35 +28,14 @@ import java.util.Objects;
 /**
  * Options to specify attributes of put API invocation.
  */
-public final class StorageUploadFileOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageUploadFileOptions extends StorageOptions {
     private final String contentType;
     private final Map<String, String> metadata;
 
-    private StorageUploadFileOptions(Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
+    private StorageUploadFileOptions(final Builder builder) {
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.contentType = builder.getContentType();
         this.metadata = builder.getMetadata();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    @Nullable
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Target user to apply the action on.
-     * @return Target user's identity id
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
     }
 
     /**
@@ -73,7 +51,7 @@ public final class StorageUploadFileOptions implements Options {
      * Metadata for the object to store.
      * @return metadata
      */
-    @Nullable
+    @NonNull
     public Map<String, String> getMetadata() {
         return Immutable.of(metadata);
     }
@@ -127,6 +105,10 @@ public final class StorageUploadFileOptions implements Options {
         private String contentType;
         private Map<String, String> metadata;
 
+        private Builder() {
+            this.metadata = new HashMap<>();
+        }
+
         /**
          * Configures the storage access level for the new
          * StorageUploadFileOptions instance.
@@ -134,8 +116,8 @@ public final class StorageUploadFileOptions implements Options {
          * @return Current Builder instance for fluent chaining
          */
         @NonNull
-        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
-            this.accessLevel = Objects.requireNonNull(accessLevel);
+        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
             return this;
         }
 
@@ -145,8 +127,8 @@ public final class StorageUploadFileOptions implements Options {
          * @return Current Builder instance for fluent chaining
          */
         @NonNull
-        public Builder targetIdentityId(@NonNull String targetIdentityId) {
-            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
+        public Builder targetIdentityId(@Nullable String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
             return this;
         }
 
@@ -156,8 +138,8 @@ public final class StorageUploadFileOptions implements Options {
          * @return Current Builder instance for fluent chaining
          */
         @NonNull
-        public Builder contentType(@NonNull String contentType) {
-            this.contentType = Objects.requireNonNull(contentType);
+        public Builder contentType(@Nullable String contentType) {
+            this.contentType = contentType;
             return this;
         }
 
@@ -184,22 +166,22 @@ public final class StorageUploadFileOptions implements Options {
         }
 
         @Nullable
-        StorageAccessLevel getAccessLevel() {
+        public StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
         @Nullable
-        String getTargetIdentityId() {
+        public String getTargetIdentityId() {
             return targetIdentityId;
         }
 
         @Nullable
-        String getContentType() {
+        public String getContentType() {
             return contentType;
         }
 
-        @Nullable
-        Map<String, String> getMetadata() {
+        @NonNull
+        public Map<String, String> getMetadata() {
             return Immutable.of(metadata);
         }
     }

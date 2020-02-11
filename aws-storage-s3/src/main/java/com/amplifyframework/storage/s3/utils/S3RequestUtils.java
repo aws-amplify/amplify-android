@@ -26,6 +26,8 @@ import java.util.Locale;
  */
 public final class S3RequestUtils {
 
+    private static final char BUCKET_SEPARATOR = '/';
+
     @SuppressWarnings("WhitespaceAround") // Looks better this way
     private S3RequestUtils() {}
 
@@ -55,7 +57,7 @@ public final class S3RequestUtils {
             @NonNull String identityId,
             @NonNull String key
     ) {
-        return getAccessLevelPrefix(accessLevel, identityId) + key;
+        return getAccessLevelPrefix(accessLevel, identityId) + BUCKET_SEPARATOR + key;
     }
 
     @NonNull
@@ -64,9 +66,9 @@ public final class S3RequestUtils {
             @NonNull String identityId
     ) {
         if (accessLevel.equals(StorageAccessLevel.PRIVATE) || accessLevel.equals(StorageAccessLevel.PROTECTED)) {
-            return accessLevel.name().toLowerCase(Locale.US) + "/" + identityId + "/";
+            return accessLevel.name().toLowerCase(Locale.US) + BUCKET_SEPARATOR + identityId;
         } else {
-            return accessLevel.name().toLowerCase(Locale.US) + "/";
+            return accessLevel.name().toLowerCase(Locale.US);
         }
     }
 }

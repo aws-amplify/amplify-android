@@ -186,11 +186,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 key,
                 local,
                 options.getAccessLevel() != null
-                        ? options.getAccessLevel()
-                        : defaultAccessLevel,
+                ? options.getAccessLevel()
+                : defaultAccessLevel,
                 options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : getUserIdentityId()
+                ? options.getTargetIdentityId()
+                : identityIdProvider.getIdentityId()
         );
 
         AWSS3StorageDownloadFileOperation operation =
@@ -224,11 +224,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 key,
                 local,
                 options.getAccessLevel() != null
-                        ? options.getAccessLevel()
-                        : defaultAccessLevel,
+                ? options.getAccessLevel()
+                : defaultAccessLevel,
                 options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : getUserIdentityId(),
+                ? options.getTargetIdentityId()
+                : identityIdProvider.getIdentityId(),
                 options.getContentType(),
                 options.getMetadata()
         );
@@ -262,11 +262,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         AWSS3StorageRemoveRequest request = new AWSS3StorageRemoveRequest(
                 key,
                 options.getAccessLevel() != null
-                        ? options.getAccessLevel()
-                        : defaultAccessLevel,
+                ? options.getAccessLevel()
+                : defaultAccessLevel,
                 options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : getUserIdentityId()
+                ? options.getTargetIdentityId()
+                : identityIdProvider.getIdentityId()
         );
 
         AWSS3StorageRemoveOperation operation =
@@ -295,14 +295,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
+        StorageAccessLevel accessLevel = options.getAccessLevel() != null
+                ? options.getAccessLevel()
+                : defaultAccessLevel;
         AWSS3StorageListRequest request = new AWSS3StorageListRequest(
                 path,
                 options.getAccessLevel() != null
-                        ? options.getAccessLevel()
-                        : defaultAccessLevel,
+                ? options.getAccessLevel()
+                : defaultAccessLevel,
                 options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : getUserIdentityId()
+                ? options.getTargetIdentityId()
+                : identityIdProvider.getIdentityId()
         );
 
         AWSS3StorageListOperation operation =
@@ -311,10 +314,6 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         operation.start();
 
         return operation;
-    }
-
-    private String getUserIdentityId() {
-        return identityIdProvider.getIdentityId();
     }
 
     /**

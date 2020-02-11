@@ -16,30 +16,34 @@
 package com.amplifyframework.storage.s3;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobile.client.Callback;
-import com.amazonaws.mobile.client.UserStateDetails;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.Await;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserStateDetails;
+import org.json.JSONException;
+
 final class TestConfiguration {
     private static TestConfiguration singleton;
     private final AWSS3StoragePlugin plugin;
+    private final String bucket;
 
     private TestConfiguration(Context context) throws AmplifyException {
         plugin = new AWSS3StoragePlugin();
+        bucket = getBucketNameFromPlugin(context, plugin);
 
         Amplify.addPlugin(plugin);
         configureAmplify(context);
-        initializeMobileClient(context);
+        setUpCredentials(context);
     }
 
     /**
@@ -78,7 +82,7 @@ final class TestConfiguration {
         });
     }
 
-    private static void initializeMobileClient(Context context) {
+    private static void setUpCredentials(Context context) {
         Await.result((onResult, onError) ->
             AWSMobileClient.getInstance().initialize(context, new Callback<UserStateDetails>() {
                 @Override
@@ -95,7 +99,32 @@ final class TestConfiguration {
         );
     }
 
+    private static String getBucketNameFromPlugin(Context context, AWSS3StoragePlugin plugin) {
+        try {
+            return AmplifyConfiguration.fromConfigFile(context)
+                    .forCategoryType(plugin.getCategoryType())
+                    .getPluginConfig(plugin.getPluginKey())
+                    .getString("bucket");
+        } catch (AmplifyException exception) {
+            throw new RuntimeException("Failed to obtain bucket name from configuration.",
+                    exception);
+        } catch (JSONException jsonError) {
+            throw new RuntimeException("Configuration is missing bucket name.", jsonError);
+        }
+    }
+
+    private static int getConfigResourceId(Context context, String identifier) {
+        return context.getResources().getIdentifier(identifier,
+                "raw", context.getPackageName());
+    }
+
+    @NonNull
     AWSS3StoragePlugin plugin() {
         return plugin;
+    }
+
+    @NonNull
+    String getBucketName() {
+        return bucket;
     }
 }

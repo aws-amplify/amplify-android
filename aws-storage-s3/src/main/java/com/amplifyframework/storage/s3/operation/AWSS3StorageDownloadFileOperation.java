@@ -34,7 +34,6 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 
 /**
  * An operation to download a file from AWS S3.
@@ -83,14 +82,6 @@ public final class AWSS3StorageDownloadFileOperation
         );
 
         this.file = new File(getRequest().getLocal());
-        if (!file.exists() || file.isDirectory()) {
-            onError.accept(new StorageException(
-                    "This file does not exist or is a directory.",
-                    new FileNotFoundException(),
-                    "Verify that the local path is valid."
-            ));
-            return;
-        }
 
         try {
             transferObserver = storageService.downloadToFile(serviceKey, file);
@@ -153,13 +144,12 @@ public final class AWSS3StorageDownloadFileOperation
         @Override
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("downloadState", state));
+                    HubEvent.create("downloadState", state.name()));
             if (TransferState.COMPLETED == state) {
                 onResult.accept(StorageDownloadFileResult.fromFile(file));
             }
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
             final float progress;
@@ -174,6 +164,8 @@ public final class AWSS3StorageDownloadFileOperation
 
         @Override
         public void onError(int transferId, Exception exception) {
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create("downloadError", exception));
             onError.accept(new StorageException(
                     "Something went wrong with your AWS S3 Storage download file operation",
                     exception,

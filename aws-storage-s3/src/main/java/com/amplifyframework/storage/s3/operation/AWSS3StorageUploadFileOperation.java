@@ -16,7 +16,6 @@
 package com.amplifyframework.storage.s3.operation;
 
 import android.annotation.SuppressLint;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
@@ -35,7 +34,6 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.util.Objects;
 
 /**
@@ -82,14 +80,6 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         );
 
         File file = new File(getRequest().getLocal());
-        if (!file.exists() || file.isDirectory()) {
-            onError.accept(new StorageException(
-                "This file does not exist or is a directory.",
-                new FileNotFoundException(),
-                "Verify that the local path is valid."
-            ));
-            return;
-        }
 
         try {
             if (getRequest().getMetadata().isEmpty()) {
@@ -156,13 +146,12 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         @Override
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("uploadState", state));
+                    HubEvent.create("uploadState", state.name()));
             if (TransferState.COMPLETED == state) {
                 onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
             }
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
             final float progress;
@@ -177,6 +166,8 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
 
         @Override
         public void onError(int transferId, Exception exception) {
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create("uploadError", exception));
             onError.accept(new StorageException(
                     "Something went wrong with your AWS S3 Storage upload file operation",
                     exception,

@@ -18,39 +18,15 @@ package com.amplifyframework.storage.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
-
-import java.util.Objects;
 
 /**
  * Options to specify attributes of remove API invocation.
  */
-public final class StorageRemoveOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageRemoveOptions extends StorageOptions {
 
     private StorageRemoveOptions(final Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    @Nullable
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Gets the target identity ID.
-     * @return target identity ID
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
     /**
@@ -107,8 +83,8 @@ public final class StorageRemoveOptions implements Options {
          * @return Current Builder instance, for fluent method chaining
          */
         @NonNull
-        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
-            this.accessLevel = Objects.requireNonNull(accessLevel);
+        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
             return this;
         }
 
@@ -119,8 +95,8 @@ public final class StorageRemoveOptions implements Options {
          * @return Current Builder instance, for fluent method chaining
          */
         @NonNull
-        public Builder targetIdentityId(@NonNull String targetIdentityId) {
-            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
+        public Builder targetIdentityId(@Nullable String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
             return this;
         }
 
@@ -136,12 +112,12 @@ public final class StorageRemoveOptions implements Options {
         }
 
         @Nullable
-        StorageAccessLevel getAccessLevel() {
+        public StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
         @Nullable
-        String getTargetIdentityId() {
+        public String getTargetIdentityId() {
             return targetIdentityId;
         }
     }
