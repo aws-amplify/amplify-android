@@ -56,7 +56,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test
     public void testUploadUnauthenticatedPublicAccess() throws Exception {
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PUBLIC);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PUBLIC, getIdentityId());
     }
 
     /**
@@ -70,7 +70,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test(expected = StorageException.class)
     public void testUploadUnauthenticatedProtectedAccess() throws Exception {
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, getIdentityId());
     }
 
     /**
@@ -84,7 +84,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test(expected = StorageException.class)
     public void testUploadUnauthenticatedPrivateAccess() throws Exception {
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, getIdentityId());
     }
 
     /**
@@ -95,7 +95,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
     @Test
     public void testUploadAuthenticatedProtectedAccess() throws Exception {
         signInAs("test-user-1");
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, getIdentityId());
     }
 
     /**
@@ -106,13 +106,69 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
     @Test
     public void testUploadAuthenticatedPrivateAccess() throws Exception {
         signInAs("test-user-2");
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, getIdentityId());
     }
 
-    private void testUploadAndCleanUp(File file,
-                                      StorageAccessLevel accessLevel) throws StorageException {
+    /**
+     * Test uploading with protected access after signing in
+     * as another user.
+     *
+     * A protected resource is READ-ONLY to all users. Upload is
+     * not allowed and this test will throw an exception.
+     *
+     * @throws Exception if download is unsuccessful
+     */
+    @Test(expected = StorageException.class)
+    public void testUploadDifferentUserProtectedAccess() throws Exception {
+        final String identityId;
+
+        // Sign in as "test-user-1"
+        signInAs("test-user-1");
+
+        // Remember user's identity ID before signing out
+        identityId = getIdentityId();
+
+        // Re-sign in as "test-user-2"
+        signOut();
+        signInAs("test-user-2");
+
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, identityId);
+    }
+
+    /**
+     * Test uploading with private access after signing in
+     * as another user.
+     *
+     * Private resources are only accessible to owners. This test
+     * will throw an exception.
+     *
+     * @throws Exception if download is unsuccessful
+     */
+    @Test(expected = StorageException.class)
+    public void testUploadDifferentUserPrivateAccess() throws Exception {
+        final String identityId;
+
+        // Sign in as "test-user-1"
+        signInAs("test-user-1");
+
+        // Remember user's identity ID before signing out
+        identityId = getIdentityId();
+
+        // Re-sign in as "test-user-2"
+        signOut();
+        signInAs("test-user-2");
+
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, identityId);
+    }
+
+    private void testUploadAndCleanUp(
+            File file,
+            StorageAccessLevel accessLevel,
+            String identityId
+    ) throws StorageException {
         StorageUploadFileOptions options = StorageUploadFileOptions.builder()
                 .accessLevel(accessLevel)
+                .targetIdentityId(identityId)
                 .build();
         StorageUploadFileResult result =
                 Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
