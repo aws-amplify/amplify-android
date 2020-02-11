@@ -27,6 +27,7 @@ import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 
 import java.net.URL;
+import java.util.concurrent.ExecutorService;
 
 /**
  * An operation to retrieve pre-signed object URL from AWS S3.
@@ -34,24 +35,29 @@ import java.net.URL;
 public final class AWSS3StorageGetUrlOperation
         extends StorageGetUrlOperation<AWSS3StorageGetUrlRequest> {
     private final StorageService storageService;
+    private final ExecutorService executorService;
     private final Consumer<StorageGetUrlResult> onResult;
     private final Consumer<StorageException> onError;
 
     /**
      * Constructs a new AWSS3StorageGetUrlOperation.
      * @param storageService S3 client wrapper
+     * @param executorService Executor service used for running
+     *                        blocking operations on a separate thread
      * @param request getUrl request parameters
      * @param onSuccess Notified when URL is generated.
      * @param onError Notified upon URL generation error
      */
     public AWSS3StorageGetUrlOperation(
             @NonNull StorageService storageService,
+            @NonNull ExecutorService executorService,
             @NonNull AWSS3StorageGetUrlRequest request,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         super(request);
         this.storageService = storageService;
+        this.executorService = executorService;
         this.onResult = onSuccess;
         this.onError = onError;
     }
@@ -59,7 +65,7 @@ public final class AWSS3StorageGetUrlOperation
     @SuppressLint("SyntheticAccessor")
     @Override
     public void start() {
-        try {
+        executorService.submit(() -> {
             // Obtain S3 service key for storage service
             String serviceKey = S3RequestUtils.getServiceKey(
                     getRequest().getAccessLevel(),
@@ -77,13 +83,6 @@ public final class AWSS3StorageGetUrlOperation
                         "See included exception for more details and suggestions to fix."
                 ));
             }
-        } catch (Exception exception) {
-            onError.accept(new StorageException(
-                    "AWSMobileClient could not get user id.",
-                    exception,
-                    "Check whether you initialized AWSMobileClient and waited for its success callback " +
-                            "before calling Amplify config."
-            ));
-        }
+        });
     }
 }

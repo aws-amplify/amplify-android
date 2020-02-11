@@ -199,7 +199,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         );
 
         AWSS3StorageGetUrlOperation operation =
-                new AWSS3StorageGetUrlOperation(storageService, request, onSuccess, onError);
+                new AWSS3StorageGetUrlOperation(storageService, executorService, request, onSuccess, onError);
         operation.start();
 
         return operation;
