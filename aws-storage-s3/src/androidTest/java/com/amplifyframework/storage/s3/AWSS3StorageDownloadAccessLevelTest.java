@@ -19,15 +19,18 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
-import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.storage.result.StorageDownloadFileResult;
-import com.amplifyframework.storage.result.StorageUploadFileResult;
-import com.amplifyframework.testutils.Await;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Instrumentation test to confirm that Storage Download behaves
@@ -35,13 +38,59 @@ import java.io.File;
  */
 public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrumentationTestBase {
 
-    private static final long UPLOAD_SIZE = 100L;
+    private static final String USER_NAME_ONE = "test-user-1";
+    private static final String USER_NAME_TWO = "test-user-2";
+    private static Map<String, String> identityIds = new HashMap<>();
 
-    private final String uploadName = "upload-test-" + System.currentTimeMillis();
-    private File uploadFile;
+    private static final String UPLOAD_NAME = "upload-test-" + System.currentTimeMillis();
+    private static final long UPLOAD_SIZE = 100L;
+    private static File uploadFile;
 
     private final String destination = "download-test-" + System.currentTimeMillis();
     private File downloadFile;
+
+    /**
+     * Upload the required resources in cloud prior to running the tests.
+     * @throws Exception if there is a problem while creating or uploading
+     *         the files.
+     */
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        // Randomly write a file to upload
+        uploadFile = createTempFile(UPLOAD_NAME, UPLOAD_SIZE);
+
+        // Upload to each access level
+        latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PUBLIC, getIdentityId());
+
+        signInAs(USER_NAME_ONE);
+        identityIds.put(USER_NAME_ONE, getIdentityId());
+        latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PROTECTED, getIdentityId());
+        latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PRIVATE, getIdentityId());
+
+        signInAs(USER_NAME_TWO);
+        identityIds.put(USER_NAME_TWO, getIdentityId());
+        latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PROTECTED, getIdentityId());
+        latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PRIVATE, getIdentityId());
+    }
+
+    /**
+     * Clean up the uploaded resources after the test.
+     */
+    @AfterClass
+    public static void cleanUp() {
+        // Clean up each access level
+        cleanUpS3Object(getS3Key(StorageAccessLevel.PUBLIC, UPLOAD_NAME));
+
+        signInAs(USER_NAME_ONE);
+        cleanUpS3Object(getS3Key(StorageAccessLevel.PROTECTED, UPLOAD_NAME));
+        cleanUpS3Object(getS3Key(StorageAccessLevel.PRIVATE, UPLOAD_NAME));
+
+        signInAs(USER_NAME_TWO);
+        cleanUpS3Object(getS3Key(StorageAccessLevel.PROTECTED, UPLOAD_NAME));
+        cleanUpS3Object(getS3Key(StorageAccessLevel.PRIVATE, UPLOAD_NAME));
+
+        identityIds.clear();
+    }
 
     /**
      * Signs out by default and sets up the file to download object to.
@@ -51,7 +100,6 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
     public void setUp() throws Exception {
         signOut();
         downloadFile = createTempFile(destination);
-        uploadFile = createTempFile(uploadName, UPLOAD_SIZE);
     }
 
     /**
@@ -61,14 +109,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadUnauthenticatedPublicAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PUBLIC;
-
-        upload(accessLevel);
-
-        testDownload(downloadFile, accessLevel, getIdentityId());
-
-        // Clean-up uploaded item
-        cleanUp(accessLevel);
+        testDownload(downloadFile, StorageAccessLevel.PUBLIC, getIdentityId());
     }
 
     /**
@@ -81,19 +122,8 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadUnauthenticatedProtectedAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PROTECTED;
-        final String identityId;
-
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-        upload(accessLevel);
-
-        // Remember user's identity ID before signing out
-        identityId = getIdentityId();
-        signOut();
-
-        testDownload(downloadFile, accessLevel, identityId);
-        cleanUp(accessLevel);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_ONE));
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_TWO));
     }
 
     /**
@@ -107,19 +137,10 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test(expected = StorageException.class)
     public void testDownloadUnauthenticatedPrivateAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PRIVATE;
-        final String identityId;
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-        upload(accessLevel);
-
-        // Remember user's identity ID before signing out
-        identityId = getIdentityId();
-        signOut();
-
-        testDownload(downloadFile, accessLevel, identityId);
-        cleanUp(accessLevel);
+        // This one should be unreachable, since first attempt fails
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_TWO));
     }
 
     /**
@@ -129,14 +150,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadAuthenticatedProtectedAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PROTECTED;
+        signInAs(USER_NAME_ONE);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, getIdentityId());
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-        upload(accessLevel);
-
-        testDownload(downloadFile, accessLevel, getIdentityId());
-        cleanUp(accessLevel);
+        signInAs(USER_NAME_TWO);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, getIdentityId());
     }
 
     /**
@@ -146,14 +164,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadAuthenticatedPrivateAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PRIVATE;
+        signInAs(USER_NAME_ONE);
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, getIdentityId());
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-        upload(accessLevel);
-
-        testDownload(downloadFile, accessLevel, getIdentityId());
-        cleanUp(accessLevel);
+        signInAs(USER_NAME_TWO);
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, getIdentityId());
     }
 
     /**
@@ -167,22 +182,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadDifferentUsersProtectedAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PROTECTED;
-        final String identityId;
+        signInAs(USER_NAME_ONE);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_TWO));
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-        upload(accessLevel);
-
-        // Remember user's identity ID before signing out
-        identityId = getIdentityId();
-
-        // Re-sign in as "test-user-2"
-        signOut();
-        signInAs("test-user-2");
-
-        testDownload(downloadFile, accessLevel, identityId);
-        cleanUp(accessLevel);
+        signInAs(USER_NAME_TWO);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_ONE));
     }
 
     /**
@@ -196,63 +200,44 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test(expected = StorageException.class)
     public void testDownloadDifferentUsersPrivateAccess() throws Exception {
-        final StorageAccessLevel accessLevel = StorageAccessLevel.PRIVATE;
-        final String identityId;
+        signInAs(USER_NAME_ONE);
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_TWO));
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-        upload(accessLevel);
-
-        // Remember user's identity ID before signing out
-        identityId = getIdentityId();
-
-        // Re-sign in as "test-user-2"
-        signOut();
-        signInAs("test-user-2");
-
-        testDownload(downloadFile, accessLevel, identityId);
-        cleanUp(accessLevel);
+        // This part of the test should be unreachable
+        signInAs(USER_NAME_TWO);
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
     }
 
-    private void upload(StorageAccessLevel accessLevel) throws StorageException {
-        StorageUploadFileOptions uploadOptions = StorageUploadFileOptions.builder()
-                .accessLevel(accessLevel)
-                .build();
-        Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
-                Amplify.Storage.uploadFile(
-                        uploadFile.getName(),
-                        uploadFile.getAbsolutePath(),
-                        uploadOptions,
-                        onResult,
-                        onError
-                )
-        );
-    }
-
+    @SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
     private void testDownload(
             File downloadTo,
             StorageAccessLevel accessLevel,
             String identityId
-    ) throws StorageException {
+    ) throws Exception {
+        final CountDownLatch completed = new CountDownLatch(1);
+        AtomicReference<StorageException> errorContainer = new AtomicReference<>();
+
         StorageDownloadFileOptions downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
-        StorageDownloadFileResult result =
-                Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) ->
-                Amplify.Storage.downloadFile(
-                        uploadName,
-                        downloadTo.getAbsolutePath(),
-                        downloadOptions,
-                        onResult,
-                        onError
-                )
+        Amplify.Storage.downloadFile(
+                UPLOAD_NAME,
+                downloadTo.getAbsolutePath(),
+                downloadOptions,
+                onResult -> completed.countDown(),
+                onError -> {
+                    errorContainer.set(onError);
+                    completed.countDown();
+                }
         );
-        TestUtils.assertFileEqualsFile(uploadFile, result.getFile());
-    }
+        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
 
-    private void cleanUp(StorageAccessLevel accessLevel) {
-        String s3key = getS3Key(accessLevel, uploadName);
-        cleanUpS3Object(s3key);
+        // Throw if upload was not successful
+        StorageException error = errorContainer.get();
+        if (error != null) {
+            error.printStackTrace();
+            throw error;
+        }
     }
 }

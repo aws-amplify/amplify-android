@@ -18,7 +18,10 @@ package com.amplifyframework.storage.s3;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 import com.amplifyframework.testutils.AmplifyTestBase;
 
@@ -30,6 +33,9 @@ import org.junit.BeforeClass;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertTrue;
 
@@ -39,6 +45,8 @@ import static org.junit.Assert.assertTrue;
  * {@link AmazonS3Client} and {@link AWSMobileClient}.
  */
 public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
+
+    static final long DEFAULT_TIMEOUT_IN_SECONDS = 10; // 5 seconds is too short for file transfers
 
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
@@ -63,15 +71,19 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
         mClient = AWSMobileClient.getInstance();
     }
 
-    static File createTempFile(String filename) throws IOException {
+    static synchronized File createTempFile(String filename) throws IOException {
         File file = new File(TEMP_DIR, filename);
         if (file.createNewFile()) {
             file.deleteOnExit();
+        } else if (file.delete()) {
+            file = createTempFile(filename);
+        } else {
+            throw new IOException("Failed to create a new file.");
         }
         return file;
     }
 
-    static File createTempFile(String filename, long contentLength) throws IOException {
+    static synchronized File createTempFile(String filename, long contentLength) throws IOException {
         File file = createTempFile(filename);
         RandomAccessFile raf = new RandomAccessFile(file, "rw");
         raf.setLength(contentLength);
@@ -100,6 +112,7 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
     }
 
     static void signInAs(@NonNull String username) {
+        signOut();
         try {
             String password = credentials.getString("password");
             mClient.signIn(username, password, null);
@@ -110,5 +123,46 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
 
     static void signOut() {
         mClient.signOut();
+    }
+
+    @SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
+    static void latchedUploadAndConfirm(
+            File file,
+            StorageAccessLevel accessLevel,
+            String identityId
+    ) throws Exception {
+        final CountDownLatch completed = new CountDownLatch(1);
+        AtomicReference<StorageException> errorContainer = new AtomicReference<>();
+
+        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+                .accessLevel(accessLevel)
+                .targetIdentityId(identityId)
+                .build();
+        Amplify.Storage.uploadFile(
+                file.getName(),
+                file.getAbsolutePath(),
+                options,
+                onResult -> completed.countDown(),
+                onError -> {
+                    errorContainer.set(onError);
+                    completed.countDown();
+                }
+        );
+        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+
+        // Throw if upload was not successful
+        StorageException error = errorContainer.get();
+        if (error != null) {
+            error.printStackTrace();
+            throw error;
+        }
+
+        // Confirm that the uploaded file is in S3 bucket
+        String s3Key = S3RequestUtils.getServiceKey(
+                accessLevel,
+                identityId,
+                file.getName()
+        );
+        assertS3ObjectExists(s3Key);
     }
 }

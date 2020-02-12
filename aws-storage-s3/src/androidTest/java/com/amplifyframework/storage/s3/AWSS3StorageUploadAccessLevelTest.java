@@ -15,19 +15,16 @@
 
 package com.amplifyframework.storage.s3;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.storage.result.StorageUploadFileResult;
-import com.amplifyframework.testutils.Await;
 
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-
-import static org.junit.Assert.assertEquals;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Instrumentation test to confirm that Storage Upload behaves
@@ -35,8 +32,24 @@ import static org.junit.Assert.assertEquals;
  */
 public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentationTestBase {
 
+    private static final String USER_NAME_ONE = "test-user-1";
+    private static final String USER_NAME_TWO = "test-user-2";
+    private static Map<String, String> identityIds = new HashMap<>();
+
     private final String filename = "test-" + System.currentTimeMillis();
     private File fileToUpload;
+
+    /**
+     * Obtain the user IDs prior to running the tests.
+     */
+    @BeforeClass
+    public static void setUpBeforeClass() {
+        signInAs(USER_NAME_ONE);
+        identityIds.put(USER_NAME_ONE, getIdentityId());
+
+        signInAs(USER_NAME_TWO);
+        identityIds.put(USER_NAME_TWO, getIdentityId());
+    }
 
     /**
      * Signs out by default and sets up the file to test uploading.
@@ -70,7 +83,10 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test(expected = StorageException.class)
     public void testUploadUnauthenticatedProtectedAccess() throws Exception {
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, getIdentityId());
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_ONE));
+
+        // This part of the test is unreachable, since above should fail
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_TWO));
     }
 
     /**
@@ -84,7 +100,10 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test(expected = StorageException.class)
     public void testUploadUnauthenticatedPrivateAccess() throws Exception {
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, getIdentityId());
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
+
+        // This part of the test is unreachable, since above should fail
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_TWO));
     }
 
     /**
@@ -94,7 +113,10 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test
     public void testUploadAuthenticatedProtectedAccess() throws Exception {
-        signInAs("test-user-1");
+        signInAs(USER_NAME_ONE);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, getIdentityId());
+
+        signInAs(USER_NAME_TWO);
         testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, getIdentityId());
     }
 
@@ -105,7 +127,10 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test
     public void testUploadAuthenticatedPrivateAccess() throws Exception {
-        signInAs("test-user-2");
+        signInAs(USER_NAME_ONE);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, getIdentityId());
+
+        signInAs(USER_NAME_TWO);
         testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, getIdentityId());
     }
 
@@ -120,19 +145,12 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserProtectedAccess() throws Exception {
-        final String identityId;
+        signInAs(USER_NAME_ONE);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_TWO));
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-
-        // Remember user's identity ID before signing out
-        identityId = getIdentityId();
-
-        // Re-sign in as "test-user-2"
-        signOut();
-        signInAs("test-user-2");
-
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, identityId);
+        // This part of the test is unreachable
+        signInAs(USER_NAME_TWO);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_ONE));
     }
 
     /**
@@ -146,43 +164,20 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      */
     @Test(expected = StorageException.class)
     public void testUploadDifferentUserPrivateAccess() throws Exception {
-        final String identityId;
+        signInAs(USER_NAME_ONE);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_TWO));
 
-        // Sign in as "test-user-1"
-        signInAs("test-user-1");
-
-        // Remember user's identity ID before signing out
-        identityId = getIdentityId();
-
-        // Re-sign in as "test-user-2"
-        signOut();
-        signInAs("test-user-2");
-
-        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, identityId);
+        // This part of the test is unreachable
+        signInAs(USER_NAME_TWO);
+        testUploadAndCleanUp(fileToUpload, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
     }
 
     private void testUploadAndCleanUp(
             File file,
             StorageAccessLevel accessLevel,
             String identityId
-    ) throws StorageException {
-        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
-                .accessLevel(accessLevel)
-                .targetIdentityId(identityId)
-                .build();
-        StorageUploadFileResult result =
-                Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
-                Amplify.Storage.uploadFile(
-                        file.getName(),
-                        file.getAbsolutePath(),
-                        options,
-                        onResult,
-                        onError
-                )
-        );
-
-        // Will only make it this far if transfer was successful
-        assertEquals(file.getName(), result.getKey());
+    ) throws Exception {
+        latchedUploadAndConfirm(file, accessLevel, identityId);
 
         // Clean up
         String s3key = getS3Key(accessLevel, file.getName());

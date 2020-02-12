@@ -35,6 +35,5 @@ dependencies {
     androidTestImplementation dependency.androidx.annotation
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
-    androidTestImplementation dependency.aws.mobileclient
 }
 

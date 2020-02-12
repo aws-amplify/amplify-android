@@ -22,13 +22,13 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
-import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.testutils.Await;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -45,20 +45,46 @@ import static org.junit.Assert.fail;
 public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBase {
 
     private static final StorageAccessLevel DEFAULT_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
-    private static final long DEFAULT_TIMEOUT_IN_SECONDS = 10;
 
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
     private static final long SMALL_FILE_SIZE = 100L;
 
-    private final String largeFileName = "large-test-" + System.currentTimeMillis();
-    private final String smallFileName = "small-test-" + System.currentTimeMillis();
+    private static final String LARGE_FILE_NAME = "large-test-" + System.currentTimeMillis();
+    private static final String SMALL_FILE_NAME = "small-test-" + System.currentTimeMillis();
 
-    private File largeFile;
-    private File smallFile;
+    private static File largeFile;
+    private static File smallFile;
 
     private final String destination = "download-test-" + System.currentTimeMillis();
     private File downloadFile;
     private StorageDownloadFileOptions options;
+
+    /**
+     * Upload required resources ahead of time.
+     * @throws Exception if file creation or upload fails
+     */
+    @BeforeClass
+    public static void setUpBeforeClass() throws Exception {
+        // Randomly write objects to upload
+        largeFile = createTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
+        smallFile = createTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
+
+        // Upload to bucket and confirm successful upload
+        latchedUploadAndConfirm(largeFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
+        latchedUploadAndConfirm(smallFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
+    }
+
+    /**
+     * Cleans up the S3 bucket for files that were uploaded
+     * during testing processes.
+     */
+    @AfterClass
+    public static void cleanUp() {
+        String largeFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, LARGE_FILE_NAME);
+        String smallFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, SMALL_FILE_NAME);
+        cleanUpS3Object(largeFileKey);
+        cleanUpS3Object(smallFileKey);
+    }
 
     /**
      * Sets up the required files for testing transfers.
@@ -69,26 +95,10 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         // Set up file to download test-object to
         downloadFile = createTempFile(destination);
 
-        // Randomly write objects to upload
-        largeFile = createTempFile(largeFileName, LARGE_FILE_SIZE);
-        smallFile = createTempFile(smallFileName, SMALL_FILE_SIZE);
-
         // Always interact with PUBLIC access for consistency
         options = StorageDownloadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
-    }
-
-    /**
-     * Cleans up the S3 bucket for files that were uploaded
-     * during testing processes.
-     */
-    @After
-    public void cleanUp() {
-        String largeFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, largeFileName);
-        String smallFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, smallFileName);
-        cleanUpS3Object(largeFileKey);
-        cleanUpS3Object(smallFileKey);
     }
 
     /**
@@ -98,12 +108,10 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadSmallFile() throws Exception {
-        latchedUpload(smallFile);
-
         StorageDownloadFileResult result = Await.<StorageDownloadFileResult, StorageException>result(
                 (onResult, onError) ->
                         Amplify.Storage.downloadFile(
-                                smallFileName,
+                                SMALL_FILE_NAME,
                                 downloadFile.getAbsolutePath(),
                                 options,
                                 onResult,
@@ -121,12 +129,10 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadLargeFile() throws Exception {
-        latchedUpload(largeFile);
-
         StorageDownloadFileResult result = Await.<StorageDownloadFileResult, StorageException>result(
                 (onResult, onError) ->
                         Amplify.Storage.downloadFile(
-                                largeFileName,
+                                LARGE_FILE_NAME,
                                 downloadFile.getAbsolutePath(),
                                 options,
                                 onResult,
@@ -148,11 +154,9 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     @SuppressWarnings("unchecked")
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch latch = new CountDownLatch(1);
-        latchedUpload(largeFile);
-
         // Begin downloading large file
         StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
-                largeFileName,
+                LARGE_FILE_NAME,
                 downloadFile.getAbsolutePath(),
                 options,
                 onResult -> fail("Download finished before being successfully cancelled."),
@@ -196,15 +200,14 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
-        latchedUpload(largeFile);
 
         // Begin downloading large file
         StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
-                largeFileName,
+                LARGE_FILE_NAME,
                 downloadFile.getAbsolutePath(),
                 options,
                 onResult -> completed.countDown(),
-                onError -> fail("Encountered an error during download.")
+                onError -> fail("Download is not successful.")
         );
 
         // Listen to Hub events to pause when progress has been made
@@ -224,29 +227,12 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
                 if (TransferState.PAUSED.equals(state)) {
-                    resumed.countDown();
                     op.resume();
+                    resumed.countDown();
                 }
             }
         });
         resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
         completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
-    }
-
-    private void latchedUpload(File file) throws Exception {
-        final CountDownLatch completed = new CountDownLatch(1);
-        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
-                .accessLevel(DEFAULT_ACCESS_LEVEL)
-                .build();
-        Amplify.Storage.uploadFile(
-                file.getName(),
-                file.getAbsolutePath(),
-                options,
-                onResult -> completed.countDown(),
-                onError -> fail("Upload was not successful.")
-        );
-        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
-        String s3key = getS3Key(DEFAULT_ACCESS_LEVEL, file.getName());
-        assertS3ObjectExists(s3key);
     }
 }
