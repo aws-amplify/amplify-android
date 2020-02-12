@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils;
 
+import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
 import org.json.JSONException;
@@ -30,6 +31,7 @@ import java.util.Scanner;
  */
 public abstract class AmplifyTestBase {
 
+    private static final String TEST_CONFIGURATION_IDENTIFIER = "testconfiguration";
     private static final String TEST_CONFIGURATION_FILENAME = "testconfiguration.json";
 
     private static JSONConfiguration mJSONConfiguration;
@@ -38,13 +40,26 @@ public abstract class AmplifyTestBase {
         return getJSONConfiguration().getPackageConfigure(packageName);
     }
 
+    private static int getConfigResourceId(Context context) {
+        try {
+            return context.getResources().getIdentifier(
+                    TEST_CONFIGURATION_IDENTIFIER, "raw",
+                    context.getPackageName()
+            );
+        } catch (Exception exception) {
+            throw new RuntimeException(
+                    "Failed to locate " + TEST_CONFIGURATION_IDENTIFIER,
+                    exception
+            );
+        }
+    }
+
     private static JSONConfiguration getJSONConfiguration() {
         if (mJSONConfiguration == null) {
             try {
-                final android.content.res.Resources resource =
-                        ApplicationProvider.getApplicationContext().getResources();
-                final InputStream inputStream = resource.openRawResource(
-                        R.raw.testconfiguration);
+                Context context = ApplicationProvider.getApplicationContext();
+                final InputStream inputStream = context.getResources()
+                        .openRawResource(getConfigResourceId(context));
                 final Scanner in = new Scanner(inputStream);
                 final StringBuilder sb = new StringBuilder();
                 while (in.hasNextLine()) {
