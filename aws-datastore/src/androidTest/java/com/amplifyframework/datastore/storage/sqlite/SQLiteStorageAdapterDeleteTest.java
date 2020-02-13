@@ -28,7 +28,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test the functionality of {@link SQLiteStorageAdapter} operations.
+ * Test the delete functionality of {@link SQLiteStorageAdapter} operations.
  */
 public final class SQLiteStorageAdapterDeleteTest extends StorageAdapterInstrumentedTestBase {
 

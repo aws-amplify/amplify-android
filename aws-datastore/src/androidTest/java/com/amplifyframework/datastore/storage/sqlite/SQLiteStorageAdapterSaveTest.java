@@ -36,7 +36,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Test the functionality of {@link SQLiteStorageAdapter} operations.
+ * Test the save functionality of {@link SQLiteStorageAdapter} operations.
  */
 public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrumentedTestBase {
 
