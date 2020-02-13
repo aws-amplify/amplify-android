@@ -275,7 +275,7 @@ public final class SynchronousApi {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
             Await.<String, ApiException>result(
-                    EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                EXTENDED_TIMEOUT_IN_MILLISECONDS,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = Amplify.API.subscribe(
                         apiName,
@@ -307,7 +307,7 @@ public final class SynchronousApi {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
             Await.<String, ApiException>result(
-                    EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                EXTENDED_TIMEOUT_IN_MILLISECONDS,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = Amplify.API.subscribe(
                         apiName,
