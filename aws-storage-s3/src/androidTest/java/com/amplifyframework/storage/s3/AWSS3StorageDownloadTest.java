@@ -25,12 +25,16 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -61,6 +65,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     private final String destination = "download-test-" + System.currentTimeMillis();
     private File downloadFile;
     private StorageDownloadFileOptions options;
+
+    private Set<SubscriptionToken> subscriptions;
 
     /**
      * Upload required resources ahead of time.
@@ -102,6 +108,20 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         options = StorageDownloadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
+
+        // Create a set to remember all the subscriptions
+        subscriptions = new HashSet<>();
+    }
+
+    /**
+     * Unsubscribe from everything after each test.
+     */
+    @After
+    public void unsubscribe() {
+        // Unsubscribe from everything
+        for (SubscriptionToken token : subscriptions) {
+            Amplify.Hub.unsubscribe(token);
+        }
     }
 
     /**
@@ -153,6 +173,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     @SuppressWarnings("unchecked")
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
+
         // Begin downloading large file
         StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
                 LARGE_FILE_NAME,
@@ -163,7 +184,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         );
 
         // Listen to Hub events to cancel when progress has been made
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken progressSubscription = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("downloadProgress".equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
@@ -172,9 +193,10 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 }
             }
         });
+        subscriptions.add(progressSubscription);
 
         // Listen to Hub events for cancel
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken cancelSubscription = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("downloadState".equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
@@ -183,6 +205,9 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 }
             }
         });
+        subscriptions.add(cancelSubscription);
+
+        // Assert that the required conditions have been met
         assertTrue(canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
     }
 
@@ -220,9 +245,10 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 }
             }
         });
+        subscriptions.add(pauseToken);
 
         // Listen to Hub events to resume when operation has been paused
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("downloadState".equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
@@ -235,6 +261,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 }
             }
         });
+        subscriptions.add(resumeToken);
 
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));

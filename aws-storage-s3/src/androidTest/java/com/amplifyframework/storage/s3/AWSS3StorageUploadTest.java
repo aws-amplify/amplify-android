@@ -25,12 +25,16 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+
+import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -59,6 +63,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     private static File smallFile;
 
     private StorageUploadFileOptions options;
+
+    private Set<SubscriptionToken> subscriptions;
 
     /**
      * Create temp files to upload ahead of time.
@@ -92,6 +98,20 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         options = StorageUploadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
+
+        // Create a set to remember all the subscriptions
+        subscriptions = new HashSet<>();
+    }
+
+    /**
+     * Unsubscribe from everything after each test.
+     */
+    @After
+    public void unsubscribe() {
+        // Unsubscribe from everything
+        for (SubscriptionToken token : subscriptions) {
+            Amplify.Hub.unsubscribe(token);
+        }
     }
 
     /**
@@ -136,7 +156,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         );
 
         // Listen to Hub events to cancel when progress has been made
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken progressToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("uploadProgress".equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
@@ -145,9 +165,10 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 }
             }
         });
+        subscriptions.add(progressToken);
 
         // Listen to Hub events for cancel
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken cancelToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("uploadState".equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
@@ -156,6 +177,9 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 }
             }
         });
+        subscriptions.add(cancelToken);
+
+        // Assert that the required conditions have been met
         assertTrue(canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
     }
 
@@ -191,9 +215,10 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 }
             }
         });
+        subscriptions.add(pauseToken);
 
         // Listen to Hub events to resume when operation has been paused
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("uploadState".equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
@@ -205,6 +230,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 }
             }
         });
+        subscriptions.add(resumeToken);
 
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
