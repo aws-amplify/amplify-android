@@ -181,7 +181,6 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
 
         // Clean up
         String s3key = getS3Key(accessLevel, file.getName());
-        assertS3ObjectExists(s3key);
         cleanUpS3Object(s3key);
     }
 }

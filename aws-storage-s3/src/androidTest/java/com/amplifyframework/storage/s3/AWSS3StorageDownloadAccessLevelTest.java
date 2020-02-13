@@ -19,6 +19,8 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.testutils.Await;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -28,11 +30,7 @@ import org.junit.Test;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
-
-import static org.junit.Assert.assertTrue;
 
 /**
  * Instrumentation test to confirm that Storage Download behaves
@@ -210,36 +208,25 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
         testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
     }
 
-    @SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
     private void testDownload(
             File downloadTo,
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        final CountDownLatch completed = new CountDownLatch(1);
-        AtomicReference<StorageException> errorContainer = new AtomicReference<>();
-
-        StorageDownloadFileOptions downloadOptions = StorageDownloadFileOptions.builder()
+        StorageDownloadFileOptions options = StorageDownloadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
-        Amplify.Storage.downloadFile(
-                UPLOAD_NAME,
-                downloadTo.getAbsolutePath(),
-                downloadOptions,
-                onResult -> completed.countDown(),
-                onError -> {
-                    errorContainer.set(onError);
-                    completed.countDown();
-                }
+        Await.<StorageDownloadFileResult, StorageException>result(
+            TimeUnit.SECONDS.toMillis(EXTENDED_TIMEOUT_IN_SECONDS),
+            (onResult, onError) -> Amplify.Storage.downloadFile(
+                    UPLOAD_NAME,
+                    downloadTo.getAbsolutePath(),
+                    options,
+                    onResult,
+                    onError
+            )
         );
-        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-
-        // Throw if upload was not successful
-        StorageException error = errorContainer.get();
-        if (error != null) {
-            error.printStackTrace();
-            throw error;
-        }
+        TestUtils.assertFileEqualsFile(uploadFile, downloadTo);
     }
 }

@@ -20,8 +20,11 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -43,7 +46,6 @@ import static org.junit.Assert.fail;
 /**
  * Instrumentation test for operational work on download.
  */
-@SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
 public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBase {
 
     // TODO: This is a temporary work-around to resolve a race-condition
@@ -126,38 +128,39 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     /**
      * Tests that small file (single-part) downloads successfully.
      *
-     * @throws Exception if uploading test-file fails
+     * @throws StorageException if uploading test-file fails
      */
     @Test
-    public void testDownloadSmallFile() throws Exception {
-        final CountDownLatch completed = new CountDownLatch(1);
-        Amplify.Storage.downloadFile(
-                SMALL_FILE_NAME,
-                downloadFile.getAbsolutePath(),
-                options,
-                onResult -> completed.countDown(),
-                onError -> fail("Download is not successful.")
+    public void testDownloadSmallFile() throws StorageException {
+        Await.<StorageDownloadFileResult, StorageException>result(
+            (onResult, onError) -> Amplify.Storage.downloadFile(
+                    SMALL_FILE_NAME,
+                    downloadFile.getAbsolutePath(),
+                    options,
+                    onResult,
+                    onError
+            )
         );
-        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         TestUtils.assertFileEqualsFile(smallFile, downloadFile);
     }
 
     /**
      * Tests that large file (multi-part) downloads successfully.
      *
-     * @throws Exception if uploading test-file fails
+     * @throws StorageException if uploading test-file fails
      */
     @Test
-    public void testDownloadLargeFile() throws Exception {
-        final CountDownLatch completed = new CountDownLatch(1);
-        Amplify.Storage.downloadFile(
-                LARGE_FILE_NAME,
-                downloadFile.getAbsolutePath(),
-                options,
-                onResult -> completed.countDown(),
-                onError -> fail("Download is not successful.")
+    public void testDownloadLargeFile() throws StorageException {
+        Await.<StorageDownloadFileResult, StorageException>result(
+            TimeUnit.SECONDS.toMillis(EXTENDED_TIMEOUT_IN_SECONDS),
+            (onResult, onError) -> Amplify.Storage.downloadFile(
+                    LARGE_FILE_NAME,
+                    downloadFile.getAbsolutePath(),
+                    options,
+                    onResult,
+                    onError
+            )
         );
-        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         TestUtils.assertFileEqualsFile(largeFile, downloadFile);
     }
 
@@ -175,11 +178,11 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Begin downloading large file
         StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
-                LARGE_FILE_NAME,
-                downloadFile.getAbsolutePath(),
-                options,
-                onResult -> fail("Download finished before being successfully cancelled."),
-                onError -> fail("Download failed for a different reason.")
+            LARGE_FILE_NAME,
+            downloadFile.getAbsolutePath(),
+            options,
+            onResult -> fail("Download finished before being successfully cancelled."),
+            onError -> fail("Download failed for a different reason.")
         );
 
         // Listen to Hub events to cancel when progress has been made
@@ -207,7 +210,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         subscriptions.add(cancelSubscription);
 
         // Assert that the required conditions have been met
-        assertTrue(canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(canceled.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
     }
 
     /**
@@ -226,11 +229,11 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Begin downloading large file
         StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
-                LARGE_FILE_NAME,
-                downloadFile.getAbsolutePath(),
-                options,
-                onResult -> completed.countDown(),
-                onError -> completed.countDown()
+            LARGE_FILE_NAME,
+            downloadFile.getAbsolutePath(),
+            options,
+            onResult -> completed.countDown(),
+            onError -> completed.countDown()
         );
 
         // Listen to Hub events to pause when progress has been made
@@ -263,8 +266,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         subscriptions.add(resumeToken);
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         TestUtils.assertFileEqualsFile(largeFile, downloadFile);
     }
 }

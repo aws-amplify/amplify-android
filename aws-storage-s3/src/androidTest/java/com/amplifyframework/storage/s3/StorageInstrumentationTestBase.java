@@ -22,8 +22,10 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 import com.amplifyframework.testutils.AmplifyTestBase;
+import com.amplifyframework.testutils.Await;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -33,9 +35,7 @@ import org.junit.BeforeClass;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertTrue;
 
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
 
-    static final long DEFAULT_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
+    static final long EXTENDED_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
 
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
@@ -121,37 +121,25 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
         mClient.signOut();
     }
 
-    @SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
     static void latchedUploadAndConfirm(
             File file,
             StorageAccessLevel accessLevel,
             String identityId
-    ) throws Exception {
-        final CountDownLatch completed = new CountDownLatch(1);
-        AtomicReference<StorageException> errorContainer = new AtomicReference<>();
-
+    ) throws StorageException {
         StorageUploadFileOptions options = StorageUploadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
-        Amplify.Storage.uploadFile(
-                file.getName(),
-                file.getAbsolutePath(),
-                options,
-                onResult -> completed.countDown(),
-                onError -> {
-                    errorContainer.set(onError);
-                    completed.countDown();
-                }
+        Await.<StorageUploadFileResult, StorageException>result(
+            TimeUnit.SECONDS.toMillis(EXTENDED_TIMEOUT_IN_SECONDS),
+            (onResult, onError) -> Amplify.Storage.uploadFile(
+                    file.getName(),
+                    file.getAbsolutePath(),
+                    options,
+                    onResult,
+                    onError
+            )
         );
-        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-
-        // Throw if upload was not successful
-        StorageException error = errorContainer.get();
-        if (error != null) {
-            error.printStackTrace();
-            throw error;
-        }
 
         // Confirm that the uploaded file is in S3 bucket
         String s3Key = S3RequestUtils.getServiceKey(

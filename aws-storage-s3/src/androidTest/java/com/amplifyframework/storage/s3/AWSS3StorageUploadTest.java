@@ -43,7 +43,6 @@ import static org.junit.Assert.fail;
 /**
  * Instrumentation test for operational work on upload.
  */
-@SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
 public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase {
 
     // TODO: This is a temporary work-around to resolve a race-condition
@@ -147,11 +146,11 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
         // Begin uploading large file
         StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
-                largeFile.getName(),
-                largeFile.getAbsolutePath(),
-                options,
-                onResult -> fail("Upload finished before being successfully cancelled."),
-                onError -> fail("Upload failed for a different reason.")
+            largeFile.getName(),
+            largeFile.getAbsolutePath(),
+            options,
+            onResult -> fail("Upload finished before being successfully cancelled."),
+            onError -> fail("Upload failed for a different reason.")
         );
 
         // Listen to Hub events to cancel when progress has been made
@@ -179,7 +178,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         subscriptions.add(cancelToken);
 
         // Assert that the required conditions have been met
-        assertTrue(canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(canceled.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
     }
 
     /**
@@ -197,11 +196,11 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
         // Begin uploading large file
         StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
-                largeFile.getName(),
-                largeFile.getAbsolutePath(),
-                options,
-                onResult -> completed.countDown(),
-                onError -> fail("Upload is not successful.")
+            largeFile.getName(),
+            largeFile.getAbsolutePath(),
+            options,
+            onResult -> completed.countDown(),
+            onError -> fail("Upload is not successful.")
         );
 
         // Listen to Hub events to pause when progress has been made
@@ -232,8 +231,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         subscriptions.add(resumeToken);
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         assertS3ObjectExists(getS3Key(DEFAULT_ACCESS_LEVEL, largeFile.getName()));
     }
 }
