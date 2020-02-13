@@ -33,6 +33,7 @@ import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -45,6 +46,10 @@ import io.reactivex.disposables.Disposables;
  * performing various operations.
  */
 public final class SynchronousApi {
+
+    private static final long EXTENDED_TIMEOUT_IN_MILLISECONDS =
+            TimeUnit.SECONDS.toMillis(10); // 5 seconds is insufficient
+
     private static SynchronousApi singleton = null;
 
     @SuppressWarnings("checkstyle:all") private SynchronousApi() {}
@@ -269,20 +274,23 @@ public final class SynchronousApi {
         return Observable.create(emitter -> {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
-            Await.<String, ApiException>result((onSubscriptionStarted, onError) -> {
-                Cancelable cancelable = Amplify.API.subscribe(
-                    apiName,
-                    clazz,
-                    SubscriptionType.ON_CREATE,
-                    onSubscriptionStarted,
-                    emitter::onNext,
-                    onError,
-                    emitter::onComplete
-                );
-                if (cancelable != null) {
-                    disposable.add(Disposables.fromAction(cancelable::cancel));
+            Await.<String, ApiException>result(
+                    EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                (onSubscriptionStarted, onError) -> {
+                    Cancelable cancelable = Amplify.API.subscribe(
+                        apiName,
+                        clazz,
+                        SubscriptionType.ON_CREATE,
+                        onSubscriptionStarted,
+                        emitter::onNext,
+                        onError,
+                        emitter::onComplete
+                    );
+                    if (cancelable != null) {
+                        disposable.add(Disposables.fromAction(cancelable::cancel));
+                    }
                 }
-            });
+            );
         });
     }
 
@@ -298,19 +306,22 @@ public final class SynchronousApi {
         return Observable.create(emitter -> {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
-            Await.<String, ApiException>result((onSubscriptionStarted, onError) -> {
-                Cancelable cancelable = Amplify.API.subscribe(
-                    apiName,
-                    request,
-                    onSubscriptionStarted,
-                    emitter::onNext,
-                    onError,
-                    emitter::onComplete
-                );
-                if (cancelable != null) {
-                    disposable.add(Disposables.fromAction(cancelable::cancel));
+            Await.<String, ApiException>result(
+                    EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                (onSubscriptionStarted, onError) -> {
+                    Cancelable cancelable = Amplify.API.subscribe(
+                        apiName,
+                        request,
+                        onSubscriptionStarted,
+                        emitter::onNext,
+                        onError,
+                        emitter::onComplete
+                    );
+                    if (cancelable != null) {
+                        disposable.add(Disposables.fromAction(cancelable::cancel));
+                    }
                 }
-            });
+            );
         });
     }
 
@@ -318,7 +329,8 @@ public final class SynchronousApi {
     private <T> T awaitResponseData(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                resultErrorEmitter);
         if (response.hasErrors()) {
             String firstErrorMessage = response.getErrors().get(0).getMessage();
             throw new RuntimeException("Response has error:" + firstErrorMessage);
@@ -332,7 +344,8 @@ public final class SynchronousApi {
     private <T> List<GraphQLResponse.Error> awaitResponseErrors(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                resultErrorEmitter);
         if (!response.hasErrors()) {
             throw new RuntimeException("No errors in response.");
         }
@@ -343,6 +356,7 @@ public final class SynchronousApi {
     private RestResponse awaitRestResponse(
             Await.ResultErrorEmitter<RestResponse, ApiException> resultErrorEmitter)
             throws ApiException {
-        return Await.result(resultErrorEmitter);
+        return Await.result(EXTENDED_TIMEOUT_IN_MILLISECONDS,
+                resultErrorEmitter);
     }
 }
