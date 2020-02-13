@@ -25,7 +25,6 @@ import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
