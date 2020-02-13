@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
@@ -29,7 +28,6 @@ import com.amplifyframework.testutils.AmplifyTestBase;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.s3.AmazonS3Client;
 import org.json.JSONObject;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.io.File;
@@ -50,15 +48,12 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
 
     static final long DEFAULT_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
 
-    private static final String TAG = StorageInstrumentationTestBase.class.getSimpleName();
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
     private static AmazonS3Client s3;
     private static String bucketName;
     private static JSONObject credentials;
     private static AWSMobileClient mClient;
-
-    private static SubscriptionToken token;
 
     /**
      * Setup the Android application context.
@@ -74,15 +69,6 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
                 .getBucketName();
         credentials = getPackageConfigure("Storage");
         mClient = AWSMobileClient.getInstance();
-    }
-
-    /**
-     * Teardown test setups.
-     */
-    @AfterClass
-    public static void tearDown() {
-        signOut();
-        Amplify.Hub.unsubscribe(token);
     }
 
     static synchronized File createTempFile(String filename) throws IOException {

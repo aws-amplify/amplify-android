@@ -48,7 +48,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
     // TODO: This is a temporary work-around to resolve a race-condition
     // TransferUtility crashes if a transfer is paused and instantly resumed.
-    private static final int SLEEP_DURATION_IN_MILLISECONDS = 1000;
+    private static final int SLEEP_DURATION_IN_MILLISECONDS = 300;
 
     private static final StorageAccessLevel DEFAULT_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
 
