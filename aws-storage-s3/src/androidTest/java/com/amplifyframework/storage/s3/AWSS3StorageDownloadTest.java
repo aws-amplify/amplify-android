@@ -15,8 +15,6 @@
 
 package com.amplifyframework.storage.s3;
 
-import android.util.Log;
-
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -211,15 +209,11 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 onError -> completed.countDown()
         );
 
-        Log.d("StorageTest", "file length: " + downloadFile.length());
         // Listen to Hub events to pause when progress has been made
         SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("downloadProgress".equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
-                Log.d("StorageTest", "progress: " + progress);
-                Log.d("StorageTest", "file can write: " + downloadFile.canWrite());
-                Log.d("StorageTest", "file length: " + downloadFile.length());
                 // Pause if progress is non-zero amount
                 if (progress != null && progress > 0) {
                     op.pause();
@@ -232,9 +226,6 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
             if ("downloadState".equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
-                Log.d("StorageTest", "state: " + state.name());
-                Log.d("StorageTest", "file can write: " + downloadFile.canWrite());
-                Log.d("StorageTest", "file length: " + downloadFile.length());
                 // Resume if transfer was paused
                 if (TransferState.PAUSED.equals(state)) {
                     Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
