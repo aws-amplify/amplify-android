@@ -32,6 +32,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.Assert.assertTrue;
+
 /**
  * Instrumentation test to confirm that Storage Download behaves
  * correctly with regards to the provided storage access level.
@@ -231,7 +233,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
                     completed.countDown();
                 }
         );
-        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
 
         // Throw if upload was not successful
         StorageException error = errorContainer.get();

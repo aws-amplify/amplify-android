@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
@@ -28,6 +29,7 @@ import com.amplifyframework.testutils.AmplifyTestBase;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.s3.AmazonS3Client;
 import org.json.JSONObject;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 
 import java.io.File;
@@ -46,14 +48,17 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
 
-    static final long DEFAULT_TIMEOUT_IN_SECONDS = 10; // 5 seconds is too short for file transfers
+    static final long DEFAULT_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
 
+    private static final String TAG = StorageInstrumentationTestBase.class.getSimpleName();
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
     private static AmazonS3Client s3;
     private static String bucketName;
     private static JSONObject credentials;
     private static AWSMobileClient mClient;
+
+    private static SubscriptionToken token;
 
     /**
      * Setup the Android application context.
@@ -71,14 +76,19 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
         mClient = AWSMobileClient.getInstance();
     }
 
+    /**
+     * Teardown test setups.
+     */
+    @AfterClass
+    public static void tearDown() {
+        signOut();
+        Amplify.Hub.unsubscribe(token);
+    }
+
     static synchronized File createTempFile(String filename) throws IOException {
         File file = new File(TEMP_DIR, filename);
         if (file.createNewFile()) {
             file.deleteOnExit();
-        } else if (file.delete()) {
-            file = createTempFile(filename);
-        } else {
-            throw new IOException("Failed to create a new file.");
         }
         return file;
     }
@@ -148,7 +158,7 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
                     completed.countDown();
                 }
         );
-        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
 
         // Throw if upload was not successful
         StorageException error = errorContainer.get();

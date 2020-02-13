@@ -18,9 +18,11 @@ package com.amplifyframework.storage.s3;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.AfterClass;
@@ -32,6 +34,7 @@ import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -39,6 +42,10 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
 public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase {
+
+    // TODO: This is a temporary work-around to resolve a race-condition
+    // TransferUtility crashes if a transfer is paused and instantly resumed.
+    private static final int SLEEP_DURATION_IN_MILLISECONDS = 1000;
 
     private static final StorageAccessLevel DEFAULT_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
 
@@ -149,7 +156,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 }
             }
         });
-        canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+        assertTrue(canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
     }
 
     /**
@@ -175,7 +182,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         );
 
         // Listen to Hub events to pause when progress has been made
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("uploadProgress".equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
@@ -191,12 +198,17 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
                 if (TransferState.PAUSED.equals(state)) {
+                    Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
+                    Sleep.milliseconds(SLEEP_DURATION_IN_MILLISECONDS); // TODO: This is kind of gross
                     op.resume();
                     resumed.countDown();
                 }
             }
         });
-        resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
-        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that all the required conditions have been met
+        assertTrue(resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertS3ObjectExists(getS3Key(DEFAULT_ACCESS_LEVEL, largeFile.getName()));
     }
 }

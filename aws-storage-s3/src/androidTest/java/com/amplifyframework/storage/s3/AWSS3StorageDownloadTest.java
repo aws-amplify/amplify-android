@@ -15,15 +15,16 @@
 
 package com.amplifyframework.storage.s3;
 
+import android.util.Log;
+
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
-import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
-import com.amplifyframework.storage.result.StorageDownloadFileResult;
-import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.AfterClass;
@@ -35,7 +36,7 @@ import java.io.File;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 /**
@@ -43,6 +44,10 @@ import static org.junit.Assert.fail;
  */
 @SuppressWarnings("Indentation") // Doesn't seem to like lambda indentation
 public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBase {
+
+    // TODO: This is a temporary work-around to resolve a race-condition
+    // TransferUtility crashes if a transfer is paused and instantly resumed.
+    private static final int SLEEP_DURATION_IN_MILLISECONDS = 1000;
 
     private static final StorageAccessLevel DEFAULT_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
 
@@ -108,17 +113,15 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadSmallFile() throws Exception {
-        StorageDownloadFileResult result = Await.<StorageDownloadFileResult, StorageException>result(
-                (onResult, onError) ->
-                        Amplify.Storage.downloadFile(
-                                SMALL_FILE_NAME,
-                                downloadFile.getAbsolutePath(),
-                                options,
-                                onResult,
-                                onError
-                        )
+        final CountDownLatch completed = new CountDownLatch(1);
+        Amplify.Storage.downloadFile(
+                SMALL_FILE_NAME,
+                downloadFile.getAbsolutePath(),
+                options,
+                onResult -> completed.countDown(),
+                onError -> fail("Download is not successful.")
         );
-        assertEquals(downloadFile, result.getFile());
+        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         TestUtils.assertFileEqualsFile(smallFile, downloadFile);
     }
 
@@ -129,17 +132,15 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadLargeFile() throws Exception {
-        StorageDownloadFileResult result = Await.<StorageDownloadFileResult, StorageException>result(
-                (onResult, onError) ->
-                        Amplify.Storage.downloadFile(
-                                LARGE_FILE_NAME,
-                                downloadFile.getAbsolutePath(),
-                                options,
-                                onResult,
-                                onError
-                        )
+        final CountDownLatch completed = new CountDownLatch(1);
+        Amplify.Storage.downloadFile(
+                LARGE_FILE_NAME,
+                downloadFile.getAbsolutePath(),
+                options,
+                onResult -> completed.countDown(),
+                onError -> fail("Download is not successful.")
         );
-        assertEquals(downloadFile, result.getFile());
+        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         TestUtils.assertFileEqualsFile(largeFile, downloadFile);
     }
 
@@ -153,7 +154,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     @Test
     @SuppressWarnings("unchecked")
     public void testDownloadFileIsCancelable() throws Exception {
-        final CountDownLatch latch = new CountDownLatch(1);
+        final CountDownLatch canceled = new CountDownLatch(1);
         // Begin downloading large file
         StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
                 LARGE_FILE_NAME,
@@ -180,11 +181,11 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
                 if (TransferState.CANCELED.equals(state)) {
-                    latch.countDown();
+                    canceled.countDown();
                 }
             }
         });
-        latch.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+        assertTrue(canceled.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
     }
 
     /**
@@ -207,14 +208,19 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 downloadFile.getAbsolutePath(),
                 options,
                 onResult -> completed.countDown(),
-                onError -> fail("Download is not successful.")
+                onError -> completed.countDown()
         );
 
+        Log.d("StorageTest", "file length: " + downloadFile.length());
         // Listen to Hub events to pause when progress has been made
-        Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
+        SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
             if ("downloadProgress".equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
+                Log.d("StorageTest", "progress: " + progress);
+                Log.d("StorageTest", "file can write: " + downloadFile.canWrite());
+                Log.d("StorageTest", "file length: " + downloadFile.length());
+                // Pause if progress is non-zero amount
                 if (progress != null && progress > 0) {
                     op.pause();
                 }
@@ -226,13 +232,22 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
             if ("downloadState".equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
+                Log.d("StorageTest", "state: " + state.name());
+                Log.d("StorageTest", "file can write: " + downloadFile.canWrite());
+                Log.d("StorageTest", "file length: " + downloadFile.length());
+                // Resume if transfer was paused
                 if (TransferState.PAUSED.equals(state)) {
-                    op.resume();
+                    Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
+                    Sleep.milliseconds(SLEEP_DURATION_IN_MILLISECONDS); // TODO: This is kind of gross
                     resumed.countDown();
+                    op.resume();
                 }
             }
         });
-        resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
-        completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS);
+
+        // Assert that all the required conditions have been met
+        assertTrue(resumed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(completed.await(DEFAULT_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        TestUtils.assertFileEqualsFile(largeFile, downloadFile);
     }
 }

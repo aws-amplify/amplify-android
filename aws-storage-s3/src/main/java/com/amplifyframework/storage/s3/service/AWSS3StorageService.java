@@ -72,13 +72,16 @@ public final class AWSS3StorageService implements StorageService {
         this.client = createS3Client(region);
 
         if (transferAcceleration) {
-            client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(true).build());
+            client.setS3ClientOptions(S3ClientOptions.builder()
+                    .setAccelerateModeEnabled(true)
+                    .build()
+            );
         }
 
         this.transferUtility = TransferUtility.builder()
-                                .context(this.context)
-                                .s3Client(client)
-                                .build();
+                .context(this.context)
+                .s3Client(client)
+                .build();
     }
 
     private AmazonS3Client createS3Client(@NonNull Region region) {
