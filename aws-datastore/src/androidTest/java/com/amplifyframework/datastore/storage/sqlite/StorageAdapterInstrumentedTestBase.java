@@ -48,7 +48,7 @@ import static org.junit.Assert.assertEquals;
  */
 @SuppressWarnings("DesignForExtension") // Utility methods shouldn't be overwritten
 public abstract class StorageAdapterInstrumentedTestBase {
-    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private SQLiteStorageAdapter sqliteStorageAdapter;
