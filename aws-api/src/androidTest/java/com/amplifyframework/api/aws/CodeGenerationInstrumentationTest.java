@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.aws;
 
-import android.os.SystemClock;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -38,7 +36,6 @@ import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import io.reactivex.observers.TestObserver;
 
@@ -148,13 +145,10 @@ public final class CodeGenerationInstrumentationTest {
 
     /**
      * Tests that attempting to subscribe to an API which is protected by Cognito User Pool auth will fail if the user
-     * is unauthenticated. Also checks that the connection error is returned quickly without waiting for a timeout.
+     * is unauthenticated.
      */
     @Test
     public void subscribeFailsWithoutProperAuth() {
-        // Start timing the subscription call.
-        long startTime = SystemClock.elapsedRealtime();
-
         // Act: try to create a subscription
         TestObserver<GraphQLResponse<PrivateNote>> observer = TestObserver.create();
         api.onCreate(NOTES_WITH_AUTH_API_NAME, PrivateNote.class).subscribe(observer);
@@ -166,11 +160,6 @@ public final class CodeGenerationInstrumentationTest {
         assertTrue(throwable instanceof ApiException);
         assertNotNull(throwable.getMessage());
         assertTrue(throwable.getMessage().contains("connection_error"));
-        //
-        // A connection error should take less than a second to be reported
-        long acceptableDurationMs = TimeUnit.SECONDS.toMillis(1);
-        long actualApiCallDurationMs = SystemClock.elapsedRealtime() - startTime;
-        assertTrue(actualApiCallDurationMs < acceptableDurationMs);
     }
 
     /**
