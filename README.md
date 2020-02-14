@@ -36,13 +36,13 @@ Gradle can be used alongside Android Studio to declare dependencies on Amplify r
 ``` gradle
 dependencies {
     // Core SDK is required for configuring Amplify
-    implementation 'com.amplifyframework:core:0.9.0'
+    implementation 'com.amplifyframework:core:0.9.1'
     
     // Specify only the modules that the app will use
-    implementation 'com.amplifyframework:aws-datastore:0.9.0'
-    implementation 'com.amplifyframework:aws-api:0.9.0'
-    implementation 'com.amplifyframework:aws-storage-s3:0.9.0'
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:0.9.0'
+    implementation 'com.amplifyframework:aws-datastore:0.9.1'
+    implementation 'com.amplifyframework:aws-api:0.9.1'
+    implementation 'com.amplifyframework:aws-storage-s3:0.9.1'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:0.9.1'
 }
 ```
 
