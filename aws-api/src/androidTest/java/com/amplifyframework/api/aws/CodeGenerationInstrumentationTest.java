@@ -166,9 +166,9 @@ public final class CodeGenerationInstrumentationTest {
         assertTrue(throwable instanceof ApiException);
         assertNotNull(throwable.getMessage());
         assertTrue(throwable.getMessage().contains("connection_error"));
-        //
-        // A connection error should take less than a second to be reported
-        long acceptableDurationMs = TimeUnit.SECONDS.toMillis(1);
+
+        // A connection error should take less than two seconds to be reported
+        long acceptableDurationMs = TimeUnit.SECONDS.toMillis(2);
         long actualApiCallDurationMs = SystemClock.elapsedRealtime() - startTime;
         assertTrue(actualApiCallDurationMs < acceptableDurationMs);
     }
