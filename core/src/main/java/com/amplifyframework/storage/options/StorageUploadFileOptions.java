@@ -15,12 +15,16 @@
 
 package com.amplifyframework.storage.options;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.util.Immutable;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Options to specify attributes of put API invocation.
@@ -31,7 +35,7 @@ public final class StorageUploadFileOptions implements Options {
     private final String contentType;
     private final Map<String, String> metadata;
 
-    StorageUploadFileOptions(Builder builder) {
+    private StorageUploadFileOptions(Builder builder) {
         this.accessLevel = builder.getAccessLevel();
         this.targetIdentityId = builder.getTargetIdentityId();
         this.contentType = builder.getContentType();
@@ -42,6 +46,7 @@ public final class StorageUploadFileOptions implements Options {
      * Gets the storage access level.
      * @return Storage access level
      */
+    @Nullable
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -50,6 +55,7 @@ public final class StorageUploadFileOptions implements Options {
      * Target user to apply the action on.
      * @return Target user's identity id
      */
+    @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
     }
@@ -58,6 +64,7 @@ public final class StorageUploadFileOptions implements Options {
      * The standard MIME type describing the format of the object to store.
      * @return Content type
      */
+    @Nullable
     public String getContentType() {
         return contentType;
     }
@@ -66,8 +73,9 @@ public final class StorageUploadFileOptions implements Options {
      * Metadata for the object to store.
      * @return metadata
      */
+    @Nullable
     public Map<String, String> getMetadata() {
-        return metadata;
+        return Immutable.of(metadata);
     }
 
     /**
@@ -75,14 +83,35 @@ public final class StorageUploadFileOptions implements Options {
      * and build a new immutable instance of StorageUploadFileOptions.
      * @return a new builder instance
      */
+    @NonNull
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Factory method to create builder which is configured to prepare
+     * object instances with the same field values as the provided
+     * options. This can be used as a starting ground to create a
+     * new clone of the provided options, which shares some common
+     * configuration.
+     * @param options Options to populate into a new builder configuration
+     * @return A Builder instance that has been configured using the
+     *         values in the provided options
+     */
+    @NonNull
+    public static Builder from(@NonNull final StorageUploadFileOptions options) {
+        return builder()
+                .accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .contentType(options.getContentType())
+                .metadata(options.getMetadata());
     }
 
     /**
      * Creates a new default instance of the StorageUploadFileOptions.
      * @return default storage put options
      */
+    @NonNull
     public static StorageUploadFileOptions defaultInstance() {
         return builder().build();
     }
@@ -98,18 +127,15 @@ public final class StorageUploadFileOptions implements Options {
         private String contentType;
         private Map<String, String> metadata;
 
-        Builder() {
-            Builder.this.metadata = new HashMap<>();
-        }
-
         /**
          * Configures the storage access level for the new
          * StorageUploadFileOptions instance.
          * @param accessLevel Storage access level
          * @return Current Builder instance for fluent chaining
          */
-        public Builder accessLevel(StorageAccessLevel accessLevel) {
-            this.accessLevel = accessLevel;
+        @NonNull
+        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
+            this.accessLevel = Objects.requireNonNull(accessLevel);
             return this;
         }
 
@@ -118,8 +144,9 @@ public final class StorageUploadFileOptions implements Options {
          * @param targetIdentityId Target user's identity id
          * @return Current Builder instance for fluent chaining
          */
-        public Builder targetIdentityId(String targetIdentityId) {
-            this.targetIdentityId = targetIdentityId;
+        @NonNull
+        public Builder targetIdentityId(@NonNull String targetIdentityId) {
+            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
             return this;
         }
 
@@ -128,8 +155,9 @@ public final class StorageUploadFileOptions implements Options {
          * @param contentType Content type
          * @return Current Builder instance for fluent chaining
          */
-        public Builder contentType(String contentType) {
-            this.contentType = contentType;
+        @NonNull
+        public Builder contentType(@NonNull String contentType) {
+            this.contentType = Objects.requireNonNull(contentType);
             return this;
         }
 
@@ -138,11 +166,9 @@ public final class StorageUploadFileOptions implements Options {
          * @param metadata Metadata for StorageUploadFileOptions
          * @return Current Builder instance for fluent method chaining
          */
-        public Builder metadata(Map<String, String> metadata) {
-            this.metadata.clear();
-            if (metadata != null) {
-                this.metadata.putAll(metadata);
-            }
+        @NonNull
+        public Builder metadata(@NonNull Map<String, String> metadata) {
+            this.metadata = new HashMap<>(Objects.requireNonNull(metadata));
             return this;
         }
 
@@ -152,24 +178,29 @@ public final class StorageUploadFileOptions implements Options {
          * set on this Builder instance.
          * @return A new immutable StorageUploadFileOptions instance
          */
+        @NonNull
         public StorageUploadFileOptions build() {
             return new StorageUploadFileOptions(this);
         }
 
+        @Nullable
         StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
+        @Nullable
         String getTargetIdentityId() {
             return targetIdentityId;
         }
 
+        @Nullable
         String getContentType() {
             return contentType;
         }
 
+        @Nullable
         Map<String, String> getMetadata() {
-            return Collections.unmodifiableMap(metadata);
+            return Immutable.of(metadata);
         }
     }
 }

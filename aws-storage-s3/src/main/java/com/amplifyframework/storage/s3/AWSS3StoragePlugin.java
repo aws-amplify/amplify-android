@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.AmplifyExecutors;
@@ -44,7 +45,9 @@ import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
+import com.amplifyframework.storage.s3.service.StorageService;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3Client;
 import org.json.JSONException;
@@ -58,16 +61,35 @@ import java.util.concurrent.ExecutorService;
  */
 @SuppressWarnings("unused") // Revisit this suppression after tests are created
 public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
+
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
-    private AWSS3StorageService storageService;
+
+    private final StorageService.Factory storageServiceFactory;
+    private final IdentityIdProvider identityIdProvider;
     private final ExecutorService executorService;
+
+    private StorageService storageService;
     private StorageAccessLevel defaultAccessLevel;
 
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     public AWSS3StoragePlugin() {
+        this(
+            (context, region, bucket) ->
+                    new AWSS3StorageService(context, region, bucket, false),
+            () -> AWSMobileClient.getInstance().getIdentityId()
+        );
+    }
+
+    @VisibleForTesting
+    AWSS3StoragePlugin(
+            StorageService.Factory storageServiceFactory,
+            IdentityIdProvider identityIdProvider
+    ) {
         super();
+        this.storageServiceFactory = storageServiceFactory;
+        this.identityIdProvider = identityIdProvider;
         this.executorService = AmplifyExecutors.standard();
     }
 
@@ -111,20 +133,19 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             bucket = pluginConfiguration.getString(JsonKeys.BUCKET.getConfigurationKey());
         } catch (JSONException error) {
             throw new StorageException(
-                    "Missing or malformed value for Region in " + AWS_S3_STORAGE_PLUGIN_KEY + "configuration.",
+                    "Missing or malformed value for bucket in " + AWS_S3_STORAGE_PLUGIN_KEY + "configuration.",
                     error,
                     "Check the attached error to see where the parsing issue took place."
             );
         }
 
         try {
-            this.storageService = new AWSS3StorageService(
-                    region,
+            this.storageService = storageServiceFactory.create(
                     context,
-                    bucket,
-                    /* transferAcceleration = */false // This will come from the config in the future
+                    region,
+                    bucket
             );
-        } catch (Exception exception) {
+        } catch (RuntimeException exception) {
             throw new StorageException(
                     "Failed to create storage service.",
                     exception,
@@ -138,7 +159,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @NonNull
     @Override
     public AmazonS3Client getEscapeHatch() {
-        return storageService.getClient();
+        return ((AWSS3StorageService) storageService).getClient();
     }
 
     @NonNull
@@ -147,7 +168,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String key,
             @NonNull String local,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return downloadFile(key, local, StorageDownloadFileOptions.defaultInstance(), onSuccess, onError);
     }
 
@@ -158,12 +180,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String local,
             @NonNull StorageDownloadFileOptions options,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         AWSS3StorageDownloadFileRequest request = new AWSS3StorageDownloadFileRequest(
                 key,
                 local,
-                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
-                options.getTargetIdentityId()
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId() != null
+                        ? options.getTargetIdentityId()
+                        : getUserIdentityId()
         );
 
         AWSS3StorageDownloadFileOperation operation =
@@ -179,7 +206,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String key,
             @NonNull String local,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return uploadFile(key, local, StorageUploadFileOptions.defaultInstance(), onSuccess, onError);
     }
 
@@ -190,13 +218,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String local,
             @NonNull StorageUploadFileOptions options,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
-
+            @NonNull Consumer<StorageException> onError
+    ) {
         AWSS3StorageUploadFileRequest request = new AWSS3StorageUploadFileRequest(
                 key,
                 local,
-                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
-                options.getTargetIdentityId(),
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId() != null
+                        ? options.getTargetIdentityId()
+                        : getUserIdentityId(),
                 options.getContentType(),
                 options.getMetadata()
         );
@@ -214,7 +246,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     public StorageRemoveOperation<?> remove(
             @NonNull String key,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return remove(key, StorageRemoveOptions.defaultInstance(), onSuccess, onError);
     }
 
@@ -224,11 +257,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String key,
             @NonNull StorageRemoveOptions options,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         AWSS3StorageRemoveRequest request = new AWSS3StorageRemoveRequest(
                 key,
-                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
-                options.getTargetIdentityId()
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId() != null
+                        ? options.getTargetIdentityId()
+                        : getUserIdentityId()
         );
 
         AWSS3StorageRemoveOperation operation =
@@ -244,7 +282,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     public StorageListOperation<?> list(
             @NonNull String path,
             @NonNull Consumer<StorageListResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         return list(path, StorageListOptions.defaultInstance(), onSuccess, onError);
     }
 
@@ -254,11 +293,16 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             @NonNull String path,
             @NonNull StorageListOptions options,
             @NonNull Consumer<StorageListResult> onSuccess,
-            @NonNull Consumer<StorageException> onError) {
+            @NonNull Consumer<StorageException> onError
+    ) {
         AWSS3StorageListRequest request = new AWSS3StorageListRequest(
                 path,
-                options.getAccessLevel() != null ? options.getAccessLevel() : defaultAccessLevel,
-                options.getTargetIdentityId()
+                options.getAccessLevel() != null
+                        ? options.getAccessLevel()
+                        : defaultAccessLevel,
+                options.getTargetIdentityId() != null
+                        ? options.getTargetIdentityId()
+                        : getUserIdentityId()
         );
 
         AWSS3StorageListOperation operation =
@@ -267,6 +311,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         operation.start();
 
         return operation;
+    }
+
+    private String getUserIdentityId() {
+        return identityIdProvider.getIdentityId();
     }
 
     /**

@@ -15,10 +15,25 @@
 
 package com.amplifyframework.testutils;
 
+import com.amplifyframework.hub.HubEvent;
+
 /**
  * A test utility to sleep the thread of execution.
  * This exists so that we don't have to catch {@link InterruptedException} all over the place,
  * cluttering our test code.
+ *
+ * Okay. Now, here's a rant about why you _almost certainly_ shouldn't use this class:
+ *
+ * Sleeping for the purpose of state synchronization is a code smell. Often, mechanisms like
+ * this will be used as a means to cross your fingers and hope that some components have reached a
+ * desired state after (some magic amount of) milliseconds. Well, what if the state is reached
+ * after (some magic amount of milliseconds) + 10ms?
+ *
+ * Instead, you should coordinate component state based on deterministic events. Instead of
+ * using this utility, consider publishing a {@link HubEvent} from one component, and listening
+ * for it in another.
+ *
+ * All of this considered, "When ya gotta sleep, ya gotta, sleep." Ya know?
  */
 public final class Sleep {
     @SuppressWarnings("checkstyle:all") private Sleep() {}

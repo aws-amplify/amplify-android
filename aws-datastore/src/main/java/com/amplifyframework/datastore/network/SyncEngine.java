@@ -27,10 +27,13 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -136,6 +139,11 @@ public final class SyncEngine {
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                     );
             }
+
+            // Notify Hub that we just updated the local storage.
+            HubEvent<? extends Model> receivedFromCloudEvent =
+                HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, mutation.model());
+            Amplify.Hub.publish(HubChannel.DATASTORE, receivedFromCloudEvent);
         }));
     }
 
@@ -150,7 +158,12 @@ public final class SyncEngine {
                 .flatMapSingle(this::publishToNetwork)
                 .flatMapSingle(storageItemChangeJournal::remove)
                 .subscribe(
-                    processedChange -> LOG.info("Change processed successfully! " + processedChange),
+                    processedChange -> {
+                        LOG.info("Change processed successfully! " + processedChange);
+                        HubEvent<? extends Model> publishedToCloudEvent =
+                            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedChange.item());
+                        Amplify.Hub.publish(HubChannel.DATASTORE, publishedToCloudEvent);
+                    },
                     error -> LOG.warn("Error ended journal subscription: ", error),
                     () -> LOG.warn("Change journal subscription was completed.")
                 )

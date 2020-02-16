@@ -15,6 +15,9 @@
 
 package com.amplifyframework.storage.s3.request;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.storage.StorageAccessLevel;
 
 import java.util.HashMap;
@@ -43,19 +46,18 @@ public final class AWSS3StorageUploadFileRequest {
      * @param metadata Metadata for the object to store
      */
     public AWSS3StorageUploadFileRequest(
-            String key,
-            String local,
-            StorageAccessLevel accessLevel,
-            String targetIdentityId,
-            String contentType,
-            Map<String, String> metadata
+            @NonNull String key,
+            @NonNull String local,
+            @NonNull StorageAccessLevel accessLevel,
+            @NonNull String targetIdentityId,
+            @Nullable String contentType,
+            @Nullable Map<String, String> metadata
     ) {
         this.key = key;
         this.local = local;
         this.accessLevel = accessLevel;
         this.targetIdentityId = targetIdentityId;
         this.contentType = contentType;
-
         this.metadata = new HashMap<>();
         if (metadata != null) {
             this.metadata.putAll(metadata);
@@ -66,6 +68,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the storage key.
      * @return key
      */
+    @NonNull
     public String getKey() {
         return key;
     }
@@ -74,6 +77,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the local file path of the file to upload.
      * @return local file path
      */
+    @NonNull
     public String getLocal() {
         return local;
     }
@@ -82,6 +86,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the access level.
      * @return Access level
      */
+    @NonNull
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -90,6 +95,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the target identity id.
      * @return target identity id
      */
+    @NonNull
     public String getTargetIdentityId() {
         return targetIdentityId;
     }
@@ -98,6 +104,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the content type.
      * @return content type
      */
+    @Nullable
     public String getContentType() {
         return contentType;
     }
@@ -106,6 +113,7 @@ public final class AWSS3StorageUploadFileRequest {
      * Gets the metadata.
      * @return metadata
      */
+    @NonNull
     public Map<String, String> getMetadata() {
         return metadata;
     }
