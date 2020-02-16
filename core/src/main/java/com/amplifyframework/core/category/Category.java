@@ -31,7 +31,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * A category groups together zero or more plugins that share the same
@@ -49,14 +49,14 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * Flag to remember that the category is already configured by Amplify
      * and throw an error if configure method is called again.
      */
-    private final AtomicReference<ConfigurationState> configurationState;
+    private final AtomicBoolean configurationState;
 
     /**
      * Constructs a new, not-yet-configured, Category.
      */
     public Category() {
         this.plugins = new ConcurrentHashMap<>();
-        this.configurationState = new AtomicReference<>(ConfigurationState.NOT_CONFIGURED);
+        this.configurationState = new AtomicBoolean(false);
     }
 
     /**
@@ -69,7 +69,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
         synchronized (configurationState) {
-            if (ConfigurationState.CONFIGURED.equals(configurationState.get())) {
+            if (configurationState.get()) {
                 throw new AmplifyException(
                     "Category " + getCategoryType() + " has already been configured.",
                     "Ensure that you are only attempting configuration once, before now."
@@ -82,7 +82,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
                 plugin.configure(pluginConfig, context);
             }
 
-            configurationState.set(ConfigurationState.CONFIGURED);
+            configurationState.set(true);
         }
     }
 
@@ -92,7 +92,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     public final boolean isConfigured() {
         synchronized (configurationState) {
-            return ConfigurationState.CONFIGURED.equals(configurationState.get());
+            return configurationState.get();
         }
     }
 
@@ -128,13 +128,11 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @throws AmplifyException If Amplify is already configured
      */
     public final void addPlugin(@NonNull P plugin) throws AmplifyException {
-        synchronized (configurationState) {
-            if (ConfigurationState.CONFIGURED.equals(configurationState.get())) {
-                throw new AmplifyException(
-                    "Category " + getCategoryType() + " has already been configured.",
-                    "Make sure that you have added all plugins before attempting configuration."
-                );
-            }
+        if (isConfigured()) {
+            throw new AmplifyException(
+                "Category " + getCategoryType() + " has already been configured.",
+                "Make sure that you have added all plugins before attempting configuration."
+            );
         }
         String pluginKey = plugin.getPluginKey();
         plugins.put(pluginKey, plugin);
@@ -189,13 +187,11 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     @NonNull
     protected final P getSelectedPlugin() throws IllegalStateException {
-        synchronized (configurationState) {
-            if (!ConfigurationState.CONFIGURED.equals(configurationState.get())) {
-                throw new IllegalStateException(
-                    "Category " + getCategoryType() + " is not configured. " +
-                    "Ensure that you have configured the category before trying to use it."
-                );
-            }
+        if (!isConfigured()) {
+            throw new IllegalStateException(
+                "Category " + getCategoryType() + " is not configured. " +
+                "Ensure that you have configured the category before trying to use it."
+            );
         }
 
         if (plugins.isEmpty()) {
@@ -211,11 +207,6 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
         }
 
         return getPlugins().iterator().next();
-    }
-
-    private enum ConfigurationState {
-        NOT_CONFIGURED,
-        CONFIGURED
     }
 }
 
