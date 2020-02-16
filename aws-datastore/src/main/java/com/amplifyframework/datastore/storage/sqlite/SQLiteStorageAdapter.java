@@ -467,6 +467,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                     modelSchema.getName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
+                    return;
                 }
 
                 synchronized (sqlCommand.getCompiledSqlStatement()) {
