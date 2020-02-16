@@ -155,7 +155,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
             return plugin;
         } else {
             throw new IllegalStateException(
-                    "Tried to get a plugin but that plugin was not present." +
+                    "Tried to get a plugin but that plugin was not present. " +
                     "Check if the plugin was added originally or perhaps was already removed."
             );
         }
@@ -180,18 +180,18 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     @NonNull
     protected final P getSelectedPlugin() {
         if (!isConfigured) {
-            throw new IllegalStateException("This category is not yet configured." +
+            throw new IllegalStateException("This category is not yet configured. " +
                     "Make sure you added it with Amplify.addPlugin and then called Amplify.config");
         }
         if (plugins.isEmpty()) {
             throw new IllegalStateException(
-                    "Tried to get a plugin but that plugin was not present." +
+                    "Tried to get a plugin but that plugin was not present. " +
                     "Check if the plugin was added originally or perhaps was already removed."
             );
         }
         if (plugins.size() > 1) {
             throw new IllegalStateException(
-                    "Tried to get a default plugin but there are more than one to choose from in this category." +
+                    "Tried to get a default plugin but there are more than one to choose from in this category. " +
                     "Call getPlugin(pluginKey) to choose the specific plugin you want to use in this case."
             );
         }

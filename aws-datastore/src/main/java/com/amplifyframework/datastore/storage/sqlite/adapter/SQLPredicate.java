@@ -214,7 +214,7 @@ public final class SQLPredicate {
             default:
                 throw new DataStoreException(
                         "Tried to parse an unsupported QueryOperator type",
-                        "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                        "Check if a new QueryOperator.Type enum has been created which is not supported " +
                                 "in the AppSyncGraphQLRequestFactory."
                 );
         }
