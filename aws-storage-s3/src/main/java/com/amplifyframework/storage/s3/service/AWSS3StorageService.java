@@ -17,8 +17,9 @@ package com.amplifyframework.storage.s3.service;
 
 import android.content.Context;
 import android.content.Intent;
+import androidx.annotation.NonNull;
 
-import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.ClientConfiguration;
@@ -37,12 +38,13 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 /**
  * A representation of an S3 backend service endpoint.
  */
-public final class AWSS3StorageService {
+public final class AWSS3StorageService implements StorageService {
 
     private final Context context;
     private final String bucket;
@@ -59,7 +61,12 @@ public final class AWSS3StorageService {
      * @param transferAcceleration Whether or not transfer acceleration
      *                             should be enabled
      */
-    public AWSS3StorageService(Region region, Context context, String bucket, boolean transferAcceleration) {
+    public AWSS3StorageService(
+            @NonNull Context context,
+            @NonNull Region region,
+            @NonNull String bucket,
+            boolean transferAcceleration
+    ) {
         this.context = context;
         this.bucket = bucket;
         this.client = createS3Client(region);
@@ -74,7 +81,7 @@ public final class AWSS3StorageService {
                                 .build();
     }
 
-    private AmazonS3Client createS3Client(Region region) {
+    private AmazonS3Client createS3Client(@NonNull Region region) {
         AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
@@ -87,7 +94,11 @@ public final class AWSS3StorageService {
      * @param file Target file
      * @return A transfer observer
      */
-    public TransferObserver downloadToFile(String serviceKey, File file) {
+    @NonNull
+    public TransferObserver downloadToFile(
+            @NonNull String serviceKey,
+            @NonNull File file
+    ) {
         startServiceIfNotAlreadyStarted();
         return transferUtility.download(bucket, serviceKey, file);
     }
@@ -98,7 +109,11 @@ public final class AWSS3StorageService {
      * @param file Target file
      * @return A transfer observer
      */
-    public TransferObserver uploadFile(String serviceKey, File file) {
+    @NonNull
+    public TransferObserver uploadFile(
+            @NonNull String serviceKey,
+            @NonNull File file
+    ) {
         startServiceIfNotAlreadyStarted();
         return transferUtility.upload(bucket, serviceKey, file);
     }
@@ -110,7 +125,12 @@ public final class AWSS3StorageService {
      * @param metadata Object metadata to associate with upload
      * @return A transfer observer
      */
-    public TransferObserver uploadFile(String serviceKey, File file, Map<String, String> metadata) {
+    @NonNull
+    public TransferObserver uploadFile(
+            @NonNull String serviceKey,
+            @NonNull File file,
+            @NonNull Map<String, String> metadata
+    ) {
         startServiceIfNotAlreadyStarted();
         ObjectMetadata objectMetadata = new ObjectMetadata();
         objectMetadata.setUserMetadata(metadata);
@@ -120,11 +140,12 @@ public final class AWSS3StorageService {
     /**
      * List items inside an S3 path.
      * @param path The path to list items from
-     * @return An object containing the parsed items
+     * @return A list of parsed items
      */
-    public StorageListResult listFiles(String path) {
+    @NonNull
+    public List<StorageItem> listFiles(@NonNull String path) {
         startServiceIfNotAlreadyStarted();
-        ArrayList<StorageListResult.Item> itemList = new ArrayList<>();
+        ArrayList<StorageItem> itemList = new ArrayList<>();
         ListObjectsV2Request request =
                 new ListObjectsV2Request().withBucketName(this.bucket).withPrefix(path);
         ListObjectsV2Result result;
@@ -133,7 +154,7 @@ public final class AWSS3StorageService {
             result = client.listObjectsV2(request);
 
             for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
-                itemList.add(new StorageListResult.Item(
+                itemList.add(new StorageItem(
                         objectSummary.getKey(),
                         objectSummary.getSize(),
                         objectSummary.getLastModified(),
@@ -147,14 +168,14 @@ public final class AWSS3StorageService {
             request.setContinuationToken(token);
         } while (result.isTruncated());
 
-        return StorageListResult.fromItems(itemList);
+        return itemList;
     }
 
     /**
      * Synchronous operation to delete a file in s3.
      * @param serviceKey Fully specified path to file to delete (including public/private/protected folder)
      */
-    public void deleteObject(String serviceKey) {
+    public void deleteObject(@NonNull String serviceKey) {
         this.client.deleteObject(this.bucket, serviceKey);
     }
 
@@ -162,7 +183,7 @@ public final class AWSS3StorageService {
      * Pause a file transfer operation.
      * @param transfer an in-progress transfer
      */
-    public void pauseTransfer(TransferObserver transfer) {
+    public void pauseTransfer(@NonNull TransferObserver transfer) {
         startServiceIfNotAlreadyStarted();
         transferUtility.pause(transfer.getId());
     }
@@ -171,7 +192,7 @@ public final class AWSS3StorageService {
      * Resume a file transfer.
      * @param transfer A transfer to be resumed
      */
-    public void resumeTransfer(TransferObserver transfer) {
+    public void resumeTransfer(@NonNull TransferObserver transfer) {
         startServiceIfNotAlreadyStarted();
         transferUtility.resume(transfer.getId());
     }
@@ -180,7 +201,7 @@ public final class AWSS3StorageService {
      * Cancel a file transfer.
      * @param transfer A file transfer to cancel
      */
-    public void cancelTransfer(TransferObserver transfer) {
+    public void cancelTransfer(@NonNull TransferObserver transfer) {
         startServiceIfNotAlreadyStarted();
         transferUtility.cancel(transfer.getId());
     }
@@ -197,6 +218,7 @@ public final class AWSS3StorageService {
      * Gets a handle the S3 client underlying this service.
      * @return S3 client instance
      */
+    @NonNull
     public AmazonS3Client getClient() {
         return client;
     }
