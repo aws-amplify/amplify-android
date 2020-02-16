@@ -19,9 +19,13 @@ import android.util.Log;
 
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -38,7 +42,24 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the save functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrumentedTestBase {
+public final class SQLiteStorageAdapterSaveTest {
+    private SynchronousStorageAdapter adapter;
+
+    @BeforeClass
+    public static void enableStrictMode() {
+        StrictMode.enable();
+    }
+
+    @Before
+    public void setup() {
+        TestStorageAdapter.cleanup();
+        this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
+    }
+
+    @After
+    public void teardown() {
+        TestStorageAdapter.cleanup(adapter);
+    }
 
     /**
      * Assert that save stores item in the SQLite database correctly.
@@ -50,16 +71,16 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner raphael = BlogOwner.builder()
             .name("Raphael Kim")
             .build();
-        saveModel(raphael);
+        adapter.save(raphael);
 
         // Triggers an update
         final BlogOwner raph = raphael.copyOfBuilder()
             .name("Raph Kim")
             .build();
-        saveModel(raph);
+        adapter.save(raph);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertFalse(blogOwners.contains(raphael)); // Replaced by "Raph Kim"
         assertTrue(blogOwners.contains(raph));
@@ -74,10 +95,10 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner alan = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        saveModel(alan);
+        adapter.save(alan);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(alan));
     }
@@ -93,10 +114,10 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
             .name("Tony Danielsen")
             .wea(null)
             .build();
-        saveModel(tony);
+        adapter.save(tony);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(tony));
     }
@@ -110,16 +131,16 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner alan = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        saveModel(alan);
+        adapter.save(alan);
 
         final Blog blog = Blog.builder()
             .name("Alan's Software Blog")
             .owner(alan)
             .build();
-        saveModel(blog);
+        adapter.save(blog);
 
         // Get the Blog record from the database
-        final Set<Blog> blogs = queryModel(Blog.class);
+        final Set<Blog> blogs = adapter.query(Blog.class);
         assertEquals(1, blogs.size());
         assertTrue(blogs.contains(blog));
     }
@@ -133,7 +154,7 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        saveModel(blogOwner);
+        adapter.save(blogOwner);
 
         final Blog blog = Blog.builder()
             .name("Alan's Blog")
@@ -141,7 +162,7 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
                 .name("Susan Swanson") // What??
                 .build())
             .build();
-        Throwable actualError = saveModelExpectingError(blog);
+        Throwable actualError = adapter.saveExpectingError(blog);
 
         final String expectedError = "FOREIGN KEY constraint failed";
         assertNotNull(actualError.getCause());
@@ -158,9 +179,9 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Jane'); DROP TABLE Person; --")
             .build();
-        saveModel(blogOwner);
+        adapter.save(blogOwner);
 
-        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.contains(blogOwner));
     }
 
@@ -180,9 +201,9 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner mark = BlogOwner.builder()
                 .name("Mark")
                 .build();
-        saveModel(john);
-        saveModel(jane);
-        saveModel(mark);
+        adapter.save(john);
+        adapter.save(jane);
+        adapter.save(mark);
 
         // Only update John and Jane
         final QueryPredicate predicate = BlogOwner.NAME.beginsWith("J");
@@ -195,17 +216,17 @@ public final class SQLiteStorageAdapterSaveTest extends StorageAdapterInstrument
         final BlogOwner newMark = mark.copyOfBuilder()
                 .name("Mark Doe")
                 .build();
-        saveModel(newJohn, predicate);
-        saveModel(newJane, predicate);
+        adapter.save(newJohn, predicate);
+        adapter.save(newJane, predicate);
         //noinspection ThrowableNotThrown
-        saveModelExpectingError(newMark, predicate); // Should not update
+        adapter.saveExpectingError(newMark, predicate); // Should not update
 
         final Set<BlogOwner> expectedBlogOwners = new HashSet<>(Arrays.asList(
                 newJohn,
                 newJane,
                 mark
         ));
-        final Set<BlogOwner> actualBlogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> actualBlogOwners = adapter.query(BlogOwner.class);
         assertEquals(expectedBlogOwners, actualBlogOwners);
     }
 }

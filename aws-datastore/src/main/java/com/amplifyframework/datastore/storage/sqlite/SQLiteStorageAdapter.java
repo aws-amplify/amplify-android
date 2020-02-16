@@ -84,7 +84,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final int DATABASE_VERSION = 1;
 
     // Name of the database
-    private static final String DATABASE_NAME = "AmplifyDatastore.db";
+    @VisibleForTesting @SuppressWarnings("checkstyle:all") // Keep logger first
+    static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     // Provider of the Models that will be warehouse-able by the DataStore
     private final ModelProvider modelProvider;
