@@ -111,7 +111,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                     pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
                 } else {
                     throw new AnalyticsException("Invalid property type detected.",
-                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty." +
+                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty. " +
                                     "Refer to the documentation for details.");
                 }
             }
@@ -204,10 +204,12 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                                         .getConfigurationKey()));
             }
         } catch (JSONException exception) {
-            throw new AnalyticsException("Unable to read appId or region from the amplify configuration json.",
-                    exception,
-                    "Make sure amplifyconfiguration.json is a valid json object in expected format." +
-                            "Please take a look at the documentation for expected format of amplifyconfiguration.json");
+            throw new AnalyticsException(
+                "Unable to read appId or region from the amplify configuration json.",
+                exception,
+                "Make sure amplifyconfiguration.json is a valid json object in expected format. " +
+                "Please take a look at the documentation for expected format of amplifyconfiguration.json."
+            );
         }
 
         pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);

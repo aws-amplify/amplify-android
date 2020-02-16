@@ -90,6 +90,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                     exception,
                     "See included exception for more details and suggestions to fix."
                 ));
+                return;
             }
 
             transferObserver.setTransferListener(new TransferListener() {
