@@ -31,6 +31,7 @@ dependencies {
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
     testImplementation dependency.androidx.test.core
+    testImplementation dependency.jsonassert
 
     androidTestImplementation(project(path: ':testutils')) {
         transitive = false
