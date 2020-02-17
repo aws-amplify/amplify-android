@@ -39,7 +39,7 @@ import static com.amplifyframework.core.model.query.predicate.QueryPredicateOper
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-/**f
+/**
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
  */
 public final class SQLiteStorageAdapterQueryTest {
