@@ -32,7 +32,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 /*
- * An {@link StorageItemChangeJournal} is a persistently-backed in-order staging ground
+ * An {@link MutationOutbox} is a persistently-backed in-order staging ground
  * for changes that have already occurred in the storage adapter, and need
  * to be synchronized with a remote GraphQL API, via (a) GraphQL mutation(s).
  *
@@ -40,37 +40,37 @@ import io.reactivex.subjects.PublishSubject;
  * that the implementation doesn't store GraphQL primitives, it stores storage change
  * primitives. These are consumed and converted to GraphQL mutations, though.
  *
- * Items in the change journal are observed, and written out over the network.
+ * Items in the mutation outbox are observed, and written out over the network.
  * When a write completes successfully, it is safe to remove the corresponding item
- * from the journal.
+ * from the outbox.
  */
 // In this class, some lambdas look more readable w/ blocks
 // The generics get crazy, so we break convention and use labels MODEL and SIC, not just M, S.
 @SuppressWarnings({"CodeBlock2Expr", "checkstyle:MethodTypeParameterName"})
-final class StorageItemChangeJournal {
+final class MutationOutbox {
     private final LocalStorageAdapter localStorageAdapter;
     private final PublishSubject<StorageItemChange<? extends Model>> pendingStorageItemChanges;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
-    StorageItemChangeJournal(@NonNull final LocalStorageAdapter localStorageAdapter) {
+    MutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
         this.pendingStorageItemChanges = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
 
     /**
-     * Write a new {@link StorageItemChange} into the journal.
+     * Write a new {@link StorageItemChange} into the outbox.
      * This involves:
      *   1. Writing the {@link StorageItemChange.Record} into a persistent store
      *      (we use the storage adapter, again, for this). To make our lives easier,
      *      we first convert the {@link StorageItemChange} to a {@link StorageItemChange.Record},
      *      which is something the storage adapter can handle.
-     *   2. Notifying the journal observers that there is a new
+     *   2. Notifying the observers of the outbox that there is a new
      *      {@link StorageItemChange} that needs to be processed.
-     * @param storageItemChange Storage item change to be placed into the journal
+     * @param storageItemChange Storage item change to be placed into the outbox
      * @param <MODEL> Any Java type that extends {@link Model}
      * @param <SIC> Any Java type that extends {@link StorageItemChange} with template param of MODEL
-     * @return A Single that emits the StorageItemChange that was journaled, if successful,
+     * @return A Single that emits the StorageItemChange that was put into the outbox, if successful,
      *         or emits error, if not.
      */
     @NonNull
@@ -102,10 +102,10 @@ final class StorageItemChangeJournal {
     }
 
     /**
-     * Observe the {@link StorageItemChangeJournal}, for new {@link StorageItemChange}s.
-     * The SyncEngine may invoke this method to consume items out of the journal. After
+     * Observe the {@link MutationOutbox}, for new {@link StorageItemChange}s.
+     * The Orchestrator may invoke this method to consume items out of the outbox. After
      * processing an item on this observable, that item should be removed from the
-     * StorageItemChangeJournal.
+     * MutationOutbox.
      * @return An observable stream of items that have yet to be published via the network
      */
     @WorkerThread
@@ -121,9 +121,9 @@ final class StorageItemChangeJournal {
     }
 
     /**
-     * Remove an item from the journal. The sync engine calls this after it successfully
+     * Remove an item from the outbox. The sync engine calls this after it successfully
      * publishes an update over the network.
-     * @param storageItemChange The item to remove from the journal
+     * @param storageItemChange The item to remove from the outbox
      * @param <MODEL> Java type that extends {@link Model} type.
      * @param <SIC> Java type that extends a {@link StorageItemChange} with parameter type of MODEL.
      * @return A Single which will complete with the successfully deleted storageItemChange,

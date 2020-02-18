@@ -15,10 +15,11 @@
 
 package com.amplifyframework.datastore.network;
 
-import android.os.Build;
-
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.NoOpCancelable;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
@@ -30,25 +31,25 @@ import com.amplifyframework.testutils.Await;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowLog;
 
+import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests the {@link SyncEngine}.
+ * Tests the {@link Orchestrator}.
  */
-@Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
+@SuppressWarnings("unchecked") // Mockito matchers, e.g. any(), etc.
 @RunWith(RobolectricTestRunner.class)
-public class SyncEngineTest {
+public final class OrchestratorTest {
     // A "reasonable" amount of time our test(s) will wait for async operations to complete
-    private static final long OPERATIONS_TIMEOUT_MS = 5_000L /* ms */;
+    private static final long OPERATIONS_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5) /* ms */;
 
     /**
      * When an item is placed into storage, a cascade of
@@ -60,25 +61,36 @@ public class SyncEngineTest {
      */
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException, DataStoreException {
-        ShadowLog.stream = System.out;
         AppSyncEndpoint endpoint = mock(AppSyncEndpoint.class);
-        LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
-        ModelProvider modelProvider = mock(ModelProvider.class);
-        SyncEngine syncEngine = new SyncEngine(modelProvider, localStorageAdapter, endpoint);
-
-        // Arrange: storage engine is running
-        syncEngine.start();
 
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()
             .name("Susan Quimby")
             .build();
 
-        CountDownLatch apiInvoked = new CountDownLatch(1);
+        CountDownLatch apiInvocationsPending = new CountDownLatch(1);
         doAnswer(invocation -> {
-            apiInvoked.countDown();
-            return null;
-        }).when(endpoint).create(any(), any(), any());
+            // Count down our latch, to indicate that this code did run.
+            apiInvocationsPending.countDown();
+
+            // Simulate a successful response from the API.
+            int positionOfCreationItem = 0;
+            int positionOfResponseConsumer = 1;
+            Model createdItem = invocation.getArgument(positionOfCreationItem);
+            Consumer<GraphQLResponse<Model>> onResponse = invocation.getArgument(positionOfResponseConsumer);
+            onResponse.accept(new GraphQLResponse<>(createdItem, Collections.emptyList()));
+
+            // Technically, the AppSync create() returns a Cancelable of some kind.
+            return new NoOpCancelable();
+        }).when(endpoint)
+            .create(eq(susan), any(Consumer.class), any(Consumer.class));
+
+        LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
+        ModelProvider modelProvider = mock(ModelProvider.class);
+        Orchestrator orchestrator = new Orchestrator(modelProvider, localStorageAdapter, endpoint);
+
+        // Arrange: storage engine is running
+        orchestrator.start().blockingAwait();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         Await.result(
@@ -92,6 +104,7 @@ public class SyncEngineTest {
         );
 
         // Wait for the mock network callback to occur on the IO scheduler ...
-        assertTrue(apiInvoked.await(OPERATIONS_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        apiInvocationsPending.await(OPERATIONS_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertEquals(0, apiInvocationsPending.getCount());
     }
 }
