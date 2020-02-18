@@ -13,14 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
-
-import com.amplifyframework.core.async.Cancelable;
+package com.amplifyframework.core.async;
 
 /**
  * A cancelable which does nothing.
  */
-final class NoOpCancelable implements Cancelable {
+public final class NoOpCancelable implements Cancelable {
     @Override
     public void cancel() {
     }
