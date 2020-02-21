@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,13 +28,18 @@ import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.StringUtils;
 
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
 /**
- * A factory to generate AppSync GraphQL request documents.
+ * A factory to generate requests against an AppSync endpoint.
+ *
+ * This is an implementation detail of the {@link AppSyncClient}.
+ *
+ * AppSync requests are raw GraphQL document strings, which contain AppSync-specific details,
+ * such as AppSync mutation names (create, update, delete, and associated subscription names),
+ * and AppSync-specific field names (`_version`, `_deleted`, etc.)
  */
 final class AppSyncRequestFactory {
     private static final int WALK_DEPTH = 1;
@@ -67,7 +72,8 @@ final class AppSyncRequestFactory {
     static <T extends Model> String buildSyncDoc(
             @NonNull final Class<T> modelClass,
             @Nullable final Long lastSync,
-            @Nullable final String nextToken) throws DataStoreException {
+            @SuppressWarnings("SameParameterValue") @Nullable final String nextToken)
+            throws DataStoreException {
 
         final StringBuilder doc = new StringBuilder();
         final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
@@ -249,7 +255,7 @@ final class AppSyncRequestFactory {
     private static <T extends Model> String buildSelectionPortion(
             final Class<T> modelClass,
             final int indentationLevel,
-            final int levelsToGo)
+            @SuppressWarnings("SameParameterValue") final int levelsToGo)
             throws DataStoreException {
 
         if (levelsToGo < 0) {
@@ -288,31 +294,5 @@ final class AppSyncRequestFactory {
             }
         }
         return result.toString();
-    }
-
-
-    /**
-     * Gets the parameterized type of a field. By calling this, you have some
-     * ahead-of-time knowledge that such a thing exists. For example, if field
-     * has type {@link List}, then you know it has a template ("parameter") type.
-     * @param field A Java field in an Object
-     * @param <T> Where field is a generic type, this will be the type of the first parameter
-     *            of the field type
-     * @return The parameter type bound inside field (a generic type container)
-     */
-    @SuppressWarnings("unchecked")
-    private static <T extends Model> Class<T> getParamType(Field field) {
-        ParameterizedType listType = (ParameterizedType) field.getGenericType();
-        return (Class<T>) listType.getActualTypeArguments()[0];
-    }
-
-    /**
-     * Gets the class of a Java field.
-     * @param field A field that was found in a Java object
-     * @return The class of the field
-     */
-    @SuppressWarnings("unchecked")
-    private static <T extends Model> Class<T> getFieldType(Field field) {
-        return (Class<T>) field.getType();
     }
 }

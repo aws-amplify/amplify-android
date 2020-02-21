@@ -28,12 +28,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.network.AppSyncApi;
-import com.amplifyframework.datastore.network.Orchestrator;
+import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.datastore.syncengine.Orchestrator;
 
 import org.json.JSONObject;
 
@@ -66,7 +66,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     private Orchestrator createOrchestrator(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
-        return new Orchestrator(modelProvider, storageAdapter, AppSyncApi.instance());
+        return new Orchestrator(modelProvider, storageAdapter, AppSyncClient.instance());
     }
 
     /**

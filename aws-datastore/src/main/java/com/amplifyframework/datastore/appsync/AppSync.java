@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -26,10 +26,23 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 
 /**
- * Convenience class to call API in a way that supports versioning and retrieving sync metadata.
+ * Client interface for an AppSync service endpoint.
+ *
+ * Specifically, an AppSync client expects that the AppSync endpoint:
+ *
+ *   1. May be queried via base/delta sync queries, to understand the current states of
+ *      the data warehoused on the AppSync endpoint. The logic to perform a base or a
+ *      delta query is managed by business rules around the last sync time;
+ *
+ *   2. Supports create, update, delete mutations, to modify the state of any data
+ *      that is warehoused at the endpoint. These operations consider a unique ID for
+ *      each model instance, as well as a monotonically increasing version for every
+ *      model instance warehoused at the endpoint;
+ *
+ *   3. Can host subscriptions, over which a client may receive notifications when any
+ *      of the above AppSync mutations have been performed on a particular model(s);
  */
-@SuppressWarnings("unused") // Hold my beer...
-public interface AppSyncEndpoint {
+public interface AppSync {
     /**
      * Uses Amplify API category to get a list of changes which have happened since a last sync time.
      * @param <T> The type of data in the response. Must extend Model.

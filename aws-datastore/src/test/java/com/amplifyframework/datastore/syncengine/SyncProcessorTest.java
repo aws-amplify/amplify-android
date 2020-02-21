@@ -13,10 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.SimpleModelProvider;
+import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.AppSyncMocking;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -32,10 +36,10 @@ import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.BLOGGER_ISLA;
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.BLOGGER_JAMESON;
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.DELETED_DRUM_POST;
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.DRUM_POST;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_ISLA;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_JAMESON;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DELETED_DRUM_POST;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DRUM_POST;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
@@ -47,7 +51,7 @@ public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
     private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
-    private AppSyncEndpoint appSyncEndpoint;
+    private AppSync appSync;
     private InMemoryStorageAdapter inMemoryStorageAdapter;
 
     private SyncProcessor syncProcessor;
@@ -60,9 +64,9 @@ public final class SyncProcessorTest {
         this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
         this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
 
-        final ModelProvider modelProvider = ModelProviderFactory.including(Post.class, BlogOwner.class);
-        this.appSyncEndpoint = mock(AppSyncEndpoint.class);
-        final RemoteModelState remoteModelState = new RemoteModelState(appSyncEndpoint, modelProvider);
+        final ModelProvider modelProvider = SimpleModelProvider.forClasses(Post.class, BlogOwner.class);
+        this.appSync = mock(AppSync.class);
+        final RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
 
         this.syncProcessor = new SyncProcessor(remoteModelState, inMemoryStorageAdapter);
     }
@@ -88,7 +92,7 @@ public final class SyncProcessorTest {
             .subscribe(adapterObserver);
 
         // Arrange: return some responses for the sync() call on the RemoteModelState
-        MockAppSyncEndpoint.configure(appSyncEndpoint)
+        AppSyncMocking.configure(appSync)
             .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_ISLA, BLOGGER_JAMESON);
 

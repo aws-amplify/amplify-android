@@ -13,9 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
@@ -30,7 +32,6 @@ import io.reactivex.schedulers.Schedulers;
  * TODO: the sync processor should save items via the Merger, not directly
  * into the {@link LocalStorageAdapter} as it is currently.
  */
-@SuppressWarnings("unused")
 final class SyncProcessor {
     private final RemoteModelState remoteModelState;
     private final LocalStorageAdapter localStorageAdapter;

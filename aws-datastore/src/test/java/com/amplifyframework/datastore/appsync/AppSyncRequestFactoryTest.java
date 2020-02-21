@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.datastore.DataStoreException;
