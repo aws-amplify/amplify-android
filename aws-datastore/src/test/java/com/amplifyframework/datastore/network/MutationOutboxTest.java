@@ -32,11 +32,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
- * Tests the {@link StorageItemChangeJournal}.
+ * Tests the {@link MutationOutbox}.
  */
-public class StorageItemChangeJournalTest {
+public class MutationOutboxTest {
     private InMemoryStorageAdapter inMemoryStorageAdapter;
-    private StorageItemChangeJournal storageItemChangeJournal;
+    private MutationOutbox mutationOutbox;
     private GsonStorageItemChangeConverter storageItemChangeConverter;
 
     /**
@@ -45,7 +45,7 @@ public class StorageItemChangeJournalTest {
     @Before
     public void setup() {
         inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        storageItemChangeJournal = new StorageItemChangeJournal(inMemoryStorageAdapter);
+        mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
         storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
 
@@ -59,7 +59,7 @@ public class StorageItemChangeJournalTest {
     public void enqueuePersistsChangeAndNotifiesObserver() {
         // Observe the queue
         TestObserver<StorageItemChange<? extends Model>> queueObserver = TestObserver.create();
-        storageItemChangeJournal.observe().subscribe(queueObserver);
+        mutationOutbox.observe().subscribe(queueObserver);
 
         StorageItemChange<BlogOwner> saveJameson = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.SAVE)
@@ -73,7 +73,7 @@ public class StorageItemChangeJournalTest {
         // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onSuccess().
         TestObserver<StorageItemChange<BlogOwner>> saveObserver = TestObserver.create();
-        storageItemChangeJournal.enqueue(saveJameson).subscribe(saveObserver);
+        mutationOutbox.enqueue(saveJameson).subscribe(saveObserver);
         saveObserver.awaitTerminalEvent();
         saveObserver.dispose();
 
@@ -98,10 +98,10 @@ public class StorageItemChangeJournalTest {
     public void enqueueDoesNothingBeforeSubscription() {
         // Watch for notifications on the observe() API.
         TestObserver<StorageItemChange<?>> testObserver = TestObserver.create();
-        storageItemChangeJournal.observe().subscribe(testObserver);
+        mutationOutbox.observe().subscribe(testObserver);
 
         // Enqueue something, but don't subscribe to the observable just yet.
-        storageItemChangeJournal.enqueue(StorageItemChange.<BlogOwner>builder()
+        mutationOutbox.enqueue(StorageItemChange.<BlogOwner>builder()
             .itemClass(BlogOwner.class)
             .item(BlogOwner.builder()
                 .name("Tony Daniels")
@@ -155,13 +155,13 @@ public class StorageItemChangeJournalTest {
             .build();
 
         // Arrange: when no-one is observing, enqueue some changes.
-        storageItemChangeJournal.enqueue(updateTony).subscribe();
-        storageItemChangeJournal.enqueue(insertSam).subscribe();
-        storageItemChangeJournal.enqueue(deleteBetty).subscribe();
+        mutationOutbox.enqueue(updateTony).subscribe();
+        mutationOutbox.enqueue(insertSam).subscribe();
+        mutationOutbox.enqueue(deleteBetty).subscribe();
 
         // Act: observe the queue.
         TestObserver<StorageItemChange<?>> testObserver = TestObserver.create();
-        storageItemChangeJournal.observe().subscribe(testObserver);
+        mutationOutbox.observe().subscribe(testObserver);
 
         // Assert: we got some stuff.
         testObserver.awaitCount(Arrays.asList(updateTony, insertSam, deleteBetty).size());
@@ -169,7 +169,7 @@ public class StorageItemChangeJournalTest {
     }
 
     /**
-     * Tests {@link StorageItemChangeJournal#remove(StorageItemChange)}.
+     * Tests {@link MutationOutbox#remove(StorageItemChange)}.
      */
     @Test
     public void removeRemovesChangesFromQueue() {
@@ -185,7 +185,7 @@ public class StorageItemChangeJournalTest {
         inMemoryStorageAdapter.items().add(deleteBillGates.toRecord(storageItemChangeConverter));
 
         TestObserver<StorageItemChange<BlogOwner>> testObserver = TestObserver.create();
-        storageItemChangeJournal.remove(deleteBillGates).subscribe(testObserver);
+        mutationOutbox.remove(deleteBillGates).subscribe(testObserver);
 
         testObserver.assertValue(deleteBillGates);
 

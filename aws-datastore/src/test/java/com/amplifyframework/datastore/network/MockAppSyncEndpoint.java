@@ -27,7 +27,6 @@ import java.util.HashSet;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
-import static org.mockito.Mockito.mock;
 
 /**
  * A utility to mock behaviors of an {@link AppSyncEndpoint} from test code.
@@ -41,10 +40,6 @@ final class MockAppSyncEndpoint {
 
     static final class Configurator {
         private AppSyncEndpoint endpoint;
-
-        Configurator() {
-            this(mock(AppSyncEndpoint.class));
-        }
 
         Configurator(AppSyncEndpoint appSyncEndpoint) {
             this.endpoint = appSyncEndpoint;
@@ -82,10 +77,6 @@ final class MockAppSyncEndpoint {
                 any() // Consumer<DataStoreException>
             );
             return Configurator.this;
-        }
-
-        AppSyncEndpoint endpoint() {
-            return this.endpoint;
         }
     }
 }
