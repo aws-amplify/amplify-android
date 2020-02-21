@@ -80,9 +80,9 @@ public final class AWSS3StorageDownloadFileOperation
                 getRequest().getTargetIdentityId(),
                 getRequest().getKey()
         );
-
+      
         this.file = new File(getRequest().getLocal());
-
+      
         try {
             transferObserver = storageService.downloadToFile(serviceKey, file);
             transferObserver.setTransferListener(new DownloadTransferListener());

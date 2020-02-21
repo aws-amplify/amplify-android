@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.network;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 
 import java.util.Arrays;
