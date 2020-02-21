@@ -29,7 +29,7 @@ import io.reactivex.Observable;
  * An Rx-idiomatic expression of the behaviors in {@link DataStoreCategoryBehavior}.
  */
 @SuppressWarnings("unused") // These are all public APIs
-public interface RxDataStore {
+public interface RxDataStoreCategoryBehavior {
 
     /**
      * Saves an item into the DataStore.

@@ -20,6 +20,7 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.NoOpCancelable;
+import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
@@ -33,7 +34,7 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 
 import io.reactivex.Single;
 
-final class RxStorageBinding implements RxStorage {
+final class RxStorageBinding implements RxStorageCategoryBehavior {
     private final StorageCategoryBehavior storage;
 
     RxStorageBinding() {
@@ -41,8 +42,7 @@ final class RxStorageBinding implements RxStorage {
     }
 
     @VisibleForTesting
-    @SuppressWarnings("WeakerAccess")
-    RxStorageBinding(StorageCategoryBehavior storage) {
+    RxStorageBinding(StorageCategory storage) {
         this.storage = storage;
     }
 

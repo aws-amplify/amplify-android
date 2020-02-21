@@ -32,10 +32,10 @@ public final class RxAmplify {
     @SuppressWarnings("checkstyle:all") private RxAmplify() {}
 
     // Breaking the rules, here. Don't look.
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxApi API = new RxApiBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxDataStore DataStore = new RxDataStoreBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxHub Hub = new RxHubBinding();
-    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxStorage Storage = new RxStorageBinding();
+    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxApiCategoryBehavior API = new RxApiBinding();
+    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxDataStoreCategoryBehavior DataStore = new RxDataStoreBinding();
+    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxHubCategoryBehavior Hub = new RxHubBinding();
+    @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxStorageCategoryBehavior Storage = new RxStorageBinding();
     // Logging currently has no callback/async behaviors
     // Analytics currently has no callback/async behaviors
 

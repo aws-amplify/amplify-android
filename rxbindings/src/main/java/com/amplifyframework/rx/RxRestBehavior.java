@@ -28,7 +28,7 @@ import io.reactivex.Single;
  * An Rx-idiomatic expression of Amplify's {@link RestBehavior}.
  */
 @SuppressWarnings("unused")
-public interface RxRestApi {
+public interface RxRestBehavior {
 
     /**
      * This is a helper method for easily invoking GET HTTP request.

@@ -32,8 +32,7 @@ import io.reactivex.Single;
 /**
  * An Rx idiomatic expression of the facilities in Amplify's {@link StorageCategoryBehavior}.
  */
-@SuppressWarnings("unused")
-public interface RxStorage {
+public interface RxStorageCategoryBehavior {
 
     /**
      * Download a file.

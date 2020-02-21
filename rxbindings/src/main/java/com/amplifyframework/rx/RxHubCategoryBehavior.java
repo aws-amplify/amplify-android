@@ -28,8 +28,7 @@ import io.reactivex.Observable;
 /**
  * An Rx-idiomatic version of Amplify's {@link HubCategoryBehavior}.
  */
-@SuppressWarnings("unused") // These are public APIs
-public interface RxHub {
+public interface RxHubCategoryBehavior {
 
     /**
      * Publish an event to the specified channel.

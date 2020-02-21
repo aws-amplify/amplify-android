@@ -15,7 +15,6 @@
 
 package com.amplifyframework.rx;
 
-import com.amplifyframework.hub.AWSHubPlugin;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testutils.RandomString;
@@ -34,11 +33,11 @@ import io.reactivex.observers.TestObserver;
 public final class RxHubBindingTest {
     private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(1);
 
-    private RxHub rxHub;
+    private RxHubCategoryBehavior rxHub;
 
     @Before
     public void setup() {
-        this.rxHub = new RxHubBinding(new AWSHubPlugin());
+        this.rxHub = new RxHubBinding();
     }
 
     @Test

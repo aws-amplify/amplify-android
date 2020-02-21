@@ -22,6 +22,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
@@ -31,7 +32,7 @@ import java.util.Iterator;
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 
-final class RxDataStoreBinding implements RxDataStore {
+final class RxDataStoreBinding implements RxDataStoreCategoryBehavior {
     private final DataStoreCategoryBehavior dataStore;
 
     RxDataStoreBinding() {
@@ -39,7 +40,7 @@ final class RxDataStoreBinding implements RxDataStore {
     }
 
     @VisibleForTesting
-    RxDataStoreBinding(DataStoreCategoryBehavior dataStore) {
+    RxDataStoreBinding(DataStoreCategory dataStore) {
         this.dataStore = dataStore;
     }
 

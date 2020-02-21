@@ -16,7 +16,9 @@
 package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -33,18 +35,18 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 
 /**
- * An implementation of the RxApi which satisfies the API contract by wrapping
+ * An implementation of the RxApiCategoryBehavior which satisfies the API contract by wrapping
  * {@link ApiCategoryBehavior} in Rx primitives.
  */
-final class RxApiBinding implements RxApi {
+final class RxApiBinding implements RxApiCategoryBehavior {
     private final ApiCategoryBehavior api;
 
     RxApiBinding() {
         this(Amplify.API);
     }
 
-    @SuppressWarnings("WeakerAccess")
-    RxApiBinding(ApiCategoryBehavior api) {
+    @VisibleForTesting
+    RxApiBinding(ApiCategory api) {
         this.api = api;
     }
 

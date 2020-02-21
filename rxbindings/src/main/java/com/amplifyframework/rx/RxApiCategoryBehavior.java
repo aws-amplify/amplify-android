@@ -21,5 +21,5 @@ import com.amplifyframework.api.ApiCategoryBehavior;
  * An Rx-idiomatic expression of Amplify's {@link ApiCategoryBehavior}s.
  */
 @SuppressWarnings("WeakerAccess") // This is a public API.
-public interface RxApi extends RxRestApi, RxGraphQlApi {
+public interface RxApiCategoryBehavior extends RxRestBehavior, RxGraphQlBehavior {
 }

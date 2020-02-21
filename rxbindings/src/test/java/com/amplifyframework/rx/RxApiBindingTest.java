@@ -15,8 +15,13 @@
 
 package com.amplifyframework.rx;
 
-import com.amplifyframework.api.ApiCategoryBehavior;
+import android.content.Context;
+
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -24,7 +29,9 @@ import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryInitializationResult;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.RandomModel;
 import com.amplifyframework.testutils.RandomString;
 
@@ -40,19 +47,36 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link RxApiBinding}.
  */
 @SuppressWarnings("unchecked") // Mockito.any(Raw.class), etc.
 public final class RxApiBindingTest {
-    private ApiCategoryBehavior apiCategoryBehavior;
-    private RxApi rxApi;
+    private ApiPlugin<?> delegate;
+    private RxApiCategoryBehavior rxApi;
 
+    /**
+     * To test the binding, we construct a category that has been configured
+     * with a mock plugin. The binding delegates to the category.
+     * @throws AmplifyException On failure to add plugin or configure category
+     */
     @Before
-    public void setup() {
-        this.apiCategoryBehavior = mock(ApiCategoryBehavior.class);
-        this.rxApi = new RxApiBinding(apiCategoryBehavior);
+    public void createBindingInFrontOfMockPlugin() throws AmplifyException {
+        // Mock plugin on which we will simulate API responses/failures
+        this.delegate = mock(ApiPlugin.class);
+        when(delegate.getPluginKey()).thenReturn(RandomString.string());
+
+        // Build a category, add the mock plugin, configure and init the category.
+        final ApiCategory apiCategory = new ApiCategory();
+        apiCategory.addPlugin(delegate);
+        apiCategory.configure(new ApiCategoryConfiguration(), mock(Context.class));
+        Await.<CategoryInitializationResult, AmplifyException>result((onResult, onError) ->
+            apiCategory.initialize(mock(Context.class), onResult));
+
+        // Provide that category as a backing to our binding.
+        this.rxApi = new RxApiBinding(apiCategory);
     }
 
     @Test
@@ -64,7 +88,7 @@ public final class RxApiBindingTest {
             Consumer<GraphQLResponse<Iterable<Model>>> onResponse = invocation.getArgument(positionOfResultConsumer);
             onResponse.accept(response);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
 
         // Act: query the Api via the Rx Binding
@@ -74,7 +98,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertValue(response);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
     }
 
@@ -87,7 +111,7 @@ public final class RxApiBindingTest {
             Consumer<ApiException> onFailure = invocation.getArgument(positionOfOnFailure);
             onFailure.accept(expectedFailure);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
 
         // Act: access query() method via Rx binding
@@ -97,7 +121,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
     }
 
@@ -112,7 +136,7 @@ public final class RxApiBindingTest {
             Consumer<GraphQLResponse<Model>> onResponse = invocation.getArgument(positionOfResultConsumer);
             onResponse.accept(response);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
 
         // Act: mutation via the Rx binding
@@ -122,7 +146,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertValue(response);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
     }
 
@@ -137,7 +161,7 @@ public final class RxApiBindingTest {
             Consumer<ApiException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(expectedFailure);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
 
         // Act: access it via binding
@@ -147,7 +171,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
     }
 
@@ -168,7 +192,7 @@ public final class RxApiBindingTest {
             onNext.accept(response);
             onComplete.call();
             return null;
-        }).when(apiCategoryBehavior).subscribe(
+        }).when(delegate).subscribe(
             eq(Model.class),
             eq(SubscriptionType.ON_CREATE),
             any(Consumer.class),
@@ -199,7 +223,7 @@ public final class RxApiBindingTest {
             onStart.accept(token);
             onFailure.accept(expectedFailure);
             return null;
-        }).when(apiCategoryBehavior).subscribe(
+        }).when(delegate).subscribe(
             eq(Model.class),
             eq(SubscriptionType.ON_CREATE),
             any(Consumer.class),
@@ -228,7 +252,7 @@ public final class RxApiBindingTest {
             Consumer<ApiException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(expectedFailure);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .get(eq(options), any(Consumer.class), any(Consumer.class));
 
         TestObserver<RestResponse> observer = rxApi.get(options).test();
@@ -236,7 +260,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .get(eq(options), any(Consumer.class), any(Consumer.class));
     }
 
@@ -253,7 +277,7 @@ public final class RxApiBindingTest {
             Consumer<RestResponse> onResponse = invocation.getArgument(positionOfResponseConsumer);
             onResponse.accept(response);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .get(eq(options), any(Consumer.class), any(Consumer.class));
 
         TestObserver<RestResponse> observer = rxApi.get(options).test();
@@ -261,7 +285,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertValue(response);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .get(eq(options), any(Consumer.class), any(Consumer.class));
     }
 
@@ -278,7 +302,7 @@ public final class RxApiBindingTest {
             Consumer<ApiException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(expectedFailure);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .post(eq(options), any(Consumer.class), any(Consumer.class));
 
         // Act: post via the Rx binding
@@ -288,7 +312,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .post(eq(options), any(Consumer.class), any(Consumer.class));
     }
 
@@ -307,7 +331,7 @@ public final class RxApiBindingTest {
             Consumer<RestResponse> onResponse = invocation.getArgument(positionOfResponseConsumer);
             onResponse.accept(response);
             return null;
-        }).when(apiCategoryBehavior)
+        }).when(delegate)
             .post(eq(options), any(Consumer.class), any(Consumer.class));
 
         // Act: post via Rx binding
@@ -317,7 +341,7 @@ public final class RxApiBindingTest {
         observer.awaitTerminalEvent();
         observer.assertValue(response);
 
-        verify(apiCategoryBehavior)
+        verify(delegate)
             .post(eq(options), any(Consumer.class), any(Consumer.class));
     }
 }

@@ -15,16 +15,24 @@
 
 package com.amplifyframework.rx;
 
+import android.content.Context;
+
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
+import com.amplifyframework.core.category.CategoryInitializationResult;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.DataStoreCategoryBehavior;
+import com.amplifyframework.datastore.DataStoreCategory;
+import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.DataStoreItemChange.Initiator;
 import com.amplifyframework.datastore.DataStoreItemChange.Type;
+import com.amplifyframework.datastore.DataStorePlugin;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.RandomModel;
+import com.amplifyframework.testutils.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -40,24 +48,38 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link RxDataStoreBinding}.
  * The general skeleton for these tests is:
- * 1. Mock the DataStore store category behavior, to pretend that it calls back an error or result
+ * 1. Mock the DataStore, to pretend that it calls back an error or result
  * 2. Invoke the Rx Binding on top of it
  * 3. Validate that either the operation completed or returned the failure that the category behavior
  * emitted.
  */
 @SuppressWarnings("unchecked") // Mockito.any(Raw.class) etc.
 public final class RxDataStoreBindingTest {
-    private DataStoreCategoryBehavior dataStoreCategoryBehavior;
-    private RxDataStore rxDataStore;
+    private DataStorePlugin<?> delegate;
+    private RxDataStoreCategoryBehavior rxDataStore;
 
+    /**
+     * Creates a DataStoreCategory that has a mock plugin backing it.
+     * Creates an Rx Binding around this category, for test.
+     * @throws AmplifyException On failure to add plugin, init/config the category
+     */
     @Before
-    public void setup() {
-        this.dataStoreCategoryBehavior = mock(DataStoreCategoryBehavior.class);
-        this.rxDataStore = new RxDataStoreBinding(dataStoreCategoryBehavior);
+    public void createBindingInFrontOfMockPlugin() throws AmplifyException {
+        this.delegate = mock(DataStorePlugin.class);
+        when(delegate.getPluginKey()).thenReturn(RandomString.string());
+
+        final DataStoreCategory dataStoreCategory = new DataStoreCategory();
+        dataStoreCategory.addPlugin(delegate);
+        dataStoreCategory.configure(new DataStoreCategoryConfiguration(), mock(Context.class));
+        Await.<CategoryInitializationResult, AmplifyException>result((onResult, onError) ->
+            dataStoreCategory.initialize(mock(Context.class), onResult));
+
+        this.rxDataStore = new RxDataStoreBinding(dataStoreCategory);
     }
 
     @Test
@@ -79,7 +101,7 @@ public final class RxDataStoreBindingTest {
                 .item(modelFromInvocation)
                 .build());
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .save(eq(model), any(Consumer.class), any(Consumer.class));
 
         // Act: try to save something.
@@ -90,7 +112,7 @@ public final class RxDataStoreBindingTest {
         observer.assertComplete();
 
         // Assert: behavior was invoked
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .save(eq(model), any(Consumer.class), any(Consumer.class));
     }
 
@@ -105,7 +127,7 @@ public final class RxDataStoreBindingTest {
             Consumer<DataStoreException> failureConsumer = invocation.getArgument(indexOfFailureConsumer);
             failureConsumer.accept(expectedFailure);
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .save(eq(model), any(Consumer.class), any(Consumer.class));
 
         // Act: try to save something.
@@ -113,7 +135,7 @@ public final class RxDataStoreBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .save(eq(model), any(Consumer.class), any(Consumer.class));
     }
 
@@ -135,7 +157,7 @@ public final class RxDataStoreBindingTest {
                 .itemClass(Model.class)
                 .build());
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .delete(eq(model), any(Consumer.class), any(Consumer.class));
 
         // Act: okay, call delete() on the Rx binding.
@@ -143,7 +165,7 @@ public final class RxDataStoreBindingTest {
         observer.awaitTerminalEvent();
         observer.assertComplete();
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .delete(eq(model), any(Consumer.class), any(Consumer.class));
     }
 
@@ -157,7 +179,7 @@ public final class RxDataStoreBindingTest {
             Consumer<DataStoreException> failureConsumer = invocation.getArgument(indexOfFailureConsumer);
             failureConsumer.accept(expectedFailure);
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .delete(eq(model), any(Consumer.class), any(Consumer.class));
 
         // Act: try to delete a model via the Rx binding
@@ -167,7 +189,7 @@ public final class RxDataStoreBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .delete(eq(model), any(Consumer.class), any(Consumer.class));
     }
 
@@ -180,7 +202,7 @@ public final class RxDataStoreBindingTest {
             Consumer<Iterator<Model>> resultConsumer = invocation.getArgument(positionOfResultConsumer);
             resultConsumer.accept(models.iterator());
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
 
         // Act: call Rx Binding to query for Model.class
@@ -190,7 +212,7 @@ public final class RxDataStoreBindingTest {
         observer.awaitTerminalEvent();
         observer.assertValueSet(models);
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
     }
 
@@ -202,14 +224,14 @@ public final class RxDataStoreBindingTest {
             Consumer<DataStoreException> failureConsumer = invocation.getArgument(positionOrFailureConsumer);
             failureConsumer.accept(expectedFailure);
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
 
         TestObserver<Model> observer = rxDataStore.query(Model.class).test();
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
     }
 
@@ -229,7 +251,7 @@ public final class RxDataStoreBindingTest {
             Consumer<DataStoreItemChange<Model>> onNext = invocation.getArgument(positionOfValueConsumer);
             onNext.accept(changeEvent);
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .observe(eq(Model.class), any(Consumer.class), any(Consumer.class), any(Action.class));
 
         // Act: Observe the DataStore via Rx binding
@@ -240,7 +262,7 @@ public final class RxDataStoreBindingTest {
             .awaitCount(1)
             .assertValue(changeEvent);
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .observe(eq(Model.class), any(Consumer.class), any(Consumer.class), any(Action.class));
     }
 
@@ -252,7 +274,7 @@ public final class RxDataStoreBindingTest {
             Action onComplete = invocation.getArgument(positionOfOnComplete);
             onComplete.call();
             return null;
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .observe(eq(Model.class), any(Consumer.class), any(Consumer.class), any(Action.class));
 
         // Act: observe via Rx binding
@@ -260,7 +282,7 @@ public final class RxDataStoreBindingTest {
         observer.awaitTerminalEvent();
         observer.assertComplete();
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .observe(eq(Model.class), any(Consumer.class), any(Consumer.class), any(Action.class));
     }
 
@@ -273,7 +295,7 @@ public final class RxDataStoreBindingTest {
             Consumer<DataStoreException> onFailure = invocation.getArgument(positionOfOnFailure);
             onFailure.accept(expectedFailure);
             return new NoOpCancelable();
-        }).when(dataStoreCategoryBehavior)
+        }).when(delegate)
             .observe(eq(Model.class), any(Consumer.class), any(Consumer.class), any(Action.class));
 
         // Act: observe the DataStore via Rx binding
@@ -283,7 +305,7 @@ public final class RxDataStoreBindingTest {
         observer.awaitTerminalEvent();
         observer.assertError(expectedFailure);
 
-        verify(dataStoreCategoryBehavior)
+        verify(delegate)
             .observe(eq(Model.class), any(Consumer.class), any(Consumer.class), any(Action.class));
     }
 }

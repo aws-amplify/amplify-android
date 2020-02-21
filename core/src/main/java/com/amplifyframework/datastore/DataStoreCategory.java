@@ -34,7 +34,7 @@ import java.util.Iterator;
  * The operations made available by the category are defined in the
  * {@link DataStoreCategoryBehavior}.
  */
-public class DataStoreCategory
+public final class DataStoreCategory
         extends Category<DataStorePlugin<?>>
         implements DataStoreCategoryBehavior {
 

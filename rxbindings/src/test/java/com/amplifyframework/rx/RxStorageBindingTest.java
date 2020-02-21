@@ -15,9 +15,16 @@
 
 package com.amplifyframework.rx;
 
+import android.content.Context;
+
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryInitializationResult;
+import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
+import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.StoragePlugin;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
@@ -26,6 +33,7 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.RandomString;
 
 import org.junit.Before;
@@ -40,21 +48,43 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link RxStorageBinding}.
  */
 @SuppressWarnings("unchecked")
 public final class RxStorageBindingTest {
-    private RxStorage rxStorage;
-    private StorageCategoryBehavior delegate;
+    private RxStorageCategoryBehavior rxStorage;
+    private StoragePlugin<?> delegate;
     private String localPath;
     private String remoteKey;
 
+    /**
+     * Creates a StorageCategory backed by a mock plugin. Uses this category
+     * as a backing for an Rx Binding, under test.
+     * @throws AmplifyException On failure to add plugin or config/init the storage category
+     */
     @Before
-    public void setup() {
-        delegate = mock(StorageCategoryBehavior.class);
-        rxStorage = new RxStorageBinding(delegate);
+    public void createBindingInFrontOfMockPlugin() throws AmplifyException {
+        delegate = mock(StoragePlugin.class);
+        when(delegate.getPluginKey()).thenReturn(RandomString.string());
+
+        final StorageCategory storageCategory = new StorageCategory();
+        storageCategory.addPlugin(delegate);
+        storageCategory.configure(new StorageCategoryConfiguration(), mock(Context.class));
+        Await.<CategoryInitializationResult, AmplifyException>result((onResult, onError) ->
+            storageCategory.initialize(mock(Context.class), onResult));
+
+        rxStorage = new RxStorageBinding(storageCategory);
+    }
+
+    /**
+     * Creates stable/expected values for a local path and remote key, to be matched
+     * against in behavior mocks/verifications.
+     */
+    @Before
+    public void createRandomRequestParams() {
         localPath = RandomString.string();
         remoteKey = RandomString.string();
     }
@@ -62,7 +92,7 @@ public final class RxStorageBindingTest {
     /**
      * When {@link StorageCategoryBehavior#downloadFile(String, String, Consumer, Consumer)}
      * invokes its success callback, the {@link StorageDownloadFileResult} should propagate
-     * via the {@link Single} returned by {@link RxStorage#downloadFile(String, String)}.
+     * via the {@link Single} returned by {@link RxStorageCategoryBehavior#downloadFile(String, String)}.
      */
     @Test
     public void downloadFileReturnsResult() {
@@ -84,7 +114,7 @@ public final class RxStorageBindingTest {
     /**
      * When {@link StorageCategoryBehavior#downloadFile(String, String, Consumer, Consumer)} invokes
      * its error callback, the {@link StorageException} is communicated via the {@link Single}
-     * returned by {@link RxStorage#downloadFile(String, String)}.
+     * returned by {@link RxStorageCategoryBehavior#downloadFile(String, String)}.
      */
     @Test
     public void downloadFileReturnsError() {
@@ -106,7 +136,7 @@ public final class RxStorageBindingTest {
     /**
      * When {@link StorageCategoryBehavior#uploadFile(String, String, Consumer, Consumer)} returns
      * a {@link StorageUploadFileResult}, then the {@link Single} returned by
-     * {@link RxStorage#uploadFile(String, String)} should emit that result.
+     * {@link RxStorageCategoryBehavior#uploadFile(String, String)} should emit that result.
      */
     @Test
     public void uploadFileReturnsResult() {
@@ -129,7 +159,7 @@ public final class RxStorageBindingTest {
     /**
      * When {@link StorageCategoryBehavior#uploadFile(String, String, Consumer, Consumer)} returns
      * an {@link StorageException}, then the {@link Single} returned by
-     * {@link RxStorage#uploadFile(String, String)} should emit a {@link StorageException}.
+     * {@link RxStorageCategoryBehavior#uploadFile(String, String)} should emit a {@link StorageException}.
      */
     @Test
     public void uploadFileReturnsError() {
@@ -151,7 +181,7 @@ public final class RxStorageBindingTest {
 
     /**
      * When {@link StorageCategoryBehavior#list(String, Consumer, Consumer)} emits a result,
-     * then the {@link Single} returned by {@link RxStorage#list(String)}
+     * then the {@link Single} returned by {@link RxStorageCategoryBehavior#list(String)}
      * should emit an {@link StorageListResult}.
      */
     @Test
@@ -174,7 +204,7 @@ public final class RxStorageBindingTest {
 
     /**
      * When the {@link StorageCategoryBehavior#list(String, Consumer, Consumer)} emits an error,
-     * the {@link Single} returned by {@link RxStorage#list(String)} should emit an
+     * the {@link Single} returned by {@link RxStorageCategoryBehavior#list(String)} should emit an
      * {@link StorageException}.
      */
     @Test
@@ -197,7 +227,7 @@ public final class RxStorageBindingTest {
 
     /**
      * When the {@link StorageCategoryBehavior#remove(String, Consumer, Consumer)} emits
-     * a result, the {@link Single} returned by {@link RxStorage#remove(String)} should
+     * a result, the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)} should
      * emit a {@link StorageRemoveResult}.
      */
     @Test
@@ -220,7 +250,7 @@ public final class RxStorageBindingTest {
 
     /**
      * When {@link StorageCategoryBehavior#remove(String, Consumer, Consumer)} calls its
-     * error consumer, then the {@link Single} returned by {@link RxStorage#remove(String)}
+     * error consumer, then the {@link Single} returned by {@link RxStorageCategoryBehavior#remove(String)}
      * should emit an error.
      */
     @Test

@@ -34,8 +34,8 @@ import io.reactivex.disposables.Disposable;
 /**
  * An Rx-idiomatic expression of Amplify's {@link GraphQlBehavior}.
  */
-@SuppressWarnings("unused") // These are all public APIs
-public interface RxGraphQlApi {
+@SuppressWarnings("unused") // This is a public API
+public interface RxGraphQlBehavior {
 
     /**
      * Query a remote API for a list of Amplify {@link Model}s of a given class.
@@ -113,7 +113,7 @@ public interface RxGraphQlApi {
 
     /**
      * Query a remote API for a list objects. This is the most flexible version of
-     * query method available in the {@link RxGraphQlApi}, in that it accepts a primitive
+     * query method available in the {@link RxGraphQlBehavior}, in that it accepts a primitive
      * {@link GraphQLRequest}, directly.
      * This method assumes that the `amplifyconfiguration.json` contains a single GraphQL API,
      * configured during the call to {@link RxAmplify#configure(Context)}. If not,
@@ -212,7 +212,7 @@ public interface RxGraphQlApi {
 
     /**
      * Query a remote API for a list objects. This is the most flexible version of
-     * query method available in the {@link RxGraphQlApi}, in that it accepts a primitive
+     * query method available in the {@link RxGraphQlBehavior}, in that it accepts a primitive
      * {@link GraphQLRequest}, directly.
      * @param apiName The name of any GraphQL endpoint for which a configuration exists in the
      *                `amplifyconfiguration.json` that was used during the call to
@@ -290,7 +290,7 @@ public interface RxGraphQlApi {
 
     /**
      * Perform a mutation on a remote object using a raw {@link GraphQLRequest}.
-     * Along with {@link RxGraphQlApi#mutate(String, GraphQLRequest)}, this is the most flexible
+     * Along with {@link RxGraphQlBehavior#mutate(String, GraphQLRequest)}, this is the most flexible
      * of the mutation methods, since it allows direct specification of a raw GraphQLRequest.
      * This method assumes that the `amplifyconfiguration.json` contains a single GraphQL API,
      * configured during the call to {@link RxAmplify#configure(Context)}. If not,
@@ -369,7 +369,7 @@ public interface RxGraphQlApi {
 
     /**
      * Perform a mutation on a remote object using a raw {@link GraphQLRequest}.
-     * Along with {@link RxGraphQlApi#mutate(GraphQLRequest)}, this is the most flexible of the
+     * Along with {@link RxGraphQlBehavior#mutate(GraphQLRequest)}, this is the most flexible of the
      * mutation methods, since it allows direct specification of a raw GraphQLRequest.
      * @param apiName The name of any GraphQL endpoint for which a configuration exists in the
      *                `amplifyconfiguration.json` that was used during the call to
@@ -424,7 +424,7 @@ public interface RxGraphQlApi {
 
     /**
      * Subscribe to mutation events that occur on a GraphQL endpoint. This, combined with
-     * {@link RxGraphQlApi#subscribe(String, GraphQLRequest)} are the most flexible subscription
+     * {@link RxGraphQlBehavior#subscribe(String, GraphQLRequest)} are the most flexible subscription
      * methods available, as they allow specification of a raw {@link GraphQLRequest}.
      * This method assumes that the `amplifyconfiguration.json` contains a single GraphQL API,
      * configured during the call to {@link RxAmplify#configure(Context)}. If not,
@@ -481,7 +481,7 @@ public interface RxGraphQlApi {
 
     /**
      * Subscribe to mutation events that occur on a GraphQL endpoint. This, combined with
-     * {@link RxGraphQlApi#subscribe(GraphQLRequest)} are the most flexible subscription
+     * {@link RxGraphQlBehavior#subscribe(GraphQLRequest)} are the most flexible subscription
      * methods available, as they allow specification of a raw {@link GraphQLRequest}.
      * @param apiName The name of any GraphQL endpoint for which a configuration exists in the
      *                `amplifyconfiguration.json` that was used during the call to

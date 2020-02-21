@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.hub.HubCategoryBehavior;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -29,7 +30,7 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposables;
 
-final class RxHubBinding implements RxHub {
+final class RxHubBinding implements RxHubCategoryBehavior {
 
     private final HubCategoryBehavior hub;
 
@@ -38,8 +39,7 @@ final class RxHubBinding implements RxHub {
     }
 
     @VisibleForTesting
-    @SuppressWarnings("WeakerAccess")
-    RxHubBinding(HubCategoryBehavior hub) {
+    RxHubBinding(HubCategory hub) {
         this.hub = hub;
     }
 
