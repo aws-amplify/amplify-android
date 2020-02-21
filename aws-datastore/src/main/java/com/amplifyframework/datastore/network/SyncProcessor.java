@@ -26,13 +26,16 @@ import io.reactivex.schedulers.Schedulers;
  * "Hydrates" the local DataStore, using model metadata receive from the
  * {@link RemoteModelState}. Hydration refers to populating the local storage
  * with values from a remote system.
+ *
+ * TODO: the sync processor should save items via the Merger, not directly
+ * into the {@link LocalStorageAdapter} as it is currently.
  */
 @SuppressWarnings("unused")
-final class DataHydration {
+final class SyncProcessor {
     private final RemoteModelState remoteModelState;
     private final LocalStorageAdapter localStorageAdapter;
 
-    DataHydration(
+    SyncProcessor(
             RemoteModelState remoteModelState,
             LocalStorageAdapter localStorageAdapter) {
         this.remoteModelState = remoteModelState;

@@ -41,19 +41,19 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.mock;
 
 /**
- * Tests the {@link DataHydration}.
+ * Tests the {@link SyncProcessor}.
  */
-public final class DataHydrationTest {
+public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
 
     private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
     private AppSyncEndpoint appSyncEndpoint;
     private InMemoryStorageAdapter inMemoryStorageAdapter;
 
-    private DataHydration dataHydration;
+    private SyncProcessor syncProcessor;
 
     /**
-     * Wire up dependencies for the DataHydration, and build one for testing.
+     * Wire up dependencies for the SyncProcessor, and build one for testing.
      */
     @Before
     public void setup() {
@@ -64,11 +64,11 @@ public final class DataHydrationTest {
         this.appSyncEndpoint = mock(AppSyncEndpoint.class);
         final RemoteModelState remoteModelState = new RemoteModelState(appSyncEndpoint, modelProvider);
 
-        this.dataHydration = new DataHydration(remoteModelState, inMemoryStorageAdapter);
+        this.syncProcessor = new SyncProcessor(remoteModelState, inMemoryStorageAdapter);
     }
 
     /**
-     * When {@link DataHydration#hydrate()}'s {@link Completable} completes,
+     * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
      */
     @SuppressWarnings({"unchecked", "checkstyle:MagicNumber"})
@@ -78,7 +78,7 @@ public final class DataHydrationTest {
         inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
-        // We expect to see content here as a result of the DataHydration applying updates.
+        // We expect to see content here as a result of the SyncProcessor applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = TestObserver.create();
         Observable.<StorageItemChange.Record>create(
             emitter ->
@@ -94,9 +94,10 @@ public final class DataHydrationTest {
 
         // Act: Call hydrate, and await its completion - assert it completed without error
         TestObserver<ModelWithMetadata<? extends Model>> hydrationObserver = TestObserver.create();
-        dataHydration.hydrate().subscribe(hydrationObserver);
+        syncProcessor.hydrate().subscribe(hydrationObserver);
         assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         hydrationObserver.assertNoErrors();
+        hydrationObserver.assertComplete();
 
         // Since hydrate() completed, the storage adapter observer should see some values.
         // There should be a total of six changes on storage adapter
