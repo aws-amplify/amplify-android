@@ -41,7 +41,7 @@ import java.io.File;
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final StorageService storageService;
-    private final Consumer<StorageDownloadFileResult> onResult;
+    private final Consumer<StorageDownloadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
     private File file;
@@ -61,7 +61,7 @@ public final class AWSS3StorageDownloadFileOperation
     ) {
         super(request);
         this.storageService = storageService;
-        this.onResult = onSuccess;
+        this.onSuccess = onSuccess;
         this.onError = onError;
         this.transferObserver = null;
         this.file = null;
@@ -145,8 +145,18 @@ public final class AWSS3StorageDownloadFileOperation
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
                     HubEvent.create("downloadState", state.name()));
-            if (TransferState.COMPLETED == state) {
-                onResult.accept(StorageDownloadFileResult.fromFile(file));
+            switch (state) {
+                case COMPLETED:
+                    onSuccess.accept(StorageDownloadFileResult.fromFile(file));
+                    return;
+                case FAILED:
+                    onError.accept(new StorageException(
+                            "Storage download operation was interrupted.",
+                            "Please verify that you have a stable internet connection."
+                    ));
+                    return;
+                default:
+                    // no-op;
             }
         }
 

@@ -99,9 +99,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      * StorageUploadFileOptions, using fluent of property configuration
      * methods.
      */
-    public static final class Builder {
-        private StorageAccessLevel accessLevel;
-        private String targetIdentityId;
+    public static final class Builder extends StorageOptions.Builder {
         private String contentType;
         private Map<String, String> metadata;
 
@@ -109,27 +107,16 @@ public final class StorageUploadFileOptions extends StorageOptions {
             this.metadata = new HashMap<>();
         }
 
-        /**
-         * Configures the storage access level for the new
-         * StorageUploadFileOptions instance.
-         * @param accessLevel Storage access level
-         * @return Current Builder instance for fluent chaining
-         */
+        @Override
         @NonNull
         public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
-            this.accessLevel = accessLevel;
-            return this;
+            return (Builder) super.accessLevel(accessLevel);
         }
 
-        /**
-         * Configures the target identity id for a new StorageUploadFileOptions instance.
-         * @param targetIdentityId Target user's identity id
-         * @return Current Builder instance for fluent chaining
-         */
+        @Override
         @NonNull
         public Builder targetIdentityId(@Nullable String targetIdentityId) {
-            this.targetIdentityId = targetIdentityId;
-            return this;
+            return (Builder) super.targetIdentityId(targetIdentityId);
         }
 
         /**
@@ -154,6 +141,16 @@ public final class StorageUploadFileOptions extends StorageOptions {
             return this;
         }
 
+        @Nullable
+        public String getContentType() {
+            return contentType;
+        }
+
+        @NonNull
+        public Map<String, String> getMetadata() {
+            return Immutable.of(metadata);
+        }
+
         /**
          * Builds a new immutable StorageUploadFileOptions instance,
          * based on the configuration options that have been previously
@@ -163,26 +160,6 @@ public final class StorageUploadFileOptions extends StorageOptions {
         @NonNull
         public StorageUploadFileOptions build() {
             return new StorageUploadFileOptions(this);
-        }
-
-        @Nullable
-        public StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        @Nullable
-        public String getTargetIdentityId() {
-            return targetIdentityId;
-        }
-
-        @Nullable
-        public String getContentType() {
-            return contentType;
-        }
-
-        @NonNull
-        public Map<String, String> getMetadata() {
-            return Immutable.of(metadata);
         }
     }
 }

@@ -32,6 +32,7 @@ import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.File;
 import java.util.Objects;
@@ -73,20 +74,24 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             return;
         }
 
+        // Get S3 key for give user and access level
         String serviceKey = S3RequestUtils.getServiceKey(
                 getRequest().getAccessLevel(),
                 getRequest().getTargetIdentityId(),
                 getRequest().getKey()
         );
 
+        // Grab the file to upload...
         File file = new File(getRequest().getLocal());
 
+        // Set up the metadata
+        ObjectMetadata objectMetadata = new ObjectMetadata();
+        objectMetadata.setUserMetadata(getRequest().getMetadata());
+        objectMetadata.setContentType(getRequest().getContentType());
+
+        // Upload!
         try {
-            if (getRequest().getMetadata().isEmpty()) {
-                transferObserver = storageService.uploadFile(serviceKey, file);
-            } else {
-                transferObserver = storageService.uploadFile(serviceKey, file, getRequest().getMetadata());
-            }
+            transferObserver = storageService.uploadFile(serviceKey, file, objectMetadata);
             transferObserver.setTransferListener(new UploadTransferListener());
         } catch (Exception exception) {
             onError.accept(new StorageException(
@@ -147,8 +152,18 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
                     HubEvent.create("uploadState", state.name()));
-            if (TransferState.COMPLETED == state) {
-                onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
+            switch (state) {
+                case COMPLETED:
+                    onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
+                    return;
+                case FAILED:
+                    onError.accept(new StorageException(
+                            "Storage upload operation was interrupted.",
+                            "Please verify that you have a stable internet connection."
+                    ));
+                    return;
+                default:
+                    // no-op;
             }
         }
 

@@ -15,6 +15,7 @@
 
 package com.amplifyframework.storage.options;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.Options;
@@ -51,5 +52,53 @@ abstract class StorageOptions implements Options {
     @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
+    }
+
+    abstract static class Builder {
+        private StorageAccessLevel accessLevel;
+        private String targetIdentityId;
+
+        /**
+         * Configures the storage access level to set on new
+         * StorageOptions instances.
+         * @param accessLevel Storage access level for new StorageOptions instances
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
+            this.accessLevel = accessLevel;
+            return this;
+        }
+
+        /**
+         * Configures the target identity ID that will be used on newly
+         * built StorageOptions.
+         * @param targetIdentityId Target identity ID for new StorageOptions instances
+         * @return Current Builder instance, for fluent method chaining
+         */
+        @NonNull
+        public Builder targetIdentityId(@Nullable String targetIdentityId) {
+            this.targetIdentityId = targetIdentityId;
+            return this;
+        }
+
+        @Nullable
+        public StorageAccessLevel getAccessLevel() {
+            return accessLevel;
+        }
+
+        @Nullable
+        public String getTargetIdentityId() {
+            return targetIdentityId;
+        }
+
+        /**
+         * Constructs and returns a new immutable instance of the
+         * StorageOptions, using the configurations that
+         * have been provided the current instance of the Builder.
+         * @return A new immutable instance of StorageOptions
+         */
+        @NonNull
+        abstract StorageOptions build();
     }
 }

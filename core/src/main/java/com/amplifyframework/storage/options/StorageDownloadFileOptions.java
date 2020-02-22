@@ -72,53 +72,23 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      * instances of the {@link StorageDownloadFileOptions}, by chaining
      * fluent configuration method calls.
      */
-    public static final class Builder {
-        private StorageAccessLevel accessLevel;
-        private String targetIdentityId;
-
-        /**
-         * Configures the storage access level to set on new
-         * StorageDownloadFileOptions instances.
-         * @param accessLevel Storage access level for new StorageDownloadFileOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
+    public static final class Builder extends StorageOptions.Builder {
+        @Override
         @NonNull
         public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
-            this.accessLevel = accessLevel;
-            return this;
+            return (Builder) super.accessLevel(accessLevel);
         }
 
-        /**
-         * Configures the target identity ID that will be used on newly
-         * built StorageDownloadFileOptions.
-         * @param targetIdentityId Target identity ID for new StorageDownloadFileOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
+        @Override
         @NonNull
         public Builder targetIdentityId(@Nullable String targetIdentityId) {
-            this.targetIdentityId = targetIdentityId;
-            return this;
+            return (Builder) super.targetIdentityId(targetIdentityId);
         }
 
-        /**
-         * Constructs and returns a new immutable instance of the
-         * StorageDownloadFileOptions, using the configurations that
-         * have been provided the current instance of the Builder.
-         * @return A new immutable instance of StorageDownloadFileOptions
-         */
+        @Override
         @NonNull
         public StorageDownloadFileOptions build() {
             return new StorageDownloadFileOptions(this);
-        }
-
-        @Nullable
-        public StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        @Nullable
-        public String getTargetIdentityId() {
-            return targetIdentityId;
         }
     }
 }
