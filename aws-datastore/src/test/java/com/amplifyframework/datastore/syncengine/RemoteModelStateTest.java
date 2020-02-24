@@ -13,10 +13,15 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.SimpleModelProvider;
+import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.AppSyncMocking;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 
@@ -27,10 +32,10 @@ import java.util.Arrays;
 
 import io.reactivex.observers.TestObserver;
 
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.BLOGGER_ISLA;
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.BLOGGER_JAMESON;
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.DELETED_DRUM_POST;
-import static com.amplifyframework.datastore.network.TestModelWithMetadataInstances.DRUM_POST;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_ISLA;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.BLOGGER_JAMESON;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DELETED_DRUM_POST;
+import static com.amplifyframework.datastore.appsync.TestModelWithMetadataInstances.DRUM_POST;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -38,32 +43,32 @@ import static org.mockito.Mockito.mock;
  */
 @SuppressWarnings("checkstyle:MagicNumber") // Arranged data picked arbitrarily
 public final class RemoteModelStateTest {
-    private AppSyncEndpoint endpoint;
+    private AppSync endpoint;
     private RemoteModelState remoteModelState;
 
     /**
      * Mock out our dependencies. We'll want to pretend we have some different models
-     * being provided by the system. And, we want to mock away the AppSyncEndpoint, so we
+     * being provided by the system. And, we want to mock away the AppSync, so we
      * can test our logic in isolation without going out to the network / depending
      * on some backend to have a certain configuration / state.
      */
     @Before
     public void setup() {
-        endpoint = mock(AppSyncEndpoint.class);
-        final ModelProvider modelProvider = ModelProviderFactory.including(Post.class, BlogOwner.class);
+        endpoint = mock(AppSync.class);
+        final ModelProvider modelProvider = SimpleModelProvider.forClasses(Post.class, BlogOwner.class);
         remoteModelState = new RemoteModelState(endpoint, modelProvider);
     }
 
     /**
      * Observe the remote model state, via {@link RemoteModelState#observe()}.
      * Validate that the observed items are the ones that were provided by our
-     * arranged {@link AppSyncEndpoint} mock.
+     * arranged {@link AppSync} mock.
      */
     @Test
     public void observeReceivesAllModelInstances() {
         // Arrange: the AppSync endpoint will give us some MetaData for items
         // having these types.
-        MockAppSyncEndpoint.configure(endpoint)
+        AppSyncMocking.configure(endpoint)
             .mockSuccessResponse(Post.class, DRUM_POST, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON, BLOGGER_ISLA);
 

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -22,6 +22,7 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -45,7 +46,7 @@ import static org.mockito.Mockito.mock;
 /**
  * Tests the {@link Orchestrator}.
  */
-@SuppressWarnings("unchecked") // Mockito matchers, e.g. any(), etc.
+@SuppressWarnings("unchecked") // Mockito matchers, i.e. any(Raw.class), etc.
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
     // A "reasonable" amount of time our test(s) will wait for async operations to complete
@@ -61,7 +62,7 @@ public final class OrchestratorTest {
      */
     @Test
     public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException, DataStoreException {
-        AppSyncEndpoint endpoint = mock(AppSyncEndpoint.class);
+        AppSync endpoint = mock(AppSync.class);
 
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()

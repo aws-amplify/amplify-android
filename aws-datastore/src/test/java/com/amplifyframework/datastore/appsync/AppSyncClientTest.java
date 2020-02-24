@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLOperation;
@@ -43,24 +43,24 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 /**
- * Tests the {@link AppSyncApi}.
+ * Tests the {@link AppSyncClient}.
  */
-@SuppressWarnings("unchecked") // most matchers ...
+@SuppressWarnings("unchecked") // Mockito matchers, i.e. any(Raw.class), etc.
 @RunWith(RobolectricTestRunner.class)
-public final class AppSyncApiTest {
+public final class AppSyncClientTest {
 
     private ApiCategoryBehavior api;
-    private AppSyncEndpoint endpoint;
+    private AppSync endpoint;
 
     /**
-     * Setup an {@link AppSyncApi} instance, under test.
+     * Setup an {@link AppSyncClient} instance, under test.
      * Mock its {@link ApiCategoryBehavior} dependency, so we can spoof
      * responses.
      */
     @Before
     public void setup() {
         this.api = mock(ApiCategoryBehavior.class);
-        this.endpoint = new AppSyncApi(api);
+        this.endpoint = new AppSyncClient(api);
 
         // We need it to response with **something** by default.
         // Use this same method to send more interesting test values back...

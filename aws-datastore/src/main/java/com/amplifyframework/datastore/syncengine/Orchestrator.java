@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
 import java.util.Objects;
@@ -26,7 +27,7 @@ import io.reactivex.Completable;
 
 /**
  * Synchronizes changed data between the {@link LocalStorageAdapter}
- * and {@link AppSyncEndpoint}.
+ * and {@link AppSync}.
  */
 public final class Orchestrator {
     private final SubscriptionProcessor subscriptionProcessor;
@@ -36,28 +37,28 @@ public final class Orchestrator {
 
     /**
      * Constructs a new Orchestrator.
-     * The Orchestrator will synchronize data between the {@link AppSyncEndpoint}
+     * The Orchestrator will synchronize data between the {@link AppSync}
      * and the {@link LocalStorageAdapter}.
      * @param modelProvider A provider of the models to be synchronized
      * @param localStorageAdapter Interface to local storage, used to
      *                       durably store offline changes until
      *                       then can be written to the network
-     * @param appSyncEndpoint An AppSync Endpoint
+     * @param appSync An AppSync Endpoint
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final LocalStorageAdapter localStorageAdapter,
-            @NonNull final AppSyncEndpoint appSyncEndpoint) {
+            @NonNull final AppSync appSync) {
         Objects.requireNonNull(modelProvider);
-        Objects.requireNonNull(appSyncEndpoint);
+        Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
-        RemoteModelState remoteModelState = new RemoteModelState(appSyncEndpoint, modelProvider);
+        RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
 
-        this.mutationProcessor = new MutationProcessor(mutationOutbox, appSyncEndpoint);
+        this.mutationProcessor = new MutationProcessor(mutationOutbox, appSync);
         this.syncProcessor = new SyncProcessor(remoteModelState, localStorageAdapter);
-        this.subscriptionProcessor = new SubscriptionProcessor(localStorageAdapter, appSyncEndpoint, modelProvider);
+        this.subscriptionProcessor = new SubscriptionProcessor(localStorageAdapter, appSync, modelProvider);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
     }
 

@@ -23,8 +23,9 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.datastore.network.AppSyncApi;
-import com.amplifyframework.datastore.network.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
@@ -51,8 +52,8 @@ import static org.junit.Assert.assertTrue;
  * Tests the DataStore API Interface.
  */
 @Ignore("Multiple tests can't subscribe in a single process right now.")
-public final class AppSyncApiInstrumentationTest {
-    private static AppSyncApi api;
+public final class AppSyncClientInstrumentationTest {
+    private static AppSync api;
 
     /**
      * Configure Amplify for API tests, if it has not been configured, yet.
@@ -61,11 +62,11 @@ public final class AppSyncApiInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         TestConfiguration.configureIfNotConfigured();
-        api = AppSyncApi.instance();
+        api = AppSyncClient.instance();
     }
 
     /**
-     * Tests the operations in AppSyncApi.
+     * Tests the operations in AppSyncClient.
      * @throws DataStoreException If any call to AppSync endpoint fails to return a response
      */
     @Test

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.Nullable;
 
@@ -23,6 +23,8 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -34,13 +36,22 @@ import io.reactivex.SingleEmitter;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
-@SuppressWarnings("unused") // one sec
+/**
+ * {@link RemoteModelState} is an implementation detail of the {@link SyncProcessor}.
+ *
+ * For each model described by the {@link ModelProvider}, the {@link RemoteModelState} will
+ * perform a base/delta sync via the {@link AppSync} client. Every instance of each type of
+ * model is then emitted onto a single {@link Observable} stream.
+ *
+ * The {@link RemoteModelState#observe()} method is the single intended entry point to this
+ * class, and represents a stream of the current state of all models on an AppSync backend.
+ */
 final class RemoteModelState {
-    private final AppSyncEndpoint endpoint;
+    private final AppSync endpoint;
     private final ModelProvider modelProvider;
 
     RemoteModelState(
-            AppSyncEndpoint endpoint,
+            AppSync endpoint,
             ModelProvider modelProvider) {
         this.endpoint = endpoint;
         this.modelProvider = modelProvider;

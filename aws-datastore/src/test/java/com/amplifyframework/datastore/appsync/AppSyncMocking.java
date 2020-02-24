@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
@@ -29,32 +29,36 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 
 /**
- * A utility to mock behaviors of an {@link AppSyncEndpoint} from test code.
+ * A utility to mock behaviors of an {@link AppSync} from test code.
  */
-final class MockAppSyncEndpoint {
-    @SuppressWarnings("checkstyle:all") private MockAppSyncEndpoint() {}
+public final class AppSyncMocking {
+    @SuppressWarnings("checkstyle:all") private AppSyncMocking() {}
 
-    static Configurator configure(AppSyncEndpoint mock) {
+    public static Configurator configure(AppSync mock) {
         return new Configurator(mock);
     }
 
-    static final class Configurator {
-        private AppSyncEndpoint endpoint;
+    /**
+     * Configures mocking for a particular {@link AppSync} mock.
+     */
+    public static final class Configurator {
+        private AppSync endpoint;
 
-        Configurator(AppSyncEndpoint appSyncEndpoint) {
-            this.endpoint = appSyncEndpoint;
+        Configurator(AppSync appSync) {
+            this.endpoint = appSync;
         }
 
         /**
-         * Creates an instance of an {@link AppSyncEndpoint}, which will provide a fake response when asked to
-         * to {@link AppSyncEndpoint#sync(Class, Long, Consumer, Consumer)}.
+         * Creates an instance of an {@link AppSync}, which will provide a fake response when asked to
+         * to {@link AppSync#sync(Class, Long, Consumer, Consumer)}.
          * @param modelClass Class of models for which the endpoint should respond
          * @param responseItems The items that should be included in the mocked response, for the model class
          * @param <T> Type of models for which a response is mocked
+         * @return The same Configurator instance, to enable chaining of calls
          */
         @SuppressWarnings("varargs")
         @SafeVarargs
-        final <T extends Model> Configurator mockSuccessResponse(
+        public final <T extends Model> Configurator mockSuccessResponse(
                 Class<T> modelClass, ModelWithMetadata<T>... responseItems) {
             doAnswer(invocation -> {
                 // Get a handle to the response consumer that is passed into the sync() method

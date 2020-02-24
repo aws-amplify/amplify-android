@@ -13,13 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -33,7 +34,6 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
-import org.robolectric.shadows.ShadowLog;
 
 import java.util.Collections;
 import java.util.concurrent.CountDownLatch;
@@ -47,34 +47,33 @@ import static org.mockito.Mockito.mock;
 /**
  * Tests the {@link MutationProcessor}.
  */
-@SuppressWarnings("unchecked") // Mockito's argument matchers, e.g. any()
+@SuppressWarnings("unchecked") // Mockito's argument matchers, i.e. any(Raw.class)
 @RunWith(RobolectricTestRunner.class)
 public final class MutationProcessorTest {
     private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(1);
 
     private LocalStorageAdapter localStorageAdapter;
-    private AppSyncEndpoint appSyncEndpoint;
+    private AppSync appSync;
     private MutationProcessor mutationProcessor;
     private StorageItemChange.RecordFactory recordConverter;
 
     @Before
     public void setup() {
         this.localStorageAdapter = InMemoryStorageAdapter.create();
-        this.appSyncEndpoint = mock(AppSyncEndpoint.class);
-        this.mutationProcessor = new MutationProcessor(new MutationOutbox(localStorageAdapter), appSyncEndpoint);
+        this.appSync = mock(AppSync.class);
+        this.mutationProcessor = new MutationProcessor(new MutationOutbox(localStorageAdapter), appSync);
         this.recordConverter = new GsonStorageItemChangeConverter();
-        ShadowLog.stream = System.out;
     }
 
     /**
      * Validates that the {@link MutationProcessor} will read form the {@link MutationOutbox},
-     * and will publish any items there-in to the {@link AppSyncEndpoint}.
+     * and will publish any items there-in to the {@link AppSync}.
      * @throws DataStoreException On failure to arrange items in to the MutationOutbox
      * @throws InterruptedException If the latch is interrupted while waiting for AppSync API to be invoked
      */
     @Test
     public void canDrainMutationOutbox() throws DataStoreException, InterruptedException {
-        // Arrange a CountDownLatch, which will count down when the AppSyncEndpoint API is hit.
+        // Arrange a CountDownLatch, which will count down when the AppSync API is hit.
         final CountDownLatch apiInvocationsPending = new CountDownLatch(2);
         doAnswer(invocation -> {
             // Count down our latch, to signal that the create() API was hit.
@@ -89,7 +88,7 @@ public final class MutationProcessorTest {
 
             // Technically, create() returns a Cancelable...
             return new NoOpCancelable();
-        }).when(appSyncEndpoint)
+        }).when(appSync)
             .create(any(Model.class), any(Consumer.class), any(Consumer.class));
 
         // Put some stuff in the mutation outbox.
@@ -127,7 +126,7 @@ public final class MutationProcessorTest {
         apiInvocationsPending.await(REASONABLE_WAIT_TIME_MS, TimeUnit.MILLISECONDS);
 
         // As a result, the mutation processor should try to dispatch them to the
-        // AppSyncEndpoint.
+        // AppSync.
         assertEquals(0, apiInvocationsPending.getCount());
     }
 

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.core.util.ObjectsCompat;
 
@@ -22,7 +22,10 @@ import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 
 /**
- * System model to represent the versioning/sync metadata for an object.
+ * A system model to house versioning/sync metadata associated with a model instance.
+ * This is _also_ used as a model of a portion of an AppSync response, that includes
+ * metadata about a particular model. The metadata fields are unique to the AppSync protocol,
+ * and these fields exist in GraphQL responses from AppSync.
  */
 @ModelConfig
 @SuppressWarnings({"MemberName", "ParameterName"})
