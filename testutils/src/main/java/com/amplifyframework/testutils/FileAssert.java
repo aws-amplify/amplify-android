@@ -13,7 +13,9 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.storage.s3;
+package com.amplifyframework.testutils;
+
+import org.junit.Assert;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,35 +24,29 @@ import java.io.InputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
-
 /**
  * Test utility for comparing file content.
  */
-final class TestUtils {
-
+public final class FileAssert {
     @SuppressWarnings("WhitespaceAround")
-    private TestUtils() {} // Prevent instantiation
+    private FileAssert() {} // Prevent instantiation
 
-    static void assertFileEqualsFile(File expectedFile, File actualFile) {
-        assertTrue("Expected file must exist.", expectedFile.exists());
-        assertTrue("Testing file must exist.", actualFile.exists());
-        assertEquals(expectedFile.length(), actualFile.length());
+    public static void assertEquals(File expectedFile, File actualFile) {
+        Assert.assertTrue("Expected file must exist.", expectedFile.exists());
+        Assert.assertTrue("Testing file must exist.", actualFile.exists());
+        Assert.assertEquals(expectedFile.length(), actualFile.length());
 
         try {
             FileInputStream expectedInputStream = new FileInputStream(expectedFile);
             FileInputStream actualInputStream = new FileInputStream(actualFile);
             assertStreamEqualStream(expectedInputStream, actualInputStream);
-        } catch (Exception exception) {
+        } catch (IOException exception) {
             exception.printStackTrace();
-            fail("Unable to compare files: " + exception.getMessage());
+            Assert.fail("Unable to compare files: " + exception.getMessage());
         }
     }
 
-    static void assertStreamEqualStream(
+    private static void assertStreamEqualStream(
             InputStream expectedInputStream,
             InputStream actualInputStream
     ) throws IOException {
@@ -60,11 +56,10 @@ final class TestUtils {
         try {
             expectedDigest = calculateMD5Digest(expectedInputStream);
             actualDigest = calculateMD5Digest(actualInputStream);
-
-            assertArrayEquals(expectedDigest, actualDigest);
+            Assert.assertArrayEquals(expectedDigest, actualDigest);
         } catch (NoSuchAlgorithmException exception) {
             exception.printStackTrace();
-            fail("Unable to compare input streams: " + exception.getMessage());
+            Assert.fail("Unable to compare input streams: " + exception.getMessage());
         } finally {
             expectedInputStream.close();
             actualInputStream.close();

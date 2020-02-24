@@ -15,12 +15,10 @@
 
 package com.amplifyframework.storage.s3;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
-import com.amplifyframework.storage.result.StorageDownloadFileResult;
-import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.FileAssert;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -30,7 +28,6 @@ import org.junit.Test;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Instrumentation test to confirm that Storage Download behaves
@@ -217,16 +214,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
-        Await.<StorageDownloadFileResult, StorageException>result(
-            TimeUnit.SECONDS.toMillis(EXTENDED_TIMEOUT_IN_SECONDS),
-            (onResult, onError) -> Amplify.Storage.downloadFile(
-                    UPLOAD_NAME,
-                    downloadTo.getAbsolutePath(),
-                    options,
-                    onResult,
-                    onError
-            )
-        );
-        TestUtils.assertFileEqualsFile(uploadFile, downloadTo);
+        synchronousStorage().downloadFile(UPLOAD_NAME, downloadTo.getAbsolutePath(), options);
+        FileAssert.assertEquals(uploadFile, downloadTo);
     }
 }

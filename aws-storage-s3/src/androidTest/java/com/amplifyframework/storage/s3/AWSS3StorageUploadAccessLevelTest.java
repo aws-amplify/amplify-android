@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
+import com.amplifyframework.storage.options.StorageUploadFileOptions;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -177,10 +178,17 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        latchedUploadAndConfirm(file, accessLevel, identityId);
+        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+                .accessLevel(accessLevel)
+                .targetIdentityId(identityId)
+                .build();
+        synchronousStorage().uploadFile(file.getName(),
+                file.getAbsolutePath(),
+                options);
 
-        // Clean up
+        // Confirm and clean up
         String s3key = getS3Key(accessLevel, file.getName());
+        assertS3ObjectExists(s3key);
         cleanUpS3Object(s3key);
     }
 }

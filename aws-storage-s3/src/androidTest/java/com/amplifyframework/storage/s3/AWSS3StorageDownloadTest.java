@@ -16,6 +16,8 @@
 package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
@@ -23,8 +25,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
-import com.amplifyframework.storage.result.StorageDownloadFileResult;
-import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -39,9 +40,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Instrumentation test for operational work on download.
@@ -132,16 +134,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadSmallFile() throws StorageException {
-        Await.<StorageDownloadFileResult, StorageException>result(
-            (onResult, onError) -> Amplify.Storage.downloadFile(
-                    SMALL_FILE_NAME,
-                    downloadFile.getAbsolutePath(),
-                    options,
-                    onResult,
-                    onError
-            )
-        );
-        TestUtils.assertFileEqualsFile(smallFile, downloadFile);
+        synchronousStorage().downloadFile(SMALL_FILE_NAME, downloadFile.getAbsolutePath(), options);
+        FileAssert.assertEquals(smallFile, downloadFile);
     }
 
     /**
@@ -151,17 +145,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadLargeFile() throws StorageException {
-        Await.<StorageDownloadFileResult, StorageException>result(
-            TimeUnit.SECONDS.toMillis(EXTENDED_TIMEOUT_IN_SECONDS),
-            (onResult, onError) -> Amplify.Storage.downloadFile(
-                    LARGE_FILE_NAME,
-                    downloadFile.getAbsolutePath(),
-                    options,
-                    onResult,
-                    onError
-            )
-        );
-        TestUtils.assertFileEqualsFile(largeFile, downloadFile);
+        synchronousStorage().downloadFile(LARGE_FILE_NAME, downloadFile.getAbsolutePath(), options);
+        FileAssert.assertEquals(largeFile, downloadFile);
     }
 
     /**
@@ -175,15 +160,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     @SuppressWarnings("unchecked")
     public void testDownloadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
-
-        // Begin downloading large file
-        StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
-            LARGE_FILE_NAME,
-            downloadFile.getAbsolutePath(),
-            options,
-            onResult -> fail("Download finished before being successfully cancelled."),
-            onError -> fail("Download failed for a different reason.")
-        );
+        final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Listen to Hub events to cancel when progress has been made
         SubscriptionToken progressSubscription = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -191,7 +169,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
                 if (progress != null && progress > 0) {
-                    op.cancel();
+                    opContainer.get().cancel();
                 }
             }
         });
@@ -209,8 +187,19 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         });
         subscriptions.add(cancelSubscription);
 
+        // Begin downloading large file
+        StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
+            LARGE_FILE_NAME,
+            downloadFile.getAbsolutePath(),
+            options,
+            onResult -> errorContainer.set(new RuntimeException("Upload completed without canceling.")),
+            onError -> errorContainer.set(onError.getCause())
+        );
+        opContainer.set(op);
+
         // Assert that the required conditions have been met
         assertTrue(canceled.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertNull(errorContainer.get());
     }
 
     /**
@@ -226,15 +215,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     public void testDownloadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
-
-        // Begin downloading large file
-        StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
-            LARGE_FILE_NAME,
-            downloadFile.getAbsolutePath(),
-            options,
-            onResult -> completed.countDown(),
-            onError -> completed.countDown()
-        );
+        final AtomicReference<Resumable> opContainer = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Listen to Hub events to pause when progress has been made
         SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -243,7 +225,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 Float progress = progressEvent.getData();
                 // Pause if progress is non-zero amount
                 if (progress != null && progress > 0) {
-                    op.pause();
+                    opContainer.get().pause();
                 }
             }
         });
@@ -257,17 +239,29 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 // Resume if transfer was paused
                 if (TransferState.PAUSED.equals(state)) {
                     Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
+                    // Wait briefly for transfer to pause successfully
                     Sleep.milliseconds(SLEEP_DURATION_IN_MILLISECONDS); // TODO: This is kind of gross
                     resumed.countDown();
-                    op.resume();
+                    opContainer.get().resume();
                 }
             }
         });
         subscriptions.add(resumeToken);
 
+        // Begin downloading large file
+        StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
+            LARGE_FILE_NAME,
+            downloadFile.getAbsolutePath(),
+            options,
+            onResult -> completed.countDown(),
+            onError -> errorContainer.set(onError.getCause())
+        );
+        opContainer.set(op);
+
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         assertTrue(completed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-        TestUtils.assertFileEqualsFile(largeFile, downloadFile);
+        FileAssert.assertEquals(largeFile, downloadFile);
+        assertNull(errorContainer.get());
     }
 }

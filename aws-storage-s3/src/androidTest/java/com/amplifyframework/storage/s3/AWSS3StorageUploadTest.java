@@ -16,6 +16,8 @@
 package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.async.Resumable;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
@@ -36,9 +38,10 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Instrumentation test for operational work on upload.
@@ -143,15 +146,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     @SuppressWarnings("unchecked")
     public void testUploadFileIsCancelable() throws Exception {
         final CountDownLatch canceled = new CountDownLatch(1);
-
-        // Begin uploading large file
-        StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
-            largeFile.getName(),
-            largeFile.getAbsolutePath(),
-            options,
-            onResult -> fail("Upload finished before being successfully cancelled."),
-            onError -> fail("Upload failed for a different reason.")
-        );
+        final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Listen to Hub events to cancel when progress has been made
         SubscriptionToken progressToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -159,7 +155,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
                 if (progress != null && progress > 0) {
-                    op.cancel();
+                    opContainer.get().cancel();
                 }
             }
         });
@@ -177,8 +173,19 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         });
         subscriptions.add(cancelToken);
 
+        // Begin uploading large file
+        StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
+            largeFile.getName(),
+            largeFile.getAbsolutePath(),
+            options,
+            onResult -> errorContainer.set(new RuntimeException("Upload completed without canceling.")),
+            onError -> errorContainer.set(onError.getCause())
+        );
+        opContainer.set(op);
+
         // Assert that the required conditions have been met
         assertTrue(canceled.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertNull(errorContainer.get());
     }
 
     /**
@@ -193,15 +200,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
         final CountDownLatch resumed = new CountDownLatch(1);
-
-        // Begin uploading large file
-        StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
-            largeFile.getName(),
-            largeFile.getAbsolutePath(),
-            options,
-            onResult -> completed.countDown(),
-            onError -> fail("Upload is not successful.")
-        );
+        final AtomicReference<Resumable> opContainer = new AtomicReference<>();
+        final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
 
         // Listen to Hub events to pause when progress has been made
         SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -209,7 +209,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
                 if (progress != null && progress > 0) {
-                    op.pause();
+                    opContainer.get().pause();
                 }
             }
         });
@@ -222,17 +222,29 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 TransferState state = TransferState.getState(stateEvent.getData());
                 if (TransferState.PAUSED.equals(state)) {
                     Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
+                    // Wait briefly for transfer to pause successfully
                     Sleep.milliseconds(SLEEP_DURATION_IN_MILLISECONDS); // TODO: This is kind of gross
-                    op.resume();
+                    opContainer.get().resume();
                     resumed.countDown();
                 }
             }
         });
         subscriptions.add(resumeToken);
 
+        // Begin uploading large file
+        StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
+            largeFile.getName(),
+            largeFile.getAbsolutePath(),
+            options,
+            onResult -> completed.countDown(),
+            onError -> errorContainer.set(onError.getCause())
+        );
+        opContainer.set(op);
+
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         assertTrue(completed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
         assertS3ObjectExists(getS3Key(DEFAULT_ACCESS_LEVEL, largeFile.getName()));
+        assertNull(errorContainer.get());
     }
 }

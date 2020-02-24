@@ -18,14 +18,12 @@ package com.amplifyframework.storage.s3;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 import com.amplifyframework.testutils.AmplifyTestBase;
-import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.SynchronousStorage;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.s3.AmazonS3Client;
@@ -35,7 +33,6 @@ import org.junit.BeforeClass;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
@@ -49,11 +46,11 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
     static final long EXTENDED_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
 
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
-
     private static AmazonS3Client s3;
     private static String bucketName;
     private static JSONObject credentials;
     private static AWSMobileClient mClient;
+    private static SynchronousStorage synchronousStorage;
 
     /**
      * Setup the Android application context.
@@ -69,6 +66,11 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
                 .getBucketName();
         credentials = getPackageConfigure("Storage");
         mClient = AWSMobileClient.getInstance();
+        synchronousStorage = SynchronousStorage.singleton();
+    }
+
+    static SynchronousStorage synchronousStorage() {
+        return synchronousStorage;
     }
 
     static synchronized File createTempFile(String filename) throws IOException {
@@ -130,23 +132,12 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
-        Await.<StorageUploadFileResult, StorageException>result(
-            TimeUnit.SECONDS.toMillis(EXTENDED_TIMEOUT_IN_SECONDS),
-            (onResult, onError) -> Amplify.Storage.uploadFile(
-                    file.getName(),
-                    file.getAbsolutePath(),
-                    options,
-                    onResult,
-                    onError
-            )
-        );
+        synchronousStorage().uploadFile(file.getName(),
+                file.getAbsolutePath(),
+                options);
 
-        // Confirm that the uploaded file is in S3 bucket
-        String s3Key = S3RequestUtils.getServiceKey(
-                accessLevel,
-                identityId,
-                file.getName()
-        );
-        assertS3ObjectExists(s3Key);
+        // Confirm successful upload
+        String s3key = S3RequestUtils.getServiceKey(accessLevel, identityId, file.getName());
+        assertS3ObjectExists(s3key);
     }
 }
