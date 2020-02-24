@@ -167,7 +167,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 final Set<Class<? extends Model>> models = new HashSet<>();
                 // StorageItemChange.Record.class is an internal system event
-                // it is used to journal local storage changes
+                // it is used to stage local storage changes for upload to cloud
                 models.add(StorageItemChange.Record.class);
                 // PersistentModelVersion.class is an internal system event
                 // it is used to store the version of the ModelProvider

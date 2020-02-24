@@ -28,12 +28,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.network.AppSyncApi;
-import com.amplifyframework.datastore.network.SyncEngine;
+import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
+import com.amplifyframework.datastore.syncengine.Orchestrator;
 
 import org.json.JSONObject;
 
@@ -54,7 +54,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
-    private final SyncEngine syncEngine;
+    private final Orchestrator orchestrator;
 
     // Configuration for the plugin.
     private AWSDataStorePluginConfiguration pluginConfiguration;
@@ -62,11 +62,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private AWSDataStorePlugin(@NonNull final ModelProvider modelProvider) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.syncEngine = createSyncEngine(modelProvider, sqliteStorageAdapter);
+        this.orchestrator = createOrchestrator(modelProvider, sqliteStorageAdapter);
     }
 
-    private SyncEngine createSyncEngine(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
-        return new SyncEngine(modelProvider, storageAdapter, AppSyncApi.instance());
+    private Orchestrator createOrchestrator(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
+        return new Orchestrator(modelProvider, storageAdapter, AppSyncClient.instance());
     }
 
     /**
@@ -122,7 +122,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         if (!AWSDataStorePluginConfiguration.SyncMode.SYNC_WITH_API.equals(syncMode)) {
             return Completable.complete();
         } else {
-            return Completable.fromAction(syncEngine::start);
+            return orchestrator.start();
         }
     }
 
@@ -143,7 +143,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @throws AmplifyException On failure to terminate use of the plugin
      */
     synchronized void terminate() throws AmplifyException {
-        syncEngine.stop();
+        orchestrator.stop();
         sqliteStorageAdapter.terminate();
     }
 
