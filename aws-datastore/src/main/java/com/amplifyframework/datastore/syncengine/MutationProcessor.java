@@ -13,13 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -33,21 +34,21 @@ import io.reactivex.schedulers.Schedulers;
 
 /**
  * The {@link MutationProcessor} observes the {@link MutationOutbox}, and publishes its items to an
- * {@link AppSyncEndpoint}.
+ * {@link AppSync}.
  *
  * The responses to these mutations are themselves forwarded to the Merger (TODO: write a merger.)
  */
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final AppSyncEndpoint appSyncEndpoint;
+    private final AppSync appSync;
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposable;
 
     MutationProcessor(
             @NonNull MutationOutbox mutationOutbox,
-            @NonNull AppSyncEndpoint appSyncEndpoint) {
-        this.appSyncEndpoint = Objects.requireNonNull(appSyncEndpoint);
+            @NonNull AppSync appSync) {
+        this.appSync = Objects.requireNonNull(appSync);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
         this.disposable = new CompositeDisposable();
     }
@@ -96,7 +97,7 @@ final class MutationProcessor {
         final SIC storageItemChange) {
         //noinspection CodeBlock2Expr More readable as a block statement
         return Single.defer(() -> Single.create(subscriber -> {
-            appSyncEndpoint.create(
+            appSync.create(
                 storageItemChange.item(),
                 result -> {
                     if (result.hasErrors() || !result.hasData()) {

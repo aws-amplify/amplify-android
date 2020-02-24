@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.Model;
 
@@ -36,11 +37,20 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-@SuppressWarnings("unused") // remove me later ...
-final class GsonResponseDeserializer implements ResponseDeserializer {
+/**
+ * This is an implementation detail of the {@link AppSyncClient}.
+ *
+ * Since the {@link AppSyncClient} makes requests to AppSync using raw GraphQL document strings,
+ * the {@link ApiCategoryBehavior}s also return raw strings in their responses.
+ *
+ * This {@link AppSyncResponseDeserializer} takes string responses, and converts them into data models:
+ * {@link ModelWithMetadata} (or, a collection of {@link ModelWithMetadata}). The shape of these
+ * responses is unique to the AppSync protocol.
+ */
+final class AppSyncResponseDeserializer implements AppSyncClient.ResponseDeserializer {
     private final Gson gson;
 
-    GsonResponseDeserializer() {
+    AppSyncResponseDeserializer() {
         this.gson = new GsonBuilder()
                 .registerTypeAdapter(List.class, new GsonListDeserializer())
                 .create();

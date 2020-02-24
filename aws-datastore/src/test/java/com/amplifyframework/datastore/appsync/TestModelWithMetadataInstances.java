@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -27,9 +27,9 @@ import java.util.Set;
 /**
  * A bucket for some test data that is cumbersome/verbose to write out.
  */
-@SuppressWarnings("checkstyle:MagicNumber")
-final class TestModelWithMetadataInstances {
-    static final ModelWithMetadata<BlogOwner> BLOGGER_JAMESON =
+@SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:JavadocVariable"})
+public final class TestModelWithMetadataInstances {
+    public static final ModelWithMetadata<BlogOwner> BLOGGER_JAMESON =
         new ModelWithMetadata<>(
             BlogOwner.builder()
                 .name("Jameson")
@@ -37,7 +37,7 @@ final class TestModelWithMetadataInstances {
                 .build(),
             new ModelMetadata("d5b44350-b8e9-4deb-94c2-7fe986d6a0e1", null, 3, 223344L)
         );
-    static final ModelWithMetadata<BlogOwner> BLOGGER_ISLA =
+    public static final ModelWithMetadata<BlogOwner> BLOGGER_ISLA =
         new ModelWithMetadata<>(
             BlogOwner.builder()
                 .name("Isla")
@@ -45,7 +45,7 @@ final class TestModelWithMetadataInstances {
                 .build(),
             new ModelMetadata("c0601168-2931-4bc0-bf13-5963cd31f828", null, 11, 998877L)
         );
-    static final ModelWithMetadata<Post> DRUM_POST =
+    public static final ModelWithMetadata<Post> DRUM_POST =
         new ModelWithMetadata<>(
             Post.builder()
                 .title("Inactive Post About Drums")
@@ -55,7 +55,7 @@ final class TestModelWithMetadataInstances {
                 .build(),
             new ModelMetadata("83ceb757-c8c8-4b6a-bee0-a43afb53a73a", null, 5, 123123L)
         );
-    static final ModelWithMetadata<Post> DELETED_DRUM_POST =
+    public static final ModelWithMetadata<Post> DELETED_DRUM_POST =
         new ModelWithMetadata<>(
             DRUM_POST.getModel(),
             new ModelMetadata("83ceb757-c8c8-4b6a-bee0-a43afb53a73a", Boolean.TRUE, 5, 123123L)
@@ -69,7 +69,7 @@ final class TestModelWithMetadataInstances {
      * @param expected Expected collection
      * @param actual Actual collection to compare to expected
      */
-    static void assertEquals(
+    public static void assertEquals(
         // They're "equal" if they deal with the same item ID... for now...
         // (it's not actually true, though, this is not a sufficient equality condition.)
 

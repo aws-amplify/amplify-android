@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
@@ -49,10 +50,10 @@ final class SubscriptionProcessor {
 
     SubscriptionProcessor(
             @NonNull LocalStorageAdapter localStorageAdapter,
-            @NonNull AppSyncEndpoint appSyncEndpoint,
+            @NonNull AppSync appSync,
             @NonNull ModelProvider modelProvider) {
         this.localStorageAdapter = localStorageAdapter;
-        this.remoteModelMutations = new RemoteModelMutations(appSyncEndpoint, modelProvider);
+        this.remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
         this.disposable = new CompositeDisposable();
         this.buffer = ReplaySubject.create();
     }

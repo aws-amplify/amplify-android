@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
@@ -54,7 +54,6 @@ public class MutationOutboxTest {
      * the change to storage, and notifying any observers that
      * there is a new change available.
      */
-    @SuppressWarnings("WhitespaceAround")
     @Test
     public void enqueuePersistsChangeAndNotifiesObserver() {
         // Observe the queue

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,24 +41,30 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * An implementation of the {@link AppSyncEndpoint} contract,
- * which used the {@link ApiCategoryBehavior} to implement the various
- * GraphQL operations.
+ * An implementation of the {@link AppSync} client interface.
+ *
+ * This implementation adds business rules on top of the generic GraphQL behaviors in the
+ * {@link ApiCategoryBehavior}.
+ *
+ * AppSync requests are formed as raw GraphQL document strings, using the
+ * {@link AppSyncRequestFactory}. The requests are not generic GraphQL, and contain
+ * AppSync-specific details like protocol-specific operation names (create, update, delete),
+ * assumptions about the structure of data types (unique IDs, versioning information), etc.
  */
-public final class AppSyncApi implements AppSyncEndpoint {
+public final class AppSyncClient implements AppSync {
     private final GraphQlBehavior api;
     private final GraphQLRequest.VariablesSerializer variablesSerializer;
     private final ResponseDeserializer responseDeserializer;
 
     /**
-     * Constructs a new AppSyncApi.
+     * Constructs a new AppSyncClient.
      * @param api The API Category, configured with a DataStore API
      */
     @VisibleForTesting
-    AppSyncApi(@NonNull final GraphQlBehavior api) {
+    AppSyncClient(@NonNull final GraphQlBehavior api) {
         this.api = Objects.requireNonNull(api);
-        this.variablesSerializer = new GsonVariablesSerializer();
-        this.responseDeserializer = new GsonResponseDeserializer();
+        this.variablesSerializer = new AppSyncVariablesSerializer();
+        this.responseDeserializer = new AppSyncResponseDeserializer();
     }
 
     /**
@@ -67,8 +73,8 @@ public final class AppSyncApi implements AppSyncEndpoint {
      * @return An App Sync API instance
      */
     @NonNull
-    public static AppSyncApi instance() {
-        return new AppSyncApi(Amplify.API);
+    public static AppSyncClient instance() {
+        return new AppSyncClient(Amplify.API);
     }
 
     @SuppressWarnings("checkstyle:LineLength")
@@ -319,5 +325,15 @@ public final class AppSyncApi implements AppSyncEndpoint {
             return cancelable;
         }
         return new NoOpCancelable();
+    }
+
+    interface ResponseDeserializer {
+        <T extends Model> GraphQLResponse<ModelWithMetadata<T>> deserialize(
+            String json,
+            Class<T> intoClazz);
+
+        <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> deserialize(
+            Iterable<String> json,
+            Class<T> memberClazz);
     }
 }

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.WorkerThread;
@@ -28,6 +28,8 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
 
 import java.util.HashSet;
@@ -36,18 +38,30 @@ import java.util.Set;
 import io.reactivex.Emitter;
 import io.reactivex.Observable;
 
+/**
+ * An implementation detail of the {@link SubscriptionProcessor}.
+ *
+ * The {@link RemoteModelMutations} asks the {@link ModelProvider} for the collection
+ * of models that should be managed. For each, a subscription is formed via the {@link AppSync}
+ * client.
+ *
+ * Any/all responses received on those multiple subscriptions get batched together into a single
+ * observable stream. The {@link RemoteModelMutations#observe()} is the single intended top-level
+ * entry to this class, and its use is to monitor subscription data for all managed models,
+ * over a single {@link Observable}.
+ */
 final class RemoteModelMutations {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final AppSyncEndpoint appSyncEndpoint;
+    private final AppSync appSync;
     private final ModelProvider modelProvider;
     private final Set<Subscription> subscriptions;
 
     RemoteModelMutations(
-            AppSyncEndpoint appSyncEndpoint,
+            AppSync appSync,
             ModelProvider modelProvider) {
         this.modelProvider = modelProvider;
-        this.appSyncEndpoint = appSyncEndpoint;
+        this.appSync = appSync;
         this.subscriptions = new HashSet<>();
     }
 
@@ -67,7 +81,7 @@ final class RemoteModelMutations {
                 for (Class<? extends Model> modelClass : modelProvider.models()) {
                     for (SubscriptionType subscriptionType : SubscriptionType.values()) {
                         subscriptions.add(Subscription.request()
-                            .appSyncEndpoint(appSyncEndpoint)
+                            .appSync(appSync)
                             .modelClass(modelClass)
                             .subscriptionType(subscriptionType)
                             .commonEmitter(emitter)
@@ -99,13 +113,13 @@ final class RemoteModelMutations {
          * @param <T> Type of model for which to subscribe to mutations
          */
         static final class Request<T extends Model> {
-            private AppSyncEndpoint appSyncEndpoint;
+            private AppSync appSync;
             private Class<T> modelClass;
             private SubscriptionType subscriptionType;
             private Emitter<Mutation<? extends Model>> commonEmitter;
 
-            Request<T> appSyncEndpoint(AppSyncEndpoint appSyncEndpoint) {
-                this.appSyncEndpoint = appSyncEndpoint;
+            Request<T> appSync(AppSync appSync) {
+                this.appSync = appSync;
                 return this;
             }
 
@@ -143,13 +157,13 @@ final class RemoteModelMutations {
                 final Cancelable cancelable;
                 switch (subscriptionType) {
                     case ON_UPDATE:
-                        cancelable = appSyncEndpoint.onUpdate(modelClass, onStarted, onNext, onFailure, onComplete);
+                        cancelable = appSync.onUpdate(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     case ON_DELETE:
-                        cancelable = appSyncEndpoint.onDelete(modelClass, onStarted, onNext, onFailure, onComplete);
+                        cancelable = appSync.onDelete(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     case ON_CREATE:
-                        cancelable = appSyncEndpoint.onCreate(modelClass, onStarted, onNext, onFailure, onComplete);
+                        cancelable = appSync.onCreate(modelClass, onStarted, onNext, onFailure, onComplete);
                         break;
                     default:
                         throw new DataStoreException(

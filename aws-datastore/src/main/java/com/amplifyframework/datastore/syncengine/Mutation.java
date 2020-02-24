@@ -13,14 +13,22 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.syncengine;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
 
 import java.util.Objects;
 
+/**
+ * NOTE: this class is named in a way that makes it sounds broad, but it is NOT.
+ * A {@link Mutation} is a depiction of a GraphQL mutation _as received on a subscription_.
+ * Subscriptions notify the client of mutations that have occurred on the backend.
+ * Other GraphQL mutation data may be represented in additional/other data structures.
+ * @param <T> Type of data that has been mutated
+ */
 final class Mutation<T extends Model> {
     private final T model;
     private final Class<T> modelClass;
@@ -37,6 +45,7 @@ final class Mutation<T extends Model> {
         return model;
     }
 
+    @SuppressWarnings("unused")
     @NonNull
     Class<T> modelClass() {
         return modelClass;
@@ -75,6 +84,7 @@ final class Mutation<T extends Model> {
             return this;
         }
 
+        @SuppressLint("SyntheticAccessor")
         @NonNull
         Mutation<T> build() {
             return new Mutation<>(model, modelClass, type);

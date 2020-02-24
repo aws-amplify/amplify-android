@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
 
@@ -22,9 +22,11 @@ import com.google.gson.Gson;
 import java.util.Map;
 
 /**
- * Implementation of a GraphQL Request serializer for the variables map using Gson.
+ * This is an implementation detail of the {@link AppSyncClient}. When forming a request to
+ * AppSync, this {@link AppSyncVariablesSerializer} will serialize a map of request variables
+ * into a string, that may be included in an outgoing GraphQL request.
  */
-public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
+final class AppSyncVariablesSerializer implements GraphQLRequest.VariablesSerializer {
     @Override
     public String serialize(Map<String, Object> variables) {
         return new Gson().toJson(variables);

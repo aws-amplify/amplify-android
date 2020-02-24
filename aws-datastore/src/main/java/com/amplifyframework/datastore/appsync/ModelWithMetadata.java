@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.network;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
@@ -23,12 +23,12 @@ import com.amplifyframework.core.model.Model;
 import java.util.Objects;
 
 /**
- * Container class to hold an instance of an object with it's metadata.
+ * Container class to hold an instance of a model, alongside metadata about that model.
  * @param <M> The model represented by this container
  */
 public final class ModelWithMetadata<M extends Model> {
-    private M model;
-    private ModelMetadata syncMetadata;
+    private final M model;
+    private final ModelMetadata syncMetadata;
 
     /**
      * Holds an instance of a model in one object and its sync metadata in another.
