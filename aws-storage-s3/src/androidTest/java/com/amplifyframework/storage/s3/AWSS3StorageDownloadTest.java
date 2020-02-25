@@ -119,7 +119,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         downloadFile = new RandomTempFile(destination);
 
         // Always interact with PUBLIC access for consistency
-        options = (StorageDownloadFileOptions) StorageDownloadFileOptions.builder()
+        options = StorageDownloadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
 

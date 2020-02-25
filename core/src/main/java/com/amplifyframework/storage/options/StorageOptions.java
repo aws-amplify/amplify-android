@@ -57,7 +57,8 @@ public abstract class StorageOptions implements Options {
     /**
      * Builds storage options.
      */
-    public abstract static class Builder {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    abstract static class Builder<B extends Builder, O extends StorageOptions> {
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
 
@@ -68,9 +69,9 @@ public abstract class StorageOptions implements Options {
          * @return Current Builder instance, for fluent method chaining
          */
         @NonNull
-        public final Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
+        public final B accessLevel(@Nullable StorageAccessLevel accessLevel) {
             this.accessLevel = accessLevel;
-            return this;
+            return (B) this;
         }
 
         /**
@@ -80,9 +81,9 @@ public abstract class StorageOptions implements Options {
          * @return Current Builder instance, for fluent method chaining
          */
         @NonNull
-        public final Builder targetIdentityId(@Nullable String targetIdentityId) {
+        public final B targetIdentityId(@Nullable String targetIdentityId) {
             this.targetIdentityId = targetIdentityId;
-            return this;
+            return (B) this;
         }
 
         @Nullable
@@ -102,6 +103,6 @@ public abstract class StorageOptions implements Options {
          * @return A new immutable instance of StorageOptions
          */
         @NonNull
-        public abstract StorageOptions build();
+        public abstract O build();
     }
 }

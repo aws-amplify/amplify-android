@@ -118,7 +118,7 @@ public abstract class StorageInstrumentationTestBase {
             StorageAccessLevel accessLevel,
             String identityId
     ) throws StorageException {
-        StorageUploadFileOptions options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
+        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();

@@ -51,10 +51,8 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      */
     @NonNull
     public static Builder from(@NonNull final StorageDownloadFileOptions options) {
-        final StorageDownloadFileOptions.Builder builder = builder();
-        builder.accessLevel(options.getAccessLevel());
-        builder.targetIdentityId(options.getTargetIdentityId());
-        return builder;
+        return builder().accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -71,7 +69,7 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      * instances of the {@link StorageDownloadFileOptions}, by chaining
      * fluent configuration method calls.
      */
-    public static final class Builder extends StorageOptions.Builder {
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageDownloadFileOptions> {
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull

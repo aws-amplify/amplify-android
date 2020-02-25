@@ -49,10 +49,8 @@ public final class StorageListOptions extends StorageOptions {
      */
     @NonNull
     public static Builder from(@NonNull final StorageListOptions options) {
-        final StorageListOptions.Builder builder = builder();
-        builder.accessLevel(options.getAccessLevel());
-        builder.targetIdentityId(options.getTargetIdentityId());
-        return builder;
+        return builder().accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -69,7 +67,7 @@ public final class StorageListOptions extends StorageOptions {
      * Used to construct instance of StorageListOptions via
      * fluent configuration methods.
      */
-    public static final class Builder extends StorageOptions.Builder {
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageListOptions> {
         @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull

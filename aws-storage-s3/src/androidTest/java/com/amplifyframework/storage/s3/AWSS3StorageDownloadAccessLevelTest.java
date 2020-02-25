@@ -229,7 +229,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        StorageDownloadFileOptions options = (StorageDownloadFileOptions) StorageDownloadFileOptions.builder()
+        StorageDownloadFileOptions options = StorageDownloadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();

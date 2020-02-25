@@ -79,12 +79,10 @@ public final class StorageUploadFileOptions extends StorageOptions {
      */
     @NonNull
     public static Builder from(@NonNull final StorageUploadFileOptions options) {
-        final StorageUploadFileOptions.Builder builder = builder();
-        builder.accessLevel(options.getAccessLevel());
-        builder.targetIdentityId(options.getTargetIdentityId());
-        builder.contentType(options.getContentType());
-        builder.metadata(options.getMetadata());
-        return builder;
+        return builder().accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId())
+                .contentType(options.getContentType())
+                .metadata(options.getMetadata());
     }
 
     /**
@@ -101,7 +99,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      * StorageUploadFileOptions, using fluent of property configuration
      * methods.
      */
-    public static final class Builder extends StorageOptions.Builder {
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageUploadFileOptions> {
         private String contentType;
         private Map<String, String> metadata;
 

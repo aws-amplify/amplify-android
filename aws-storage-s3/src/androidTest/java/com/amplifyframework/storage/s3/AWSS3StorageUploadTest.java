@@ -101,7 +101,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     @Before
     public void setUp() {
         // Always interact with PUBLIC access for consistency
-        options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
+        options = StorageUploadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
 
