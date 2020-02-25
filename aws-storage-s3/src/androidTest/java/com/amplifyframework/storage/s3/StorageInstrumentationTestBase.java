@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertTrue;
 
@@ -43,7 +44,8 @@ import static org.junit.Assert.assertTrue;
  */
 public abstract class StorageInstrumentationTestBase {
 
-    static final long EXTENDED_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
+    // Transferring large files sometimes takes more than 10 seconds unfortunately
+    static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
     private static AmazonS3Client s3;
     private static String bucketName;
@@ -122,9 +124,11 @@ public abstract class StorageInstrumentationTestBase {
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
-        synchronousStorage().uploadFile(file.getName(),
+        synchronousStorage().uploadFile(
+                file.getName(),
                 file.getAbsolutePath(),
-                options);
+                options,
+                EXTENDED_TIMEOUT_MS);
 
         // Confirm successful upload
         String s3key = S3RequestUtils.getServiceKey(accessLevel, identityId, file.getName());

@@ -53,9 +53,9 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
     // TODO: This is a temporary work-around to resolve a race-condition
     // TransferUtility crashes if a transfer is paused and instantly resumed.
-    private static final int SLEEP_DURATION_IN_MILLISECONDS = 300;
+    private static final int SLEEP_DURATION_MS = 300;
 
-    private static final StorageAccessLevel DEFAULT_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
+    private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
 
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
     private static final long SMALL_FILE_SIZE = 100L;
@@ -89,8 +89,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
      */
     @AfterClass
     public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
-        String largeFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, LARGE_FILE_NAME);
-        String smallFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, SMALL_FILE_NAME);
+        String largeFileKey = getS3Key(TESTING_ACCESS_LEVEL, LARGE_FILE_NAME);
+        String smallFileKey = getS3Key(TESTING_ACCESS_LEVEL, SMALL_FILE_NAME);
         cleanUpS3Object(largeFileKey);
         cleanUpS3Object(smallFileKey);
     }
@@ -102,7 +102,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     public void setUp() {
         // Always interact with PUBLIC access for consistency
         options = StorageUploadFileOptions.builder()
-                .accessLevel(DEFAULT_ACCESS_LEVEL)
+                .accessLevel(TESTING_ACCESS_LEVEL)
                 .build();
 
         // Create a set to remember all the subscriptions
@@ -127,7 +127,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
      */
     @Test
     public void testUploadSmallFile() throws Exception {
-        latchedUploadAndConfirm(smallFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
+        latchedUploadAndConfirm(smallFile, TESTING_ACCESS_LEVEL, getIdentityId());
     }
 
     /**
@@ -137,7 +137,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
      */
     @Test
     public void testUploadLargeFile() throws Exception {
-        latchedUploadAndConfirm(largeFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
+        latchedUploadAndConfirm(largeFile, TESTING_ACCESS_LEVEL, getIdentityId());
     }
 
     /**
@@ -189,7 +189,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         opContainer.set(op);
 
         // Assert that the required conditions have been met
-        assertTrue(canceled.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(canceled.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertNull(errorContainer.get());
     }
 
@@ -228,7 +228,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
                 if (TransferState.PAUSED.equals(state)) {
                     Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
                     // Wait briefly for transfer to pause successfully
-                    Sleep.milliseconds(SLEEP_DURATION_IN_MILLISECONDS); // TODO: This is kind of gross
+                    Sleep.milliseconds(SLEEP_DURATION_MS); // TODO: This is kind of gross
                     opContainer.get().resume();
                     resumed.countDown();
                 }
@@ -247,9 +247,9 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         opContainer.set(op);
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-        assertTrue(completed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-        assertS3ObjectExists(getS3Key(DEFAULT_ACCESS_LEVEL, largeFile.getName()));
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertS3ObjectExists(getS3Key(TESTING_ACCESS_LEVEL, largeFile.getName()));
         assertNull(errorContainer.get());
     }
 }

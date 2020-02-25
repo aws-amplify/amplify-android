@@ -56,9 +56,9 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
     // TODO: This is a temporary work-around to resolve a race-condition
     // TransferUtility crashes if a transfer is paused and instantly resumed.
-    private static final int SLEEP_DURATION_IN_MILLISECONDS = 300;
+    private static final int SLEEP_DURATION_MS = 300;
 
-    private static final StorageAccessLevel DEFAULT_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
+    private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
 
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
     private static final long SMALL_FILE_SIZE = 100L;
@@ -91,8 +91,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
 
         // Upload to bucket and confirm successful upload
-        latchedUploadAndConfirm(largeFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
-        latchedUploadAndConfirm(smallFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
+        latchedUploadAndConfirm(largeFile, TESTING_ACCESS_LEVEL, getIdentityId());
+        latchedUploadAndConfirm(smallFile, TESTING_ACCESS_LEVEL, getIdentityId());
     }
 
     /**
@@ -103,8 +103,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @AfterClass
     public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
-        String largeFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, LARGE_FILE_NAME);
-        String smallFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, SMALL_FILE_NAME);
+        String largeFileKey = getS3Key(TESTING_ACCESS_LEVEL, LARGE_FILE_NAME);
+        String smallFileKey = getS3Key(TESTING_ACCESS_LEVEL, SMALL_FILE_NAME);
         cleanUpS3Object(largeFileKey);
         cleanUpS3Object(smallFileKey);
     }
@@ -120,7 +120,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Always interact with PUBLIC access for consistency
         options = StorageDownloadFileOptions.builder()
-                .accessLevel(DEFAULT_ACCESS_LEVEL)
+                .accessLevel(TESTING_ACCESS_LEVEL)
                 .build();
 
         // Create a set to remember all the subscriptions
@@ -145,7 +145,9 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadSmallFile() throws StorageException {
-        synchronousStorage().downloadFile(SMALL_FILE_NAME, downloadFile.getAbsolutePath(), options);
+        synchronousStorage().downloadFile(SMALL_FILE_NAME,
+                downloadFile.getAbsolutePath(),
+                options);
         FileAssert.assertEquals(smallFile, downloadFile);
     }
 
@@ -156,7 +158,10 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
      */
     @Test
     public void testDownloadLargeFile() throws StorageException {
-        synchronousStorage().downloadFile(LARGE_FILE_NAME, downloadFile.getAbsolutePath(), options);
+        synchronousStorage().downloadFile(LARGE_FILE_NAME,
+                downloadFile.getAbsolutePath(),
+                options,
+                EXTENDED_TIMEOUT_MS);
         FileAssert.assertEquals(largeFile, downloadFile);
     }
 
@@ -209,7 +214,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         opContainer.set(op);
 
         // Assert that the required conditions have been met
-        assertTrue(canceled.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(canceled.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertNull(errorContainer.get());
     }
 
@@ -251,7 +256,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
                 if (TransferState.PAUSED.equals(state)) {
                     Amplify.Hub.unsubscribe(pauseToken); // So it doesn't pause on each progress report
                     // Wait briefly for transfer to pause successfully
-                    Sleep.milliseconds(SLEEP_DURATION_IN_MILLISECONDS); // TODO: This is kind of gross
+                    Sleep.milliseconds(SLEEP_DURATION_MS); // TODO: This is kind of gross
                     resumed.countDown();
                     opContainer.get().resume();
                 }
@@ -270,8 +275,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         opContainer.set(op);
 
         // Assert that all the required conditions have been met
-        assertTrue(resumed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
-        assertTrue(completed.await(EXTENDED_TIMEOUT_IN_SECONDS, TimeUnit.SECONDS));
+        assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         FileAssert.assertEquals(largeFile, downloadFile);
         assertNull(errorContainer.get());
     }
