@@ -99,7 +99,6 @@ private void configureAndroidLibrary(Project project) {
             versionCode rootProject.findProperty('VERSION_CODE').toInteger()
             versionName rootProject.findProperty('VERSION_NAME')
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
-            consumerProguardFiles 'proguard-rules.pro'
 
             testOptions {
                 unitTests {
@@ -121,7 +120,6 @@ private void configureAndroidLibrary(Project project) {
 
         buildTypes {
             release {
-                minifyEnabled true
                 proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             }
         }
