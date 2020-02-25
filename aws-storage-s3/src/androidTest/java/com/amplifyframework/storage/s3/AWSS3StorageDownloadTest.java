@@ -22,6 +22,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
@@ -175,7 +176,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Listen to Hub events to cancel when progress has been made
         SubscriptionToken progressSubscription = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
-            if ("downloadProgress".equals(hubEvent.getName())) {
+            if (StorageChannelEventName.DOWNLOAD_PROGRESS.toString().equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
                 if (progress != null && progress > 0) {
@@ -187,7 +188,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Listen to Hub events for cancel
         SubscriptionToken cancelSubscription = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
-            if ("downloadState".equals(hubEvent.getName())) {
+            if (StorageChannelEventName.DOWNLOAD_STATE.toString().equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
                 if (TransferState.CANCELED.equals(state)) {
@@ -230,7 +231,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Listen to Hub events to pause when progress has been made
         SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
-            if ("downloadProgress".equals(hubEvent.getName())) {
+            if (StorageChannelEventName.DOWNLOAD_PROGRESS.toString().equals(hubEvent.getName())) {
                 HubEvent<Float> progressEvent = (HubEvent<Float>) hubEvent;
                 Float progress = progressEvent.getData();
                 // Pause if progress is non-zero amount
@@ -243,7 +244,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
         // Listen to Hub events to resume when operation has been paused
         SubscriptionToken resumeToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
-            if ("downloadState".equals(hubEvent.getName())) {
+            if (StorageChannelEventName.DOWNLOAD_STATE.toString().equals(hubEvent.getName())) {
                 HubEvent<String> stateEvent = (HubEvent<String>) hubEvent;
                 TransferState state = TransferState.getState(stateEvent.getData());
                 // Resume if transfer was paused
