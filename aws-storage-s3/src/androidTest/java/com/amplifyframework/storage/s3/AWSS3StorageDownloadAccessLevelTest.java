@@ -19,6 +19,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.testutils.FileAssert;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -83,7 +84,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      * Clean up the uploaded resources after the test.
      */
     @AfterClass
-    public static void cleanUp() {
+    public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
         // Clean up each access level
         cleanUpS3Object(getS3Key(StorageAccessLevel.PUBLIC, UPLOAD_NAME));
 
@@ -219,7 +220,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        StorageDownloadFileOptions options = StorageDownloadFileOptions.builder()
+        StorageDownloadFileOptions options = (StorageDownloadFileOptions) StorageDownloadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();

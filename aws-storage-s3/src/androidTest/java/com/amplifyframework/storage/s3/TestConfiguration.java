@@ -27,10 +27,8 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobile.client.Callback;
-import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -67,7 +65,8 @@ final class TestConfiguration {
     private final String bucket;
     private final Map<String, String> userCredentials;
 
-    private TestConfiguration(Context context) throws AmplifyException {
+    private TestConfiguration(Context context)
+            throws AmplifyException, SynchronousAWSMobileClient.MobileClientException {
         plugin = new AWSS3StoragePlugin();
         bucket = getBucketNameFromPlugin(context, plugin);
         userCredentials = getUserCredentials(context);
@@ -82,7 +81,8 @@ final class TestConfiguration {
      * @return A TestConfiguration instance
      */
     @NonNull
-    static synchronized TestConfiguration configureIfNotConfigured() throws AmplifyException {
+    static synchronized TestConfiguration configureIfNotConfigured()
+            throws AmplifyException, SynchronousAWSMobileClient.MobileClientException {
         if (singleton == null) {
             singleton = new TestConfiguration(ApplicationProvider.getApplicationContext());
         }
@@ -119,26 +119,12 @@ final class TestConfiguration {
         });
     }
 
-    private static void setUpCredentials(Context context) {
+    private static void setUpCredentials(Context context) throws SynchronousAWSMobileClient.MobileClientException {
         // Obtain AWS Configuration
         final int configId = Resources.getRawResourceId(context, AWS_CONFIGURATION_IDENTIFIER);
         AWSConfiguration configuration = new AWSConfiguration(context, configId);
-
         // Initialize Mobile Client!
-        Await.result((onResult, onError) ->
-            AWSMobileClient.getInstance().initialize(context, configuration, new Callback<UserStateDetails>() {
-                @Override
-                public void onResult(UserStateDetails userStateDetails) {
-                    onResult.accept(userStateDetails);
-                }
-
-                @Override
-                public void onError(Exception initializationError) {
-                    onError.accept(new RuntimeException("Mobile Client initialization failed.",
-                            initializationError));
-                }
-            })
-        );
+        SynchronousAWSMobileClient.instance().initialize(configuration);
     }
 
     private String getBucketNameFromPlugin(Context context, AWSS3StoragePlugin plugin) {

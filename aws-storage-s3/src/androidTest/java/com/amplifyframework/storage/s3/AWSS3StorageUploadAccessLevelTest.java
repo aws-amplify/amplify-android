@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -47,7 +48,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
      * Obtain the user IDs prior to running the tests.
      */
     @BeforeClass
-    public static void setUpBeforeClass() {
+    public static void setUpBeforeClass() throws SynchronousAWSMobileClient.MobileClientException {
         // Get registered user names from test resources
         List<String> users = getUsers();
         assertTrue(users.size() >= 2); // This test suite requires at least two verified users
@@ -188,7 +189,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+        StorageUploadFileOptions options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
