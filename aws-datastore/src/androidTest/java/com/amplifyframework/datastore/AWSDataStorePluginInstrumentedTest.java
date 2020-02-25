@@ -38,7 +38,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the functions of {@link com.amplifyframework.datastore.AWSDataStorePlugin}.
+ * Tests the functions of {@link AWSDataStorePlugin}.
  * This test expects a backend API that has support for the {@link Blog} family of models,
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.

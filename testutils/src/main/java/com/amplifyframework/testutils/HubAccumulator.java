@@ -56,10 +56,16 @@ public final class HubAccumulator {
      */
     @NonNull
     public static HubAccumulator create(@NonNull HubChannel channel) {
-        Objects.requireNonNull(channel);
-        return new HubAccumulator(channel, HubEventFilters.always());
+        return create(channel, HubEventFilters.always());
     }
 
+    /**
+     * Gets an {@link HubAccumulator} that accumulates events arriving
+     * on a particular channel.
+     * @param channel Events will be accumulated for this channel only
+     * @param filter Filter to apply to accumulating events
+     * @return A HubAccumulator for the requested channel
+     */
     @NonNull
     public static HubAccumulator create(@NonNull HubChannel channel, @NonNull HubEventFilter filter) {
         Objects.requireNonNull(channel);
@@ -121,9 +127,21 @@ public final class HubAccumulator {
         // If we haven't yet received the desired quantity of events on the subscription,
         // setup a latch to await the desired quantity, less the number of existing events.
         // For example: I desire 5, I already have 3, I wait for 2 more.
-        if (events.size() < desiredQuantity) {
-            latch = new CountDownLatch(desiredQuantity - events.size());
-            Latch.await(latch);
+        int waitCount = desiredQuantity - events.size();
+        if (waitCount > 0) {
+            latch = new CountDownLatch(waitCount);
+            try {
+                // Wait for proportionally as long as the number of missing events
+                long waitTimeMs = waitCount * Latch.REASONABLE_WAIT_TIME_MS;
+                Latch.await(latch, waitTimeMs);
+            } catch (RuntimeException exception) {
+                // Did not count down but wait! It's possible for a race condition to have occurred.
+                // What if the event was emitted right before latch was instantiated?
+                // Do one more check before throwing!
+                if (events.size() < desiredQuantity) {
+                    throw new RuntimeException("Not enough events were accumulated.");
+                }
+            }
             latch = null;
         }
 
