@@ -22,17 +22,18 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
-import com.amplifyframework.testutils.AmplifyTestBase;
 import com.amplifyframework.testutils.SynchronousStorage;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.s3.AmazonS3Client;
-import org.json.JSONObject;
 import org.junit.BeforeClass;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertTrue;
 
@@ -41,14 +42,16 @@ import static org.junit.Assert.assertTrue;
  * basic static methods that involve direct interactions with low-level
  * {@link AmazonS3Client} and {@link AWSMobileClient}.
  */
-public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
+public abstract class StorageInstrumentationTestBase {
 
     static final long EXTENDED_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
 
     private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
+
     private static AmazonS3Client s3;
     private static String bucketName;
-    private static JSONObject credentials;
+    private static Map<String, String> credentials;
+
     private static AWSMobileClient mClient;
     private static SynchronousStorage synchronousStorage;
 
@@ -59,12 +62,12 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
      */
     @BeforeClass
     public static void setUpOnce() throws AmplifyException {
-        s3 = TestConfiguration.configureIfNotConfigured()
-                .plugin()
-                .getEscapeHatch();
-        bucketName = TestConfiguration.configureIfNotConfigured()
-                .getBucketName();
-        credentials = getPackageConfigure("Storage");
+        TestConfiguration config = TestConfiguration.configureIfNotConfigured();
+
+        s3 = config.plugin().getEscapeHatch();
+        bucketName = config.getBucketName();
+        credentials = config.getUserCredentials();
+
         mClient = AWSMobileClient.getInstance();
         synchronousStorage = SynchronousStorage.singleton();
     }
@@ -109,10 +112,14 @@ public abstract class StorageInstrumentationTestBase extends AmplifyTestBase {
         }
     }
 
+    static List<String> getUsers() {
+        return new ArrayList<>(credentials.keySet());
+    }
+
     static void signInAs(@NonNull String username) {
         signOut();
         try {
-            String password = credentials.getString("password");
+            String password = credentials.get(username);
             mClient.signIn(username, password, null);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to sign in as " + username, exception);

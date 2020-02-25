@@ -27,7 +27,10 @@ import org.junit.Test;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+
+import static org.junit.Assert.assertTrue;
 
 /**
  * Instrumentation test to confirm that Storage Download behaves
@@ -35,8 +38,8 @@ import java.util.Map;
  */
 public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrumentationTestBase {
 
-    private static final String USER_NAME_ONE = "test-user-1";
-    private static final String USER_NAME_TWO = "test-user-2";
+    private static String userNameOne;
+    private static String userNameTwo;
     private static Map<String, String> identityIds = new HashMap<>();
 
     private static final String UPLOAD_NAME = "upload-test-" + System.currentTimeMillis();
@@ -53,19 +56,25 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
+        // Get registered user names from test resources
+        List<String> users = getUsers();
+        assertTrue(users.size() >= 2); // This test suite requires at least two verified users
+        userNameOne = users.get(0);
+        userNameTwo = users.get(1);
+
         // Randomly write a file to upload
         uploadFile = createTempFile(UPLOAD_NAME, UPLOAD_SIZE);
 
         // Upload to each access level
         latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PUBLIC, getIdentityId());
 
-        signInAs(USER_NAME_ONE);
-        identityIds.put(USER_NAME_ONE, getIdentityId());
+        signInAs(userNameOne);
+        identityIds.put(userNameOne, getIdentityId());
         latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PROTECTED, getIdentityId());
         latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PRIVATE, getIdentityId());
 
-        signInAs(USER_NAME_TWO);
-        identityIds.put(USER_NAME_TWO, getIdentityId());
+        signInAs(userNameTwo);
+        identityIds.put(userNameTwo, getIdentityId());
         latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PROTECTED, getIdentityId());
         latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PRIVATE, getIdentityId());
     }
@@ -78,11 +87,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
         // Clean up each access level
         cleanUpS3Object(getS3Key(StorageAccessLevel.PUBLIC, UPLOAD_NAME));
 
-        signInAs(USER_NAME_ONE);
+        signInAs(userNameOne);
         cleanUpS3Object(getS3Key(StorageAccessLevel.PROTECTED, UPLOAD_NAME));
         cleanUpS3Object(getS3Key(StorageAccessLevel.PRIVATE, UPLOAD_NAME));
 
-        signInAs(USER_NAME_TWO);
+        signInAs(userNameTwo);
         cleanUpS3Object(getS3Key(StorageAccessLevel.PROTECTED, UPLOAD_NAME));
         cleanUpS3Object(getS3Key(StorageAccessLevel.PRIVATE, UPLOAD_NAME));
 
@@ -119,8 +128,8 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadUnauthenticatedProtectedAccess() throws Exception {
-        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_ONE));
-        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_TWO));
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(userNameOne));
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(userNameTwo));
     }
 
     /**
@@ -134,10 +143,10 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test(expected = StorageException.class)
     public void testDownloadUnauthenticatedPrivateAccess() throws Exception {
-        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(userNameOne));
 
         // This one should be unreachable, since first attempt fails
-        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_TWO));
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(userNameTwo));
     }
 
     /**
@@ -147,10 +156,10 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadAuthenticatedProtectedAccess() throws Exception {
-        signInAs(USER_NAME_ONE);
+        signInAs(userNameOne);
         testDownload(downloadFile, StorageAccessLevel.PROTECTED, getIdentityId());
 
-        signInAs(USER_NAME_TWO);
+        signInAs(userNameTwo);
         testDownload(downloadFile, StorageAccessLevel.PROTECTED, getIdentityId());
     }
 
@@ -161,10 +170,10 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadAuthenticatedPrivateAccess() throws Exception {
-        signInAs(USER_NAME_ONE);
+        signInAs(userNameOne);
         testDownload(downloadFile, StorageAccessLevel.PRIVATE, getIdentityId());
 
-        signInAs(USER_NAME_TWO);
+        signInAs(userNameTwo);
         testDownload(downloadFile, StorageAccessLevel.PRIVATE, getIdentityId());
     }
 
@@ -179,11 +188,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test
     public void testDownloadDifferentUsersProtectedAccess() throws Exception {
-        signInAs(USER_NAME_ONE);
-        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_TWO));
+        signInAs(userNameOne);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(userNameTwo));
 
-        signInAs(USER_NAME_TWO);
-        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(USER_NAME_ONE));
+        signInAs(userNameTwo);
+        testDownload(downloadFile, StorageAccessLevel.PROTECTED, identityIds.get(userNameOne));
     }
 
     /**
@@ -197,12 +206,12 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
      */
     @Test(expected = StorageException.class)
     public void testDownloadDifferentUsersPrivateAccess() throws Exception {
-        signInAs(USER_NAME_ONE);
-        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_TWO));
+        signInAs(userNameOne);
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(userNameTwo));
 
         // This part of the test should be unreachable
-        signInAs(USER_NAME_TWO);
-        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(USER_NAME_ONE));
+        signInAs(userNameTwo);
+        testDownload(downloadFile, StorageAccessLevel.PRIVATE, identityIds.get(userNameOne));
     }
 
     private void testDownload(

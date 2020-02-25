@@ -26,20 +26,51 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.Resources;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobile.config.AWSConfiguration;
+import org.json.JSONArray;
 import org.json.JSONException;
+import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * This is a class to help configure Amplify and prepare other test resources
+ * for Storage integration tests. In order to use this package effectively,
+ * please verify the following:
+ *
+ * 1) `res/raw/amplifyconfiguration.json` is present and one instance of
+ *    "awsS3StoragePlugin" is registered with valid S3 bucket name and region.
+ *
+ * 2) `res/raw/awsconfiguration.json` is present with a valid Cognito Identity and
+ *    User Pools.
+ *
+ * 3) `res/raw/credentials.json` is present with two or more user credentials from
+ *    the Cognito User Pools.
+ *
+ * If for any reason you require the test configuration files to be named differently,
+ * the constant identifier variables in this class can be adjusted accordingly.
+ */
 final class TestConfiguration {
+
+    private static final String AMPLIFY_CONFIGURATION_IDENTIFIER = "amplifyconfiguration";
+    private static final String AWS_CONFIGURATION_IDENTIFIER = "awsconfiguration";
+    private static final String CREDENTIAL_IDENTIFIER = "credentials";
+
     private static TestConfiguration singleton;
     private final AWSS3StoragePlugin plugin;
     private final String bucket;
+    private final Map<String, String> userCredentials;
 
     private TestConfiguration(Context context) throws AmplifyException {
         plugin = new AWSS3StoragePlugin();
         bucket = getBucketNameFromPlugin(context, plugin);
+        userCredentials = getUserCredentials(context);
 
         Amplify.addPlugin(plugin);
         configureAmplify(context);
@@ -59,6 +90,7 @@ final class TestConfiguration {
     }
 
     private static void configureAmplify(Context context) {
+
         // Configure Amplify, and wait for Storage to be ready.
         Await.result((onResult, onError) -> {
             // Listen for initialization success messages
@@ -73,7 +105,12 @@ final class TestConfiguration {
             });
             // Now that we're listening for it ... configure Amplify and begin initialization
             try {
-                Amplify.configure(context);
+                // Obtain Amplify Configuration
+                final int configId = Resources.getRawResourceId(context, AMPLIFY_CONFIGURATION_IDENTIFIER);
+                AmplifyConfiguration configuration = AmplifyConfiguration.fromConfigFile(context, configId);
+
+                // Configure!
+                Amplify.configure(configuration, context);
             } catch (AmplifyException configurationFailure) {
                 // If the configuration fails before even initialization begins, kill the Await with onError.
                 onError.accept(new RuntimeException("Configuration failed.",
@@ -83,8 +120,13 @@ final class TestConfiguration {
     }
 
     private static void setUpCredentials(Context context) {
+        // Obtain AWS Configuration
+        final int configId = Resources.getRawResourceId(context, AWS_CONFIGURATION_IDENTIFIER);
+        AWSConfiguration configuration = new AWSConfiguration(context, configId);
+
+        // Initialize Mobile Client!
         Await.result((onResult, onError) ->
-            AWSMobileClient.getInstance().initialize(context, new Callback<UserStateDetails>() {
+            AWSMobileClient.getInstance().initialize(context, configuration, new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails userStateDetails) {
                     onResult.accept(userStateDetails);
@@ -99,9 +141,10 @@ final class TestConfiguration {
         );
     }
 
-    private static String getBucketNameFromPlugin(Context context, AWSS3StoragePlugin plugin) {
+    private String getBucketNameFromPlugin(Context context, AWSS3StoragePlugin plugin) {
         try {
-            return AmplifyConfiguration.fromConfigFile(context)
+            final int configId = Resources.getRawResourceId(context, AMPLIFY_CONFIGURATION_IDENTIFIER);
+            return AmplifyConfiguration.fromConfigFile(context, configId)
                     .forCategoryType(plugin.getCategoryType())
                     .getPluginConfig(plugin.getPluginKey())
                     .getString("bucket");
@@ -113,6 +156,27 @@ final class TestConfiguration {
         }
     }
 
+    private Map<String, String> getUserCredentials(Context context) {
+        Map<String, String> userCredentials = new HashMap<>();
+
+        // Obtain User Pool Credentials configuration JSON
+        final int configId = Resources.getRawResourceId(context, CREDENTIAL_IDENTIFIER);
+        JSONObject configuration = Resources.readAsJson(context, configId);
+
+        // Read the content for credentials
+        try {
+            JSONArray credentials = configuration.getJSONArray("credentials");
+            for (int index = 0; index < credentials.length(); index++) {
+                String username = credentials.getJSONObject(index).getString("username");
+                String password = credentials.getJSONObject(index).getString("password");
+                userCredentials.put(username, password);
+            }
+        } catch (JSONException exception) {
+            throw new RuntimeException(exception);
+        }
+        return userCredentials;
+    }
+
     @NonNull
     AWSS3StoragePlugin plugin() {
         return plugin;
@@ -121,5 +185,10 @@ final class TestConfiguration {
     @NonNull
     String getBucketName() {
         return bucket;
+    }
+
+    @NonNull
+    Map<String, String> getUserCredentials() {
+        return userCredentials;
     }
 }

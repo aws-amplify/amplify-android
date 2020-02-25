@@ -40,8 +40,8 @@ public final class Resources {
     /**
      * Dis-allows instantiation of this test utility.
      */
-    private Resources() {
-    }
+    @SuppressWarnings("WhitespaceAround")
+    private Resources() {}
 
     /**
      * Gets a test resource as a string, given its path relative to the
@@ -81,6 +81,21 @@ public final class Resources {
     }
 
     /**
+     * Obtains the raw resource ID for given resource identifier.
+     * @param context An Android Context
+     * @param identifier Name of a raw resource
+     * @return ID of the raw resource
+     * @throws RuntimeException if the specified raw resource does not exist
+     */
+    public static int getRawResourceId(Context context, String identifier) {
+        try {
+            return context.getResources().getIdentifier(identifier, "raw", context.getPackageName());
+        } catch (Exception exception) {
+            throw new RuntimeException("Failed to locate " + identifier, exception);
+        }
+    }
+
+    /**
      * Reads the content of a raw resource, as a string.
      * @param context An Android Context
      * @param rawResourceId ID of a raw resource
@@ -88,6 +103,21 @@ public final class Resources {
      */
     public static String readAsString(Context context, @RawRes int rawResourceId) {
         return stringFromStream(context.getResources().openRawResource(rawResourceId));
+    }
+
+    /**
+     * Reads the content of a raw resource, as a {@link JSONObject}.
+     * @param context An Android Context
+     * @param rawResourceId ID of a raw resource
+     * @return JSON Object equivalent of the raw resource
+     * @throws RuntimeException If resource with given ID does not exist or cannot be read
+     */
+    public static JSONObject readAsJson(Context context, @RawRes int rawResourceId) {
+        try {
+            return new JSONObject(readAsString(context, rawResourceId));
+        } catch (JSONException jsonException) {
+            throw new RuntimeException(jsonException);
+        }
     }
 
     /**
@@ -101,7 +131,7 @@ public final class Resources {
      * @throws RuntimeException If resource at path does not exist or cannot be read
      */
     @NonNull
-    public static JSONObject readAsJson(String path) throws RuntimeException {
+    public static JSONObject readAsJson(String path) {
         try {
             return new JSONObject(readAsString(path));
         } catch (JSONException jsonException) {

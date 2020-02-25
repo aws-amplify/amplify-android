@@ -84,6 +84,7 @@ __pycache__/
 **/testconfiguration.json
 **/awsconfiguration.json
 **/amplifyconfiguration.json
+**/credentials.json
 
 # IDE files
 .idea/**
