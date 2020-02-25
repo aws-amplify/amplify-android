@@ -26,6 +26,7 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.testutils.FileAssert;
+import com.amplifyframework.testutils.RandomTempFile;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -80,8 +81,8 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         // Randomly write objects to upload
-        largeFile = createTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
-        smallFile = createTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
+        largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
+        smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
 
         // Upload to bucket and confirm successful upload
         latchedUploadAndConfirm(largeFile, DEFAULT_ACCESS_LEVEL, getIdentityId());
@@ -107,7 +108,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     @Before
     public void setUp() throws Exception {
         // Set up file to download test-object to
-        downloadFile = createTempFile(destination);
+        downloadFile = new RandomTempFile(destination);
 
         // Always interact with PUBLIC access for consistency
         options = (StorageDownloadFileOptions) StorageDownloadFileOptions.builder()

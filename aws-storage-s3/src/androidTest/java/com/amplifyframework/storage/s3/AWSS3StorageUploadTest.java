@@ -24,6 +24,7 @@ import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.testutils.RandomTempFile;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
@@ -76,8 +77,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     @BeforeClass
     public static void setUpBeforeClass() throws Exception {
         // Randomly write objects to upload
-        largeFile = createTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
-        smallFile = createTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
+        largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
+        smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
     }
 
     /**

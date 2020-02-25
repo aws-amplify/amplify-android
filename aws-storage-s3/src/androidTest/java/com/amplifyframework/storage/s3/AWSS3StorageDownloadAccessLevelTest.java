@@ -20,6 +20,7 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.SynchronousAWSMobileClient;
+import com.amplifyframework.testutils.RandomTempFile;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,7 +65,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
         userNameTwo = users.get(1);
 
         // Randomly write a file to upload
-        uploadFile = createTempFile(UPLOAD_NAME, UPLOAD_SIZE);
+        uploadFile = new RandomTempFile(UPLOAD_NAME, UPLOAD_SIZE);
 
         // Upload to each access level
         latchedUploadAndConfirm(uploadFile, StorageAccessLevel.PUBLIC, getIdentityId());
@@ -106,7 +107,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
     @Before
     public void setUp() throws Exception {
         signOut();
-        downloadFile = createTempFile(destination);
+        downloadFile = new RandomTempFile(destination);
     }
 
     /**
