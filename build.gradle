@@ -20,7 +20,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.3'
+        classpath 'com.android.tools.build:gradle:3.6.0'
         classpath 'me.tatarka:gradle-retrolambda:3.7.1'
     }
 }
@@ -48,13 +48,13 @@ ext {
     minSdkVersion = 15
     targetSdkVersion = 29
 
-    awsSdkVersion = '2.16.7'
+    awsSdkVersion = '2.16.8'
     dependency = [
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
             annotation: 'androidx.annotation:annotation:1.1.0',
             appcompat: 'androidx.appcompat:appcompat:1.1.0',
-            core: 'androidx.core:core:1.1.0',
+            core: 'androidx.core:core:1.2.0',
             test: [
                 core: 'androidx.test:core:1.2.0',
                 runner: 'androidx.test:runner:1.2.0',
@@ -67,7 +67,7 @@ ext {
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion"
         ],
-        okhttp: 'com.squareup.okhttp3:okhttp:4.3.1',
+        okhttp: 'com.squareup.okhttp3:okhttp:4.4.0',
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
