@@ -25,7 +25,7 @@ task checkstyle(type: Checkstyle) {
 }
 
 checkstyle {
-    toolVersion = '8.28'
+    toolVersion = '8.29'
 }
 
 afterEvaluate {
