@@ -29,8 +29,6 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import org.junit.BeforeClass;
 
 import java.io.File;
-import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -45,8 +43,6 @@ import static org.junit.Assert.assertTrue;
 public abstract class StorageInstrumentationTestBase {
 
     static final long EXTENDED_TIMEOUT_IN_SECONDS = 20; // 5 seconds is too short for file transfers
-
-    private static final String TEMP_DIR = System.getProperty("java.io.tmpdir");
 
     private static AmazonS3Client s3;
     private static String bucketName;
@@ -74,21 +70,6 @@ public abstract class StorageInstrumentationTestBase {
 
     static SynchronousStorage synchronousStorage() {
         return synchronousStorage;
-    }
-
-    static synchronized File createTempFile(String filename) throws IOException {
-        File file = new File(TEMP_DIR, filename);
-        if (file.createNewFile()) {
-            file.deleteOnExit();
-        }
-        return file;
-    }
-
-    static synchronized File createTempFile(String filename, long contentLength) throws IOException {
-        File file = createTempFile(filename);
-        RandomAccessFile raf = new RandomAccessFile(file, "rw");
-        raf.setLength(contentLength);
-        return file;
     }
 
     static synchronized String getIdentityId() {

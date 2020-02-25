@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3;
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.testutils.RandomTempFile;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
@@ -70,7 +71,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
     @Before
     public void setUp() throws Exception {
         signOut();
-        fileToUpload = createTempFile(filename);
+        fileToUpload = new RandomTempFile(filename);
     }
 
     /**
