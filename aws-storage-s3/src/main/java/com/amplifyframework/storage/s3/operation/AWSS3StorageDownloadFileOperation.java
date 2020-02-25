@@ -22,6 +22,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
@@ -140,11 +141,12 @@ public final class AWSS3StorageDownloadFileOperation
         }
     }
 
+    @SuppressLint("SyntheticAccessor")
     private final class DownloadTransferListener implements TransferListener {
         @Override
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("downloadState", state.name()));
+                    HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name()));
             switch (state) {
                 case COMPLETED:
                     onSuccess.accept(StorageDownloadFileResult.fromFile(file));
@@ -169,13 +171,13 @@ public final class AWSS3StorageDownloadFileOperation
                 progress = 1f;
             }
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("downloadProgress", progress));
+                    HubEvent.create(StorageChannelEventName.DOWNLOAD_PROGRESS, progress));
         }
 
         @Override
         public void onError(int transferId, Exception exception) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("downloadError", exception));
+                    HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, exception));
             onError.accept(new StorageException(
                     "Something went wrong with your AWS S3 Storage download file operation",
                     exception,
