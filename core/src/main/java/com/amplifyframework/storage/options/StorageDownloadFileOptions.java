@@ -15,10 +15,8 @@
 
 package com.amplifyframework.storage.options;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
  * Options to specify attributes of get API invocation.
@@ -53,9 +51,10 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      */
     @NonNull
     public static Builder from(@NonNull final StorageDownloadFileOptions options) {
-        return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+        final StorageDownloadFileOptions.Builder builder = builder();
+        builder.accessLevel(options.getAccessLevel());
+        builder.targetIdentityId(options.getTargetIdentityId());
+        return builder;
     }
 
     /**
@@ -73,18 +72,7 @@ public final class StorageDownloadFileOptions extends StorageOptions {
      * fluent configuration method calls.
      */
     public static final class Builder extends StorageOptions.Builder {
-        @Override
-        @NonNull
-        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
-            return (Builder) super.accessLevel(accessLevel);
-        }
-
-        @Override
-        @NonNull
-        public Builder targetIdentityId(@Nullable String targetIdentityId) {
-            return (Builder) super.targetIdentityId(targetIdentityId);
-        }
-
+        @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull
         public StorageDownloadFileOptions build() {

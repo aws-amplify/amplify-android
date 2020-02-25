@@ -26,6 +26,7 @@ import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.testutils.RandomTempFile;
 import com.amplifyframework.testutils.Sleep;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
@@ -82,9 +83,11 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     /**
      * Cleans up the S3 bucket for files that were uploaded
      * during testing processes.
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to obtain
+     *         a valid identity ID from mobile client
      */
     @AfterClass
-    public static void cleanUp() {
+    public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
         String largeFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, LARGE_FILE_NAME);
         String smallFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, SMALL_FILE_NAME);
         cleanUpS3Object(largeFileKey);
@@ -97,7 +100,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     @Before
     public void setUp() {
         // Always interact with PUBLIC access for consistency
-        options = StorageUploadFileOptions.builder()
+        options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
 

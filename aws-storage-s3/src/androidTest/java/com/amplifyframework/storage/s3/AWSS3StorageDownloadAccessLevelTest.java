@@ -20,6 +20,7 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.RandomTempFile;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -27,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,11 +54,15 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
 
     /**
      * Upload the required resources in cloud prior to running the tests.
-     * @throws Exception if there is a problem while creating or uploading
-     *         the files.
+     * @throws IOException if there is a problem while creating the files
+     * @throws StorageException if there is a problem with uploading the files
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to sign in with
+     *         Cognito User Pools or obtain an identity ID
      */
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() throws IOException,
+            StorageException,
+            SynchronousAWSMobileClient.MobileClientException {
         // Get registered user names from test resources
         List<String> users = getUsers();
         assertTrue(users.size() >= 2); // This test suite requires at least two verified users
@@ -82,9 +88,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
 
     /**
      * Clean up the uploaded resources after the test.
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to sign in with
+     *         Cognito User Pools or obtain an identity ID
      */
     @AfterClass
-    public static void cleanUp() {
+    public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
         // Clean up each access level
         cleanUpS3Object(getS3Key(StorageAccessLevel.PUBLIC, UPLOAD_NAME));
 
@@ -101,10 +109,11 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
 
     /**
      * Signs out by default and sets up the file to download object to.
-     * @throws Exception if an error is encountered while creating file
+     * @throws IOException if an error is encountered while creating file
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to sign out
      */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException, SynchronousAWSMobileClient.MobileClientException {
         signOut();
         downloadFile = new RandomTempFile(destination);
     }
@@ -220,7 +229,7 @@ public final class AWSS3StorageDownloadAccessLevelTest extends StorageInstrument
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        StorageDownloadFileOptions options = StorageDownloadFileOptions.builder()
+        StorageDownloadFileOptions options = (StorageDownloadFileOptions) StorageDownloadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();

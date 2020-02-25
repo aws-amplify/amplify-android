@@ -25,7 +25,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.datastore.test.R.raw;
+import com.amplifyframework.datastore.test.R;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testutils.Await;
@@ -42,7 +42,7 @@ final class TestConfiguration {
         Amplify.addPlugin(plugin);
 
         AmplifyConfiguration amplifyConfiguration =
-            AmplifyConfiguration.fromConfigFile(context, raw.amplifyconfiguration);
+            AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
 
         /*
          * Currently, initialization of categories is async, and there is no synchronization.

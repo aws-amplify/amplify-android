@@ -15,6 +15,8 @@
 
 package com.amplifyframework.testutils;
 
+import androidx.annotation.Nullable;
+
 import org.junit.Assert;
 
 import java.io.File;
@@ -28,21 +30,39 @@ import java.security.NoSuchAlgorithmException;
  * Test utility for comparing file content.
  */
 public final class FileAssert {
-    @SuppressWarnings("WhitespaceAround")
-    private FileAssert() {} // Prevent instantiation
+    @SuppressWarnings("checkstyle:all") private FileAssert() {} // Prevent instantiation
 
-    public static void assertEquals(File expectedFile, File actualFile) {
-        Assert.assertTrue("Expected file must exist.", expectedFile.exists());
-        Assert.assertTrue("Testing file must exist.", actualFile.exists());
+    /**
+     * Asserts that two files are equal in the respect that:
+     *  1. Both are non-null, or both are null, bot not a mix;
+     *  2. Both exist, or do not exist, but not a mix;
+     *  3. If both are non-null and exist, then they must have the same content.
+     * @param expectedFile A baseline to compare against
+     * @param actualFile A file which may or may not be the same as the expected file
+     */
+    public static void assertEquals(@Nullable File expectedFile, @Nullable File actualFile) {
+        // Ensure that the files are either both null, or are both non-null.
+        if (expectedFile == null) {
+            Assert.assertNull("Expected file was null, but actual file was non-null.", actualFile);
+            return; // Linting doesn't catch logic on Assert, just if/else
+        } else if (actualFile == null) {
+            // Expected was not null, and this is null. So it fails.
+            Assert.fail("Expected file was non-null, but actual file was null.");
+            return; // Linting doesn't catch logic on Assert, just if/else
+        }
+        // else, neither are null ...
+
+        // Alright, both are non-null. Cool. Do they have the same existence?
+        Assert.assertEquals(expectedFile.exists(), actualFile.exists());
+        // Both exist, are they the same length?
         Assert.assertEquals(expectedFile.length(), actualFile.length());
 
         try {
             FileInputStream expectedInputStream = new FileInputStream(expectedFile);
             FileInputStream actualInputStream = new FileInputStream(actualFile);
             assertStreamEqualStream(expectedInputStream, actualInputStream);
-        } catch (IOException exception) {
-            exception.printStackTrace();
-            Assert.fail("Unable to compare files: " + exception.getMessage());
+        } catch (IOException errorOpeningFileStream) {
+            throw new RuntimeException("Failed to open file stream while comparing content.", errorOpeningFileStream);
         }
     }
 
@@ -52,30 +72,35 @@ public final class FileAssert {
     ) throws IOException {
         final byte[] expectedDigest;
         final byte[] actualDigest;
-
         try {
             expectedDigest = calculateMD5Digest(expectedInputStream);
             actualDigest = calculateMD5Digest(actualInputStream);
             Assert.assertArrayEquals(expectedDigest, actualDigest);
-        } catch (NoSuchAlgorithmException exception) {
-            exception.printStackTrace();
-            Assert.fail("Unable to compare input streams: " + exception.getMessage());
         } finally {
             expectedInputStream.close();
             actualInputStream.close();
         }
     }
 
-    @SuppressWarnings("MagicNumber")
-    private static byte[] calculateMD5Digest(InputStream stream)
-            throws NoSuchAlgorithmException, IOException {
-        int bytesRead;
-        byte[] buffer = new byte[2048];
-        MessageDigest md5 = MessageDigest.getInstance("MD5");
-
-        while ((bytesRead = stream.read(buffer)) != -1) {
-            md5.update(buffer, 0, bytesRead);
+    @SuppressWarnings("MagicNumber") // Buffer size
+    private static byte[] calculateMD5Digest(InputStream stream) {
+        final byte[] buffer = new byte[2_048];
+        final MessageDigest md5;
+        try {
+            md5 = MessageDigest.getInstance("MD5");
+        } catch (NoSuchAlgorithmException noMd5AvailableError) {
+            throw new RuntimeException("No MD5 algorithm available to use for hashing.", noMd5AvailableError);
         }
+
+        int bytesRead;
+        try {
+            while ((bytesRead = stream.read(buffer)) != -1) {
+                md5.update(buffer, 0, bytesRead);
+            }
+        } catch (IOException readError) {
+            throw new RuntimeException("Failed to read input stream.", readError);
+        }
+
         return md5.digest();
     }
 }

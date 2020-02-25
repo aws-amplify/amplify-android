@@ -15,10 +15,8 @@
 
 package com.amplifyframework.storage.options;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
  * Options to specify attributes of list API invocation.
@@ -51,9 +49,10 @@ public final class StorageListOptions extends StorageOptions {
      */
     @NonNull
     public static Builder from(@NonNull final StorageListOptions options) {
-        return builder()
-                .accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId());
+        final StorageListOptions.Builder builder = builder();
+        builder.accessLevel(options.getAccessLevel());
+        builder.targetIdentityId(options.getTargetIdentityId());
+        return builder;
     }
 
     /**
@@ -71,18 +70,7 @@ public final class StorageListOptions extends StorageOptions {
      * fluent configuration methods.
      */
     public static final class Builder extends StorageOptions.Builder {
-        @Override
-        @NonNull
-        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
-            return (Builder) super.accessLevel(accessLevel);
-        }
-
-        @Override
-        @NonNull
-        public Builder targetIdentityId(@Nullable String targetIdentityId) {
-            return (Builder) super.targetIdentityId(targetIdentityId);
-        }
-
+        @SuppressLint("SyntheticAccessor")
         @Override
         @NonNull
         public StorageListOptions build() {

@@ -26,7 +26,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
  * storage operation will inspect the provided options
  * instance for access level and target ID.
  */
-abstract class StorageOptions implements Options {
+public abstract class StorageOptions implements Options {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
@@ -41,7 +41,7 @@ abstract class StorageOptions implements Options {
      * @return Storage access level
      */
     @Nullable
-    public StorageAccessLevel getAccessLevel() {
+    public final StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
 
@@ -50,11 +50,14 @@ abstract class StorageOptions implements Options {
      * @return target identity id
      */
     @Nullable
-    public String getTargetIdentityId() {
+    public final String getTargetIdentityId() {
         return targetIdentityId;
     }
 
-    abstract static class Builder {
+    /**
+     * Builds storage options.
+     */
+    public abstract static class Builder {
         private StorageAccessLevel accessLevel;
         private String targetIdentityId;
 
@@ -65,7 +68,7 @@ abstract class StorageOptions implements Options {
          * @return Current Builder instance, for fluent method chaining
          */
         @NonNull
-        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
+        public final Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
             this.accessLevel = accessLevel;
             return this;
         }
@@ -77,18 +80,18 @@ abstract class StorageOptions implements Options {
          * @return Current Builder instance, for fluent method chaining
          */
         @NonNull
-        public Builder targetIdentityId(@Nullable String targetIdentityId) {
+        public final Builder targetIdentityId(@Nullable String targetIdentityId) {
             this.targetIdentityId = targetIdentityId;
             return this;
         }
 
         @Nullable
-        public StorageAccessLevel getAccessLevel() {
+        public final StorageAccessLevel getAccessLevel() {
             return accessLevel;
         }
 
         @Nullable
-        public String getTargetIdentityId() {
+        public final String getTargetIdentityId() {
             return targetIdentityId;
         }
 
@@ -99,6 +102,6 @@ abstract class StorageOptions implements Options {
          * @return A new immutable instance of StorageOptions
          */
         @NonNull
-        abstract StorageOptions build();
+        public abstract StorageOptions build();
     }
 }

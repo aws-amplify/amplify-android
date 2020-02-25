@@ -22,9 +22,9 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 import com.amplifyframework.testutils.SynchronousStorage;
 
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.s3.AmazonS3Client;
 import org.junit.BeforeClass;
 
@@ -32,13 +32,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import static org.junit.Assert.assertTrue;
 
 /**
  * Abstract test base for Storage instrumented tests. This test contains
  * basic static methods that involve direct interactions with low-level
- * {@link AmazonS3Client} and {@link AWSMobileClient}.
+ * {@link AmazonS3Client} and AWS Mobile Client.
  */
 public abstract class StorageInstrumentationTestBase {
 
@@ -48,23 +49,23 @@ public abstract class StorageInstrumentationTestBase {
     private static String bucketName;
     private static Map<String, String> credentials;
 
-    private static AWSMobileClient mClient;
     private static SynchronousStorage synchronousStorage;
 
     /**
      * Setup the Android application context.
      *
      * @throws AmplifyException from Amplify configuration
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to initialize
+     *         AWS Mobile Client
      */
     @BeforeClass
-    public static void setUpOnce() throws AmplifyException {
+    public static void setUpOnce() throws AmplifyException, SynchronousAWSMobileClient.MobileClientException {
         TestConfiguration config = TestConfiguration.configureIfNotConfigured();
 
         s3 = config.plugin().getEscapeHatch();
         bucketName = config.getBucketName();
         credentials = config.getUserCredentials();
 
-        mClient = AWSMobileClient.getInstance();
         synchronousStorage = SynchronousStorage.singleton();
     }
 
@@ -72,14 +73,15 @@ public abstract class StorageInstrumentationTestBase {
         return synchronousStorage;
     }
 
-    static synchronized String getIdentityId() {
-        return mClient.getIdentityId();
-    }
-
-    static synchronized String getS3Key(StorageAccessLevel accessLevel, String key) {
+    static synchronized String getS3Key(StorageAccessLevel accessLevel, String key)
+            throws SynchronousAWSMobileClient.MobileClientException {
         return S3RequestUtils.getServiceKey(accessLevel,
                 getIdentityId(),
                 key);
+    }
+
+    static String getIdentityId() throws SynchronousAWSMobileClient.MobileClientException {
+        return SynchronousAWSMobileClient.instance().getIdentityId();
     }
 
     static void assertS3ObjectExists(String key) {
@@ -97,18 +99,18 @@ public abstract class StorageInstrumentationTestBase {
         return new ArrayList<>(credentials.keySet());
     }
 
-    static void signInAs(@NonNull String username) {
-        signOut();
+    static void signInAs(@NonNull String username) throws SynchronousAWSMobileClient.MobileClientException {
+        SynchronousAWSMobileClient.instance().signOut();
         try {
-            String password = credentials.get(username);
-            mClient.signIn(username, password, null);
+            String password = Objects.requireNonNull(credentials.get(username));
+            SynchronousAWSMobileClient.instance().signIn(username, password);
         } catch (Exception exception) {
             throw new RuntimeException("Failed to sign in as " + username, exception);
         }
     }
 
-    static void signOut() {
-        mClient.signOut();
+    static void signOut() throws SynchronousAWSMobileClient.MobileClientException {
+        SynchronousAWSMobileClient.instance().signOut();
     }
 
     static void latchedUploadAndConfirm(
@@ -116,7 +118,7 @@ public abstract class StorageInstrumentationTestBase {
             StorageAccessLevel accessLevel,
             String identityId
     ) throws StorageException {
-        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+        StorageUploadFileOptions options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();

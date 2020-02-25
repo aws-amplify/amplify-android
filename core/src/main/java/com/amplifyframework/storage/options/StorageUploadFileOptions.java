@@ -15,10 +15,10 @@
 
 package com.amplifyframework.storage.options;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
@@ -61,6 +61,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
      * and build a new immutable instance of StorageUploadFileOptions.
      * @return a new builder instance
      */
+    @SuppressLint("SyntheticAccessor")
     @NonNull
     public static Builder builder() {
         return new Builder();
@@ -78,11 +79,12 @@ public final class StorageUploadFileOptions extends StorageOptions {
      */
     @NonNull
     public static Builder from(@NonNull final StorageUploadFileOptions options) {
-        return builder()
-                .accessLevel(options.getAccessLevel())
-                .targetIdentityId(options.getTargetIdentityId())
-                .contentType(options.getContentType())
-                .metadata(options.getMetadata());
+        final StorageUploadFileOptions.Builder builder = builder();
+        builder.accessLevel(options.getAccessLevel());
+        builder.targetIdentityId(options.getTargetIdentityId());
+        builder.contentType(options.getContentType());
+        builder.metadata(options.getMetadata());
+        return builder;
     }
 
     /**
@@ -107,23 +109,12 @@ public final class StorageUploadFileOptions extends StorageOptions {
             this.metadata = new HashMap<>();
         }
 
-        @Override
-        @NonNull
-        public Builder accessLevel(@Nullable StorageAccessLevel accessLevel) {
-            return (Builder) super.accessLevel(accessLevel);
-        }
-
-        @Override
-        @NonNull
-        public Builder targetIdentityId(@Nullable String targetIdentityId) {
-            return (Builder) super.targetIdentityId(targetIdentityId);
-        }
-
         /**
          * Configures the content type for a new StorageUploadFileOptions instance.
          * @param contentType Content type
          * @return Current Builder instance for fluent chaining
          */
+        @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
         @NonNull
         public Builder contentType(@Nullable String contentType) {
             this.contentType = contentType;
@@ -141,6 +132,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
             return this;
         }
 
+        @SuppressWarnings("WeakerAccess")
         @Nullable
         public String getContentType() {
             return contentType;
@@ -157,10 +149,10 @@ public final class StorageUploadFileOptions extends StorageOptions {
          * set on this Builder instance.
          * @return A new immutable StorageUploadFileOptions instance
          */
+        @SuppressLint("SyntheticAccessor")
         @NonNull
         public StorageUploadFileOptions build() {
             return new StorageUploadFileOptions(this);
         }
     }
 }
-

@@ -19,6 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 import com.amplifyframework.testutils.SynchronousApi;
 
 import org.json.JSONException;
@@ -39,13 +40,13 @@ public final class RestApiInstrumentationTest {
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
      * @throws AmplifyException if configuration fails
-     * @throws TestAWSMobileClient.InitializationError If AWS Mobile Client initialization fails
+     * @throws SynchronousAWSMobileClient.MobileClientException If AWS Mobile Client initialization fails
      */
     @BeforeClass
-    public static void onceBeforeTests() throws AmplifyException, TestAWSMobileClient.InitializationError {
+    public static void onceBeforeTests() throws AmplifyException, SynchronousAWSMobileClient.MobileClientException {
         AmplifyTestConfigurator.configureIfNotConfigured();
         api = SynchronousApi.singleton();
-        TestAWSMobileClient.initialize();
+        SynchronousAWSMobileClient.instance().initialize();
     }
 
     /**

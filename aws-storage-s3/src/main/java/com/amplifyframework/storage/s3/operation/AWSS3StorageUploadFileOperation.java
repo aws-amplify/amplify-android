@@ -22,6 +22,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -147,11 +148,12 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         }
     }
 
+    @SuppressLint("SyntheticAccessor")
     private final class UploadTransferListener implements TransferListener {
         @Override
         public void onStateChanged(int transferId, TransferState state) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("uploadState", state.name()));
+                    HubEvent.create(StorageChannelEventName.UPLOAD_STATE, state.name()));
             switch (state) {
                 case COMPLETED:
                     onSuccess.accept(StorageUploadFileResult.fromKey(getRequest().getKey()));
@@ -176,13 +178,13 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
                 progress = 1f;
             }
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("uploadProgress", progress));
+                    HubEvent.create(StorageChannelEventName.UPLOAD_PROGRESS, progress));
         }
 
         @Override
         public void onError(int transferId, Exception exception) {
             Amplify.Hub.publish(HubChannel.STORAGE,
-                    HubEvent.create("uploadError", exception));
+                    HubEvent.create(StorageChannelEventName.UPLOAD_ERROR, exception));
             onError.accept(new StorageException(
                     "Something went wrong with your AWS S3 Storage upload file operation",
                     exception,

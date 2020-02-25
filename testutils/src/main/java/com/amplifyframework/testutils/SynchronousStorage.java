@@ -38,8 +38,8 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousStorage {
-    private static final long EXTENDED_TIMEOUT_IN_MILLISECONDS =
-            TimeUnit.SECONDS.toMillis(10); // 5 seconds is insufficient
+    // 5 seconds seemed to be insufficient to reliably cover both initial auth calls + storage network ops
+    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private static SynchronousStorage singleton = null;
 
@@ -72,7 +72,7 @@ public final class SynchronousStorage {
             @NonNull StorageDownloadFileOptions options
     ) throws StorageException {
         return Await.<StorageDownloadFileResult, StorageException>result(
-            EXTENDED_TIMEOUT_IN_MILLISECONDS,
+            STORAGE_OPERATION_TIMEOUT_MS,
             (onResult, onError) ->
             Amplify.Storage.downloadFile(key, local, options, onResult, onError)
         );
@@ -93,7 +93,7 @@ public final class SynchronousStorage {
             @NonNull StorageUploadFileOptions options
     ) throws StorageException {
         return Await.<StorageUploadFileResult, StorageException>result(
-            EXTENDED_TIMEOUT_IN_MILLISECONDS,
+            STORAGE_OPERATION_TIMEOUT_MS,
             (onResult, onError) ->
             Amplify.Storage.uploadFile(key, local, options, onResult, onError)
         );
@@ -112,6 +112,7 @@ public final class SynchronousStorage {
             @NonNull StorageRemoveOptions options
     ) throws StorageException {
         return Await.<StorageRemoveResult, StorageException>result(
+            STORAGE_OPERATION_TIMEOUT_MS,
             (onResult, onError) ->
             Amplify.Storage.remove(key, options, onResult, onError)
         );
@@ -130,6 +131,7 @@ public final class SynchronousStorage {
             @NonNull StorageListOptions options
     ) throws StorageException {
         return Await.<StorageListResult, StorageException>result(
+            STORAGE_OPERATION_TIMEOUT_MS,
             (onResult, onError) ->
             Amplify.Storage.list(path, options, onResult, onError)
         );

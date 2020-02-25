@@ -28,6 +28,7 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.RandomTempFile;
 import com.amplifyframework.testutils.Sleep;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
@@ -37,6 +38,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
@@ -74,10 +76,15 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
 
     /**
      * Upload required resources ahead of time.
-     * @throws Exception if file creation or upload fails
+     * @throws IOException if file creation fails
+     * @throws StorageException if file upload fails
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to obtain
+     *         an identity ID from Mobile Client
      */
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpBeforeClass() throws IOException,
+            StorageException,
+            SynchronousAWSMobileClient.MobileClientException {
         // Randomly write objects to upload
         largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
         smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
@@ -90,9 +97,11 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
     /**
      * Cleans up the S3 bucket for files that were uploaded
      * during testing processes.
+     * @throws com.amplifyframework.testutils.SynchronousAWSMobileClient.MobileClientException from
+     *
      */
     @AfterClass
-    public static void cleanUp() {
+    public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
         String largeFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, LARGE_FILE_NAME);
         String smallFileKey = getS3Key(DEFAULT_ACCESS_LEVEL, SMALL_FILE_NAME);
         cleanUpS3Object(largeFileKey);
@@ -109,7 +118,7 @@ public final class AWSS3StorageDownloadTest extends StorageInstrumentationTestBa
         downloadFile = new RandomTempFile(destination);
 
         // Always interact with PUBLIC access for consistency
-        options = StorageDownloadFileOptions.builder()
+        options = (StorageDownloadFileOptions) StorageDownloadFileOptions.builder()
                 .accessLevel(DEFAULT_ACCESS_LEVEL)
                 .build();
 
