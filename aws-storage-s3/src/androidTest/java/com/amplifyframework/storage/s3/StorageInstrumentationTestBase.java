@@ -55,6 +55,8 @@ public abstract class StorageInstrumentationTestBase {
      * Setup the Android application context.
      *
      * @throws AmplifyException from Amplify configuration
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to initialize
+     *         AWS Mobile Client
      */
     @BeforeClass
     public static void setUpOnce() throws AmplifyException, SynchronousAWSMobileClient.MobileClientException {

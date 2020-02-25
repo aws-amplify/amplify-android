@@ -79,6 +79,9 @@ final class TestConfiguration {
     /**
      * Process-wide configuration for the Storage instrumentation tests.
      * @return A TestConfiguration instance
+     * @throws AmplifyException if Amplify configuration fails
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to initialize
+     *         AWS Mobile Client
      */
     @NonNull
     static synchronized TestConfiguration configureIfNotConfigured()

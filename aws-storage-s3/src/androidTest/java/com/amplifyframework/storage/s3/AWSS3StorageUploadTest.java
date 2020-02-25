@@ -26,10 +26,9 @@ import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.testutils.RandomTempFile;
 import com.amplifyframework.testutils.Sleep;
-
-import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
+import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -84,6 +83,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     /**
      * Cleans up the S3 bucket for files that were uploaded
      * during testing processes.
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to obtain
+     *         a valid identity ID from mobile client
      */
     @AfterClass
     public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {

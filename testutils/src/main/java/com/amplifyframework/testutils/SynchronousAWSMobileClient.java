@@ -78,7 +78,7 @@ public final class SynchronousAWSMobileClient {
             userStateDetails = Await.<UserStateDetails, Exception>result((onResult, onError) ->
                 awsMobileClient.initialize(context, DelegatingCallback.with(onResult, onError)));
         } catch (Exception initializationError) {
-            throw new MobileClientException(initializationError);
+            throw new MobileClientException("Failed to initialize Mobile Client", initializationError);
         }
         return Objects.requireNonNull(userStateDetails);
     }
@@ -106,7 +106,7 @@ public final class SynchronousAWSMobileClient {
                 awsMobileClient.initialize(context, awsConfiguration, callback);
             });
         } catch (Exception initializationError) {
-            throw new MobileClientException(initializationError);
+            throw new MobileClientException("Failed to initialize Mobile Client", initializationError);
         }
         return Objects.requireNonNull(userStateDetails);
     }
@@ -128,7 +128,7 @@ public final class SynchronousAWSMobileClient {
             SignInResult result = awsMobileClient.signIn(username, password, null);
             return Objects.requireNonNull(result);
         } catch (Exception baseJavaException) {
-            throw new MobileClientException(baseJavaException);
+            throw new MobileClientException("Failed to sign in as " + username, baseJavaException);
         }
     }
 
@@ -140,7 +140,7 @@ public final class SynchronousAWSMobileClient {
         try {
             awsMobileClient.signOut();
         } catch (Exception baseJavaException) {
-            throw new MobileClientException(baseJavaException);
+            throw new MobileClientException("Failed to sign out", baseJavaException);
         }
     }
 
@@ -154,7 +154,7 @@ public final class SynchronousAWSMobileClient {
         try {
             return awsMobileClient.getIdentityId();
         } catch (Exception baseJavaException) {
-            throw new MobileClientException(baseJavaException);
+            throw new MobileClientException("Failed to obtain identity ID", baseJavaException);
         }
     }
 
@@ -163,14 +163,15 @@ public final class SynchronousAWSMobileClient {
      * Ordinarily, that would return a base Java {@link Exception}, which is pretty ugly.
      */
     public static final class MobileClientException extends Exception {
-        private static final long serialVersionUID = 1L;
+        private static final long serialVersionUID = 1192653974771481999L;
 
         /**
-         * Constructs a new InitializationError, with an underlying cause.
+         * Constructs a new MobileClientException, with an underlying cause.
+         * @param message User-friendly message regarding this exception
          * @param cause The reason the initialization failed
          */
-        MobileClientException(@NonNull Throwable cause) {
-            super("Failed to initialize TestAWSMobileClient.", Objects.requireNonNull(cause));
+        MobileClientException(@NonNull String message, @NonNull Throwable cause) {
+            super(Objects.requireNonNull(message), Objects.requireNonNull(cause));
         }
     }
 

@@ -17,15 +17,16 @@ package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.options.StorageUploadFileOptions;
-import com.amplifyframework.testutils.SynchronousAWSMobileClient;
+import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 import com.amplifyframework.testutils.RandomTempFile;
+import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,8 +39,8 @@ import static org.junit.Assert.assertTrue;
  */
 public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentationTestBase {
 
-    private static String userNameOne = "test-user-1";
-    private static String userNameTwo = "test-user-2";
+    private static String userNameOne;
+    private static String userNameTwo;
     private static Map<String, String> identityIds = new HashMap<>();
 
     private final String filename = "test-" + System.currentTimeMillis();
@@ -47,6 +48,8 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
 
     /**
      * Obtain the user IDs prior to running the tests.
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to sign in with
+     *         Cognito User Pools or obtain identity ID from Mobile Client
      */
     @BeforeClass
     public static void setUpBeforeClass() throws SynchronousAWSMobileClient.MobileClientException {
@@ -67,10 +70,11 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
     /**
      * Signs out by default and sets up the file to test uploading.
      *
-     * @throws Exception if an error is encountered while creating file
+     * @throws IOException if an error is encountered while creating file
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to sign out
      */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException, SynchronousAWSMobileClient.MobileClientException {
         signOut();
         fileToUpload = new RandomTempFile(filename);
     }
@@ -190,17 +194,10 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
             StorageAccessLevel accessLevel,
             String identityId
     ) throws Exception {
-        StorageUploadFileOptions options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
-                .accessLevel(accessLevel)
-                .targetIdentityId(identityId)
-                .build();
-        synchronousStorage().uploadFile(file.getName(),
-                file.getAbsolutePath(),
-                options);
+        latchedUploadAndConfirm(file, accessLevel, identityId);
 
-        // Confirm and clean up
-        String s3key = getS3Key(accessLevel, file.getName());
-        assertS3ObjectExists(s3key);
+        // Clean up
+        String s3key = S3RequestUtils.getServiceKey(accessLevel, identityId, file.getName());
         cleanUpS3Object(s3key);
     }
 }
