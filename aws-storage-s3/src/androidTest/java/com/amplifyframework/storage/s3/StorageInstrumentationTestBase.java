@@ -61,7 +61,7 @@ public abstract class StorageInstrumentationTestBase {
      * @throws AmplifyException from Amplify configuration
      */
     @BeforeClass
-    public static void setUpOnce() throws AmplifyException {
+    public static void setUpOnce() throws AmplifyException, SynchronousAWSMobileClient.MobileClientException {
         TestConfiguration config = TestConfiguration.configureIfNotConfigured();
 
         s3 = config.plugin().getEscapeHatch();
@@ -135,7 +135,7 @@ public abstract class StorageInstrumentationTestBase {
             StorageAccessLevel accessLevel,
             String identityId
     ) throws StorageException {
-        StorageUploadFileOptions options = StorageUploadFileOptions.builder()
+        StorageUploadFileOptions options = (StorageUploadFileOptions) StorageUploadFileOptions.builder()
                 .accessLevel(accessLevel)
                 .targetIdentityId(identityId)
                 .build();
