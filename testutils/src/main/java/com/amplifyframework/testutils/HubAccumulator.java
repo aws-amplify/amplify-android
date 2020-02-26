@@ -127,21 +127,9 @@ public final class HubAccumulator {
         // If we haven't yet received the desired quantity of events on the subscription,
         // setup a latch to await the desired quantity, less the number of existing events.
         // For example: I desire 5, I already have 3, I wait for 2 more.
-        int waitCount = desiredQuantity - events.size();
-        if (waitCount > 0) {
-            latch = new CountDownLatch(waitCount);
-            try {
-                // Wait for proportionally as long as the number of missing events
-                long waitTimeMs = waitCount * Latch.REASONABLE_WAIT_TIME_MS;
-                Latch.await(latch, waitTimeMs);
-            } catch (RuntimeException exception) {
-                // Did not count down but wait! It's possible for a race condition to have occurred.
-                // What if the event was emitted right before latch was instantiated?
-                // Do one more check before throwing!
-                if (events.size() < desiredQuantity) {
-                    throw new RuntimeException("Not enough events were accumulated.");
-                }
-            }
+        if (events.size() < desiredQuantity) {
+            latch = new CountDownLatch(desiredQuantity - events.size());
+            Latch.await(latch);
             latch = null;
         }
 

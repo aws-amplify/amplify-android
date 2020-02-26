@@ -27,7 +27,7 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings({"SameParameterValue", "WeakerAccess"})
 final class Latch {
-    static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
+    private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
 
     @SuppressWarnings("checkstyle:all") private Latch() {}
 
