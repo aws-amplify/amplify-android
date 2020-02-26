@@ -22,10 +22,6 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.InitializationStatus;
-import com.amplifyframework.core.category.CategoryType;
-import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
@@ -92,46 +88,27 @@ final class TestConfiguration {
         return singleton;
     }
 
-    private static void configureAmplify(Context context) {
+    private static void configureAmplify(Context context) throws AmplifyException {
+        // Obtain Amplify Configuration
+        final int configId = Resources.getRawResourceId(context, AMPLIFY_CONFIGURATION_IDENTIFIER);
+        AmplifyConfiguration configuration = AmplifyConfiguration.fromConfigFile(context, configId);
 
-        // Configure Amplify, and wait for Storage to be ready.
-        Await.result((onResult, onError) -> {
-            // Listen for initialization success messages
-            Amplify.Hub.subscribe(HubChannel.STORAGE, event -> {
-                // When we get one, end the Await call by firing a result
-                if (InitializationStatus.SUCCEEDED.toString().equals(event.getName())) {
-                    onResult.accept(CategoryType.STORAGE);
-                    // When we see a failure, end the await by firing onError
-                } else if (InitializationStatus.FAILED.toString().equals(event.getName())) {
-                    onError.accept(new RuntimeException(String.valueOf(event.getData())));
-                }
-            });
-            // Now that we're listening for it ... configure Amplify and begin initialization
-            try {
-                // Obtain Amplify Configuration
-                final int configId = Resources.getRawResourceId(context, AMPLIFY_CONFIGURATION_IDENTIFIER);
-                AmplifyConfiguration configuration = AmplifyConfiguration.fromConfigFile(context, configId);
-
-                // Configure!
-                Amplify.configure(configuration, context);
-            } catch (AmplifyException configurationFailure) {
-                // If the configuration fails before even initialization begins, kill the Await with onError.
-                onError.accept(new RuntimeException("Configuration failed.",
-                        configurationFailure));
-            }
-        });
+        // Configure!
+        Amplify.configure(configuration, context);
     }
 
     private static void setUpCredentials(Context context) throws SynchronousAWSMobileClient.MobileClientException {
         // Obtain AWS Configuration
         final int configId = Resources.getRawResourceId(context, AWS_CONFIGURATION_IDENTIFIER);
         AWSConfiguration configuration = new AWSConfiguration(context, configId);
+
         // Initialize Mobile Client!
         SynchronousAWSMobileClient.instance().initialize(configuration);
     }
 
     private String getBucketNameFromPlugin(Context context, AWSS3StoragePlugin plugin) {
         try {
+            // Obtain s3 bucket name from Amplify Configuration
             final int configId = Resources.getRawResourceId(context, AMPLIFY_CONFIGURATION_IDENTIFIER);
             return AmplifyConfiguration.fromConfigFile(context, configId)
                     .forCategoryType(plugin.getCategoryType())
