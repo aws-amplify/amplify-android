@@ -25,15 +25,14 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.utils.S3RequestUtils;
 import com.amplifyframework.testutils.RandomTempFile;
 import com.amplifyframework.testutils.Sleep;
 import com.amplifyframework.testutils.SynchronousAWSMobileClient;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
@@ -60,40 +59,9 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
     private static final long SMALL_FILE_SIZE = 100L;
 
-    private static final String LARGE_FILE_NAME = "large-test-" + System.currentTimeMillis();
-    private static final String SMALL_FILE_NAME = "small-test-" + System.currentTimeMillis();
-
-    private static File largeFile;
-    private static File smallFile;
-
     private StorageUploadFileOptions options;
-
     private Set<SubscriptionToken> subscriptions;
-
-    /**
-     * Create temp files to upload ahead of time.
-     * @throws Exception if file creation or upload fails
-     */
-    @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
-        // Randomly write objects to upload
-        largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
-        smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
-    }
-
-    /**
-     * Cleans up the S3 bucket for files that were uploaded
-     * during testing processes.
-     * @throws SynchronousAWSMobileClient.MobileClientException from failure to obtain
-     *         a valid identity ID from mobile client
-     */
-    @AfterClass
-    public static void cleanUp() throws SynchronousAWSMobileClient.MobileClientException {
-        String largeFileKey = getS3Key(TESTING_ACCESS_LEVEL, LARGE_FILE_NAME);
-        String smallFileKey = getS3Key(TESTING_ACCESS_LEVEL, SMALL_FILE_NAME);
-        cleanUpS3Object(largeFileKey);
-        cleanUpS3Object(smallFileKey);
-    }
+    private File uploadFile;
 
     /**
      * Sets up the options to use for transfer.
@@ -111,9 +79,16 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
     /**
      * Unsubscribe from everything after each test.
+     *
+     * @throws SynchronousAWSMobileClient.MobileClientException from failure to obtain a
+     *         valid identity ID from Mobile Client
      */
     @After
-    public void unsubscribe() {
+    public void unsubscribe() throws SynchronousAWSMobileClient.MobileClientException {
+        // Remove the file from S3 bucket
+        String s3key = S3RequestUtils.getServiceKey(TESTING_ACCESS_LEVEL, getIdentityId(), uploadFile.getName());
+        cleanUpS3Object(s3key);
+
         // Unsubscribe from everything
         for (SubscriptionToken token : subscriptions) {
             Amplify.Hub.unsubscribe(token);
@@ -127,7 +102,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
      */
     @Test
     public void testUploadSmallFile() throws Exception {
-        latchedUploadAndConfirm(smallFile, TESTING_ACCESS_LEVEL, getIdentityId());
+        uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
+        latchedUploadAndConfirm(uploadFile, TESTING_ACCESS_LEVEL, getIdentityId());
     }
 
     /**
@@ -137,7 +113,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
      */
     @Test
     public void testUploadLargeFile() throws Exception {
-        latchedUploadAndConfirm(largeFile, TESTING_ACCESS_LEVEL, getIdentityId());
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
+        latchedUploadAndConfirm(uploadFile, TESTING_ACCESS_LEVEL, getIdentityId());
     }
 
     /**
@@ -153,6 +130,9 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         final CountDownLatch canceled = new CountDownLatch(1);
         final AtomicReference<Cancelable> opContainer = new AtomicReference<>();
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
+
+        // Create a file large enough that transfer won't finish before being canceled
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
         // Listen to Hub events to cancel when progress has been made
         SubscriptionToken progressToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -180,8 +160,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
         // Begin uploading large file
         StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
-            largeFile.getName(),
-            largeFile.getAbsolutePath(),
+            uploadFile.getName(),
+            uploadFile.getAbsolutePath(),
             options,
             onResult -> errorContainer.set(new RuntimeException("Upload completed without canceling.")),
             onError -> errorContainer.set(onError.getCause())
@@ -207,6 +187,9 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         final CountDownLatch resumed = new CountDownLatch(1);
         final AtomicReference<Resumable> opContainer = new AtomicReference<>();
         final AtomicReference<Throwable> errorContainer = new AtomicReference<>();
+
+        // Create a file large enough that transfer won't finish before being paused
+        uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
 
         // Listen to Hub events to pause when progress has been made
         SubscriptionToken pauseToken = Amplify.Hub.subscribe(HubChannel.STORAGE, hubEvent -> {
@@ -238,8 +221,8 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
 
         // Begin uploading large file
         StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
-            largeFile.getName(),
-            largeFile.getAbsolutePath(),
+            uploadFile.getName(),
+            uploadFile.getAbsolutePath(),
             options,
             onResult -> completed.countDown(),
             onError -> errorContainer.set(onError.getCause())
@@ -249,7 +232,7 @@ public final class AWSS3StorageUploadTest extends StorageInstrumentationTestBase
         // Assert that all the required conditions have been met
         assertTrue(resumed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
         assertTrue(completed.await(EXTENDED_TIMEOUT_MS, TimeUnit.MILLISECONDS));
-        assertS3ObjectExists(getS3Key(TESTING_ACCESS_LEVEL, largeFile.getName()));
+        assertS3ObjectExists(getS3Key(TESTING_ACCESS_LEVEL, uploadFile.getName()));
         assertNull(errorContainer.get());
     }
 }

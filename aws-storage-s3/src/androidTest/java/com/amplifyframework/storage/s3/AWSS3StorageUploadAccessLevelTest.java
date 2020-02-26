@@ -39,11 +39,12 @@ import static org.junit.Assert.assertTrue;
  */
 public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentationTestBase {
 
+    private static final long UPLOAD_SIZE = 100L;
+
     private static String userNameOne;
     private static String userNameTwo;
     private static Map<String, String> identityIds = new HashMap<>();
 
-    private final String filename = "test-" + System.currentTimeMillis();
     private File fileToUpload;
 
     /**
@@ -76,7 +77,7 @@ public final class AWSS3StorageUploadAccessLevelTest extends StorageInstrumentat
     @Before
     public void setUp() throws IOException, SynchronousAWSMobileClient.MobileClientException {
         signOut();
-        fileToUpload = new RandomTempFile(filename);
+        fileToUpload = new RandomTempFile(UPLOAD_SIZE);
     }
 
     /**

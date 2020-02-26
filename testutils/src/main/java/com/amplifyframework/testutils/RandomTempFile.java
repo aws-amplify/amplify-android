@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.UUID;
 
 /**
  * Utility class to create a temporary file that can be quickly populated with
@@ -43,7 +42,7 @@ public final class RandomTempFile extends File {
      * @throws IOException If a problem is encountered while creating the file
      */
     public RandomTempFile(long byteSize) throws IOException {
-        this(UUID.randomUUID().toString(), byteSize);
+        this(RandomString.string(), byteSize);
     }
 
     /**
