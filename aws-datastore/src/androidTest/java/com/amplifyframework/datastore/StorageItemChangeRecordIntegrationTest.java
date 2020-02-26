@@ -54,7 +54,7 @@ import static org.junit.Assert.assertEquals;
  */
 public final class StorageItemChangeRecordIntegrationTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
 
     private GsonStorageItemChangeConverter storageItemChangeConverter;
     private LocalStorageAdapter localStorageAdapter;

@@ -13,20 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite;
+package com.amplifyframework.datastore;
 
 /**
  * Utility class to easily manipulate strict mode policies
  * for testing purposes.
  */
-final class StrictMode {
+public final class StrictMode {
     @SuppressWarnings("WhitespaceAround")
     private StrictMode() {}
 
     /**
-     * Enable strict mode for testing SQLite operations.
+     * Enable strict mode for testing SQLite operations to make
+     * sure that there are no leaks.
      */
-    static void enable() {
+    public static void enable() {
         android.os.StrictMode.setVmPolicy(strictModePolicy());
     }
 
