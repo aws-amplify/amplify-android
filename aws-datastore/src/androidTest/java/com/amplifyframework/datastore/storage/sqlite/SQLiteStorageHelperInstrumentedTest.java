@@ -17,10 +17,10 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.logging.Logger;
 
 import org.junit.After;
@@ -52,12 +52,7 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @BeforeClass
     public static void enableStrictMode() {
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+        StrictMode.enable();
     }
 
     /**

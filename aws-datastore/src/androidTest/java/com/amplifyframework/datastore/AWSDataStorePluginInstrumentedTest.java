@@ -16,7 +16,6 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
-import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
@@ -57,12 +56,7 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @BeforeClass
     public static void enableStrictMode() {
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-            .detectLeakedSqlLiteObjects()
-            .detectLeakedClosableObjects()
-            .penaltyLog()
-            .penaltyDeath()
-            .build());
+        StrictMode.enable();
     }
 
     /**
