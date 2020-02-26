@@ -19,7 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.testutils.SynchronousApi;
+import com.amplifyframework.testutils.sync.SynchronousApi;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.testutils.sync;
 
 import androidx.annotation.NonNull;
 
@@ -29,6 +29,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.testutils.Await;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;

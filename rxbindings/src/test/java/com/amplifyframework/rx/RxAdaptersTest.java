@@ -20,8 +20,8 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.rx.RxAdapters.CancelableResultEmitter;
 import com.amplifyframework.rx.RxAdapters.CancelableStreamEmitter;
 import com.amplifyframework.rx.RxAdapters.VoidResultEmitter;
-import com.amplifyframework.testutils.RandomString;
 import com.amplifyframework.testutils.SimpleCancelable;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Test;
 

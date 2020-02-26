@@ -24,8 +24,8 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
-import com.amplifyframework.testutils.SynchronousApi;
-import com.amplifyframework.testutils.SynchronousDataStore;
+import com.amplifyframework.testutils.sync.SynchronousApi;
+import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
 import org.junit.After;
 import org.junit.AfterClass;

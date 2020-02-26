@@ -27,11 +27,11 @@ import java.io.InputStreamReader;
  * A little utility read the contents of the androidTest assets
  * directory at runtime, on a device.
  */
-public final class TestAssets {
+public final class Assets {
     /**
      * Dis-allows instantiation of this test utility.
      */
-    private TestAssets() {
+    private Assets() {
     }
 
     /**

@@ -29,7 +29,7 @@ import com.amplifyframework.testmodels.ratingsblog.Rating;
 import com.amplifyframework.testmodels.ratingsblog.User;
 import com.amplifyframework.testmodels.teamproject.Projectfields;
 import com.amplifyframework.testmodels.teamproject.Team;
-import com.amplifyframework.testutils.SynchronousApi;
+import com.amplifyframework.testutils.sync.SynchronousApi;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
