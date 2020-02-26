@@ -17,10 +17,10 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.StrictMode;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.logging.Logger;
 
 import org.junit.After;
@@ -52,12 +52,7 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @BeforeClass
     public static void enableStrictMode() {
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-                .detectLeakedSqlLiteObjects()
-                .detectLeakedClosableObjects()
-                .penaltyLog()
-                .penaltyDeath()
-                .build());
+        StrictMode.enable();
     }
 
     /**
@@ -87,8 +82,12 @@ public class SQLiteStorageHelperInstrumentedTest {
      */
     @After
     public void tearDown() {
-        sqLiteDatabase.close();
-        sqLiteStorageHelper.close();
+        if (sqLiteDatabase != null) {
+            sqLiteDatabase.close();
+        }
+        if (sqLiteStorageHelper != null) {
+            sqLiteStorageHelper.close();
+        }
         deleteDatabase();
     }
 
@@ -128,21 +127,19 @@ public class SQLiteStorageHelperInstrumentedTest {
 
     private List<String> getTableNames(SQLiteDatabase sqLiteDatabase) {
         final ArrayList<String> tableNamesFromDatabase = new ArrayList<>();
-        final Cursor cursor = sqLiteDatabase.rawQuery(
-                "SELECT name FROM sqlite_master WHERE type='table'",
-                null);
-
-        if (cursor.moveToFirst()) {
-            while (!cursor.isAfterLast()) {
-                final String tableName = cursor.getString(cursor.getColumnIndex("name"));
-                if (!"android_metadata".equals(tableName)) {
-                    tableNamesFromDatabase.add(tableName);
+        final String queryString = "SELECT name FROM sqlite_master WHERE type='table'";
+        try (Cursor cursor = sqLiteDatabase.rawQuery(queryString, null)) {
+            if (cursor.moveToFirst()) {
+                while (!cursor.isAfterLast()) {
+                    final String tableName = cursor.getString(cursor.getColumnIndex("name"));
+                    if (!"android_metadata".equals(tableName)) {
+                        tableNamesFromDatabase.add(tableName);
+                    }
+                    cursor.moveToNext();
                 }
-                cursor.moveToNext();
             }
+            return tableNamesFromDatabase;
         }
-        cursor.close();
-        return tableNamesFromDatabase;
     }
 
     private void deleteDatabase() {

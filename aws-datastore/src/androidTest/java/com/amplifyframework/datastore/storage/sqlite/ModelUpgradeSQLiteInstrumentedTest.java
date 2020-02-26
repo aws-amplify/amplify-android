@@ -15,11 +15,13 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import android.os.StrictMode;
+import android.content.Context;
+import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testutils.Await;
@@ -33,7 +35,6 @@ import org.junit.Test;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 
@@ -41,24 +42,21 @@ import static org.junit.Assert.assertFalse;
  * Test the functionality of {@link SQLiteStorageAdapter} with model update operations.
  */
 public final class ModelUpgradeSQLiteInstrumentedTest {
-    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long SQLITE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     private SQLiteStorageAdapter sqliteStorageAdapter;
     private AmplifyCliGeneratedModelProvider modelProvider;
     private RandomVersionModelProvider modelProviderThatUpgradesVersion;
 
+    private Context context;
+
     /**
      * Enable strict mode for catching SQLite leaks.
      */
     @BeforeClass
     public static void enableStrictMode() {
-        StrictMode.setVmPolicy(new StrictMode.VmPolicy.Builder()
-            .detectLeakedSqlLiteObjects()
-            .detectLeakedClosableObjects()
-            .penaltyLog()
-            .penaltyDeath()
-            .build());
+        StrictMode.enable();
     }
 
     /**
@@ -66,7 +64,8 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
      */
     @Before
     public void setUp() {
-        getApplicationContext().deleteDatabase(DATABASE_NAME);
+        context = ApplicationProvider.getApplicationContext();
+        context.deleteDatabase(DATABASE_NAME);
 
         modelProvider = AmplifyCliGeneratedModelProvider.singletonInstance();
         modelProviderThatUpgradesVersion = RandomVersionModelProvider.singletonInstance();
@@ -79,7 +78,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
     @After
     public void tearDown() throws DataStoreException {
         sqliteStorageAdapter.terminate();
-        getApplicationContext().deleteDatabase(DATABASE_NAME);
+        context.deleteDatabase(DATABASE_NAME);
     }
 
     /**
@@ -93,7 +92,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                sqliteStorageAdapter.initialize(getApplicationContext(), onResult, onError)
+                sqliteStorageAdapter.initialize(context, onResult, onError)
         );
         // Assert if initialize succeeds.
         assertFalse(CollectionUtils.isNullOrEmpty(firstResults));
@@ -120,7 +119,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         List<ModelSchema> secondResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                sqliteStorageAdapter.initialize(getApplicationContext(), onResult, onError)
+                sqliteStorageAdapter.initialize(context, onResult, onError)
         );
         assertFalse(CollectionUtils.isNullOrEmpty(secondResults));
 
