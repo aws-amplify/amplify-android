@@ -223,6 +223,18 @@ afterEvaluate { project ->
                 artifactId POM_ARTIFACT_ID
                 version VERSION_NAME
                 artifact("${buildDir}/outputs/aar/${artifactId}-release.aar")
+                pom.withXml {
+                    def dependenciesNode = asNode().appendNode('dependencies')
+                    // Note that this only handles implementation
+                    // dependencies. In the future, may need to add api,
+                    // etc.
+                    configurations.implementation.allDependencies.each {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
             }
         }
     }

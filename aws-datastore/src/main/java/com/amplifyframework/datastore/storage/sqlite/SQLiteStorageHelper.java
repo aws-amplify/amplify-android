@@ -196,10 +196,8 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
 
     private void dropAllTables(@NonNull SQLiteDatabase sqliteDatabase) {
         Objects.requireNonNull(sqliteDatabase);
-
-        final Cursor cursor = sqliteDatabase.rawQuery("SELECT name FROM sqlite_master " +
-                "WHERE type='table'", null);
-        try {
+        final String queryString = "SELECT name FROM sqlite_master WHERE type='table'";
+        try (Cursor cursor = sqliteDatabase.rawQuery(queryString, null)) {
             Objects.requireNonNull(cursor);
 
             final Set<String> tablesToDrop = new HashSet<>();
@@ -220,8 +218,6 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
             }
             sqliteDatabase.setTransactionSuccessful();
             sqliteDatabase.endTransaction();
-        } finally {
-            cursor.close();
         }
     }
 }
