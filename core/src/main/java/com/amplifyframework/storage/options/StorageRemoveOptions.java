@@ -15,42 +15,16 @@
 
 package com.amplifyframework.storage.options;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.amplifyframework.core.async.Options;
-import com.amplifyframework.storage.StorageAccessLevel;
-
-import java.util.Objects;
 
 /**
  * Options to specify attributes of remove API invocation.
  */
-public final class StorageRemoveOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageRemoveOptions extends StorageOptions {
 
     private StorageRemoveOptions(final Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    @Nullable
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Gets the target identity ID.
-     * @return target identity ID
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
     /**
@@ -77,8 +51,7 @@ public final class StorageRemoveOptions implements Options {
      */
     @NonNull
     public static Builder from(@NonNull final StorageRemoveOptions options) {
-        return builder()
-                .accessLevel(options.getAccessLevel())
+        return builder().accessLevel(options.getAccessLevel())
                 .targetIdentityId(options.getTargetIdentityId());
     }
 
@@ -96,53 +69,12 @@ public final class StorageRemoveOptions implements Options {
      * instances of the {@link StorageRemoveOptions}, by chaining
      * fluent configuration method calls.
      */
-    public static final class Builder {
-        private StorageAccessLevel accessLevel;
-        private String targetIdentityId;
-
-        /**
-         * Configures the storage access level to set on new
-         * StorageRemoveOptions instances.
-         * @param accessLevel Storage access level for new StorageRemoveOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
-        @NonNull
-        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
-            this.accessLevel = Objects.requireNonNull(accessLevel);
-            return this;
-        }
-
-        /**
-         * Configures the target identity ID that will be used on newly
-         * built StorageRemoveOptions.
-         * @param targetIdentityId Target identity ID for new StorageRemoveOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
-        @NonNull
-        public Builder targetIdentityId(@NonNull String targetIdentityId) {
-            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
-            return this;
-        }
-
-        /**
-         * Constructs and returns a new immutable instance of the
-         * StorageRemoveOptions, using the configurations that
-         * have been provided the current instance of the Builder.
-         * @return A new immutable instance of StorageRemoveOptions
-         */
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageRemoveOptions> {
+        @SuppressLint("SyntheticAccessor")
+        @Override
         @NonNull
         public StorageRemoveOptions build() {
             return new StorageRemoveOptions(this);
-        }
-
-        @Nullable
-        StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        @Nullable
-        String getTargetIdentityId() {
-            return targetIdentityId;
         }
     }
 }

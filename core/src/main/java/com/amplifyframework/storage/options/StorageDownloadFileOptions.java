@@ -15,42 +15,16 @@
 
 package com.amplifyframework.storage.options;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import com.amplifyframework.core.async.Options;
-import com.amplifyframework.storage.StorageAccessLevel;
-
-import java.util.Objects;
 
 /**
  * Options to specify attributes of get API invocation.
  */
-public final class StorageDownloadFileOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageDownloadFileOptions extends StorageOptions {
 
     private StorageDownloadFileOptions(final Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    @Nullable
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Gets the target identity ID.
-     * @return target identity ID
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
     }
 
     /**
@@ -77,9 +51,8 @@ public final class StorageDownloadFileOptions implements Options {
      */
     @NonNull
     public static Builder from(@NonNull final StorageDownloadFileOptions options) {
-        return builder()
-            .accessLevel(options.getAccessLevel())
-            .targetIdentityId(options.getTargetIdentityId());
+        return builder().accessLevel(options.getAccessLevel())
+                .targetIdentityId(options.getTargetIdentityId());
     }
 
     /**
@@ -96,53 +69,12 @@ public final class StorageDownloadFileOptions implements Options {
      * instances of the {@link StorageDownloadFileOptions}, by chaining
      * fluent configuration method calls.
      */
-    public static final class Builder {
-        private StorageAccessLevel accessLevel;
-        private String targetIdentityId;
-
-        /**
-         * Configures the storage access level to set on new
-         * StorageDownloadFileOptions instances.
-         * @param accessLevel Storage access level for new StorageDownloadFileOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
-        @NonNull
-        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
-            this.accessLevel = Objects.requireNonNull(accessLevel);
-            return this;
-        }
-
-        /**
-         * Configures the target identity ID that will be used on newly
-         * built StorageDownloadFileOptions.
-         * @param targetIdentityId Target identity ID for new StorageDownloadFileOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
-        @NonNull
-        public Builder targetIdentityId(@NonNull String targetIdentityId) {
-            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
-            return this;
-        }
-
-        /**
-         * Constructs and returns a new immutable instance of the
-         * StorageDownloadFileOptions, using the configurations that
-         * have been provided the current instance of the Builder.
-         * @return A new immutable instance of StorageDownloadFileOptions
-         */
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageDownloadFileOptions> {
+        @SuppressLint("SyntheticAccessor")
+        @Override
         @NonNull
         public StorageDownloadFileOptions build() {
             return new StorageDownloadFileOptions(this);
-        }
-
-        @Nullable
-        StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        @Nullable
-        String getTargetIdentityId() {
-            return targetIdentityId;
         }
     }
 }
