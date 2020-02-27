@@ -36,7 +36,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
-    private final Consumer<StorageGetUrlResult> onResult;
+    private final Consumer<StorageGetUrlResult> onSuccess;
     private final Consumer<StorageException> onError;
 
     /**
@@ -58,7 +58,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
-        this.onResult = onSuccess;
+        this.onSuccess = onSuccess;
         this.onError = onError;
     }
 
@@ -75,7 +75,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
 
             try {
                 URL url = storageService.getPresignedUrl(serviceKey, getRequest().getExpires());
-                onResult.accept(StorageGetUrlResult.fromUrl(url));
+                onSuccess.accept(StorageGetUrlResult.fromUrl(url));
             } catch (Exception exception) {
                 onError.accept(new StorageException(
                         "Encountered an issue while generating pre-signed URL",

@@ -59,6 +59,7 @@ import org.json.JSONObject;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A plugin for the storage category which uses S3 as a storage
@@ -67,7 +68,6 @@ import java.util.concurrent.Executors;
 public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
-    private static final int DEFAULT_URL_EXPIRE_IN_SECONDS = 5;
 
     private final StorageService.Factory storageServiceFactory;
     private final IdentityIdProvider identityIdProvider;
@@ -75,6 +75,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     private StorageService storageService;
     private StorageAccessLevel defaultAccessLevel;
+    private int defaultUrlExpiration;
 
     /**
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
@@ -105,6 +106,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     }
 
     @Override
+    @SuppressWarnings("MagicNumber") // TODO: Remove once default values are moved to configuration
     public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws StorageException {
         String regionStr;
         String bucket;
@@ -145,11 +147,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         }
 
         try {
-            this.storageService = storageServiceFactory.create(
-                    context,
-                    region,
-                    bucket
-            );
+            this.storageService = storageServiceFactory.create(context, region, bucket);
         } catch (RuntimeException exception) {
             throw new StorageException(
                     "Failed to create storage service.",
@@ -158,8 +156,9 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             );
         }
 
-        // These will be passed in the config in the future
+        // TODO: Integrate into config + options
         this.defaultAccessLevel = StorageAccessLevel.PUBLIC;
+        this.defaultUrlExpiration = (int) TimeUnit.DAYS.toSeconds(7);
     }
 
     @NonNull
@@ -194,7 +193,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                         : identityIdProvider.getIdentityId(),
                 options.getExpires() != 0
                         ? options.getExpires()
-                        : DEFAULT_URL_EXPIRE_IN_SECONDS
+                        : defaultUrlExpiration
         );
 
         AWSS3StorageGetPresignedUrlOperation operation =

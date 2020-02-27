@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3.request;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
@@ -36,9 +38,9 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * @param expires The number of seconds before the URL expires
      */
     public AWSS3StorageGetPresignedUrlRequest(
-            String key,
-            StorageAccessLevel accessLevel,
-            String targetIdentityId,
+            @NonNull String key,
+            @NonNull StorageAccessLevel accessLevel,
+            @NonNull String targetIdentityId,
             int expires) {
         this.key = key;
         this.accessLevel = accessLevel;
@@ -50,6 +52,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * Gets the access level.
      * @return Access level
      */
+    @NonNull
     public StorageAccessLevel getAccessLevel() {
         return accessLevel;
     }
@@ -58,6 +61,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * Gets the storage key.
      * @return key
      */
+    @NonNull
     public String getKey() {
         return key;
     }
@@ -66,6 +70,7 @@ public final class AWSS3StorageGetPresignedUrlRequest {
      * Gets the target identity id.
      * @return target identity id
      */
+    @NonNull
     public String getTargetIdentityId() {
         return targetIdentityId;
     }

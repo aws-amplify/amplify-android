@@ -28,7 +28,7 @@ import java.util.Objects;
 public final class StorageGetUrlResult implements Result {
     private final URL url;
 
-    private StorageGetUrlResult(URL url) {
+    private StorageGetUrlResult(@NonNull URL url) {
         this.url = url;
     }
 
