@@ -127,11 +127,10 @@ public final class StorageGetUrlOptions implements Options {
         /**
          * Configures the number of seconds left until URL expires on new
          * StorageGetUrlOptions instances.
-         * StorageGetUrlOptions instances.
-         * @param accessLevel Storage access level for new StorageGetUrlOptions instances
+         * @param expires Amount of seconds until URL expires
          * @return Current Builder instance, for fluent method chaining
          */
-        public Builder expires(int accessLevel) {
+        public Builder expires(int expires) {
             this.expires = expires;
             return this;
         }
