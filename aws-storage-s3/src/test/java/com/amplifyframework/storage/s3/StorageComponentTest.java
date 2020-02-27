@@ -33,6 +33,7 @@ import com.amplifyframework.testutils.RandomString;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -183,7 +184,7 @@ public final class StorageComponentTest {
         final String fromLocalPath = RandomString.string();
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.uploadFile(anyString(), any(File.class)))
+        when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
                 .thenReturn(observer);
 
         doAnswer(invocation -> {
@@ -221,7 +222,7 @@ public final class StorageComponentTest {
         final String fromLocalPath = RandomString.string();
 
         TransferObserver observer = mock(TransferObserver.class);
-        when(storageService.uploadFile(anyString(), any(File.class)))
+        when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
                 .thenReturn(observer);
 
         doAnswer(invocation -> {

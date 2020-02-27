@@ -39,7 +39,6 @@ import com.amazonaws.services.s3.model.S3ObjectSummary;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 /**
  * A representation of an S3 backend service endpoint.
@@ -72,13 +71,16 @@ public final class AWSS3StorageService implements StorageService {
         this.client = createS3Client(region);
 
         if (transferAcceleration) {
-            client.setS3ClientOptions(S3ClientOptions.builder().setAccelerateModeEnabled(true).build());
+            client.setS3ClientOptions(S3ClientOptions.builder()
+                    .setAccelerateModeEnabled(true)
+                    .build()
+            );
         }
 
         this.transferUtility = TransferUtility.builder()
-                                .context(this.context)
-                                .s3Client(client)
-                                .build();
+                .context(this.context)
+                .s3Client(client)
+                .build();
     }
 
     private AmazonS3Client createS3Client(@NonNull Region region) {
@@ -107,21 +109,6 @@ public final class AWSS3StorageService implements StorageService {
      * Begin uploading a file.
      * @param serviceKey S3 service key
      * @param file Target file
-     * @return A transfer observer
-     */
-    @NonNull
-    public TransferObserver uploadFile(
-            @NonNull String serviceKey,
-            @NonNull File file
-    ) {
-        startServiceIfNotAlreadyStarted();
-        return transferUtility.upload(bucket, serviceKey, file);
-    }
-
-    /**
-     * Begin uploading a file.
-     * @param serviceKey S3 service key
-     * @param file Target file
      * @param metadata Object metadata to associate with upload
      * @return A transfer observer
      */
@@ -129,12 +116,10 @@ public final class AWSS3StorageService implements StorageService {
     public TransferObserver uploadFile(
             @NonNull String serviceKey,
             @NonNull File file,
-            @NonNull Map<String, String> metadata
+            @NonNull ObjectMetadata metadata
     ) {
         startServiceIfNotAlreadyStarted();
-        ObjectMetadata objectMetadata = new ObjectMetadata();
-        objectMetadata.setUserMetadata(metadata);
-        return transferUtility.upload(bucket, serviceKey, file, objectMetadata);
+        return transferUtility.upload(bucket, serviceKey, file, metadata);
     }
 
     /**
