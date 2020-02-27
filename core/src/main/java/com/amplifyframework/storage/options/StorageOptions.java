@@ -26,7 +26,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
  * storage operation will inspect the provided options
  * instance for access level and target ID.
  */
-public abstract class StorageOptions implements Options {
+abstract class StorageOptions implements Options {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 

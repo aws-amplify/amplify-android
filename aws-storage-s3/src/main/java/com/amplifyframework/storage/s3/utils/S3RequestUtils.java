@@ -18,8 +18,6 @@ package com.amplifyframework.storage.s3.utils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.storage.StorageAccessLevel;
-import com.amplifyframework.storage.StorageException;
-import com.amplifyframework.storage.options.StorageOptions;
 
 import java.util.Locale;
 
@@ -61,22 +59,6 @@ public final class S3RequestUtils {
         return getAccessLevelPrefix(accessLevel, identityId) + BUCKET_SEPARATOR + key;
     }
 
-    /**
-     * See {@link S3RequestUtils#getServiceKey(StorageAccessLevel, String, String)}.
-     *
-     * @param options Storage options to specify accessor and access level
-     *                of the request
-     * @param key User-friendly key to access the item
-     * @return Formatted key to be used internally by S3 plugin
-     */
-    @NonNull
-    public static String getServiceKey(
-            @NonNull StorageOptions options,
-            @NonNull String key
-    ) {
-        return getAccessLevelPrefix(options) + BUCKET_SEPARATOR + key;
-    }
-
     @NonNull
     private static String getAccessLevelPrefix(
             @NonNull StorageAccessLevel accessLevel,
@@ -87,26 +69,5 @@ public final class S3RequestUtils {
         } else {
             return accessLevel.name().toLowerCase(Locale.US);
         }
-    }
-
-    @NonNull
-    private static String getAccessLevelPrefix(@NonNull StorageOptions options) {
-        StorageAccessLevel accessLevel = options.getAccessLevel();
-        if (accessLevel == null) {
-            throw new RuntimeException(new StorageException(
-                    "Storage access-level is null.",
-                    "Set the access-level value to PUBLIC | PROTECTED | PRIVATE."
-            ));
-        }
-
-        String identityId = options.getTargetIdentityId();
-        if (identityId == null) {
-            throw new RuntimeException(new StorageException(
-                    "The identity ID of storage accessor is null.",
-                    "Provide a valid identity ID to specify the accessor."
-            ));
-        }
-
-        return getAccessLevelPrefix(accessLevel, identityId);
     }
 }
