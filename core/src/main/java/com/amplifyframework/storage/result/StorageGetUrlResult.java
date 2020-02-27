@@ -33,23 +33,23 @@ public final class StorageGetUrlResult implements Result {
     }
 
     /**
-     * Gets the presigned URL.
-     * @return presigned URL
-     */
-    @NonNull
-    public URL getUrl() {
-        return url;
-    }
-
-    /**
-     * Creates a new StorageGetUrlResult containing the presigned URL
+     * Creates a new StorageGetUrlResult containing the pre-signed URL
      * of requested object.
-     * @param url The presigned URL
+     * @param url The pre-signed URL
      * @return A StorageGetUrlResult
      */
     @NonNull
     public static StorageGetUrlResult fromUrl(@NonNull URL url) {
         return new StorageGetUrlResult(Objects.requireNonNull(url));
+    }
+
+    /**
+     * Gets the pre-signed URL.
+     * @return pre-signed URL
+     */
+    @NonNull
+    public URL getUrl() {
+        return url;
     }
 }
 
