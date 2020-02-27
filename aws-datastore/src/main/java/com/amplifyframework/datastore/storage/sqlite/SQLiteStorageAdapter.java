@@ -84,7 +84,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private static final int DATABASE_VERSION = 1;
 
     // Name of the database
-    private static final String DATABASE_NAME = "AmplifyDatastore.db";
+    @VisibleForTesting @SuppressWarnings("checkstyle:all") // Keep logger first
+    static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     // Provider of the Models that will be warehouse-able by the DataStore
     private final ModelProvider modelProvider;
@@ -166,7 +167,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             try {
                 final Set<Class<? extends Model>> models = new HashSet<>();
                 // StorageItemChange.Record.class is an internal system event
-                // it is used to journal local storage changes
+                // it is used to stage local storage changes for upload to cloud
                 models.add(StorageItemChange.Record.class);
                 // PersistentModelVersion.class is an internal system event
                 // it is used to store the version of the ModelProvider
@@ -376,14 +377,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(onError);
 
         threadPool.submit(() -> {
-            try {
+            try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), predicate)) {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
                 final ModelSchema modelSchema =
                     modelSchemaRegistry.getModelSchemaForModelClass(itemClass.getSimpleName());
 
-                final Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), predicate);
                 if (cursor == null) {
                     onError.accept(new DataStoreException(
                         "Error in getting a cursor to the table for class: " + itemClass.getSimpleName(),
@@ -398,9 +398,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                             itemClass, modelSchema, cursor);
                         models.add(deserializeModelFromRawMap(mapForModel, itemClass));
                     } while (cursor.moveToNext());
-                }
-                if (!cursor.isClosed()) {
-                    cursor.close();
                 }
 
                 onSuccess.accept(models.iterator());
@@ -467,6 +464,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                     modelSchema.getName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
+                    return;
                 }
 
                 synchronized (sqlCommand.getCompiledSqlStatement()) {
@@ -595,45 +593,42 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             throws IllegalAccessException, DataStoreException {
         final String tableName = model.getClass().getSimpleName();
         final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(model.getClass()).iterator();
-        final Cursor cursor = getQueryAllCursor(tableName);
-        if (cursor == null) {
-            throw new IllegalAccessException("Error in getting a cursor to table: " +
-                    tableName);
-        }
-        cursor.moveToFirst();
+        try (Cursor cursor = getQueryAllCursor(tableName)) {
+            if (cursor == null) {
+                throw new IllegalAccessException("Error in getting a cursor to table: " +
+                        tableName);
+            }
+            cursor.moveToFirst();
 
-        final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
-                .getModelSchemaForModelClass(tableName);
-        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
-        final List<Object> fieldValues = new ArrayList<>();
-        while (fieldValues.size() < columns.size()) {
-            fieldValues.add(null); // Pre-populate with null values
-        }
-
-        while (fieldIterator.hasNext()) {
-            final Field field = fieldIterator.next();
-
-            field.setAccessible(true);
-            final String fieldName = field.getName();
-            final Object fieldValue = field.get(model);
-
-            // Skip if there is no equivalent column for field in object
-            final SQLiteColumn column = columns.get(fieldName);
-            if (column == null) {
-                continue;
+            final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
+                    .getModelSchemaForModelClass(tableName);
+            final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
+            final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
+            final List<Object> fieldValues = new ArrayList<>();
+            while (fieldValues.size() < columns.size()) {
+                fieldValues.add(null); // Pre-populate with null values
             }
 
-            final String columnName = column.getAliasedName();
-            final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
-            fieldValues.set(columnIndex, fieldValue);
-        }
+            while (fieldIterator.hasNext()) {
+                final Field field = fieldIterator.next();
 
-        if (!cursor.isClosed()) {
-            cursor.close();
-        }
+                field.setAccessible(true);
+                final String fieldName = field.getName();
+                final Object fieldValue = field.get(model);
 
-        return Immutable.of(fieldValues);
+                // Skip if there is no equivalent column for field in object
+                final SQLiteColumn column = columns.get(fieldName);
+                if (column == null) {
+                    continue;
+                }
+
+                final String columnName = column.getAliasedName();
+                final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
+                fieldValues.set(columnIndex, fieldValue);
+            }
+
+            return Immutable.of(fieldValues);
+        }
     }
 
     // Binds each value inside list onto compiled statement in order
@@ -874,16 +869,20 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull String tableName,
             @NonNull String columnName,
             @NonNull String columnValue) {
-        final Cursor cursor = databaseConnectionHandle.rawQuery(
-                "SELECT * FROM " + StringUtils.singleQuote(tableName) +
-                        " WHERE " + columnName + " = " +
-                        StringUtils.singleQuote(columnValue), null);
-        if (cursor.getCount() <= 0) {
-            cursor.close();
-            return false;
+        // SELECT * FROM '{tableName}' WHERE {columnName} = '{columnValue}'
+        final String queryString = new StringBuilder()
+                .append(SqlKeyword.SELECT).append(SqlKeyword.DELIMITER)
+                .append("*").append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.FROM).append(SqlKeyword.DELIMITER)
+                .append(StringUtils.singleQuote(tableName)).append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.WHERE).append(SqlKeyword.DELIMITER)
+                .append(columnName).append(SqlKeyword.DELIMITER)
+                .append(SqlKeyword.EQUAL).append(SqlKeyword.DELIMITER)
+                .append(StringUtils.singleQuote(columnValue))
+                .toString();
+        try (Cursor cursor = databaseConnectionHandle.rawQuery(queryString, null)) {
+            return cursor.getCount() > 0;
         }
-        cursor.close();
-        return true;
     }
 
     /*

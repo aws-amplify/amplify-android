@@ -46,10 +46,7 @@ import io.reactivex.disposables.Disposables;
  * performing various operations.
  */
 public final class SynchronousApi {
-
-    private static final long EXTENDED_TIMEOUT_IN_MILLISECONDS =
-            TimeUnit.SECONDS.toMillis(10); // 5 seconds is insufficient
-
+    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private static SynchronousApi singleton = null;
 
     @SuppressWarnings("checkstyle:all") private SynchronousApi() {}
@@ -274,8 +271,7 @@ public final class SynchronousApi {
         return Observable.create(emitter -> {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
-            Await.<String, ApiException>result(
-                EXTENDED_TIMEOUT_IN_MILLISECONDS,
+            Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = Amplify.API.subscribe(
                         apiName,
@@ -306,8 +302,7 @@ public final class SynchronousApi {
         return Observable.create(emitter -> {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
-            Await.<String, ApiException>result(
-                EXTENDED_TIMEOUT_IN_MILLISECONDS,
+            Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = Amplify.API.subscribe(
                         apiName,
@@ -329,8 +324,7 @@ public final class SynchronousApi {
     private <T> T awaitResponseData(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(EXTENDED_TIMEOUT_IN_MILLISECONDS,
-                resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
         if (response.hasErrors()) {
             String firstErrorMessage = response.getErrors().get(0).getMessage();
             throw new RuntimeException("Response has error:" + firstErrorMessage);
@@ -344,8 +338,7 @@ public final class SynchronousApi {
     private <T> List<GraphQLResponse.Error> awaitResponseErrors(
             Await.ResultErrorEmitter<GraphQLResponse<T>, ApiException> resultErrorEmitter)
             throws ApiException {
-        final GraphQLResponse<T> response = Await.result(EXTENDED_TIMEOUT_IN_MILLISECONDS,
-                resultErrorEmitter);
+        final GraphQLResponse<T> response = Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
         if (!response.hasErrors()) {
             throw new RuntimeException("No errors in response.");
         }
@@ -356,7 +349,6 @@ public final class SynchronousApi {
     private RestResponse awaitRestResponse(
             Await.ResultErrorEmitter<RestResponse, ApiException> resultErrorEmitter)
             throws ApiException {
-        return Await.result(EXTENDED_TIMEOUT_IN_MILLISECONDS,
-                resultErrorEmitter);
+        return Await.result(OPERATION_TIMEOUT_MS, resultErrorEmitter);
     }
 }

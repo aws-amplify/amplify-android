@@ -18,11 +18,16 @@ package com.amplifyframework.datastore.storage.sqlite;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
+import org.junit.After;
+import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -38,7 +43,24 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test the query functionality of {@link SQLiteStorageAdapter} operations.
  */
-public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumentedTestBase {
+public final class SQLiteStorageAdapterQueryTest {
+    private SynchronousStorageAdapter adapter;
+
+    @BeforeClass
+    public static void enableStrictMode() {
+        StrictMode.enable();
+    }
+
+    @Before
+    public void setup() {
+        TestStorageAdapter.cleanup();
+        this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
+    }
+
+    @After
+    public void teardown() {
+        TestStorageAdapter.cleanup(adapter);
+    }
 
     /**
      * Test querying the saved item in the SQLite database.
@@ -49,9 +71,9 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Alan Turing")
             .build();
-        saveModel(blogOwner);
+        adapter.save(blogOwner);
 
-        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.contains(blogOwner));
     }
 
@@ -67,11 +89,11 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
             final BlogOwner blogOwner = BlogOwner.builder()
                 .name("namePrefix:" + counter)
                 .build();
-            saveModel(blogOwner);
+            adapter.save(blogOwner);
             savedModels.add(blogOwner);
         }
 
-        final Set<BlogOwner> blogOwners = queryModel(BlogOwner.class);
+        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(savedModels, blogOwners);
     }
 
@@ -91,10 +113,10 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
             .owner(blogOwner)
             .build();
 
-        saveModel(blogOwner);
-        saveModel(blog);
+        adapter.save(blogOwner);
+        adapter.save(blog);
 
-        final Set<Blog> blogs = queryModel(Blog.class);
+        final Set<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.contains(blog));
     }
 
@@ -114,7 +136,7 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
                 .status(PostStatus.INACTIVE)
                 .rating(counter)
                 .build();
-            saveModel(post);
+            adapter.save(post);
             savedModels.add(post);
         }
 
@@ -128,7 +150,7 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
             savedModels.get(5),
             savedModels.get(6)
         ));
-        final Set<Post> actualPosts = queryModel(Post.class, predicate);
+        final Set<Post> actualPosts = adapter.query(Post.class, predicate);
         assertEquals(expectedPosts, actualPosts);
     }
 
@@ -148,7 +170,7 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
                 .status(PostStatus.INACTIVE)
                 .rating(counter)
                 .build();
-            saveModel(post);
+            adapter.save(post);
             savedModels.add(post);
         }
 
@@ -156,7 +178,7 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
                 savedModels.get(4),
                 savedModels.get(7)
         ));
-        final Set<Post> actualPosts = queryModel(Post.class, Post.TITLE
+        final Set<Post> actualPosts = adapter.query(Post.class, Post.TITLE
             .beginsWith("4")
                 .or(Post.TITLE.beginsWith("7"))
                 .or(Post.TITLE.beginsWith("9"))
@@ -174,15 +196,16 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
         final BlogOwner blogOwner = BlogOwner.builder()
             .name("Jane Doe")
             .build();
-        saveModel(blogOwner);
+        adapter.save(blogOwner);
 
         final Blog blog = Blog.builder()
             .name("Jane's Commercial Real Estate Blog")
             .owner(blogOwner)
             .build();
-        saveModel(blog);
+        adapter.save(blog);
 
-        final Set<Blog> blogsOwnedByJaneDoe = queryModel(Blog.class, QueryField.field("BlogOwner.name").eq("Jane Doe"));
+        final Set<Blog> blogsOwnedByJaneDoe =
+            adapter.query(Blog.class, QueryField.field("BlogOwner.name").eq("Jane Doe"));
         assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }
 
@@ -195,13 +218,13 @@ public final class SQLiteStorageAdapterQueryTest extends StorageAdapterInstrumen
         final BlogOwner jane = BlogOwner.builder()
             .name("Jane Doe")
             .build();
-        saveModel(jane);
+        adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-        final Set<BlogOwner> resultOfMaliciousQuery = queryModel(BlogOwner.class, predicate);
+        final Set<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, predicate);
         assertTrue(resultOfMaliciousQuery.isEmpty());
 
-        final Set<BlogOwner> resultAfterMaliciousQuery = queryModel(BlogOwner.class);
+        final Set<BlogOwner> resultAfterMaliciousQuery = adapter.query(BlogOwner.class);
         assertTrue(resultAfterMaliciousQuery.contains(jane));
     }
 }

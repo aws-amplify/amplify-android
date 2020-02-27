@@ -64,7 +64,6 @@ import java.util.concurrent.Executors;
  * A plugin for the storage category which uses S3 as a storage
  * repository.
  */
-@SuppressWarnings("unused") // Revisit this suppression after tests are created
 public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
@@ -355,7 +354,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
         return operation;
     }
-    
+
     /**
      * Holds the keys for the various configuration properties for this plugin.
      */

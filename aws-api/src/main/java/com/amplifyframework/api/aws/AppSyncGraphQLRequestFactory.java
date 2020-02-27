@@ -364,7 +364,7 @@ final class AppSyncGraphQLRequestFactory {
             default:
                 throw new ApiException(
                     "Tried to parse an unsupported QueryOperator type",
-                    "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                    "Check if a new QueryOperator.Type enum has been created which is not supported " +
                     "in the AppSyncGraphQLRequestFactory."
                 );
         }
@@ -394,7 +394,7 @@ final class AppSyncGraphQLRequestFactory {
             default:
                 throw new ApiException(
                     "Tried to parse an unsupported QueryOperator type",
-                    "Check if a new QueryOperator.Type enum has been created which is not supported" +
+                    "Check if a new QueryOperator.Type enum has been created which is not supported " +
                     "in the AppSyncGraphQLRequestFactory."
                 );
         }

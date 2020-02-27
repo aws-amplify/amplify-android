@@ -8,14 +8,14 @@ commands:
           name: Download gradle
           command: |
             cd ~
-            wget https://services.gradle.org/distributions/gradle-5.4.1-bin.zip
-            unzip gradle-5.4.1-bin.zip
+            wget https://services.gradle.org/distributions/gradle-6.2.1-bin.zip
+            unzip gradle-6.2.1-bin.zip
       - run:
           name: Generate gradle wrapper
           command: |
             cd ~/amplify-android-home
             yes | sdkmanager --licenses && yes | sdkmanager --update
-            ~/gradle-5.4.1/bin/gradle wrapper
+            ~/gradle-6.2.1/bin/gradle wrapper
   early_return_for_forked_pull_requests:
     description: >-
       If this build is from a fork, stop executing the current job and return success.

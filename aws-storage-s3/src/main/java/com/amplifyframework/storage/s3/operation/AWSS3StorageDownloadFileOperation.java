@@ -18,7 +18,11 @@ package com.amplifyframework.storage.s3.operation;
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
@@ -38,7 +42,7 @@ import java.io.File;
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final StorageService storageService;
-    private final Consumer<StorageDownloadFileResult> onResult;
+    private final Consumer<StorageDownloadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
     private File file;
@@ -58,7 +62,7 @@ public final class AWSS3StorageDownloadFileOperation
     ) {
         super(request);
         this.storageService = storageService;
-        this.onResult = onSuccess;
+        this.onSuccess = onSuccess;
         this.onError = onError;
         this.transferObserver = null;
         this.file = null;
@@ -68,50 +72,27 @@ public final class AWSS3StorageDownloadFileOperation
     @Override
     public void start() {
         // Only start if it hasn't already been started
-        if (transferObserver == null) {
-            String serviceKey = S3RequestUtils.getServiceKey(
-                    getRequest().getAccessLevel(),
-                    getRequest().getTargetIdentityId(),
-                    getRequest().getKey()
-            );
+        if (transferObserver != null) {
+            return;
+        }
 
-            this.file = new File(getRequest().getLocal()); //TODO: Add error handling if path is invalid
-
-            try {
-                transferObserver = storageService.downloadToFile(serviceKey, file);
-            } catch (Exception exception) {
-                onError.accept(new StorageException(
-                        "Issue downloading file",
-                        exception,
-                        "See included exception for more details and suggestions to fix."
-                ));
-            }
-
-            transferObserver.setTransferListener(new TransferListener() {
-                @Override
-                public void onStateChanged(int transferId, TransferState state) {
-                    if (TransferState.COMPLETED == state) {
-                        onResult.accept(StorageDownloadFileResult.fromFile(file));
-                    }
-                }
-
-                @SuppressWarnings("checkstyle:MagicNumber")
-                @Override
-                public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
-                    @SuppressWarnings("unused")
-                    int percentage = (int) (bytesCurrent / bytesTotal * 100);
-                    // TODO: dispatch event to hub
-                }
-
-                @Override
-                public void onError(int transferId, Exception exception) {
-                    onError.accept(new StorageException(
-                        "Something went wrong with your AWS S3 Storage download file operation",
-                        exception,
-                        "See attached exception for more information and suggestions"
-                    ));
-                }
-            });
+        String serviceKey = S3RequestUtils.getServiceKey(
+                getRequest().getAccessLevel(),
+                getRequest().getTargetIdentityId(),
+                getRequest().getKey()
+        );
+      
+        this.file = new File(getRequest().getLocal());
+      
+        try {
+            transferObserver = storageService.downloadToFile(serviceKey, file);
+            transferObserver.setTransferListener(new DownloadTransferListener());
+        } catch (Exception exception) {
+            onError.accept(new StorageException(
+                    "Issue downloading file",
+                    exception,
+                    "See included exception for more details and suggestions to fix."
+            ));
         }
     }
 
@@ -157,6 +138,51 @@ public final class AWSS3StorageDownloadFileOperation
                     "See attached exception for more information and suggestions"
                 ));
             }
+        }
+    }
+
+    @SuppressLint("SyntheticAccessor")
+    private final class DownloadTransferListener implements TransferListener {
+        @Override
+        public void onStateChanged(int transferId, TransferState state) {
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create(StorageChannelEventName.DOWNLOAD_STATE, state.name()));
+            switch (state) {
+                case COMPLETED:
+                    onSuccess.accept(StorageDownloadFileResult.fromFile(file));
+                    return;
+                case FAILED:
+                    onError.accept(new StorageException(
+                            "Storage download operation was interrupted.",
+                            "Please verify that you have a stable internet connection."
+                    ));
+                    return;
+                default:
+                    // no-op;
+            }
+        }
+
+        @Override
+        public void onProgressChanged(int transferId, long bytesCurrent, long bytesTotal) {
+            final float progress;
+            if (bytesTotal != 0) {
+                progress = (float) bytesCurrent / bytesTotal;
+            } else {
+                progress = 1f;
+            }
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create(StorageChannelEventName.DOWNLOAD_PROGRESS, progress));
+        }
+
+        @Override
+        public void onError(int transferId, Exception exception) {
+            Amplify.Hub.publish(HubChannel.STORAGE,
+                    HubEvent.create(StorageChannelEventName.DOWNLOAD_ERROR, exception));
+            onError.accept(new StorageException(
+                    "Something went wrong with your AWS S3 Storage download file operation",
+                    exception,
+                    "See attached exception for more information and suggestions"
+            ));
         }
     }
 }

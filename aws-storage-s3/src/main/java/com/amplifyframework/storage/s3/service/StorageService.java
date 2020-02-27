@@ -22,11 +22,11 @@ import com.amplifyframework.storage.StorageItem;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.regions.Region;
+import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.File;
 import java.net.URL;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Interface to manage file transfer to and from a registered S3 bucket.
@@ -53,26 +53,16 @@ public interface StorageService {
 
     /**
      * Begin uploading a file to a key in storage and return an observer
-     * to monitor upload progress.
-     * @param serviceKey key to uniquely label item in storage
-     * @param file file to upload
-     * @return An instance of {@link TransferObserver} to monitor upload
-     */
-    TransferObserver uploadFile(@NonNull String serviceKey,
-                                @NonNull File file);
-
-    /**
-     * Begin uploading a file to a key in storage and return an observer
      * to monitor upload progress. This item will be stored with specified
      * metadata.
      * @param serviceKey key to uniquely label item in storage
      * @param file file to upload
-     * @param metadata map of metadata to attach to uploaded item
+     * @param metadata metadata to attach to uploaded item
      * @return An instance of {@link TransferObserver} to monitor upload
      */
     TransferObserver uploadFile(@NonNull String serviceKey,
                                 @NonNull File file,
-                                @NonNull Map<String, String> metadata);
+                                @NonNull ObjectMetadata metadata);
 
     /**
      * Returns a list of items from provided path inside the storage.

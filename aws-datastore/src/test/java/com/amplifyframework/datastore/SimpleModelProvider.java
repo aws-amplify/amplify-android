@@ -24,8 +24,13 @@ import com.amplifyframework.util.Immutable;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
 
-final class SimpleModelProvider implements ModelProvider {
+/**
+ * An immutable {@link ModelProvider} which implementation. Instance can be built with the
+ * {@link Builder} class.
+ */
+public final class SimpleModelProvider implements ModelProvider {
     private String version;
     private Set<Class<? extends Model>> modelClasses;
 
@@ -48,11 +53,19 @@ final class SimpleModelProvider implements ModelProvider {
         return version;
     }
 
-    static Builder builder() {
+    public static Builder builder() {
         return new Builder();
     }
 
-    @SuppressWarnings({"UnusedReturnValue", "unused"})
+    @SafeVarargs
+    @SuppressWarnings("varargs")
+    public static ModelProvider forClasses(final Class<? extends Model>... modelClasses) {
+        return SimpleModelProvider.builder()
+            .version(UUID.randomUUID().toString())
+            .addModels(modelClasses)
+            .build();
+    }
+
     static final class Builder {
         private Set<Class<? extends Model>> modelClasses;
         private String version;
