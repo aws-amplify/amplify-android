@@ -19,14 +19,17 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
+import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -36,6 +39,40 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
  */
 @SuppressWarnings("unused")
 public interface StorageCategoryBehavior {
+
+    /**
+     * Retrieve the remote URL for the object from storage.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @param key the unique identifier for the object in storage
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageGetUrlOperation<?> getUrl(
+            @NonNull String key,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
+
+    /**
+     * Retrieve the remote URL for the object from storage.
+     * Set advanced options such as the access level of the object
+     * or the expiration details of the URL.
+     * Provide callbacks to obtain the URL retrieval results.
+     * @param key the unique identifier for the object in storage
+     * @param options parameters specific to plugin behavior
+     * @param onSuccess Called if operation completed successfully and furnishes a result
+     * @param onError Called if an error occurs during operation
+     * @return an operation object that provides notifications and
+     *         actions related to the execution of the work
+     */
+    @NonNull
+    StorageGetUrlOperation<?> getUrl(
+            @NonNull String key,
+            @NonNull StorageGetUrlOptions options,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError);
 
     /**
      * Download object to file from storage.
