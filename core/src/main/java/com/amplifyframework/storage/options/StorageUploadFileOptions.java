@@ -112,7 +112,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
          * @param contentType Content type
          * @return Current Builder instance for fluent chaining
          */
-        @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
+        @SuppressWarnings("WeakerAccess")
         @NonNull
         public Builder contentType(@Nullable String contentType) {
             this.contentType = contentType;
@@ -148,6 +148,7 @@ public final class StorageUploadFileOptions extends StorageOptions {
          * @return A new immutable StorageUploadFileOptions instance
          */
         @SuppressLint("SyntheticAccessor")
+        @Override
         @NonNull
         public StorageUploadFileOptions build() {
             return new StorageUploadFileOptions(this);

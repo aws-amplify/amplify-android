@@ -15,37 +15,18 @@
 
 package com.amplifyframework.storage.options;
 
-import com.amplifyframework.core.async.Options;
-import com.amplifyframework.storage.StorageAccessLevel;
+import android.annotation.SuppressLint;
+import androidx.annotation.NonNull;
 
 /**
  * Options to specify attributes of get URL API invocation.
  */
-public final class StorageGetUrlOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageGetUrlOptions extends StorageOptions {
     private final int expires;
 
-    StorageGetUrlOptions(final Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
+    private StorageGetUrlOptions(final Builder builder) {
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.expires = builder.getExpires();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Gets the target identity ID.
-     * @return target identity ID
-     */
-    public String getTargetIdentityId() {
-        return targetIdentityId;
     }
 
     /**
@@ -57,12 +38,12 @@ public final class StorageGetUrlOptions implements Options {
     }
 
     /**
-     * Factory method to create a new instance of the
-     * {@link StorageGetUrlOptions.Builder}.  The builder can be
-     * used to configure properties and then construct a new immutable
-     * instance of the StorageGetUrlOptions.
-     * @return An instance of the {@link StorageGetUrlOptions.Builder}
+     * Returns a new Builder instance that can be used to configure
+     * and build a new immutable instance of StorageGetUrlOptions.
+     * @return a new builder instance
      */
+    @SuppressLint("SyntheticAccessor")
+    @NonNull
     public static Builder builder() {
         return new Builder();
     }
@@ -77,7 +58,8 @@ public final class StorageGetUrlOptions implements Options {
      * @return A Builder instance that has been configured using the
      *         values in the provided options
      */
-    public static Builder from(StorageGetUrlOptions options) {
+    @NonNull
+    public static Builder from(@NonNull StorageGetUrlOptions options) {
         return builder()
             .accessLevel(options.getAccessLevel())
             .targetIdentityId(options.getTargetIdentityId())
@@ -88,6 +70,7 @@ public final class StorageGetUrlOptions implements Options {
      * Constructs a default instance of the {@link StorageGetUrlOptions}.
      * @return default instance of StorageGetUrlOptions
      */
+    @NonNull
     public static StorageGetUrlOptions defaultInstance() {
         return builder().build();
     }
@@ -97,32 +80,8 @@ public final class StorageGetUrlOptions implements Options {
      * instances of the {@link StorageGetUrlOptions}, by chaining
      * fluent configuration method calls.
      */
-    public static final class Builder {
-        private StorageAccessLevel accessLevel;
-        private String targetIdentityId;
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageGetUrlOptions> {
         private int expires;
-
-        /**
-         * Configures the storage access level to set on new
-         * StorageGetUrlOptions instances.
-         * @param accessLevel Storage access level for new StorageGetUrlOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
-        public Builder accessLevel(StorageAccessLevel accessLevel) {
-            this.accessLevel = accessLevel;
-            return this;
-        }
-
-        /**
-         * Configures the target identity ID that will be used on newly
-         * built StorageGetUrlOptions.
-         * @param targetIdentityId Target identity ID for new StorageGetUrlOptions instances
-         * @return Current Builder instance, for fluent method chaining
-         */
-        public Builder targetIdentityId(String targetIdentityId) {
-            this.targetIdentityId = targetIdentityId;
-            return this;
-        }
 
         /**
          * Configures the number of seconds left until URL expires on new
@@ -130,9 +89,15 @@ public final class StorageGetUrlOptions implements Options {
          * @param expires Amount of seconds until URL expires
          * @return Current Builder instance, for fluent method chaining
          */
+        @SuppressWarnings("WeakerAccess")
         public Builder expires(int expires) {
             this.expires = expires;
             return this;
+        }
+
+        @SuppressWarnings("WeakerAccess")
+        public int getExpires() {
+            return expires;
         }
 
         /**
@@ -141,20 +106,11 @@ public final class StorageGetUrlOptions implements Options {
          * have been provided the current instance of the Builder.
          * @return A new immutable instance of StorageGetUrlOptions
          */
+        @SuppressLint("SyntheticAccessor")
+        @Override
+        @NonNull
         public StorageGetUrlOptions build() {
             return new StorageGetUrlOptions(this);
-        }
-
-        StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        String getTargetIdentityId() {
-            return targetIdentityId;
-        }
-
-        int getExpires() {
-            return expires;
         }
     }
 }
