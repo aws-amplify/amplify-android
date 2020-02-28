@@ -23,6 +23,7 @@ import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -42,11 +43,14 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -91,6 +95,48 @@ public final class StorageComponentTest {
             throw new RuntimeException(jsonException);
         }
         return configuration;
+    }
+
+    /**
+     * Test that calling get URL method from Storage category correctly invokes
+     * the registered AWSS3StoragePlugin instance and returns a {@link URL}
+     * instance for that download.
+     * @throws StorageException when an error is encountered while generating
+     *         URL from storage service
+     */
+    @Test
+    public void testGenerateUrlGetsPresignedUrl() throws StorageException {
+        final String fromRemoteKey = RandomString.string();
+        final URL urlFromRemoteKey;
+        try {
+            // URL instance cannot be mocked so just make one
+            // https://{random-host}:0/{fromRemoteKey}
+            urlFromRemoteKey = new URL(
+                    "https",
+                    RandomString.string(),
+                    0,
+                    fromRemoteKey,
+                    null
+            );
+        } catch (MalformedURLException exception) {
+            throw new RuntimeException(exception);
+        }
+
+        // Allow mock StorageService instance to return a non-null
+        // URL instance.
+        when(storageService.getPresignedUrl(anyString(), anyInt()))
+                .thenReturn(urlFromRemoteKey);
+
+        // Let Storage category invoke getUrl on mock Storage Service.
+        StorageGetUrlResult result = Await.<StorageGetUrlResult, StorageException>result(
+            (onResult, onError) -> storage.getUrl(
+                fromRemoteKey,
+                onResult,
+                onError
+            )
+        );
+
+        assertEquals(urlFromRemoteKey, result.getUrl());
     }
 
     /**

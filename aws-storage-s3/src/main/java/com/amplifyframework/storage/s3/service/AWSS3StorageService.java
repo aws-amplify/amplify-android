@@ -37,8 +37,11 @@ import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 
 import java.io.File;
+import java.net.URL;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A representation of an S3 backend service endpoint.
@@ -88,6 +91,18 @@ public final class AWSS3StorageService implements StorageService {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
         return new AmazonS3Client(credentialsProvider, region, configuration);
+    }
+
+    /**
+     * Generate pre-signed URL for an object.
+     * @param serviceKey S3 service key
+     * @param expires Number of seconds before URL expires
+     * @return A pre-signed URL
+     */
+    @NonNull
+    public URL getPresignedUrl(@NonNull String serviceKey, int expires) {
+        Date expiration = new Date(System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(expires));
+        return client.generatePresignedUrl(bucket, serviceKey, expiration);
     }
 
     /**

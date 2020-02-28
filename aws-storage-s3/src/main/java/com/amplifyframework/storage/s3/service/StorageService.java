@@ -25,12 +25,21 @@ import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 
 import java.io.File;
+import java.net.URL;
 import java.util.List;
 
 /**
  * Interface to manage file transfer to and from a registered S3 bucket.
  */
 public interface StorageService {
+
+    /**
+     * Generate pre-signed download URL for an object.
+     * @param serviceKey key to uniquely specify item to generate URL for
+     * @param expires Number of seconds before URL expires
+     * @return A pre-signed URL
+     */
+    URL getPresignedUrl(@NonNull String serviceKey, int expires);
 
     /**
      * Begin downloading a specific item to a file and return an observer
