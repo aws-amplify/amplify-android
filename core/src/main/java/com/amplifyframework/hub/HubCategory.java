@@ -100,7 +100,7 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
     }
 
     private HubPlugin<?> getHubPlugin() {
-        if (!super.isConfigured() || super.getPlugins().isEmpty()) {
+        if (!super.isInitialized() || super.getPlugins().isEmpty()) {
             return defaultPlugin;
         } else {
             return super.getSelectedPlugin();
