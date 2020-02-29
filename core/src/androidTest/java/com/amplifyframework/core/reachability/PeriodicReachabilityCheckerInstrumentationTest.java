@@ -17,7 +17,7 @@ package com.amplifyframework.core.reachability;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Test;
 

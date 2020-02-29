@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.testutils.random;
 
 import androidx.annotation.NonNull;
 

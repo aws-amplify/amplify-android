@@ -23,7 +23,7 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;

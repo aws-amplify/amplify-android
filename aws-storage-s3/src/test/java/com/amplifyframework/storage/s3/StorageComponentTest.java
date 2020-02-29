@@ -29,7 +29,7 @@ import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomString;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;

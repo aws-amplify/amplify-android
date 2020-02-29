@@ -21,7 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.BadInitLoggingPlugin;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;

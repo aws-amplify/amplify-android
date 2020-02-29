@@ -20,7 +20,7 @@ import android.util.Log;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.category.CategoryConfiguration;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;

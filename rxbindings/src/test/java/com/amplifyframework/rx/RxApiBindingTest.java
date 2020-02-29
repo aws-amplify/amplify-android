@@ -32,8 +32,8 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryInitializationResult;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.RandomModel;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomModel;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
