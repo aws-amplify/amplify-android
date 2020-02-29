@@ -35,7 +35,6 @@ import java.util.Objects;
  * A wrapper around the {@link AWSMobileClient} which turns its asynchronous methods
  * into synchronous ones.
  */
-@SuppressWarnings("unused")
 public final class SynchronousMobileClient {
     private final AWSMobileClient awsMobileClient;
 
@@ -165,16 +164,16 @@ public final class SynchronousMobileClient {
     }
 
     /**
-     * A unique error that can be thrown if the {@link AWSMobileClient} fails to initialize.
+     * A named error that can be thrown if the {@link AWSMobileClient} fails to perform an action.
      * Ordinarily, that would return a base Java {@link Exception}, which is pretty ugly.
      */
     public static final class MobileClientException extends Exception {
-        private static final long serialVersionUID = 1192653974771481999L;
+        private static final long serialVersionUID = 707443782664477404L;
 
         /**
          * Constructs a new MobileClientException, with an underlying cause.
          * @param message User-friendly message regarding this exception
-         * @param cause The reason the initialization failed
+         * @param cause The reason the Mobile Client failed
          */
         MobileClientException(@NonNull String message, @NonNull Throwable cause) {
             super(Objects.requireNonNull(message), Objects.requireNonNull(cause));
@@ -186,7 +185,7 @@ public final class SynchronousMobileClient {
      * values to one of two {@link Consumer}s, and taking no other action(s).
      * @param <T> Type of result in callback
      */
-    static final class DelegatingCallback<T> implements Callback<T> {
+    private static final class DelegatingCallback<T> implements Callback<T> {
         private final Consumer<T> onResult;
         private final Consumer<Exception> onError;
 
