@@ -76,9 +76,11 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
         // Obtain the user identity ID values of each user ahead of time
         userIdentityIds = new HashMap<>();
+        mobileClient.signOut();
         mobileClient.signIn(userOne);
         userIdentityIds.put(userOne, mobileClient.getIdentityId());
 
+        mobileClient.signOut();
         mobileClient.signIn(userTwo);
         userIdentityIds.put(userTwo, mobileClient.getIdentityId());
     }
