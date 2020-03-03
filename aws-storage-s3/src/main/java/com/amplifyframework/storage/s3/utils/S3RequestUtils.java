@@ -42,8 +42,8 @@ public final class S3RequestUtils {
      * into the key prefix. For example:
      *
      *  - public service key:    "public/{key}"
-     *  - protected service key: "protected/{userID}/{key}"
-     *  - private service key:   "private/{userID}/{key}"
+     *  - protected service key: "protected/{identityID}/{key}"
+     *  - private service key:   "private/{identityID}/{key}"
      *
      * @param accessLevel Storage access level of the request
      * @param identityId Identity ID of the user
@@ -68,6 +68,41 @@ public final class S3RequestUtils {
             return accessLevel.name().toLowerCase(Locale.US) + BUCKET_SEPARATOR + identityId;
         } else {
             return accessLevel.name().toLowerCase(Locale.US);
+        }
+    }
+
+    /**
+     * This utility is useful for converting S3 service key back into
+     * a user-friendly key for Amplify. It strips the access level
+     * prefix as well as the associated identity ID.
+     * @param serviceKey S3 specific key containing access level and
+     *                   identity ID
+     * @return Amplify storage key devoid of S3 specific details
+     * @throws IllegalArgumentException for wrong service key format
+     */
+    @NonNull
+    public static String getAmplifyKey(@NonNull String serviceKey) {
+        try {
+            int accessLevelIndex = serviceKey.indexOf(BUCKET_SEPARATOR);
+            if (accessLevelIndex < 0) {
+                throw new IllegalArgumentException("Missing access level.");
+            }
+            String accessLevelString = serviceKey.substring(0, accessLevelIndex).toUpperCase(Locale.US);
+            StorageAccessLevel accessLevel = StorageAccessLevel.valueOf(accessLevelString);
+
+            // public keys are formatted as "public/{key}"
+            if (StorageAccessLevel.PUBLIC.equals(accessLevel)) {
+                return serviceKey.substring(accessLevelIndex + 1);
+            }
+
+            // private and protected keys are formatted as "{access-level}/{identity-id}/{key}"
+            int identityIdIndex = serviceKey.indexOf(BUCKET_SEPARATOR, accessLevelIndex + 1);
+            if (identityIdIndex < 0) {
+                throw new IllegalArgumentException("Missing identity ID.");
+            }
+            return serviceKey.substring(identityIdIndex + 1);
+        } catch (RuntimeException exception) {
+            throw new IllegalArgumentException("Service key is incorrectly formatted.", exception);
         }
     }
 }
