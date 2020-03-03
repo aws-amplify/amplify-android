@@ -29,6 +29,8 @@ import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobile.config.AWSConfiguration;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -37,9 +39,12 @@ import java.util.Objects;
  */
 public final class SynchronousMobileClient {
     private final AWSMobileClient awsMobileClient;
+    private final Map<String, String> userCredentials;
 
-    private SynchronousMobileClient(AWSMobileClient awsMobileClient) {
+    private SynchronousMobileClient(AWSMobileClient awsMobileClient,
+                                    Map<String, String> userCredentials) {
         this.awsMobileClient = awsMobileClient;
+        this.userCredentials = userCredentials;
     }
 
     /**
@@ -49,7 +54,7 @@ public final class SynchronousMobileClient {
      */
     @NonNull
     public static SynchronousMobileClient instance() {
-        return new SynchronousMobileClient(AWSMobileClient.getInstance());
+        return instance(AWSMobileClient.getInstance());
     }
 
     /**
@@ -60,7 +65,36 @@ public final class SynchronousMobileClient {
      */
     @NonNull
     public static SynchronousMobileClient instance(@NonNull AWSMobileClient awsMobileClient) {
-        return new SynchronousMobileClient(Objects.requireNonNull(awsMobileClient));
+        return instance(awsMobileClient, new HashMap<>());
+    }
+
+    /**
+     * Creates an instance of the {@link SynchronousMobileClient}, using the
+     * default instance of the {@link AWSMobileClient} and associates a map
+     * of user login details.
+     * @param userCredentials A map of user login details, in the format of
+     *                        {String username -> String password}
+     * @return A {@link SynchronousMobileClient} using the default {@link AWSMobileClient}
+     */
+    @NonNull
+    public static SynchronousMobileClient instance(@NonNull Map<String, String> userCredentials) {
+        return instance(AWSMobileClient.getInstance(), userCredentials);
+    }
+
+    /**
+     * Creates an instance of the {@link SynchronousMobileClient}, using a provided
+     * {@link AWSMobileClient} as a delegate and associates a map of user login details.
+     * @param awsMobileClient Client to which requests are delegated
+     * @param userCredentials A map of user login details, in the format of
+     *                        {String username -> String password}
+     * @return A {@link SynchronousMobileClient} using the default {@link AWSMobileClient}
+     */
+    @NonNull
+    public static SynchronousMobileClient instance(@NonNull AWSMobileClient awsMobileClient,
+                                                   @NonNull Map<String, String> userCredentials) {
+        Objects.requireNonNull(awsMobileClient);
+        Objects.requireNonNull(userCredentials);
+        return new SynchronousMobileClient(awsMobileClient, userCredentials);
     }
 
     /**
@@ -114,6 +148,24 @@ public final class SynchronousMobileClient {
             throw new MobileClientException("Failed to initialize Mobile Client", initializationError);
         }
         return Objects.requireNonNull(userStateDetails);
+    }
+
+    /**
+     * Sign in with the user name and associated login map.
+     * @param username User name
+     * @return A sign in result
+     * @throws MobileClientException If sign in fails
+     */
+    @SuppressWarnings("UnusedReturnValue")
+    @NonNull
+    public SignInResult signIn(@NonNull String username) throws MobileClientException {
+        Objects.requireNonNull(username);
+        final String password = userCredentials.get(username);
+        if (password == null) {
+            throw new MobileClientException("Failed to get credentials for " + username,
+                    new NullPointerException());
+        }
+        return signIn(username, password);
     }
 
     /**
