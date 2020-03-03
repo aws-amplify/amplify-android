@@ -62,7 +62,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      * @throws Exception from failure to sign in with Cognito User Pools
      */
     @BeforeClass
-    public static void setUpBeforeClass() throws Exception {
+    public static void setUpOnce() throws Exception {
         // Configure Amplify if not already configured
         TestConfiguration configuration = TestConfiguration.configureIfNotConfigured();
         Map<String, String> userCredentials = configuration.getUserCredentials();
