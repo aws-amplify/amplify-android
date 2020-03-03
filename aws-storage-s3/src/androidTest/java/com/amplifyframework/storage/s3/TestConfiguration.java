@@ -57,15 +57,14 @@ final class TestConfiguration {
     private static final String CREDENTIAL_IDENTIFIER = "credentials";
 
     private static TestConfiguration singleton;
-    private final AWSS3StoragePlugin plugin;
+
     private final Map<String, String> userCredentials;
 
-    private TestConfiguration(Context context)
-            throws AmplifyException, SynchronousMobileClient.MobileClientException {
-        plugin = new AWSS3StoragePlugin();
+    private TestConfiguration() throws Exception {
+        Context context = ApplicationProvider.getApplicationContext();
         userCredentials = getUserCredentials(context);
 
-        Amplify.addPlugin(plugin);
+        Amplify.addPlugin(new AWSS3StoragePlugin());
         configureAmplify(context);
         setUpCredentials(context);
     }
@@ -73,13 +72,12 @@ final class TestConfiguration {
     /**
      * Process-wide configuration for the Storage instrumentation tests.
      * @return A TestConfiguration instance
-     * @throws AmplifyException if Amplify configuration fails
+     * @throws Exception if configuration fails
      */
     @NonNull
-    static synchronized TestConfiguration configureIfNotConfigured()
-            throws AmplifyException, SynchronousMobileClient.MobileClientException {
+    static synchronized TestConfiguration configureIfNotConfigured() throws Exception {
         if (singleton == null) {
-            singleton = new TestConfiguration(ApplicationProvider.getApplicationContext());
+            singleton = new TestConfiguration();
         }
         return singleton;
     }
@@ -102,7 +100,7 @@ final class TestConfiguration {
         SynchronousMobileClient.instance().initialize(context, configuration);
     }
 
-    private Map<String, String> getUserCredentials(Context context) {
+    private Map<String, String> getUserCredentials(Context context) throws JSONException {
         Map<String, String> userCredentials = new HashMap<>();
 
         // Obtain User Pool Credentials configuration JSON
@@ -110,22 +108,13 @@ final class TestConfiguration {
         JSONObject configuration = Resources.readAsJson(context, configId);
 
         // Read the content for credentials
-        try {
-            JSONArray credentials = configuration.getJSONArray("credentials");
-            for (int index = 0; index < credentials.length(); index++) {
-                String username = credentials.getJSONObject(index).getString("username");
-                String password = credentials.getJSONObject(index).getString("password");
-                userCredentials.put(username, password);
-            }
-        } catch (JSONException exception) {
-            throw new RuntimeException(exception);
+        JSONArray credentials = configuration.getJSONArray("credentials");
+        for (int index = 0; index < credentials.length(); index++) {
+            String username = credentials.getJSONObject(index).getString("username");
+            String password = credentials.getJSONObject(index).getString("password");
+            userCredentials.put(username, password);
         }
         return userCredentials;
-    }
-
-    @NonNull
-    AWSS3StoragePlugin plugin() {
-        return plugin;
     }
 
     @NonNull
