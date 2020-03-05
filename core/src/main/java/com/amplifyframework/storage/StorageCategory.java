@@ -21,14 +21,17 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
+import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
+import com.amplifyframework.storage.options.StorageGetUrlOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
 import com.amplifyframework.storage.options.StorageRemoveOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
@@ -44,6 +47,25 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.STORAGE;
+    }
+
+    @NonNull
+    @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull String key,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().getUrl(key, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public StorageGetUrlOperation<?> getUrl(
+            @NonNull String key,
+            @NonNull StorageGetUrlOptions options,
+            @NonNull Consumer<StorageGetUrlResult> onSuccess,
+            @NonNull Consumer<StorageException> onError) {
+        return getSelectedPlugin().getUrl(key, options, onSuccess, onError);
     }
 
     @NonNull

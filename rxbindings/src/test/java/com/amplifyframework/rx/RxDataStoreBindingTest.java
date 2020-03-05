@@ -30,8 +30,8 @@ import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.datastore.DataStoreItemChange.Initiator;
 import com.amplifyframework.datastore.DataStoreItemChange.Type;
 import com.amplifyframework.datastore.DataStorePlugin;
-import com.amplifyframework.testutils.RandomModel;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomModel;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;

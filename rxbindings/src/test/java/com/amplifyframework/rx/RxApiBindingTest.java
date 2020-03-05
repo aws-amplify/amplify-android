@@ -30,8 +30,8 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.testutils.RandomModel;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomModel;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;

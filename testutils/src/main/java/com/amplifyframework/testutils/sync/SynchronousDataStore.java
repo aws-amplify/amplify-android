@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.testutils.sync;
 
 import androidx.annotation.NonNull;
 
@@ -21,6 +21,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
+import com.amplifyframework.testutils.Await;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;

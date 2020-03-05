@@ -19,8 +19,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.testutils.SynchronousApi;
-import com.amplifyframework.testutils.TestAssets;
+import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.sync.SynchronousApi;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public final class GraphQLInstrumentationTest {
         TestObserver<GraphQLResponse<Comment>> observer = api.onCreate(
             API_NAME,
             new GraphQLRequest<>(
-                TestAssets.readAsString("subscribe-event-comments.graphql"),
+                Assets.readAsString("subscribe-event-comments.graphql"),
                 Collections.singletonMap("eventId", eventId),
                 Comment.class,
                 new GsonVariablesSerializer()
@@ -117,7 +117,7 @@ public final class GraphQLInstrumentationTest {
         Comment createdComment = api.create(
             API_NAME,
             new GraphQLRequest<>(
-                TestAssets.readAsString("create-comment.graphql"),
+                Assets.readAsString("create-comment.graphql"),
                 variables,
                 Comment.class,
                 new GsonVariablesSerializer()
@@ -144,7 +144,7 @@ public final class GraphQLInstrumentationTest {
         Event createdEvent = api.create(
             API_NAME,
             new GraphQLRequest<>(
-                TestAssets.readAsString("create-event.graphql"),
+                Assets.readAsString("create-event.graphql"),
                 variables,
                 Event.class,
                 new GsonVariablesSerializer()

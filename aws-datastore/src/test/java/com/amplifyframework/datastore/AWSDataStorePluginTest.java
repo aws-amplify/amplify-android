@@ -19,7 +19,7 @@ import android.content.Context;
 
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
-import com.amplifyframework.testutils.RandomString;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;

@@ -15,11 +15,10 @@
 
 package com.amplifyframework.storage.options;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Options;
-import com.amplifyframework.storage.StorageAccessLevel;
 import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
@@ -29,35 +28,14 @@ import java.util.Objects;
 /**
  * Options to specify attributes of put API invocation.
  */
-public final class StorageUploadFileOptions implements Options {
-    private final StorageAccessLevel accessLevel;
-    private final String targetIdentityId;
+public final class StorageUploadFileOptions extends StorageOptions {
     private final String contentType;
     private final Map<String, String> metadata;
 
-    private StorageUploadFileOptions(Builder builder) {
-        this.accessLevel = builder.getAccessLevel();
-        this.targetIdentityId = builder.getTargetIdentityId();
+    private StorageUploadFileOptions(final Builder builder) {
+        super(builder.getAccessLevel(), builder.getTargetIdentityId());
         this.contentType = builder.getContentType();
         this.metadata = builder.getMetadata();
-    }
-
-    /**
-     * Gets the storage access level.
-     * @return Storage access level
-     */
-    @Nullable
-    public StorageAccessLevel getAccessLevel() {
-        return accessLevel;
-    }
-
-    /**
-     * Target user to apply the action on.
-     * @return Target user's identity id
-     */
-    @Nullable
-    public String getTargetIdentityId() {
-        return targetIdentityId;
     }
 
     /**
@@ -73,7 +51,7 @@ public final class StorageUploadFileOptions implements Options {
      * Metadata for the object to store.
      * @return metadata
      */
-    @Nullable
+    @NonNull
     public Map<String, String> getMetadata() {
         return Immutable.of(metadata);
     }
@@ -83,6 +61,7 @@ public final class StorageUploadFileOptions implements Options {
      * and build a new immutable instance of StorageUploadFileOptions.
      * @return a new builder instance
      */
+    @SuppressLint("SyntheticAccessor")
     @NonNull
     public static Builder builder() {
         return new Builder();
@@ -100,8 +79,7 @@ public final class StorageUploadFileOptions implements Options {
      */
     @NonNull
     public static Builder from(@NonNull final StorageUploadFileOptions options) {
-        return builder()
-                .accessLevel(options.getAccessLevel())
+        return builder().accessLevel(options.getAccessLevel())
                 .targetIdentityId(options.getTargetIdentityId())
                 .contentType(options.getContentType())
                 .metadata(options.getMetadata());
@@ -121,33 +99,12 @@ public final class StorageUploadFileOptions implements Options {
      * StorageUploadFileOptions, using fluent of property configuration
      * methods.
      */
-    public static final class Builder {
-        private StorageAccessLevel accessLevel;
-        private String targetIdentityId;
+    public static final class Builder extends StorageOptions.Builder<Builder, StorageUploadFileOptions> {
         private String contentType;
         private Map<String, String> metadata;
 
-        /**
-         * Configures the storage access level for the new
-         * StorageUploadFileOptions instance.
-         * @param accessLevel Storage access level
-         * @return Current Builder instance for fluent chaining
-         */
-        @NonNull
-        public Builder accessLevel(@NonNull StorageAccessLevel accessLevel) {
-            this.accessLevel = Objects.requireNonNull(accessLevel);
-            return this;
-        }
-
-        /**
-         * Configures the target identity id for a new StorageUploadFileOptions instance.
-         * @param targetIdentityId Target user's identity id
-         * @return Current Builder instance for fluent chaining
-         */
-        @NonNull
-        public Builder targetIdentityId(@NonNull String targetIdentityId) {
-            this.targetIdentityId = Objects.requireNonNull(targetIdentityId);
-            return this;
+        private Builder() {
+            this.metadata = new HashMap<>();
         }
 
         /**
@@ -155,9 +112,10 @@ public final class StorageUploadFileOptions implements Options {
          * @param contentType Content type
          * @return Current Builder instance for fluent chaining
          */
+        @SuppressWarnings("WeakerAccess")
         @NonNull
-        public Builder contentType(@NonNull String contentType) {
-            this.contentType = Objects.requireNonNull(contentType);
+        public Builder contentType(@Nullable String contentType) {
+            this.contentType = contentType;
             return this;
         }
 
@@ -172,36 +130,28 @@ public final class StorageUploadFileOptions implements Options {
             return this;
         }
 
+        @SuppressWarnings("WeakerAccess")
+        @Nullable
+        public String getContentType() {
+            return contentType;
+        }
+
+        @NonNull
+        public Map<String, String> getMetadata() {
+            return Immutable.of(metadata);
+        }
+
         /**
          * Builds a new immutable StorageUploadFileOptions instance,
          * based on the configuration options that have been previously
          * set on this Builder instance.
          * @return A new immutable StorageUploadFileOptions instance
          */
+        @SuppressLint("SyntheticAccessor")
+        @Override
         @NonNull
         public StorageUploadFileOptions build() {
             return new StorageUploadFileOptions(this);
         }
-
-        @Nullable
-        StorageAccessLevel getAccessLevel() {
-            return accessLevel;
-        }
-
-        @Nullable
-        String getTargetIdentityId() {
-            return targetIdentityId;
-        }
-
-        @Nullable
-        String getContentType() {
-            return contentType;
-        }
-
-        @Nullable
-        Map<String, String> getMetadata() {
-            return Immutable.of(metadata);
-        }
     }
 }
-
