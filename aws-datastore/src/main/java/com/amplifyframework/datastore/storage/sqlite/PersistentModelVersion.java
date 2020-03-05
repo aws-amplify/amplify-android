@@ -98,6 +98,7 @@ final class PersistentModelVersion implements Model {
     }
 
     /** {@inheritDoc}. */
+    @NonNull
     @Override
     public String getId() {
         return this.id;

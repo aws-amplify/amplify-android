@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model;
 
+import androidx.annotation.NonNull;
+
 /**
  * All models should conform to the Model
  * interface.
@@ -26,5 +28,6 @@ public interface Model {
      *
      * @return the ID that is the primary key of a Model.
      */
+    @NonNull
     String getId();
 }

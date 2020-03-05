@@ -15,6 +15,10 @@
 
 package com.amplifyframework.datastore.storage.sqlite.adapter;
 
+import android.annotation.SuppressLint;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -25,25 +29,27 @@ import com.amplifyframework.core.model.types.internal.TypeConverter;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
 
 /**
  * Adapts a {@link ModelSchema} with additional information
  * to assist in representing and processing a SQLite table.
  */
+@SuppressWarnings("WeakerAccess")
 public final class SQLiteTable {
-
     private final String name;
     private final Map<String, SQLiteColumn> columns;
     private final List<SQLiteColumn> sortedColumns;
 
-    private SQLiteTable(Builder builder) {
-        this.name = builder.name;
-        this.columns = builder.columns;
-        this.sortedColumns = sortColumns();
+    private SQLiteTable(String name, Map<String, SQLiteColumn> columns) {
+        this.name = name;
+        this.columns = columns;
+        this.sortedColumns = sortedColumns();
     }
 
     /**
@@ -68,7 +74,9 @@ public final class SQLiteTable {
      * @param modelSchema An instance of {@link ModelSchema}
      * @return Adapted SQLite table
      */
-    public static SQLiteTable fromSchema(ModelSchema modelSchema) {
+    @NonNull
+    public static SQLiteTable fromSchema(@NonNull ModelSchema modelSchema) {
+        Objects.requireNonNull(modelSchema);
         Map<String, ModelAssociation> associations = modelSchema.getAssociations();
         Map<String, SQLiteColumn> sqlColumns = new TreeMap<>();
         for (ModelField modelField : modelSchema.getFields().values()) {
@@ -115,6 +123,7 @@ public final class SQLiteTable {
      * Returns a builder to construct SQLite table instance.
      * @return a builder instance
      */
+    @NonNull
     public static Builder builder() {
         return new Builder();
     }
@@ -123,6 +132,7 @@ public final class SQLiteTable {
      * Returns the name of table.
      * @return the name of table
      */
+    @NonNull
     public String getName() {
         return name;
     }
@@ -131,6 +141,7 @@ public final class SQLiteTable {
      * Returns the primary key of this table.
      * @return the primary key of this table
      */
+    @Nullable
     public SQLiteColumn getPrimaryKey() {
         for (SQLiteColumn column: sortedColumns) {
             if (column.isPrimaryKey()) {
@@ -145,6 +156,7 @@ public final class SQLiteTable {
      * Return "id" if no column identifies as primary key.
      * @return the column name of primary key
      */
+    @Nullable
     public String getPrimaryKeyColumnName() {
         if (getPrimaryKey() == null) {
             return PrimaryKey.fieldName();
@@ -156,6 +168,7 @@ public final class SQLiteTable {
      * Returns the list of foreign keys of this table.
      * @return the list of foreign keys of this table
      */
+    @NonNull
     public List<SQLiteColumn> getForeignKeys() {
         List<SQLiteColumn> foreignKeys = new LinkedList<>();
         for (SQLiteColumn column: sortedColumns) {
@@ -170,19 +183,21 @@ public final class SQLiteTable {
      * Returns the map of field names to columns of this table.
      * @return the map of field names to columns of this table
      */
+    @NonNull
     public Map<String, SQLiteColumn> getColumns() {
         return Immutable.of(columns);
     }
 
     /**
      * Returns the sorted list of columns of this table.
-     * @return the sroted list of columns of this table
+     * @return the sorted list of columns of this table
      */
+    @NonNull
     public List<SQLiteColumn> getSortedColumns() {
         return Immutable.of(sortedColumns);
     }
 
-    private List<SQLiteColumn> sortColumns() {
+    private List<SQLiteColumn> sortedColumns() {
         if (columns == null) {
             return null;
         }
@@ -221,16 +236,21 @@ public final class SQLiteTable {
      * A builder to construct immutable SQLite table.
      */
     public static final class Builder {
+        private final Map<String, SQLiteColumn> columns;
         private String name;
-        private Map<String, SQLiteColumn> columns;
+
+        Builder() {
+            this.columns = new HashMap<>();
+        }
 
         /**
          * Sets the name of the table.
          * @param name the name of the table
          * @return builder instance with given name
          */
-        public Builder name(String name) {
-            this.name = name;
+        @NonNull
+        public Builder name(@NonNull String name) {
+            this.name = Objects.requireNonNull(name);
             return this;
         }
 
@@ -239,8 +259,11 @@ public final class SQLiteTable {
          * @param columns the map of columns of the table
          * @return builder instance with given name
          */
-        public Builder columns(Map<String, SQLiteColumn> columns) {
-            this.columns = columns;
+        @NonNull
+        public Builder columns(@NonNull Map<String, SQLiteColumn> columns) {
+            Objects.requireNonNull(columns);
+            this.columns.clear();
+            this.columns.putAll(columns);
             return this;
         }
 
@@ -248,8 +271,10 @@ public final class SQLiteTable {
          * Constructs an instance of table using this builder.
          * @return Constructed instance of table
          */
+        @SuppressLint("SyntheticAccessor")
+        @NonNull
         public SQLiteTable build() {
-            return new SQLiteTable(this);
+            return new SQLiteTable(this.name, Immutable.of(this.columns));
         }
     }
 }
