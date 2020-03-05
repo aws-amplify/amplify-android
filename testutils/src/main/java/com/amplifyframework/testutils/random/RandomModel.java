@@ -41,6 +41,7 @@ public final class RandomModel {
             this.modelId = modelId;
         }
 
+        @NonNull
         @Override
         public String getId() {
             return modelId;

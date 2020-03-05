@@ -15,7 +15,9 @@
 
 package com.amplifyframework.core.model;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.AmplifyException;
@@ -44,10 +46,6 @@ import java.util.TreeMap;
  * The schema encapsulates the metadata information of a Model.
  */
 public final class ModelSchema {
-
-    // Logcat Tag.
-    private static final String TAG = ModelSchema.class.getSimpleName();
-
     // Name of the Model.
     private final String name;
 
@@ -76,12 +74,13 @@ public final class ModelSchema {
     // persistence-related operations guarantee that the results are always consistent.
     private final List<ModelField> sortedFields;
 
-    private ModelSchema(String name,
-                        String pluralName,
-                        boolean hasOwnerAuthorization,
-                        Map<String, ModelField> fields,
-                        Map<String, ModelAssociation> associations,
-                        Map<String, ModelIndex> indexes) {
+    private ModelSchema(
+            String name,
+            String pluralName,
+            boolean hasOwnerAuthorization,
+            Map<String, ModelField> fields,
+            Map<String, ModelAssociation> associations,
+            Map<String, ModelIndex> indexes) {
         this.name = name;
         this.pluralName = pluralName;
         this.hasOwnerAuthorization = hasOwnerAuthorization;
@@ -95,6 +94,7 @@ public final class ModelSchema {
      * Return the builder object.
      * @return the builder object.
      */
+    @NonNull
     public static Builder builder() {
         return new Builder();
     }
@@ -106,6 +106,7 @@ public final class ModelSchema {
      * @return the ModelSchema object.
      * @throws AmplifyException If the conversion fails
      */
+    @NonNull
     public static ModelSchema fromModelClass(@NonNull Class<? extends Model> clazz) throws AmplifyException {
         try {
             final List<Field> classFields = FieldFinder.findFieldsIn(clazz);
@@ -119,7 +120,7 @@ public final class ModelSchema {
             final String modelPluralName = modelConfig != null && !modelConfig.pluralName().isEmpty()
                     ? modelConfig.pluralName()
                     : null;
-            final boolean hasOwnerAuthorization = modelConfig != null ? modelConfig.hasOwnerAuthorization() : false;
+            final boolean hasOwnerAuthorization = modelConfig != null && modelConfig.hasOwnerAuthorization();
 
             for (Annotation annotation : clazz.getAnnotations()) {
                 ModelIndex modelIndex = createModelIndex(annotation);
@@ -180,7 +181,7 @@ public final class ModelSchema {
     // Utility method to extract association metadata from a field
     private static ModelAssociation createModelAssociation(Field field) {
         if (field.isAnnotationPresent(BelongsTo.class)) {
-            BelongsTo association = field.getAnnotation(BelongsTo.class);
+            BelongsTo association = Objects.requireNonNull(field.getAnnotation(BelongsTo.class));
             return ModelAssociation.builder()
                     .name(BelongsTo.class.getSimpleName())
                     .targetName(association.targetName())
@@ -188,7 +189,7 @@ public final class ModelSchema {
                     .build();
         }
         if (field.isAnnotationPresent(HasOne.class)) {
-            HasOne association = field.getAnnotation(HasOne.class);
+            HasOne association = Objects.requireNonNull(field.getAnnotation(HasOne.class));
             return ModelAssociation.builder()
                     .name(HasOne.class.getSimpleName())
                     .associatedName(association.associatedWith())
@@ -196,7 +197,7 @@ public final class ModelSchema {
                     .build();
         }
         if (field.isAnnotationPresent(HasMany.class)) {
-            HasMany association = field.getAnnotation(HasMany.class);
+            HasMany association = Objects.requireNonNull(field.getAnnotation(HasMany.class));
             return ModelAssociation.builder()
                     .name(HasMany.class.getSimpleName())
                     .associatedName(association.associatedWith())
@@ -223,6 +224,7 @@ public final class ModelSchema {
      *
      * @return the name of the Model class.
      */
+    @NonNull
     public String getName() {
         return name;
     }
@@ -234,6 +236,7 @@ public final class ModelSchema {
      * @return the plural name of the Model in the target
      *         if explicitly provided.
      */
+    @Nullable
     public String getPluralName() {
         return pluralName;
     }
@@ -254,6 +257,7 @@ public final class ModelSchema {
      * @return map of fieldName and the fieldObject
      *         of all the fields of the model.
      */
+    @NonNull
     public Map<String, ModelField> getFields() {
         return fields;
     }
@@ -263,6 +267,7 @@ public final class ModelSchema {
      *
      * @return a map of field to associations of the model.
      */
+    @NonNull
     public Map<String, ModelAssociation> getAssociations() {
         return Immutable.of(associations);
     }
@@ -272,6 +277,7 @@ public final class ModelSchema {
      *
      * @return the map of indexes of a {@link Model}.
      */
+    @NonNull
     public Map<String, ModelIndex> getIndexes() {
         return indexes;
     }
@@ -282,6 +288,8 @@ public final class ModelSchema {
      * @return list of fieldName and the fieldObject of all
      *          the fields of the model in sorted order.
      */
+    @SuppressWarnings("unused")
+    @NonNull
     public List<ModelField> getSortedFields() {
         return Immutable.of(sortedFields);
     }
@@ -292,7 +300,10 @@ public final class ModelSchema {
      * @return a map of the target fields in the schema to the actual values in the provided object
      * @throws AmplifyException if the object does not match the fields in this schema
      */
-    public Map<String, Object> getMapOfFieldNameAndValues(Model instance) throws AmplifyException {
+    @NonNull
+    public Map<String, Object> getMapOfFieldNameAndValues(@NonNull Model instance) throws AmplifyException {
+        Objects.requireNonNull(instance);
+
         HashMap<String, Object> result = new HashMap<>();
 
         if (!instance.getClass().getSimpleName().equals(this.getName())) {
@@ -311,7 +322,7 @@ public final class ModelSchema {
                     result.put(modelField.getName(), privateField.get(instance));
                 } else if (association.isOwner()) {
                     // All ModelAssociation targets are required to be instances of Model so this is a safe cast
-                    Model target = (Model) privateField.get(instance);
+                    Model target = (Model) Objects.requireNonNull(privateField.get(instance));
                     result.put(association.getTargetName(), target.getId());
                 }
                 // Ignore if field is associated, but is not a "belongsTo" relationship
@@ -407,30 +418,41 @@ public final class ModelSchema {
     /**
      * The Builder to build the {@link ModelSchema} object.
      */
+    @SuppressWarnings("WeakerAccess")
     public static final class Builder {
+        private final Map<String, ModelField> fields;
+        private final Map<String, ModelAssociation> associations;
+        private final Map<String, ModelIndex> indexes;
         private String name;
         private String pluralName;
-        private boolean hasOwnerAuthorization = false;
-        private Map<String, ModelField> fields = new TreeMap<>();
-        private Map<String, ModelAssociation> associations = new TreeMap<>();
-        private Map<String, ModelIndex> indexes = new TreeMap<>();
+        private boolean hasOwnerAuthorization;
+
+        Builder() {
+            this.hasOwnerAuthorization = false;
+            this.fields = new TreeMap<>();
+            this.associations = new TreeMap<>();
+            this.indexes = new TreeMap<>();
+        }
 
         /**
          * Set the the name of the Model class.
          * @param name the name of the Model class.
          * @return the builder object
          */
-        public Builder name(String name) {
-            this.name = name;
+        @NonNull
+        public Builder name(@NonNull String name) {
+            this.name = Objects.requireNonNull(name);
             return this;
         }
 
         /**
-         * the plural version of the name of the Model.
+         * The plural version of the name of the Model.
+         * If null, a default plural version name will be generated.
          * @param pluralName the plural version of model name.
          * @return the builder object
          */
-        public Builder pluralName(String pluralName) {
+        @NonNull
+        public Builder pluralName(@Nullable String pluralName) {
             this.pluralName = pluralName;
             return this;
         }
@@ -441,6 +463,7 @@ public final class ModelSchema {
          * @param hasOwnerAuthorization true if the model has owner based authorization, false otherwise
          * @return the builder object
          */
+        @NonNull
         public Builder hasOwnerAuthorization(boolean hasOwnerAuthorization) {
             this.hasOwnerAuthorization = hasOwnerAuthorization;
             return this;
@@ -451,9 +474,11 @@ public final class ModelSchema {
          * @param fields the map of fieldName and the fieldObject of all the fields of the model.
          * @return the builder object.
          */
+        @NonNull
         public Builder fields(@NonNull Map<String, ModelField> fields) {
             Objects.requireNonNull(fields);
-            this.fields = fields;
+            this.fields.clear();
+            this.fields.putAll(fields);
             return this;
         }
 
@@ -462,9 +487,11 @@ public final class ModelSchema {
          * @param associations the map of fieldName and the association metadata.
          * @return the builder object.
          */
+        @NonNull
         public Builder associations(@NonNull Map<String, ModelAssociation> associations) {
             Objects.requireNonNull(associations);
-            this.associations = associations;
+            this.associations.clear();
+            this.associations.putAll(associations);
             return this;
         }
 
@@ -473,8 +500,11 @@ public final class ModelSchema {
          * @param indexes the indexes of the model.
          * @return the builder object.
          */
+        @NonNull
         public Builder indexes(@NonNull Map<String, ModelIndex> indexes) {
-            this.indexes = indexes;
+            Objects.requireNonNull(indexes);
+            this.indexes.clear();
+            this.indexes.putAll(indexes);
             return this;
         }
 
@@ -482,13 +512,18 @@ public final class ModelSchema {
          * Return the ModelSchema object.
          * @return the ModelSchema object.
          */
+        @SuppressLint("SyntheticAccessor")
+        @NonNull
         public ModelSchema build() {
-            return new ModelSchema(name,
-                    pluralName,
-                    hasOwnerAuthorization,
-                    fields,
-                    associations,
-                    indexes);
+            Objects.requireNonNull(name);
+            return new ModelSchema(
+                name,
+                pluralName,
+                hasOwnerAuthorization,
+                fields,
+                associations,
+                indexes
+            );
         }
     }
 }
