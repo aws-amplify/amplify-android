@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
@@ -101,7 +102,12 @@ final class MutationProcessor {
                 storageItemChange.item(),
                 result -> {
                     if (result.hasErrors() || !result.hasData()) {
-                        subscriber.onError(new RuntimeException("Failed to publish item to network."));
+                        subscriber.onError(new DataStoreException(
+                            "Failed to publish an item to the network. AppSync response contained errors: "
+                                + result.getErrors(),
+                            "Verify that your endpoint is configured to accept "
+                                + storageItemChange.itemClass().getSimpleName() + " models."
+                        ));
                     } else {
                         subscriber.onSuccess(storageItemChange);
                     }
