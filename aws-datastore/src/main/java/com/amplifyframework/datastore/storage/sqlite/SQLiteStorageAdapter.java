@@ -287,29 +287,30 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     modelSchemaRegistry.getModelSchemaForModelInstance(item);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-                final boolean writeSuccess;
+                final SqlCommand sqlCommand;
+                final ModelConflictStrategy modelConflictStrategy;
 
                 if (dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
                     // update model stored in SQLite
                     // update always checks for ID first
                     final QueryPredicateOperation<?> idCheck =
-                            QueryField.field(primaryKeyName).eq(item.getId());
+                        QueryField.field(primaryKeyName).eq(item.getId());
                     final QueryPredicate condition = predicate != null
                         ? idCheck.and(predicate)
                         : idCheck;
-                    final SqlCommand sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
+                    sqlCommand = sqlCommandFactory.updateFor(modelSchema, item, condition);
                     if (!sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "Error in saving the model. No update statement " +
-                            "found for the Model: " + modelSchema.getName(),
+                                "found for the Model: " + modelSchema.getName(),
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
                         return;
                     }
-                    writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.OVERWRITE_EXISTING);
+                    modelConflictStrategy = ModelConflictStrategy.OVERWRITE_EXISTING;
                 } else {
                     // insert model in SQLite
-                    final SqlCommand sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
+                    sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
                             "No insert statement found for the Model: " + modelSchema.getName(),
@@ -317,33 +318,31 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         ));
                         return;
                     }
-                    writeSuccess = saveModel(item, modelSchema, sqlCommand, ModelConflictStrategy.THROW_EXCEPTION);
+                    modelConflictStrategy = ModelConflictStrategy.THROW_EXCEPTION;
                 }
 
-                if (writeSuccess) {
-                    // Do not publish item change if write did not go through.
-                    @SuppressWarnings("unchecked") // item.getClass() is Class<? extends Model>, builder wants Class<T>.
-                    final StorageItemChange.Record record = StorageItemChange.<T>builder()
-                            .item(item)
-                            .itemClass((Class<T>) item.getClass())
-                            .type(StorageItemChange.Type.SAVE)
-                            .predicate(predicate)
-                            .initiator(initiator)
-                            .build()
-                            .toRecord(storageItemChangeConverter);
-                    itemChangeSubject.onNext(record);
-                    onSuccess.accept(record);
-                } else {
-                    onError.accept(new DataStoreException(
-                        "Predicate condition not met.",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    ));
-                }
-            } catch (Exception exception) {
-                itemChangeSubject.onError(exception);
-                onError.accept(new DataStoreException(
-                    "Error in saving the model.", exception, "See attached exception for details."
-                ));
+                saveModel(item, modelSchema, sqlCommand, modelConflictStrategy);
+                @SuppressWarnings("unchecked")
+                // item.getClass() is Class<? extends Model>, builder wants Class<T>.
+                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                    .item(item)
+                    .itemClass((Class<T>) item.getClass())
+                    .type(StorageItemChange.Type.SAVE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+                itemChangeSubject.onNext(record);
+                onSuccess.accept(record);
+            } catch (DataStoreException dataStoreException) {
+                itemChangeSubject.onError(dataStoreException);
+                onError.accept(dataStoreException);
+            } catch (Exception someOtherTypeOfException) {
+                DataStoreException dataStoreException = new DataStoreException(
+                    "Error in saving the model.", someOtherTypeOfException, "See attached exception for details."
+                );
+                itemChangeSubject.onError(dataStoreException);
+                onError.accept(dataStoreException);
             }
         });
     }
@@ -445,60 +444,63 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelInstance(item);
                 final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
-                final boolean deleteSuccess;
 
                 LOG.debug("Deleting item in table: " + sqliteTable.getName() +
-                        " identified by ID: " + item.getId());
+                    " identified by ID: " + item.getId());
 
                 // delete always checks for ID first
                 final QueryPredicateOperation<?> idCheck =
-                        QueryField.field(primaryKeyName).eq(item.getId());
+                    QueryField.field(primaryKeyName).eq(item.getId());
                 final QueryPredicate condition = predicate != null
-                        ? idCheck.and(predicate)
-                        : idCheck;
+                    ? idCheck.and(predicate)
+                    : idCheck;
                 final SqlCommand sqlCommand = sqlCommandFactory.deleteFor(modelSchema, item, condition);
                 if (sqlCommand == null || sqlCommand.sqlStatement() == null
-                        || !sqlCommand.hasCompiledSqlStatement()) {
+                    || !sqlCommand.hasCompiledSqlStatement()) {
                     onError.accept(new DataStoreException(
-                            "No delete statement found for the Model: " +
-                                    modelSchema.getName(),
-                            AmplifyException.TODO_RECOVERY_SUGGESTION
+                        "No delete statement found for the Model: " + modelSchema.getName(),
+                        AmplifyException.TODO_RECOVERY_SUGGESTION
                     ));
                     return;
                 }
 
+                DataStoreException problem = null;
                 synchronized (sqlCommand.getCompiledSqlStatement()) {
                     final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
                     compiledSqlStatement.clearBindings();
                     bindPreCompiledStatementWithFieldValues(compiledSqlStatement, sqlCommand.getSelectionArgs());
                     // executeUpdateDelete returns the number of rows affected.
-                    deleteSuccess = compiledSqlStatement.executeUpdateDelete() > 0;
+                    if (compiledSqlStatement.executeUpdateDelete() <= 0) {
+                        problem = new DataStoreException(
+                            "No columns effected for update/delete.",
+                            "This is likely a bug. Please report to AWS."
+                        );
+                    }
                     compiledSqlStatement.clearBindings();
+                    if (problem != null) {
+                        throw problem;
+                    }
                 }
-
-                if (deleteSuccess) {
-                    // Do not publish item change if write did not go through.
-                    final StorageItemChange.Record record = StorageItemChange.<T>builder()
-                            .item(item)
-                            .itemClass((Class<T>) item.getClass())
-                            .type(StorageItemChange.Type.DELETE)
-                            .predicate(predicate)
-                            .initiator(initiator)
-                            .build()
-                            .toRecord(storageItemChangeConverter);
-                    itemChangeSubject.onNext(record);
-                    onSuccess.accept(record);
-                } else {
-                    //TODO: implement ConditionCheckFailedException to be cause of this error
-                    onError.accept(new DataStoreException("Predicate condition not met.",
-                            AmplifyException.TODO_RECOVERY_SUGGESTION));
-                }
-            } catch (Exception exception) {
-                itemChangeSubject.onError(exception);
-                onError.accept(new DataStoreException(
-                    "Error in deleting the model.", exception,
-                    "See attached exception for details."
-                ));
+                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                    .item(item)
+                    .itemClass((Class<T>) item.getClass())
+                    .type(StorageItemChange.Type.DELETE)
+                    .predicate(predicate)
+                    .initiator(initiator)
+                    .build()
+                    .toRecord(storageItemChangeConverter);
+                itemChangeSubject.onNext(record);
+                onSuccess.accept(record);
+            } catch (DataStoreException dataStoreException) {
+                itemChangeSubject.onError(dataStoreException);
+                onError.accept(dataStoreException);
+            } catch (Exception someOtherTypeOfException) {
+                DataStoreException dataStoreException = new DataStoreException(
+                    "Error in deleting the model.", someOtherTypeOfException,
+                    "See attched exception for details."
+                );
+                itemChangeSubject.onError(dataStoreException);
+                onError.accept(dataStoreException);
             }
         });
     }
@@ -811,20 +813,18 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     // Extract the values of the fields of a model and bind the values to the SQLiteStatement
     // and execute the statement.
-    // Return true if a model is successfully saved, false otherwise.
-    private <T extends Model> boolean saveModel(
+    // throws DataStoreException on failure to save
+    private <T extends Model> void saveModel(
             @NonNull T model,
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
-            ModelConflictStrategy modelConflictStrategy)
+            @NonNull ModelConflictStrategy modelConflictStrategy)
             throws IllegalAccessException, DataStoreException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);
-        Objects.requireNonNull(sqlCommand.getCompiledSqlStatement());
 
         LOG.debug("Writing data to table for: " + model.toString());
-        final boolean writeSuccess;
 
         // SQLiteStatement object that represents the pre-compiled/prepared SQLite statements
         // are not thread-safe. Adding a synchronization barrier to access it.
@@ -841,28 +841,39 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             }
             bindPreCompiledStatementWithFieldValues(compiledSqlStatement, fieldValues);
 
+            DataStoreException problem = null;
             switch (modelConflictStrategy) {
                 case OVERWRITE_EXISTING:
                     // executeUpdateDelete returns the number of rows affected.
-                    writeSuccess = compiledSqlStatement.executeUpdateDelete() > 0;
+                    if (compiledSqlStatement.executeUpdateDelete() != 1) {
+                        problem = new DataStoreException(
+                            "No column updated or deleted!",
+                            "This is likely a bug; please report to AWS."
+                        );
+                    }
                     break;
                 case THROW_EXCEPTION:
                     // executeInsert returns id if successful, -1 otherwise.
-                    writeSuccess = compiledSqlStatement.executeInsert() != -1;
+                    if (compiledSqlStatement.executeInsert() == -1) {
+                        problem = new DataStoreException(
+                            "Failed to insert any record in to database.",
+                            "This is likely a bug; please report to AWS."
+                        );
+                    }
                     break;
                 default:
-                    throw new DataStoreException("ModelConflictStrategy " +
-                            modelConflictStrategy + " is not supported.", AmplifyException.TODO_RECOVERY_SUGGESTION);
+                    problem = new DataStoreException(
+                        "ModelConflictStrategy " + modelConflictStrategy + " is not supported.",
+                        "This is likely a bug; please report to AWS."
+                    );
             }
-            compiledSqlStatement.clearBindings();
-        }
 
-        if (writeSuccess) {
-            LOG.debug("Successfully written data to table for: " + model.toString());
-        } else {
-            LOG.debug("Data was not written to table for: " + model.toString());
+            compiledSqlStatement.clearBindings();
+
+            if (problem != null) {
+                throw problem;
+            }
         }
-        return writeSuccess;
     }
 
     private boolean dataExistsInSQLiteTable(
