@@ -43,6 +43,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
@@ -88,7 +89,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     static final String DATABASE_NAME = "AmplifyDatastore.db";
 
     // Provider of the Models that will be warehouse-able by the DataStore
-    private final ModelProvider modelProvider;
+    private final ModelProvider userModelsProvider;
+
+    // Provider of models that are used internally for DataStore to track metadata
+    private final ModelProvider systemModelsProvider;
 
     // ModelSchemaRegistry instance that gives the ModelSchema and Model objects
     // based on Model class name lookup mechanism.
@@ -128,10 +132,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Construct the SQLiteStorageAdapter object.
-     * @param modelProvider Provides the models that will be usable by the DataStore
+     * @param userModelsProvider Provides the models that will be usable by the DataStore
      */
-    private SQLiteStorageAdapter(@NonNull ModelProvider modelProvider) {
-        this.modelProvider = Objects.requireNonNull(modelProvider);
+    private SQLiteStorageAdapter(
+            ModelProvider userModelsProvider,
+            ModelProvider systemModelsProvider) {
+        this.userModelsProvider = userModelsProvider;
+        this.systemModelsProvider = systemModelsProvider;
         this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
@@ -143,12 +150,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
-     * @param modelProvider A provider of models that will be represented in SQL
+     * @param userModelsProvider A provider of models that will be represented in SQL
      * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
      */
     @NonNull
-    public static SQLiteStorageAdapter forModels(@NonNull ModelProvider modelProvider) {
-        return new SQLiteStorageAdapter(Objects.requireNonNull(modelProvider));
+    public static SQLiteStorageAdapter forModels(@NonNull ModelProvider userModelsProvider) {
+        return new SQLiteStorageAdapter(
+            Objects.requireNonNull(userModelsProvider),
+            SystemModelsProviderFactory.create()
+        );
     }
 
     /**
@@ -166,13 +176,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         threadPool.submit(() -> {
             try {
                 final Set<Class<? extends Model>> models = new HashSet<>();
-                // StorageItemChange.Record.class is an internal system event
-                // it is used to stage local storage changes for upload to cloud
-                models.add(StorageItemChange.Record.class);
-                // PersistentModelVersion.class is an internal system event
-                // it is used to store the version of the ModelProvider
-                models.add(PersistentModelVersion.class);
-                models.addAll(modelProvider.models());
+                models.addAll(systemModelsProvider.models());
+                models.addAll(userModelsProvider.models());
 
                 /*
                  * Start with a fresh registry.
@@ -898,7 +903,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                 "Checking if the model version need to be updated...");
                         PersistentModelVersion persistentModelVersion = iterator.next();
                         String oldVersion = persistentModelVersion.getVersion();
-                        String newVersion = modelProvider.version();
+                        String newVersion = userModelsProvider.version();
                         if (!ObjectsCompat.equals(oldVersion, newVersion)) {
                             LOG.debug("Updating version as it has changed from " +
                                     oldVersion + " to " + newVersion);
@@ -912,7 +917,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     }
                     return PersistentModelVersion.saveToLocalStorage(
                             this,
-                            new PersistentModelVersion(modelProvider.version()));
+                            new PersistentModelVersion(userModelsProvider.version()));
                 }).ignoreElement();
     }
 
