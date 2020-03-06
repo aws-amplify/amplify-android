@@ -70,7 +70,7 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @NonNull
     private LoggingPlugin<?> getLoggingPlugin() {
-        if (!super.isConfigured() || super.getPlugins().isEmpty()) {
+        if (!super.isInitialized() || super.getPlugins().isEmpty()) {
             return defaultPlugin;
         } else {
             return super.getSelectedPlugin();

@@ -119,57 +119,57 @@ public final class DataStoreCategory
     /**
      * {@inheritDoc}
      */
-    @NonNull
     @Override
-    public Cancelable observe(
+    public void observe(
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return getSelectedPlugin().observe(
-            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+        getSelectedPlugin().observe(
+            onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
     /**
      * {@inheritDoc}
      */
-    @NonNull
     @Override
-    public <T extends Model> Cancelable observe(
+    public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return getSelectedPlugin().observe(itemClass,
-            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+        getSelectedPlugin().observe(itemClass,
+            onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
     /**
      * {@inheritDoc}
      */
-    @NonNull
     @Override
-    public <T extends Model> Cancelable observe(
+    public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull String uniqueId,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return getSelectedPlugin().observe(itemClass, uniqueId,
-            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+        getSelectedPlugin().observe(itemClass, uniqueId,
+            onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 
     /**
      * {@inheritDoc}
      */
-    @NonNull
     @Override
-    public <T extends Model> Cancelable observe(
+    public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return getSelectedPlugin().observe(itemClass, selectionCriteria,
-            onDataStoreItemChange, onObservationFailure, onObservationCompleted);
+        getSelectedPlugin().observe(itemClass, selectionCriteria,
+            onObservationStarted, onDataStoreItemChange, onObservationFailure, onObservationCompleted);
     }
 }

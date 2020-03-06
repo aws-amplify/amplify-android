@@ -28,8 +28,6 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
 import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
-import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Immutable;
@@ -136,19 +134,7 @@ public final class Amplify {
     }
 
     private static void beginInitialization(@NonNull Category<? extends Plugin<?>> category, @NonNull Context context) {
-        INITIALIZATION_POOL.execute(() -> {
-            HubChannel hubChannel = HubChannel.forCategoryType(category.getCategoryType());
-            category.initialize(context, categoryInitializationResult -> {
-                if (categoryInitializationResult.isSuccess()) {
-                    Hub.publish(hubChannel, HubEvent.create(InitializationStatus.SUCCEEDED.toString()));
-                    return;
-                }
-                Hub.publish(hubChannel, HubEvent.create(
-                    InitializationStatus.FAILED.toString(),
-                    categoryInitializationResult.getPluginInitializationFailures()
-                ));
-            });
-        });
+        INITIALIZATION_POOL.execute(() -> category.initialize(context));
     }
 
     /**
