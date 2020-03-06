@@ -55,7 +55,7 @@ public final class RemoteModelStateTest {
     @Before
     public void setup() {
         endpoint = mock(AppSync.class);
-        final ModelProvider modelProvider = SimpleModelProvider.forClasses(Post.class, BlogOwner.class);
+        final ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(Post.class, BlogOwner.class);
         remoteModelState = new RemoteModelState(endpoint, modelProvider);
     }
 

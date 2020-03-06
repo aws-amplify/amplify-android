@@ -64,7 +64,7 @@ public final class SyncProcessorTest {
         this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
         this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
 
-        final ModelProvider modelProvider = SimpleModelProvider.forClasses(Post.class, BlogOwner.class);
+        final ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(Post.class, BlogOwner.class);
         this.appSync = mock(AppSync.class);
         final RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
 
