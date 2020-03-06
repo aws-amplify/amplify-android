@@ -19,7 +19,6 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.category.CategoryInitializationResult;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
@@ -33,7 +32,6 @@ import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
-import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
@@ -44,7 +42,7 @@ import java.util.Collections;
 
 import io.reactivex.Single;
 
-import static org.mockito.ArgumentMatchers.any;
+import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -53,7 +51,6 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the {@link RxStorageBinding}.
  */
-@SuppressWarnings("unchecked")
 public final class RxStorageBindingTest {
     private RxStorageCategoryBehavior rxStorage;
     private StoragePlugin<?> delegate;
@@ -73,8 +70,7 @@ public final class RxStorageBindingTest {
         final StorageCategory storageCategory = new StorageCategory();
         storageCategory.addPlugin(delegate);
         storageCategory.configure(new StorageCategoryConfiguration(), mock(Context.class));
-        Await.<CategoryInitializationResult, AmplifyException>result((onResult, onError) ->
-            storageCategory.initialize(mock(Context.class), onResult));
+        storageCategory.initialize(mock(Context.class));
 
         rxStorage = new RxStorageBinding(storageCategory);
     }
@@ -104,7 +100,7 @@ public final class RxStorageBindingTest {
             return mock(StorageDownloadFileOperation.class);
         })
         .when(delegate)
-            .downloadFile(eq(remoteKey), eq(localPath), any(Consumer.class), any(Consumer.class));
+            .downloadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
 
         rxStorage.downloadFile(remoteKey, localPath)
             .test()
@@ -126,7 +122,7 @@ public final class RxStorageBindingTest {
             return mock(StorageDownloadFileOperation.class);
         })
         .when(delegate)
-            .downloadFile(eq(remoteKey), eq(localPath), any(Consumer.class), any(Consumer.class));
+            .downloadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
 
         rxStorage.downloadFile(remoteKey, localPath)
             .test()
@@ -148,7 +144,7 @@ public final class RxStorageBindingTest {
             return mock(StorageUploadFileOperation.class);
         })
         .when(delegate)
-            .uploadFile(eq(remoteKey), eq(localPath), any(Consumer.class), any(Consumer.class));
+            .uploadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
 
         rxStorage
             .uploadFile(remoteKey, localPath)
@@ -171,7 +167,7 @@ public final class RxStorageBindingTest {
             return mock(StorageUploadFileOperation.class);
         })
         .when(delegate)
-            .uploadFile(eq(remoteKey), eq(localPath), any(Consumer.class), any(Consumer.class));
+            .uploadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
 
         rxStorage
             .uploadFile(remoteKey, localPath)
@@ -194,7 +190,7 @@ public final class RxStorageBindingTest {
             return mock(StorageListOperation.class);
         })
         .when(delegate)
-            .list(eq(localPath), any(Consumer.class), any(Consumer.class));
+            .list(eq(localPath), anyConsumer(), anyConsumer());
 
         rxStorage
             .list(localPath)
@@ -217,7 +213,7 @@ public final class RxStorageBindingTest {
             return mock(StorageListOperation.class);
         })
         .when(delegate)
-            .list(eq(localPath), any(Consumer.class), any(Consumer.class));
+            .list(eq(localPath), anyConsumer(), anyConsumer());
 
         rxStorage
             .list(localPath)
@@ -240,7 +236,7 @@ public final class RxStorageBindingTest {
             return mock(StorageRemoveOperation.class);
         })
         .when(delegate)
-            .remove(eq(remoteKey), any(Consumer.class), any(Consumer.class));
+            .remove(eq(remoteKey), anyConsumer(), anyConsumer());
 
         rxStorage
             .remove(remoteKey)
@@ -263,7 +259,7 @@ public final class RxStorageBindingTest {
             return mock(StorageRemoveOperation.class);
         })
         .when(delegate)
-            .remove(eq(remoteKey), any(Consumer.class), any(Consumer.class));
+            .remove(eq(remoteKey), anyConsumer(), anyConsumer());
 
         rxStorage
             .remove(remoteKey)

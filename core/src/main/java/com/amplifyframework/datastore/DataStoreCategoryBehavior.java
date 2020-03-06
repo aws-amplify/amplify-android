@@ -127,16 +127,15 @@ public interface DataStoreCategoryBehavior {
 
     /**
      * Observe all changes to any/all item(s) in the DataStore.
-     *
+     * @param onObservationStarted Called when observation begins
      * @param onDataStoreItemChange  Called 0..n times, once for each and every change that
      *                               occurs to any/all item(s) in the DataStore.
      * @param onObservationFailure   Called if observation of the DataStore terminates
      *                               with a non-recoverable failure
      * @param onObservationCompleted Called when observation completes gracefully
-     * @return A cancelable by which the observation may be ended
      */
-    @NonNull
-    Cancelable observe(
+    void observe(
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted
@@ -146,16 +145,16 @@ public interface DataStoreCategoryBehavior {
      * Observe changes to a certain type of item(s) in the DataStore.
      * @param itemClass The class of the item(s) to observe
      * @param <T> The type of the item(s) to observe
+     * @param onObservationStarted Called when observation begins
      * @param onDataStoreItemChange Called 0..n times, whenever there is a change to an
      *                              item of the requested class
      * @param onObservationFailure Called if observation of the DataStore terminates
      *                             with a non-recoverable failure
      * @param onObservationCompleted Called when observation completes gracefully
-     * @return A Cancelable by which the observation may be terminated
      */
-    @NonNull
-    <T extends Model> Cancelable observe(
+    <T extends Model> void observe(
             @NonNull Class<T> itemClass,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted
@@ -166,6 +165,7 @@ public interface DataStoreCategoryBehavior {
      * @param itemClass The class of the item being observed
      * @param uniqueId The unique ID of the item being observed
      * @param <T> The type of item being observed
+     * @param onObservationStarted Called when observation begins
      * @param onDataStoreItemChange Called 0..n times, whenever there are changes to the
      *                              item which is uniquely identified by the provided
      *                              class and unique ID. Note that this callback will be invoked
@@ -174,12 +174,11 @@ public interface DataStoreCategoryBehavior {
      * @param onObservationFailure Called if observation of the DataStore terminates
      *                             with a non-recoverable failure
      * @param onObservationCompleted Called when observation completes gracefully
-     * @return A Cancelable by which the observation may be terminated
      */
-    @NonNull
-    <T extends Model> Cancelable observe(
+    <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull String uniqueId,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted
@@ -193,18 +192,18 @@ public interface DataStoreCategoryBehavior {
      *        Additional criteria which will be considered when identifying which
      *        items in the DataStore should be observed for changes.
      * @param <T> The type of the item(s) to observe
+     * @param onObservationStarted Called when observation begins
      * @param onDataStoreItemChange Called 0..n times, whenever there are changes to
      *                              models of the given class, that additionally match the provided
      *                              selection criteria
      * @param onObservationFailure Called if observation of the DataStore terminates
      *                             with a non-recoverable failure
      * @param onObservationCompleted Called when observation completes gracefully
-     * @return A Cancelable with which the observation may be terminated
      */
-    @NonNull
-    <T extends Model> Cancelable observe(
+    <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted

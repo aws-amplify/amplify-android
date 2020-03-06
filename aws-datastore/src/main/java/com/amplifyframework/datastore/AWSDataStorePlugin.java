@@ -23,7 +23,9 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -34,10 +36,12 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
+import com.amplifyframework.hub.HubChannel;
 
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.concurrent.CountDownLatch;
 
 import io.reactivex.Completable;
 
@@ -56,6 +60,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // local storage adapter, and a remote API
     private final Orchestrator orchestrator;
 
+    // Keeps track of whether of not the category is initialized yet
+    private final CountDownLatch categoryInitializationsPending;
+
     // Configuration for the plugin.
     private AWSDataStorePluginConfiguration pluginConfiguration;
 
@@ -63,6 +70,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.orchestrator = createOrchestrator(modelProvider, sqliteStorageAdapter);
+        this.categoryInitializationsPending = new CountDownLatch(1);
     }
 
     private Orchestrator createOrchestrator(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
@@ -108,6 +116,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                     "be sure you are only calling Amplify.configure once"
             );
         }
+
+        HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
+        Amplify.Hub.subscribe(hubChannel,
+            event -> InitializationStatus.SUCCEEDED.toString().equals(event.getName()),
+            event -> categoryInitializationsPending.countDown()
+        );
     }
 
     @WorkerThread
@@ -176,7 +190,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemSaved,
             @NonNull Consumer<DataStoreException> onFailureToSave) {
-        sqliteStorageAdapter.save(
+        afterInitialization(() -> sqliteStorageAdapter.save(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
@@ -188,7 +202,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 }
             },
             onFailureToSave
-        );
+        ));
     }
 
     /**
@@ -211,7 +225,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @Nullable QueryPredicate predicate,
             @NonNull Consumer<DataStoreItemChange<T>> onItemDeleted,
             @NonNull Consumer<DataStoreException> onFailureToDelete) {
-        sqliteStorageAdapter.delete(
+        afterInitialization(() -> sqliteStorageAdapter.delete(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             recordOfDelete -> {
@@ -222,7 +236,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                 }
             },
             onFailureToDelete
-        );
+        ));
     }
 
     /**
@@ -233,7 +247,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Class<T> itemClass,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure);
+        afterInitialization(() -> sqliteStorageAdapter.query(itemClass, onQueryResults, onQueryFailure));
     }
 
     /**
@@ -245,16 +259,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
-        sqliteStorageAdapter.query(itemClass, predicate, onQueryResults, onQueryFailure);
+        afterInitialization(() ->
+            sqliteStorageAdapter.query(itemClass, predicate, onQueryResults, onQueryFailure));
     }
 
-    @NonNull
     @Override
-    public Cancelable observe(
+    public void observe(
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<? extends Model>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return sqliteStorageAdapter.observe(
+        afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             storageItemChangeRecord -> {
                 try {
                     onDataStoreItemChange.accept(toDataStoreItemChange(storageItemChangeRecord));
@@ -264,17 +279,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        );
+        )));
     }
 
-    @NonNull
     @Override
-    public <T extends Model> Cancelable observe(
+    public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return sqliteStorageAdapter.observe(
+        afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             storageItemChangeRecord -> {
                 try {
                     if (!storageItemChangeRecord.getItemClass().equals(itemClass.getName())) {
@@ -287,24 +302,24 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        );
+        )));
     }
 
-    @NonNull
     @Override
-    public <T extends Model> Cancelable observe(
+    public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull String uniqueId,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
-        return sqliteStorageAdapter.observe(
+        afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
             storageItemChangeRecord -> {
                 try {
                     final DataStoreItemChange<T> dataStoreItemChange =
                         toDataStoreItemChange(storageItemChangeRecord);
                     if (!dataStoreItemChange.itemClass().equals(itemClass) ||
-                            !uniqueId.equals(dataStoreItemChange.item().getId())) {
+                        !uniqueId.equals(dataStoreItemChange.item().getId())) {
                         return;
                     }
                     onDataStoreItemChange.accept(dataStoreItemChange);
@@ -314,20 +329,24 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             },
             onObservationFailure,
             onObservationCompleted
-        );
+        )));
     }
 
-    @SuppressWarnings("checkstyle:WhitespaceAround") // () -> {}
-    @NonNull
     @Override
-    public <T extends Model> Cancelable observe(
+    public <T extends Model> void observe(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate selectionCriteria,
+            @NonNull Consumer<Cancelable> onObservationStarted,
             @NonNull Consumer<DataStoreItemChange<T>> onDataStoreItemChange,
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
-        return () -> {};
+    }
+
+    private void afterInitialization(@NonNull final Runnable runnable) {
+        Completable.fromAction(categoryInitializationsPending::await)
+            .andThen(Completable.fromRunnable(runnable))
+            .blockingAwait();
     }
 
     /**
