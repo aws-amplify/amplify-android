@@ -1,9 +1,9 @@
 # Contributing Guidelines
 
-Thank you for your interest in contributing to the Android Amplify
-framework. Whether it's a bug report, new feature, correction, or
-additional documentation, the project maintainers at AWS greatly value
-your feedback and contributions.
+Thank you for your interest in contributing to the Android distribution
+of the Amplify Framework. Whether it's a bug report, new feature,
+correction, or additional documentation, the project maintainers at AWS
+greatly value your feedback and contributions.
 
 Please read through this document before submitting any issues or pull
 requests. Doing so will help to ensure that the project maintainers have
@@ -11,84 +11,12 @@ all information neessary to effectively respond to your bug report or
 contribution.
 
 - [Contributing Guidelines](#contributing-guidelines)
-  * [Amplify History and Ethos](#amplify-history-and-ethos)
-    + [Amplify Design](#amplify-design)
   * [Getting Started](#getting-started)
   * [Tools](#tools)
   * [Workflows](#workflows)
     + [Adding code to support a new feature](#adding-code-to-support-a-new-feature)
   * [Reporting Bugs/Feature Requests](#reporting-bugs-feature-requests)
   * [Contributing via Pull Requests](#contributing-via-pull-requests)
-
-
-## Amplify History and Ethos
-AWS Amplify aims to simplify the experience of developing cloud
-integrations on Android. Amplify codifies best practices through
-programmatic interfaces that reduce the effort needed to interact with
-cloud resources.
-
-First and foremost, Amplify exposes to you _what_ things do, and then
-_how_ best to do them. The "_what_" is a functional use case, and
-"_how_" is an opinionated implementation that you can override with
-"escape hatches." This will allow you to have higher velocity and build
-better applications by focusing less on implementation choices.
-
-Secondly, Amplify is a manifestation of
-[The Rule of Least Power](https://en.wikipedia.org/wiki/Rule_of_least_power)
-when developing against AWS. This means it encourages architectural and
-programmatic best practices that enable you to start quickly.  This
-shows by encouraging certain services (API Gateway usage vs. direct
-DynamoDB interaction) or certain connection patterns (Circuit breaker,
-retry counts and throttle up/down).
-
-__Opinionated implementations__: There are many ways to interface with AWS
-Services. Certain service interactions are favored over others. For instance, if
-sending and receiving JSON, we would prefer an API Gateway endpoint to other
-mechanisms. Amplify will programmatically help optimize for cost and
-performance through library decisions.
-
-__Declarative actions__: Amplify will provide you a reference to a generic client
-object and offer an ability to perform common actions: "RegisterUser", "Login",
-"SendObject", "UpdateObject", "StreamData". By default, you should not need to
-worry about AWS-service-specific API operations like `putItem()` with a unique
-hash -- or even which HTTP verbs to use.
-
-__Cascading service interactions__: Certain actions in a declarative style can have
-overlapping or ambiguous AWS Service implementations. With an opinionated
-implementation we can decide which Services are "primary" and which are
-"secondary" depending on what is configured. For instance sending an image will
-prefer S3 over API Gateway..
-
-__Simple, standard data objects__: Sending & Receiving data to AWS Services can
-have many parameters, which tend to show up in the SDKs. These are abstracted
-and inferred, where possible, with simple JSON that the implementation can
-reason about. Standard parameters (bucket names, stream names, partition keys,
-etc.) that are part of the implementation are extracted from a simplified
-configuration file and dynamically generated/updated in order to further allow
-focus on state and data types only.
-
-### Amplify Design
-As more and more modules are introduced to AWS Amplify, there is a clear
-necessity to modularize the library into smaller pieces so that users
-could avoid importing unnecessary parts into their app. The goal of this
-design is to make AWS Amplify modularized and also keep it backward
-compatible to avoid breaking changes.
-
-Modular import prevents unnecessary code dependencies are included with the
-app, and thus decreases the bundle size and enables adding new functionality
-without the risk of introducing errors related to the unused code.
-
-Amplify has established the concepts of categories and plugins. A
-__category__ is a collection of api calls that are exposed to the client
-to do things inside that category. For example, in the storage category
-generally one wants to upload and download objects from storage so the
-apis exposed to the client will represent that functionality. Because
-Amplify is pluggable, a __plugin__ of your choosing will provide the
-actual implementation behind that api interface.  Using the same example
-of Storage, the plugin we choose might be `AWSS3StoragePlugin`, which
-would then implement each api call from the category with a service call
-or set of service calls to S3, the underlying storage provider of the
-AWS plugin.
 
 ## Getting Started
 
@@ -153,8 +81,8 @@ actually with changing some code.
 
 First, identify the module you'll modify:
 
- - `core` - The framework itself, including category behavior definitions
- - `aws-datastore` - The AppSync Local implementation of the datastore contract
+ - `core` - The Framework itself, including category behavior definitions
+ - `aws-datastore` - An AppSync implementation of the datastore contract
  - `aws-api` - A utility to talk to GraphQL and REST endpoints
  - `aws-storage-s3` - Wrapper around S3
  - `aws-analytics-pinpoint` - Wrapper around Pinpoint
@@ -315,11 +243,15 @@ tests. This must complete successfully before proposing a PR.
 ### Run Instrumentation Tests
 
 The instrumentation tests presume the presence of various backend resources.
-Currently, the tests use "special" Amazon-only `amplifyconfiguration.json` files in
-an S3 bucket, to find these resources.
+Currently, there is no mechanism for contributors to easily allocate
+these resources. This is tracked in [Amplify issue 301](https://github.com/aws-amplify/amplify-android/issues/301).
 
-If you are part of the special access list, this command will copy the
-configurations to your local workspace:
+AWS maintainers can gain access to `awsconfiguration.json` and
+`amplifyconfiguration.json` files in an S3 bucket, to find
+configurations suitable for running the integration tests.
+
+If you are part of the private access list, the command below will copy
+those configurations to your local workspace:
 
 ```
 cd amplify-android
@@ -350,7 +282,7 @@ issues to make sure somebody else hasn't already reported the issue.
 Please try to include as much information as you can. Details like these
 are useful:
 
-* The version of the framework you are using
+* The version of the Framework you are using
 * Details and configurations for any backend resources that are relevant
 * A full exception trace of an error you observe
 * A statement about what system behavior you _expect_, alongside the
@@ -489,13 +421,30 @@ happening on the device, in `device-logs-during-test.log`.
 
 ## Related Repositories
 
+This project is part of the Amplify Framework, which runs on Android,
+iOS, and numerous JavaScript-based web platforms.
+
+1. [AWS Amplify for iOS](https://github.com/aws-amplify/amplify-ios)
+2. [AWS Amplify for JavaScript](https://github.com/aws-amplify/amplify-js)
+
+AWS Amplify plugins are built on top of the AWS SDKs. AWS SDKs are a
+toolkit for interacting with AWS backend resources.
+
 1. [AWS SDK for Android](https://github.com/aws-amplify/aws-sdk-android)
 2. [AWS SDK for iOS](https://github.com/aws-amplify/aws-sdk-ios)
-3. [Android AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-android)
+3. [AWS SDK for JavaScript](https://github.com/aws/aws-sdk-js)
+
+Not officially part of the AWS SDKs, [AppSync](https://aws.amazon.com/appsync/) is an opinionated,
+mobile-oriented GraphQL management service. It is used by Amplify's
+DataStore and API plugins.
+
+1. [Android AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-android)
+2. [iOS AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-ios)
+3. [JavaScript AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-js)
 
 ## Finding contributions to work on
-Looking at the existing issues is a great way to find something to
-work on.
+Looking at [the existing issues](https://github.com/aws-amplify/amplify-android/issues) is a
+great way to find something to work on.
 
 ## Code of Conduct
 This project has adopted the [Amazon Open Source Code of Conduct](https://aws.github.io/code-of-conduct).
@@ -505,7 +454,7 @@ opensource-codeofconduct@amazon.com with any additional questions or comments.
 ## Security issue notifications
 If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our
 [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please
-do **not** create a public github issue.
+do **not** create a public GitHub issue.
 
 ## Licensing
 
