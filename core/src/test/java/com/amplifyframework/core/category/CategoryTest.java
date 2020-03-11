@@ -20,7 +20,6 @@ import android.content.Context;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.BadInitLoggingPlugin;
 import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
@@ -53,10 +52,7 @@ public final class CategoryTest {
         category.addPlugin(SimplePlugin.type(CategoryType.DATASTORE));
         category.configure(SimpleCategoryConfiguration.type(CategoryType.DATASTORE), getApplicationContext());
 
-        //noinspection CodeBlock2Expr Easier to read as block
-        CategoryInitializationResult result = Await.result((onResult, ignored) -> {
-            category.initialize(getApplicationContext(), onResult);
-        });
+        CategoryInitializationResult result = category.initialize(getApplicationContext());
         assertEquals(1, result.getSuccessfulPlugins().size());
         assertEquals(0, result.getFailedPlugins().size());
     }
@@ -71,10 +67,7 @@ public final class CategoryTest {
         category.addPlugin(BadInitLoggingPlugin.instance());
         category.configure(SimpleCategoryConfiguration.type(CategoryType.LOGGING), getApplicationContext());
 
-        //noinspection CodeBlock2Expr Easier to read as a block
-        CategoryInitializationResult categoryInitializationResult = Await.result((onResult, ignored) -> {
-            category.initialize(getApplicationContext(), onResult);
-        });
+        CategoryInitializationResult categoryInitializationResult = category.initialize(getApplicationContext());
 
         assertEquals(0, categoryInitializationResult.getSuccessfulPlugins().size());
         Set<String> failedPlugins = categoryInitializationResult.getFailedPlugins();
@@ -110,6 +103,7 @@ public final class CategoryTest {
         FakeCategoryConfiguration config =
             FakeCategoryConfiguration.instance(categoryType, categoryConfigurationJson);
         category.configure(config, getApplicationContext());
+        category.initialize(getApplicationContext());
 
         // Validate the category
         assertEquals(categoryType, category.getCategoryType());

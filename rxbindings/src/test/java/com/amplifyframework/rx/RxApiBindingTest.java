@@ -29,9 +29,7 @@ import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.category.CategoryInitializationResult;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -42,7 +40,8 @@ import java.util.Collections;
 
 import io.reactivex.observers.TestObserver;
 
-import static org.mockito.Mockito.any;
+import static com.amplifyframework.rx.Matchers.anyAction;
+import static com.amplifyframework.rx.Matchers.anyConsumer;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -52,7 +51,6 @@ import static org.mockito.Mockito.when;
 /**
  * Tests the {@link RxApiBinding}.
  */
-@SuppressWarnings("unchecked") // Mockito.any(Raw.class), etc.
 public final class RxApiBindingTest {
     private ApiPlugin<?> delegate;
     private RxApiCategoryBehavior rxApi;
@@ -72,8 +70,7 @@ public final class RxApiBindingTest {
         final ApiCategory apiCategory = new ApiCategory();
         apiCategory.addPlugin(delegate);
         apiCategory.configure(new ApiCategoryConfiguration(), mock(Context.class));
-        Await.<CategoryInitializationResult, AmplifyException>result((onResult, onError) ->
-            apiCategory.initialize(mock(Context.class), onResult));
+        apiCategory.initialize(mock(Context.class));
 
         // Provide that category as a backing to our binding.
         this.rxApi = new RxApiBinding(apiCategory);
@@ -89,7 +86,7 @@ public final class RxApiBindingTest {
             onResponse.accept(response);
             return null;
         }).when(delegate)
-            .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
+            .query(eq(Model.class), anyConsumer(), anyConsumer());
 
         // Act: query the Api via the Rx Binding
         TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(Model.class).test();
@@ -99,7 +96,7 @@ public final class RxApiBindingTest {
         observer.assertValue(response);
 
         verify(delegate)
-            .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
+            .query(eq(Model.class), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -112,7 +109,7 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate)
-            .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
+            .query(eq(Model.class), anyConsumer(), anyConsumer());
 
         // Act: access query() method via Rx binding
         TestObserver<GraphQLResponse<Iterable<Model>>> observer = rxApi.query(Model.class).test();
@@ -122,7 +119,7 @@ public final class RxApiBindingTest {
         observer.assertError(expectedFailure);
 
         verify(delegate)
-            .query(eq(Model.class), any(Consumer.class), any(Consumer.class));
+            .query(eq(Model.class), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -137,7 +134,7 @@ public final class RxApiBindingTest {
             onResponse.accept(response);
             return null;
         }).when(delegate)
-            .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
+            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
 
         // Act: mutation via the Rx binding
         TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(model, mutationType).test();
@@ -147,7 +144,7 @@ public final class RxApiBindingTest {
         observer.assertValue(response);
 
         verify(delegate)
-            .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
+            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -162,7 +159,7 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate)
-            .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
+            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
 
         // Act: access it via binding
         TestObserver<GraphQLResponse<Model>> observer = rxApi.mutate(model, mutationType).test();
@@ -172,7 +169,7 @@ public final class RxApiBindingTest {
         observer.assertError(expectedFailure);
 
         verify(delegate)
-            .mutate(eq(model), eq(mutationType), any(Consumer.class), any(Consumer.class));
+            .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -195,10 +192,10 @@ public final class RxApiBindingTest {
         }).when(delegate).subscribe(
             eq(Model.class),
             eq(SubscriptionType.ON_CREATE),
-            any(Consumer.class),
-            any(Consumer.class),
-            any(Consumer.class),
-            any(Action.class)
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer(),
+            anyAction()
         );
 
         // Act: subscribe via binding
@@ -226,10 +223,10 @@ public final class RxApiBindingTest {
         }).when(delegate).subscribe(
             eq(Model.class),
             eq(SubscriptionType.ON_CREATE),
-            any(Consumer.class),
-            any(Consumer.class),
-            any(Consumer.class),
-            any(Action.class)
+            anyConsumer(),
+            anyConsumer(),
+            anyConsumer(),
+            anyAction()
         );
 
         // Act: subscribe via binding
@@ -253,7 +250,7 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate)
-            .get(eq(options), any(Consumer.class), any(Consumer.class));
+            .get(eq(options), anyConsumer(), anyConsumer());
 
         TestObserver<RestResponse> observer = rxApi.get(options).test();
 
@@ -261,7 +258,7 @@ public final class RxApiBindingTest {
         observer.assertError(expectedFailure);
 
         verify(delegate)
-            .get(eq(options), any(Consumer.class), any(Consumer.class));
+            .get(eq(options), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -278,7 +275,7 @@ public final class RxApiBindingTest {
             onResponse.accept(response);
             return null;
         }).when(delegate)
-            .get(eq(options), any(Consumer.class), any(Consumer.class));
+            .get(eq(options), anyConsumer(), anyConsumer());
 
         TestObserver<RestResponse> observer = rxApi.get(options).test();
 
@@ -286,7 +283,7 @@ public final class RxApiBindingTest {
         observer.assertValue(response);
 
         verify(delegate)
-            .get(eq(options), any(Consumer.class), any(Consumer.class));
+            .get(eq(options), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -303,7 +300,7 @@ public final class RxApiBindingTest {
             onFailure.accept(expectedFailure);
             return null;
         }).when(delegate)
-            .post(eq(options), any(Consumer.class), any(Consumer.class));
+            .post(eq(options), anyConsumer(), anyConsumer());
 
         // Act: post via the Rx binding
         TestObserver<RestResponse> observer = rxApi.post(options).test();
@@ -313,7 +310,7 @@ public final class RxApiBindingTest {
         observer.assertError(expectedFailure);
 
         verify(delegate)
-            .post(eq(options), any(Consumer.class), any(Consumer.class));
+            .post(eq(options), anyConsumer(), anyConsumer());
     }
 
     @Test
@@ -332,7 +329,7 @@ public final class RxApiBindingTest {
             onResponse.accept(response);
             return null;
         }).when(delegate)
-            .post(eq(options), any(Consumer.class), any(Consumer.class));
+            .post(eq(options), anyConsumer(), anyConsumer());
 
         // Act: post via Rx binding
         TestObserver<RestResponse> observer = rxApi.post(options).test();
@@ -342,6 +339,6 @@ public final class RxApiBindingTest {
         observer.assertValue(response);
 
         verify(delegate)
-            .post(eq(options), any(Consumer.class), any(Consumer.class));
+            .post(eq(options), anyConsumer(), anyConsumer());
     }
 }

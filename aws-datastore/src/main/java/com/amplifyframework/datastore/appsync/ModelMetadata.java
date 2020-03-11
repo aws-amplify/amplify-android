@@ -15,11 +15,15 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+
+import java.util.Objects;
 
 /**
  * A system model to house versioning/sync metadata associated with a model instance.
@@ -42,8 +46,13 @@ public final class ModelMetadata implements Model {
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
      */
-    public ModelMetadata(String id, Boolean deleted, Integer version, Long lastChangedAt) {
-        this.id = id;
+    @SuppressWarnings("WeakerAccess")
+    public ModelMetadata(
+            @NonNull String id,
+            @Nullable Boolean deleted,
+            @Nullable Integer version,
+            @Nullable Long lastChangedAt) {
+        this.id = Objects.requireNonNull(id);
         this._deleted = deleted;
         this._version = version;
         this._lastChangedAt = lastChangedAt;
@@ -53,6 +62,7 @@ public final class ModelMetadata implements Model {
      * Gets ID.
      * @return ID
      */
+    @NonNull
     public String getId() {
         return id;
     }
@@ -61,6 +71,7 @@ public final class ModelMetadata implements Model {
      * Gets the deleted status.
      * @return True if deleted, False otherwise
      */
+    @Nullable
     public Boolean isDeleted() {
         return _deleted;
     }
@@ -69,6 +80,7 @@ public final class ModelMetadata implements Model {
      * Gets the version.
      * @return version
      */
+    @Nullable
     public Integer getVersion() {
         return _version;
     }
@@ -77,6 +89,7 @@ public final class ModelMetadata implements Model {
      * Gets last changed at time.
      * @return last changed at time
      */
+    @Nullable
     public Long getLastChangedAt() {
         return _lastChangedAt;
     }
@@ -107,7 +120,7 @@ public final class ModelMetadata implements Model {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
-        int result = id != null ? id.hashCode() : 0;
+        int result = id.hashCode();
         result = 31 * result + (_deleted != null ? _deleted.hashCode() : 0);
         result = 31 * result + (_version != null ? _version.hashCode() : 0);
         result = 31 * result + (_lastChangedAt != null ? _lastChangedAt.hashCode() : 0);

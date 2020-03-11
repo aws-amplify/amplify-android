@@ -17,11 +17,15 @@ package com.amplifyframework.core.category;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.InitializationResult;
+import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.plugin.Plugin;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.util.Immutable;
 
 import org.json.JSONObject;
@@ -31,7 +35,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * A category groups together zero or more plugins that share the same
@@ -46,17 +50,16 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     private final Map<String, P> plugins;
 
     /**
-     * Flag to remember that the category is already configured by Amplify
-     * and throw an error if configure method is called again.
+     * Records the initialization state. See {@link State} for possible values.
      */
-    private final AtomicBoolean configurationState;
+    private final AtomicReference<State> state;
 
     /**
      * Constructs a new, not-yet-configured, Category.
      */
     public Category() {
         this.plugins = new ConcurrentHashMap<>();
-        this.configurationState = new AtomicBoolean(false);
+        this.state = new AtomicReference<>(State.NOT_CONFIGURED);
     }
 
     /**
@@ -68,31 +71,25 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
     public final synchronized void configure(
             @NonNull CategoryConfiguration configuration, @NonNull Context context)
             throws AmplifyException {
-        synchronized (configurationState) {
-            if (configurationState.get()) {
+        synchronized (state) {
+            if (!State.NOT_CONFIGURED.equals(state.get())) {
                 throw new AmplifyException(
-                    "Category " + getCategoryType() + " has already been configured.",
-                    "Ensure that you are only attempting configuration once, before now."
+                    "Category " + getCategoryType() + " has already been configured or is currently configuring.",
+                    "Ensure that you are only attempting configuration once."
                 );
             }
-
-            for (P plugin : getPlugins()) {
-                String pluginKey = plugin.getPluginKey();
-                JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
-                plugin.configure(pluginConfig, context);
+            state.set(State.CONFIGURING);
+            try {
+                for (P plugin : getPlugins()) {
+                    String pluginKey = plugin.getPluginKey();
+                    JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
+                    plugin.configure(pluginConfig, context);
+                }
+                state.set(State.CONFIGURED);
+            } catch (Throwable anyError) {
+                state.set(State.FAILED);
+                throw anyError;
             }
-
-            configurationState.set(true);
-        }
-    }
-
-    /**
-     * Checks if this category has been configured, yet.
-     * @return True if this category has been configured, false otherwise
-     */
-    public final boolean isConfigured() {
-        synchronized (configurationState) {
-            return configurationState.get();
         }
     }
 
@@ -101,25 +98,47 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * the category has been successfully configured. Whereas configuration is a short-lived
      * synchronous phase of setup, initialization may require disk/network resources, etc.
      * @param context An Android Context
-     * @param onInitializationAttempted Called when initialization has been attempted.
-     *                                  The result contains information about each plugin,
-     *                                  and whether or not its initialization succeeded.
+     * @return A category initialization result
      */
-    public final synchronized void initialize(
-            @NonNull Context context,
-            @NonNull Consumer<CategoryInitializationResult> onInitializationAttempted) {
-        Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
-        for (P plugin : getPlugins()) {
-            InitializationResult result;
-            try {
-                plugin.initialize(context);
-                result = InitializationResult.success();
-            } catch (AmplifyException pluginInitializationFailure) {
-                result = InitializationResult.failure(pluginInitializationFailure);
+    @NonNull
+    @WorkerThread
+    public final synchronized CategoryInitializationResult initialize(@NonNull Context context) {
+        final Map<String, InitializationResult> pluginInitializationResults = new HashMap<>();
+        if (!State.CONFIGURED.equals(state.get())) {
+            for (P plugin : getPlugins()) {
+                InitializationResult result = InitializationResult.failure(new AmplifyException(
+                    "Tried to init before category was not configured.",
+                    "Call configure() on category, first."
+                ));
+                pluginInitializationResults.put(plugin.getPluginKey(), result);
             }
-            pluginInitializationResults.put(plugin.getPluginKey(), result);
+        } else {
+            state.set(State.CONFIGURING);
+            for (P plugin : getPlugins()) {
+                InitializationResult result;
+                try {
+                    plugin.initialize(context);
+                    result = InitializationResult.success();
+                } catch (AmplifyException pluginInitializationFailure) {
+                    result = InitializationResult.failure(pluginInitializationFailure);
+                }
+                pluginInitializationResults.put(plugin.getPluginKey(), result);
+            }
         }
-        onInitializationAttempted.accept(CategoryInitializationResult.with(pluginInitializationResults));
+
+        final CategoryInitializationResult result =
+            CategoryInitializationResult.with(pluginInitializationResults);
+        if (result.isFailure()) {
+            state.set(State.FAILED);
+        } else {
+            state.set(State.INITIALIZED);
+        }
+        HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
+        InitializationStatus status = result.isFailure() ?
+            InitializationStatus.FAILED : InitializationStatus.SUCCEEDED;
+        Amplify.Hub.publish(hubChannel, HubEvent.create(status, result));
+
+        return result;
     }
 
     /**
@@ -128,9 +147,9 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      * @throws AmplifyException If Amplify is already configured
      */
     public final void addPlugin(@NonNull P plugin) throws AmplifyException {
-        if (isConfigured()) {
+        if (!State.NOT_CONFIGURED.equals(state.get())) {
             throw new AmplifyException(
-                "Category " + getCategoryType() + " has already been configured.",
+                "Category " + getCategoryType() + " has already been configured or is configuring.",
                 "Make sure that you have added all plugins before attempting configuration."
             );
         }
@@ -187,13 +206,6 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
      */
     @NonNull
     protected final P getSelectedPlugin() throws IllegalStateException {
-        if (!isConfigured()) {
-            throw new IllegalStateException(
-                "Category " + getCategoryType() + " is not configured. " +
-                "Ensure that you have configured the category before trying to use it."
-            );
-        }
-
         if (plugins.isEmpty()) {
             throw new IllegalStateException(
                 "Tried to get a plugin but that plugin was not present. " +
@@ -208,5 +220,52 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
 
         return getPlugins().iterator().next();
     }
-}
 
+    /**
+     * Gets the current state of the category.
+     * @return Current category state
+     */
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    protected synchronized boolean isInitialized() {
+        return State.INITIALIZED.equals(state.get());
+    }
+
+    /**
+     * The Category must be in exactly one of the below states. During ideal operation, the state
+     * machine flows from {@link #NOT_CONFIGURED} to {@link #INITIALIZED}, in the order below.
+     * But, if there is an error at any point, the state transition will terminate in a {@link #FAILED}
+     * state.
+     */
+    private enum State {
+        /**
+         * The category has not began configuration, yet. This is the starting state.
+         */
+        NOT_CONFIGURED,
+
+        /**
+         * Configuration is under way.
+         */
+        CONFIGURING,
+
+        /**
+         * Configuration has succeeded.
+         */
+        CONFIGURED,
+
+        /**
+         * Initialization has began.
+         */
+        INITIALIZING,
+
+        /**
+         * Initialization has completed successfully. As a corollary, configuration
+         * had also succeed. This is a terminal state.
+         */
+        INITIALIZED,
+
+        /**
+         * Configuration or initialization failed. This is a terminal state.
+         */
+        FAILED
+    }
+}

@@ -15,8 +15,6 @@
 
 package com.amplifyframework.storage.s3;
 
-import androidx.test.core.app.ApplicationProvider;
-
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
@@ -48,6 +46,7 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Date;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
@@ -79,7 +78,8 @@ public final class StorageComponentTest {
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
         IdentityIdProvider identityIdProvider = RandomString::string;
         this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, identityIdProvider));
-        this.storage.configure(buildConfiguration(), ApplicationProvider.getApplicationContext());
+        this.storage.configure(buildConfiguration(), getApplicationContext());
+        this.storage.initialize(getApplicationContext());
     }
 
     private static StorageCategoryConfiguration buildConfiguration() {

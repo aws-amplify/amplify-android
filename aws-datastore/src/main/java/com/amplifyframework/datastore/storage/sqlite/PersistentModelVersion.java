@@ -35,7 +35,7 @@ import io.reactivex.Single;
  * stored will be checked with the version available through the
  * {@link ModelProvider#version()} for detecting version changes.
  */
-final class PersistentModelVersion implements Model {
+public final class PersistentModelVersion implements Model {
     // A static identifier that is used to store the version of model. Currently there can be
     // only ONE version of ONE ModelProvider be stored in the local storage at any time. This
     // limitation can be addressed in the future by an identifier that is long-lived than the version
@@ -98,6 +98,7 @@ final class PersistentModelVersion implements Model {
     }
 
     /** {@inheritDoc}. */
+    @NonNull
     @Override
     public String getId() {
         return this.id;

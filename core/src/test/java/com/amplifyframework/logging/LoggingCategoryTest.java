@@ -111,6 +111,7 @@ public final class LoggingCategoryTest {
         FakeLoggingPlugin<Void> userPlugin = FakeLoggingPlugin.instance(userLogger);
         realLoggingCategory.addPlugin(userPlugin);
         realLoggingCategory.configure(loggingConfiguration(), getApplicationContext());
+        realLoggingCategory.initialize(getApplicationContext());
 
         // Act: try to log something
         String message = RandomString.string();

@@ -21,6 +21,7 @@ import com.amplifyframework.core.InitializationResult;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.util.Immutable;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -40,6 +41,15 @@ public final class CategoryInitializationResult {
             @NonNull Map<String, InitializationResult> pluginInitializationResults) {
         this.initializationStatus = initializationStatus;
         this.pluginInitializationResults = pluginInitializationResults;
+    }
+
+    /**
+     * Category initialization has failed.
+     * @return A category initialization result with a failed initialization status.
+     */
+    @NonNull
+    public static CategoryInitializationResult failure() {
+        return new CategoryInitializationResult(InitializationStatus.FAILED, Collections.emptyMap());
     }
 
     /**
