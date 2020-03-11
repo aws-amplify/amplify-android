@@ -25,8 +25,6 @@ import android.os.Bundle;
 import android.util.Log;
 import androidx.lifecycle.Lifecycle;
 
-import com.amplifyframework.util.ThreadUtils;
-
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 
@@ -77,20 +75,19 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
     @Override
     public void onActivityCreated(final Activity activity, final Bundle bundle) {
         Log.d(LOG_TAG, "onActivityCreated " + activity.getLocalClassName());
-        handleOnCreateOrOnStartToHandleApplicationEnteredForeground();
         activityLifecycleStateMap.put(activity, Lifecycle.State.CREATED);
     }
 
     @Override
     public void onActivityStarted(final Activity activity) {
         Log.d(LOG_TAG, "onActivityStarted " + activity.getLocalClassName());
-        handleOnCreateOrOnStartToHandleApplicationEnteredForeground();
         activityLifecycleStateMap.put(activity, Lifecycle.State.STARTED);
     }
 
     @Override
     public void onActivityResumed(final Activity activity) {
         Log.d(LOG_TAG, "onActivityResumed " + activity.getLocalClassName());
+        handleOnCreateOrOnStartToHandleApplicationEnteredForeground();
         activityLifecycleStateMap.put(activity, Lifecycle.State.RESUMED);
     }
 
@@ -135,8 +132,8 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
      * Called back when your application enters the Background.
      */
     void applicationEnteredBackground() {
-        sessionClient.stopSession();
         analyticsClient.submitEvents();
+        sessionClient.stopSession();
 
     }
 
@@ -155,13 +152,11 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
     }
 
     private void checkForApplicationEnteredBackground() {
-        ThreadUtils.runOnUiThread(() -> {
-            // If the App is in the foreground and there are no longer any activities that have not been stopped.
-            if ((activityLifecycleStateMap.size() == 0) && inForeground) {
-                inForeground = false;
-                applicationEnteredBackground();
-            }
-        });
+        // If the App is in the foreground and there are no longer any activities that have not been stopped.
+        if ((activityLifecycleStateMap.size() == 0) && inForeground) {
+            inForeground = false;
+            applicationEnteredBackground();
+        }
     }
 
     class ScreenOffReceiver extends BroadcastReceiver {
