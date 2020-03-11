@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,21 +13,23 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.category;
+package com.amplifyframework.predictions.model;
 
 import androidx.annotation.NonNull;
 
 /**
- * A component which is {@link CategoryType}-able is one that is able to
- * respond by saying to which {@link CategoryType} it belongs.
+ * Specifies the type of text detection to perform.
  */
-public interface CategoryTypeable {
+@SuppressWarnings("JavadocVariable")
+public enum TextFormatType implements IdentifyAction {
+    FORM,
+    TABLE,
+    PLAIN,
+    ALL;
 
-    /**
-     * Gets the category type associated with the current object.
-     * @return The category type to which the current object is affiliated
-     */
     @NonNull
-    CategoryType getCategoryType();
+    @Override
+    public final IdentifyActionType getType() {
+        return IdentifyActionType.DETECT_TEXT;
+    }
 }
-

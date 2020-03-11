@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,21 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.category;
+package com.amplifyframework.predictions.model;
 
 import androidx.annotation.NonNull;
 
 /**
- * A component which is {@link CategoryType}-able is one that is able to
- * respond by saying to which {@link CategoryType} it belongs.
+ * Interface to help specify the type of identification.
  */
-public interface CategoryTypeable {
-
+public interface IdentifyAction {
     /**
-     * Gets the category type associated with the current object.
-     * @return The category type to which the current object is affiliated
+     * Return the type of identification to perform.
+     * @return the type of identification to perform
      */
-    @NonNull
-    CategoryType getCategoryType();
+    @NonNull IdentifyActionType getType();
 }
-

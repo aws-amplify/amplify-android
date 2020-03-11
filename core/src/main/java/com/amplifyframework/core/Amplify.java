@@ -31,6 +31,7 @@ import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.LoggingCategory;
+import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.util.Immutable;
 
@@ -67,6 +68,7 @@ public final class Amplify {
     @SuppressWarnings("checkstyle:all") public static final StorageCategory Storage = new StorageCategory();
     @SuppressWarnings("checkstyle:all") public static final HubCategory Hub = new HubCategory();
     @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
+    @SuppressWarnings("checkstyle:all") public static final PredictionsCategory Predictions = new PredictionsCategory();
 
     private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
@@ -91,6 +93,7 @@ public final class Amplify {
         modifiableCategories.put(CategoryType.STORAGE, Storage);
         modifiableCategories.put(CategoryType.HUB, Hub);
         modifiableCategories.put(CategoryType.DATASTORE, DataStore);
+        modifiableCategories.put(CategoryType.PREDICTIONS, Predictions);
         return Immutable.of(modifiableCategories);
     }
 

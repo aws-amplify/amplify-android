@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,21 +13,24 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.category;
-
-import androidx.annotation.NonNull;
+package com.amplifyframework.predictions.model;
 
 /**
- * A component which is {@link CategoryType}-able is one that is able to
- * respond by saying to which {@link CategoryType} it belongs.
+ * Types of genders that can be detected.
  */
-public interface CategoryTypeable {
+public enum GenderType {
+    /**
+     * Classifies male gender.
+     */
+    MALE,
 
     /**
-     * Gets the category type associated with the current object.
-     * @return The category type to which the current object is affiliated
+     * Classifies female gender.
      */
-    @NonNull
-    CategoryType getCategoryType();
-}
+    FEMALE,
 
+    /**
+     * Unable to identify gender.
+     */
+    UNKNOWN
+}
