@@ -18,8 +18,8 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.predictions.model.IdentifiedLine;
-import com.amplifyframework.predictions.model.IdentifiedWord;
+import com.amplifyframework.predictions.models.IdentifiedLine;
+import com.amplifyframework.predictions.models.IdentifiedWord;
 
 import java.util.List;
 

@@ -18,8 +18,8 @@ package com.amplifyframework.predictions;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.predictions.model.IdentifyAction;
-import com.amplifyframework.predictions.model.LanguageType;
+import com.amplifyframework.predictions.models.IdentifyAction;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.PredictionsIdentifyOperation;
 import com.amplifyframework.predictions.operation.PredictionsInterpretOperation;
 import com.amplifyframework.predictions.operation.PredictionsSpeechToTextOperation;

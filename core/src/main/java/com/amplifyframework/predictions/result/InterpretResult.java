@@ -19,11 +19,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.Result;
-import com.amplifyframework.predictions.model.EntityDetectionResult;
-import com.amplifyframework.predictions.model.KeyPhrase;
-import com.amplifyframework.predictions.model.LanguageDetectionResult;
-import com.amplifyframework.predictions.model.Sentiment;
-import com.amplifyframework.predictions.model.SyntaxToken;
+import com.amplifyframework.predictions.models.EntityDetectionResult;
+import com.amplifyframework.predictions.models.KeyPhrase;
+import com.amplifyframework.predictions.models.LanguageDetectionResult;
+import com.amplifyframework.predictions.models.Sentiment;
+import com.amplifyframework.predictions.models.SyntaxToken;
 
 import java.util.List;
 

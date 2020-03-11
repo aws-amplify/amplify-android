@@ -17,11 +17,11 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.predictions.model.BoundedKeyValue;
-import com.amplifyframework.predictions.model.IdentifiedLine;
-import com.amplifyframework.predictions.model.IdentifiedWord;
-import com.amplifyframework.predictions.model.Selection;
-import com.amplifyframework.predictions.model.Table;
+import com.amplifyframework.predictions.models.BoundedKeyValue;
+import com.amplifyframework.predictions.models.IdentifiedLine;
+import com.amplifyframework.predictions.models.IdentifiedWord;
+import com.amplifyframework.predictions.models.Selection;
+import com.amplifyframework.predictions.models.Table;
 
 import java.util.List;
 import java.util.Objects;

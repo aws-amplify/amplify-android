@@ -17,7 +17,7 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.predictions.model.EntityMatch;
+import com.amplifyframework.predictions.models.EntityMatch;
 
 import java.util.List;
 import java.util.Objects;

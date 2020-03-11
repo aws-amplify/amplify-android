@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.predictions.model.Label;
+import com.amplifyframework.predictions.models.Label;
 
 import java.util.List;
 import java.util.Objects;

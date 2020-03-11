@@ -17,7 +17,7 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.predictions.model.Celebrity;
+import com.amplifyframework.predictions.models.Celebrity;
 
 import java.util.List;
 import java.util.Objects;
