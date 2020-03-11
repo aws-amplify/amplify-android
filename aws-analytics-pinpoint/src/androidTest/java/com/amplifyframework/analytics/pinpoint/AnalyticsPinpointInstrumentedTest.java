@@ -15,6 +15,9 @@
 
 package com.amplifyframework.analytics.pinpoint;
 
+import android.app.Application;
+import android.content.Context;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
@@ -61,11 +64,12 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     @BeforeClass
     public static void setUp() throws AmplifyException {
+        Context context = getApplicationContext();
         AmplifyConfiguration configuration =
-                AmplifyConfiguration.fromConfigFile(getApplicationContext(), R.raw.amplifyconfiguration);
-        plugin = new AmazonPinpointAnalyticsPlugin(getApplicationContext());
+                AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
+        plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
         Amplify.addPlugin(plugin);
-        Amplify.configure(configuration, getApplicationContext());
+        Amplify.configure(configuration, context);
         analyticsClient = plugin.getAnalyticsClient();
     }
 
