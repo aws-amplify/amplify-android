@@ -17,37 +17,23 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.app.Activity;
 import android.app.Application;
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.util.Log;
-import androidx.lifecycle.Lifecycle;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 
-import java.util.WeakHashMap;
-
 /**
- * Aids in determining when your application has entered or left the foreground.
+ * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive Activity lifecycle events and also registers a
- * broadcast receiver to handle the screen being turned off.  Abstract methods are
- * provided to handle when the application enters the background or foreground.
- * Any activity lifecycle callbacks can easily be overriden if additional handling
- * is needed. Just be sure to call through to the super method so that this class
- * will still behave as intended.
+ * broadcast receiver to handle the screen being turned off.
  **/
 public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
-    private static final String ACTION_SCREEN_OFF = "android.intent.action.SCREEN_OFF";
-    private final ScreenOffReceiver screenOffReceiver;
     private final SessionClient sessionClient;
     private final AnalyticsClient analyticsClient;
     private boolean inForeground = false;
-    /** Tracks the lifecycle of activities that have not stopped (including those restarted). */
-    private WeakHashMap<Activity, Lifecycle.State> activityLifecycleStateMap = new WeakHashMap<>();
+    private int activityCount = 0;
 
     /**
      * Constructor. Registers to receive activity lifecycle events.
@@ -56,113 +42,100 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
      */
     public AutoSessionTracker(final AnalyticsClient analyticsClient,
                               final SessionClient sessionClient) {
-        screenOffReceiver = new ScreenOffReceiver();
         this.analyticsClient = analyticsClient;
         this.sessionClient = sessionClient;
     }
 
     void startSessionTracking(final Application application) {
         application.registerActivityLifecycleCallbacks(this);
-        final ScreenOffReceiver screenOffReceiver = new ScreenOffReceiver();
-        application.registerReceiver(screenOffReceiver, new IntentFilter(ACTION_SCREEN_OFF));
     }
 
     void stopSessionTracking(final Application application) {
         application.unregisterActivityLifecycleCallbacks(this);
-        application.unregisterReceiver(screenOffReceiver);
     }
 
     @Override
     public void onActivityCreated(final Activity activity, final Bundle bundle) {
-        Log.d(LOG_TAG, "onActivityCreated " + activity.getLocalClassName());
-        activityLifecycleStateMap.put(activity, Lifecycle.State.CREATED);
+        Log.d(LOG_TAG, "Activity created: " + activity.getLocalClassName());
     }
 
     @Override
     public void onActivityStarted(final Activity activity) {
-        Log.d(LOG_TAG, "onActivityStarted " + activity.getLocalClassName());
-        activityLifecycleStateMap.put(activity, Lifecycle.State.STARTED);
+        Log.d(LOG_TAG, "Activity started: " + activity.getLocalClassName());
     }
 
     @Override
     public void onActivityResumed(final Activity activity) {
-        Log.d(LOG_TAG, "onActivityResumed " + activity.getLocalClassName());
-        handleOnCreateOrOnStartToHandleApplicationEnteredForeground();
-        activityLifecycleStateMap.put(activity, Lifecycle.State.RESUMED);
+        // An activity came to foreground. Application potentially entered foreground as well
+        // if there were no other activities in the foreground.
+        Log.d(LOG_TAG, "Activity resumed: " + activity.getLocalClassName());
+        checkIfApplicationEnteredForeground();
+        activityCount++;
     }
 
     @Override
     public void onActivityPaused(final Activity activity) {
-        Log.d(LOG_TAG, "onActivityPaused " + activity.getLocalClassName());
-        activityLifecycleStateMap.put(activity, Lifecycle.State.RESUMED);
+        Log.d(LOG_TAG, "Activity paused: " + activity.getLocalClassName());
     }
 
     @Override
     public void onActivityStopped(final Activity activity) {
-        Log.d(LOG_TAG, "onActivityStopped " + activity.getLocalClassName());
-        // When the activity is stopped, we remove it from the lifecycle state map since we
-        // no longer consider it keeping a session alive.
-        activityLifecycleStateMap.remove(activity);
+        // An activity entered stopped state. Application potentially entered background if there are
+        // no other activities in non-stopped states.
+        Log.d(LOG_TAG, "Activity stopped: " + activity.getLocalClassName());
+        activityCount--;
+        checkIfApplicationEnteredBackground();
     }
 
     @Override
     public void onActivitySaveInstanceState(final Activity activity, final Bundle outState) {
-        Log.d(LOG_TAG, "onActivitySaveInstanceState " + activity.getLocalClassName());
+        Log.d(LOG_TAG, "Activity state saved: " + activity.getLocalClassName());
     }
 
     @Override
     public void onActivityDestroyed(final Activity activity) {
-        Log.d(LOG_TAG, "onActivityDestroyed " + activity.getLocalClassName());
-        // Activity should not be in the activityLifecycleStateMap any longer.
-        if (activityLifecycleStateMap.containsKey(activity)) {
-            Log.wtf(LOG_TAG, "Destroyed activity present in activityLifecycleMap!?");
-            activityLifecycleStateMap.remove(activity);
-        }
-        checkForApplicationEnteredBackground();
+        Log.d(LOG_TAG, "Activity destroyed " + activity.getLocalClassName());
     }
 
     /**
-     * Called back when your application enters the Foreground.
+     * Called when the application enters the foreground.
      */
     void applicationEnteredForeground() {
+        Log.d(LOG_TAG, "Application entered the foreground.");
         sessionClient.startSession();
     }
 
     /**
-     * Called back when your application enters the Background.
+     * Called when the application enters the background.
      */
     void applicationEnteredBackground() {
-        analyticsClient.submitEvents();
+        Log.d(LOG_TAG, "Application entered the background.");
         sessionClient.stopSession();
+        analyticsClient.submitEvents();
 
     }
 
     /**
-     * Called from onActivityCreated and onActivityStarted to handle when the application enters
-     * the foreground.
+     * Called from onActivityResumed to check if the application came to the foreground.
      */
-    private void handleOnCreateOrOnStartToHandleApplicationEnteredForeground() {
+    private void checkIfApplicationEnteredForeground() {
         // if nothing is in the activity lifecycle map indicating that we are likely in the background, and the flag
         // indicates we are indeed in the background.
-        if (activityLifecycleStateMap.size() == 0 && !inForeground) {
+        if (activityCount == 0 && !inForeground) {
             inForeground = true;
             // Since this is called when an activity has started, we now know the app has entered the foreground.
             applicationEnteredForeground();
         }
     }
 
-    private void checkForApplicationEnteredBackground() {
+    /**
+     * Called from onActivityStopped to check if the application receded to the background.
+     */
+    private void checkIfApplicationEnteredBackground() {
         // If the App is in the foreground and there are no longer any activities that have not been stopped.
-        if ((activityLifecycleStateMap.size() == 0) && inForeground) {
+        if ((activityCount == 0) && inForeground) {
             inForeground = false;
             applicationEnteredBackground();
-        }
-    }
-
-    class ScreenOffReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            checkForApplicationEnteredBackground();
         }
     }
 }
