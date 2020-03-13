@@ -25,8 +25,7 @@ import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
 
 /**
  * Tracks when the host application enters or leaves foreground.
- * The constructor registers to receive Activity lifecycle events and also registers a
- * broadcast receiver to handle the screen being turned off.
+ * The constructor registers to receive activity lifecycle events.
  **/
 public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
@@ -75,13 +74,18 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityPaused(final Activity activity) {
+        // onPause is always followed by onStop except when the app is interrupted by an event such
+        // as a phone call, pop-ups or app losing focus in a multi-window mode, in which case activity is
+        // resumed if app regains focus.In either case, app foreground status does not change for the
+        // purpose of session tracking.
         Log.d(LOG_TAG, "Activity paused: " + activity.getLocalClassName());
     }
 
     @Override
     public void onActivityStopped(final Activity activity) {
         // An activity entered stopped state. Application potentially entered background if there are
-        // no other activities in non-stopped states.
+        // no other activities in non-stopped states, in which case app is not visible to user and has
+        // entered background state.
         Log.d(LOG_TAG, "Activity stopped: " + activity.getLocalClassName());
         activityCount--;
         checkIfApplicationEnteredBackground();
@@ -94,6 +98,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
 
     @Override
     public void onActivityDestroyed(final Activity activity) {
+        // onStop is always called before onDestroy so no action is required in onActivityDestroyed.
         Log.d(LOG_TAG, "Activity destroyed " + activity.getLocalClassName());
     }
 
