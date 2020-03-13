@@ -21,7 +21,6 @@ import android.os.Bundle;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -43,7 +42,7 @@ public final class AutoSessionTrackerTest {
     private Application.ActivityLifecycleCallbacks callbacks;
 
     /**
-     * Setup dependencies and object under test
+     * Setup dependencies and object under test.
      */
     @Before
     public void setup() {
