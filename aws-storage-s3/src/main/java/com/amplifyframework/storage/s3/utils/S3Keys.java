@@ -22,13 +22,12 @@ import com.amplifyframework.storage.StorageAccessLevel;
 import java.util.Locale;
 
 /**
- * A utility to help form requests to S3.
+ * A utility to manipulate keys used with S3.
  */
-public final class S3RequestUtils {
-
+public final class S3Keys {
     private static final char BUCKET_SEPARATOR = '/';
 
-    @SuppressWarnings("checkstyle:all") private S3RequestUtils() {}
+    @SuppressWarnings("checkstyle:all") private S3Keys() {}
 
     /**
      * Amplify Storage implementation with S3 integrates access level
@@ -47,16 +46,16 @@ public final class S3RequestUtils {
      *
      * @param accessLevel Storage access level of the request
      * @param identityId Identity ID of the user
-     * @param key User-friendly key to access the item
+     * @param amplifyKey User-friendly key to access the item
      * @return Formatted key to be used internally by S3 plugin
      */
     @NonNull
-    public static String getServiceKey(
+    public static String createServiceKey(
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String identityId,
-            @NonNull String key
+            @NonNull String amplifyKey
     ) {
-        return getAccessLevelPrefix(accessLevel, identityId) + BUCKET_SEPARATOR + key;
+        return getAccessLevelPrefix(accessLevel, identityId) + BUCKET_SEPARATOR + amplifyKey;
     }
 
     @NonNull
@@ -75,13 +74,12 @@ public final class S3RequestUtils {
      * This utility is useful for converting S3 service key back into
      * a user-friendly key for Amplify. It strips the access level
      * prefix as well as the associated identity ID.
-     * @param serviceKey S3 specific key containing access level and
-     *                   identity ID
+     * @param serviceKey S3 specific key containing access level an identity ID
      * @return Amplify storage key devoid of S3 specific details
      * @throws IllegalArgumentException for wrong service key format
      */
     @NonNull
-    public static String getAmplifyKey(@NonNull String serviceKey) {
+    public static String extractAmplifyKey(@NonNull String serviceKey) {
         try {
             int accessLevelIndex = serviceKey.indexOf(BUCKET_SEPARATOR);
             if (accessLevelIndex < 0) {

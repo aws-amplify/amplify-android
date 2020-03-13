@@ -23,7 +23,7 @@ import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
@@ -65,7 +65,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         executorService.submit(() -> {
             try {
                 storageService.deleteObject(
-                    S3RequestUtils.getServiceKey(
+                    S3Keys.createServiceKey(
                         getRequest().getAccessLevel(),
                         getRequest().getTargetIdentityId(),
                         getRequest().getKey()

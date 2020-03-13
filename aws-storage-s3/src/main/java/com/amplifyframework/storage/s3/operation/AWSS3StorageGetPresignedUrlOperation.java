@@ -24,7 +24,7 @@ import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import java.net.URL;
 import java.util.concurrent.ExecutorService;
@@ -67,7 +67,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
     public void start() {
         executorService.submit(() -> {
             // Obtain S3 service key for storage service
-            String serviceKey = S3RequestUtils.getServiceKey(
+            String serviceKey = S3Keys.createServiceKey(
                     getRequest().getAccessLevel(),
                     getRequest().getTargetIdentityId(),
                     getRequest().getKey()

@@ -23,90 +23,95 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests that S3RequestUtils behaves as expected.
+ * Tests the {@link S3Keys} utility.
  */
-public final class S3RequestUtilsTest {
+public final class S3KeysTest {
     /**
-     * Tests that a public service key is constructed as expected.
+     * A public service key should just be the amplify key, prefixed by the path "public/".
      */
     @Test
-    public void testPublicServiceKey() {
+    public void createdPublicServiceKey() {
         StorageAccessLevel accessLevel = StorageAccessLevel.PUBLIC;
         String identityId = RandomString.string(); // should be ignored for public
         String key = RandomString.string();
         final String expected = "public/" + key;
 
-        assertEquals(expected, S3RequestUtils.getServiceKey(accessLevel, identityId, key));
+        assertEquals(expected, S3Keys.createServiceKey(accessLevel, identityId, key));
     }
 
     /**
-     * Tests that a protected service key is constructed as expected.
+     * Validates construction of a protected service key as "protected/identity_id/key".
      */
     @Test
-    public void testProtectedServiceKey() {
+    public void createdProtectedServiceKey() {
         StorageAccessLevel accessLevel = StorageAccessLevel.PROTECTED;
         String identityId = RandomString.string();
         String key = RandomString.string();
         final String expected = "protected/" + identityId + "/" + key;
 
-        assertEquals(expected, S3RequestUtils.getServiceKey(accessLevel, identityId, key));
+        assertEquals(expected, S3Keys.createServiceKey(accessLevel, identityId, key));
     }
 
     /**
-     * Tests that a private service key is constructed as expected.
+     * Validates construction of a private service key as "private/identity_id/key".
      */
     @Test
-    public void testPrivateServiceKey() {
+    public void createPrivateServiceKey() {
         StorageAccessLevel accessLevel = StorageAccessLevel.PRIVATE;
         String identityId = RandomString.string();
         String key = RandomString.string();
         final String expected = "private/" + identityId + "/" + key;
 
-        assertEquals(expected, S3RequestUtils.getServiceKey(accessLevel, identityId, key));
+        assertEquals(expected, S3Keys.createServiceKey(accessLevel, identityId, key));
     }
 
     /**
-     * Tests that a public service key can convert to amplify key as expected.
+     * Validates the extraction of an Amplify key, from a public service key.
+     * The "public/" portion of the service key should be stripped off.
      */
     @Test
-    public void testPublicServiceToAmplifyKey() {
-        final String serviceKey = "public/foo/bar";
-        assertEquals("foo/bar", S3RequestUtils.getAmplifyKey(serviceKey));
+    public void amplifyKeyIsExtractedFromPublicServiceKey() {
+        final String publicServiceKey = "public/foo/bar";
+        assertEquals("foo/bar", S3Keys.extractAmplifyKey(publicServiceKey));
     }
 
     /**
-     * Tests that a protected service key can convert to amplify key as expected.
+     * Validates the extraction of an Amplify key, from a protected service key.
+     * The "protected/" portion of the service key should be stripped off.
      */
     @Test
-    public void testProtectedServiceToAmplifyKey() {
+    public void amplifyKeyIsExtractedFromProtectedServiceKey() {
         final String serviceKey = "protected/foo/bar";
-        assertEquals("bar", S3RequestUtils.getAmplifyKey(serviceKey));
+        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey));
     }
 
     /**
-     * Tests that a private service key can convert to amplify key as expected.
+     * Validates the extraction of an Amplify key, from a private service key.
+     * The "private/" portion of the service key should be stripped off.
      */
     @Test
-    public void testPrivateServiceToAmplifyKey() {
+    public void amplifyKeyIsExtractedFromPrivateServiceKey() {
         final String serviceKey = "private/foo/bar";
-        assertEquals("bar", S3RequestUtils.getAmplifyKey(serviceKey));
+        assertEquals("bar", S3Keys.extractAmplifyKey(serviceKey));
     }
 
     /**
-     * Tests that non-existent accessor throws.
+     * An attempt to extract an Amplify key from a service key that has a non-existent accessor
+     * should throw an error.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidAccessorServiceToAmplifyKey() {
+    public void extractKeyFromServiceKeyWithBadAccessor() {
         final String serviceKey = "master/foo/bar";
-        S3RequestUtils.getAmplifyKey(serviceKey);
+        S3Keys.extractAmplifyKey(serviceKey);
     }
 
     /**
-     * Tests that only having the service prefix throws.
+     * An attempt to extract an Amplify key from a service key that only has a prefix
+     * should throw an error.
      */
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidFormatServiceToAmplifyKey() {
+    public void extractKeyFromIncompleteServiceKey() {
         final String serviceKey = "private/foo";
-        S3RequestUtils.getAmplifyKey(serviceKey);
+        S3Keys.extractAmplifyKey(serviceKey);
     }
 }
