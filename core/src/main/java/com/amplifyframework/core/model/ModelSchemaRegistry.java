@@ -22,15 +22,13 @@ import com.amplifyframework.util.Immutable;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * A utility that creates ModelSchema from Model classes.
  */
 public final class ModelSchemaRegistry {
-    // Singleton instance
-    private static ModelSchemaRegistry singleton;
-
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
 
@@ -57,8 +55,10 @@ public final class ModelSchemaRegistry {
      *                        {@link Class#getSimpleName()} method.
      * @return the ModelSchema object for the given Model class.
      */
+    @NonNull
     public synchronized ModelSchema getModelSchemaForModelClass(@NonNull String classSimpleName) {
-        return modelSchemaMap.get(classSimpleName);
+        final ModelSchema result = modelSchemaMap.get(classSimpleName);
+        return Objects.requireNonNull(result);
     }
 
     /**
@@ -67,27 +67,28 @@ public final class ModelSchemaRegistry {
      * @param <T> type of the model instance
      * @return the ModelSchema object for the given Model instance.
      */
+    @NonNull
     public synchronized <T extends Model> ModelSchema getModelSchemaForModelInstance(@NonNull T modelInstance) {
-        return modelSchemaMap.get(modelInstance.getClass().getSimpleName());
+        final ModelSchema result = modelSchemaMap.get(modelInstance.getClass().getSimpleName());
+        return Objects.requireNonNull(result);
     }
 
     /**
      * Retrieve the map of Model ClassName => ModelSchema.
      * @return an immutable map of Model ClassName => ModelSchema
      */
+    @NonNull
     public Map<String, ModelSchema> getModelSchemaMap() {
         return Immutable.of(modelSchemaMap);
     }
 
     /**
-     * Returns the singleton instance.
-     * @return the singleton instance of the ModelSchemaRegistry.
+     * Creates a new instance.
+     * @return A new instance
      */
-    public static synchronized ModelSchemaRegistry singleton() {
-        if (singleton == null) {
-            singleton = new ModelSchemaRegistry();
-        }
-        return singleton;
+    @NonNull
+    public static synchronized ModelSchemaRegistry instance() {
+        return new ModelSchemaRegistry();
     }
 
     /**

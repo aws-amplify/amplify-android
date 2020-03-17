@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -22,11 +23,18 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,14 +55,17 @@ import io.reactivex.schedulers.Schedulers;
  * class, and represents a stream of the current state of all models on an AppSync backend.
  */
 final class RemoteModelState {
-    private final AppSync endpoint;
+    private final AppSync appSync;
     private final ModelProvider modelProvider;
+    private final ModelSchemaRegistry modelSchemaRegistry;
 
     RemoteModelState(
-            AppSync endpoint,
-            ModelProvider modelProvider) {
-        this.endpoint = endpoint;
+            AppSync appSync,
+            ModelProvider modelProvider,
+            ModelSchemaRegistry modelSchemaRegistry) {
+        this.appSync = appSync;
         this.modelProvider = modelProvider;
+        this.modelSchemaRegistry = modelSchemaRegistry;
     }
 
     /**
@@ -65,7 +76,7 @@ final class RemoteModelState {
      */
     Observable<ModelWithMetadata<? extends Model>> observe() {
         // Get an observable stream of the set of model classes.
-        return Observable.fromIterable(modelProvider.models())
+        return Observable.fromIterable(sortedModelClasses())
             // Heavy network traffic, we require this to be done on IO scheduler.
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
@@ -80,7 +91,7 @@ final class RemoteModelState {
             @SuppressWarnings("SameParameterValue") @Nullable final Long lastSync) {
         return Single.create(emitter -> {
             final Cancelable cancelable =
-                endpoint.sync(modelClazz, lastSync, metadataEmitter(emitter), emitter::onError);
+                appSync.sync(modelClazz, lastSync, metadataEmitter(emitter), emitter::onError);
             emitter.setDisposable(asDisposable(cancelable));
         });
     }
@@ -91,14 +102,17 @@ final class RemoteModelState {
      * @param cancelable An Amplify Cancelable
      * @return An RxJava2 Disposable that disposed by invoking the cancelation.
      */
-    private Disposable asDisposable(Cancelable cancelable) {
+    private Disposable asDisposable(@NonNull Cancelable cancelable) {
+        Objects.requireNonNull(cancelable);
         return new Disposable() {
             private final AtomicReference<Boolean> isCanceled = new AtomicReference<>(false);
             @Override
             public void dispose() {
                 synchronized (isCanceled) {
-                    cancelable.cancel();
-                    isCanceled.set(true);
+                    if (!isCanceled.get()) {
+                        cancelable.cancel();
+                        isCanceled.set(true);
+                    }
                 }
             }
 
@@ -131,5 +145,27 @@ final class RemoteModelState {
                 singleEmitter.onSuccess(emittedValue);
             }
         };
+    }
+
+    @NonNull
+    private List<Class<? extends Model>> sortedModelClasses() {
+        final List<Class<? extends Model>> modelClasses = new ArrayList<>(modelProvider.models());
+        final TopologicalOrdering topologicalOrdering =
+            TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
+        Collections.sort(modelClasses, (left, right) ->
+            topologicalOrdering.compare(schemaFor(left), schemaFor(right)));
+        return Immutable.of(modelClasses);
+    }
+
+    /**
+     * Gets the model schema for a model class.
+     * @param modelClass A model class
+     * @param <T> Type of model
+     * @return Model Schema for class
+     */
+    @NonNull
+    private <T extends Model> ModelSchema schemaFor(Class<T> modelClass) {
+        final String modelClassName = modelClass.getSimpleName();
+        return modelSchemaRegistry.getModelSchemaForModelClass(modelClassName);
     }
 }
