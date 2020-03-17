@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -27,6 +28,7 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -47,13 +49,13 @@ import io.reactivex.schedulers.Schedulers;
  * class, and represents a stream of the current state of all models on an AppSync backend.
  */
 final class RemoteModelState {
-    private final AppSync endpoint;
+    private final AppSync appSync;
     private final ModelProvider modelProvider;
 
     RemoteModelState(
-            AppSync endpoint,
+            AppSync appSync,
             ModelProvider modelProvider) {
-        this.endpoint = endpoint;
+        this.appSync = appSync;
         this.modelProvider = modelProvider;
     }
 
@@ -80,7 +82,7 @@ final class RemoteModelState {
             @SuppressWarnings("SameParameterValue") @Nullable final Long lastSync) {
         return Single.create(emitter -> {
             final Cancelable cancelable =
-                endpoint.sync(modelClazz, lastSync, metadataEmitter(emitter), emitter::onError);
+                appSync.sync(modelClazz, lastSync, metadataEmitter(emitter), emitter::onError);
             emitter.setDisposable(asDisposable(cancelable));
         });
     }
@@ -91,14 +93,17 @@ final class RemoteModelState {
      * @param cancelable An Amplify Cancelable
      * @return An RxJava2 Disposable that disposed by invoking the cancelation.
      */
-    private Disposable asDisposable(Cancelable cancelable) {
+    private Disposable asDisposable(@NonNull Cancelable cancelable) {
+        Objects.requireNonNull(cancelable);
         return new Disposable() {
             private final AtomicReference<Boolean> isCanceled = new AtomicReference<>(false);
             @Override
             public void dispose() {
                 synchronized (isCanceled) {
-                    cancelable.cancel();
-                    isCanceled.set(true);
+                    if (!isCanceled.get()) {
+                        cancelable.cancel();
+                        isCanceled.set(true);
+                    }
                 }
             }
 

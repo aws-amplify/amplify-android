@@ -35,9 +35,9 @@ import java.util.Objects;
 @SuppressWarnings({"MemberName", "ParameterName"})
 public final class ModelMetadata implements Model {
     private final @ModelField(targetType = "ID", isRequired = true) String id;
-    private final @ModelField(targetType = "Boolean", isRequired = true) Boolean _deleted;
-    private final @ModelField(targetType = "Int", isRequired = true) Integer _version;
-    private final @ModelField(targetType = "AWSTimestamp", isRequired = true) Long _lastChangedAt;
+    private final @ModelField(targetType = "Boolean") Boolean _deleted;
+    private final @ModelField(targetType = "Int") Integer _version;
+    private final @ModelField(targetType = "AWSTimestamp") Long _lastChangedAt;
 
     /**
      * Constructor for this metadata model.

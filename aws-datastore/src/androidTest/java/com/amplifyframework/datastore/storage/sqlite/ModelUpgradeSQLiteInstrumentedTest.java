@@ -18,8 +18,10 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
@@ -83,12 +85,16 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
     /**
      * Asserts if the model version change updates the new version in local storage.
-     * @throws DataStoreException On failure to terminate adapter
+     * @throws AmplifyException On failure to load schema into model schema registry,
+     *                          or on failure to terminate adapter
      */
     @Test
-    public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws DataStoreException {
+    public void modelVersionStoredCorrectlyBeforeAndAfterUpgrade() throws AmplifyException {
         // Initialize StorageAdapter with models
-        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.load(modelProvider.models());
+        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         List<ModelSchema> firstResults = Await.result(
             SQLITE_OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
@@ -113,7 +119,8 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         sqliteStorageAdapter.terminate();
         sqliteStorageAdapter = null;
 
-        sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProviderThatUpgradesVersion);
+        sqliteStorageAdapter =
+            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProviderThatUpgradesVersion);
 
         // Now, initialize storage adapter with the new models
         List<ModelSchema> secondResults = Await.result(

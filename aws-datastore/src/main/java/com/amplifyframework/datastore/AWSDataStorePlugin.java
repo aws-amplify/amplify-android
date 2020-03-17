@@ -29,6 +29,7 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
@@ -66,15 +67,18 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Configuration for the plugin.
     private AWSDataStorePluginConfiguration pluginConfiguration;
 
-    private AWSDataStorePlugin(@NonNull final ModelProvider modelProvider) {
-        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+    private AWSDataStorePlugin(
+            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull ModelProvider modelProvider) {
+        this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.orchestrator = createOrchestrator(modelProvider, sqliteStorageAdapter);
+        this.orchestrator = createOrchestrator(modelProvider, modelSchemaRegistry, sqliteStorageAdapter);
         this.categoryInitializationsPending = new CountDownLatch(1);
     }
 
-    private Orchestrator createOrchestrator(ModelProvider modelProvider, LocalStorageAdapter storageAdapter) {
-        return new Orchestrator(modelProvider, storageAdapter, AppSyncClient.instance());
+    private Orchestrator createOrchestrator(
+            ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry, LocalStorageAdapter storageAdapter) {
+        return new Orchestrator(modelProvider, modelSchemaRegistry, storageAdapter, AppSyncClient.instance());
     }
 
     /**
@@ -85,7 +89,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @NonNull
     @SuppressWarnings("WeakerAccess")
     public static synchronized AWSDataStorePlugin forModels(@NonNull final ModelProvider modelProvider) {
-        return new AWSDataStorePlugin(modelProvider);
+        return new AWSDataStorePlugin(ModelSchemaRegistry.instance(), modelProvider);
     }
 
     /**

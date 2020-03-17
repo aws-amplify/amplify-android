@@ -28,9 +28,6 @@ import java.util.Set;
  * A utility that creates ModelSchema from Model classes.
  */
 public final class ModelSchemaRegistry {
-    // Singleton instance
-    private static ModelSchemaRegistry singleton;
-
     // Model ClassName => ModelSchema map
     private final Map<String, ModelSchema> modelSchemaMap;
 
@@ -75,19 +72,18 @@ public final class ModelSchemaRegistry {
      * Retrieve the map of Model ClassName => ModelSchema.
      * @return an immutable map of Model ClassName => ModelSchema
      */
+    @NonNull
     public Map<String, ModelSchema> getModelSchemaMap() {
         return Immutable.of(modelSchemaMap);
     }
 
     /**
-     * Returns the singleton instance.
-     * @return the singleton instance of the ModelSchemaRegistry.
+     * Creates a new instance.
+     * @return A new instance
      */
-    public static synchronized ModelSchemaRegistry singleton() {
-        if (singleton == null) {
-            singleton = new ModelSchemaRegistry();
-        }
-        return singleton;
+    @NonNull
+    public static synchronized ModelSchemaRegistry instance() {
+        return new ModelSchemaRegistry();
     }
 
     /**
