@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
@@ -40,6 +41,7 @@ public final class Orchestrator {
      * The Orchestrator will synchronize data between the {@link AppSync}
      * and the {@link LocalStorageAdapter}.
      * @param modelProvider A provider of the models to be synchronized
+     * @param modelSchemaRegistry A registry of model schema
      * @param localStorageAdapter Interface to local storage, used to
      *                       durably store offline changes until
      *                       then can be written to the network
@@ -47,8 +49,10 @@ public final class Orchestrator {
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
+            @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync) {
+        Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
@@ -57,7 +61,8 @@ public final class Orchestrator {
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
 
         this.mutationProcessor = new MutationProcessor(mutationOutbox, appSync);
-        this.syncProcessor = new SyncProcessor(remoteModelState, localStorageAdapter);
+        this.syncProcessor =
+            new SyncProcessor(remoteModelState, localStorageAdapter, modelProvider, modelSchemaRegistry);
         this.subscriptionProcessor = new SubscriptionProcessor(localStorageAdapter, appSync, modelProvider);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
     }
@@ -72,7 +77,7 @@ public final class Orchestrator {
         return Completable.fromAction(() -> {
             storageObserver.startObservingStorageChanges();
             subscriptionProcessor.startSubscriptions();
-            //syncProcessor.hydrate().blockingAwait(); This crashes right now ...
+            syncProcessor.hydrate().blockingAwait();
             mutationProcessor.startDrainingMutationOutbox();
             subscriptionProcessor.startDrainingMutationBuffer();
         });

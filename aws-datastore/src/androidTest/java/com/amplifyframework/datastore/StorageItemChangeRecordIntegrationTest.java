@@ -15,12 +15,14 @@
 
 package com.amplifyframework.datastore;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -64,15 +66,19 @@ public final class StorageItemChangeRecordIntegrationTest {
      * return a ModelSchema for the {@link StorageItemChange.Record} type.
      * TODO: later, consider hiding this schema from the callback. This is sort
      *       of leaking an implementation detail to the customer of the API.
-     * @throws DataStoreException On failure to initialize the storage adapter
+     * @throws AmplifyException On failure to initialize the storage adapter,
+     *                          or on failure to load model schema into registry
      */
     @Before
-    public void obtainLocalStorageAndValidateModelSchema() throws DataStoreException {
+    public void obtainLocalStorageAndValidateModelSchema() throws AmplifyException {
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         getApplicationContext().deleteDatabase(DATABASE_NAME);
 
         ModelProvider modelProvider = ModelProviderFactory.createProviderOf(BlogOwner.class);
-        this.localStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.load(modelProvider.models());
+        this.localStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         List<ModelSchema> initializationResults = Await.result(
             OPERATION_TIMEOUT_MS,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
@@ -88,7 +94,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         }
         Collections.sort(actualNames);
         assertEquals(
-            Arrays.asList("BlogOwner", "PersistentModelVersion", "Record"),
+            Arrays.asList("BlogOwner", "ModelMetadata", "PersistentModelVersion", "Record"),
             actualNames
         );
     }

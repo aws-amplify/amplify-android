@@ -15,21 +15,26 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.SimpleModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
@@ -47,8 +52,10 @@ import static org.mockito.Mockito.mock;
 /**
  * Tests the {@link SyncProcessor}.
  */
+@SuppressWarnings({"unchecked", "checkstyle:MagicNumber"})
+@RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
-    private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
 
     private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
     private AppSync appSync;
@@ -58,24 +65,29 @@ public final class SyncProcessorTest {
 
     /**
      * Wire up dependencies for the SyncProcessor, and build one for testing.
+     * @throws AmplifyException On failure to load models into registry
      */
     @Before
-    public void setup() {
+    public void setup() throws AmplifyException {
         this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
         this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
 
-        final ModelProvider modelProvider = SimpleModelProvider.withRandomVersion(Post.class, BlogOwner.class);
+        final ModelProvider modelProvider = AmplifyModelProvider.getInstance();
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.load(modelProvider.models());
+
         this.appSync = mock(AppSync.class);
         final RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
 
-        this.syncProcessor = new SyncProcessor(remoteModelState, inMemoryStorageAdapter);
+        this.syncProcessor =
+            new SyncProcessor(remoteModelState, inMemoryStorageAdapter, modelProvider, modelSchemaRegistry);
     }
 
     /**
      * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
      */
-    @SuppressWarnings({"unchecked", "checkstyle:MagicNumber"})
     @Test
     public void localStorageAdapterIsHydratedFromRemoteModelState() {
         // Arrange: drum post is already in the adapter before hydration.
@@ -145,6 +157,50 @@ public final class SyncProcessorTest {
         );
 
         adapterObserver.dispose();
+        hydrationObserver.dispose();
+    }
+
+    /**
+     * Suppose that the remote AppSync endpoint has a deleted record, and tells the client to
+     * delete a record. But suppose the client is sync'ing for the first time. So, the client
+     * doesn't actually need to delete this record. The deletion attempt will fail. But, that's
+     * okay. Generally speaking, we want to do a "best effort" to apply the remote updates.
+     */
+    @Test
+    public void hydrationContinuesEvenIfOneItemFailsToSync() {
+        // The local store does NOT have the drum post to start (or, for that matter, any items.)
+        // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
+
+        // Arrange some responses from AppSync
+        AppSyncMocking.configure(appSync)
+            .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
+            .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
+
+        // Act: hydrate the local store.
+        TestObserver<Void> hydrationObserver = syncProcessor.hydrate().test();
+
+        // Assert that hydration completed without error.
+        assertTrue(hydrationObserver.awaitTerminalEvent(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
+        hydrationObserver.assertNoErrors();
+        hydrationObserver.assertComplete();
+
+        // Local storage should have a metadata record for the deletion, but no entry for the drum
+        // post. There should be an entry and a metadata for Jameson the BlogOwner.
+        List<? extends Model> storageItems = inMemoryStorageAdapter.items();
+        assertEquals(3, storageItems.size());
+        assertEquals(
+            // Expect a metadata for Jameson & deleted drum post, and an entry for Jameson
+            Observable.fromArray(BLOGGER_JAMESON)
+                .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
+                .startWith(DELETED_DRUM_POST.getSyncMetadata())
+                .toSortedList(SortByModelId::compare)
+                .blockingGet(),
+            Observable.fromIterable(storageItems)
+                .toSortedList(SortByModelId::compare)
+                .blockingGet()
+        );
+
+        // Cleanup!
         hydrationObserver.dispose();
     }
 

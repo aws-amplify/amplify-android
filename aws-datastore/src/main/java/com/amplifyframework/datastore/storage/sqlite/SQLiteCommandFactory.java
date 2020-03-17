@@ -38,6 +38,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -45,6 +46,7 @@ import java.util.Set;
  * {@link Model} and {@link ModelSchema}.
  */
 final class SQLiteCommandFactory implements SQLCommandFactory {
+    private final ModelSchemaRegistry modelSchemaRegistry;
 
     // Connection handle to a SQLiteDatabase.
     private final SQLiteDatabase databaseConnectionHandle;
@@ -52,15 +54,18 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     /**
      * Default constructor.
      */
-    SQLiteCommandFactory() {
-        this.databaseConnectionHandle = null;
+    SQLiteCommandFactory(ModelSchemaRegistry modelSchemaRegistry) {
+        this(modelSchemaRegistry, null);
     }
 
     /**
      * Constructor with databaseConnectionHandle.
      * @param databaseConnectionHandle connection to a SQLiteDatabase.
      */
-    SQLiteCommandFactory(@NonNull SQLiteDatabase databaseConnectionHandle) {
+    SQLiteCommandFactory(
+            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @Nullable SQLiteDatabase databaseConnectionHandle) {
+        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.databaseConnectionHandle = databaseConnectionHandle;
     }
 
@@ -155,8 +160,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         while (foreignKeyIterator.hasNext()) {
             final SQLiteColumn foreignKey = foreignKeyIterator.next();
             final String ownedTableName = foreignKey.getOwnedType();
-            final ModelSchema ownedSchema = ModelSchemaRegistry.singleton()
-                    .getModelSchemaForModelClass(ownedTableName);
+            final ModelSchema ownedSchema = modelSchemaRegistry.getModelSchemaForModelClass(ownedTableName);
             final SQLiteTable ownedTable = SQLiteTable.fromSchema(ownedSchema);
 
             columns.addAll(ownedTable.getSortedColumns());
@@ -390,6 +394,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     }
 
     // Utility method to parse foreign key references in CREATE TABLE
+    @SuppressWarnings("StringConcatenationInsideStringBufferAppend") // Maintains groupings
     private StringBuilder parseForeignKeys(SQLiteTable table) {
         final StringBuilder builder = new StringBuilder();
         final Iterator<SQLiteColumn> foreignKeyIterator = table.getForeignKeys().iterator();

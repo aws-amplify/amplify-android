@@ -132,14 +132,17 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Construct the SQLiteStorageAdapter object.
+     * @param modelSchemaRegistry A registry of schema for all models used by the system
      * @param userModelsProvider Provides the models that will be usable by the DataStore
+     * @param systemModelsProvider Provides the models that are used by the DataStore system internally
      */
     private SQLiteStorageAdapter(
+            ModelSchemaRegistry modelSchemaRegistry,
             ModelProvider userModelsProvider,
             ModelProvider systemModelsProvider) {
+        this.modelSchemaRegistry = modelSchemaRegistry;
         this.userModelsProvider = userModelsProvider;
         this.systemModelsProvider = systemModelsProvider;
-        this.modelSchemaRegistry = ModelSchemaRegistry.singleton();
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
@@ -150,12 +153,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     /**
      * Gets a SQLiteStorageAdapter that can be initialized to use the provided models.
+     * @param modelSchemaRegistry Registry of schema for all models in the system
      * @param userModelsProvider A provider of models that will be represented in SQL
      * @return A SQLiteStorageAdapter that will host the provided models in SQL tables
      */
     @NonNull
-    public static SQLiteStorageAdapter forModels(@NonNull ModelProvider userModelsProvider) {
+    public static SQLiteStorageAdapter forModels(
+            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull ModelProvider userModelsProvider) {
         return new SQLiteStorageAdapter(
+            modelSchemaRegistry,
             Objects.requireNonNull(userModelsProvider),
             SystemModelsProviderFactory.create()
         );
@@ -195,7 +202,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * Models. Instantiate {@link SQLiteStorageHelper} to execute those
                  * create commands.
                  */
-                this.sqlCommandFactory = new SQLiteCommandFactory();
+                this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry);
                 CreateSqlCommands createSqlCommands = getCreateCommands(models);
                 sqliteStorageHelper = SQLiteStorageHelper.getInstance(
                         context,
@@ -218,7 +225,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                  * All database operations will happen through this handle.
                  */
                 databaseConnectionHandle = sqliteStorageHelper.getWritableDatabase();
-                this.sqlCommandFactory = new SQLiteCommandFactory(databaseConnectionHandle);
+                this.sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry, databaseConnectionHandle);
 
                 /*
                  * Create INSERT INTO TABLE_NAME statements for all SQL tables
@@ -343,8 +350,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
             } catch (Exception someOtherTypeOfException) {
+                String modelToString = item.getClass().getSimpleName() + "[id=" + item.getId() + "]";
                 DataStoreException dataStoreException = new DataStoreException(
-                    "Error in saving the model.", someOtherTypeOfException, "See attached exception for details."
+                    "Error in saving the model: " + modelToString,
+                    someOtherTypeOfException, "See attached exception for details."
                 );
                 itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
@@ -475,9 +484,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     compiledSqlStatement.clearBindings();
                     bindPreCompiledStatementWithFieldValues(compiledSqlStatement, sqlCommand.getSelectionArgs());
                     // executeUpdateDelete returns the number of rows affected.
-                    if (compiledSqlStatement.executeUpdateDelete() <= 0) {
+                    final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
+                    if (rowsDeleted != 1) {
                         problem = new DataStoreException(
-                            "No columns effected for update/delete.",
+                            "Wanted to delete one row, but deleted " + rowsDeleted + " rows.",
                             "This is likely a bug. Please report to AWS."
                         );
                     }
@@ -584,7 +594,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private Map<String, SqlCommand> getInsertSqlPreparedStatements() {
         final Map<String, SqlCommand> modifiableMap = new HashMap<>();
         final Set<Map.Entry<String, ModelSchema>> modelSchemaEntrySet =
-                ModelSchemaRegistry.singleton().getModelSchemaMap().entrySet();
+                modelSchemaRegistry.getModelSchemaMap().entrySet();
         for (final Map.Entry<String, ModelSchema> entry: modelSchemaEntrySet) {
             final String tableName = entry.getKey();
             final ModelSchema modelSchema = entry.getValue();
@@ -607,8 +617,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             }
             cursor.moveToFirst();
 
-            final ModelSchema modelSchema = ModelSchemaRegistry.singleton()
-                    .getModelSchemaForModelClass(tableName);
+            final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
             final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
             final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
             final List<Object> fieldValues = new ArrayList<>();
@@ -766,8 +775,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         Class<? extends Model> innerModelType =
                             (Class<? extends Model>) modelClass.getDeclaredField(fieldName).getType();
                         String className = innerModelType.getSimpleName();
-                        ModelSchema innerModelSchema = ModelSchemaRegistry.singleton()
-                                .getModelSchemaForModelClass(className);
+                        ModelSchema innerModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(className);
                         Map<String, Object> mapForInnerModel = buildMapForModel(
                                 innerModelType,
                                 innerModelSchema,
@@ -850,9 +858,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             switch (modelConflictStrategy) {
                 case OVERWRITE_EXISTING:
                     // executeUpdateDelete returns the number of rows affected.
-                    if (compiledSqlStatement.executeUpdateDelete() != 1) {
+                    final int rowsUpdated = compiledSqlStatement.executeUpdateDelete();
+                    if (rowsUpdated != 1) {
                         problem = new DataStoreException(
-                            "No column updated or deleted!",
+                            "Wanted to update 1 row, but updated " + rowsUpdated + " rows!",
                             "This is likely a bug; please report to AWS."
                         );
                     }
@@ -948,8 +957,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName,
                              @Nullable QueryPredicate predicate) throws DataStoreException {
-        final ModelSchema schema = ModelSchemaRegistry.singleton()
-                .getModelSchemaForModelClass(tableName);
+        final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, predicate);
         final String rawQuery = sqlCommand.sqlStatement();
         final String[] selectionArgs = sqlCommand.getSelectionArgsAsArray();
