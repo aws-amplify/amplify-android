@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.appsync;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
@@ -42,10 +44,39 @@ public final class AppSyncMocking {
      * Configures mocking for a particular {@link AppSync} mock.
      */
     public static final class Configurator {
-        private AppSync endpoint;
+        private AppSync appSync;
 
         Configurator(AppSync appSync) {
-            this.endpoint = appSync;
+            this.appSync = appSync;
+            this.mockSuccessResponses();
+        }
+
+        /**
+         * By default, return an empty list of items when attempting to sync any/all Model classes.
+         * @return Configurator instance
+         */
+        @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
+        @NonNull
+        public Configurator mockSuccessResponses() {
+            doAnswer(invocation -> {
+                // Get a handle to the response consumer that is passed into the sync() method
+                // Response consumer is the third param, at index 2 (@0, @1, @2, @3).
+                final int argumentPositionForResponseConsumer = 2;
+                final Consumer<GraphQLResponse<Iterable<ModelWithMetadata<? extends Model>>>> consumer =
+                    invocation.getArgument(argumentPositionForResponseConsumer);
+
+                // Call the response consumer, and pass EMPTY items inside of a GraphQLResponse wrapper
+                consumer.accept(new GraphQLResponse<>(Collections.emptyList(), Collections.emptyList()));
+
+                // Return a NoOp cancelable via the sync() method's return.
+                return new NoOpCancelable();
+            }).when(appSync).sync(
+                any(), // Item class to sync
+                any(), // last sync time
+                any(), // Consumer<Iterable<ModelWithMetadata<T>>>
+                any() // Consumer<DataStoreException>
+            );
+            return this;
         }
 
         /**
@@ -74,7 +105,7 @@ public final class AppSyncMocking {
 
                 // Return a NoOp cancelable via the sync() method's return.
                 return new NoOpCancelable();
-            }).when(endpoint).sync(
+            }).when(appSync).sync(
                 eq(modelClass), // Item class to sync
                 any(), // last sync time
                 any(), // Consumer<Iterable<ModelWithMetadata<T>>>

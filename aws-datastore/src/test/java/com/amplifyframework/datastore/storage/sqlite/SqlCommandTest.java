@@ -21,6 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import org.junit.Before;
@@ -52,7 +53,8 @@ public class SqlCommandTest {
      */
     @Before
     public void createSqlCommandFactory() {
-        sqlCommandFactory = new SQLiteCommandFactory();
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        sqlCommandFactory = new SQLiteCommandFactory(modelSchemaRegistry);
     }
 
     /**
