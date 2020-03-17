@@ -21,7 +21,6 @@
 #-printmapping out.map
 -dontobfuscate
 -keepparameternames
--renamesourcefileattribute SourceFile
 -keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,EnclosingMethod
 
 # Preserve all annotations.
