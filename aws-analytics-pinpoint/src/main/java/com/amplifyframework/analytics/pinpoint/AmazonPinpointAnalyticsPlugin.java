@@ -224,7 +224,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         }
 
         pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);
-        PinpointManager pinpointManager = PinpointClientFactory.create(context, pinpointAnalyticsPluginConfiguration);
+        PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
         this.analyticsClient = pinpointManager.getAnalyticsClient();
 
         // Initiate the logic to automatically submit events periodically

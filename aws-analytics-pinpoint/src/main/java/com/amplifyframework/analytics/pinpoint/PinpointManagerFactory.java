@@ -38,12 +38,12 @@ import java.util.concurrent.TimeUnit;
 /**
  * Factory class to vend out pinpoint analytics client.
  */
-final class PinpointClientFactory {
+final class PinpointManagerFactory {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int INITIALIZATION_TIMEOUT_MS = 5000;
 
-    private PinpointClientFactory() {
+    private PinpointManagerFactory() {
     }
 
     static PinpointManager create(Context context,
