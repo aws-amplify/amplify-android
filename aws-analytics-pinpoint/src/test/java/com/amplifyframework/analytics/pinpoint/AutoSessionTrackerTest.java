@@ -74,21 +74,44 @@ public final class AutoSessionTrackerTest {
 
     /**
      * When the app is started, user interacts with the app and presses the home button
-     * a start session and a stop session should be recorded in that order.
+     * stop session should be recorded.
      */
     @Test
     public void sessionStoppedWhenHomeButtonPressed() {
-        // Given: the activity that is currently in foreground.
+        // Given: the launcher activity and the app is opened.
         Activity activity = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
-
-        // When: the app goes to background, the activity in foreground is stopped.
-        // Activity is put in resume state when the app is started.
+        // Activity is put in resume state when the app is opened.
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
 
-        // Activity stopped when home button is pressed.
+        // When: home button is pressed, app goes to the background.
+        // Activity stopped when home button is pressed and app goes to background.
+        callbacks.onActivityPaused(activity);
+        callbacks.onActivityStopped(activity);
+
+        // Then: Make sure stopSession is invoked.
+        verify(sessionClient).stopSession();
+    }
+
+    /**
+     * When the app is started, user interacts with the app and presses the home button
+     * a start session and a stop session should be recorded in that order.
+     */
+    @Test
+    public void sessionStartedAndStoppedWhenAppIsOpenedAndHomeButtonIsPressed() {
+        // Given: the launcher activity.
+        Activity activity = mock(Activity.class);
+        Bundle bundle = mock(Bundle.class);
+
+        // When: the app is opened and home button is pressed
+        // Activity is put in resume state when the app is opened.
+        callbacks.onActivityCreated(activity, bundle);
+        callbacks.onActivityStarted(activity);
+        callbacks.onActivityResumed(activity);
+
+        // Activity is stopped when home button is pressed.
         callbacks.onActivityPaused(activity);
         callbacks.onActivityStopped(activity);
 
@@ -104,25 +127,22 @@ public final class AutoSessionTrackerTest {
      */
     @Test
     public void sessionStopWhenAppKilled() {
-        // Given: the activity that is currently in foreground.
+        // Given: the launcher activity and the app is opened.
         Activity activity = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
-
-        // When: the app is killed, the current activity is destroyed.
-        // Activity is put in resume state when the app is started.
+        // Activity is put in resume state when the app is opened.
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
 
-        // Activity stopped and destroyed when home button is pressed.
+        // When: the app is killed, the current activity is destroyed.
+        // Activity stopped and destroyed when app is killed.
         callbacks.onActivityPaused(activity);
         callbacks.onActivityStopped(activity);
         callbacks.onActivityDestroyed(activity);
 
-        // Then: Make sure startSession and stopSession are invoked in that order.
-        InOrder inOrder = inOrder(sessionClient);
-        inOrder.verify(sessionClient).startSession();
-        inOrder.verify(sessionClient).stopSession();
+        // Then: Make sure stopSession is invoked.
+        verify(sessionClient).stopSession();
     }
 
     /**
@@ -131,22 +151,20 @@ public final class AutoSessionTrackerTest {
      */
     @Test
     public void sessionNotStoppedWhenAppInterrupted() {
-        // Given: the activity that is currently in foreground.
+        // Given: the launcher activity and the app is opened.
         Activity activity = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
-
-        // When: the app is interrupted by an event such as phone call, pop-up or app losing focus in
-        // Multi-window mode, running activity is paused.
         // Activity is put in resume state when the app is started.
         callbacks.onActivityCreated(activity, bundle);
         callbacks.onActivityStarted(activity);
         callbacks.onActivityResumed(activity);
 
+        // When: the app is interrupted by an event such as phone call, pop-up or app losing focus in
+        // Multi-window mode, running activity is paused.
         // Activity paused upon interruption.
         callbacks.onActivityPaused(activity);
 
         // Then: Make sure stopSession is not invoked.
-        verify(sessionClient).startSession();
         verify(sessionClient, never()).stopSession();
     }
 
@@ -156,17 +174,16 @@ public final class AutoSessionTrackerTest {
      */
     @Test
     public void sessionNotStoppedOnActivityTransition() {
-        // Given: two activities of the application.
+        // Given: two activities of the application
         Activity activity1 = mock(Activity.class);
         Activity activity2 = mock(Activity.class);
         Bundle bundle = mock(Bundle.class);
-
-        // When: the activity is paused because of an interruptive event such as
-        // Activity is started
+        // Launcher activity is started
         callbacks.onActivityCreated(activity1, bundle);
         callbacks.onActivityStarted(activity1);
         callbacks.onActivityResumed(activity1);
 
+        // When: App transitions from first to the second activity
         // Second activity is started causing first activity to be paused.
         callbacks.onActivityPaused(activity1);
 
@@ -175,11 +192,10 @@ public final class AutoSessionTrackerTest {
         callbacks.onActivityStarted(activity2);
         callbacks.onActivityResumed(activity2);
 
-        // Previous activity is stopped only after the new activity is in foreground.
+        // First activity is stopped only after the new activity is in foreground.
         callbacks.onActivityStopped(activity1);
 
         // Then: Make sure that the session is not interrupted by the activity transition.
-        verify(sessionClient).startSession();
         verify(sessionClient, never()).stopSession();
     }
 }

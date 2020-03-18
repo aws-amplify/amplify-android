@@ -31,8 +31,8 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
     private final SessionClient sessionClient;
     private final AnalyticsClient analyticsClient;
-    private boolean inForeground = false;
-    private int activityCount = 0;
+    private boolean inForeground;
+    private int foregroundActivityCount;
 
     /**
      * Constructor. Registers to receive activity lifecycle events.
@@ -43,6 +43,8 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
                               final SessionClient sessionClient) {
         this.analyticsClient = analyticsClient;
         this.sessionClient = sessionClient;
+        inForeground = false;
+        foregroundActivityCount = 0;
     }
 
     void startSessionTracking(final Application application) {
@@ -69,7 +71,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
         // if there were no other activities in the foreground.
         Log.d(LOG_TAG, "Activity resumed: " + activity.getLocalClassName());
         checkIfApplicationEnteredForeground();
-        activityCount++;
+        foregroundActivityCount++;
     }
 
     @Override
@@ -87,7 +89,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
         // no other activities in non-stopped states, in which case app is not visible to user and has
         // entered background state.
         Log.d(LOG_TAG, "Activity stopped: " + activity.getLocalClassName());
-        activityCount--;
+        foregroundActivityCount--;
         checkIfApplicationEnteredBackground();
     }
 
@@ -117,7 +119,6 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
         Log.d(LOG_TAG, "Application entered the background.");
         sessionClient.stopSession();
         analyticsClient.submitEvents();
-
     }
 
     /**
@@ -126,7 +127,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
     private void checkIfApplicationEnteredForeground() {
         // if nothing is in the activity lifecycle map indicating that we are likely in the background, and the flag
         // indicates we are indeed in the background.
-        if (activityCount == 0 && !inForeground) {
+        if (foregroundActivityCount == 0 && !inForeground) {
             inForeground = true;
             // Since this is called when an activity has started, we now know the app has entered the foreground.
             applicationEnteredForeground();
@@ -138,7 +139,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
      */
     private void checkIfApplicationEnteredBackground() {
         // If the App is in the foreground and there are no longer any activities that have not been stopped.
-        if ((activityCount == 0) && inForeground) {
+        if (foregroundActivityCount == 0 && inForeground) {
             inForeground = false;
             applicationEnteredBackground();
         }
