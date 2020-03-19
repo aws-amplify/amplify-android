@@ -3,19 +3,24 @@ version: 2.1
 commands:
   generate_gradle_wrapper:
     description: Download and install gradle wrapper
+    parameters:
+      gradle_version:
+        description: "The version of Gradle to install"
+        default: "6.2.2"
+        type: string
     steps:
       - run:
           name: Download gradle
           command: |
             cd ~
-            wget https://services.gradle.org/distributions/gradle-6.2.1-bin.zip
-            unzip gradle-6.2.1-bin.zip
+            wget https://services.gradle.org/distributions/gradle-<< parameters.gradle_version >>-bin.zip
+            unzip gradle-<< parameters.gradle_version >>-bin.zip
       - run:
           name: Generate gradle wrapper
           command: |
             cd ~/amplify-android-home
             yes | sdkmanager --licenses && yes | sdkmanager --update
-            ~/gradle-6.2.1/bin/gradle wrapper
+            ~/gradle-<< parameters.gradle_version >>/bin/gradle wrapper
   early_return_for_forked_pull_requests:
     description: >-
       If this build is from a fork, stop executing the current job and return success.
@@ -51,13 +56,12 @@ commands:
       - run:
           name: Setup emulator
           command: |
-            echo y | sdkmanager "system-images;android-24;default;armeabi-v7a"
-            echo "no" | avdmanager create avd -n test -k "system-images;android-24;default;armeabi-v7a"
+            echo y | sdkmanager "system-images;android-29;default;x86_64"
+            echo "no" | avdmanager create avd -n test -k "system-images;android-29;default;x86_64"
       - run:
           name: Launch emulator
           command: |
-            export LD_LIBRARY_PATH=${ANDROID_HOME}/emulator/lib64:${ANDROID_HOME}/emulator/lib64/qt/lib
-            emulator64-arm -avd test -no-boot-anim -no-window -accel auto -verbose
+            emulator -avd test -no-boot-anim -no-window -accel auto -verbose
           background: true
       - run:
           name: Launch logcat
@@ -93,7 +97,7 @@ jobs:
   integrationtest:
     working_directory: ~/amplify-android-home
     docker:
-      - image: circleci/android@sha256:5cdc8626cc6f13efe5ed982cdcdb432b0472f8740fed8743a6461e025ad6cdfc
+      - image: circleci/android:api-29
     resource_class: xlarge
     environment:
       JVM_OPTS: -Xmx3200m
