@@ -15,6 +15,7 @@
 
 package com.amplifyframework.analytics.pinpoint;
 
+import android.app.Application;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
@@ -28,6 +29,7 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
+import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.regions.Regions;
 import org.json.JSONException;
@@ -40,14 +42,19 @@ import java.util.Set;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
+    private final Application application;
     private AutoEventSubmitter autoEventSubmitter;
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
+    private AutoSessionTracker autoSessionTracker;
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
+     *
+     * @param application Global application context
      */
-    public AmazonPinpointAnalyticsPlugin() {
+    public AmazonPinpointAnalyticsPlugin(final Application application) {
+        this.application = application;
     }
 
     /**
@@ -64,6 +71,8 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @Override
     public void enable() {
         autoEventSubmitter.start();
+        // Start auto session tracking
+        autoSessionTracker.startSessionTracking(application);
     }
 
     /**
@@ -80,6 +89,8 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @Override
     public void disable() {
         autoEventSubmitter.stop();
+        // Stop auto session tracking
+        autoSessionTracker.stopSessionTracking(application);
     }
 
     /**
@@ -213,12 +224,17 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         }
 
         pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);
-        this.analyticsClient = PinpointClientFactory.create(context, pinpointAnalyticsPluginConfiguration);
+        PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
+        this.analyticsClient = pinpointManager.getAnalyticsClient();
 
         // Initiate the logic to automatically submit events periodically
         autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
                 pinpointAnalyticsPluginConfiguration.getAutoFlushEventsInterval());
         autoEventSubmitter.start();
+
+        // Instantiate the logic to automatically track app session
+        autoSessionTracker = new AutoSessionTracker(this.analyticsClient, pinpointManager.getSessionClient());
+        autoSessionTracker.startSessionTracking(application);
     }
 
     /**
