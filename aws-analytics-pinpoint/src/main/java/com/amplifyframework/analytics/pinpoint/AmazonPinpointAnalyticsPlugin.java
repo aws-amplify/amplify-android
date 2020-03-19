@@ -22,7 +22,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsProfile;
+import com.amplifyframework.analytics.AnalyticsUserProfile;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
 import com.amplifyframework.core.Amplify;
@@ -31,10 +31,15 @@ import com.amplifyframework.hub.HubEvent;
 
 import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.TargetingClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfile;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfileLocation;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfileUser;
 import com.amazonaws.regions.Regions;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Arrays;
 import java.util.Map;
 import java.util.Set;
 
@@ -47,6 +52,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
     private AutoSessionTracker autoSessionTracker;
+    private TargetingClient targetingClient;
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
@@ -66,6 +72,14 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     }
 
     /**
+     * Accessor method for pinpoint targeting client.
+     * @return returns pinpoint targeting client.
+     */
+    protected TargetingClient getTargetingClient() {
+        return targetingClient;
+    }
+
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -79,8 +93,71 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
-        throw new UnsupportedOperationException("This operation has not been implemented yet.");
+    public void identifyUser(@NonNull String userId, @NonNull AnalyticsUserProfile profile) {
+        EndpointProfile endpointProfile = targetingClient.currentEndpoint();
+        // Assign userId to the endpoint.
+        EndpointProfileUser user = new EndpointProfileUser();
+        user.setUserId(userId);
+        endpointProfile.setUser(user);
+        // Add user-specific data to the endpoint
+        addUserProfileToEndpoint(endpointProfile, profile);
+        // update endpoint
+        targetingClient.updateEndpointProfile();
+    }
+
+    /**
+     * Add user specific data from {@link AnalyticsUserProfile} to the endpoint profile.
+     * @param endpointProfile endpoint profile.
+     * @param userProfile user specific data to be added to the endpoint.
+     */
+    private void addUserProfileToEndpoint(EndpointProfile endpointProfile,
+                                          AnalyticsUserProfile userProfile) {
+        endpointProfile.addAttribute("email", Arrays.asList(userProfile.getEmail()));
+        endpointProfile.addAttribute("name", Arrays.asList(userProfile.getName()));
+        endpointProfile.addAttribute("plan", Arrays.asList(userProfile.getPlan()));
+        // Add location
+        addLocation(endpointProfile.getLocation(), userProfile.getLocation());
+        // Add custom properties
+        addCustomProperties(endpointProfile, userProfile.getCustomProperties());
+    }
+
+    /**
+     * Add custom user properties to the endpoint profile.
+     * @param endpointProfile endpoint profile.
+     * @param customProperties custom user properties to be added to the endpoint profile.
+     */
+    private void addCustomProperties(EndpointProfile endpointProfile,
+                                     Properties customProperties) {
+        if (customProperties != null) {
+            for (Map.Entry<String, Property<?>> entry : customProperties.get().entrySet()) {
+                if (entry.getValue() instanceof StringProperty) {
+                    endpointProfile.addAttribute(entry.getKey(),
+                            Arrays.asList(((StringProperty) entry.getValue()).getValue()));
+                } else if (entry.getValue() instanceof DoubleProperty) {
+                    endpointProfile.addMetric(entry.getKey(),
+                            ((DoubleProperty) entry.getValue()).getValue());
+                } else {
+                    Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent.create("Analytics.identifyUser",
+                            "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
+                                    " only StringProperty or DoubleProperty. Refer to the documentation for details."));
+                }
+            }
+        }
+    }
+
+    /**
+     * Add location details to the endpoint profile location.
+     * @param endpointProfileLocation endpoint location.
+     * @param location location details.
+     */
+    private void addLocation(EndpointProfileLocation endpointProfileLocation,
+                             AnalyticsUserProfile.Location location) {
+        endpointProfileLocation.setLatitude(location.getLatitude());
+        endpointProfileLocation.setLongitude(location.getLongitude());
+        endpointProfileLocation.setPostalCode(location.getPostalCode());
+        endpointProfileLocation.setCity(location.getCity());
+        endpointProfileLocation.setRegion(location.getRegion());
+        endpointProfileLocation.setCountry(location.getCountry());
     }
 
     /**
@@ -226,6 +303,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);
         PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
         this.analyticsClient = pinpointManager.getAnalyticsClient();
+        this.targetingClient = pinpointManager.getTargetingClient();
 
         // Initiate the logic to automatically submit events periodically
         autoEventSubmitter = new AutoEventSubmitter(analyticsClient,

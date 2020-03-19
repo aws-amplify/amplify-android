@@ -20,6 +20,7 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.analytics.AnalyticsUserProfile;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.pinpoint.test.R;
 import com.amplifyframework.core.Amplify;
@@ -28,6 +29,9 @@ import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.TargetingClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfile;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfileLocation;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -55,8 +59,12 @@ public class AnalyticsPinpointInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int EVENT_FLUSH_TIMEOUT = 60;
     private static final int EVENT_FLUSH_WAIT = 2;
+    private static final double SEATTLE_LATITUDE = 47.6154086;
+    private static final double SEATTLE_LONGITUDE = -122.3349685;
+
     private static AmazonPinpointAnalyticsPlugin plugin;
     private static AnalyticsClient analyticsClient;
+    private static TargetingClient targetingClient;
 
     /**
      * Configure the Amplify framework.
@@ -71,6 +79,7 @@ public class AnalyticsPinpointInstrumentedTest {
         Amplify.addPlugin(plugin);
         Amplify.configure(configuration, context);
         analyticsClient = plugin.getAnalyticsClient();
+        targetingClient = plugin.getTargetingClient();
     }
 
     /**
@@ -189,6 +198,43 @@ public class AnalyticsPinpointInstrumentedTest {
 
         assertEquals(1, analyticsClient.getAllEvents().size());
         assertFalse(analyticsClient.getAllEvents().get(0).has("attributes"));
+    }
+
+    @Test
+    public void testIdentifyUser() {
+        // Create a location object
+        AnalyticsUserProfile.Location location = new AnalyticsUserProfile.Location(SEATTLE_LATITUDE,
+                SEATTLE_LONGITUDE,
+                "98122",
+                "Seattle",
+                "WA",
+                "USA");
+        PinpointProperties pinpointProperties = PinpointProperties.builder()
+                .add("TestStringProperty", "TestStringValue")
+                .add("TestDoubleProperty", 1.0)
+                .build();
+        AnalyticsUserProfile userProfile = new AnalyticsUserProfile("test-user",
+                "user@test.com",
+                "test-plan",
+                location,
+                pinpointProperties);
+
+        Amplify.Analytics.identifyUser("userId", userProfile);
+
+        // Test endpoint attributes and metrics.
+        EndpointProfile endpointProfile = targetingClient.currentEndpoint();
+        EndpointProfileLocation endpointProfileLocation = endpointProfile.getLocation();
+        assertEquals(endpointProfile.getAttribute("email").get(0), "user@test.com");
+        assertEquals(endpointProfile.getAttribute("name").get(0), "test-user");
+        assertEquals(endpointProfile.getAttribute("plan").get(0), "test-plan");
+        assertEquals(endpointProfileLocation.getLatitude(), (Double) SEATTLE_LATITUDE);
+        assertEquals(endpointProfileLocation.getLongitude(), (Double) SEATTLE_LONGITUDE);
+        assertEquals(endpointProfileLocation.getPostalCode(), "98122");
+        assertEquals(endpointProfileLocation.getCity(), "Seattle");
+        assertEquals(endpointProfileLocation.getRegion(), "WA");
+        assertEquals(endpointProfileLocation.getCountry(), "USA");
+        assertEquals(endpointProfile.getAttribute("TestStringProperty").get(0), "TestStringValue");
+        assertEquals(endpointProfile.getMetric("TestDoubleProperty"), (Double) 1.0);
     }
 
     private void registerGobalProperty() throws AnalyticsException {
