@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Set;
 
@@ -33,7 +34,7 @@ public interface AnalyticsCategoryBehavior {
      * @param userId The unique identifier for the user
      * @param profile User specific data (e.g. plan, accountType, email, age, location, etc)
      */
-    void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile);
+    void identifyUser(@NonNull String userId, @Nullable UserProfile profile);
 
     /**
      * Disable collection and sending of Analytics Events.

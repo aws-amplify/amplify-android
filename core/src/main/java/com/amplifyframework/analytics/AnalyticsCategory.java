@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -60,14 +61,17 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
-        throw new UnsupportedOperationException("This operation is currently not supported.");
+    public void identifyUser(@NonNull String userId, @Nullable UserProfile profile) {
+        if (enabled) {
+            getSelectedPlugin().identifyUser(userId, profile);
+        }
     }
 
     @Override
     public void disable() {
         synchronized (LOCK) {
             enabled = false;
+            getSelectedPlugin().disable();
         }
     }
 
@@ -75,6 +79,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     public void enable() {
         synchronized (LOCK) {
             enabled = true;
+            getSelectedPlugin().enable();
         }
     }
 
