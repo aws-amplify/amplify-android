@@ -396,8 +396,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             case DELETE:
                 dataStoreItemChangeType = DataStoreItemChange.Type.DELETE;
                 break;
-            case SAVE:
-                dataStoreItemChangeType = DataStoreItemChange.Type.SAVE;
+            case UPDATE:
+                dataStoreItemChangeType = DataStoreItemChange.Type.UPDATE;
+                break;
+            case CREATE:
+                dataStoreItemChangeType = DataStoreItemChange.Type.CREATE;
                 break;
             default:
                 throw new DataStoreException(

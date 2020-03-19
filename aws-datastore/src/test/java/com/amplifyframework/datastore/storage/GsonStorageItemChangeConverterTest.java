@@ -52,7 +52,7 @@ public class GsonStorageItemChangeConverterTest {
                     .build())
                 .build())
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.CREATE)
             .build();
 
         // Instantiate the object under test
