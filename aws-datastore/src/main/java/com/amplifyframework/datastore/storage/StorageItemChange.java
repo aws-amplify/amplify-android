@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
@@ -35,7 +36,6 @@ import java.util.UUID;
  * a stored item is changed.
  * @param <T> The type of the item that has changed
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
 public final class StorageItemChange<T extends Model> {
     private final UUID changeId;
     private final Initiator initiator;
@@ -45,21 +45,12 @@ public final class StorageItemChange<T extends Model> {
     private final Class<T> itemClass;
 
     private StorageItemChange(
-            @NonNull UUID changeId,
-            @NonNull Initiator initiator,
-            @NonNull Type type,
-            @NonNull T item,
-            @NonNull Class<T> itemClass) {
-        this(changeId, initiator, type, null, item, itemClass);
-    }
-
-    private StorageItemChange(
-            @NonNull UUID changeId,
-            @NonNull Initiator initiator,
-            @NonNull Type type,
-            @Nullable QueryPredicate predicate,
-            @NonNull T item,
-            @NonNull Class<T> itemClass) {
+            UUID changeId,
+            Initiator initiator,
+            Type type,
+            QueryPredicate predicate,
+            T item,
+            Class<T> itemClass) {
         this.changeId = changeId;
         this.initiator = initiator;
         this.type = type;
@@ -72,6 +63,7 @@ public final class StorageItemChange<T extends Model> {
      * Gets the ID of this change.
      * @return Unique ID for this change
      */
+    @NonNull
     public UUID changeId() {
         return changeId;
     }
@@ -80,6 +72,7 @@ public final class StorageItemChange<T extends Model> {
      * Gets an identification of the actor who initiated this change.
      * @return Identification of actor who initiated the change
      */
+    @NonNull
     public Initiator initiator() {
         return initiator;
     }
@@ -88,6 +81,7 @@ public final class StorageItemChange<T extends Model> {
      * Gets the type of change.
      * @return Type of change
      */
+    @NonNull
     public Type type() {
         return type;
     }
@@ -96,6 +90,7 @@ public final class StorageItemChange<T extends Model> {
      * Gets the predicate that was applied before this item change.
      * @return Predicate applied for this item change
      */
+    @Nullable
     public QueryPredicate predicate() {
         return predicate;
     }
@@ -106,6 +101,7 @@ public final class StorageItemChange<T extends Model> {
      * For deletions, this is the item as it was before the deletion.
      * @return Representation of item that changed
      */
+    @NonNull
     public T item() {
         return item;
     }
@@ -114,6 +110,7 @@ public final class StorageItemChange<T extends Model> {
      * Gets the class of the changed item.
      * @return Class of changed item
      */
+    @NonNull
     public Class<T> itemClass() {
         return itemClass;
     }
@@ -123,6 +120,7 @@ public final class StorageItemChange<T extends Model> {
      * @param <T> Type of item that has changed
      * @return A builder of StorageItemChange.
      */
+    @NonNull
     public static <T extends Model> Builder<T> builder() {
         return new Builder<>();
     }
@@ -133,12 +131,13 @@ public final class StorageItemChange<T extends Model> {
      * @param recordFactory A component capable of generating records.
      * @return A Record representation of this instance.
      */
+    @NonNull
     public Record toRecord(@NonNull RecordFactory recordFactory) {
         return Objects.requireNonNull(recordFactory).toRecord(this);
     }
 
     @Override
-    public boolean equals(Object thatObject) {
+    public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
             return true;
         }
@@ -178,6 +177,7 @@ public final class StorageItemChange<T extends Model> {
         return result;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "StorageItemChange{" +
@@ -194,7 +194,7 @@ public final class StorageItemChange<T extends Model> {
      * A utility for fluent construction of {@link StorageItemChange}.
      * @param <T> Type of item to be included in built StorageItemChanges.
      */
-    @SuppressWarnings("UnusedReturnValue")
+    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
     public static final class Builder<T extends Model> {
         private UUID changeId;
         private Initiator initiator;
@@ -210,6 +210,7 @@ public final class StorageItemChange<T extends Model> {
          * @param changeId A string representation of a Java UUID
          * @return Current Builder instance for fluent configuration chaining
          */
+        @NonNull
         public Builder<T> changeId(@NonNull String changeId) {
             this.changeId = UUID.fromString(Objects.requireNonNull(changeId));
             return this;
@@ -220,6 +221,7 @@ public final class StorageItemChange<T extends Model> {
          * each newly generated {@link StorageItemChange}.
          * @return Current Builder instance for fluent configuration chaining
          */
+        @NonNull
         public Builder<T> randomChangeId() {
             this.changeId = null;
             return this;
@@ -230,16 +232,18 @@ public final class StorageItemChange<T extends Model> {
          * @param initiator An identification of the initiator of this change
          * @return Current Builder instance for fluent configuration chaining
          */
+        @NonNull
         public Builder<T> initiator(@NonNull Initiator initiator) {
             this.initiator = Objects.requireNonNull(initiator);
             return this;
         }
 
         /**
-         * Configures the type of the change, e.g., {@link Type#SAVE}, etc.
+         * Configures the type of the change, e.g., {@link Type#CREATE}, etc.
          * @param type The type of change, e.g. {@link Type#DELETE}
          * @return Current Builder instance for fluent configuration chaining
          */
+        @NonNull
         public Builder<T> type(@NonNull Type type) {
             this.type = Objects.requireNonNull(type);
             return this;
@@ -250,6 +254,7 @@ public final class StorageItemChange<T extends Model> {
          * @param predicate The predicate that was applied for this change.
          * @return Current Builder instance for fluent configuration chainging
          */
+        @NonNull
         public Builder<T> predicate(@Nullable QueryPredicate predicate) {
             this.predicate = predicate;
             return this;
@@ -262,7 +267,8 @@ public final class StorageItemChange<T extends Model> {
          * @param item Representation of the item that changed
          * @return Current Builder instance for fluent configuration chaining
          */
-        public Builder<T> item(T item) {
+        @NonNull
+        public Builder<T> item(@NonNull T item) {
             this.item = Objects.requireNonNull(item);
             return this;
         }
@@ -272,7 +278,8 @@ public final class StorageItemChange<T extends Model> {
          * @param itemClass Class of the item that changed
          * @return Current Builder instance for fluent configuration chaining
          */
-        public Builder<T> itemClass(Class<T> itemClass) {
+        @NonNull
+        public Builder<T> itemClass(@NonNull Class<T> itemClass) {
             this.itemClass = Objects.requireNonNull(itemClass);
             return this;
         }
@@ -281,6 +288,8 @@ public final class StorageItemChange<T extends Model> {
          * Builds an instance of a StorageItemChange.
          * @return A new StorageItemChange instance.
          */
+        @SuppressLint("SyntheticAccessor")
+        @NonNull
         public StorageItemChange<T> build() {
             final UUID usedId = changeId == null ? UUID.randomUUID() : changeId;
             randomChangeId();
@@ -299,7 +308,7 @@ public final class StorageItemChange<T extends Model> {
      * A Record of a StorageItemChange is just a StorageItemChange in its serialized form.
      * This is the type which the {@link LocalStorageAdapter} deals with directly.
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     @ModelConfig(pluralName = "Records")
     @Index(fields = {"itemClass"}, name = "itemClassBasedIndex")
     public static final class Record implements Model {
@@ -400,6 +409,7 @@ public final class StorageItemChange<T extends Model> {
          * @return A StorageItemChange representation of the record
          * @throws DataStoreException If unable to perform the conversion
          */
+        @NonNull
         public <T extends Model> StorageItemChange<T> toStorageItemChange(
                 @NonNull StorageItemChangeFactory factory) throws DataStoreException {
             return Objects.requireNonNull(factory).fromRecord(this);
@@ -409,6 +419,7 @@ public final class StorageItemChange<T extends Model> {
          * Gets an instance of a {@link Record.Builder}.
          * @return A builder for Records
          */
+        @NonNull
         public static Builder builder() {
             return new Builder();
         }
@@ -419,6 +430,7 @@ public final class StorageItemChange<T extends Model> {
          * @param entry Record entry
          * @return A record containing the entry, and with random ID.
          */
+        @NonNull
         public static Record forEntry(@NonNull String entry) {
             return Record.builder().entry(entry).build();
         }
@@ -484,6 +496,7 @@ public final class StorageItemChange<T extends Model> {
              * Builds a Record using the configured properties.
              * @return A new instance of a {@link Record}.
              */
+            @SuppressLint("SyntheticAccessor")
             @NonNull
             public Record build() {
                 final UUID usedId = id == null ? UUID.randomUUID() : id;
@@ -515,15 +528,18 @@ public final class StorageItemChange<T extends Model> {
     }
 
     /**
-     * A type of change, e.g., one of the possible operations that can be
-     * invoked on {@link LocalStorageAdapter} to change a stored item.
+     * An outcome of one of the save/delete operations on the {@link LocalStorageAdapter}.
      */
     public enum Type {
         /**
-         * An item was saved into storage.
-         * This may have been an insert or an update ("upsert").
+         * A new item was created into storage.
          */
-        SAVE,
+        CREATE,
+
+        /**
+         * An existing item was updated.
+         */
+        UPDATE,
 
         /**
          * An item was deleted from storage.
@@ -542,7 +558,8 @@ public final class StorageItemChange<T extends Model> {
          * @return A Record corresponding to the storage item change.
          * @param <T> Type of item being kept in the StorageItemChange.
          */
-        <T extends Model> Record toRecord(StorageItemChange<T> storageItemChange);
+        @NonNull
+        <T extends Model> Record toRecord(@NonNull StorageItemChange<T> storageItemChange);
     }
 
     /**
@@ -559,6 +576,7 @@ public final class StorageItemChange<T extends Model> {
          * @return A {@link StorageItemChange} representation of provided record
          * @throws DataStoreException If unable to perform the conversion
          */
-        <T extends Model> StorageItemChange<T> fromRecord(Record record) throws DataStoreException;
+        @NonNull
+        <T extends Model> StorageItemChange<T> fromRecord(@NonNull Record record) throws DataStoreException;
     }
 }
