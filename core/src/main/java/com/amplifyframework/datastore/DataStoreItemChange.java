@@ -58,7 +58,7 @@ public final class DataStoreItemChange<T extends Model> {
     }
 
     /**
-     * Gets the type of change, e.g. {@link Type#SAVE} or {@link Type#DELETE}.
+     * Gets the type of change, e.g. {@link Type#CREATE} or {@link Type#UPDATE} or {@link Type#DELETE}.
      * @return Type of change
      */
     @NonNull
@@ -173,6 +173,7 @@ public final class DataStoreItemChange<T extends Model> {
          * @param uuid A UUID to assign in the next DataStoreChangeEvent that is generated
          * @return Current Builder instance, for fluent method chaining
          */
+        @NonNull
         public Builder<T> uuid(@NonNull final String uuid) {
             this.uuid = UUID.fromString(Objects.requireNonNull(uuid));
             return this;
@@ -182,6 +183,7 @@ public final class DataStoreItemChange<T extends Model> {
          * Configures the builder to use a random UUID for DataStoreItemChange instances.
          * @return The current instance of the Builder, for fluent method chaining
          */
+        @NonNull
         public Builder<T> randomUuid() {
             this.uuid = null;
             return this;
@@ -227,8 +229,9 @@ public final class DataStoreItemChange<T extends Model> {
          * @param initiator Initiator of change
          * @return Current builder instance for fluent chaining
          */
-        public Builder<T> initiator(final Initiator initiator) {
-            this.initiator = initiator;
+        @NonNull
+        public Builder<T> initiator(@NonNull Initiator initiator) {
+            this.initiator = Objects.requireNonNull(initiator);
             return this;
         }
 
@@ -238,6 +241,7 @@ public final class DataStoreItemChange<T extends Model> {
          * @return A new DataStoreItemChange instance
          */
         @SuppressLint("SyntheticAccessor")
+        @NonNull
         public DataStoreItemChange<T> build() {
             final UUID usedId = uuid == null ? UUID.randomUUID() : uuid;
             randomUuid();
@@ -259,9 +263,14 @@ public final class DataStoreItemChange<T extends Model> {
      */
     public enum Type {
         /**
-         * An item has been saved into the DataStore.
+         * An item with a new ID has been saved into the DataStore.
          */
-        SAVE,
+        CREATE,
+
+        /**
+         * An existing item was updated. The existing item was matched by its ID.
+         */
+        UPDATE,
 
         /**
          * An existing item has been deleted from the DataStore.

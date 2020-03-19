@@ -102,11 +102,11 @@ public final class MutationProcessorTest {
                     .wea(RandomString.string())
                     .build())
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-                .type(StorageItemChange.Type.SAVE)
+                .type(StorageItemChange.Type.CREATE)
                 .build()
                 .toRecord(recordConverter),
             StorageItemChange.<Blog>builder()
-                .type(StorageItemChange.Type.SAVE)
+                .type(StorageItemChange.Type.CREATE)
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
                 .itemClass(Blog.class)
                 .item(Blog.builder()

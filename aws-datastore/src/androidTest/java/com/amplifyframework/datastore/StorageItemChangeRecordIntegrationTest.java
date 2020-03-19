@@ -115,32 +115,31 @@ public final class StorageItemChangeRecordIntegrationTest {
             .name("Tony Daniels")
             .build();
 
-        final StorageItemChange<BlogOwner> originalSaveForTony = StorageItemChange.<BlogOwner>builder()
+        final StorageItemChange<BlogOwner> originalTonyCreation = StorageItemChange.<BlogOwner>builder()
             .item(tonyDaniels)
             .itemClass(BlogOwner.class)
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.CREATE)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
 
         // Save the creation mutation for Tony, as a Record object.
-        StorageItemChange.Record saveForTonyAsRecord =
-            originalSaveForTony.toRecord(storageItemChangeConverter);
-        save(saveForTonyAsRecord);
+        StorageItemChange.Record originalTonyCreationAsRecord =
+            originalTonyCreation.toRecord(storageItemChangeConverter);
+        save(originalTonyCreationAsRecord);
 
         // Now, lookup what records we have in the storage.
-        List<StorageItemChange.Record> foundRecords = query();
+        List<StorageItemChange.Record> recordsInStorage = query();
 
-        // There should be 1, the save for the insertionForTony.
-        // and it should be identical to the thing we tried to save.
-        assertEquals(1, foundRecords.size());
-        StorageItemChange.Record firstResultRecord = foundRecords.get(0);
-        assertEquals(saveForTonyAsRecord, firstResultRecord);
+        // There should be 1, and it should be the original creation for Tony.
+        assertEquals(1, recordsInStorage.size());
+        StorageItemChange.Record firstRecordFoundInStorage = recordsInStorage.get(0);
+        assertEquals(originalTonyCreationAsRecord, firstRecordFoundInStorage);
 
         // After we convert back from record, we should get back a copy of
         // what we created above
-        StorageItemChange<BlogOwner> reconstructedSaveForTony =
-            firstResultRecord.toStorageItemChange(storageItemChangeConverter);
-        assertEquals(originalSaveForTony, reconstructedSaveForTony);
+        StorageItemChange<BlogOwner> reconstructedCreationOfTony =
+            firstRecordFoundInStorage.toStorageItemChange(storageItemChangeConverter);
+        assertEquals(originalTonyCreation, reconstructedCreationOfTony);
     }
 
     /**
@@ -163,7 +162,7 @@ public final class StorageItemChangeRecordIntegrationTest {
                 .name("Juan Gonzales")
                 .build())
             .itemClass(BlogOwner.class)
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.CREATE)
             .build()
             .toRecord(storageItemChangeConverter);
 
@@ -206,59 +205,59 @@ public final class StorageItemChangeRecordIntegrationTest {
     @Test
     public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
-        TestObserver<StorageItemChange.Record> saveAndUpdateObserver = TestObserver.create();
-        records().subscribe(saveAndUpdateObserver);
+        TestObserver<StorageItemChange.Record> storageObserver = TestObserver.create();
+        records().subscribe(storageObserver);
 
         // Create a record for Joe, and a change to save him into storage
         BlogOwner joeLastNameMispelled = BlogOwner.builder()
             .name("Joe Sweeneyy")
             .build();
-        StorageItemChange<BlogOwner> saveJoeWrongLastName = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.SAVE)
+        StorageItemChange<BlogOwner> createJoeWrongLastName = StorageItemChange.<BlogOwner>builder()
+            .type(StorageItemChange.Type.CREATE)
             .item(joeLastNameMispelled)
             .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
-        StorageItemChange.Record saveJoeWrongLastNameRecord =
-            saveJoeWrongLastName.toRecord(storageItemChangeConverter);
+        StorageItemChange.Record createJoeWrongLastNameAsRecord =
+            createJoeWrongLastName.toRecord(storageItemChangeConverter);
 
         // Save our saveJoeWrongLastName change item, as a record.
-        save(saveJoeWrongLastNameRecord);
+        save(createJoeWrongLastNameAsRecord);
 
         // Now, suppose we have to update that change object. Maybe it contained a bad item payload.
         BlogOwner joeWithLastNameFix = BlogOwner.builder()
             .name("Joe Sweeney")
             .build();
-        StorageItemChange<BlogOwner> saveJoeCorrectLastName = StorageItemChange.<BlogOwner>builder()
-            .changeId(saveJoeWrongLastName.changeId().toString()) // Same ID
+        StorageItemChange<BlogOwner> createJoeCorrectLastName = StorageItemChange.<BlogOwner>builder()
+            .changeId(createJoeWrongLastName.changeId().toString()) // Same ID
             .item(joeWithLastNameFix) // But with a patch to the item
             .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
-            .type(StorageItemChange.Type.SAVE) // We're still saving Joe, we're updating this change.
+            .type(StorageItemChange.Type.UPDATE) // We're still *creating Joe*, we're *updating this change*.
             .build();
-        StorageItemChange.Record saveJoeCorrectLastNameRecord =
-            saveJoeCorrectLastName.toRecord(storageItemChangeConverter);
+        StorageItemChange.Record createJoeCorrectLastNameAsRecord =
+            createJoeCorrectLastName.toRecord(storageItemChangeConverter);
 
-        // Save an update (same model type, same unique ID) to the thing we saved before.
-        save(saveJoeCorrectLastNameRecord);
+        // Save an update (same model type, same unique ID) to the change we saved previously.
+        save(createJoeCorrectLastNameAsRecord);
 
         // Our observer got the records to save Joe with wrong age, and also to save joe with right age
-        List<StorageItemChange.Record> values = saveAndUpdateObserver.awaitCount(2).values();
+        List<StorageItemChange.Record> values = storageObserver.awaitCount(2).values();
         assertEquals(
-            saveJoeWrongLastNameRecord,
+            createJoeWrongLastNameAsRecord,
             values
                 .get(0)
                 .toStorageItemChange(storageItemChangeConverter)
                 .item()
         );
         assertEquals(
-            saveJoeCorrectLastNameRecord,
+            createJoeCorrectLastNameAsRecord,
             values
                 .get(1)
                 .toStorageItemChange(storageItemChangeConverter)
                 .item()
         );
-        saveAndUpdateObserver.dispose();
+        storageObserver.dispose();
     }
 
     /**
@@ -272,42 +271,42 @@ public final class StorageItemChangeRecordIntegrationTest {
     public void deletionIsObservedForChangeRecord() throws DataStoreException {
         // What we are really observing are items of type StorageItemChange.Record that contain
         // StorageItemChange.Record of BlogOwner
-        TestObserver<StorageItemChange.Record> saveObserver = TestObserver.create();
-        records().subscribe(saveObserver);
+        TestObserver<StorageItemChange.Record> storageObserver = TestObserver.create();
+        records().subscribe(storageObserver);
 
         BlogOwner beatrice = BlogOwner.builder()
             .name("Beatrice Stone")
             .build();
-        StorageItemChange<BlogOwner> saveBeatrice = StorageItemChange.<BlogOwner>builder()
+        StorageItemChange<BlogOwner> createBeatrice = StorageItemChange.<BlogOwner>builder()
             .item(beatrice)
             .itemClass(BlogOwner.class)
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.CREATE)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
-        StorageItemChange.Record saveBeatriceRecord =
-            saveBeatrice.toRecord(storageItemChangeConverter);
+        StorageItemChange.Record createBeatriceRecord =
+            createBeatrice.toRecord(storageItemChangeConverter);
 
-        save(saveBeatriceRecord);
+        save(createBeatriceRecord);
 
         // Assert that we do observe the record being saved ...
         assertEquals(
-            saveBeatriceRecord,
-            saveObserver.awaitCount(1)
+            createBeatriceRecord,
+            storageObserver.awaitCount(1)
                 .values()
                 .get(0)
                 .toStorageItemChange(storageItemChangeConverter)
                 .item()
         );
-        saveObserver.dispose();
+        storageObserver.dispose();
 
         TestObserver<StorageItemChange.Record> deletionObserver = TestObserver.create();
         records().subscribe(deletionObserver);
 
         // The mutation record doesn't change, but we want to delete it, itself.
-        delete(saveBeatriceRecord);
+        delete(createBeatriceRecord);
 
         assertEquals(
-            saveBeatriceRecord,
+            createBeatriceRecord,
             deletionObserver
                 .awaitCount(1)
                 .values()
