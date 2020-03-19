@@ -301,8 +301,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final String primaryKeyName = sqliteTable.getPrimaryKeyColumnName();
                 final SqlCommand sqlCommand;
                 final ModelConflictStrategy modelConflictStrategy;
+                final StorageItemChange.Type type;
 
                 if (dataExistsInSQLiteTable(sqliteTable.getName(), primaryKeyName, item.getId())) {
+                    type = StorageItemChange.Type.UPDATE;
+
                     // update model stored in SQLite
                     // update always checks for ID first
                     final QueryPredicateOperation<?> idCheck =
@@ -322,6 +325,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     modelConflictStrategy = ModelConflictStrategy.OVERWRITE_EXISTING;
                 } else {
                     // insert model in SQLite
+                    type = StorageItemChange.Type.CREATE;
+
                     sqlCommand = insertSqlPreparedStatements.get(modelSchema.getName());
                     if (sqlCommand == null || !sqlCommand.hasCompiledSqlStatement()) {
                         onError.accept(new DataStoreException(
@@ -339,7 +344,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 final StorageItemChange.Record record = StorageItemChange.<T>builder()
                     .item(item)
                     .itemClass((Class<T>) item.getClass())
-                    .type(StorageItemChange.Type.SAVE)
+                    .type(type)
                     .predicate(predicate)
                     .initiator(initiator)
                     .build()

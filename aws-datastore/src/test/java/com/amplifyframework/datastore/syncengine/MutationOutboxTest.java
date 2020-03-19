@@ -60,8 +60,8 @@ public class MutationOutboxTest {
         TestObserver<StorageItemChange<? extends Model>> queueObserver = TestObserver.create();
         mutationOutbox.observe().subscribe(queueObserver);
 
-        StorageItemChange<BlogOwner> saveJameson = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.SAVE)
+        StorageItemChange<BlogOwner> createJameson = StorageItemChange.<BlogOwner>builder()
+            .type(StorageItemChange.Type.CREATE)
             .itemClass(BlogOwner.class)
             .item(BlogOwner.builder()
                 .name("Jameson Williams")
@@ -72,19 +72,19 @@ public class MutationOutboxTest {
         // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onSuccess().
         TestObserver<StorageItemChange<BlogOwner>> saveObserver = TestObserver.create();
-        mutationOutbox.enqueue(saveJameson).subscribe(saveObserver);
+        mutationOutbox.enqueue(createJameson).subscribe(saveObserver);
         saveObserver.awaitTerminalEvent();
         saveObserver.dispose();
 
         // Expected to observe the mutation on the subject
         queueObserver.awaitCount(1);
-        queueObserver.assertValue(saveJameson);
+        queueObserver.assertValue(createJameson);
         queueObserver.dispose();
 
         // Assert that the storage contains the mutation
         assertEquals(1, inMemoryStorageAdapter.items().size());
         assertEquals(
-            saveJameson.toRecord(storageItemChangeConverter),
+            createJameson.toRecord(storageItemChangeConverter),
             inMemoryStorageAdapter.items().get(0)
         );
     }
@@ -105,7 +105,7 @@ public class MutationOutboxTest {
             .item(BlogOwner.builder()
                 .name("Tony Daniels")
                 .build())
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.CREATE)
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build());
         // .subscribe() is NOT called.
@@ -129,7 +129,7 @@ public class MutationOutboxTest {
 
         // Arrange: some mutations.
         StorageItemChange<BlogOwner> updateTony = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.UPDATE)
             .item(BlogOwner.builder()
                 .name("Tony Daniels")
                 .build())
@@ -137,7 +137,7 @@ public class MutationOutboxTest {
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
         StorageItemChange<BlogOwner> insertSam = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.SAVE)
+            .type(StorageItemChange.Type.CREATE)
             .item(BlogOwner.builder()
                 .name("Sam Watson")
                 .build())

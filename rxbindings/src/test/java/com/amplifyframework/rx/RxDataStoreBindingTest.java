@@ -93,7 +93,7 @@ public final class RxDataStoreBindingTest {
             Consumer<DataStoreItemChange<Model>> resultConsumer = invocation.getArgument(indexOfResultConsumer);
             resultConsumer.accept(DataStoreItemChange.builder()
                 .uuid(modelFromInvocation.getId())
-                .type(Type.SAVE)
+                .type(Type.CREATE)
                 .itemClass(Model.class)
                 .initiator(Initiator.LOCAL)
                 .item(modelFromInvocation)
@@ -241,7 +241,7 @@ public final class RxDataStoreBindingTest {
             .uuid(model.getId())
             .itemClass(Model.class)
             .item(model)
-            .type(Type.SAVE)
+            .type(Type.CREATE)
             .initiator(Initiator.LOCAL)
             .build();
         doAnswer(invocation -> {

@@ -83,34 +83,34 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
             @NonNull final Consumer<StorageItemChange.Record> onSuccess,
-            @NonNull final Consumer<DataStoreException> onError
-    ) {
+            @NonNull final Consumer<DataStoreException> onError) {
+        StorageItemChange.Type type = StorageItemChange.Type.CREATE;
         final int index = indexOf(item);
         if (index > -1) {
-            // Update
+            // There is an existing record with that ID; this is an update.
+            type = StorageItemChange.Type.UPDATE;
             Model savedItem = items.get(index);
-            if (predicate == null || predicate.evaluate(savedItem)) {
-                items.remove(index);
-                save(item, initiator, predicate, onSuccess, onError);
-                return;
-            }
-            onError.accept(new DataStoreException(
+            if (predicate != null && !predicate.evaluate(savedItem)) {
+                onError.accept(new DataStoreException(
                     "Conditional check failed.",
                     "Verify that there is a saved model that matches the provided predicate."));
-        } else {
-            // Insert
-            items.add(item);
-            StorageItemChange.Record save = StorageItemChange.<T>builder()
-                    .item(item)
-                    .itemClass((Class<T>) item.getClass())
-                    .type(StorageItemChange.Type.SAVE)
-                    .predicate(predicate)
-                    .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
-            changeRecordStream.onNext(save);
-            onSuccess.accept(save);
+                return;
+            } else {
+                items.remove(index);
+            }
         }
+
+        items.add(item);
+        StorageItemChange.Record save = StorageItemChange.<T>builder()
+            .item(item)
+            .itemClass((Class<T>) item.getClass())
+            .type(type)
+            .predicate(predicate)
+            .initiator(initiator)
+            .build()
+            .toRecord(storageItemChangeConverter);
+        changeRecordStream.onNext(save);
+        onSuccess.accept(save);
     }
 
     @Override
