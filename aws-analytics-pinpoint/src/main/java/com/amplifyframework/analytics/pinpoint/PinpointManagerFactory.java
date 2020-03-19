@@ -29,7 +29,6 @@ import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.pinpoint.PinpointConfiguration;
 import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
-import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.pinpoint.model.ChannelType;
 
@@ -39,15 +38,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Factory class to vend out pinpoint analytics client.
  */
-final class PinpointClientFactory {
+final class PinpointManagerFactory {
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int INITIALIZATION_TIMEOUT_MS = 5000;
 
-    private PinpointClientFactory() {
+    private PinpointManagerFactory() {
     }
 
-    static AnalyticsClient create(Context context,
+    static PinpointManager create(Context context,
                                   AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration)
             throws AnalyticsException {
         final PinpointManager pinpointManager;
@@ -91,6 +90,6 @@ final class PinpointClientFactory {
         ).withClientConfiguration(clientConfiguration);
 
         pinpointManager = new PinpointManager(pinpointConfiguration);
-        return pinpointManager.getAnalyticsClient();
+        return pinpointManager;
     }
 }
