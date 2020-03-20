@@ -255,7 +255,7 @@ those configurations to your local workspace:
 
 ```
 cd amplify-android
-.circle-ci/copy-configs
+.circleci/copy-configs
 ```
 
 To run a __specific__ test:
