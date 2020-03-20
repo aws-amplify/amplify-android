@@ -104,7 +104,7 @@ public final class SyncProcessorTest {
             .subscribe(adapterObserver);
 
         // Arrange: return some responses for the sync() call on the RemoteModelState
-        AppSyncMocking.configure(appSync)
+        AppSyncMocking.onSync(appSync)
             .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_ISLA, BLOGGER_JAMESON);
 
@@ -172,7 +172,7 @@ public final class SyncProcessorTest {
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
         // Arrange some responses from AppSync
-        AppSyncMocking.configure(appSync)
+        AppSyncMocking.onSync(appSync)
             .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
 

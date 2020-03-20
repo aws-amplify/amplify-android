@@ -70,12 +70,10 @@ public final class AWSDataStorePluginInstrumentedTest {
         context = ApplicationProvider.getApplicationContext();
         api = SynchronousApi.singleton();
         dataStore = SynchronousDataStore.singleton();
-        outboundModelEventAccumulator = HubAccumulator.create(HubChannel.DATASTORE, event ->
-            DataStoreChannelEventName.PUBLISHED_TO_CLOUD.toString().equals(event.getName())
-        );
-        inboundModelEventAccumulator = HubAccumulator.create(HubChannel.DATASTORE, event ->
-            DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(event.getName())
-        );
+        outboundModelEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
+        inboundModelEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.RECEIVED_FROM_CLOUD);
     }
 
     /**

@@ -60,7 +60,7 @@ public final class Orchestrator {
         RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
 
-        this.mutationProcessor = new MutationProcessor(mutationOutbox, appSync);
+        this.mutationProcessor = new MutationProcessor(localStorageAdapter, mutationOutbox, appSync);
         this.syncProcessor =
             new SyncProcessor(remoteModelState, localStorageAdapter, modelProvider, modelSchemaRegistry);
         this.subscriptionProcessor = new SubscriptionProcessor(localStorageAdapter, appSync, modelProvider);
