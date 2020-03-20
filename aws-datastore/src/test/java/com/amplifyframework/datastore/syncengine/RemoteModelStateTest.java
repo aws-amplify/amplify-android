@@ -72,7 +72,7 @@ public final class RemoteModelStateTest {
     public void observeReceivesAllModelInstances() {
         // Arrange: the AppSync endpoint will give us some MetaData for items
         // having these types.
-        AppSyncMocking.configure(appSync)
+        AppSyncMocking.onSync(appSync)
             .mockSuccessResponse(Post.class, DRUM_POST, DELETED_DRUM_POST)
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON, BLOGGER_ISLA);
 
@@ -91,4 +91,3 @@ public final class RemoteModelStateTest {
         observer.dispose();
     }
 }
-
