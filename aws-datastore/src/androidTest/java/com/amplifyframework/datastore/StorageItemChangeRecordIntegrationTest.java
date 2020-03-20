@@ -32,7 +32,6 @@ import com.amplifyframework.testutils.Await;
 
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -207,7 +206,6 @@ public final class StorageItemChangeRecordIntegrationTest {
      * will be a StorageItemChange.Record which itself contains a BlogOwner.
      * @throws DataStoreException from storage item change, or on failure to mainuplate I/O to DataStore
      */
-    @Ignore("update operations are not currently implemented! TODO: validate this, once available")
     @Test
     public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
@@ -272,7 +270,6 @@ public final class StorageItemChangeRecordIntegrationTest {
      * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)} will be called.
      * @throws DataStoreException from storage item change, or on failure to mainuplate I/O to DataStore
      */
-    @Ignore("delete() is not currently implemented! Validate this test when it is.")
     @Test
     public void deletionIsObservedForChangeRecord() throws DataStoreException {
         // What we are really observing are items of type StorageItemChange.Record that contain
