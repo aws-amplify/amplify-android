@@ -24,13 +24,14 @@ import java.util.Objects;
  * Represents user specific data such as name, email, plan, location etc.
  */
 public final class UserProfile {
-    private String name;
-    private String email;
-    private String plan;
-    private Location location;
-    private Properties customProperties;
+    private final String name;
+    private final String email;
+    private final String plan;
+    private final Location location;
+    private final Properties customProperties;
 
-    public UserProfile(Builder builder) {
+    public UserProfile(@NonNull Builder builder) {
+        Objects.requireNonNull(builder);
         this.name = builder.name;
         this.email = builder.email;
         this.plan = builder.plan;
@@ -63,13 +64,14 @@ public final class UserProfile {
         return customProperties;
     }
 
+    @NonNull
     public static Builder builder() {
         return new Builder();
     }
 
     @SuppressWarnings("checkstyle:NeedBraces")
     @Override
-    public boolean equals(Object object) {
+    public boolean equals(@Nullable Object object) {
         if (this == object) return true;
         if (object == null || getClass() != object.getClass()) return false;
 
@@ -95,6 +97,7 @@ public final class UserProfile {
         return result;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "UserProfile{" +
@@ -113,59 +116,57 @@ public final class UserProfile {
         private Location location;
         private Properties customProperties;
 
+        @NonNull
         public Builder name(@NonNull final String name) {
             Objects.requireNonNull(name);
             this.name = name;
             return this;
         }
 
+        @NonNull
         public Builder email(@NonNull final String email) {
             Objects.requireNonNull(email);
             this.email = email;
             return this;
         }
 
+        @NonNull
         public Builder plan(@NonNull final String plan) {
             Objects.requireNonNull(plan);
             this.plan = plan;
             return this;
         }
 
+        @NonNull
         public Builder location(@NonNull final Location location) {
             Objects.requireNonNull(location);
             this.location = location;
             return this;
         }
 
+        @NonNull
         public Builder customProperties(@NonNull final Properties properties) {
             Objects.requireNonNull(properties);
             this.customProperties = properties;
             return this;
         }
 
+        @NonNull
         public UserProfile build() {
-            if (name == null &&
-                email == null &&
-                plan == null &&
-                location == null &&
-                customProperties == null
-            ) {
-                throw new IllegalArgumentException("You must set at least one user attribute to " +
-                        "construct a valid user profile");
-            }
             return new UserProfile(this);
         }
     }
 
     public static final class Location {
-        private Double latitude;
-        private Double longitude;
-        private String postalCode;
-        private String city;
-        private String region;
-        private String country;
+        private final Double latitude;
+        private final Double longitude;
+        private final String postalCode;
+        private final String city;
+        private final String region;
+        private final String country;
 
-        public Location(Builder builder) {
+        public Location(@NonNull Builder builder) {
+            Objects.requireNonNull(builder);
             this.latitude = builder.latitude;
             this.longitude = builder.longitude;
             this.postalCode = builder.postalCode;
@@ -204,13 +205,14 @@ public final class UserProfile {
             return country;
         }
 
+        @NonNull
         public static Builder builder() {
             return new Builder();
         }
 
         @SuppressWarnings("checkstyle:NeedBraces")
         @Override
-        public boolean equals(Object object) {
+        public boolean equals(@Nullable Object object) {
             if (this == object) return true;
             if (object == null || getClass() != object.getClass()) return false;
 
@@ -240,6 +242,7 @@ public final class UserProfile {
             return result;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "Location{" +
@@ -260,52 +263,50 @@ public final class UserProfile {
             private String region;
             private String country;
 
+            @NonNull
             public Builder latitude(@NonNull Double latitude) {
                 Objects.requireNonNull(latitude);
                 this.latitude = latitude;
                 return this;
             }
 
+            @NonNull
             public Builder longitude(@NonNull Double longitude) {
                 Objects.requireNonNull(longitude);
                 this.longitude = longitude;
                 return this;
             }
 
+            @NonNull
             public Builder postalCode(@NonNull String postalCode) {
                 Objects.requireNonNull(postalCode);
                 this.postalCode = postalCode;
                 return this;
             }
 
+            @NonNull
             public Builder city(@NonNull String city) {
                 Objects.requireNonNull(city);
                 this.city = city;
                 return this;
             }
 
+            @NonNull
             public Builder region(@NonNull String region) {
                 Objects.requireNonNull(region);
                 this.region = region;
                 return this;
             }
 
+            @NonNull
             public Builder country(@NonNull String country) {
                 Objects.requireNonNull(country);
                 this.country = country;
                 return this;
             }
 
+            @NonNull
             public Location build() {
-                if (latitude == null &&
-                    longitude == null &&
-                    postalCode == null &&
-                    city == null &&
-                    region == null &&
-                    country == null) {
-                    throw new IllegalArgumentException("At least on parameter must be non-null to " +
-                            "construct a Location object");
-                }
                 return new Location(this);
             }
         }

@@ -30,13 +30,6 @@ import java.util.Set;
  */
 public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
         implements AnalyticsCategoryBehavior {
-
-    /**
-     * Protect enabling and disabling of Analytics event
-     * collection and sending.
-     */
-    private static final Object LOCK = new Object();
-
     /**
      * By default collection and sending of Analytics events
      * are enabled.
@@ -69,18 +62,14 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
 
     @Override
     public void disable() {
-        synchronized (LOCK) {
-            enabled = false;
-            getSelectedPlugin().disable();
-        }
+        enabled = false;
+        getSelectedPlugin().disable();
     }
 
     @Override
     public void enable() {
-        synchronized (LOCK) {
-            enabled = true;
-            getSelectedPlugin().enable();
-        }
+        enabled = true;
+        getSelectedPlugin().enable();
     }
 
     @Override
