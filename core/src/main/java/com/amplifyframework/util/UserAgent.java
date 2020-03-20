@@ -16,6 +16,7 @@
 package com.amplifyframework.util;
 
 import android.annotation.SuppressLint;
+import android.os.Build;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -40,11 +41,10 @@ public final class UserAgent {
             instance = new UserAgent.Builder()
                 .libraryName("amplify-android")
                 .libraryVersion(BuildConfig.VERSION_NAME)
-                .systemName(System.getProperty("os.name"))
-                .systemVersion(System.getProperty("os.version"))
-                .javaVmName(System.getProperty("java.vm.name"))
-                .javaVmVersion(System.getProperty("java.vm.version"))
-                .javaVersion(System.getProperty("java.version"))
+                .systemName("Android")
+                .systemVersion(Build.VERSION.RELEASE)
+                .deviceManufacturer(Build.MANUFACTURER)
+                .deviceName(Build.MODEL)
                 .userLanguage(System.getProperty("user.language"))
                 .userRegion(System.getProperty("user.region"))
                 .toString();
@@ -59,9 +59,8 @@ public final class UserAgent {
         private String libraryVersion;
         private String systemName;
         private String systemVersion;
-        private String javaVmName;
-        private String javaVmVersion;
-        private String javaVersion;
+        private String deviceManufacturer;
+        private String deviceName;
         private String userLanguage;
         private String userRegion;
 
@@ -85,18 +84,13 @@ public final class UserAgent {
             return this;
         }
 
-        Builder javaVmName(String javaVmName) {
-            this.javaVmName = sanitize(javaVmName);
+        Builder deviceManufacturer(String deviceManufacturer) {
+            this.deviceManufacturer = sanitize(deviceManufacturer);
             return this;
         }
 
-        Builder javaVmVersion(String javaVmVersion) {
-            this.javaVmVersion = sanitize(javaVmVersion);
-            return this;
-        }
-
-        Builder javaVersion(String javaVersion) {
-            this.javaVersion = sanitize(javaVersion);
+        Builder deviceName(String deviceName) {
+            this.deviceName = sanitize(deviceName);
             return this;
         }
 
@@ -114,10 +108,10 @@ public final class UserAgent {
         @Override
         public String toString() {
             return String.format(
-                "%s/%s %s/%s %s/%s/%s %s_%s",
+                "%s/%s (%s %s; %s %s; %s_%s)",
                 libraryName, libraryVersion,
                 systemName, systemVersion,
-                javaVmName, javaVmVersion, javaVersion,
+                deviceManufacturer, deviceName,
                 userLanguage, userRegion
             );
         }
@@ -128,7 +122,7 @@ public final class UserAgent {
                 return "UNKNOWN";
             }
 
-            return string.replace(' ', '_');
+            return string;
         }
     }
 }
