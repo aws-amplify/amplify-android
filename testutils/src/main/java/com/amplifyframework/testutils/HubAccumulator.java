@@ -18,6 +18,7 @@ package com.amplifyframework.testutils;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
@@ -71,6 +72,27 @@ public final class HubAccumulator {
         Objects.requireNonNull(channel);
         Objects.requireNonNull(filter);
         return new HubAccumulator(channel, filter);
+    }
+
+    /**
+     * Gets an {@link HubAccumulator} that accumulates events arriving on a particular channel,
+     * whose event name is the given enum value (as string). For example, an accumulator
+     * created in this way will match all events with name {@link DataStoreChannelEventName#PUBLISHED_TO_CLOUD}:
+     *
+     *   HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISH_TO_CLOUD);
+     *
+     * @param channel Channel on which to listen for events
+     * @param enumeratedEventName A enum value, the toString() of which is expected as the name of
+     *                             a hub event. Only events with this name will be accumualated.
+     * @param <E> The type of enumeration
+     * @return A HubAccumulator
+     */
+    @NonNull
+    public static <E extends Enum<E>> HubAccumulator create(
+            @NonNull HubChannel channel, @NonNull E enumeratedEventName) {
+        Objects.requireNonNull(channel);
+        Objects.requireNonNull(enumeratedEventName);
+        return new HubAccumulator(channel, event -> enumeratedEventName.toString().equals(event.getName()));
     }
 
     /**
