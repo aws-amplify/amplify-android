@@ -18,12 +18,16 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 
 import java.util.Objects;
 
@@ -57,11 +61,31 @@ final class Merger {
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
         T model = modelWithMetadata.getModel();
+
+        final Completable modelModification;
         if (Boolean.TRUE.equals(metadata.isDeleted())) {
-            return delete(model).andThen(save(metadata));
+            modelModification = delete(model);
         } else {
-            return save(model).andThen(save(metadata));
+            modelModification = save(model);
         }
+
+        return modelModification
+            .andThen(save(metadata))
+            .andThen(announceMergeOverHub(modelWithMetadata));
+    }
+
+    /**
+     * Announce a successful merge over Hub.
+     * @param modelWithMetadata Model with metadata that was successfully merged
+     * @param <T> Type of model
+     * @return A completable operation for the publication.
+     */
+    private <T extends Model> Completable announceMergeOverHub(ModelWithMetadata<T> modelWithMetadata) {
+        return Completable.fromAction(() ->
+            Amplify.Hub.publish(HubChannel.DATASTORE,
+                HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, modelWithMetadata)
+            )
+        );
     }
 
     // Delete a model.

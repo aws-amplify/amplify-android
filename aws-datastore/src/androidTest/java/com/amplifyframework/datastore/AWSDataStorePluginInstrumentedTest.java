@@ -20,21 +20,25 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
+import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.datastore.appsync.SynchronousAppSync;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEventFilter;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
-import org.junit.After;
 import org.junit.AfterClass;
-import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Tests the functions of {@link AWSDataStorePlugin}.
@@ -44,12 +48,12 @@ import static org.junit.Assert.assertEquals;
  */
 public final class AWSDataStorePluginInstrumentedTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
+
     private static Context context;
     private static AWSDataStorePlugin awsDataStorePlugin;
     private static SynchronousApi api;
+    private static SynchronousAppSync appSync;
     private static SynchronousDataStore dataStore;
-    private static HubAccumulator outboundModelEventAccumulator;
-    private static HubAccumulator inboundModelEventAccumulator;
 
     /**
      * Enable strict mode for catching SQLite leaks.
@@ -69,29 +73,8 @@ public final class AWSDataStorePluginInstrumentedTest {
         awsDataStorePlugin = testConfig.plugin();
         context = ApplicationProvider.getApplicationContext();
         api = SynchronousApi.singleton();
+        appSync = SynchronousAppSync.defaultInstance();
         dataStore = SynchronousDataStore.singleton();
-        outboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
-        inboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.RECEIVED_FROM_CLOUD);
-    }
-
-    /**
-     * Before each test, clear and restart the hub event accumulators.
-     */
-    @Before
-    public void beforeEachIndividualTest() {
-        outboundModelEventAccumulator.stop().clear().start();
-        inboundModelEventAccumulator.stop().clear().start();
-    }
-
-    /**
-     * After each test, stop and clear the hub event accumulators.
-     */
-    @After
-    public void afterEachIndividualTest() {
-        outboundModelEventAccumulator.stop().clear();
-        inboundModelEventAccumulator.stop().clear();
     }
 
     /**
@@ -102,6 +85,11 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @Test
     public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() throws DataStoreException, ApiException {
+        // Start listening for model publication events on the Hub.
+        HubAccumulator outboundModelEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
+        outboundModelEventAccumulator.clear().start();
+
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
@@ -110,6 +98,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Wait for a Hub event telling us that our Charley model got published to the cloud.
         outboundModelEventAccumulator.takeOne();
+        outboundModelEventAccumulator.stop().clear();
 
         // Try to get Charley from the backend.
         BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
@@ -123,35 +112,67 @@ public final class AWSDataStorePluginInstrumentedTest {
      * The sync engine should receive mutations for its managed models, through its
      * subscriptions. When we change a model remotely, the sync engine should respond
      * by processing the subscription event and saving the model locally.
-     * @throws ApiException On failure to obtain valid response from endpoint while arranging data (first step)
      * @throws DataStoreException On failure to query the local data store for
      *                            local presence of arranged data (second step)
      */
-    @Ignore(
-        "This test is broken, until support for _version is added. " +
-        "The local version will be the original created version, not the " +
-        "updated version, since the client is not passing _version right now."
-    )
+    @SuppressWarnings("unchecked")
     @Test
-    public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() throws ApiException, DataStoreException {
-        // Create a record for a blog owner, with a misspelling in the last name
-        BlogOwner remoteOwner = BlogOwner.builder()
+    public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() throws DataStoreException {
+        // Arrange a stable ID for the model we create/update,
+        // so that we can match it in an event accumulator, below.
+        String expectedId = RandomString.string();
+
+        // Now, start watching the Hub for notifications that we received and processed models
+        // from the Cloud. Look specifically for events relating to the model with the above ID.
+        HubAccumulator inboundModelEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, (HubEventFilter) hubEvent -> {
+                if (!DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(hubEvent.getName())) {
+                    return false;
+                }
+
+                ModelWithMetadata<BlogOwner> modelWithMetadata =
+                    (ModelWithMetadata<BlogOwner>) hubEvent.getData();
+                if (modelWithMetadata == null) {
+                    return false;
+                }
+                return modelWithMetadata.getSyncMetadata().getId().equals(expectedId);
+            });
+        inboundModelEventAccumulator.clear().start();
+
+        // Act: externally in the Cloud, someone creates a record for a blog owner,
+        // with a misspelling in the last name
+        BlogOwner originalModel = BlogOwner.builder()
             .name("Jameson Willlllliams")
+            .id(expectedId)
             .build();
-        api.create(remoteOwner);
+        GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse = appSync.create(originalModel);
+        ModelMetadata originalMetadata = createResponse.getData().getSyncMetadata();
+        assertNotNull(originalMetadata.getVersion());
+        int originalVersion = originalMetadata.getVersion();
 
-        // Update the record to fix the last name
-        api.update(remoteOwner.copyOfBuilder()
-            // This uses the same record ID
-            .name("Jameson Williams")
-            .build());
+        // A hub event tells us that a model was created in the cloud;
+        // this model was synced into our local store.
+        inboundModelEventAccumulator.takeOne();
+        inboundModelEventAccumulator.stop().clear().start();
 
-        // Wait for a Hub event letting us know that our local Jameson models were published to cloud
-        // One event for create(), one event for update() = 2 events.
-        inboundModelEventAccumulator.take(2);
+        // Act: externally, the record in the Cloud is updated, to correct the entry's last name
+        BlogOwner updatedModel = originalModel.copyOfBuilder() // This uses the same model ID
+            .name("Jameson Williams") // But with corrected name
+            .build();
+        GraphQLResponse<ModelWithMetadata<BlogOwner>> updateResponse =
+            appSync.update(updatedModel, originalVersion);
+        ModelMetadata newMetadata = updateResponse.getData().getSyncMetadata();
+        assertNotNull(newMetadata.getVersion());
+        int newVersion = newMetadata.getVersion();
+        assertEquals(originalVersion + 1, newVersion);
+
+        // Another HubEvent tells us that an update occurred in the Cloud;
+        // the update was applied locally, to an existing record.
+        inboundModelEventAccumulator.take(1);
+        inboundModelEventAccumulator.stop().clear();
 
         // Jameson should be in the local DataStore, and last name should be updated.
-        BlogOwner localOwner = dataStore.get(BlogOwner.class, remoteOwner.getId());
+        BlogOwner localOwner = dataStore.get(BlogOwner.class, originalModel.getId());
         assertEquals("Jameson Williams", localOwner.getName());
     }
 
