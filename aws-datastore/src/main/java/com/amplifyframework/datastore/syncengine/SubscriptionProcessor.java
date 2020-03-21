@@ -17,43 +17,37 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.DataStoreChannelEventName;
-import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.appsync.AppSync;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
-import io.reactivex.Single;
+import java.util.Objects;
+
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.subjects.ReplaySubject;
 
 /**
- * Starts subscriptions to AppSync. Applies data to local storage when it arrives.
- *
- * TODO: this component should save data via the merger, not directly through the
- * {@link LocalStorageAdapter}.
+ * Observes mutations occurring on a remote system, via the {@link RemoteModelMutations}.
+ * For each, marries the data back into the local DataStore, through the {@link Merger}.
  */
 final class SubscriptionProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private final RemoteModelMutations remoteModelMutations;
-    private final LocalStorageAdapter localStorageAdapter;
+    private final Merger merger;
     private final CompositeDisposable disposable;
     private final ReplaySubject<Mutation<? extends Model>> buffer;
 
+    /**
+     * Constructs a new SubscriptionProcessor.
+     * @param remoteModelMutations An observable stream of mutations occurring on other end of network
+     * @param merger A merger, to apply data back into local storage
+     */
     SubscriptionProcessor(
-            @NonNull LocalStorageAdapter localStorageAdapter,
-            @NonNull AppSync appSync,
-            @NonNull ModelProvider modelProvider) {
-        this.localStorageAdapter = localStorageAdapter;
-        this.remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
+            @NonNull RemoteModelMutations remoteModelMutations,
+            @NonNull Merger merger) {
+        this.remoteModelMutations = Objects.requireNonNull(remoteModelMutations);
+        this.merger = Objects.requireNonNull(merger);
         this.disposable = new CompositeDisposable();
         this.buffer = ReplaySubject.create();
     }
@@ -79,13 +73,13 @@ final class SubscriptionProcessor {
      * This should be called after {@link #startSubscriptions()}.
      */
     void startDrainingMutationBuffer() {
-        disposable.add(buffer
-            .flatMapSingle(this::applyMutationToLocalStorage)
-            .subscribe(
-                savedMutation -> LOG.info("Saved a mutation from a subscription: " + savedMutation),
-                failure -> LOG.warn("Reading subscriptions buffer has failed.", failure),
-                () -> LOG.warn("Reading from subscriptions buffer is completed.")
-            )
+        disposable.add(
+            buffer
+                .flatMapCompletable(mutation -> merger.merge(mutation.modelWithMetadata()))
+                .subscribe(
+                    () -> LOG.warn("Reading from subscriptions buffer is completed."),
+                    failure -> LOG.warn("Reading subscriptions buffer has failed.", failure)
+                )
         );
     }
 
@@ -94,34 +88,5 @@ final class SubscriptionProcessor {
      */
     void stopAllSubscriptionActivity() {
         disposable.clear();
-    }
-
-    private Single<Mutation<? extends Model>> applyMutationToLocalStorage(Mutation<? extends Model> mutation) {
-        final StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
-        return Single.defer(() -> Single.create(emitter -> {
-            final Consumer<StorageItemChange.Record> onSuccess =
-                result -> emitter.onSuccess(mutation);
-            final Consumer<DataStoreException> onError = emitter::onError;
-
-            switch (mutation.type()) {
-                case UPDATE:
-                case CREATE:
-                    localStorageAdapter.save(mutation.model(), initiator, onSuccess, onError);
-                    break;
-                case DELETE:
-                    localStorageAdapter.delete(mutation.model(), initiator, onSuccess, onError);
-                    break;
-                default:
-                    throw new DataStoreException(
-                        "Unknown mutation type = " + mutation.type(),
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                    );
-            }
-
-            // Notify Hub that we just updated the local storage.
-            HubEvent<? extends Model> receivedFromCloudEvent =
-                HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, mutation.model());
-            Amplify.Hub.publish(HubChannel.DATASTORE, receivedFromCloudEvent);
-        }));
     }
 }

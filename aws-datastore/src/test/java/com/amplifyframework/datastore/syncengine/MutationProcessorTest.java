@@ -65,7 +65,9 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
 
         MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
-        this.mutationProcessor = new MutationProcessor(inMemoryStorageAdapter, mutationOutbox, appSync);
+        Merger merger = new Merger(inMemoryStorageAdapter);
+        VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
+        this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
 
         this.publicationEventAccumulator =
             HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);

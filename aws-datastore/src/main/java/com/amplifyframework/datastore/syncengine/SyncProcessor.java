@@ -17,18 +17,13 @@ package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Action;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.logging.Logger;
+
+import java.util.Objects;
 
 import io.reactivex.Completable;
 import io.reactivex.schedulers.Schedulers;
@@ -38,25 +33,31 @@ import io.reactivex.schedulers.Schedulers;
  * {@link RemoteModelState}. Hydration refers to populating the local storage
  * with values from a remote system.
  *
- * TODO: the sync processor should save items via the Merger, not directly
- * into the {@link LocalStorageAdapter} as it is currently.
+ * For all items returned by the sync, merge them back into local storage through
+ * the {@link Merger}.
  */
 final class SyncProcessor {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final RemoteModelState remoteModelState;
-    private final LocalStorageAdapter localStorageAdapter;
+    private final Merger merger;
     private final ModelProvider modelProvider;
     private final ModelSchemaRegistry modelSchemaRegistry;
 
+    /**
+     * Constructs a new SyncProcessor.
+     * @param remoteModelState Provides an observable stream of the state of all remote models
+     * @param merger Allows network data to be ingested back into the local repository
+     * @param modelProvider Provides the set of model classes managed by this system
+     * @param modelSchemaRegistry A registry of schema for all models managed by this system
+     */
     SyncProcessor(
-            RemoteModelState remoteModelState,
-            LocalStorageAdapter localStorageAdapter,
-            ModelProvider modelProvider,
-            ModelSchemaRegistry modelSchemaRegistry) {
-        this.remoteModelState = remoteModelState;
-        this.localStorageAdapter = localStorageAdapter;
-        this.modelProvider = modelProvider;
-        this.modelSchemaRegistry = modelSchemaRegistry;
+            @NonNull RemoteModelState remoteModelState,
+            @NonNull Merger merger,
+            @NonNull ModelProvider modelProvider,
+            @NonNull ModelSchemaRegistry modelSchemaRegistry) {
+        this.remoteModelState = Objects.requireNonNull(remoteModelState);
+        this.merger = Objects.requireNonNull(merger);
+        this.modelProvider = Objects.requireNonNull(modelProvider);
+        this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
     }
 
     /**
@@ -70,67 +71,18 @@ final class SyncProcessor {
 
         // Observe the remote model states,
         return remoteModelState.observe()
-            .sorted(modelWithMetadataComparator::compare)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
-            // For each model state, provide it as an input to a completable operation
-            .flatMapCompletable(modelWithMetadata -> {
-                // Save the metadata if the data save succeeds
-                LOG.info("Base sync, saving " + modelWithMetadata);
-                return saveItemToStorage(modelWithMetadata)
-                    .andThen(saveMetadataToStorage(modelWithMetadata));
-            });
-    }
-
-    private <T extends Model> Completable saveItemToStorage(ModelWithMetadata<T> modelWithMetadata) {
-        return Completable.create(emitter -> {
-            // Save the model portion
-            final ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
-            final T item = modelWithMetadata.getModel();
-            if (Boolean.TRUE.equals(metadata.isDeleted())) {
-                ifPresent(item.getClass(), item.getId(), () ->
-                    localStorageAdapter.delete(item, StorageItemChange.Initiator.SYNC_ENGINE,
-                        ignoredRecord -> emitter.onComplete(), emitter::onError),
-                    emitter::onComplete
-                );
-            } else {
-                localStorageAdapter.save(item, StorageItemChange.Initiator.SYNC_ENGINE,
-                    ignoredRecord -> emitter.onComplete(), emitter::onError);
-            }
-        });
+            .sorted(modelWithMetadataComparator::compare)
+            // For each ModelWithMetadata, merge it into the local store.
+            .flatMapCompletable(merger::merge);
     }
 
     /**
-     * If the DataStore contains an item of the given class and with the given ID,
-     * then perform an action. Otherwise, perform some other action.
-     * @param clazz Search for this class in the DataStore
-     * @param modelId Search for an item with this ID in the DataStore
-     * @param onPresent If there is a match, perform this action
-     * @param onNotPresent If there is NOT a match, perform this action as a fallback
-     * @param <T> The type of item being searched
+     * Compares to {@link ModelWithMetadata}, according to the topological order
+     * of the {@link Model} within each. Topological order is determined by the
+     * {@link TopologicalOrdering} utility.
      */
-    private <T extends Model> void ifPresent(
-            Class<T> clazz, String modelId, Action onPresent, Action onNotPresent) {
-        localStorageAdapter.query(clazz, QueryField.field("id").eq(modelId), iterator -> {
-            if (iterator.hasNext()) {
-                onPresent.call();
-            } else {
-                onNotPresent.call();
-            }
-        }, failure -> onNotPresent.call());
-    }
-
-    private <T extends Model> Completable saveMetadataToStorage(ModelWithMetadata<T> modelWithMetadata) {
-        return Completable.create(emitter -> {
-            // Save the metadata portion
-            // This is separate from the model save since they have two distinct completions.
-            final ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
-            localStorageAdapter.save(metadata, StorageItemChange.Initiator.SYNC_ENGINE,
-                ignoredRecord -> emitter.onComplete(), emitter::onError);
-        });
-    }
-
-    @SuppressWarnings("MethodTypeParameterName") // <MWM> is used; <M> could be mistaken for just Model.
     private static final class ModelWithMetadataComparator {
         private final ModelSchemaRegistry modelSchemaRegistry;
         private final TopologicalOrdering topologicalOrdering;
@@ -141,18 +93,18 @@ final class SyncProcessor {
                 TopologicalOrdering.forRegisteredModels(modelSchemaRegistry, modelProvider);
         }
 
-        private <MWM extends ModelWithMetadata<? extends Model>> int compare(MWM left, MWM right) {
+        private <M extends ModelWithMetadata<? extends Model>> int compare(M left, M right) {
             return topologicalOrdering.compare(schemaFor(left), schemaFor(right));
         }
 
         /**
          * Gets the model schema for a model.
          * @param modelWithMetadata A model with metadata about it
-         * @param <MWM> Type of model
+         * @param <M> Type for ModelWithMetadata containing arbitrary model instances
          * @return Model Schema for model
          */
         @NonNull
-        private <MWM extends ModelWithMetadata<? extends Model>> ModelSchema schemaFor(MWM modelWithMetadata) {
+        private <M extends ModelWithMetadata<? extends Model>> ModelSchema schemaFor(M modelWithMetadata) {
             return modelSchemaRegistry.getModelSchemaForModelInstance(modelWithMetadata.getModel());
         }
     }
