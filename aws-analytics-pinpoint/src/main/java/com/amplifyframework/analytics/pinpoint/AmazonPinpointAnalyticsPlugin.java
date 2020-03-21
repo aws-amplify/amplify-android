@@ -64,6 +64,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     private static final String USER_NAME = "name";
     private static final String USER_EMAIL = "email";
     private static final String USER_PLAN = "plan";
+
     private final Application application;
     private AutoEventSubmitter autoEventSubmitter;
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
@@ -92,7 +93,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * Accessor method for pinpoint targeting client.
      * @return returns pinpoint targeting client.
      */
-    protected TargetingClient getTargetingClient() {
+    TargetingClient getTargetingClient() {
         return targetingClient;
     }
 

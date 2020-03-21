@@ -30,8 +30,7 @@ public final class UserProfile {
     private final Location location;
     private final Properties customProperties;
 
-    public UserProfile(@NonNull Builder builder) {
-        Objects.requireNonNull(builder);
+    private UserProfile(@NonNull Builder builder) {
         this.name = builder.name;
         this.email = builder.email;
         this.plan = builder.plan;
@@ -165,8 +164,7 @@ public final class UserProfile {
         private final String region;
         private final String country;
 
-        public Location(@NonNull Builder builder) {
-            Objects.requireNonNull(builder);
+        private Location(@NonNull Builder builder) {
             this.latitude = builder.latitude;
             this.longitude = builder.longitude;
             this.postalCode = builder.postalCode;
