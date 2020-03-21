@@ -16,6 +16,7 @@
 package com.amplifyframework.datastore.syncengine;
 
 import android.annotation.SuppressLint;
+import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
@@ -33,6 +34,7 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
 
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import io.reactivex.Emitter;
@@ -57,11 +59,16 @@ final class RemoteModelMutations {
     private final ModelProvider modelProvider;
     private final Set<Subscription> subscriptions;
 
+    /**
+     * Constructs a new RemoteModelMutations.
+     * @param appSync An interface to an AppSync endpoint
+     * @param modelProvider Provides the model classes managed by this system
+     */
     RemoteModelMutations(
-            AppSync appSync,
-            ModelProvider modelProvider) {
-        this.modelProvider = modelProvider;
-        this.appSync = appSync;
+            @NonNull AppSync appSync,
+            @NonNull ModelProvider modelProvider) {
+        this.appSync = Objects.requireNonNull(appSync);
+        this.modelProvider = Objects.requireNonNull(modelProvider);
         this.subscriptions = new HashSet<>();
     }
 
@@ -123,8 +130,7 @@ final class RemoteModelMutations {
                 return this;
             }
 
-            @SuppressWarnings("unchecked")
-                // TODO: can this be improved?
+            @SuppressWarnings("unchecked") // TODO: can this be improved?
             Request<T> modelClass(Class<? extends Model> modelClass) {
                 this.modelClass = (Class<T>) modelClass;
                 return this;
@@ -210,7 +216,7 @@ final class RemoteModelMutations {
                         ));
                     } else {
                         commonEmitter.onNext(Mutation.<T>builder()
-                            .model(response.getData().getModel())
+                            .modelWithMetadata(response.getData())
                             .modelClass(modelClazz)
                             .type(fromSubscriptionType(subscriptionType))
                             .build());

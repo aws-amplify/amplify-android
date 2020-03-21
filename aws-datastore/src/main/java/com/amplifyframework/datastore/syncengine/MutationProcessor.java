@@ -21,48 +21,43 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
-import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
-import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
  * The {@link MutationProcessor} observes the {@link MutationOutbox}, and publishes its items to an
- * {@link AppSync}.
- *
- * The responses to these mutations are themselves forwarded to the Merger (TODO: write a merger.)
+ * {@link AppSync}. The responses to these mutations are themselves forwarded to the Merger,
+ * which may again modify the store.
  */
 @SuppressWarnings("CodeBlock2Expr")
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
-    private final LocalStorageAdapter localStorageAdapter;
+    private final VersionRepository versionRepository;
+    private final Merger merger;
     private final AppSync appSync;
     private final MutationOutbox mutationOutbox;
     private final CompositeDisposable disposable;
 
     MutationProcessor(
-            @NonNull LocalStorageAdapter localStorageAdapter,
+            @NonNull Merger merger,
+            @NonNull VersionRepository versionRepository,
             @NonNull MutationOutbox mutationOutbox,
             @NonNull AppSync appSync) {
-        this.localStorageAdapter = localStorageAdapter;
+        this.merger = Objects.requireNonNull(merger);
+        this.versionRepository = Objects.requireNonNull(versionRepository);
         this.appSync = Objects.requireNonNull(appSync);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
         this.disposable = new CompositeDisposable();
@@ -83,7 +78,10 @@ final class MutationProcessor {
                 .observeOn(Schedulers.io())
                 .flatMapSingle(this::processOutboxItem)
                 .subscribe(
-                    this::announceSuccessToHub,
+                    processedChange -> {
+                        LOG.info("Change processed successfully! " + processedChange);
+                        announceSuccessToHub(processedChange);
+                    },
                     error -> LOG.warn("Error ended observation of mutation outbox: ", error),
                     () -> LOG.warn("Observation of mutation outbox was completed.")
                 )
@@ -99,12 +97,8 @@ final class MutationProcessor {
     private <T extends Model> Single<StorageItemChange<T>> processOutboxItem(StorageItemChange<T> mutationOutboxItem) {
         // First, publish the change over the network.
         return publishToNetwork(mutationOutboxItem)
-            .flatMapCompletable(modelWithMetadata -> {
-                // Then, save the RESPONSE of the network call, locally
-                return saveModel(modelWithMetadata.getModel())
-                    // If that succeeds, save the metadata, too.
-                    .andThen(saveModel(modelWithMetadata.getSyncMetadata()));
-            })
+            // Merge the response back into the local store.
+            .flatMapCompletable(merger::merge)
             // Lastly, remove the item from the outbox, so we don't process it again.
             .andThen(mutationOutbox.remove(mutationOutboxItem));
     }
@@ -115,22 +109,9 @@ final class MutationProcessor {
      * @param <T> Type of model
      */
     private <T extends Model> void announceSuccessToHub(StorageItemChange<T> processedChange) {
-        LOG.info("Change processed successfully! " + processedChange);
         HubEvent<StorageItemChange<? extends Model>> publishedToCloudEvent =
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedChange);
         Amplify.Hub.publish(HubChannel.DATASTORE, publishedToCloudEvent);
-    }
-
-    // This should go through the Merger, not directly into storage.
-    private <T extends Model> Completable saveModel(T model) {
-        return Completable.create(emitter ->
-            localStorageAdapter.save(
-                model,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                record -> emitter.onComplete(),
-                emitter::onError
-            )
-        );
     }
 
     /**
@@ -165,7 +146,7 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch an update mutation
     private <T extends Model> Single<ModelWithMetadata<T>> update(StorageItemChange<T> storageItemChange) {
-        return findModelVersion(storageItemChange.item()).flatMap(version -> {
+        return versionRepository.findModelVersion(storageItemChange.item()).flatMap(version -> {
             return publishWithStrategy(storageItemChange, (model, onSuccess, onError) -> {
                 appSync.update(model, version, onSuccess, onError);
             });
@@ -179,41 +160,12 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch a delete mutation
     private <T extends Model> Single<ModelWithMetadata<T>> delete(StorageItemChange<T> storageItemChange) {
-        return findModelVersion(storageItemChange.item()).flatMap(version -> {
+        return versionRepository.findModelVersion(storageItemChange.item()).flatMap(version -> {
             return publishWithStrategy(storageItemChange, (model, onSuccess, onError) -> {
                 final Class<T> modelClass = storageItemChange.itemClass();
                 final String modelId = storageItemChange.item().getId();
                 appSync.delete(modelClass, modelId, version, onSuccess, onError);
             });
-        });
-    }
-
-    /**
-     * Find the current version of a model, that we have in the local store.
-     * @param model A model
-     * @param <T> Type of model
-     * @return Current version known locally
-     */
-    private <T extends Model> Single<Integer> findModelVersion(T model) {
-        // The ModelMetadata for the model uses the same ID as an identifier.
-        final QueryPredicate hasMatchingId = QueryField.field("id").eq(model.getId());
-        return Single.create(emitter -> {
-            localStorageAdapter.query(ModelMetadata.class, hasMatchingId, iterableResults -> {
-                // Extract the results into a list.
-                final List<ModelMetadata> results = new ArrayList<>();
-                while (iterableResults.hasNext()) {
-                    results.add(iterableResults.next());
-                }
-                // There should be only one metadata for the model....
-                if (results.size() == 1) {
-                    emitter.onSuccess(results.get(0).getVersion());
-                } else {
-                    emitter.onError(new DataStoreException(
-                        "Wanted 1 metadata for item with id = " + model.getId() + ", but had " + results.size() + ".",
-                        "This is likely a bug. please report to AWS."
-                    ));
-                }
-            }, emitter::onError);
         });
     }
 

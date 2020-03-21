@@ -79,9 +79,9 @@ public final class SyncProcessorTest {
 
         this.appSync = mock(AppSync.class);
         final RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
+        final Merger merger = new Merger(inMemoryStorageAdapter);
 
-        this.syncProcessor =
-            new SyncProcessor(remoteModelState, inMemoryStorageAdapter, modelProvider, modelSchemaRegistry);
+        this.syncProcessor = new SyncProcessor(remoteModelState, merger, modelProvider, modelSchemaRegistry);
     }
 
     /**
