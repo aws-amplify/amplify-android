@@ -30,7 +30,7 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
     private final long autoFlushEventsInterval;
     private final long autoSessionTrackingInterval;
 
-    AmazonPinpointAnalyticsPluginConfiguration(Builder builder) {
+    private AmazonPinpointAnalyticsPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.region = builder.region;
         this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
