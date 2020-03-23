@@ -85,7 +85,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * Accessor method for pinpoint analytics client.
      * @return returns pinpoint analytics client.
      */
-    protected AnalyticsClient getAnalyticsClient() {
+    AnalyticsClient getAnalyticsClient() {
         return analyticsClient;
     }
 
@@ -348,7 +348,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             );
         }
 
-        pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);
+        pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
         PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
         this.analyticsClient = pinpointManager.getAnalyticsClient();
         this.targetingClient = pinpointManager.getTargetingClient();
