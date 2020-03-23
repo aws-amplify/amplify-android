@@ -201,7 +201,6 @@ public class AnalyticsPinpointInstrumentedTest {
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void testIdentifyUser() {
-        // Create a location object
         UserProfile.Location location = UserProfile.Location.builder()
                 .latitude(47.6154086)
                 .longitude(-122.3349685)
@@ -224,7 +223,6 @@ public class AnalyticsPinpointInstrumentedTest {
 
         Amplify.Analytics.identifyUser("userId", userProfile);
 
-        // Test endpoint attributes and metrics.
         EndpointProfile endpointProfile = targetingClient.currentEndpoint();
         EndpointProfileLocation endpointProfileLocation = endpointProfile.getLocation();
         assertEquals("user@test.com", endpointProfile.getAttribute("email").get(0));
