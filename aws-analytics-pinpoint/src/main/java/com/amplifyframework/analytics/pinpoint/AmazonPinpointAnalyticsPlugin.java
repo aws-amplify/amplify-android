@@ -18,35 +18,59 @@ package com.amplifyframework.analytics.pinpoint;
 import android.app.Application;
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringDef;
 
+import com.amplifyframework.analytics.AnalyticsChannelEventName;
 import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.AnalyticsProfile;
 import com.amplifyframework.analytics.Properties;
 import com.amplifyframework.analytics.Property;
+import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 
 import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.TargetingClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfile;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfileLocation;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfileUser;
 import com.amazonaws.regions.Regions;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
+    @SuppressWarnings("checkstyle:WhitespaceAround")
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({
+        USER_NAME,
+        USER_EMAIL,
+        USER_PLAN
+    })
+    private @interface PinpointUserProfileAttribute {}
+    private static final String USER_NAME = "name";
+    private static final String USER_EMAIL = "email";
+    private static final String USER_PLAN = "plan";
+
     private final Application application;
     private AutoEventSubmitter autoEventSubmitter;
     private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
     private AutoSessionTracker autoSessionTracker;
+    private TargetingClient targetingClient;
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
@@ -61,8 +85,16 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * Accessor method for pinpoint analytics client.
      * @return returns pinpoint analytics client.
      */
-    protected AnalyticsClient getAnalyticsClient() {
+    AnalyticsClient getAnalyticsClient() {
         return analyticsClient;
+    }
+
+    /**
+     * Accessor method for pinpoint targeting client.
+     * @return returns pinpoint targeting client.
+     */
+    TargetingClient getTargetingClient() {
+        return targetingClient;
     }
 
     /**
@@ -79,8 +111,99 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
-        throw new UnsupportedOperationException("This operation has not been implemented yet.");
+    public void identifyUser(@NonNull String userId, @Nullable UserProfile userProfile) {
+        Objects.requireNonNull(userId);
+        EndpointProfile endpointProfile = targetingClient.currentEndpoint();
+        // Assign userId to the endpoint.
+        EndpointProfileUser user = new EndpointProfileUser();
+        user.setUserId(userId);
+        endpointProfile.setUser(user);
+        // Add user-specific data to the endpoint
+        if (userProfile != null) {
+            addUserProfileToEndpoint(endpointProfile, userProfile);
+        }
+        // update endpoint
+        targetingClient.updateEndpointProfile();
+    }
+
+    /**
+     * Add user specific data from {@link UserProfile} to the endpoint profile.
+     * @param endpointProfile endpoint profile.
+     * @param userProfile user specific data to be added to the endpoint.
+     */
+    private void addUserProfileToEndpoint(@NonNull EndpointProfile endpointProfile,
+                                          @NonNull UserProfile userProfile) {
+        addAttribute(endpointProfile, USER_NAME, userProfile.getName());
+        addAttribute(endpointProfile, USER_EMAIL, userProfile.getEmail());
+        addAttribute(endpointProfile, USER_PLAN, userProfile.getPlan());
+
+        // Add location
+        if (userProfile.getLocation() != null) {
+            addLocation(endpointProfile.getLocation(), userProfile.getLocation());
+        }
+
+        // Add custom properties
+        if (userProfile.getCustomProperties() != null) {
+            addCustomProperties(endpointProfile, userProfile.getCustomProperties());
+        }
+    }
+
+    /**
+     * Add user profile attribute to the endpoint profile. If an attribute value is null. It is
+     * removed from the set of endpoint attributes.
+     * @param endpointProfile current endpoint profile.
+     * @param pinpointUserProfileAttribute String def enumerating the allowed user attributes.
+     * @param attributeValue user attribute value.
+     */
+    private void addAttribute(@NonNull EndpointProfile endpointProfile,
+                              @PinpointUserProfileAttribute String pinpointUserProfileAttribute,
+                              @Nullable final String attributeValue) {
+        if (attributeValue != null) {
+            endpointProfile.addAttribute(pinpointUserProfileAttribute,
+                    Collections.singletonList(attributeValue));
+        } else {
+            // If attribute value is null, corresponding attribute is removed/unset from the endpoint profile.
+            endpointProfile.addAttribute(pinpointUserProfileAttribute, null);
+        }
+    }
+
+    /**
+     * Add custom user properties to the endpoint profile.
+     * @param endpointProfile endpoint profile.
+     * @param customProperties custom user properties to be added to the endpoint profile.
+     */
+    private void addCustomProperties(@NonNull EndpointProfile endpointProfile,
+                                     @NonNull Properties customProperties) {
+        for (Map.Entry<String, Property<?>> entry : customProperties.get().entrySet()) {
+            if (entry.getValue() instanceof StringProperty) {
+                endpointProfile.addAttribute(entry.getKey(),
+                        Collections.singletonList(((StringProperty) entry.getValue()).getValue()));
+            } else if (entry.getValue() instanceof DoubleProperty) {
+                endpointProfile.addMetric(entry.getKey(),
+                        ((DoubleProperty) entry.getValue()).getValue());
+            } else {
+                Amplify.Hub.publish(HubChannel.ANALYTICS,
+                        HubEvent.create(AnalyticsChannelEventName.INVALID_PROPERTY_TYPE,
+                        new AnalyticsException("Invalid Property type detected.",
+                                "AmazonPinpointAnalyticsPlugin supports only StringProperty or " +
+                                        "DoubleProperty.")));
+            }
+        }
+    }
+
+    /**
+     * Add location details to the endpoint profile location.
+     * @param endpointProfileLocation endpoint location.
+     * @param location location details.
+     */
+    private void addLocation(@NonNull EndpointProfileLocation endpointProfileLocation,
+                             @NonNull UserProfile.Location location) {
+        endpointProfileLocation.setLatitude(location.getLatitude());
+        endpointProfileLocation.setLongitude(location.getLongitude());
+        endpointProfileLocation.setPostalCode(location.getPostalCode());
+        endpointProfileLocation.setCity(location.getCity());
+        endpointProfileLocation.setRegion(location.getRegion());
+        endpointProfileLocation.setCountry(location.getCountry());
     }
 
     /**
@@ -141,9 +264,11 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             } else if (entry.getValue() instanceof DoubleProperty) {
                 analyticsClient.addGlobalMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
             } else {
-                Amplify.Hub.publish(HubChannel.ANALYTICS, HubEvent.create("Analytics.registerGlobalProperties",
-                    "Invalid property type detected. AmazonPinpointAnalyticsPlugin supports" +
-                        " only StringProperty or DoubleProperty. Refer to the documentation for details."));
+                Amplify.Hub.publish(HubChannel.ANALYTICS,
+                        HubEvent.create(AnalyticsChannelEventName.INVALID_PROPERTY_TYPE,
+                                new AnalyticsException("Invalid Property type detected.",
+                                        "AmazonPinpointAnalyticsPlugin supports only StringProperty or " +
+                                                "DoubleProperty.")));
             }
         }
     }
@@ -223,9 +348,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             );
         }
 
-        pinpointAnalyticsPluginConfiguration = new AmazonPinpointAnalyticsPluginConfiguration(configurationBuilder);
+        pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
         PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
         this.analyticsClient = pinpointManager.getAnalyticsClient();
+        this.targetingClient = pinpointManager.getTargetingClient();
 
         // Initiate the logic to automatically submit events periodically
         autoEventSubmitter = new AutoEventSubmitter(analyticsClient,
