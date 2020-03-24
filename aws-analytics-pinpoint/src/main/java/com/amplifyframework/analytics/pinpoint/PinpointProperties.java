@@ -25,7 +25,7 @@ import java.util.Map;
  */
 public final class PinpointProperties extends Properties {
 
-    PinpointProperties(Builder builder) {
+    private PinpointProperties(Builder builder) {
         // Populate the attributes
         for (Map.Entry<String, String> entry: builder.attributes.entrySet()) {
             this.properties.put(entry.getKey(), StringProperty.of(entry.getValue()));
