@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.utils.RestOperationRequestUtils;
+import com.amplifyframework.api.aws.utils.RestRequestFactory;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestResponse;
@@ -78,10 +78,10 @@ public final class AWSRestOperation extends RestOperation {
             return;
         }
         try {
-            URL url = RestOperationRequestUtils.constructURL(endpoint,
+            URL url = RestRequestFactory.createURL(endpoint,
                     getRequest().getPath(),
                     getRequest().getQueryParameters());
-            Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
+            Request request = RestRequestFactory.createRequest(url,
                     getRequest().getData(),
                     getRequest().getHeaders(),
                     getRequest().getHttpMethod());
