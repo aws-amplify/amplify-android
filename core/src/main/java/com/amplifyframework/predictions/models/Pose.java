@@ -15,10 +15,6 @@
 
 package com.amplifyframework.predictions.models;
 
-import androidx.annotation.NonNull;
-
-import java.util.Objects;
-
 /**
  * Class to represent a pose by using three main
  * principal axes: pitch, roll, and yaw.
@@ -26,15 +22,18 @@ import java.util.Objects;
  * @see <a href=https://en.wikipedia.org/wiki/Aircraft_principal_axes#Principal_axes>Principal axes</a>
  */
 public final class Pose {
-    private final Double pitch;
-    private final Double roll;
-    private final Double yaw;
+    private final double pitch;
+    private final double roll;
+    private final double yaw;
 
-    private Pose(
-            @NonNull Double pitch,
-            @NonNull Double roll,
-            @NonNull Double yaw
-    ) {
+    /**
+     * Constructs a new instance of {@link Pose} using three
+     * principal axes of motion.
+     * @param pitch the pitch
+     * @param roll the roll
+     * @param yaw the yaw
+     */
+    public Pose(double pitch, double roll, double yaw) {
         this.pitch = pitch;
         this.roll = roll;
         this.yaw = yaw;
@@ -44,8 +43,7 @@ public final class Pose {
      * Gets the pitch value.
      * @return the pitch
      */
-    @NonNull
-    public Double getPitch() {
+    public double getPitch() {
         return pitch;
     }
 
@@ -53,8 +51,7 @@ public final class Pose {
      * Gets the roll value.
      * @return the roll
      */
-    @NonNull
-    public Double getRoll() {
+    public double getRoll() {
         return roll;
     }
 
@@ -62,29 +59,7 @@ public final class Pose {
      * Gets the yaw value.
      * @return the yaw
      */
-    @NonNull
-    public Double getYaw() {
+    public double getYaw() {
         return yaw;
-    }
-
-    /**
-     * Construct an immutable instance of {@link Pose} from
-     * the three positional values: pitch, roll, and yaw.
-     * @param pitch the pitch
-     * @param roll the roll
-     * @param yaw the yaw
-     * @return An instance of {@link Pose}
-     */
-    @NonNull
-    public static Pose from(
-            @NonNull Double pitch,
-            @NonNull Double roll,
-            @NonNull Double yaw
-    ) {
-        return new Pose(
-                Objects.requireNonNull(pitch),
-                Objects.requireNonNull(roll),
-                Objects.requireNonNull(yaw)
-        );
     }
 }

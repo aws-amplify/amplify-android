@@ -17,116 +17,96 @@ package com.amplifyframework.predictions.models;
 
 import android.graphics.Rect;
 import androidx.annotation.NonNull;
-
-import java.util.Objects;
+import androidx.annotation.Nullable;
 
 /**
- * Class to represent a selection from an image.
+ * Represents a selection from an image. It contains
+ * the bounding geometry of a selection and an
+ * indicator to regard its selection state.
+ *
+ * Defaults to deselected state until explicitly selected.
  */
 public final class Selection {
-    private final Rect boundingBox;
-    private final Polygon polygon;
-    private final Boolean isSelected;
+    private final TargetBoundary boundary;
 
-    private Selection(
-            @NonNull Rect boundingBox,
-            @NonNull Polygon polygon,
-            @NonNull Boolean isSelected
-    ) {
-        this.boundingBox = boundingBox;
-        this.polygon = polygon;
-        this.isSelected = isSelected;
+    private boolean selected;
+
+    /**
+     * Constructs an instance of {@link Selection} using
+     * rectangular boundary.
+     * @param box the bounding box
+     */
+    public Selection(@NonNull Rect box) {
+        this(TargetBoundary.builder().box(box).build());
     }
 
     /**
-     * Gets the rectangular boundary.
+     * Constructs an instance of {@link Selection} using
+     * polygonal boundary.
+     * @param polygon the bounding polygon
+     */
+    public Selection(@NonNull Polygon polygon) {
+        this(TargetBoundary.builder().polygon(polygon).build());
+    }
+
+    /**
+     * Constructs an instance of {@link Selection} using
+     * target boundary.
+     * @param boundary the target boundary
+     */
+    public Selection(@NonNull TargetBoundary boundary) {
+        this.boundary = boundary;
+        this.selected = false;
+    }
+
+    /**
+     * Gets the bounding geometry.
+     * @return the target boundary
+     */
+    @NonNull
+    public TargetBoundary getBoundary() {
+        return boundary;
+    }
+
+    /**
+     * Gets the rectangular boundary. It fetches the
+     * box portion of registered target boundary.
      * @return the bounding box
      */
-    @NonNull
-    public Rect getBoundingBox() {
-        return boundingBox;
+    @Nullable
+    public Rect getBox() {
+        return boundary.getBox();
     }
 
     /**
-     * Gets the polygonal boundary.
+     * Gets the polygonal boundary. It fetches the
+     * polygon portion of registered target boundary.
      * @return the polygon
      */
-    @NonNull
+    @Nullable
     public Polygon getPolygon() {
-        return polygon;
+        return boundary.getPolygon();
     }
 
     /**
      * Returns true if this selection is selected.
      * @return true if this selection is selected
      */
-    @NonNull
-    public Boolean isSelected() {
-        return isSelected;
+    public boolean isSelected() {
+        return selected;
     }
 
     /**
-     * Gets a builder to construct a selection object.
-     * @return a new builder
+     * Activates the selection flag.
      */
-    @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public void select() {
+        this.selected = true;
     }
 
     /**
-     * Builder for {@link Selection}.
+     * Deactivates the selection flag.
      */
-    public static final class Builder {
-        private Rect boundingBox;
-        private Polygon polygon;
-        private Boolean isSelected;
-
-        /**
-         * Sets the rectangular boundary and return this builder.
-         * @param boundingBox the bounding box
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder boundingBox(@NonNull Rect boundingBox) {
-            this.boundingBox = Objects.requireNonNull(boundingBox);
-            return this;
-        }
-
-        /**
-         * Sets the polygonal boundary and return this builder.
-         * @param polygon the polygon
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder polygon(@NonNull Polygon polygon) {
-            this.polygon = Objects.requireNonNull(polygon);
-            return this;
-        }
-
-        /**
-         * Sets the selection flag and return this builder.
-         * @param isSelected the selection flag
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder isSelected(@NonNull Boolean isSelected) {
-            this.isSelected = Objects.requireNonNull(isSelected);
-            return this;
-        }
-
-        /**
-         * Constructs a new instance of {@link Selection} using
-         * the values assigned to this builder.
-         * @return An instance of {@link Selection}
-         */
-        @NonNull
-        public Selection build() {
-            return new Selection(
-                    Objects.requireNonNull(boundingBox),
-                    Objects.requireNonNull(polygon),
-                    Objects.requireNonNull(isSelected)
-            );
-        }
+    public void deselect() {
+        this.selected = false;
     }
 }
