@@ -16,50 +16,30 @@
 package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.Map;
-import java.util.Objects;
 
 /**
- * Class that holds the sentiment detection results for a
- * string of text for the predictions category.
+ * Class that holds the sentiment detection results
+ * for the predictions category.
  */
-public final class Sentiment {
-    private final SentimentType predominantSentiment;
-    private final Map<SentimentType, Float> sentimentScores;
+public final class Sentiment extends Attribute<SentimentType> {
+    /**
+     * Attribute type for {@link SentimentType}.
+     */
+    public static final String ATTRIBUTE_TYPE = SentimentType.class.getSimpleName();
 
-    private Sentiment(
-            @NonNull SentimentType predominantSentiment,
-            @Nullable Map<SentimentType, Float> sentimentScores
-    ) {
-        this.predominantSentiment = predominantSentiment;
-        this.sentimentScores = sentimentScores;
+    private Sentiment(final Builder builder) {
+        super(builder);
     }
 
-    /**
-     * Gets the detected predominant sentiment of the text.
-     * @return the predominant sentiment type
-     */
+    @Override
     @NonNull
-    public SentimentType getPredominantSentiment() {
-        return predominantSentiment;
+    public String getType() {
+        return ATTRIBUTE_TYPE;
     }
 
     /**
-     * Gets a map of associated sentiments and their confidence
-     * scores.
-     * @return the map of associated sentiments and scores
-     */
-    @Nullable
-    public Map<SentimentType, Float> getSentimentScores() {
-        return sentimentScores;
-    }
-
-    /**
-     * Gets the builder to easily construct an instance of
-     * sentiment object.
-     * @return an unassigned builder instance
+     * Gets a builder to construct an Sentiments attribute.
+     * @return a new builder
      */
     @NonNull
     public static Builder builder() {
@@ -69,44 +49,11 @@ public final class Sentiment {
     /**
      * Builder for {@link Sentiment}.
      */
-    public static class Builder {
-        private SentimentType predominantSentiment;
-        private Map<SentimentType, Float> sentimentScores;
-
-        /**
-         * Sets the associated sentiment type and return this builder.
-         * @param predominantSentiment the predominant sentiment type
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder predominantSentiment(@NonNull SentimentType predominantSentiment) {
-            this.predominantSentiment = Objects.requireNonNull(predominantSentiment);
-            return this;
-        }
-
-        /**
-         * Sets the map of sentiment types and their scores and return
-         * this builder.
-         * @param sentimentScores the sentiment score map
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder sentimentScores(@Nullable Map<SentimentType, Float> sentimentScores) {
-            this.sentimentScores = sentimentScores;
-            return this;
-        }
-
-        /**
-         * Constructs a new instance of {@link Sentiment} from
-         * the values assigned to this builder.
-         * @return An instance of {@link Sentiment}
-         */
+    public static final class Builder extends Attribute.Builder<Builder, Sentiment, SentimentType> {
+        @Override
         @NonNull
         public Sentiment build() {
-            return new Sentiment(
-                    Objects.requireNonNull(predominantSentiment),
-                    sentimentScores
-            );
+            return new Sentiment(this);
         }
     }
 }

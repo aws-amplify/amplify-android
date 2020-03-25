@@ -17,5 +17,13 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
-public class PredictionsInterpretOptions implements Options {
+public final class PredictionsInterpretOptions implements Options {
+
+    private PredictionsInterpretOptions() {
+        // TODO: Add options
+    }
+
+    public static PredictionsInterpretOptions defaultInstance() {
+        return new PredictionsInterpretOptions();
+    }
 }

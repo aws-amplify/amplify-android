@@ -15,61 +15,45 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * Class that holds the label identification results
- * for the predictions category.
+ * Metadata to store the details of a detected label.
  */
-public final class Label {
-    private final String name;
-    private final LabelMetadata metadata;
-    private final List<Rect> boundingBoxes;
+public final class Label extends ImageAttribute<String> {
+    /**
+     * Attribute type for {@link Label}.
+     */
+    public static final String ATTRIBUTE_TYPE = Label.class.getSimpleName();
 
-    private Label(
-            @NonNull String name,
-            @Nullable LabelMetadata metadata,
-            @Nullable List<Rect> boundingBoxes
-    ) {
-        this.name = name;
-        this.metadata = metadata;
-        this.boundingBoxes = boundingBoxes;
+    private final List<String> parents;
+
+    private Label(final Builder builder) {
+        super(builder);
+        this.parents = builder.getParents();
+    }
+
+    @Override
+    @NonNull
+    public String getType() {
+        return ATTRIBUTE_TYPE;
     }
 
     /**
-     * Gets the name of the label.
-     * @return the label name
+     * Gets the list of parents' names.
+     * @return the list of parents
      */
     @NonNull
-    public String getName() {
-        return name;
+    public List<String> getParents() {
+        return parents;
     }
 
     /**
-     * Gets the label's metadata.
-     * @return the metadata
-     */
-    @Nullable
-    public LabelMetadata getMetadata() {
-        return metadata;
-    }
-
-    /**
-     * Gets the rectangular boundary.
-     * @return the bounding box
-     */
-    @Nullable
-    public List<Rect> getBoundingBoxes() {
-        return boundingBoxes;
-    }
-
-    /**
-     * Gets the builder for constructing label.
+     * Gets a builder to construct label metadata.
      * @return a new builder
      */
     @NonNull
@@ -80,56 +64,37 @@ public final class Label {
     /**
      * Builder for {@link Label}.
      */
-    public static class Builder {
-        private String name;
-        private LabelMetadata metadata;
-        private List<Rect> boundingBoxes;
+    public static final class Builder extends ImageAttribute.Builder<Builder, Label, String> {
+        private List<String> parents;
+
+        private Builder() {
+            this.parents = new ArrayList<>();
+        }
 
         /**
-         * Sets the name and return this builder.
-         * @param name the name
+         * Sets the list of parents' names and return this builder.
+         * @param parents the parents
          * @return this builder instance
          */
         @NonNull
-        public Builder name(@NonNull String name) {
-            this.name = Objects.requireNonNull(name);
+        public Builder parents(@NonNull List<String> parents) {
+            this.parents = Objects.requireNonNull(parents);
             return this;
         }
 
         /**
-         * Sets the metadata and return this builder.
-         * @param metadata the metadata
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder metadata(@Nullable LabelMetadata metadata) {
-            this.metadata = metadata;
-            return this;
-        }
-
-        /**
-         * Sets the list of boundaries and return this builder.
-         * @param boundingBoxes the bounding boxes
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder boundingBoxes(@Nullable List<Rect> boundingBoxes) {
-            this.boundingBoxes = boundingBoxes;
-            return this;
-        }
-
-        /**
-         * Constructs a new instance of {@link Label} from the
-         * values assigned to this builder instance.
+         * Construct a new instance of {@link Label} from
+         * the values assigned to this builder.
          * @return An instance of {@link Label}
          */
         @NonNull
         public Label build() {
-            return new Label(
-                    Objects.requireNonNull(name),
-                    metadata,
-                    boundingBoxes
-            );
+            return new Label(this);
+        }
+
+        @NonNull
+        List<String> getParents() {
+            return Objects.requireNonNull(parents);
         }
     }
 }

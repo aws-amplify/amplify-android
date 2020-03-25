@@ -18,114 +18,146 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 import java.util.Objects;
+import java.util.UUID;
 
 /**
- * Class to store detection attribute.
+ * A generic class to hold information about an inferred
+ * attribute and the confidence score for inference.
+ * @param <T> the attribute type
  */
-public final class Attribute {
-    private final String name;
-    private final Boolean value;
-    private final Float score;
+public abstract class Attribute<T> implements Comparable<Attribute<T>> {
+    private final String id;
+    private final T attribute;
+    private final float confidence;
 
-    private Attribute(
-            @NonNull String name,
-            @NonNull Boolean value,
-            @NonNull Float score
-    ) {
-        this.name = name;
-        this.value = value;
-        this.score = score;
+    Attribute(Builder<?, ? extends Attribute<T>, T> builder) {
+        this.id = builder.getId();
+        this.attribute = builder.getAttribute();
+        this.confidence = builder.getConfidence();
     }
 
     /**
-     * Gets the name of attribute.
-     * @return the name
+     * Gets the type name of attribute.
+     * @return the attribute type
      */
     @NonNull
-    public String getName() {
-        return name;
-    }
+    public abstract String getType();
 
     /**
-     * Gets the value of attribute.
-     * @return the value
+     * Gets the unique ID assigned to this result.
+     * @return unique ID
      */
     @NonNull
-    public Boolean getValue() {
-        return value;
+    public String getId() {
+        return id;
     }
 
     /**
-     * Gets the confidence score.
+     * Gets the detected value for this attribute.
+     * @return the detected result
+     */
+    @NonNull
+    public T getAttribute() {
+        return attribute;
+    }
+
+    /**
+     * Gets the confidence score for this detection result.
      * @return the confidence score
      */
-    @NonNull
-    public Float getScore() {
-        return score;
+    public float getConfidence() {
+        return confidence;
     }
 
     /**
-     * Gets a builder to construct an attribute.
-     * @return a new builder
+     * Compares an attribute to another. The attributes are
+     * sorted by their types' alphabetic order, and by
+     * decreasing order of their confidence score for those
+     * within the same type.
+     * @param other the other attribute to compare to
+     * @return positive if this item comes after
      */
-    @NonNull
-    public static Builder builder() {
-        return new Builder();
+    @Override
+    public int compareTo(Attribute<T> other) {
+        if (other == null) {
+            return -1;
+        }
+        int typeDiff = this.getType().compareToIgnoreCase(other.getType());
+        if (typeDiff != 0) {
+            return typeDiff;
+        }
+        return (int) (other.getConfidence() - this.getConfidence());
     }
 
     /**
-     * Builder for {@link Attribute}.
+     * Builder class to help construct an instance of {@link Attribute}.
+     * @param <B> Extension of this builder
+     * @param <R> Extension of result attribute instance
+     * @param <T> Type of result
      */
-    public static class Builder {
-        private String name;
-        private Boolean value;
-        private Float score;
+    @SuppressWarnings("unchecked")
+    abstract static class Builder<B extends Builder<B, R, T>, R extends Attribute<T>, T> {
+        private String id;
+        private T attribute;
+        private float confidence;
 
-        /**
-         * Sets the name and return this builder.
-         * @param name the name
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder name(@NonNull String name) {
-            this.name = Objects.requireNonNull(name);
-            return this;
+        Builder() {
+            this.id = UUID.randomUUID().toString();
         }
 
         /**
-         * Sets the value and return this builder.
-         * @param value the value
+         * Sets the ID and return this builder.
+         * @param id the identifier
          * @return this builder instance
          */
         @NonNull
-        public Builder value(@NonNull Boolean value) {
-            this.value = Objects.requireNonNull(value);
-            return this;
+        @SuppressWarnings("ParameterName")
+        public final B id(@NonNull String id) {
+            this.id = Objects.requireNonNull(id);
+            return (B) this;
         }
 
         /**
-         * Sets the score and return this builder.
-         * @param score the score
+         * Sets the attribute and return this builder.
+         * @param attribute the attribute
          * @return this builder instance
          */
         @NonNull
-        public Builder score(@NonNull Float score) {
-            this.score = Objects.requireNonNull(score);
-            return this;
+        public final B attribute(@NonNull T attribute) {
+            this.attribute = Objects.requireNonNull(attribute);
+            return (B) this;
         }
 
         /**
-         * Constructs a new instance of {@link Attribute} using the
-         * values assigned to this builder.
+         * Sets the confidence score and return this builder.
+         * @param confidence the confidence score
+         * @return this builder instance
+         */
+        public final B confidence(float confidence) {
+            this.confidence = confidence;
+            return (B) this;
+        }
+
+        /**
+         * Constructs a new instance of {@link Attribute}
+         * using the values assigned to this builder.
          * @return An instance of {@link Attribute}
          */
         @NonNull
-        public Attribute build() {
-            return new Attribute(
-                    Objects.requireNonNull(name),
-                    Objects.requireNonNull(value),
-                    Objects.requireNonNull(score)
-            );
+        public abstract R build();
+
+        @NonNull
+        final String getId() {
+            return Objects.requireNonNull(id);
+        }
+
+        @NonNull
+        final T getAttribute() {
+            return Objects.requireNonNull(attribute);
+        }
+
+        final float getConfidence() {
+            return confidence;
         }
     }
 }

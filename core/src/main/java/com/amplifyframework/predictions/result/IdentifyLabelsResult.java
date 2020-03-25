@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.predictions.models.Label;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 import java.util.Objects;
@@ -45,7 +46,7 @@ public final class IdentifyLabelsResult implements IdentifyResult {
      */
     @NonNull
     public List<Label> getLabels() {
-        return labels;
+        return Immutable.of(labels);
     }
 
     /**

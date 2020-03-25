@@ -17,5 +17,13 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
-public class PredictionsTranslateTextOptions implements Options {
+public final class PredictionsTranslateTextOptions implements Options {
+
+    private PredictionsTranslateTextOptions() {
+        // TODO: Add options
+    }
+
+    public static PredictionsTranslateTextOptions defaultInstance() {
+        return new PredictionsTranslateTextOptions();
+    }
 }

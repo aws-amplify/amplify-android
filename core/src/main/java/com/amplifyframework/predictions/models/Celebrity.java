@@ -15,56 +15,36 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
 import androidx.annotation.NonNull;
-
-import java.util.List;
-import java.util.Objects;
 
 /**
  * Class that holds the celebrity detection results
  * for the predictions category.
  */
-public final class Celebrity {
-    private final CelebrityMetadata metadata;
-    private final Rect boundingBox;
-    private final List<Landmark> landmarks;
+public final class Celebrity extends ImageAttribute<String> {
+    /**
+     * Attribute type for {@link Celebrity}.
+     */
+    public static final String ATTRIBUTE_TYPE = Celebrity.class.getSimpleName();
 
-    private Celebrity(
-            @NonNull CelebrityMetadata metadata,
-            @NonNull Rect boundingBox,
-            @NonNull List<Landmark> landmarks
-    ) {
-        this.metadata = metadata;
-        this.boundingBox = boundingBox;
-        this.landmarks = landmarks;
+    private Celebrity(final Builder builder) {
+        super(builder);
+    }
+
+    @Override
+    @NonNull
+    public String getType() {
+        return ATTRIBUTE_TYPE;
     }
 
     /**
-     * Gets the detected celebrity's metadata.
-     * @return the celebrity metadata
+     * Gets the name of detected celebrity.
+     * This is the same as {@link Celebrity#getAttribute()}.
+     * @return the name of celebrity
      */
     @NonNull
-    public CelebrityMetadata getMetadata() {
-        return metadata;
-    }
-
-    /**
-     * Gets the rectangular boundary.
-     * @return the bounding box
-     */
-    @NonNull
-    public Rect getBoundingBox() {
-        return boundingBox;
-    }
-
-    /**
-     * Gets the list of detected landmarks.
-     * @return the landmarks
-     */
-    @NonNull
-    public List<Landmark> getLandmarks() {
-        return landmarks;
+    public String getName() {
+        return getAttribute();
     }
 
     /**
@@ -80,42 +60,16 @@ public final class Celebrity {
     /**
      * Builder for {@link Celebrity}.
      */
-    public static class Builder {
-        private CelebrityMetadata metadata;
-        private Rect boundingBox;
-        private List<Landmark> landmarks;
-
+    public static final class Builder extends ImageAttribute.Builder<Builder, Celebrity, String> {
         /**
-         * Sets the metadata and return this builder instance.
-         * @param metadata the celebrity metadata
+         * Sets the name of celebrity. This is the same as
+         * setting the attribute value for this builder.
+         * @param name the name of celebrity
          * @return this builder instance
          */
         @NonNull
-        public Builder metadata(@NonNull CelebrityMetadata metadata) {
-            this.metadata = Objects.requireNonNull(metadata);
-            return this;
-        }
-
-        /**
-         * Sets the rectangular boundary and return this builder instance.
-         * @param boundingBox the bounding box
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder boundingBox(@NonNull Rect boundingBox) {
-            this.boundingBox = Objects.requireNonNull(boundingBox);
-            return this;
-        }
-
-        /**
-         * Sets the landmarks and return this builder instance.
-         * @param landmarks the landmarks
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder landmarks(@NonNull List<Landmark> landmarks) {
-            this.landmarks = Objects.requireNonNull(landmarks);
-            return this;
+        public Builder name(@NonNull String name) {
+            return super.attribute(name);
         }
 
         /**
@@ -125,11 +79,7 @@ public final class Celebrity {
          */
         @NonNull
         public Celebrity build() {
-            return new Celebrity(
-                    Objects.requireNonNull(metadata),
-                    Objects.requireNonNull(boundingBox),
-                    Objects.requireNonNull(landmarks)
-            );
+            return new Celebrity(this);
         }
     }
 }

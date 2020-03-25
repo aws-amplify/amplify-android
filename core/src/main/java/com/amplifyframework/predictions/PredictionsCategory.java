@@ -56,25 +56,25 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
     @Override
     public PredictionsTranslateTextOperation<?> translateText(
             @NonNull String text,
-            @NonNull LanguageType language,
-            @NonNull LanguageType targetLanguage,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return getSelectedPlugin().translateText(text, language, targetLanguage, onSuccess, onError);
+        return getSelectedPlugin().translateText(text, fromLanguage, toLanguage, onSuccess, onError);
     }
 
     @NonNull
     @Override
     public PredictionsTranslateTextOperation<?> translateText(
             @NonNull String text,
-            @NonNull LanguageType language,
-            @NonNull LanguageType targetLanguage,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
             @NonNull PredictionsTranslateTextOptions options,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return getSelectedPlugin().translateText(text, language, targetLanguage, options, onSuccess, onError);
+        return getSelectedPlugin().translateText(text, fromLanguage, toLanguage, options, onSuccess, onError);
     }
 
     @NonNull

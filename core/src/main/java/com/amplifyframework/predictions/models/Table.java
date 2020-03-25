@@ -17,6 +17,7 @@ package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -24,26 +25,21 @@ import java.util.Objects;
  * A representation of table.
  */
 public final class Table {
-    private final Integer rows;
-    private final Integer columns;
+    private final int rows;
+    private final int columns;
     private final List<Cell> cells;
 
-    private Table(
-            @NonNull Integer rows,
-            @NonNull Integer columns,
-            @NonNull List<Cell> cells
-    ) {
-        this.rows = rows;
-        this.columns = columns;
-        this.cells = cells;
+    private Table(final Builder builder) {
+        this.rows = builder.getRows();
+        this.columns = builder.getColumns();
+        this.cells = builder.getCells();
     }
 
     /**
      * Gets the row count.
      * @return the row count
      * */
-    @NonNull
-    public Integer getRows() {
+    public int getRows() {
         return rows;
     }
 
@@ -51,8 +47,7 @@ public final class Table {
      * Gets the column count.
      * @return the column count
      */
-    @NonNull
-    public Integer getColumns() {
+    public int getColumns() {
         return columns;
     }
 
@@ -78,10 +73,14 @@ public final class Table {
     /**
      * Builder for {@link Table}.
      */
-    public static class Builder {
-        private Integer rows;
-        private Integer columns;
+    public static final class Builder {
+        private int rows;
+        private int columns;
         private List<Cell> cells;
+
+        private Builder() {
+            this.cells = new ArrayList<>();
+        }
 
         /**
          * Sets the row count and return this builder.
@@ -89,8 +88,8 @@ public final class Table {
          * @return this builder instance
          */
         @NonNull
-        public Builder rows(@NonNull Integer rows) {
-            this.rows = Objects.requireNonNull(rows);
+        public Builder rows(int rows) {
+            this.rows = rows;
             return this;
         }
 
@@ -100,8 +99,8 @@ public final class Table {
          * @return this builder instance
          */
         @NonNull
-        public Builder columns(@NonNull Integer columns) {
-            this.columns = Objects.requireNonNull(columns);
+        public Builder columns(int columns) {
+            this.columns = columns;
             return this;
         }
 
@@ -123,11 +122,20 @@ public final class Table {
          */
         @NonNull
         public Table build() {
-            return new Table(
-                    Objects.requireNonNull(rows),
-                    Objects.requireNonNull(columns),
-                    Objects.requireNonNull(cells)
-            );
+            return new Table(this);
+        }
+
+        int getRows() {
+            return rows;
+        }
+
+        int getColumns() {
+            return columns;
+        }
+
+        @NonNull
+        List<Cell> getCells() {
+            return Objects.requireNonNull(cells);
         }
     }
 }

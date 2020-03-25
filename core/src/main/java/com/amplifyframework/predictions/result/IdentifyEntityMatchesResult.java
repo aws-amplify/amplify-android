@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.EntityMatch;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 import java.util.Objects;
@@ -38,7 +39,7 @@ public final class IdentifyEntityMatchesResult implements IdentifyResult {
      */
     @NonNull
     public List<EntityMatch> getEntityMatches() {
-        return entityMatches;
+        return Immutable.of(entityMatches);
     }
 
     /**

@@ -15,34 +15,30 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
 import androidx.annotation.NonNull;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * Class that holds the key-value detection results
  * for the predictions category.
  */
-public final class BoundedKeyValue {
-    private final String key;
-    private final String value;
-    private final Boolean isSelected;
-    private final Rect boundingBox;
-    private final Polygon polygon;
+public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, String>> {
+    /**
+     * Attribute type for {@link BoundedKeyValue}.
+     */
+    public static final String ATTRIBUTE_TYPE = BoundedKeyValue.class.getSimpleName();
 
-    private BoundedKeyValue(
-            @NonNull String key,
-            @NonNull String value,
-            @NonNull Boolean isSelected,
-            @NonNull Rect boundingBox,
-            @NonNull Polygon polygon
-    ) {
-        this.key = key;
-        this.value = value;
-        this.isSelected = isSelected;
-        this.boundingBox = boundingBox;
-        this.polygon = polygon;
+    private BoundedKeyValue(final Builder builder) {
+        super(builder);
+    }
+
+    @Override
+    @NonNull
+    public String getType() {
+        return ATTRIBUTE_TYPE;
     }
 
     /**
@@ -51,7 +47,7 @@ public final class BoundedKeyValue {
      */
     @NonNull
     public String getKey() {
-        return key;
+        return getAttribute().getKey();
     }
 
     /**
@@ -60,34 +56,7 @@ public final class BoundedKeyValue {
      */
     @NonNull
     public String getValue() {
-        return value;
-    }
-
-    /**
-     * Returns true if this key-value is selected.
-     * @return true if this key-value is selected
-     */
-    @NonNull
-    public Boolean isSelected() {
-        return isSelected;
-    }
-
-    /**
-     * Gets the rectangular boundary.
-     * @return the rectangular bounding box
-     */
-    @NonNull
-    public Rect getBoundingBox() {
-        return boundingBox;
-    }
-
-    /**
-     * Gets the polygonal boundary.
-     * @return the polygon
-     */
-    @NonNull
-    public Polygon getPolygon() {
-        return polygon;
+        return getAttribute().getValue();
     }
 
     /**
@@ -103,66 +72,19 @@ public final class BoundedKeyValue {
     /**
      * Builder for {@link BoundedKeyValue}.
      */
-    public static class Builder {
-        private String key;
-        private String value;
-        private Boolean isSelected;
-        private Rect boundingBox;
-        private Polygon polygon;
-
+    public static final class Builder
+            extends ImageAttribute.Builder<Builder, BoundedKeyValue, Map.Entry<String, String>> {
         /**
-         * Sets the key and return this builder.
+         * Sets the key-value pair and return this builder.
          * @param key the key
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder key(@NonNull String key) {
-            this.key = Objects.requireNonNull(key);
-            return this;
-        }
-
-        /**
-         * Sets the value and return this builder.
          * @param value the value
          * @return this builder instance
          */
         @NonNull
-        public Builder value(@NonNull String value) {
-            this.value = Objects.requireNonNull(value);
-            return this;
-        }
-
-        /**
-         * Sets the flag for selected and return this builder.
-         * @param isSelected the flag for whether this is selected
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder isSelected(@NonNull Boolean isSelected) {
-            this.isSelected = Objects.requireNonNull(isSelected);
-            return this;
-        }
-
-        /**
-         * Sets the rectangular boundary and return this builder.
-         * @param boundingBox the bounding box
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder boundingBox(@NonNull Rect boundingBox) {
-            this.boundingBox = Objects.requireNonNull(boundingBox);
-            return this;
-        }
-
-        /**
-         * Sets the polygonal boundary and return this builder.
-         * @param polygon the polygon
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder polygon(@NonNull Polygon polygon) {
-            this.polygon = Objects.requireNonNull(polygon);
-            return this;
+        public Builder keyValue(@NonNull String key, @NonNull String value) {
+            Objects.requireNonNull(key);
+            Objects.requireNonNull(value);
+            return attribute(new HashMap.SimpleEntry<>(key, value));
         }
 
         /**
@@ -172,13 +94,7 @@ public final class BoundedKeyValue {
          */
         @NonNull
         public BoundedKeyValue build() {
-            return new BoundedKeyValue(
-                    Objects.requireNonNull(key),
-                    Objects.requireNonNull(value),
-                    Objects.requireNonNull(isSelected),
-                    Objects.requireNonNull(boundingBox),
-                    Objects.requireNonNull(polygon)
-            );
+            return new BoundedKeyValue(this);
         }
     }
 }

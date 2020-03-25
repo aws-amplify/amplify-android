@@ -15,9 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
@@ -25,69 +23,48 @@ import java.util.Objects;
  * Abstract class representing the text that is identified
  * from inside an image.
  */
-abstract class IdentifiedText {
-    private final String text;
-    private final Rect boundingBox;
-    private final Polygon polygon;
-    private final Integer page;
+public final class IdentifiedText extends ImageAttribute<String> {
+    /**
+     * Attribute type for {@link IdentifiedText}.
+     */
+    public static final String ATTRIBUTE_TYPE = IdentifiedText.class.getSimpleName();
 
-    IdentifiedText(
-            @NonNull String text,
-            @NonNull Rect boundingBox,
-            @Nullable Polygon polygon,
-            @Nullable Integer page
-    ) {
-        this.text = Objects.requireNonNull(text);
-        this.boundingBox = Objects.requireNonNull(boundingBox);
-        this.polygon = polygon;
-        this.page = page;
+    private final int page;
+
+    private IdentifiedText(Builder builder) {
+        super(builder);
+        this.page = builder.getPage();
+    }
+
+    @Override
+    @NonNull
+    public String getType() {
+        return ATTRIBUTE_TYPE;
     }
 
     /**
-     * Gets the identified text.
+     * Gets the identified text. This is the same
+     * text as the associated attribute.
      * @return the identified text
      */
     @NonNull
     public String getText() {
-        return text;
-    }
-
-    /**
-     * Gets the rectangular boundary.
-     * @return the bounding box
-     */
-    @NonNull
-    public Rect getBoundingBox() {
-        return boundingBox;
-    }
-
-    /**
-     * Gets the polygonal boundary.
-     * @return the polygon
-     */
-    @Nullable
-    public Polygon getPolygon() {
-        return polygon;
+        return getAttribute();
     }
 
     /**
      * Gets the page value.
      * @return the page
      */
-    @Nullable
-    public Integer getPage() {
+    public int getPage() {
         return page;
     }
 
     /**
      * Builder for {@link IdentifiedText}.
      */
-    @SuppressWarnings({"rawtypes", "unchecked"})
-    abstract static class Builder<B extends Builder, T extends IdentifiedText> {
-        private String text;
-        private Rect boundingBox;
-        private Polygon polygon;
-        private Integer page;
+    public static final class Builder extends ImageAttribute.Builder<Builder, IdentifiedText, String> {
+        private int page;
 
         /**
          * Sets the identified text and return this builder.
@@ -95,31 +72,8 @@ abstract class IdentifiedText {
          * @return this builder instance.
          */
         @NonNull
-        public final B text(@NonNull String text) {
-            this.text = Objects.requireNonNull(text);
-            return (B) this;
-        }
-
-        /**
-         * Sets the bounding box and return this builder.
-         * @param boundingBox the bounding box
-         * @return this builder instance.
-         */
-        @NonNull
-        public final B boundingBox(@NonNull Rect boundingBox) {
-            this.boundingBox = Objects.requireNonNull(boundingBox);
-            return (B) this;
-        }
-
-        /**
-         * Sets the polygon bound and return this builder.
-         * @param polygon the polygon
-         * @return this builder instance.
-         */
-        @NonNull
-        public final B polygon(@Nullable Polygon polygon) {
-            this.polygon = polygon;
-            return (B) this;
+        public Builder text(@NonNull String text) {
+            return super.attribute(Objects.requireNonNull(text));
         }
 
         /**
@@ -128,36 +82,23 @@ abstract class IdentifiedText {
          * @return this builder instance.
          */
         @NonNull
-        public final B page(@Nullable Integer page) {
+        public Builder page(int page) {
             this.page = page;
-            return (B) this;
+            return this;
         }
 
         /**
-         * Constructs an instance of extended {@link IdentifiedText}
-         * using the values stored inside this builder instance.
-         * @return An inherited instance of {@link IdentifiedText}
+         * Constructs an instance of {@link IdentifiedText}
+         * using the values assigned to this builder.
+         * @return an instance of {@link IdentifiedText}
          */
+        @Override
         @NonNull
-        public abstract T build();
-
-        @NonNull
-        String getText() {
-            return text;
+        public IdentifiedText build() {
+            return new IdentifiedText(this);
         }
 
-        @NonNull
-        Rect getBoundingBox() {
-            return boundingBox;
-        }
-
-        @Nullable
-        Polygon getPolygon() {
-            return polygon;
-        }
-
-        @Nullable
-        Integer getPage() {
+        int getPage() {
             return page;
         }
     }

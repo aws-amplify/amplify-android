@@ -18,49 +18,50 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Result;
-import com.amplifyframework.predictions.models.EntityDetectionResult;
+import com.amplifyframework.predictions.models.Attribute;
 import com.amplifyframework.predictions.models.KeyPhrase;
-import com.amplifyframework.predictions.models.LanguageDetectionResult;
+import com.amplifyframework.predictions.models.Language;
 import com.amplifyframework.predictions.models.Sentiment;
-import com.amplifyframework.predictions.models.SyntaxToken;
+import com.amplifyframework.predictions.models.Syntax;
+import com.amplifyframework.predictions.models.TextEntity;
+import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The result of the call to interpret text.
  */
-public final class InterpretResult implements Result {
-    private final List<KeyPhrase> keyPhrases;
+public final class InterpretResult {
+    private final Language language;
     private final Sentiment sentiment;
-    private final List<EntityDetectionResult> entities;
-    private final LanguageDetectionResult language;
-    private final List<SyntaxToken> syntax;
+    private final List<KeyPhrase> keyPhrases;
+    private final List<TextEntity> entities;
+    private final List<Syntax> syntax;
+    private final List<Attribute<?>> attributes;
 
-    private InterpretResult(List<KeyPhrase> keyPhrases,
-                            Sentiment sentiment,
-                            List<EntityDetectionResult> entities,
-                            LanguageDetectionResult language,
-                            List<SyntaxToken> syntax) {
-        this.keyPhrases = keyPhrases;
-        this.sentiment = sentiment;
-        this.entities = entities;
-        this.language = language;
-        this.syntax = syntax;
+    private InterpretResult(final Builder builder) {
+        this.language = builder.getLanguage();
+        this.sentiment = builder.getSentiment();
+        this.keyPhrases = builder.getKeyPhrases();
+        this.entities = builder.getEntities();
+        this.syntax = builder.getSyntax();
+        this.attributes = builder.getAttributes();
     }
 
     /**
-     * Gets the associated key phrases.
-     * @return The list of key phrases
+     * Gets the associated language.
+     * @return The detected language of the text
      */
     @Nullable
-    public List<KeyPhrase> getKeyPhrases() {
-        return keyPhrases;
+    public Language getLanguage() {
+        return language;
     }
 
     /**
      * Gets the associated sentiment.
-     * @return The sentiment
+     * @return The predominant sentiment of the text
      */
     @Nullable
     public Sentiment getSentiment() {
@@ -68,30 +69,39 @@ public final class InterpretResult implements Result {
     }
 
     /**
-     * Gets the associated entities.
-     * @return The list of entities
+     * Gets the key phrases detected within the text.
+     * @return The key phrases of the text
      */
     @Nullable
-    public List<EntityDetectionResult> getEntities() {
-        return entities;
+    public List<KeyPhrase> getKeyPhrases() {
+        return Immutable.of(keyPhrases);
     }
 
     /**
-     * Gets the associated language.
-     * @return The detected language of text
+     * Gets the entities detected within the text.
+     * @return The entities of the text
      */
     @Nullable
-    public LanguageDetectionResult getLanguage() {
-        return language;
+    public List<TextEntity> getEntities() {
+        return Immutable.of(entities);
     }
 
     /**
-     * Gets the associated syntax.
-     * @return The list of syntax tokens
+     * Gets the syntax from the text.
+     * @return The text syntax
      */
     @Nullable
-    public List<SyntaxToken> getSyntax() {
-        return syntax;
+    public List<Syntax> getSyntax() {
+        return Immutable.of(syntax);
+    }
+
+    /**
+     * Gets other associated attributes.
+     * @return The list of attributes
+     */
+    @NonNull
+    public List<Attribute<?>> getAttributes() {
+        return Immutable.of(attributes);
     }
 
     /**
@@ -107,21 +117,26 @@ public final class InterpretResult implements Result {
      * Builder class to help easily build an instance of
      * {@link InterpretResult} with specific properties.
      */
-    public static class Builder {
-        private List<KeyPhrase> keyPhrases;
+    public static final class Builder {
+        private Language language;
         private Sentiment sentiment;
-        private List<EntityDetectionResult> entities;
-        private LanguageDetectionResult language;
-        private List<SyntaxToken> syntax;
+        private List<KeyPhrase> keyPhrases;
+        private List<TextEntity> entities;
+        private List<Syntax> syntax;
+        private List<Attribute<?>> attributes;
+
+        private Builder() {
+            this.attributes = new ArrayList<>();
+        }
 
         /**
-         * Sets the list of key phrases and return this builder.
-         * @param keyPhrases list of key phrases
-         * @return this builder instance
+         * Sets the language and return this builder.
+         * @param language detected language of text
+         * @return  this builder instance
          */
         @NonNull
-        public Builder keyPhrases(@Nullable List<KeyPhrase> keyPhrases) {
-            this.keyPhrases = keyPhrases;
+        public Builder language(@Nullable Language language) {
+            this.language = language;
             return this;
         }
 
@@ -137,35 +152,57 @@ public final class InterpretResult implements Result {
         }
 
         /**
-         * Sets the list of entities and return this builder.
-         * @param entities list of detected entities
+         * Sets the list of key phrases and return this builder.
+         * @param keyPhrases list of key phrases
          * @return this builder instance
          */
         @NonNull
-        public Builder entities(@Nullable List<EntityDetectionResult> entities) {
+        public Builder keyPhrases(@Nullable List<KeyPhrase> keyPhrases) {
+            this.keyPhrases = keyPhrases;
+            return this;
+        }
+
+        /**
+         * Sets the list of entities and return this builder.
+         * @param entities list of detected text entities
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder entities(@Nullable List<TextEntity> entities) {
             this.entities = entities;
             return this;
         }
 
         /**
-         * Sets the language and return this builder.
-         * @param language detected language of text
-         * @return  this builder instance
+         * Sets the list of syntax and return this builder.
+         * @param syntax list of syntax
+         * @return this builder instance
          */
         @NonNull
-        public Builder language(@Nullable LanguageDetectionResult language) {
-            this.language = language;
+        public Builder syntax(@Nullable List<Syntax> syntax) {
+            this.syntax = syntax;
             return this;
         }
 
         /**
-         * Sets the list of syntax tokens and return this builder.
-         * @param syntax list of syntax tokens
+         * Sets the list of attributes and return this builder.
+         * @param attributes all other attributes of the result
          * @return this builder instance
          */
         @NonNull
-        public Builder syntax(@Nullable List<SyntaxToken> syntax) {
-            this.syntax = syntax;
+        public Builder attributes(@NonNull List<Attribute<?>> attributes) {
+            this.attributes = Objects.requireNonNull(attributes);
+            return this;
+        }
+
+        /**
+         * Add an attribute and return this builder.
+         * @param attribute attribute to add
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder attribute(@NonNull Attribute<?> attribute) {
+            this.attributes.add(Objects.requireNonNull(attribute));
             return this;
         }
 
@@ -176,13 +213,37 @@ public final class InterpretResult implements Result {
          */
         @NonNull
         public InterpretResult build() {
-            return new InterpretResult(
-                    keyPhrases,
-                    sentiment,
-                    entities,
-                    language,
-                    syntax
-            );
+            return new InterpretResult(this);
+        }
+
+        @Nullable
+        Language getLanguage() {
+            return language;
+        }
+
+        @Nullable
+        Sentiment getSentiment() {
+            return sentiment;
+        }
+
+        @Nullable
+        List<KeyPhrase> getKeyPhrases() {
+            return keyPhrases;
+        }
+
+        @Nullable
+        List<TextEntity> getEntities() {
+            return entities;
+        }
+
+        @Nullable
+        List<Syntax> getSyntax() {
+            return syntax;
+        }
+
+        @NonNull
+        List<Attribute<?>> getAttributes() {
+            return attributes;
         }
     }
 }

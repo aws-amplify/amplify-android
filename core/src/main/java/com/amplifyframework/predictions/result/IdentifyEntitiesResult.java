@@ -17,7 +17,8 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.predictions.models.Entity;
+import com.amplifyframework.predictions.models.ImageEntity;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,9 +27,9 @@ import java.util.Objects;
  * The result of the call to identify entities from an image.
  */
 public final class IdentifyEntitiesResult implements IdentifyResult {
-    private final List<Entity> entities;
+    private final List<ImageEntity> entities;
 
-    private IdentifyEntitiesResult(List<Entity> entities) {
+    private IdentifyEntitiesResult(List<ImageEntity> entities) {
         this.entities = entities;
     }
 
@@ -37,8 +38,8 @@ public final class IdentifyEntitiesResult implements IdentifyResult {
      * @return the list of entities
      */
     @NonNull
-    public List<Entity> getEntities() {
-        return entities;
+    public List<ImageEntity> getEntities() {
+        return Immutable.of(entities);
     }
 
     /**
@@ -48,7 +49,7 @@ public final class IdentifyEntitiesResult implements IdentifyResult {
      * @return The result instance containing the given list of entities
      */
     @NonNull
-    public static IdentifyEntitiesResult fromEntities(@NonNull List<Entity> entities) {
+    public static IdentifyEntitiesResult fromEntities(@NonNull List<ImageEntity> entities) {
         return new IdentifyEntitiesResult(Objects.requireNonNull(entities));
     }
 }

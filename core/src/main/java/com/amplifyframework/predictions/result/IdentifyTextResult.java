@@ -16,68 +16,63 @@
 package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
-import com.amplifyframework.predictions.models.IdentifiedLine;
-import com.amplifyframework.predictions.models.IdentifiedWord;
+import com.amplifyframework.predictions.models.IdentifiedText;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * The result of the call to identify text from an image.
  */
 public final class IdentifyTextResult implements IdentifyResult {
     private final String fullText;
-    private final List<IdentifiedWord> words;
     private final List<String> rawLineText;
-    private final List<IdentifiedLine> identifiedLines;
+    private final List<IdentifiedText> words;
+    private final List<IdentifiedText> lines;
 
-    private IdentifyTextResult(
-            @Nullable String fullText,
-            @Nullable List<IdentifiedWord> words,
-            @Nullable List<String> rawLineText,
-            @Nullable List<IdentifiedLine> identifiedLines
-    ) {
-        this.fullText = fullText;
-        this.words = words;
-        this.rawLineText = rawLineText;
-        this.identifiedLines = identifiedLines;
+    private IdentifyTextResult(final Builder builder) {
+        this.fullText = builder.getFullText();
+        this.rawLineText = builder.getRawLineText();
+        this.words = builder.getWords();
+        this.lines = builder.getLines();
     }
 
     /**
      * Gets the full text from the image.
      * @return the full text
      */
-    @Nullable
+    @NonNull
     public String getFullText() {
         return fullText;
-    }
-
-    /**
-     * Gets the list of identified words.
-     * @return the identified words
-     */
-    @Nullable
-    public List<IdentifiedWord> getWords() {
-        return words;
     }
 
     /**
      * Gets the list of raw lines of text.
      * @return the raw lines of text
      */
-    @Nullable
+    @NonNull
     public List<String> getRawLineText() {
-        return rawLineText;
+        return Immutable.of(rawLineText);
+    }
+
+    /**
+     * Gets the list of identified words.
+     * @return the identified words
+     */
+    @NonNull
+    public List<IdentifiedText> getWords() {
+        return Immutable.of(words);
     }
 
     /**
      * Gets the list of identified lines.
      * @return the identified lines
      */
-    @Nullable
-    public List<IdentifiedLine> getIdentifiedLines() {
-        return identifiedLines;
+    @NonNull
+    public List<IdentifiedText> getLines() {
+        return Immutable.of(lines);
     }
 
     /**
@@ -94,11 +89,11 @@ public final class IdentifyTextResult implements IdentifyResult {
      * Builder to help easily construct an instance of
      * {@link IdentifyTextResult}.
      */
-    public static class Builder {
+    public static final class Builder {
         private String fullText;
-        private List<IdentifiedWord> words;
         private List<String> rawLineText;
-        private List<IdentifiedLine> identifiedLines;
+        private List<IdentifiedText> words;
+        private List<IdentifiedText> lines;
 
         /**
          * Sets the full text and return this builder.
@@ -106,19 +101,8 @@ public final class IdentifyTextResult implements IdentifyResult {
          * @return this builder instance
          */
         @NonNull
-        public Builder fullText(@Nullable String fullText) {
-            this.fullText = fullText;
-            return this;
-        }
-
-        /**
-         * Sets the identified words and return this builder.
-         * @param words the identififed words
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder words(@Nullable List<IdentifiedWord> words) {
-            this.words = words;
+        public Builder fullText(@NonNull String fullText) {
+            this.fullText = Objects.requireNonNull(fullText);
             return this;
         }
 
@@ -128,19 +112,30 @@ public final class IdentifyTextResult implements IdentifyResult {
          * @return this builder instance
          */
         @NonNull
-        public Builder rawLineText(@Nullable List<String> rawLineText) {
-            this.rawLineText = rawLineText;
+        public Builder rawLineText(@NonNull List<String> rawLineText) {
+            this.rawLineText = Objects.requireNonNull(rawLineText);
+            return this;
+        }
+
+        /**
+         * Sets the identified words and return this builder.
+         * @param words the identififed words
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder words(@NonNull List<IdentifiedText> words) {
+            this.words = Objects.requireNonNull(words);
             return this;
         }
 
         /**
          * Sets the identified lines and return this builder.
-         * @param identifiedLines the identified lines
+         * @param line the identified lines
          * @return this builder instance
          */
         @NonNull
-        public Builder identifiedLines(@Nullable List<IdentifiedLine> identifiedLines) {
-            this.identifiedLines = identifiedLines;
+        public Builder lines(@NonNull List<IdentifiedText> line) {
+            this.lines = Objects.requireNonNull(line);
             return this;
         }
 
@@ -151,12 +146,27 @@ public final class IdentifyTextResult implements IdentifyResult {
          */
         @NonNull
         public IdentifyTextResult build() {
-            return new IdentifyTextResult(
-                    fullText,
-                    words,
-                    rawLineText,
-                    identifiedLines
-            );
+            return new IdentifyTextResult(this);
+        }
+
+        @NonNull
+        String getFullText() {
+            return Objects.requireNonNull(fullText);
+        }
+
+        @NonNull
+        List<String> getRawLineText() {
+            return Objects.requireNonNull(rawLineText);
+        }
+
+        @NonNull
+        List<IdentifiedText> getWords() {
+            return Objects.requireNonNull(words);
+        }
+
+        @NonNull
+        List<IdentifiedText> getLines() {
+            return Objects.requireNonNull(lines);
         }
     }
 }

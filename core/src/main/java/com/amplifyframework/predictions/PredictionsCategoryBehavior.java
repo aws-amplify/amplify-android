@@ -46,8 +46,8 @@ public interface PredictionsCategoryBehavior {
     /**
      * Translate the text to the language specified.
      * @param text The text to translate
-     * @param language The language of the given text
-     * @param targetLanguage The language to which the text should be translated
+     * @param fromLanguage The language of the given text
+     * @param toLanguage The language to which the text should be translated
      * @param onSuccess Triggered upon successful translation
      * @param onError Triggered upon encountering error
      * @return The predictions operation object that can be used to directly access
@@ -56,8 +56,8 @@ public interface PredictionsCategoryBehavior {
     @NonNull
     PredictionsTranslateTextOperation<?> translateText(
             @NonNull String text,
-            @NonNull LanguageType language,
-            @NonNull LanguageType targetLanguage,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
@@ -65,8 +65,8 @@ public interface PredictionsCategoryBehavior {
     /**
      * Translate the text to the language specified.
      * @param text The text to translate
-     * @param language The language of the given text
-     * @param targetLanguage The language to which the text should be translated
+     * @param fromLanguage The language of the given text
+     * @param toLanguage The language to which the text should be translated
      * @param options Parameters to specific plugin behavior
      * @param onSuccess Triggered upon successful translation
      * @param onError Triggered upon encountering error
@@ -76,8 +76,8 @@ public interface PredictionsCategoryBehavior {
     @NonNull
     PredictionsTranslateTextOperation<?> translateText(
             @NonNull String text,
-            @NonNull LanguageType language,
-            @NonNull LanguageType targetLanguage,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
             @NonNull PredictionsTranslateTextOptions options,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError

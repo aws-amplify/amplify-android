@@ -17,7 +17,8 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.predictions.models.Celebrity;
+import com.amplifyframework.predictions.models.CelebrityDetails;
+import com.amplifyframework.util.Immutable;
 
 import java.util.List;
 import java.util.Objects;
@@ -26,9 +27,9 @@ import java.util.Objects;
  * The result of the call to identify celebrities from an image.
  */
 public final class IdentifyCelebritiesResult implements IdentifyResult {
-    private final List<Celebrity> celebrities;
+    private final List<CelebrityDetails> celebrities;
 
-    private IdentifyCelebritiesResult(List<Celebrity> celebrities) {
+    private IdentifyCelebritiesResult(List<CelebrityDetails> celebrities) {
         this.celebrities = celebrities;
     }
 
@@ -37,8 +38,8 @@ public final class IdentifyCelebritiesResult implements IdentifyResult {
      * @return the list of celebrities
      */
     @NonNull
-    public List<Celebrity> getCelebrities() {
-        return celebrities;
+    public List<CelebrityDetails> getCelebrities() {
+        return Immutable.of(celebrities);
     }
 
     /**
@@ -48,7 +49,7 @@ public final class IdentifyCelebritiesResult implements IdentifyResult {
      * @return The result instance containing the given list of celebrities
      */
     @NonNull
-    public static IdentifyCelebritiesResult fromCelebrities(@NonNull List<Celebrity> celebrities) {
+    public static IdentifyCelebritiesResult fromCelebrities(@NonNull List<CelebrityDetails> celebrities) {
         return new IdentifyCelebritiesResult(Objects.requireNonNull(celebrities));
     }
 }

@@ -18,11 +18,12 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.BoundedKeyValue;
-import com.amplifyframework.predictions.models.IdentifiedLine;
-import com.amplifyframework.predictions.models.IdentifiedWord;
+import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
+import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,29 +32,21 @@ import java.util.Objects;
  */
 public final class IdentifyDocumentTextResult implements IdentifyResult {
     private final String fullText;
-    private final List<IdentifiedWord> words;
     private final List<String> rawLineText;
-    private final List<IdentifiedLine> identifiedLines;
+    private final List<IdentifiedText> words;
+    private final List<IdentifiedText> lines;
     private final List<Selection> selections;
     private final List<Table> tables;
     private final List<BoundedKeyValue> keyValues;
 
-    private IdentifyDocumentTextResult(
-            @NonNull String fullText,
-            @NonNull List<IdentifiedWord> words,
-            @NonNull List<String> rawLineText,
-            @NonNull List<IdentifiedLine> identifiedLines,
-            @NonNull List<Selection> selections,
-            @NonNull List<Table> tables,
-            @NonNull List<BoundedKeyValue> keyValues
-    ) {
-        this.fullText = fullText;
-        this.words = words;
-        this.rawLineText = rawLineText;
-        this.identifiedLines = identifiedLines;
-        this.selections = selections;
-        this.tables = tables;
-        this.keyValues = keyValues;
+    private IdentifyDocumentTextResult(final Builder builder) {
+        this.fullText = builder.getFullText();
+        this.rawLineText = builder.getRawLineText();
+        this.words = builder.getWords();
+        this.lines = builder.getLines();
+        this.selections = builder.getSelections();
+        this.tables = builder.getTables();
+        this.keyValues = builder.getKeyValues();
     }
 
     /**
@@ -66,21 +59,21 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
     }
 
     /**
-     * Gets the list of identified words.
-     * @return the identified words
-     */
-    @NonNull
-    public List<IdentifiedWord> getWords() {
-        return words;
-    }
-
-    /**
      * Gets the list of raw lines of text.
      * @return the raw lines of text
      */
     @NonNull
     public List<String> getRawLineText() {
-        return rawLineText;
+        return Immutable.of(rawLineText);
+    }
+
+    /**
+     * Gets the list of identified words.
+     * @return the identified words
+     */
+    @NonNull
+    public List<IdentifiedText> getWords() {
+        return Immutable.of(words);
     }
 
     /**
@@ -88,8 +81,8 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
      * @return the identified lines
      */
     @NonNull
-    public List<IdentifiedLine> getIdentifiedLines() {
-        return identifiedLines;
+    public List<IdentifiedText> getLines() {
+        return Immutable.of(lines);
     }
 
     /**
@@ -98,7 +91,7 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
      */
     @NonNull
     public List<Selection> getSelections() {
-        return selections;
+        return Immutable.of(selections);
     }
 
     /**
@@ -107,7 +100,7 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
      */
     @NonNull
     public List<Table> getTables() {
-        return tables;
+        return Immutable.of(tables);
     }
 
     /**
@@ -116,7 +109,7 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
      */
     @NonNull
     public List<BoundedKeyValue> getKeyValues() {
-        return keyValues;
+        return Immutable.of(keyValues);
     }
 
     /**
@@ -133,14 +126,23 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
      * Builder to help easily construct an instance of
      * {@link IdentifyDocumentTextResult}.
      */
-    public static class Builder {
+    public static final class Builder {
         private String fullText;
-        private List<IdentifiedWord> words;
         private List<String> rawLineText;
-        private List<IdentifiedLine> identifiedLines;
+        private List<IdentifiedText> words;
+        private List<IdentifiedText> lines;
         private List<Selection> selections;
         private List<Table> tables;
         private List<BoundedKeyValue> keyValues;
+
+        private Builder() {
+            this.rawLineText = new ArrayList<>();
+            this.words = new ArrayList<>();
+            this.lines = new ArrayList<>();
+            this.selections = new ArrayList<>();
+            this.tables = new ArrayList<>();
+            this.keyValues = new ArrayList<>();
+        }
 
         /**
          * Sets the full text and return this builder.
@@ -150,17 +152,6 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
         @NonNull
         public Builder fullText(@NonNull String fullText) {
             this.fullText = Objects.requireNonNull(fullText);
-            return this;
-        }
-
-        /**
-         * Sets the identified words and return this builder.
-         * @param words the identififed words
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder words(@NonNull List<IdentifiedWord> words) {
-            this.words = Objects.requireNonNull(words);
             return this;
         }
 
@@ -176,13 +167,24 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
         }
 
         /**
-         * Sets the identified lines and return this builder.
-         * @param identifiedLines the identified lines
+         * Sets the identified words and return this builder.
+         * @param words the identififed words
          * @return this builder instance
          */
         @NonNull
-        public Builder identifiedLines(@NonNull List<IdentifiedLine> identifiedLines) {
-            this.identifiedLines = Objects.requireNonNull(identifiedLines);
+        public Builder words(@NonNull List<IdentifiedText> words) {
+            this.words = Objects.requireNonNull(words);
+            return this;
+        }
+
+        /**
+         * Sets the identified lines and return this builder.
+         * @param line the identified lines
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder lines(@NonNull List<IdentifiedText> line) {
+            this.lines = Objects.requireNonNull(line);
             return this;
         }
 
@@ -226,15 +228,42 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
          */
         @NonNull
         public IdentifyDocumentTextResult build() {
-            return new IdentifyDocumentTextResult(
-                    Objects.requireNonNull(fullText),
-                    Objects.requireNonNull(words),
-                    Objects.requireNonNull(rawLineText),
-                    Objects.requireNonNull(identifiedLines),
-                    Objects.requireNonNull(selections),
-                    Objects.requireNonNull(tables),
-                    Objects.requireNonNull(keyValues)
-            );
+            return new IdentifyDocumentTextResult(this);
+        }
+
+        @NonNull
+        String getFullText() {
+            return Objects.requireNonNull(fullText);
+        }
+
+        @NonNull
+        List<String> getRawLineText() {
+            return Objects.requireNonNull(rawLineText);
+        }
+
+        @NonNull
+        List<IdentifiedText> getWords() {
+            return Objects.requireNonNull(words);
+        }
+
+        @NonNull
+        List<IdentifiedText> getLines() {
+            return Objects.requireNonNull(lines);
+        }
+
+        @NonNull
+        List<Selection> getSelections() {
+            return Objects.requireNonNull(selections);
+        }
+
+        @NonNull
+        List<Table> getTables() {
+            return Objects.requireNonNull(tables);
+        }
+
+        @NonNull
+        List<BoundedKeyValue> getKeyValues() {
+            return Objects.requireNonNull(keyValues);
         }
     }
 }

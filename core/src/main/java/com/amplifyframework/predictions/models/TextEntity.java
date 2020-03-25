@@ -18,17 +18,16 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the key phrase detection results
- * for the predictions category. Target text itself will be
- * the attribute of this class.
+ * Class that holds the entity detection results from text
+ * for the predictions category.
  */
-public final class KeyPhrase extends TextAttribute<String> {
+public final class TextEntity extends TextAttribute<EntityType> {
     /**
-     * Attribute type for {@link KeyPhrase}.
+     * Attribute type for {@link TextEntity}.
      */
-    public static final String ATTRIBUTE_TYPE = KeyPhrase.class.getSimpleName();
+    public static final String ATTRIBUTE_TYPE = EntityType.class.getSimpleName();
 
-    private KeyPhrase(final Builder builder) {
+    private TextEntity(final Builder builder) {
         super(builder);
     }
 
@@ -39,7 +38,7 @@ public final class KeyPhrase extends TextAttribute<String> {
     }
 
     /**
-     * Gets a builder to construct a key phrase attribute.
+     * Gets a builder to construct a entity attribute.
      * @return a new builder
      */
     @NonNull
@@ -48,13 +47,13 @@ public final class KeyPhrase extends TextAttribute<String> {
     }
 
     /**
-     * Builder for {@link KeyPhrase}.
+     * Builder for {@link TextEntity}.
      */
-    public static final class Builder extends TextAttribute.Builder<Builder, KeyPhrase, String> {
+    public static final class Builder extends TextAttribute.Builder<Builder, TextEntity, EntityType> {
         @Override
         @NonNull
-        public KeyPhrase build() {
-            return new KeyPhrase(this);
+        public TextEntity build() {
+            return new TextEntity(this);
         }
     }
 }

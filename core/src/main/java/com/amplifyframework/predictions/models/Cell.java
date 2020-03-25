@@ -15,7 +15,6 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
 import androidx.annotation.NonNull;
 
 import java.util.Objects;
@@ -25,26 +24,17 @@ import java.util.Objects;
  */
 public final class Cell {
     private final String text;
-    private final Rect boundingBox;
-    private final Polygon polygon;
-    private final Boolean isSelected;
-    private final Integer rowSpan;
-    private final Integer columnSpan;
+    private final TargetBoundary boundary;
+    private final boolean selected;
+    private final int row;
+    private final int column;
 
-    private Cell(
-            @NonNull String text,
-            @NonNull Rect boundingBox,
-            @NonNull Polygon polygon,
-            @NonNull Boolean isSelected,
-            @NonNull Integer rowSpan,
-            @NonNull Integer columnSpan
-    ) {
-        this.text = text;
-        this.boundingBox = boundingBox;
-        this.polygon = polygon;
-        this.isSelected = isSelected;
-        this.rowSpan = rowSpan;
-        this.columnSpan = columnSpan;
+    private Cell(final Builder builder) {
+        this.text = builder.getText();
+        this.boundary = builder.getBoundary();
+        this.selected = builder.getSelected();
+        this.row = builder.getRow();
+        this.column = builder.getColumn();
     }
 
     /**
@@ -57,48 +47,36 @@ public final class Cell {
     }
 
     /**
-     * Gets the rectangular boundary.
-     * @return the bounding box
+     * Gets the bounding geometry of the cell.
+     * @return the bounding geometry
      */
     @NonNull
-    public Rect getBoundingBox() {
-        return boundingBox;
-    }
-
-    /**
-     * Gets the polygonal boundary.
-     * @return the polygon
-     */
-    @NonNull
-    public Polygon getPolygon() {
-        return polygon;
+    public TargetBoundary getBoundary() {
+        return boundary;
     }
 
     /**
      * Returns true if this cell is selected.
      * @return true if this cell is selected
      */
-    @NonNull
-    public Boolean isSelected() {
-        return isSelected;
+    public boolean isSelected() {
+        return selected;
     }
 
     /**
-     * Gets the row span value.
+     * Gets the row span.
      * @return the row span
      */
-    @NonNull
-    public Integer getRowSpan() {
-        return rowSpan;
+    public int getRow() {
+        return row;
     }
 
     /**
-     * Gets the column span value.
+     * Gets the column span.
      * @return the column span
      */
-    @NonNull
-    public Integer getColumnSpan() {
-        return columnSpan;
+    public int getColumn() {
+        return column;
     }
 
     /**
@@ -114,13 +92,12 @@ public final class Cell {
     /**
      * Builder for {@link Cell}.
      */
-    public static class Builder {
+    public static final class Builder {
         private String text;
-        private Rect boundingBox;
-        private Polygon polygon;
-        private Boolean isSelected;
-        private Integer rowSpan;
-        private Integer columnSpan;
+        private TargetBoundary boundary;
+        private boolean selected;
+        private int row;
+        private int column;
 
         /**
          * Sets the text and return this builder.
@@ -134,57 +111,46 @@ public final class Cell {
         }
 
         /**
-         * Sets the rectangular boundary and return this builder.
-         * @param boundingBox the bounding box
+         * Sets the boundary and return this builder.
+         * @param boundary the bounding geometry
          * @return this builder instance
          */
         @NonNull
-        public Builder boundingBox(@NonNull Rect boundingBox) {
-            this.boundingBox = Objects.requireNonNull(boundingBox);
-            return this;
-        }
-
-        /**
-         * Sets the polygon and return this builder.
-         * @param polygon the polygon
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder polygon(@NonNull Polygon polygon) {
-            this.polygon = Objects.requireNonNull(polygon);
+        public Builder boundary(@NonNull TargetBoundary boundary) {
+            this.boundary = Objects.requireNonNull(boundary);
             return this;
         }
 
         /**
          * Sets the selection flag and return this builder.
-         * @param isSelected the selection flag
+         * @param selected the selection flag
          * @return this builder instance
          */
         @NonNull
-        public Builder isSelected(@NonNull Boolean isSelected) {
-            this.isSelected = Objects.requireNonNull(isSelected);
+        public Builder selected(boolean selected) {
+            this.selected = selected;
             return this;
         }
 
         /**
          * Sets the row span and return this builder.
-         * @param rowSpan the row span
+         * @param row the row span
          * @return this builder instance
          */
         @NonNull
-        public Builder rowSpan(@NonNull Integer rowSpan) {
-            this.rowSpan = Objects.requireNonNull(rowSpan);
+        public Builder row(int row) {
+            this.row = row;
             return this;
         }
 
         /**
          * Sets the column span and return this builder.
-         * @param columnSpan the column span
+         * @param column the column span
          * @return this builder instance
          */
         @NonNull
-        public Builder columnSpan(@NonNull Integer columnSpan) {
-            this.columnSpan = Objects.requireNonNull(columnSpan);
+        public Builder column(int column) {
+            this.column = column;
             return this;
         }
 
@@ -195,14 +161,29 @@ public final class Cell {
          */
         @NonNull
         public Cell build() {
-            return new Cell(
-                    Objects.requireNonNull(text),
-                    Objects.requireNonNull(boundingBox),
-                    Objects.requireNonNull(polygon),
-                    Objects.requireNonNull(isSelected),
-                    Objects.requireNonNull(rowSpan),
-                    Objects.requireNonNull(columnSpan)
-            );
+            return new Cell(this);
+        }
+
+        @NonNull
+        String getText() {
+            return text;
+        }
+
+        @NonNull
+        TargetBoundary getBoundary() {
+            return boundary;
+        }
+
+        boolean getSelected() {
+            return selected;
+        }
+
+        int getRow() {
+            return row;
+        }
+
+        int getColumn() {
+            return column;
         }
     }
 }

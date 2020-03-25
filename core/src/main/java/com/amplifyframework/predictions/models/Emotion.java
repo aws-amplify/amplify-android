@@ -17,44 +17,28 @@ package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
 
-import java.util.Objects;
-
 /**
  * Class that holds the emotion detection results
  * for the predictions category.
  */
-public final class Emotion {
-    private final EmotionType emotion;
-    private final Float score;
-
-    private Emotion(
-            @NonNull EmotionType emotion,
-            @NonNull Float score
-    ) {
-        this.emotion = emotion;
-        this.score = score;
-    }
-
+public final class Emotion extends Attribute<EmotionType> {
     /**
-     * Gets the detected emotion type.
-     * @return the emotion
+     * Attribute type for {@link Emotion}.
      */
+    public static final String ATTRIBUTE_TYPE = EmotionType.class.getSimpleName();
+
+    private Emotion(final Builder builder) {
+        super(builder);
+    }
+
+    @Override
     @NonNull
-    public EmotionType getEmotion() {
-        return emotion;
+    public String getType() {
+        return ATTRIBUTE_TYPE;
     }
 
     /**
-     * Gets the confidence score of detection.
-     * @return the confidence score
-     */
-    @NonNull
-    public Float getScore() {
-        return score;
-    }
-
-    /**
-     * Gets a builder to construct an attribute.
+     * Gets a builder to construct an emotions attribute.
      * @return a new builder
      */
     @NonNull
@@ -65,43 +49,11 @@ public final class Emotion {
     /**
      * Builder for {@link Emotion}.
      */
-    public static class Builder {
-        private EmotionType emotion;
-        private Float score;
-
-        /**
-         * Sets the emotion and return this builder.
-         * @param emotion the emotion
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder emotion(@NonNull EmotionType emotion) {
-            this.emotion = Objects.requireNonNull(emotion);
-            return this;
-        }
-
-        /**
-         * Sets the score and return this builder.
-         * @param score the score
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder score(@NonNull Float score) {
-            this.score = Objects.requireNonNull(score);
-            return this;
-        }
-
-        /**
-         * Constructs a new instance of {@link Emotion}
-         * using the values assigned to this builder.
-         * @return An instance of {@link Emotion}
-         */
+    public static final class Builder extends Attribute.Builder<Builder, Emotion, EmotionType> {
+        @Override
         @NonNull
         public Emotion build() {
-            return new Emotion(
-                    Objects.requireNonNull(emotion),
-                    Objects.requireNonNull(score)
-            );
+            return new Emotion(this);
         }
     }
 }
