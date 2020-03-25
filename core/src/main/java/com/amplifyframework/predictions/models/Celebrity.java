@@ -21,11 +21,11 @@ import androidx.annotation.NonNull;
  * Holds the celebrity detection results
  * for the predictions category.
  */
-public final class Celebrity extends ImageAttribute<String> {
+public final class Celebrity extends ImageFeature<String> {
     /**
-     * Attribute type for {@link Celebrity}.
+     * Feature type for {@link Celebrity}.
      */
-    public static final String ATTRIBUTE_TYPE = Celebrity.class.getSimpleName();
+    public static final String FEATURE_TYPE = Celebrity.class.getSimpleName();
 
     private Celebrity(final Builder builder) {
         super(builder);
@@ -34,17 +34,17 @@ public final class Celebrity extends ImageAttribute<String> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
      * Gets the name of detected celebrity.
-     * This is the same as {@link Celebrity#getAttribute()}.
+     * This is the same as {@link Celebrity#getFeature()}.
      * @return the name of celebrity
      */
     @NonNull
     public String getName() {
-        return getAttribute();
+        return getFeature();
     }
 
     /**
@@ -60,16 +60,16 @@ public final class Celebrity extends ImageAttribute<String> {
     /**
      * Builder for {@link Celebrity}.
      */
-    public static final class Builder extends ImageAttribute.Builder<Builder, Celebrity, String> {
+    public static final class Builder extends ImageFeature.Builder<Builder, Celebrity, String> {
         /**
          * Sets the name of celebrity. This is the same as
-         * setting the attribute value for this builder.
+         * setting the feature value for this builder.
          * @param name the name of celebrity
          * @return this builder instance
          */
         @NonNull
         public Builder name(@NonNull String name) {
-            return super.attribute(name);
+            return super.feature(name);
         }
 
         /**

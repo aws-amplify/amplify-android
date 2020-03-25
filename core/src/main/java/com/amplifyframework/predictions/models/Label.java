@@ -24,11 +24,11 @@ import java.util.Objects;
 /**
  * Metadata to store the details of a detected label.
  */
-public final class Label extends ImageAttribute<String> {
+public final class Label extends ImageFeature<String> {
     /**
-     * Attribute type for {@link Label}.
+     * Feature type for {@link Label}.
      */
-    public static final String ATTRIBUTE_TYPE = Label.class.getSimpleName();
+    public static final String FEATURE_TYPE = Label.class.getSimpleName();
 
     private final List<String> parents;
 
@@ -40,7 +40,7 @@ public final class Label extends ImageAttribute<String> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
@@ -64,7 +64,7 @@ public final class Label extends ImageAttribute<String> {
     /**
      * Builder for {@link Label}.
      */
-    public static final class Builder extends ImageAttribute.Builder<Builder, Label, String> {
+    public static final class Builder extends ImageFeature.Builder<Builder, Label, String> {
         private List<String> parents;
 
         private Builder() {

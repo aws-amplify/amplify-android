@@ -21,11 +21,11 @@ import androidx.annotation.NonNull;
  * Holds the dominant language detection results
  * for the predictions category.
  */
-public final class Language extends Attribute<LanguageType> {
+public final class Language extends Feature<LanguageType> {
     /**
-     * Attribute type for {@link LanguageType}.
+     * Feature type for {@link LanguageType}.
      */
-    public static final String ATTRIBUTE_TYPE = LanguageType.class.getSimpleName();
+    public static final String FEATURE_TYPE = LanguageType.class.getSimpleName();
 
     private Language(final Builder builder) {
         super(builder);
@@ -34,11 +34,11 @@ public final class Language extends Attribute<LanguageType> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct dominant language attribute.
+     * Gets a builder to construct dominant language feature.
      * @return a new builder
      */
     @NonNull
@@ -49,7 +49,7 @@ public final class Language extends Attribute<LanguageType> {
     /**
      * Builder for {@link Language}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, Language, LanguageType> {
+    public static final class Builder extends Feature.Builder<Builder, Language, LanguageType> {
         @Override
         @NonNull
         public Language build() {

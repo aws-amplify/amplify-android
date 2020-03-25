@@ -21,15 +21,15 @@ import java.util.Objects;
 
 /**
  * A generic class to hold information about an inferred
- * attribute from image analysis and the confidence score
+ * feature from image analysis and the confidence score
  * for inference.
- * @param <T> the attribute type
+ * @param <T> the feature type
  */
 @SuppressWarnings("unchecked")
-public abstract class ImageAttribute<T> extends Attribute<T> {
+public abstract class ImageFeature<T> extends Feature<T> {
     private final TargetBoundary target;
 
-    ImageAttribute(Builder<?, ? extends ImageAttribute<T>, T> builder) {
+    ImageFeature(Builder<?, ? extends ImageFeature<T>, T> builder) {
         super(builder);
         this.target = builder.getTarget();
     }
@@ -44,8 +44,8 @@ public abstract class ImageAttribute<T> extends Attribute<T> {
         return target;
     }
 
-    abstract static class Builder<B extends Builder<B, R, T>, R extends ImageAttribute<T>, T>
-            extends Attribute.Builder<B, R, T> {
+    abstract static class Builder<B extends Builder<B, R, T>, R extends ImageFeature<T>, T>
+            extends Feature.Builder<B, R, T> {
         private TargetBoundary target;
 
         /**

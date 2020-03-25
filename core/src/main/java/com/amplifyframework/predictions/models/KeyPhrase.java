@@ -20,17 +20,17 @@ import androidx.annotation.NonNull;
 /**
  * Holds the key phrase detection results for the
  * predictions category. Target text itself will be
- * the attribute of this class.
+ * the feature of this class.
  *
  * Key phrase is a portion of text that is deemed to
  * hold a significant value in determining the context
  * for text analysis.
  */
-public final class KeyPhrase extends TextAttribute<String> {
+public final class KeyPhrase extends TextFeature<String> {
     /**
-     * Attribute type for {@link KeyPhrase}.
+     * Feature type for {@link KeyPhrase}.
      */
-    public static final String ATTRIBUTE_TYPE = KeyPhrase.class.getSimpleName();
+    public static final String FEATURE_TYPE = KeyPhrase.class.getSimpleName();
 
     private KeyPhrase(final Builder builder) {
         super(builder);
@@ -39,11 +39,11 @@ public final class KeyPhrase extends TextAttribute<String> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct a key phrase attribute.
+     * Gets a builder to construct a key phrase feature.
      * @return a new builder
      */
     @NonNull
@@ -54,7 +54,7 @@ public final class KeyPhrase extends TextAttribute<String> {
     /**
      * Builder for {@link KeyPhrase}.
      */
-    public static final class Builder extends TextAttribute.Builder<Builder, KeyPhrase, String> {
+    public static final class Builder extends TextFeature.Builder<Builder, KeyPhrase, String> {
         @Override
         @NonNull
         public KeyPhrase build() {

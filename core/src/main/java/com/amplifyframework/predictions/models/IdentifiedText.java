@@ -23,11 +23,11 @@ import java.util.Objects;
  * Represents the text that is identified
  * from inside an image.
  */
-public final class IdentifiedText extends ImageAttribute<String> {
+public final class IdentifiedText extends ImageFeature<String> {
     /**
-     * Attribute type for {@link IdentifiedText}.
+     * Feature type for {@link IdentifiedText}.
      */
-    public static final String ATTRIBUTE_TYPE = IdentifiedText.class.getSimpleName();
+    public static final String FEATURE_TYPE = IdentifiedText.class.getSimpleName();
 
     private final int page;
 
@@ -39,17 +39,17 @@ public final class IdentifiedText extends ImageAttribute<String> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
      * Gets the identified text. This is the same
-     * text as the associated attribute.
+     * text as the associated feature.
      * @return the identified text
      */
     @NonNull
     public String getText() {
-        return getAttribute();
+        return getFeature();
     }
 
     /**
@@ -63,7 +63,7 @@ public final class IdentifiedText extends ImageAttribute<String> {
     /**
      * Builder for {@link IdentifiedText}.
      */
-    public static final class Builder extends ImageAttribute.Builder<Builder, IdentifiedText, String> {
+    public static final class Builder extends ImageFeature.Builder<Builder, IdentifiedText, String> {
         private int page;
 
         /**
@@ -73,7 +73,7 @@ public final class IdentifiedText extends ImageAttribute<String> {
          */
         @NonNull
         public Builder text(@NonNull String text) {
-            return super.attribute(Objects.requireNonNull(text));
+            return super.feature(Objects.requireNonNull(text));
         }
 
         /**

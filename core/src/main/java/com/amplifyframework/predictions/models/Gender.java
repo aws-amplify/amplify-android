@@ -21,11 +21,11 @@ import androidx.annotation.NonNull;
  * Holds the gender detection results
  * for the predictions category.
  */
-public final class Gender extends Attribute<GenderBinaryType> {
+public final class Gender extends Feature<GenderBinaryType> {
     /**
-     * Attribute type for {@link Gender}.
+     * Feature type for {@link Gender}.
      */
-    public static final String ATTRIBUTE_TYPE = GenderBinaryType.class.getSimpleName();
+    public static final String FEATURE_TYPE = GenderBinaryType.class.getSimpleName();
 
     private Gender(final Builder builder) {
         super(builder);
@@ -34,11 +34,11 @@ public final class Gender extends Attribute<GenderBinaryType> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct an gender attribute.
+     * Gets a builder to construct an gender feature.
      * @return a new builder
      */
     @NonNull
@@ -49,7 +49,7 @@ public final class Gender extends Attribute<GenderBinaryType> {
     /**
      * Builder for {@link Gender}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, Gender, GenderBinaryType> {
+    public static final class Builder extends Feature.Builder<Builder, Gender, GenderBinaryType> {
         @Override
         @NonNull
         public Gender build() {

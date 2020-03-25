@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.predictions.models.Attribute;
+import com.amplifyframework.predictions.models.Feature;
 import com.amplifyframework.predictions.models.KeyPhrase;
 import com.amplifyframework.predictions.models.Language;
 import com.amplifyframework.predictions.models.Sentiment;
@@ -39,7 +39,7 @@ public final class InterpretResult {
     private final List<KeyPhrase> keyPhrases;
     private final List<TextEntity> entities;
     private final List<Syntax> syntax;
-    private final List<Attribute<?>> attributes;
+    private final List<Feature<?>> features;
 
     private InterpretResult(final Builder builder) {
         this.language = builder.getLanguage();
@@ -47,7 +47,7 @@ public final class InterpretResult {
         this.keyPhrases = builder.getKeyPhrases();
         this.entities = builder.getEntities();
         this.syntax = builder.getSyntax();
-        this.attributes = builder.getAttributes();
+        this.features = builder.getFeatures();
     }
 
     /**
@@ -96,12 +96,12 @@ public final class InterpretResult {
     }
 
     /**
-     * Gets other associated attributes.
-     * @return The list of attributes
+     * Gets other associated features.
+     * @return The list of features
      */
     @NonNull
-    public List<Attribute<?>> getAttributes() {
-        return Immutable.of(attributes);
+    public List<Feature<?>> getFeatures() {
+        return Immutable.of(features);
     }
 
     /**
@@ -123,10 +123,10 @@ public final class InterpretResult {
         private List<KeyPhrase> keyPhrases;
         private List<TextEntity> entities;
         private List<Syntax> syntax;
-        private List<Attribute<?>> attributes;
+        private List<Feature<?>> features;
 
         private Builder() {
-            this.attributes = new ArrayList<>();
+            this.features = new ArrayList<>();
         }
 
         /**
@@ -185,24 +185,24 @@ public final class InterpretResult {
         }
 
         /**
-         * Sets the list of attributes and return this builder.
-         * @param attributes all other attributes of the result
+         * Sets the list of features and return this builder.
+         * @param features all other features of the result
          * @return this builder instance
          */
         @NonNull
-        public Builder attributes(@NonNull List<Attribute<?>> attributes) {
-            this.attributes = Objects.requireNonNull(attributes);
+        public Builder features(@NonNull List<Feature<?>> features) {
+            this.features = Objects.requireNonNull(features);
             return this;
         }
 
         /**
-         * Add an attribute and return this builder.
-         * @param attribute attribute to add
+         * Add an feature and return this builder.
+         * @param feature feature to add
          * @return this builder instance
          */
         @NonNull
-        public Builder attribute(@NonNull Attribute<?> attribute) {
-            this.attributes.add(Objects.requireNonNull(attribute));
+        public Builder feature(@NonNull Feature<?> feature) {
+            this.features.add(Objects.requireNonNull(feature));
             return this;
         }
 
@@ -242,8 +242,8 @@ public final class InterpretResult {
         }
 
         @NonNull
-        List<Attribute<?>> getAttributes() {
-            return attributes;
+        List<Feature<?>> getFeatures() {
+            return features;
         }
     }
 }

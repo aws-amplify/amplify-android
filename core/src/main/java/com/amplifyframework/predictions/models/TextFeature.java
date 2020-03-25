@@ -21,15 +21,15 @@ import java.util.Objects;
 
 /**
  * A generic class to hold information about an inferred
- * attribute from text analysis and the confidence score
+ * feature from text analysis and the confidence score
  * for inference.
- * @param <T> the attribute type
+ * @param <T> the feature type
  */
 @SuppressWarnings("unchecked")
-public abstract class TextAttribute<T> extends Attribute<T> {
+public abstract class TextFeature<T> extends Feature<T> {
     private final TargetText target;
 
-    TextAttribute(Builder<?, ? extends TextAttribute<T>, T> builder) {
+    TextFeature(Builder<?, ? extends TextFeature<T>, T> builder) {
         super(builder);
         this.target = builder.getTarget();
     }
@@ -43,8 +43,8 @@ public abstract class TextAttribute<T> extends Attribute<T> {
         return target;
     }
 
-    abstract static class Builder<B extends Builder<B, R, T>, R extends TextAttribute<T>, T>
-            extends Attribute.Builder<B, R, T> {
+    abstract static class Builder<B extends Builder<B, R, T>, R extends TextFeature<T>, T>
+            extends Feature.Builder<B, R, T> {
         private TargetText target;
 
         /**

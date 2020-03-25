@@ -21,11 +21,11 @@ import androidx.annotation.NonNull;
  * Holds the facial feature detection results
  * for the predictions category.
  */
-public final class FacialFeature extends ImageAttribute<FacialFeatureType> {
+public final class FacialFeature extends ImageFeature<FacialFeatureType> {
     /**
-     * Attribute type for {@link FacialFeatureType}.
+     * Feature type for {@link FacialFeatureType}.
      */
-    public static final String ATTRIBUTE_TYPE = FacialFeatureType.class.getSimpleName();
+    public static final String FEATURE_TYPE = FacialFeatureType.class.getSimpleName();
 
     private FacialFeature(final Builder builder) {
         super(builder);
@@ -34,7 +34,7 @@ public final class FacialFeature extends ImageAttribute<FacialFeatureType> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
@@ -50,7 +50,7 @@ public final class FacialFeature extends ImageAttribute<FacialFeatureType> {
     /**
      * Builder for {@link FacialFeature}.
      */
-    public static final class Builder extends ImageAttribute.Builder<Builder, FacialFeature, FacialFeatureType> {
+    public static final class Builder extends ImageFeature.Builder<Builder, FacialFeature, FacialFeatureType> {
         /**
          * Construct a new instance of {@link FacialFeature} from
          * the values assigned to this builder instance.

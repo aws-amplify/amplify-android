@@ -22,23 +22,23 @@ import java.util.UUID;
 
 /**
  * A generic class to hold information about an inferred
- * attribute and the confidence score for inference.
- * @param <T> the attribute type
+ * feature and the confidence score for inference.
+ * @param <T> the feature type
  */
-public abstract class Attribute<T> implements Comparable<Attribute<T>> {
+public abstract class Feature<T> implements Comparable<Feature<T>> {
     private final String id;
-    private final T attribute;
+    private final T feature;
     private final float confidence;
 
-    Attribute(Builder<?, ? extends Attribute<T>, T> builder) {
+    Feature(Builder<?, ? extends Feature<T>, T> builder) {
         this.id = builder.getId();
-        this.attribute = builder.getAttribute();
+        this.feature = builder.getFeature();
         this.confidence = builder.getConfidence();
     }
 
     /**
-     * Gets the type name of attribute.
-     * @return the attribute type
+     * Gets the type name of feature.
+     * @return the feature type
      */
     @NonNull
     public abstract String getType();
@@ -53,12 +53,12 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
     }
 
     /**
-     * Gets the detected value for this attribute.
+     * Gets the detected value for this feature.
      * @return the detected result
      */
     @NonNull
-    public final T getAttribute() {
-        return attribute;
+    public final T getFeature() {
+        return feature;
     }
 
     /**
@@ -72,15 +72,15 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
     }
 
     /**
-     * Compares an attribute to another. The attributes are
+     * Compares an feature to another. The features are
      * sorted by their types' alphabetic order, and by
      * decreasing order of their confidence score for those
      * within the same type.
-     * @param other the other attribute to compare to
+     * @param other the other feature to compare to
      * @return positive if this item comes after
      */
     @Override
-    public int compareTo(Attribute<T> other) {
+    public int compareTo(Feature<T> other) {
         if (other == null) {
             return -1;
         }
@@ -92,15 +92,15 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
     }
 
     /**
-     * Builder class to help construct an instance of {@link Attribute}.
+     * Builder class to help construct an instance of {@link Feature}.
      * @param <B> Extension of this builder
-     * @param <R> Extension of result attribute instance
+     * @param <R> Extension of result feature instance
      * @param <T> Type of result
      */
     @SuppressWarnings("unchecked")
-    abstract static class Builder<B extends Builder<B, R, T>, R extends Attribute<T>, T> {
+    abstract static class Builder<B extends Builder<B, R, T>, R extends Feature<T>, T> {
         private String id;
-        private T attribute;
+        private T feature;
         private float confidence;
 
         Builder() {
@@ -120,13 +120,13 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
         }
 
         /**
-         * Sets the attribute and return this builder.
-         * @param attribute the attribute
+         * Sets the feature and return this builder.
+         * @param feature the feature
          * @return this builder instance
          */
         @NonNull
-        public final B attribute(@NonNull T attribute) {
-            this.attribute = Objects.requireNonNull(attribute);
+        public final B feature(@NonNull T feature) {
+            this.feature = Objects.requireNonNull(feature);
             return (B) this;
         }
 
@@ -141,9 +141,9 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
         }
 
         /**
-         * Constructs a new instance of {@link Attribute}
+         * Constructs a new instance of {@link Feature}
          * using the values assigned to this builder.
-         * @return An instance of {@link Attribute}
+         * @return An instance of {@link Feature}
          */
         @NonNull
         public abstract R build();
@@ -154,8 +154,8 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
         }
 
         @NonNull
-        final T getAttribute() {
-            return Objects.requireNonNull(attribute);
+        final T getFeature() {
+            return Objects.requireNonNull(feature);
         }
 
         final float getConfidence() {

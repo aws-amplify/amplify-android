@@ -31,11 +31,11 @@ import java.util.Objects;
 public final class ImageEntity {
     private final TargetBoundary boundary;
     private final AgeRange ageRange;
-    private final PoseAttribute pose;
+    private final PoseFeature pose;
     private final Gender gender;
     private final List<FacialFeature> facialFeatures;
     private final List<Emotion> emotions;
-    private final List<BooleanAttribute> attributes;
+    private final List<BooleanFeature> features;
 
     private ImageEntity(final Builder builder) {
         this.boundary = builder.getBoundary();
@@ -44,7 +44,7 @@ public final class ImageEntity {
         this.gender = builder.getGender();
         this.facialFeatures = builder.getfacialFeatures();
         this.emotions = builder.getEmotions();
-        this.attributes = builder.getAttributes();
+        this.features = builder.getFeatures();
     }
 
     /**
@@ -66,17 +66,17 @@ public final class ImageEntity {
     }
 
     /**
-     * Gets the detected pose attribute.
-     * @return the pose attribute
+     * Gets the detected pose feature.
+     * @return the pose feature
      */
     @Nullable
-    public PoseAttribute getPose() {
+    public PoseFeature getPose() {
         return pose;
     }
 
     /**
      * Gets the detected gender.
-     * @return the gender type attribute
+     * @return the gender type feature
      */
     @Nullable
     public Gender getGender() {
@@ -102,12 +102,12 @@ public final class ImageEntity {
     }
 
     /**
-     * Gets the list of boolean attributes.
-     * @return the list of attributes
+     * Gets the list of boolean features.
+     * @return the list of features
      */
     @NonNull
-    public List<BooleanAttribute> getAttributes() {
-        return Immutable.of(attributes);
+    public List<BooleanFeature> getFeatures() {
+        return Immutable.of(features);
     }
 
     /**
@@ -125,16 +125,16 @@ public final class ImageEntity {
     public static final class Builder {
         private TargetBoundary boundary;
         private AgeRange ageRange;
-        private PoseAttribute pose;
+        private PoseFeature pose;
         private Gender gender;
         private List<FacialFeature> facialFeatures;
         private List<Emotion> emotions;
-        private List<BooleanAttribute> attributes;
+        private List<BooleanFeature> features;
 
         private Builder() {
             this.facialFeatures = Collections.emptyList();
             this.emotions = Collections.emptyList();
-            this.attributes = Collections.emptyList();
+            this.features = Collections.emptyList();
         }
 
         /**
@@ -160,18 +160,18 @@ public final class ImageEntity {
         }
 
         /**
-         * Sets the pose attribute and return this builder.
+         * Sets the pose feature and return this builder.
          * @param pose the pose
          * @return this builder instance
          */
         @NonNull
-        public Builder pose(@Nullable PoseAttribute pose) {
+        public Builder pose(@Nullable PoseFeature pose) {
             this.pose = pose;
             return this;
         }
 
         /**
-         * Sets the gender attribute and return this builder.
+         * Sets the gender feature and return this builder.
          * @param gender the gender
          * @return this builder instance
          */
@@ -204,13 +204,13 @@ public final class ImageEntity {
         }
 
         /**
-         * Sets the list of boolean attributes and return this builder.
-         * @param attributes the list of attributes
+         * Sets the list of boolean features and return this builder.
+         * @param features the list of features
          * @return this builder instance
          */
         @NonNull
-        public Builder attributes(@NonNull List<BooleanAttribute> attributes) {
-            this.attributes = Objects.requireNonNull(attributes);
+        public Builder features(@NonNull List<BooleanFeature> features) {
+            this.features = Objects.requireNonNull(features);
             return this;
         }
 
@@ -235,7 +235,7 @@ public final class ImageEntity {
         }
 
         @Nullable
-        PoseAttribute getPose() {
+        PoseFeature getPose() {
             return pose;
         }
 
@@ -255,8 +255,8 @@ public final class ImageEntity {
         }
 
         @NonNull
-        List<BooleanAttribute> getAttributes() {
-            return Objects.requireNonNull(attributes);
+        List<BooleanFeature> getFeatures() {
+            return Objects.requireNonNull(features);
         }
     }
 }

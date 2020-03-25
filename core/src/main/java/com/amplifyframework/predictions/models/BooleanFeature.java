@@ -20,15 +20,15 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * Stores detection attribute where the result
- * is a boolean value. Its attribute type is flexible
+ * Stores detected feature where the result
+ * is a boolean value. Its feature type is flexible
  * and each instance must be provided with a specific
  * name for identification.
  */
-public final class BooleanAttribute extends Attribute<Boolean> {
+public final class BooleanFeature extends Feature<Boolean> {
     private final String type;
 
-    private BooleanAttribute(final Builder builder) {
+    private BooleanFeature(final Builder builder) {
         super(builder);
         this.type = builder.getType();
     }
@@ -40,7 +40,7 @@ public final class BooleanAttribute extends Attribute<Boolean> {
     }
 
     /**
-     * Gets a builder to construct an attribute.
+     * Gets a builder to construct an feature.
      * @return a new builder
      */
     @NonNull
@@ -49,14 +49,14 @@ public final class BooleanAttribute extends Attribute<Boolean> {
     }
 
     /**
-     * Builder for {@link BooleanAttribute}.
+     * Builder for {@link BooleanFeature}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, BooleanAttribute, Boolean> {
+    public static final class Builder extends Feature.Builder<Builder, BooleanFeature, Boolean> {
         private String type;
 
         /**
-         * Sets the attribute type and return this builder.
-         * @param type the type of attribute
+         * Sets the feature type and return this builder.
+         * @param type the type of feature
          * @return this builder instance
          */
         @NonNull
@@ -67,8 +67,8 @@ public final class BooleanAttribute extends Attribute<Boolean> {
 
         @Override
         @NonNull
-        public BooleanAttribute build() {
-            return new BooleanAttribute(this);
+        public BooleanFeature build() {
+            return new BooleanFeature(this);
         }
 
         @NonNull

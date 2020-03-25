@@ -21,11 +21,11 @@ import androidx.annotation.NonNull;
  * Holds the sentiment detection results
  * for the predictions category.
  */
-public final class Sentiment extends Attribute<SentimentType> {
+public final class Sentiment extends Feature<SentimentType> {
     /**
-     * Attribute type for {@link SentimentType}.
+     * Feature type for {@link SentimentType}.
      */
-    public static final String ATTRIBUTE_TYPE = SentimentType.class.getSimpleName();
+    public static final String FEATURE_TYPE = SentimentType.class.getSimpleName();
 
     private Sentiment(final Builder builder) {
         super(builder);
@@ -34,11 +34,11 @@ public final class Sentiment extends Attribute<SentimentType> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct an Sentiments attribute.
+     * Gets a builder to construct an Sentiments feature.
      * @return a new builder
      */
     @NonNull
@@ -49,7 +49,7 @@ public final class Sentiment extends Attribute<SentimentType> {
     /**
      * Builder for {@link Sentiment}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, Sentiment, SentimentType> {
+    public static final class Builder extends Feature.Builder<Builder, Sentiment, SentimentType> {
         @Override
         @NonNull
         public Sentiment build() {

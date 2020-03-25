@@ -21,11 +21,11 @@ import androidx.annotation.NonNull;
  * Holds the emotion detection results
  * for the predictions category.
  */
-public final class Emotion extends Attribute<EmotionType> {
+public final class Emotion extends Feature<EmotionType> {
     /**
-     * Attribute type for {@link Emotion}.
+     * Feature type for {@link Emotion}.
      */
-    public static final String ATTRIBUTE_TYPE = EmotionType.class.getSimpleName();
+    public static final String FEATURE_TYPE = EmotionType.class.getSimpleName();
 
     private Emotion(final Builder builder) {
         super(builder);
@@ -34,11 +34,11 @@ public final class Emotion extends Attribute<EmotionType> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct an emotions attribute.
+     * Gets a builder to construct an emotions feature.
      * @return a new builder
      */
     @NonNull
@@ -49,7 +49,7 @@ public final class Emotion extends Attribute<EmotionType> {
     /**
      * Builder for {@link Emotion}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, Emotion, EmotionType> {
+    public static final class Builder extends Feature.Builder<Builder, Emotion, EmotionType> {
         @Override
         @NonNull
         public Emotion build() {

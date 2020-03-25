@@ -21,24 +21,24 @@ import androidx.annotation.NonNull;
  * Holds the pose detection results
  * for the predictions category.
  */
-public final class PoseAttribute extends Attribute<Pose> {
+public final class PoseFeature extends Feature<Pose> {
     /**
-     * Attribute type for {@link Pose}.
+     * Feature type for {@link Pose}.
      */
-    public static final String ATTRIBUTE_TYPE = Pose.class.getSimpleName();
+    public static final String FEATURE_TYPE = Pose.class.getSimpleName();
 
-    private PoseAttribute(final Builder builder) {
+    private PoseFeature(final Builder builder) {
         super(builder);
     }
 
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct a pose attribute.
+     * Gets a builder to construct a pose feature.
      * @return a new builder
      */
     @NonNull
@@ -47,13 +47,13 @@ public final class PoseAttribute extends Attribute<Pose> {
     }
 
     /**
-     * Builder for {@link PoseAttribute}.
+     * Builder for {@link PoseFeature}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, PoseAttribute, Pose> {
+    public static final class Builder extends Feature.Builder<Builder, PoseFeature, Pose> {
         @Override
         @NonNull
-        public PoseAttribute build() {
-            return new PoseAttribute(this);
+        public PoseFeature build() {
+            return new PoseFeature(this);
         }
     }
 }

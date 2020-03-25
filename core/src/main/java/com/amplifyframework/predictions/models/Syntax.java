@@ -25,11 +25,11 @@ import androidx.annotation.NonNull;
  * part of speech is represented by the target
  * portion of the text.
  */
-public final class Syntax extends TextAttribute<SpeechType> {
+public final class Syntax extends TextFeature<SpeechType> {
     /**
-     * Attribute type for {@link SpeechType}.
+     * Feature type for {@link SpeechType}.
      */
-    public static final String ATTRIBUTE_TYPE = SpeechType.class.getSimpleName();
+    public static final String FEATURE_TYPE = SpeechType.class.getSimpleName();
 
     private Syntax(final Builder builder) {
         super(builder);
@@ -38,11 +38,11 @@ public final class Syntax extends TextAttribute<SpeechType> {
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
-     * Gets a builder to construct a speech type attribute.
+     * Gets a builder to construct a speech type feature.
      * @return a new builder
      */
     @NonNull
@@ -53,7 +53,7 @@ public final class Syntax extends TextAttribute<SpeechType> {
     /**
      * Builder for {@link Syntax}.
      */
-    public static final class Builder extends TextAttribute.Builder<Builder, Syntax, SpeechType> {
+    public static final class Builder extends TextFeature.Builder<Builder, Syntax, SpeechType> {
         @Override
         @NonNull
         public Syntax build() {

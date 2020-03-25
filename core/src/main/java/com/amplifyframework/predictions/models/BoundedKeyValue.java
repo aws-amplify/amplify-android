@@ -25,11 +25,11 @@ import java.util.Objects;
  * Holds the key-value detection results
  * for the predictions category.
  */
-public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, String>> {
+public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String>> {
     /**
-     * Attribute type for {@link BoundedKeyValue}.
+     * Feature type for {@link BoundedKeyValue}.
      */
-    public static final String ATTRIBUTE_TYPE = BoundedKeyValue.class.getSimpleName();
+    public static final String FEATURE_TYPE = BoundedKeyValue.class.getSimpleName();
 
     private BoundedKeyValue(final Builder builder) {
         super(builder);
@@ -38,7 +38,7 @@ public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, Stri
     @Override
     @NonNull
     public String getType() {
-        return ATTRIBUTE_TYPE;
+        return FEATURE_TYPE;
     }
 
     /**
@@ -47,7 +47,7 @@ public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, Stri
      */
     @NonNull
     public String getKey() {
-        return getAttribute().getKey();
+        return getFeature().getKey();
     }
 
     /**
@@ -56,7 +56,7 @@ public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, Stri
      */
     @NonNull
     public String getValue() {
-        return getAttribute().getValue();
+        return getFeature().getValue();
     }
 
     /**
@@ -73,7 +73,7 @@ public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, Stri
      * Builder for {@link BoundedKeyValue}.
      */
     public static final class Builder
-            extends ImageAttribute.Builder<Builder, BoundedKeyValue, Map.Entry<String, String>> {
+            extends ImageFeature.Builder<Builder, BoundedKeyValue, Map.Entry<String, String>> {
         /**
          * Sets the key-value pair and return this builder.
          * @param key the key
@@ -84,7 +84,7 @@ public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, Stri
         public Builder keyValue(@NonNull String key, @NonNull String value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(value);
-            return attribute(new HashMap.SimpleEntry<>(key, value));
+            return feature(new HashMap.SimpleEntry<>(key, value));
         }
 
         /**
