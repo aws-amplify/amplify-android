@@ -17,12 +17,19 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
+/**
+ * Options for text language translation operation.
+ */
 public final class TranslateTextOptions implements Options {
 
     private TranslateTextOptions() {
         // TODO: Add options
     }
 
+    /**
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
+     */
     public static TranslateTextOptions defaultInstance() {
         return new TranslateTextOptions();
     }

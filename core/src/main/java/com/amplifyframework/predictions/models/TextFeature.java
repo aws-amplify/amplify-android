@@ -43,6 +43,12 @@ public abstract class TextFeature<T> extends Feature<T> {
         return target;
     }
 
+    /**
+     * Builder for {@link TextFeature}.
+     * @param <B> Extension of this builder
+     * @param <R> Extension of a {@link TextFeature} instance
+     * @param <T> Type of result held by this text feature
+     */
     abstract static class Builder<B extends Builder<B, R, T>, R extends TextFeature<T>, T>
             extends Feature.Builder<B, R, T> {
         private TargetText target;

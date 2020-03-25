@@ -37,7 +37,7 @@ public final class CelebrityDetails {
     private CelebrityDetails(final Builder builder) {
         this.celebrity = builder.getCelebrity();
         this.pose = builder.getPose();
-        this.facialFeatures = builder.getfacialFeatures();
+        this.facialFeatures = builder.getFacialFeatures();
         this.urls = builder.getUrls();
     }
 
@@ -64,7 +64,7 @@ public final class CelebrityDetails {
      * @return the facial features
      */
     @NonNull
-    public List<FacialFeature> getfacialFeatures() {
+    public List<FacialFeature> getFacialFeatures() {
         return Immutable.of(facialFeatures);
     }
 
@@ -167,7 +167,7 @@ public final class CelebrityDetails {
         }
 
         @NonNull
-        List<FacialFeature> getfacialFeatures() {
+        List<FacialFeature> getFacialFeatures() {
             return Objects.requireNonNull(facialFeatures);
         }
 

@@ -28,13 +28,6 @@ public final class PredictionsCategoryConfiguration extends CategoryConfiguratio
     //TODO: Place global (category-wise) configuration options here
 
     /**
-     * Constructs a new PredictionsCategoryConfiguration.
-     */
-    public PredictionsCategoryConfiguration() {
-        super();
-    }
-
-    /**
      * Gets the category type associated with the current object.
      *
      * @return The category type to which the current object is affiliated

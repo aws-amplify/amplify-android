@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * A representation of table's individual cell.
+ * A representation of {@link Table}'s individual cell.
  */
 public final class Cell {
     private final String text;

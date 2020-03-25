@@ -42,7 +42,7 @@ public final class ImageEntity {
         this.ageRange = builder.getAgeRange();
         this.pose = builder.getPose();
         this.gender = builder.getGender();
-        this.facialFeatures = builder.getfacialFeatures();
+        this.facialFeatures = builder.getFacialFeatures();
         this.emotions = builder.getEmotions();
         this.features = builder.getFeatures();
     }
@@ -88,7 +88,7 @@ public final class ImageEntity {
      * @return the list of facial features
      */
     @NonNull
-    public List<FacialFeature> getfacialFeatures() {
+    public List<FacialFeature> getFacialFeatures() {
         return Immutable.of(facialFeatures);
     }
 
@@ -245,7 +245,7 @@ public final class ImageEntity {
         }
 
         @NonNull
-        List<FacialFeature> getfacialFeatures() {
+        List<FacialFeature> getFacialFeatures() {
             return Objects.requireNonNull(facialFeatures);
         }
 

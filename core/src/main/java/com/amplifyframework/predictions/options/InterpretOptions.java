@@ -17,12 +17,19 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
+/**
+ * Options for text interpretation operation.
+ */
 public final class InterpretOptions implements Options {
 
     private InterpretOptions() {
         // TODO: Add options
     }
 
+    /**
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
+     */
     public static InterpretOptions defaultInstance() {
         return new InterpretOptions();
     }

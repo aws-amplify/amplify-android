@@ -17,12 +17,19 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
+/**
+ * Options for text to speech synthesis operation.
+ */
 public final class TextToSpeechOptions implements Options {
 
     private TextToSpeechOptions() {
         // TODO: Add options
     }
 
+    /**
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
+     */
     public static TextToSpeechOptions defaultInstance() {
         return new TextToSpeechOptions();
     }

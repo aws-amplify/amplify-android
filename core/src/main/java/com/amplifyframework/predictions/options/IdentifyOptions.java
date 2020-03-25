@@ -17,12 +17,19 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
+/**
+ * Options for image identification operation.
+ */
 public final class IdentifyOptions implements Options {
 
     private IdentifyOptions() {
         // TODO: Add options
     }
 
+    /**
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
+     */
     public static IdentifyOptions defaultInstance() {
         return new IdentifyOptions();
     }

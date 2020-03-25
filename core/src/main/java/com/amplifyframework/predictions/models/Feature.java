@@ -94,8 +94,8 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
     /**
      * Builder class to help construct an instance of {@link Feature}.
      * @param <B> Extension of this builder
-     * @param <R> Extension of result feature instance
-     * @param <T> Type of result
+     * @param <R> Extension of detected feature instance
+     * @param <T> Type of result held by this feature
      */
     @SuppressWarnings("unchecked")
     abstract static class Builder<B extends Builder<B, R, T>, R extends Feature<T>, T> {

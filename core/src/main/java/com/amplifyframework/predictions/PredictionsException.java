@@ -29,15 +29,15 @@ public final class PredictionsException extends AmplifyException {
     /**
      * Creates a new exception with a message, root cause, and recovery suggestion.
      * @param message An error message describing why this exception was thrown
-     * @param throwable The underlying cause of this exception
+     * @param cause The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
     public PredictionsException(
             @NonNull final String message,
-            final Throwable throwable,
+            @NonNull final Throwable cause,
             @NonNull final String recoverySuggestion
     ) {
-        super(message, throwable, recoverySuggestion);
+        super(message, cause, recoverySuggestion);
     }
 
     /**

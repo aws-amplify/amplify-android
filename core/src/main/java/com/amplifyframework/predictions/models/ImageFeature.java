@@ -44,6 +44,12 @@ public abstract class ImageFeature<T> extends Feature<T> {
         return target;
     }
 
+    /**
+     * Builder for {@link ImageFeature}.
+     * @param <B> Extension of this builder
+     * @param <R> Extension of a {@link ImageFeature} instance
+     * @param <T> Type of result held by this image feature
+     */
     abstract static class Builder<B extends Builder<B, R, T>, R extends ImageFeature<T>, T>
             extends Feature.Builder<B, R, T> {
         private TargetBoundary target;
