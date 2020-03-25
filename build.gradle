@@ -58,7 +58,8 @@ ext {
             test: [
                 core: 'androidx.test:core:1.2.0',
                 runner: 'androidx.test:runner:1.2.0',
-                junit: 'androidx.test.ext:junit:1.1.1'
+                junit: 'androidx.test.ext:junit:1.1.1',
+                orchestrator: 'androidx.test:orchestrator:1.1.0'
             ]
         ],
         aws: [
@@ -99,9 +100,11 @@ private void configureAndroidLibrary(Project project) {
             versionCode rootProject.findProperty('VERSION_CODE').toInteger()
             versionName rootProject.findProperty('VERSION_NAME')
             testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+            testInstrumentationRunnerArguments clearPackageData: 'true'
             consumerProguardFiles 'proguard-rules.pro'
 
             testOptions {
+                execution 'ANDROIDX_TEST_ORCHESTRATOR'
                 unitTests {
                     includeAndroidResources = true
                 }

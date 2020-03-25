@@ -35,5 +35,6 @@ dependencies {
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
+    androidTestUtil dependency.androidx.test.orchestrator
 }
 

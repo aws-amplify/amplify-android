@@ -44,5 +44,6 @@ dependencies {
     androidTestImplementation dependency.androidx.test.runner
     androidTestImplementation dependency.androidx.test.junit
     androidTestImplementation dependency.rxjava
+    androidTestUtil dependency.androidx.test.orchestrator
 }
 
