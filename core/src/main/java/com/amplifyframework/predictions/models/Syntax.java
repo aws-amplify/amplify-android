@@ -18,8 +18,12 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the syntax detection results
+ * Holds the syntax detection results
  * for the predictions category.
+ *
+ * Syntax holds the information regarding what
+ * part of speech is represented by the target
+ * portion of the text.
  */
 public final class Syntax extends TextAttribute<SpeechType> {
     /**

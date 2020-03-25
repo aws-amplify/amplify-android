@@ -77,7 +77,7 @@ public final class Selection {
     /**
      * Builder for {@link Selection}.
      */
-    public static class Builder {
+    public static final class Builder {
         private Rect boundingBox;
         private Polygon polygon;
         private Boolean isSelected;

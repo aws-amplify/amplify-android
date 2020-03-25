@@ -17,13 +17,13 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
-public final class PredictionsSpeechToTextOptions implements Options {
+public final class SpeechToTextOptions implements Options {
 
-    private PredictionsSpeechToTextOptions() {
+    private SpeechToTextOptions() {
         // TODO: Add options
     }
 
-    public static PredictionsSpeechToTextOptions defaultInstance() {
-        return new PredictionsSpeechToTextOptions();
+    public static SpeechToTextOptions defaultInstance() {
+        return new SpeechToTextOptions();
     }
 }

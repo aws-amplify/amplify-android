@@ -19,6 +19,10 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 
+/**
+ * Exception thrown by Predictions category upon encountering
+ * an error during setup or operation.
+ */
 public final class PredictionsException extends AmplifyException {
     private static final long serialVersionUID = 6843042852631940595L;
 

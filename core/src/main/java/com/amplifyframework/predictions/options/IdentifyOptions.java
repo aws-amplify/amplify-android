@@ -17,13 +17,13 @@ package com.amplifyframework.predictions.options;
 
 import com.amplifyframework.core.async.Options;
 
-public final class PredictionsInterpretOptions implements Options {
+public final class IdentifyOptions implements Options {
 
-    private PredictionsInterpretOptions() {
+    private IdentifyOptions() {
         // TODO: Add options
     }
 
-    public static PredictionsInterpretOptions defaultInstance() {
-        return new PredictionsInterpretOptions();
+    public static IdentifyOptions defaultInstance() {
+        return new IdentifyOptions();
     }
 }

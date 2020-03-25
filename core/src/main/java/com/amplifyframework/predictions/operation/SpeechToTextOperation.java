@@ -13,24 +13,19 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.models;
+package com.amplifyframework.predictions.operation;
 
-/**
- * Types of detectable landmark.
- */
-@SuppressWarnings("JavadocVariable")
-public enum LandmarkType {    
-    ALL_POINTS,
-    LEFT_EYE,
-    RIGHT_EYE,
-    LEFT_EYEBROW,
-    RIGHT_EYEBROW,
-    NOSE,
-    NOSE_CREST,
-    MEDIAN_LINE,
-    OUTER_LIPS,
-    INNER_LIPS,
-    LEFT_PUPIL,
-    RIGHT_PUPIL,
-    FACE_CONTOUR
+import androidx.annotation.Nullable;
+
+import com.amplifyframework.core.async.AmplifyOperation;
+import com.amplifyframework.core.category.CategoryType;
+
+public abstract class SpeechToTextOperation<R> extends AmplifyOperation<R> {
+    /**
+     * Constructs a new AmplifyOperation.
+     * @param amplifyOperationRequest The request object of the operation
+     */
+    public SpeechToTextOperation(@Nullable R amplifyOperationRequest) {
+        super(CategoryType.PREDICTIONS, amplifyOperationRequest);
+    }
 }

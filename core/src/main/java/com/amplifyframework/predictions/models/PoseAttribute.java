@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the pose detection results
+ * Holds the pose detection results
  * for the predictions category.
  */
 public final class PoseAttribute extends Attribute<Pose> {

@@ -40,7 +40,7 @@ public abstract class ImageAttribute<T> extends Attribute<T> {
      * @return the boundary of the image target
      */
     @NonNull
-    public TargetBoundary getTarget() {
+    public final TargetBoundary getTarget() {
         return target;
     }
 

@@ -20,12 +20,12 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.util.Immutable;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * Class that holds the image entity detection results
+ * Holds the image entity detection results
  * for the predictions category.
  */
 public final class ImageEntity {
@@ -33,7 +33,7 @@ public final class ImageEntity {
     private final AgeRange ageRange;
     private final PoseAttribute pose;
     private final Gender gender;
-    private final List<Landmark> landmarks;
+    private final List<FacialFeature> facialFeatures;
     private final List<Emotion> emotions;
     private final List<BooleanAttribute> attributes;
 
@@ -42,7 +42,7 @@ public final class ImageEntity {
         this.ageRange = builder.getAgeRange();
         this.pose = builder.getPose();
         this.gender = builder.getGender();
-        this.landmarks = builder.getLandmarks();
+        this.facialFeatures = builder.getfacialFeatures();
         this.emotions = builder.getEmotions();
         this.attributes = builder.getAttributes();
     }
@@ -84,12 +84,12 @@ public final class ImageEntity {
     }
 
     /**
-     * Gets the list of detected landmarks.
-     * @return the list of landmarks
+     * Gets the list of detected facial features.
+     * @return the list of facial features
      */
     @NonNull
-    public List<Landmark> getLandmarks() {
-        return Immutable.of(landmarks);
+    public List<FacialFeature> getfacialFeatures() {
+        return Immutable.of(facialFeatures);
     }
 
     /**
@@ -127,14 +127,14 @@ public final class ImageEntity {
         private AgeRange ageRange;
         private PoseAttribute pose;
         private Gender gender;
-        private List<Landmark> landmarks;
+        private List<FacialFeature> facialFeatures;
         private List<Emotion> emotions;
         private List<BooleanAttribute> attributes;
 
         private Builder() {
-            this.landmarks = new ArrayList<>();
-            this.emotions = new ArrayList<>();
-            this.attributes = new ArrayList<>();
+            this.facialFeatures = Collections.emptyList();
+            this.emotions = Collections.emptyList();
+            this.attributes = Collections.emptyList();
         }
 
         /**
@@ -182,13 +182,13 @@ public final class ImageEntity {
         }
 
         /**
-         * Sets the landmarks and return this builder.
-         * @param landmarks the landmarks
+         * Sets the facial features and return this builder.
+         * @param facialFeatures the facial features
          * @return this builder instance
          */
         @NonNull
-        public Builder landmarks(@NonNull List<Landmark> landmarks) {
-            this.landmarks = Objects.requireNonNull(landmarks);
+        public Builder facialFeatures(@NonNull List<FacialFeature> facialFeatures) {
+            this.facialFeatures = Objects.requireNonNull(facialFeatures);
             return this;
         }
 
@@ -245,8 +245,8 @@ public final class ImageEntity {
         }
 
         @NonNull
-        List<Landmark> getLandmarks() {
-            return Objects.requireNonNull(landmarks);
+        List<FacialFeature> getfacialFeatures() {
+            return Objects.requireNonNull(facialFeatures);
         }
 
         @NonNull

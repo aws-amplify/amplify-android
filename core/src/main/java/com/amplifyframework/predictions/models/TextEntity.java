@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the entity detection results from text
+ * Holds the entity detection results from text
  * for the predictions category.
  */
 public final class TextEntity extends TextAttribute<EntityType> {

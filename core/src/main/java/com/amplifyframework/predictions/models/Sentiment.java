@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the sentiment detection results
+ * Holds the sentiment detection results
  * for the predictions category.
  */
 public final class Sentiment extends Attribute<SentimentType> {

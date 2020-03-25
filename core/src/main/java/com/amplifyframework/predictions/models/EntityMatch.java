@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * Class that holds the entity match results
+ * Holds the entity match results
  * for the predictions category.
  */
 public final class EntityMatch {
@@ -67,7 +67,7 @@ public final class EntityMatch {
     /**
      * Builder for {@link EntityMatch}.
      */
-    public static class Builder {
+    public static final class Builder {
         private Rect boundingBox;
         private EntityMatchMetadata metadata;
 

@@ -20,12 +20,12 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
-public abstract class PredictionsSpeechToTextOperation<R> extends AmplifyOperation<R> {
+public abstract class TextToSpeechOperation<R> extends AmplifyOperation<R> {
     /**
      * Constructs a new AmplifyOperation.
      * @param amplifyOperationRequest The request object of the operation
      */
-    public PredictionsSpeechToTextOperation(@Nullable R amplifyOperationRequest) {
+    public TextToSpeechOperation(@Nullable R amplifyOperationRequest) {
         super(CategoryType.PREDICTIONS, amplifyOperationRequest);
     }
 }

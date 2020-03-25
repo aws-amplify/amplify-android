@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 /**
  * Types of genders that can be detected.
  */
-public enum GenderType {
+public enum GenderBinaryType {
     /**
      * Classifies male gender.
      */

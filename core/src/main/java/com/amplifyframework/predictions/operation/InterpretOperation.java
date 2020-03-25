@@ -20,12 +20,12 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
-public abstract class PredictionsIdentifyOperation<R> extends AmplifyOperation<R> {
+public abstract class InterpretOperation<R> extends AmplifyOperation<R> {
     /**
      * Constructs a new AmplifyOperation.
      * @param amplifyOperationRequest The request object of the operation
      */
-    public PredictionsIdentifyOperation(@Nullable R amplifyOperationRequest) {
+    public InterpretOperation(@Nullable R amplifyOperationRequest) {
         super(CategoryType.PREDICTIONS, amplifyOperationRequest);
     }
 }

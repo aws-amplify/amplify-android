@@ -20,16 +20,16 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
-import com.amplifyframework.predictions.operation.PredictionsIdentifyOperation;
-import com.amplifyframework.predictions.operation.PredictionsInterpretOperation;
-import com.amplifyframework.predictions.operation.PredictionsSpeechToTextOperation;
-import com.amplifyframework.predictions.operation.PredictionsTextToSpeechOperation;
-import com.amplifyframework.predictions.operation.PredictionsTranslateTextOperation;
-import com.amplifyframework.predictions.options.PredictionsIdentifyOptions;
-import com.amplifyframework.predictions.options.PredictionsInterpretOptions;
-import com.amplifyframework.predictions.options.PredictionsSpeechToTextOptions;
-import com.amplifyframework.predictions.options.PredictionsTextToSpeechOptions;
-import com.amplifyframework.predictions.options.PredictionsTranslateTextOptions;
+import com.amplifyframework.predictions.operation.IdentifyOperation;
+import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.SpeechToTextOperation;
+import com.amplifyframework.predictions.operation.TextToSpeechOperation;
+import com.amplifyframework.predictions.operation.TranslateTextOperation;
+import com.amplifyframework.predictions.options.IdentifyOptions;
+import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.SpeechToTextOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.SpeechToTextResult;
@@ -39,8 +39,8 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 import java.net.URL;
 
 /**
- * Predictions category defines an abstract high-level behavior
- * of machine learning tools.
+ * The Predictions category includes functionality to convert and translate text,
+ * perform text analysis, and detect features in an image, using Machine Learning.
  */
 public interface PredictionsCategoryBehavior {
     /**
@@ -54,7 +54,7 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing translation operation
      */
     @NonNull
-    PredictionsTranslateTextOperation<?> translateText(
+    TranslateTextOperation<?> translateText(
             @NonNull String text,
             @NonNull LanguageType fromLanguage,
             @NonNull LanguageType toLanguage,
@@ -74,11 +74,11 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing translation operation
      */
     @NonNull
-    PredictionsTranslateTextOperation<?> translateText(
+    TranslateTextOperation<?> translateText(
             @NonNull String text,
             @NonNull LanguageType fromLanguage,
             @NonNull LanguageType toLanguage,
-            @NonNull PredictionsTranslateTextOptions options,
+            @NonNull TranslateTextOptions options,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
@@ -92,7 +92,7 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing conversion operation
      */
     @NonNull
-    PredictionsTextToSpeechOperation<?> convertTextToSpeech(
+    TextToSpeechOperation<?> convertTextToSpeech(
             @NonNull String text,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
@@ -108,9 +108,9 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing conversion operation
      */
     @NonNull
-    PredictionsTextToSpeechOperation<?> convertTextToSpeech(
+    TextToSpeechOperation<?> convertTextToSpeech(
             @NonNull String text,
-            @NonNull PredictionsTextToSpeechOptions options,
+            @NonNull TextToSpeechOptions options,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
@@ -124,7 +124,7 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing conversion operation
      */
     @NonNull
-    PredictionsSpeechToTextOperation<?> convertSpeechToText(
+    SpeechToTextOperation<?> convertSpeechToText(
             @NonNull URL speech,
             @NonNull Consumer<SpeechToTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
@@ -140,9 +140,9 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing conversion operation
      */
     @NonNull
-    PredictionsSpeechToTextOperation<?> convertSpeechToText(
+    SpeechToTextOperation<?> convertSpeechToText(
             @NonNull URL speech,
-            @NonNull PredictionsSpeechToTextOptions options,
+            @NonNull SpeechToTextOptions options,
             @NonNull Consumer<SpeechToTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
@@ -157,7 +157,7 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing identification operation
      */
     @NonNull
-    PredictionsIdentifyOperation<?> identify(
+    IdentifyOperation<?> identify(
             @NonNull IdentifyAction type,
             @NonNull URL image,
             @NonNull Consumer<IdentifyResult> onSuccess,
@@ -175,10 +175,10 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing identification operation
      */
     @NonNull
-    PredictionsIdentifyOperation<?> identify(
+    IdentifyOperation<?> identify(
             @NonNull IdentifyAction type,
             @NonNull URL image,
-            @NonNull PredictionsIdentifyOptions options,
+            @NonNull IdentifyOptions options,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
@@ -193,7 +193,7 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing interpretation operation
      */
     @NonNull
-    PredictionsInterpretOperation<?> interpret(
+    InterpretOperation<?> interpret(
             @NonNull String text,
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
@@ -210,9 +210,9 @@ public interface PredictionsCategoryBehavior {
      *          the ongoing interpretation operation
      */
     @NonNull
-    PredictionsInterpretOperation<?> interpret(
+    InterpretOperation<?> interpret(
             @NonNull String text,
-            @NonNull PredictionsInterpretOptions options,
+            @NonNull InterpretOptions options,
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );

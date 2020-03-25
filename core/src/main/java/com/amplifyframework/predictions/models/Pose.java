@@ -21,7 +21,9 @@ import java.util.Objects;
 
 /**
  * Class to represent a pose by using three main
- * positions: pitch, roll, and yaw.
+ * principal axes: pitch, roll, and yaw.
+ *
+ * @see <a href=https://en.wikipedia.org/wiki/Aircraft_principal_axes#Principal_axes>Principal axes</a>
  */
 public final class Pose {
     private final Double pitch;

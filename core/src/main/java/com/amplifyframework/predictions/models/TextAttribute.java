@@ -39,7 +39,7 @@ public abstract class TextAttribute<T> extends Attribute<T> {
      * @return the target text
      */
     @NonNull
-    public TargetText getTarget() {
+    public final TargetText getTarget() {
         return target;
     }
 

@@ -20,8 +20,10 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * Class to store detection attribute where the result
- * is a boolean value.
+ * Stores detection attribute where the result
+ * is a boolean value. Its attribute type is flexible
+ * and each instance must be provided with a specific
+ * name for identification.
  */
 public final class BooleanAttribute extends Attribute<Boolean> {
     private final String type;

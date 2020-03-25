@@ -23,12 +23,12 @@ import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
 import com.amplifyframework.util.Immutable;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * The result of the call to identify document text from an image.
+ * The result of a call to identify text in an image of a document.
  */
 public final class IdentifyDocumentTextResult implements IdentifyResult {
     private final String fullText;
@@ -136,12 +136,12 @@ public final class IdentifyDocumentTextResult implements IdentifyResult {
         private List<BoundedKeyValue> keyValues;
 
         private Builder() {
-            this.rawLineText = new ArrayList<>();
-            this.words = new ArrayList<>();
-            this.lines = new ArrayList<>();
-            this.selections = new ArrayList<>();
-            this.tables = new ArrayList<>();
-            this.keyValues = new ArrayList<>();
+            this.rawLineText = Collections.emptyList();
+            this.words = Collections.emptyList();
+            this.lines = Collections.emptyList();
+            this.selections = Collections.emptyList();
+            this.tables = Collections.emptyList();
+            this.keyValues = Collections.emptyList();
         }
 
         /**

@@ -18,14 +18,14 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the gender detection results
+ * Holds the gender detection results
  * for the predictions category.
  */
-public final class Gender extends Attribute<GenderType> {
+public final class Gender extends Attribute<GenderBinaryType> {
     /**
      * Attribute type for {@link Gender}.
      */
-    public static final String ATTRIBUTE_TYPE = GenderType.class.getSimpleName();
+    public static final String ATTRIBUTE_TYPE = GenderBinaryType.class.getSimpleName();
 
     private Gender(final Builder builder) {
         super(builder);
@@ -49,7 +49,7 @@ public final class Gender extends Attribute<GenderType> {
     /**
      * Builder for {@link Gender}.
      */
-    public static final class Builder extends Attribute.Builder<Builder, Gender, GenderType> {
+    public static final class Builder extends Attribute.Builder<Builder, Gender, GenderBinaryType> {
         @Override
         @NonNull
         public Gender build() {

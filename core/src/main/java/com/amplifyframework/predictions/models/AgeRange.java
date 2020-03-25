@@ -16,7 +16,7 @@
 package com.amplifyframework.predictions.models;
 
 /**
- * Class to represent a range of age.
+ * Represent a range of age.
  */
 public final class AgeRange {
     private final int low;

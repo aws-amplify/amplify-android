@@ -22,7 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Class that holds the key-value detection results
+ * Holds the key-value detection results
  * for the predictions category.
  */
 public final class BoundedKeyValue extends ImageAttribute<Map.Entry<String, String>> {

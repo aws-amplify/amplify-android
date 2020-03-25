@@ -18,16 +18,16 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the landmark detection results
+ * Holds the facial feature detection results
  * for the predictions category.
  */
-public final class Landmark extends ImageAttribute<LandmarkType> {
+public final class FacialFeature extends ImageAttribute<FacialFeatureType> {
     /**
-     * Attribute type for {@link LandmarkType}.
+     * Attribute type for {@link FacialFeatureType}.
      */
-    public static final String ATTRIBUTE_TYPE = LandmarkType.class.getSimpleName();
+    public static final String ATTRIBUTE_TYPE = FacialFeatureType.class.getSimpleName();
 
-    private Landmark(final Builder builder) {
+    private FacialFeature(final Builder builder) {
         super(builder);
     }
 
@@ -39,7 +39,7 @@ public final class Landmark extends ImageAttribute<LandmarkType> {
 
     /**
      * Gets a builder to help easily construct a
-     * landmark detection result object.
+     * facial feature detection result object.
      * @return an unassigned builder instance
      */
     @NonNull
@@ -48,17 +48,17 @@ public final class Landmark extends ImageAttribute<LandmarkType> {
     }
 
     /**
-     * Builder for {@link Landmark}.
+     * Builder for {@link FacialFeature}.
      */
-    public static class Builder extends ImageAttribute.Builder<Builder, Landmark, LandmarkType> {
+    public static final class Builder extends ImageAttribute.Builder<Builder, FacialFeature, FacialFeatureType> {
         /**
-         * Construct a new instance of {@link Landmark} from
+         * Construct a new instance of {@link FacialFeature} from
          * the values assigned to this builder instance.
-         * @return An instance of {@link Landmark}
+         * @return An instance of {@link FacialFeature}
          */
         @NonNull
-        public Landmark build() {
-            return new Landmark(this);
+        public FacialFeature build() {
+            return new FacialFeature(this);
         }
     }
 }

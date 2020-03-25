@@ -26,12 +26,12 @@ import java.util.Objects;
  * The result of the call to translate text to another language.
  */
 public final class TranslateTextResult implements Result {
-    private final String translation;
+    private final String translatedText;
     private final LanguageType targetLanguage;
 
-    private TranslateTextResult(String translation, LanguageType language) {
-        this.translation = translation;
-        this.targetLanguage = language;
+    private TranslateTextResult(final Builder builder) {
+        this.translatedText = builder.getTranslatedText();
+        this.targetLanguage = builder.getTargetLanguage();
     }
 
     /**
@@ -39,8 +39,8 @@ public final class TranslateTextResult implements Result {
      * @return the translated text
      */
     @NonNull
-    public String getTranslation() {
-        return translation;
+    public String getTranslatedText() {
+        return translatedText;
     }
 
     /**
@@ -62,8 +62,11 @@ public final class TranslateTextResult implements Result {
         return new Builder();
     }
 
-    public static class Builder {
-        private String translation;
+    /**
+     * Builder for {@link TranslateTextResult}.
+     */
+    public static final class Builder {
+        private String translatedText;
         private LanguageType targetLanguage;
 
         /**
@@ -72,8 +75,8 @@ public final class TranslateTextResult implements Result {
          * @return This builder instance
          */
         @NonNull
-        public Builder translation(@NonNull String text) {
-            this.translation = Objects.requireNonNull(text);
+        public Builder translatedText(@NonNull String text) {
+            this.translatedText = Objects.requireNonNull(text);
             return this;
         }
 
@@ -96,9 +99,17 @@ public final class TranslateTextResult implements Result {
          */
         @NonNull
         public TranslateTextResult build() {
-            Objects.requireNonNull(translation);
-            Objects.requireNonNull(targetLanguage);
-            return new TranslateTextResult(translation, targetLanguage);
+            return new TranslateTextResult(this);
+        }
+
+        @NonNull
+        String getTranslatedText() {
+            return Objects.requireNonNull(translatedText);
+        }
+
+        @NonNull
+        LanguageType getTargetLanguage() {
+            return Objects.requireNonNull(targetLanguage);
         }
     }
 }

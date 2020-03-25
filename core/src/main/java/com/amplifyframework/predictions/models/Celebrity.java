@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the celebrity detection results
+ * Holds the celebrity detection results
  * for the predictions category.
  */
 public final class Celebrity extends ImageAttribute<String> {

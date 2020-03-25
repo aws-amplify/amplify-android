@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the dominant language detection results
+ * Holds the dominant language detection results
  * for the predictions category.
  */
 public final class Language extends Attribute<LanguageType> {

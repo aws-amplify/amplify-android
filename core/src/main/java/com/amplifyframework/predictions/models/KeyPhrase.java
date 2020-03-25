@@ -18,9 +18,13 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the key phrase detection results
- * for the predictions category. Target text itself will be
+ * Holds the key phrase detection results for the
+ * predictions category. Target text itself will be
  * the attribute of this class.
+ *
+ * Key phrase is a portion of text that is deemed to
+ * hold a significant value in determining the context
+ * for text analysis.
  */
 public final class KeyPhrase extends TextAttribute<String> {
     /**

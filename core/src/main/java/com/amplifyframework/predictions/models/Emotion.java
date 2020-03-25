@@ -18,7 +18,7 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Class that holds the emotion detection results
+ * Holds the emotion detection results
  * for the predictions category.
  */
 public final class Emotion extends Attribute<EmotionType> {

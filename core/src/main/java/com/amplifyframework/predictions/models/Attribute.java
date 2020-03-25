@@ -48,7 +48,7 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
      * @return unique ID
      */
     @NonNull
-    public String getId() {
+    public final String getId() {
         return id;
     }
 
@@ -57,15 +57,17 @@ public abstract class Attribute<T> implements Comparable<Attribute<T>> {
      * @return the detected result
      */
     @NonNull
-    public T getAttribute() {
+    public final T getAttribute() {
         return attribute;
     }
 
     /**
      * Gets the confidence score for this detection result.
+     * The confidence score is a percentage value between
+     * 0 and 100.
      * @return the confidence score
      */
-    public float getConfidence() {
+    public final float getConfidence() {
         return confidence;
     }
 

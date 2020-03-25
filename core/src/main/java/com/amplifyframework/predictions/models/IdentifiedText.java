@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * Abstract class representing the text that is identified
+ * Represents the text that is identified
  * from inside an image.
  */
 public final class IdentifiedText extends ImageAttribute<String> {

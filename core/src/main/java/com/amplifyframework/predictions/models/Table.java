@@ -17,12 +17,14 @@ package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
 
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
 /**
- * A representation of table.
+ * A representation of 2-D table in given dimensions.
+ * A table can be detected from an image of a document
+ * and be organized into this data type.
  */
 public final class Table {
     private final int rows;
@@ -79,7 +81,7 @@ public final class Table {
         private List<Cell> cells;
 
         private Builder() {
-            this.cells = new ArrayList<>();
+            this.cells = Collections.emptyList();
         }
 
         /**

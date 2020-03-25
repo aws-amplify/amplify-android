@@ -13,19 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.operation;
+package com.amplifyframework.predictions.options;
 
-import androidx.annotation.Nullable;
+import com.amplifyframework.core.async.Options;
 
-import com.amplifyframework.core.async.AmplifyOperation;
-import com.amplifyframework.core.category.CategoryType;
+public final class InterpretOptions implements Options {
 
-public abstract class PredictionsInterpretOperation<R> extends AmplifyOperation<R> {
-    /**
-     * Constructs a new AmplifyOperation.
-     * @param amplifyOperationRequest The request object of the operation
-     */
-    public PredictionsInterpretOperation(@Nullable R amplifyOperationRequest) {
-        super(CategoryType.PREDICTIONS, amplifyOperationRequest);
+    private InterpretOptions() {
+        // TODO: Add options
+    }
+
+    public static InterpretOptions defaultInstance() {
+        return new InterpretOptions();
     }
 }

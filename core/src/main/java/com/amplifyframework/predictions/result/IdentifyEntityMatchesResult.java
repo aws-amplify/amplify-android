@@ -24,7 +24,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * The result of the call to identify entity matching from an image.
+ * The result of the call to identify similarity of one image entity
+ * to another from a different image.
  */
 public final class IdentifyEntityMatchesResult implements IdentifyResult {
     private final List<EntityMatch> entityMatches;

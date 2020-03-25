@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.util.Immutable;
 
 import java.net.URL;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -31,13 +31,13 @@ import java.util.Objects;
 public final class CelebrityDetails {
     private final Celebrity celebrity;
     private final Pose pose;
-    private final List<Landmark> landmarks;
+    private final List<FacialFeature> facialFeatures;
     private final List<URL> urls;
 
     private CelebrityDetails(final Builder builder) {
         this.celebrity = builder.getCelebrity();
         this.pose = builder.getPose();
-        this.landmarks = builder.getLandmarks();
+        this.facialFeatures = builder.getfacialFeatures();
         this.urls = builder.getUrls();
     }
 
@@ -61,11 +61,11 @@ public final class CelebrityDetails {
 
     /**
      * Gets the detected face details of the celebrity.
-     * @return the landmarks
+     * @return the facial features
      */
     @NonNull
-    public List<Landmark> getLandmarks() {
-        return Immutable.of(landmarks);
+    public List<FacialFeature> getfacialFeatures() {
+        return Immutable.of(facialFeatures);
     }
 
     /**
@@ -94,12 +94,12 @@ public final class CelebrityDetails {
     public static final class Builder {
         private Celebrity celebrity;
         private Pose pose;
-        private List<Landmark> landmarks;
+        private List<FacialFeature> facialFeatures;
         private List<URL> urls;
 
         private Builder() {
-            this.landmarks = new ArrayList<>();
-            this.urls = new ArrayList<>();
+            this.facialFeatures = Collections.emptyList();
+            this.urls = Collections.emptyList();
         }
 
         /**
@@ -125,13 +125,13 @@ public final class CelebrityDetails {
         }
 
         /**
-         * Sets the landmarks and return this builder.
-         * @param landmarks the celebrity facial landmarks
+         * Sets the facial features and return this builder.
+         * @param facialFeatures the celebrity facial facial features
          * @return this builder instance
          */
         @NonNull
-        public Builder landmarks(@NonNull List<Landmark> landmarks) {
-            this.landmarks = Objects.requireNonNull(landmarks);
+        public Builder facialFeatures(@NonNull List<FacialFeature> facialFeatures) {
+            this.facialFeatures = Objects.requireNonNull(facialFeatures);
             return this;
         }
 
@@ -167,8 +167,8 @@ public final class CelebrityDetails {
         }
 
         @NonNull
-        List<Landmark> getLandmarks() {
-            return Objects.requireNonNull(landmarks);
+        List<FacialFeature> getfacialFeatures() {
+            return Objects.requireNonNull(facialFeatures);
         }
 
         @NonNull

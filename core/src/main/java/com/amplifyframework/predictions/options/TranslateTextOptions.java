@@ -13,19 +13,17 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.operation;
+package com.amplifyframework.predictions.options;
 
-import androidx.annotation.Nullable;
+import com.amplifyframework.core.async.Options;
 
-import com.amplifyframework.core.async.AmplifyOperation;
-import com.amplifyframework.core.category.CategoryType;
+public final class TranslateTextOptions implements Options {
 
-public abstract class PredictionsTextToSpeechOperation<R> extends AmplifyOperation<R> {
-    /**
-     * Constructs a new AmplifyOperation.
-     * @param amplifyOperationRequest The request object of the operation
-     */
-    public PredictionsTextToSpeechOperation(@Nullable R amplifyOperationRequest) {
-        super(CategoryType.PREDICTIONS, amplifyOperationRequest);
+    private TranslateTextOptions() {
+        // TODO: Add options
+    }
+
+    public static TranslateTextOptions defaultInstance() {
+        return new TranslateTextOptions();
     }
 }

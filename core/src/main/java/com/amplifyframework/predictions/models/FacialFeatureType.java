@@ -13,17 +13,24 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.options;
+package com.amplifyframework.predictions.models;
 
-import com.amplifyframework.core.async.Options;
-
-public final class PredictionsTranslateTextOptions implements Options {
-
-    private PredictionsTranslateTextOptions() {
-        // TODO: Add options
-    }
-
-    public static PredictionsTranslateTextOptions defaultInstance() {
-        return new PredictionsTranslateTextOptions();
-    }
+/**
+ * Types of detectable facial feature.
+ */
+@SuppressWarnings("JavadocVariable")
+public enum FacialFeatureType {
+    ALL_POINTS,
+    LEFT_EYE,
+    RIGHT_EYE,
+    LEFT_EYEBROW,
+    RIGHT_EYEBROW,
+    NOSE,
+    NOSE_CREST,
+    MEDIAN_LINE,
+    OUTER_LIPS,
+    INNER_LIPS,
+    LEFT_PUPIL,
+    RIGHT_PUPIL,
+    FACE_CONTOUR
 }

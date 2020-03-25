@@ -16,11 +16,11 @@
 package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.util.Immutable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -30,14 +30,11 @@ import java.util.Objects;
  */
 public final class IdentifyLabelsResult implements IdentifyResult {
     private final List<Label> labels;
-    private final Boolean unsafeContent;
+    private final boolean unsafeContent;
 
-    private IdentifyLabelsResult(
-            @NonNull List<Label> labels,
-            @Nullable Boolean unsafeContent
-    ) {
-        this.labels = labels;
-        this.unsafeContent = unsafeContent;
+    private IdentifyLabelsResult(final Builder builder) {
+        this.labels = builder.getLabels();
+        this.unsafeContent = builder.getUnsafeContent();
     }
 
     /**
@@ -53,8 +50,7 @@ public final class IdentifyLabelsResult implements IdentifyResult {
      * Returns true if it is unsafe content.
      * @return true if it is unsafe content
      */
-    @Nullable
-    public Boolean isUnsafeContent() {
+    public boolean isUnsafeContent() {
         return unsafeContent;
     }
 
@@ -72,9 +68,13 @@ public final class IdentifyLabelsResult implements IdentifyResult {
      * Builder to help easily construct an instance of
      * {@link IdentifyLabelsResult}.
      */
-    public static class Builder {
+    public static final class Builder {
         private List<Label> labels;
-        private Boolean unsafeContent;
+        private boolean unsafeContent;
+
+        private Builder() {
+            this.labels = Collections.emptyList();
+        }
 
         /**
          * Sets the labels and return this builder.
@@ -93,7 +93,7 @@ public final class IdentifyLabelsResult implements IdentifyResult {
          * @return this builder instance
          */
         @NonNull
-        public Builder unsafeContent(@Nullable Boolean unsafeContent) {
+        public Builder unsafeContent(boolean unsafeContent) {
             this.unsafeContent = unsafeContent;
             return this;
         }
@@ -105,10 +105,16 @@ public final class IdentifyLabelsResult implements IdentifyResult {
          */
         @NonNull
         public IdentifyLabelsResult build() {
-            return new IdentifyLabelsResult(
-                    Objects.requireNonNull(labels),
-                    unsafeContent
-            );
+            return new IdentifyLabelsResult(this);
+        }
+
+        @NonNull
+        List<Label> getLabels() {
+            return Objects.requireNonNull(labels);
+        }
+
+        boolean getUnsafeContent() {
+            return unsafeContent;
         }
     }
 }

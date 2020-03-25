@@ -22,16 +22,16 @@ import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
-import com.amplifyframework.predictions.operation.PredictionsIdentifyOperation;
-import com.amplifyframework.predictions.operation.PredictionsInterpretOperation;
-import com.amplifyframework.predictions.operation.PredictionsSpeechToTextOperation;
-import com.amplifyframework.predictions.operation.PredictionsTextToSpeechOperation;
-import com.amplifyframework.predictions.operation.PredictionsTranslateTextOperation;
-import com.amplifyframework.predictions.options.PredictionsIdentifyOptions;
-import com.amplifyframework.predictions.options.PredictionsInterpretOptions;
-import com.amplifyframework.predictions.options.PredictionsSpeechToTextOptions;
-import com.amplifyframework.predictions.options.PredictionsTextToSpeechOptions;
-import com.amplifyframework.predictions.options.PredictionsTranslateTextOptions;
+import com.amplifyframework.predictions.operation.IdentifyOperation;
+import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.SpeechToTextOperation;
+import com.amplifyframework.predictions.operation.TextToSpeechOperation;
+import com.amplifyframework.predictions.operation.TranslateTextOperation;
+import com.amplifyframework.predictions.options.IdentifyOptions;
+import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.SpeechToTextOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.SpeechToTextResult;
@@ -41,9 +41,8 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 import java.net.URL;
 
 /**
- * Defines the Client API consumed by the application.
- * Internally routes the calls to the Predictions Category
- * plugins registered.
+ * Defines the API that a consuming application uses to perform predictions.
+ * Internally routes calls to the registered plugins of the category.
  */
 public final class PredictionsCategory extends Category<PredictionsPlugin<?>> implements PredictionsCategoryBehavior {
     @NonNull
@@ -54,7 +53,7 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsTranslateTextOperation<?> translateText(
+    public TranslateTextOperation<?> translateText(
             @NonNull String text,
             @NonNull LanguageType fromLanguage,
             @NonNull LanguageType toLanguage,
@@ -66,11 +65,11 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsTranslateTextOperation<?> translateText(
+    public TranslateTextOperation<?> translateText(
             @NonNull String text,
             @NonNull LanguageType fromLanguage,
             @NonNull LanguageType toLanguage,
-            @NonNull PredictionsTranslateTextOptions options,
+            @NonNull TranslateTextOptions options,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -79,7 +78,7 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsTextToSpeechOperation<?> convertTextToSpeech(
+    public TextToSpeechOperation<?> convertTextToSpeech(
             @NonNull String text,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError) {
@@ -88,9 +87,9 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsTextToSpeechOperation<?> convertTextToSpeech(
+    public TextToSpeechOperation<?> convertTextToSpeech(
             @NonNull String text,
-            @NonNull PredictionsTextToSpeechOptions options,
+            @NonNull TextToSpeechOptions options,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -99,7 +98,7 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsSpeechToTextOperation<?> convertSpeechToText(
+    public SpeechToTextOperation<?> convertSpeechToText(
             @NonNull URL speech,
             @NonNull Consumer<SpeechToTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
@@ -109,9 +108,9 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsSpeechToTextOperation<?> convertSpeechToText(
+    public SpeechToTextOperation<?> convertSpeechToText(
             @NonNull URL speech,
-            @NonNull PredictionsSpeechToTextOptions options,
+            @NonNull SpeechToTextOptions options,
             @NonNull Consumer<SpeechToTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -120,7 +119,7 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsIdentifyOperation<?> identify(
+    public IdentifyOperation<?> identify(
             @NonNull IdentifyAction type,
             @NonNull URL image,
             @NonNull Consumer<IdentifyResult> onSuccess,
@@ -131,10 +130,10 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsIdentifyOperation<?> identify(
+    public IdentifyOperation<?> identify(
             @NonNull IdentifyAction type,
             @NonNull URL image,
-            @NonNull PredictionsIdentifyOptions options,
+            @NonNull IdentifyOptions options,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -143,7 +142,7 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsInterpretOperation<?> interpret(
+    public InterpretOperation<?> interpret(
             @NonNull String text,
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
@@ -153,9 +152,9 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public PredictionsInterpretOperation<?> interpret(
+    public InterpretOperation<?> interpret(
             @NonNull String text,
-            @NonNull PredictionsInterpretOptions options,
+            @NonNull InterpretOptions options,
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
