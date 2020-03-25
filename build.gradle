@@ -21,7 +21,6 @@ buildscript {
 
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.1'
-        classpath 'me.tatarka:gradle-retrolambda:3.7.1'
     }
 }
 
@@ -86,9 +85,6 @@ subprojects { project ->
 }
 
 private void configureAndroidLibrary(Project project) {
-    project.apply plugin: 'me.tatarka.retrolambda'
-    project.retrolambda.jvmArgs += '-Dretrolambda.quiet=true'
-
     project.android {
         buildToolsVersion rootProject.ext.buildToolsVersion
         compileSdkVersion rootProject.ext.compileSdkVersion
