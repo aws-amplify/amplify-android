@@ -15,12 +15,13 @@
 
 package com.amplifyframework.analytics.pinpoint;
 
+import android.app.Application;
 import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
+import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.analytics.pinpoint.test.R;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
@@ -28,6 +29,9 @@ import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.TargetingClient;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfile;
+import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfileLocation;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -39,6 +43,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -54,8 +59,10 @@ public class AnalyticsPinpointInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int EVENT_FLUSH_TIMEOUT = 60;
     private static final int EVENT_FLUSH_WAIT = 2;
+
     private static AmazonPinpointAnalyticsPlugin plugin;
     private static AnalyticsClient analyticsClient;
+    private static TargetingClient targetingClient;
 
     /**
      * Configure the Amplify framework.
@@ -63,13 +70,14 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     @BeforeClass
     public static void setUp() throws AmplifyException {
-        Context context = ApplicationProvider.getApplicationContext();
+        Context context = getApplicationContext();
         AmplifyConfiguration configuration =
-            AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
-        plugin = new AmazonPinpointAnalyticsPlugin();
+                AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
+        plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
         Amplify.addPlugin(plugin);
         Amplify.configure(configuration, context);
         analyticsClient = plugin.getAnalyticsClient();
+        targetingClient = plugin.getTargetingClient();
     }
 
     /**
@@ -188,6 +196,46 @@ public class AnalyticsPinpointInstrumentedTest {
 
         assertEquals(1, analyticsClient.getAllEvents().size());
         assertFalse(analyticsClient.getAllEvents().get(0).has("attributes"));
+    }
+
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Test
+    public void testIdentifyUser() {
+        UserProfile.Location location = UserProfile.Location.builder()
+                .latitude(47.6154086)
+                .longitude(-122.3349685)
+                .postalCode("98122")
+                .city("Seattle")
+                .region("WA")
+                .country("USA")
+                .build();
+        PinpointProperties pinpointProperties = PinpointProperties.builder()
+                .add("TestStringProperty", "TestStringValue")
+                .add("TestDoubleProperty", 1.0)
+                .build();
+        UserProfile userProfile = UserProfile.builder()
+                .name("test-user")
+                .email("user@test.com")
+                .plan("test-plan")
+                .location(location)
+                .customProperties(pinpointProperties)
+                .build();
+
+        Amplify.Analytics.identifyUser("userId", userProfile);
+
+        EndpointProfile endpointProfile = targetingClient.currentEndpoint();
+        EndpointProfileLocation endpointProfileLocation = endpointProfile.getLocation();
+        assertEquals("user@test.com", endpointProfile.getAttribute("email").get(0));
+        assertEquals("test-user", endpointProfile.getAttribute("name").get(0));
+        assertEquals("test-plan", endpointProfile.getAttribute("plan").get(0));
+        assertEquals((Double) 47.6154086, endpointProfileLocation.getLatitude());
+        assertEquals((Double) (-122.3349685), endpointProfileLocation.getLongitude());
+        assertEquals("98122", endpointProfileLocation.getPostalCode());
+        assertEquals("Seattle", endpointProfileLocation.getCity());
+        assertEquals("WA", endpointProfileLocation.getRegion());
+        assertEquals("USA", endpointProfileLocation.getCountry());
+        assertEquals("TestStringValue", endpointProfile.getAttribute("TestStringProperty").get(0));
+        assertEquals((Double) 1.0, endpointProfile.getMetric("TestDoubleProperty"));
     }
 
     private void registerGobalProperty() throws AnalyticsException {

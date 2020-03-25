@@ -28,7 +28,7 @@ import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -76,7 +76,7 @@ public final class AWSS3StorageDownloadFileOperation
             return;
         }
 
-        String serviceKey = S3RequestUtils.getServiceKey(
+        String serviceKey = S3Keys.createServiceKey(
                 getRequest().getAccessLevel(),
                 getRequest().getTargetIdentityId(),
                 getRequest().getKey()

@@ -30,84 +30,75 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Rest the RestOperationRequestUtils.
+ * Tests the {@link RestRequestFactory}.
  */
-public final class RestOperationRequestUtilsTest {
-
+public final class RestRequestFactoryTest {
     /**
      * Test if we can create a valid URL.
-     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
     public void createValidURL() throws MalformedURLException {
-
-        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com",
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
                 "path/to/path",
                 null);
         assertEquals("The url generated should match",
-                "http://amplify-android.com/path%2Fto%2Fpath",
+                "http://amplify-android.com/path/to/path",
                 url.toString());
     }
 
     /**
      * Test if we can create a valid URL with already existing path.
-     *
      * @throws MalformedURLException Throws if the URL is invalid.
      */
     @Test
     public void createValidURLWithPath() throws MalformedURLException {
-
-        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com/beta",
+        URL url = RestRequestFactory.createURL("http://amplify-android.com/beta",
                 "path/to/path",
                 null);
         assertEquals("The url generated should match",
-                "http://amplify-android.com/beta/path%2Fto%2Fpath",
+                "http://amplify-android.com/beta/path/to/path",
                 url.toString());
     }
 
     /**
      * Test creating a valid URL with queries.
-     *
      * @throws MalformedURLException Throws when the url is invalid.
      */
     @Test
     public void createValidURLWithQuery() throws MalformedURLException {
-
-        HashMap<String, String> queries = new HashMap<String, String>();
+        Map<String, String> queries = new HashMap<>();
         queries.put("key1", "value1");
         queries.put("key2", "value2");
-        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com",
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
                 "path/to/path",
                 queries);
         assertEquals("The url generated should match",
-                "http://amplify-android.com/path%2Fto%2Fpath?key1=value1&key2=value2",
+                "http://amplify-android.com/path/to/path?key1=value1&key2=value2",
                 url.toString());
     }
 
     /**
      * Test if exception is thrown on invalid URL.
-     *
      * @throws MalformedURLException Should throw since the URL is invalid.
      */
     @Test(expected = MalformedURLException.class)
     public void createInValidURL() throws MalformedURLException {
-        RestOperationRequestUtils.constructURL("asd.com",
+        RestRequestFactory.createURL("asd.com",
                 "path/to/path",
                 null);
     }
 
     /**
-     * Test creates a Get request.
-     *
+     * Test creates a GET request.
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
     public void createGetRequest() throws MalformedURLException {
-        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com",
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
                 "path/to/path",
                 null);
-        Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
+        Request request = RestRequestFactory.createRequest(url,
                 null,
                 null,
                 HttpMethod.GET);
@@ -115,16 +106,15 @@ public final class RestOperationRequestUtilsTest {
     }
 
     /**
-     * Test creates a Post request.
-     *
+     * Test creates a POST request.
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
     public void createPostRequest() throws MalformedURLException {
-        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com",
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
                 "path/to/path",
                 null);
-        Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
+        Request request = RestRequestFactory.createRequest(url,
                 null,
                 null,
                 HttpMethod.POST);
@@ -132,19 +122,18 @@ public final class RestOperationRequestUtilsTest {
     }
 
     /**
-     * Test creates a Post request with headers.
-     *
+     * Test creates a POST request with headers.
      * @throws MalformedURLException Throws when the URL is invalid.
      */
     @Test
     public void createPostRequestWithHeaders() throws MalformedURLException {
-        URL url = RestOperationRequestUtils.constructURL("http://amplify-android.com",
+        URL url = RestRequestFactory.createURL("http://amplify-android.com",
                 "path/to/path",
                 null);
 
-        final Map<String, String> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         headers.put("key1", "value1");
-        Request request = RestOperationRequestUtils.constructOKHTTPRequest(url,
+        Request request = RestRequestFactory.createRequest(url,
                 null,
                 headers,
                 HttpMethod.POST);

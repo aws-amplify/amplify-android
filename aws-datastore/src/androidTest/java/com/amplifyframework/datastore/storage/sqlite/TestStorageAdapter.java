@@ -19,8 +19,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Objects;
@@ -41,7 +43,16 @@ final class TestStorageAdapter {
      * @return An initialized instance of the {@link SynchronousStorageAdapter}
      */
     static SynchronousStorageAdapter create(ModelProvider modelProvider) {
-        SQLiteStorageAdapter sqLiteStorageAdapter = SQLiteStorageAdapter.forModels(modelProvider);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        try {
+            modelSchemaRegistry.load(modelProvider.models());
+        } catch (AmplifyException modelSchemaLoadingFailure) {
+            throw new RuntimeException(modelSchemaLoadingFailure);
+        }
+        SQLiteStorageAdapter sqLiteStorageAdapter =
+            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+
         SynchronousStorageAdapter synchronousStorageAdapter =
             SynchronousStorageAdapter.instance(sqLiteStorageAdapter);
         Context context = ApplicationProvider.getApplicationContext();
