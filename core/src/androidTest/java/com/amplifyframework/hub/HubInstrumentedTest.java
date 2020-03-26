@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class HubInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core:test");
-    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_MS = 200;
+    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_MS = 300;
 
     /**
      * Before any test is run, configure Amplify to use an
