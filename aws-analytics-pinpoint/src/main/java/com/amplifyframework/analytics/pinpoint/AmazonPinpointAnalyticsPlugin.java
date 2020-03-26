@@ -306,7 +306,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void configure(
-            @Nullable JSONObject pluginConfiguration,
+            JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws AnalyticsException {
         if (pluginConfiguration == null) {

@@ -64,7 +64,7 @@ public interface Plugin<E> extends CategoryTypeable {
      * @param context An Android Context
      * @throws AmplifyException an error is encountered during configuration.
      */
-    void configure(@Nullable JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException;
+    void configure(JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException;
 
     /**
      * Initializes the plugin.

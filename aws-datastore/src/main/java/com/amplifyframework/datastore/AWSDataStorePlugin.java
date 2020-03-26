@@ -107,7 +107,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressLint("CheckResult")
     @Override
     public void configure(
-            @Nullable JSONObject pluginConfiguration,
+            JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws DataStoreException {
         try {

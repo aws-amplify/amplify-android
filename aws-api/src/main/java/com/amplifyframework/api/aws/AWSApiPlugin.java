@@ -102,7 +102,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Override
     public void configure(
-            @Nullable JSONObject pluginConfiguration,
+            JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws ApiException {
         // Null-check for configuration is done inside readFrom method
