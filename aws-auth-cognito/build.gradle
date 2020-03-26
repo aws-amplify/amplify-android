@@ -8,5 +8,5 @@ dependencies {
     implementation (dependency.aws.mobileclient) {
         transitive = true
     }
-    implementation 'com.amazonaws:aws-android-sdk-cognitoauth:2.16.9'
+    implementation dependency.aws.cognitoauth
 }
