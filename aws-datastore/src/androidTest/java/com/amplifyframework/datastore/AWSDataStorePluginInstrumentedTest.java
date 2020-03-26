@@ -89,13 +89,13 @@ public final class AWSDataStorePluginInstrumentedTest {
     public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() throws DataStoreException, ApiException {
         // Start listening for model publication events on the Hub.
         HubAccumulator outboundModelEventAccumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
         outboundModelEventAccumulator.clear().start();
 
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
         BlogOwner localCharley = BlogOwner.builder()
-                .name("Charley Crockett")
-                .build();
+            .name("Charley Crockett")
+            .build();
         dataStore.save(localCharley);
 
         // Wait for a Hub event telling us that our Charley model got published to the cloud.
@@ -127,26 +127,26 @@ public final class AWSDataStorePluginInstrumentedTest {
         // Now, start watching the Hub for notifications that we received and processed models
         // from the Cloud. Look specifically for events relating to the model with the above ID.
         HubAccumulator inboundModelEventAccumulator =
-                HubAccumulator.create(HubChannel.DATASTORE, (HubEventFilter) hubEvent -> {
-                    if (!DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(hubEvent.getName())) {
-                        return false;
-                    }
+            HubAccumulator.create(HubChannel.DATASTORE, (HubEventFilter) hubEvent -> {
+                if (!DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(hubEvent.getName())) {
+                    return false;
+                }
 
-                    ModelWithMetadata<BlogOwner> modelWithMetadata =
-                            (ModelWithMetadata<BlogOwner>) hubEvent.getData();
-                    if (modelWithMetadata == null) {
-                        return false;
-                    }
-                    return modelWithMetadata.getSyncMetadata().getId().equals(expectedId);
-                });
+                ModelWithMetadata<BlogOwner> modelWithMetadata =
+                    (ModelWithMetadata<BlogOwner>) hubEvent.getData();
+                if (modelWithMetadata == null) {
+                    return false;
+                }
+                return modelWithMetadata.getSyncMetadata().getId().equals(expectedId);
+            });
         inboundModelEventAccumulator.clear().start();
 
         // Act: externally in the Cloud, someone creates a record for a blog owner,
         // with a misspelling in the last name
         BlogOwner originalModel = BlogOwner.builder()
-                .name("Jameson Willlllliams")
-                .id(expectedId)
-                .build();
+            .name("Jameson Willlllliams")
+            .id(expectedId)
+            .build();
         GraphQLResponse<ModelWithMetadata<BlogOwner>> createResponse = appSync.create(originalModel);
         ModelMetadata originalMetadata = createResponse.getData().getSyncMetadata();
         assertNotNull(originalMetadata.getVersion());
@@ -159,10 +159,10 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Act: externally, the record in the Cloud is updated, to correct the entry's last name
         BlogOwner updatedModel = originalModel.copyOfBuilder() // This uses the same model ID
-                .name("Jameson Williams") // But with corrected name
-                .build();
+            .name("Jameson Williams") // But with corrected name
+            .build();
         GraphQLResponse<ModelWithMetadata<BlogOwner>> updateResponse =
-                appSync.update(updatedModel, originalVersion);
+            appSync.update(updatedModel, originalVersion);
         ModelMetadata newMetadata = updateResponse.getData().getSyncMetadata();
         assertNotNull(newMetadata.getVersion());
         int newVersion = newMetadata.getVersion();
