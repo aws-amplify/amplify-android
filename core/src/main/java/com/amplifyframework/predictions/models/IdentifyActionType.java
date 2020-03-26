@@ -33,9 +33,9 @@ public enum IdentifyActionType implements IdentifyAction {
     DETECT_LABELS,
 
     /**w
-     * Identify an entity from an image.
+     * Identify a face from an image.
      */
-    DETECT_ENTITIES,
+    DETECT_FACES,
 
     /**
      * Identify text from an image.

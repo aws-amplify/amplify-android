@@ -22,7 +22,7 @@ import com.amplifyframework.core.category.CategoryType;
 
 public abstract class InterpretOperation<R> extends AmplifyOperation<R> {
     /**
-     * Constructs a new AmplifyOperation.
+     * Constructs a new {@link InterpretOperation}.
      * @param amplifyOperationRequest The request object of the operation
      */
     public InterpretOperation(@Nullable R amplifyOperationRequest) {

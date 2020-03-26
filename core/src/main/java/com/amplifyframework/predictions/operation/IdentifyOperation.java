@@ -15,17 +15,37 @@
 
 package com.amplifyframework.predictions.operation;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.predictions.models.IdentifyActionType;
+
+import java.util.Objects;
 
 public abstract class IdentifyOperation<R> extends AmplifyOperation<R> {
+    private final IdentifyActionType identifyType;
+
     /**
-     * Constructs a new AmplifyOperation.
+     * Constructs a new {@link IdentifyOperation}.
+     * @param identifyType The type of identification to perform on an image
      * @param amplifyOperationRequest The request object of the operation
      */
-    public IdentifyOperation(@Nullable R amplifyOperationRequest) {
+    public IdentifyOperation(
+            @NonNull IdentifyActionType identifyType,
+            @Nullable R amplifyOperationRequest
+    ) {
         super(CategoryType.PREDICTIONS, amplifyOperationRequest);
+        this.identifyType = Objects.requireNonNull(identifyType);
+    }
+
+    /**
+     * Gets the type of identification to be performed by this operation.
+     * @return the identification type
+     */
+    @NonNull
+    public IdentifyActionType getIdentifyType() {
+        return identifyType;
     }
 }

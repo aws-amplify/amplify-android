@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Class that holds the labels detection results for
- * the predictions category.
+ * Holds data about all of the objects and scenes that were
+ * detected and labeled in an image or a video.
  */
 public final class IdentifyLabelsResult implements IdentifyResult {
     private final List<Label> labels;

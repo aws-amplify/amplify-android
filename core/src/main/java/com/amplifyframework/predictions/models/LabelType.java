@@ -20,14 +20,32 @@ import androidx.annotation.NonNull;
 /**
  * Specifies the type of label detection to perform.
  */
-@SuppressWarnings("JavadocVariable")
 public enum LabelType implements IdentifyAction {
-    ALL,
-    MODERATION,
-    LABELS;
+    /**
+     * Simple label provides information about a single object
+     * or scenery found in an image.
+     */
+    LABELS,
 
-    @NonNull
+    /**
+     * Moderation label provides information about a single
+     * type of unsafe content found in an image.
+     */
+    MODERATION_LABELS,
+
+    /**
+     * Detect and identifies both types of labels in an image.
+     */
+    ALL;
+
+    /**
+     * {@link LabelType} explicitly specifies the identification
+     * type as a form of label detection. It will always return
+     * {@link IdentifyActionType#DETECT_LABELS}.
+     * @return {@link IdentifyActionType#DETECT_LABELS}
+     */
     @Override
+    @NonNull
     public final IdentifyActionType getType() {
         return IdentifyActionType.DETECT_LABELS;
     }

@@ -22,7 +22,7 @@ import com.amplifyframework.core.category.CategoryType;
 
 public abstract class SpeechToTextOperation<R> extends AmplifyOperation<R> {
     /**
-     * Constructs a new AmplifyOperation.
+     * Constructs a new {@link SpeechToTextOperation}.
      * @param amplifyOperationRequest The request object of the operation
      */
     public SpeechToTextOperation(@Nullable R amplifyOperationRequest) {

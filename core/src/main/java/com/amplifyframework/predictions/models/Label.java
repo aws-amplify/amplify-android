@@ -22,7 +22,10 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Metadata to store the details of a detected label.
+ * Holds the details of a detected label inside an image.
+ * Each detected item has a label within a hierarchical taxonomy.
+ * For example, an object labeled as "car" may have parental labels
+ * of "vehicle" and "transportation".
  */
 public final class Label extends ImageFeature<String> {
     /**
@@ -30,11 +33,11 @@ public final class Label extends ImageFeature<String> {
      */
     public static final String FEATURE_TYPE = Label.class.getSimpleName();
 
-    private final List<String> parents;
+    private final List<String> parentLabels;
 
     private Label(final Builder builder) {
         super(builder);
-        this.parents = builder.getParents();
+        this.parentLabels = builder.getParentLabels();
     }
 
     @Override
@@ -44,16 +47,27 @@ public final class Label extends ImageFeature<String> {
     }
 
     /**
-     * Gets the list of parents' names.
-     * @return the list of parents
+     * Returns the name of detected label. This is simply
+     * returns the stored feature value.
+     * @return the name of detected label
      */
     @NonNull
-    public List<String> getParents() {
-        return parents;
+    public String getName() {
+        return getFeature();
     }
 
     /**
-     * Gets a builder to construct label metadata.
+     * Gets the list of parent labels' names. They are all
+     * of the ancestor labels of the detected label.
+     * @return the list of names of parent labels
+     */
+    @NonNull
+    public List<String> getParentLabels() {
+        return parentLabels;
+    }
+
+    /**
+     * Gets a builder to construct label feature.
      * @return a new builder
      */
     @NonNull
@@ -65,20 +79,30 @@ public final class Label extends ImageFeature<String> {
      * Builder for {@link Label}.
      */
     public static final class Builder extends ImageFeature.Builder<Builder, Label, String> {
-        private List<String> parents;
+        private List<String> parentLabels;
 
         private Builder() {
-            this.parents = new ArrayList<>();
+            this.parentLabels = new ArrayList<>();
         }
 
         /**
-         * Sets the list of parents' names and return this builder.
-         * @param parents the parents
+         * Sets the name of label as feature and return this builder.
+         * @param name the label name
          * @return this builder instance
          */
         @NonNull
-        public Builder parents(@NonNull List<String> parents) {
-            this.parents = Objects.requireNonNull(parents);
+        public Builder name(@NonNull String name) {
+            return super.feature(name);
+        }
+
+        /**
+         * Sets the list of parent labels and return this builder.
+         * @param parentLabels the names of parent labels
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder parentLabels(@NonNull List<String> parentLabels) {
+            this.parentLabels = Objects.requireNonNull(parentLabels);
             return this;
         }
 
@@ -93,8 +117,8 @@ public final class Label extends ImageFeature<String> {
         }
 
         @NonNull
-        List<String> getParents() {
-            return Objects.requireNonNull(parents);
+        List<String> getParentLabels() {
+            return Objects.requireNonNull(parentLabels);
         }
     }
 }

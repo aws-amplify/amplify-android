@@ -25,10 +25,10 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Holds the image entity detection results
+ * Holds the face detection results
  * for the predictions category.
  */
-public final class ImageEntity {
+public final class FaceDetails {
     private final TargetBoundary boundary;
     private final AgeRange ageRange;
     private final PoseFeature pose;
@@ -37,7 +37,7 @@ public final class ImageEntity {
     private final List<Emotion> emotions;
     private final List<BooleanFeature> features;
 
-    private ImageEntity(final Builder builder) {
+    private FaceDetails(final Builder builder) {
         this.boundary = builder.getBoundary();
         this.ageRange = builder.getAgeRange();
         this.pose = builder.getPose();
@@ -111,7 +111,7 @@ public final class ImageEntity {
     }
 
     /**
-     * Gets a builder for entity.
+     * Gets a builder for face detection result.
      * @return a new builder
      */
     @NonNull
@@ -120,7 +120,7 @@ public final class ImageEntity {
     }
 
     /**
-     * Builder for {@link ImageEntity}.
+     * Builder for {@link FaceDetails}.
      */
     public static final class Builder {
         private TargetBoundary boundary;
@@ -215,13 +215,13 @@ public final class ImageEntity {
         }
 
         /**
-         * Constructs a new instance of {@link ImageEntity} from
+         * Constructs a new instance of {@link FaceDetails} from
          * the values assigned to this builder.
-         * @return An instance of {@link ImageEntity}
+         * @return An instance of {@link FaceDetails}
          */
         @NonNull
-        public ImageEntity build() {
-            return new ImageEntity(this);
+        public FaceDetails build() {
+            return new FaceDetails(this);
         }
 
         @NonNull

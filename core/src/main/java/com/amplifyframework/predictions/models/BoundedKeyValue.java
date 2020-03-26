@@ -16,16 +16,15 @@
 package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.Pair;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Objects;
 
 /**
  * Holds the key-value detection results
  * for the predictions category.
  */
-public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String>> {
+public final class BoundedKeyValue extends ImageFeature<Pair<String, String>> {
     /**
      * Feature type for {@link BoundedKeyValue}.
      */
@@ -46,8 +45,9 @@ public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String
      * @return the key
      */
     @NonNull
+    @SuppressWarnings("ConstantConditions") // Checked for non-null in builder
     public String getKey() {
-        return getFeature().getKey();
+        return getFeature().first;
     }
 
     /**
@@ -55,8 +55,9 @@ public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String
      * @return the value
      */
     @NonNull
+    @SuppressWarnings("ConstantConditions") // Checked for non-null in builder
     public String getValue() {
-        return getFeature().getValue();
+        return getFeature().second;
     }
 
     /**
@@ -73,7 +74,7 @@ public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String
      * Builder for {@link BoundedKeyValue}.
      */
     public static final class Builder
-            extends ImageFeature.Builder<Builder, BoundedKeyValue, Map.Entry<String, String>> {
+            extends ImageFeature.Builder<Builder, BoundedKeyValue, Pair<String, String>> {
         /**
          * Sets the key-value pair and return this builder.
          * @param key the key
@@ -84,7 +85,7 @@ public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String
         public Builder keyValue(@NonNull String key, @NonNull String value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(value);
-            return feature(new HashMap.SimpleEntry<>(key, value));
+            return feature(new Pair<>(key, value));
         }
 
         /**
@@ -94,6 +95,8 @@ public final class BoundedKeyValue extends ImageFeature<Map.Entry<String, String
          */
         @NonNull
         public BoundedKeyValue build() {
+            Objects.requireNonNull(getFeature().first);
+            Objects.requireNonNull(getFeature().second);
             return new BoundedKeyValue(this);
         }
     }

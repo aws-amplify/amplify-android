@@ -22,7 +22,7 @@ import com.amplifyframework.core.category.CategoryType;
 
 public abstract class TranslateTextOperation<R> extends AmplifyOperation<R> {
     /**
-     * Constructs a new AmplifyOperation.
+     * Constructs a new {@link TranslateTextOperation}.
      * @param amplifyOperationRequest The request object of the operation
      */
     public TranslateTextOperation(@Nullable R amplifyOperationRequest) {

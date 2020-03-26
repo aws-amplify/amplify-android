@@ -20,13 +20,34 @@ import androidx.annotation.NonNull;
 /**
  * Specifies the type of text detection to perform.
  */
-@SuppressWarnings("JavadocVariable")
 public enum TextFormatType implements IdentifyAction {
+    /**
+     * Detect texts inside a fillable form.
+     */
     FORM,
+
+    /**
+     * Detect textual information from an image presented in
+     * the format of a 2-D table.
+     */
     TABLE,
+
+    /**
+     * Detect regular text presented without any formatting.
+     */
     PLAIN,
+
+    /**
+     * Detect and identifies all types of text from an image.
+     */
     ALL;
 
+    /**
+     * {@link TextFormatType} explicitly specifies the identification
+     * type as a form of optical character recognition. It will always
+     * return {@link IdentifyActionType#DETECT_TEXT}.
+     * @return {@link IdentifyActionType#DETECT_TEXT}
+     */
     @NonNull
     @Override
     public final IdentifyActionType getType() {

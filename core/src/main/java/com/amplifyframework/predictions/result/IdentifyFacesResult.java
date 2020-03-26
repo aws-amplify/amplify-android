@@ -17,7 +17,7 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.predictions.models.ImageEntity;
+import com.amplifyframework.predictions.models.FaceDetails;
 import com.amplifyframework.util.Immutable;
 
 import java.util.List;
@@ -26,30 +26,30 @@ import java.util.Objects;
 /**
  * The result of the call to identify entities from an image.
  */
-public final class IdentifyEntitiesResult implements IdentifyResult {
-    private final List<ImageEntity> entities;
+public final class IdentifyFacesResult implements IdentifyResult {
+    private final List<FaceDetails> faces;
 
-    private IdentifyEntitiesResult(List<ImageEntity> entities) {
-        this.entities = entities;
+    private IdentifyFacesResult(List<FaceDetails> faces) {
+        this.faces = faces;
     }
 
     /**
-     * Gets the list of detected entities.
-     * @return the list of entities
+     * Gets the list of detected faces and other details.
+     * @return the list of faces
      */
     @NonNull
-    public List<ImageEntity> getEntities() {
-        return Immutable.of(entities);
+    public List<FaceDetails> getFaces() {
+        return Immutable.of(faces);
     }
 
     /**
-     * Constructs a new instance of {@link IdentifyEntitiesResult} from
-     * the given list of entities.
-     * @param entities A list of entities
-     * @return The result instance containing the given list of entities
+     * Constructs a new instance of {@link IdentifyFacesResult} from
+     * the given list of faces.
+     * @param faces A list of detected faces
+     * @return The result instance containing the given list of detected faces
      */
     @NonNull
-    public static IdentifyEntitiesResult fromEntities(@NonNull List<ImageEntity> entities) {
-        return new IdentifyEntitiesResult(Objects.requireNonNull(entities));
+    public static IdentifyFacesResult fromFaces(@NonNull List<FaceDetails> faces) {
+        return new IdentifyFacesResult(Objects.requireNonNull(faces));
     }
 }
