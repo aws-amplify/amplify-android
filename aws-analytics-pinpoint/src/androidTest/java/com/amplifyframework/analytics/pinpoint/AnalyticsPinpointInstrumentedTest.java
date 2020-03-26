@@ -22,9 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.UserProfile;
-import com.amplifyframework.analytics.pinpoint.test.R;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
@@ -71,11 +69,9 @@ public class AnalyticsPinpointInstrumentedTest {
     @BeforeClass
     public static void setUp() throws AmplifyException {
         Context context = getApplicationContext();
-        AmplifyConfiguration configuration =
-                AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
         plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
         Amplify.addPlugin(plugin);
-        Amplify.configure(configuration, context);
+        Amplify.configure(context);
         analyticsClient = plugin.getAnalyticsClient();
         targetingClient = plugin.getTargetingClient();
     }
