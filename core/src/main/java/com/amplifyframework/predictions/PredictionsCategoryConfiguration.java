@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,21 +13,28 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.category;
+package com.amplifyframework.predictions;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.category.CategoryConfiguration;
+import com.amplifyframework.core.category.CategoryType;
+
 /**
- * A component which is {@link CategoryType}-able is one that is able to
- * respond by saying to which {@link CategoryType} it belongs.
+ * Configurations for all plugins of the Predictions category.
  */
-public interface CategoryTypeable {
+public final class PredictionsCategoryConfiguration extends CategoryConfiguration {
+
+    //TODO: Place global (category-wise) configuration options here
 
     /**
      * Gets the category type associated with the current object.
+     *
      * @return The category type to which the current object is affiliated
      */
     @NonNull
-    CategoryType getCategoryType();
+    @Override
+    public CategoryType getCategoryType() {
+        return CategoryType.PREDICTIONS;
+    }
 }
-
