@@ -15,13 +15,16 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -58,11 +61,11 @@ public final class OrchestratorTest {
      * to the API category, with an {@link MutationType} corresponding to the type of
      * modification that was made to the storage.
      * @throws InterruptedException If our own mock API response doesn't get generated
-     * @throws DataStoreException If saving data into DataStore fails
+     * @throws AmplifyException On failure to load model schema into registry
      */
     @Test
-    public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException, DataStoreException {
-        AppSync endpoint = mock(AppSync.class);
+    public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException, AmplifyException {
+        AppSync appSync = mock(AppSync.class);
 
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()
@@ -83,12 +86,17 @@ public final class OrchestratorTest {
 
             // Technically, the AppSync create() returns a Cancelable of some kind.
             return new NoOpCancelable();
-        }).when(endpoint)
+        }).when(appSync)
             .create(eq(susan), any(Consumer.class), any(Consumer.class));
 
         LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
-        ModelProvider modelProvider = mock(ModelProvider.class);
-        Orchestrator orchestrator = new Orchestrator(modelProvider, localStorageAdapter, endpoint);
+        ModelProvider modelProvider = SimpleModelProvider.withRandomVersion();
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        modelSchemaRegistry.clear();
+        modelSchemaRegistry.load(modelProvider.models());
+
+        Orchestrator orchestrator =
+            new Orchestrator(modelProvider, modelSchemaRegistry, localStorageAdapter, appSync);
 
         // Arrange: storage engine is running
         orchestrator.start().blockingAwait();

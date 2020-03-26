@@ -24,7 +24,7 @@ import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -67,7 +67,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
         executorService.submit(() -> {
             try {
                 List<StorageItem> listedItems = storageService.listFiles(
-                    S3RequestUtils.getServiceKey(
+                    S3Keys.createServiceKey(
                         getRequest().getAccessLevel(),
                         getRequest().getTargetIdentityId(),
                         getRequest().getPath()

@@ -31,10 +31,8 @@ import com.amplifyframework.datastore.DataStoreCategory;
 import com.amplifyframework.hub.HubCategory;
 import com.amplifyframework.logging.LoggingCategory;
 import com.amplifyframework.storage.StorageCategory;
-import com.amplifyframework.util.Immutable;
 
 import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -68,7 +66,7 @@ public final class Amplify {
     @SuppressWarnings("checkstyle:all") public static final HubCategory Hub = new HubCategory();
     @SuppressWarnings("checkstyle:all") public static final DataStoreCategory DataStore = new DataStoreCategory();
 
-    private static final Map<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
+    private static final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> CATEGORIES = buildCategoriesMap();
 
     // Used as a synchronization locking object. Set to true once configure() is complete.
     private static final AtomicBoolean CONFIGURATION_LOCK = new AtomicBoolean(false);
@@ -83,16 +81,17 @@ public final class Amplify {
         throw new UnsupportedOperationException("No instances allowed.");
     }
 
-    private static Map<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
-        final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new LinkedHashMap<>();
-        modifiableCategories.put(CategoryType.ANALYTICS, Analytics);
-        modifiableCategories.put(CategoryType.API, API);
-        modifiableCategories.put(CategoryType.AUTH, Auth);
-        modifiableCategories.put(CategoryType.LOGGING, Logging);
-        modifiableCategories.put(CategoryType.STORAGE, Storage);
-        modifiableCategories.put(CategoryType.HUB, Hub);
-        modifiableCategories.put(CategoryType.DATASTORE, DataStore);
-        return Immutable.of(modifiableCategories);
+    // The fact that this is a LinkedHashMap, and not a Map, is important.
+    // We are relying on the ordering of this data-structure, for configuration.
+    private static LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> buildCategoriesMap() {
+        final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> categories = new LinkedHashMap<>();
+        categories.put(CategoryType.ANALYTICS, Analytics);
+        categories.put(CategoryType.API, API);
+        categories.put(CategoryType.LOGGING, Logging);
+        categories.put(CategoryType.STORAGE, Storage);
+        categories.put(CategoryType.HUB, Hub);
+        categories.put(CategoryType.DATASTORE, DataStore);
+        return categories;
     }
 
     /**

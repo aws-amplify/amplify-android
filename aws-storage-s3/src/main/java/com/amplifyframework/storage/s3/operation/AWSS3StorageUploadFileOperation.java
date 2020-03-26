@@ -28,7 +28,7 @@ import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
-import com.amplifyframework.storage.s3.utils.S3RequestUtils;
+import com.amplifyframework.storage.s3.utils.S3Keys;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -76,7 +76,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         }
 
         // Get S3 key for give user and access level
-        String serviceKey = S3RequestUtils.getServiceKey(
+        String serviceKey = S3Keys.createServiceKey(
                 getRequest().getAccessLevel(),
                 getRequest().getTargetIdentityId(),
                 getRequest().getKey()

@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.SimpleModelProvider;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion;
 
 /**
@@ -35,13 +36,19 @@ public final class SystemModelsProviderFactory {
         return SimpleModelProvider.instance(
             SYSTEM_MODELS_VERSION,
 
+            // PersistentModelVersion.class is stores the version of the data schema; that is,
+            // which models exist in the system, and what is their shape. When the structure of
+            // the data changes, this should see a version bump.
+            PersistentModelVersion.class,
+
+            // ModelMetadata.class stores the version of particular instances of a model. Unlike
+            // PersistentModelVersion, which details with the structure of data, ModelMetadata
+            // deals actually with individual records, and their states.
+            ModelMetadata.class,
+
             // StorageItemChange.Record.class is an internal system event
             // it is used to stage local storage changes for upload to cloud
-            StorageItemChange.Record.class,
-
-            // PersistentModelVersion.class is an internal system event
-            // it is used to store the version of the ModelProvider
-            PersistentModelVersion.class
+            StorageItemChange.Record.class
         );
     }
 }

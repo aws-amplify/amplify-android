@@ -117,11 +117,11 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void currentAuthorizationState(
+    public void currentAuthState(
             @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().currentAuthorizationState(onSuccess, onError);
+        getSelectedPlugin().currentAuthState(onSuccess, onError);
     }
 }
 

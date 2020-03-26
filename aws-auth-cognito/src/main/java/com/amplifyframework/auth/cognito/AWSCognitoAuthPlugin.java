@@ -321,7 +321,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     //   - Cognito ID Token
     //   - Cognito Refresh Token
     @Override
-    public void currentAuthorizationState(
+    public void currentAuthState(
             @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {

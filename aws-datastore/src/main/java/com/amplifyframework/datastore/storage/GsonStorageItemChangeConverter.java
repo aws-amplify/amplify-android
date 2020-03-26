@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.storage;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
@@ -51,8 +53,9 @@ public final class GsonStorageItemChangeConverter implements
                 .create();
     }
 
+    @NonNull
     @Override
-    public <T extends Model> StorageItemChange.Record toRecord(StorageItemChange<T> storageItemChange) {
+    public <T extends Model> StorageItemChange.Record toRecord(@NonNull StorageItemChange<T> storageItemChange) {
         return StorageItemChange.Record.builder()
                 .id(storageItemChange.changeId().toString())
                 .entry(gson.toJson(storageItemChange))
@@ -60,8 +63,9 @@ public final class GsonStorageItemChangeConverter implements
                 .build();
     }
 
+    @NonNull
     @Override
-    public <T extends Model> StorageItemChange<T> fromRecord(StorageItemChange.Record record)
+    public <T extends Model> StorageItemChange<T> fromRecord(@NonNull StorageItemChange.Record record)
             throws DataStoreException {
         Class<?> itemClass;
         try {

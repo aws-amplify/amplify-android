@@ -16,6 +16,7 @@
 package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
@@ -29,13 +30,6 @@ import java.util.Set;
  */
 public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
         implements AnalyticsCategoryBehavior {
-
-    /**
-     * Protect enabling and disabling of Analytics event
-     * collection and sending.
-     */
-    private static final Object LOCK = new Object();
-
     /**
      * By default collection and sending of Analytics events
      * are enabled.
@@ -60,22 +54,22 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void identifyUser(@NonNull String userId, @NonNull AnalyticsProfile profile) {
-        throw new UnsupportedOperationException("This operation is currently not supported.");
+    public void identifyUser(@NonNull String userId, @Nullable UserProfile profile) {
+        if (enabled) {
+            getSelectedPlugin().identifyUser(userId, profile);
+        }
     }
 
     @Override
     public void disable() {
-        synchronized (LOCK) {
-            enabled = false;
-        }
+        enabled = false;
+        getSelectedPlugin().disable();
     }
 
     @Override
     public void enable() {
-        synchronized (LOCK) {
-            enabled = true;
-        }
+        enabled = true;
+        getSelectedPlugin().enable();
     }
 
     @Override

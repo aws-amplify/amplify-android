@@ -20,6 +20,7 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.s3.utils.S3Keys;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.ClientConfiguration;
@@ -154,8 +155,12 @@ public final class AWSS3StorageService implements StorageService {
             result = client.listObjectsV2(request);
 
             for (S3ObjectSummary objectSummary : result.getObjectSummaries()) {
+                // Remove the access level prefix from service key
+                String serviceKey = objectSummary.getKey();
+                String amplifyKey = S3Keys.extractAmplifyKey(serviceKey);
+
                 itemList.add(new StorageItem(
-                        objectSummary.getKey(),
+                        amplifyKey,
                         objectSummary.getSize(),
                         objectSummary.getLastModified(),
                         objectSummary.getETag(),

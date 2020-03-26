@@ -72,6 +72,15 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
+    /**
+     * Basic authentication to the app with a username and password or, if custom auth is setup,
+     * you can send null for those and the necessary authentication details in the options object.
+     * @param username This can be a normal username, email/phone if that's setup, or null if custom auth is enabled
+     * @param password User's password for normal signup, null if custom auth or passwordless configurations are setup
+     * @param options Advanced options such as a map of auth information for custom auth
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void signIn(
             @Nullable String username,
             @Nullable String password,
@@ -79,25 +88,59 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
+    /**
+     * Basic authentication to the app with a username and password
+     * @param username This can be a normal username or email/phone if that's setup
+     * @param password User's password
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void signIn(
             @Nullable String username,
             @Nullable String password,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
+    /**
+     * Launch a pre-built sign in UI flow. You should also put the {@link #handleSignInWithUIResponse(Intent)} method in
+     * your activity's onResume method to capture the response which comes back from the UI flow.
+     * @param callingActivity The activity in your app you are calling this from
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void signInWithUI(
             @NonNull Activity callingActivity,
             @NonNull Consumer<String> onSuccess,
             @NonNull Consumer<AmplifyException> onError);
 
+    /**
+     * Handles the response which comes back from {@link #signInWithUI(Activity, Consumer, Consumer)}
+     * @param intent
+     */
     void handleSignInWithUIResponse(Intent intent);
 
+    /**
+     * TODO: Replace this with a generic sign in with social method (or whatever naming lands on)
+     *       which takes the provider as an enum
+     * @param token Token retrieved from the social provider's authentication code
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
     void signInWithFacebook(
             @NonNull String token,
             @NonNull Consumer<String> onSuccess,
             @NonNull Consumer<AmplifyException> onError);
 
-    void currentAuthorizationState(
+    /**
+     * Retrieve the user's current state - Signed Out, Guest, or Signed In
+     * Depending on how a plugin implements this, the resulting AuthSession can also be cast to a type specific
+     * to that plugin which contains the various security tokens as an escape hatch if you want to manually use
+     * them outside the plugin. Within Amplify this should not be needed as the other categories will automatically
+     * work as long as you are signed in.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void currentAuthState(
             @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError);
 }
