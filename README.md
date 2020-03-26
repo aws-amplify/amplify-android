@@ -25,7 +25,7 @@ List<Bucket> buckets = s3Client.listBuckets();
 
 ## Platform Support
 
-Amplify SDK supports Android API level 15 (Android 4.0.3) and above.
+Amplify SDK supports Android API level 16 (Android 4.1) and above.
 
 ## Installation
 
