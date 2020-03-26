@@ -1,0 +1,12 @@
+apply plugin: 'com.android.library'
+apply from: rootProject.file("configuration/publishing.gradle")
+apply from: rootProject.file("configuration/checkstyle.gradle")
+
+dependencies {
+    implementation project(path: ':core')
+    implementation dependency.androidx.appcompat
+    implementation (dependency.aws.mobileclient) {
+        transitive = true
+    }
+    implementation 'com.amazonaws:aws-android-sdk-cognitoauth:2.16.9'
+}

@@ -38,6 +38,11 @@ public enum CategoryType {
     API("api"),
 
     /**
+     * Provides user authentication and authorization functionality.
+     */
+    AUTH("auth"),
+
+    /**
      * DataStore simplifies local storage of your application data on the
      * device for offline access and automatically synchronizes data with
      * the cloud.

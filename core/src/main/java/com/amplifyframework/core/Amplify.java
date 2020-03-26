@@ -22,6 +22,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
@@ -61,6 +62,7 @@ public final class Amplify {
     // For example, you can call storage operations through Amplify.Storage.list(String path).
     @SuppressWarnings("checkstyle:all") public static final AnalyticsCategory Analytics = new AnalyticsCategory();
     @SuppressWarnings("checkstyle:all") public static final ApiCategory API = new ApiCategory();
+    @SuppressWarnings("checkstyle:all") public static final AuthCategory Auth = new AuthCategory();
     @SuppressWarnings("checkstyle:all") public static final LoggingCategory Logging = new LoggingCategory();
     @SuppressWarnings("checkstyle:all") public static final StorageCategory Storage = new StorageCategory();
     @SuppressWarnings("checkstyle:all") public static final HubCategory Hub = new HubCategory();
@@ -85,6 +87,7 @@ public final class Amplify {
         final Map<CategoryType, Category<? extends Plugin<?>>> modifiableCategories = new LinkedHashMap<>();
         modifiableCategories.put(CategoryType.ANALYTICS, Analytics);
         modifiableCategories.put(CategoryType.API, API);
+        modifiableCategories.put(CategoryType.AUTH, Auth);
         modifiableCategories.put(CategoryType.LOGGING, Logging);
         modifiableCategories.put(CategoryType.STORAGE, Storage);
         modifiableCategories.put(CategoryType.HUB, Hub);
