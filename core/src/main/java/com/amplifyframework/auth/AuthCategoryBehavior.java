@@ -89,7 +89,7 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
-     * Basic authentication to the app with a username and password
+     * Basic authentication to the app with a username and password.
      * @param username This can be a normal username or email/phone if that's setup
      * @param password User's password
      * @param onSuccess Success callback
@@ -114,15 +114,15 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AmplifyException> onError);
 
     /**
-     * Handles the response which comes back from {@link #signInWithUI(Activity, Consumer, Consumer)}
-     * @param intent
+     * Handles the response which comes back from {@link #signInWithUI(Activity, Consumer, Consumer)}.
+     * @param intent The app activity's intent
      */
     void handleSignInWithUIResponse(Intent intent);
 
     /**
      * TODO: Replace this with a generic sign in with social method (or whatever naming lands on)
-     *       which takes the provider as an enum
-     * @param token Token retrieved from the social provider's authentication code
+     *       which takes the provider as an enum.
+     * @param token Token retrieved from the social provider's authentication code.
      * @param onSuccess Success callback
      * @param onError Error callback
      */
@@ -132,7 +132,7 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AmplifyException> onError);
 
     /**
-     * Retrieve the user's current state - Signed Out, Guest, or Signed In
+     * Retrieve the user's current state - Signed Out, Guest, or Signed In.
      * Depending on how a plugin implements this, the resulting AuthSession can also be cast to a type specific
      * to that plugin which contains the various security tokens as an escape hatch if you want to manually use
      * them outside the plugin. Within Amplify this should not be needed as the other categories will automatically
