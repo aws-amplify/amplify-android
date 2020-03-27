@@ -18,18 +18,11 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Holds the syntax detection results
- * for the predictions category.
- *
  * Syntax holds the information regarding what
  * part of speech is represented by the target
  * portion of the text.
  */
 public final class Syntax extends TextFeature<SpeechType> {
-    /**
-     * Feature type for {@link SpeechType}.
-     */
-    public static final String FEATURE_TYPE = SpeechType.class.getSimpleName();
 
     private Syntax(final Builder builder) {
         super(builder);
@@ -38,7 +31,7 @@ public final class Syntax extends TextFeature<SpeechType> {
     @Override
     @NonNull
     public String getType() {
-        return FEATURE_TYPE;
+        return FeatureType.SYNTAX.getFeatureName();
     }
 
     /**

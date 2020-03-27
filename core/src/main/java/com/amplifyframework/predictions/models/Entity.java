@@ -18,14 +18,10 @@ package com.amplifyframework.predictions.models;
 import androidx.annotation.NonNull;
 
 /**
- * Holds the entity detection results from text
- * for the predictions category.
+ * Entity is categorization of a specific phrase
+ * detected from input text.
  */
 public final class Entity extends TextFeature<EntityType> {
-    /**
-     * Feature type for {@link Entity}.
-     */
-    public static final String FEATURE_TYPE = EntityType.class.getSimpleName();
 
     private Entity(final Builder builder) {
         super(builder);
@@ -34,7 +30,7 @@ public final class Entity extends TextFeature<EntityType> {
     @Override
     @NonNull
     public String getType() {
-        return FEATURE_TYPE;
+        return FeatureType.ENTITY.getFeatureName();
     }
 
     /**

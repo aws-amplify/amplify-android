@@ -29,10 +29,6 @@ import androidx.annotation.NonNull;
  * article ("a"), an adjective ("beautiful"), and a noun ("day").
  */
 public final class KeyPhrase extends TextFeature<String> {
-    /**
-     * Feature type for {@link KeyPhrase}.
-     */
-    public static final String FEATURE_TYPE = KeyPhrase.class.getSimpleName();
 
     private KeyPhrase(final Builder builder) {
         super(builder);
@@ -41,7 +37,7 @@ public final class KeyPhrase extends TextFeature<String> {
     @Override
     @NonNull
     public String getType() {
-        return FEATURE_TYPE;
+        return FeatureType.KEY_PHRASE.getFeatureName();
     }
 
     /**

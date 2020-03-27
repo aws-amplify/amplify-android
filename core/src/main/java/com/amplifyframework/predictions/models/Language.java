@@ -22,10 +22,6 @@ import androidx.annotation.NonNull;
  * for the predictions category.
  */
 public final class Language extends Feature<LanguageType> {
-    /**
-     * Feature type for {@link LanguageType}.
-     */
-    public static final String FEATURE_TYPE = LanguageType.class.getSimpleName();
 
     private Language(final Builder builder) {
         super(builder);
@@ -34,7 +30,7 @@ public final class Language extends Feature<LanguageType> {
     @Override
     @NonNull
     public String getType() {
-        return FEATURE_TYPE;
+        return FeatureType.LANGUAGE.getFeatureName();
     }
 
     /**

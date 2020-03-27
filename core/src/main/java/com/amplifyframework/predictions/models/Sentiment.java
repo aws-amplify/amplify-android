@@ -22,10 +22,6 @@ import androidx.annotation.NonNull;
  * for the predictions category.
  */
 public final class Sentiment extends Feature<SentimentType> {
-    /**
-     * Feature type for {@link SentimentType}.
-     */
-    public static final String FEATURE_TYPE = SentimentType.class.getSimpleName();
 
     private Sentiment(final Builder builder) {
         super(builder);
@@ -34,7 +30,7 @@ public final class Sentiment extends Feature<SentimentType> {
     @Override
     @NonNull
     public String getType() {
-        return FEATURE_TYPE;
+        return FeatureType.SENTIMENT.getFeatureName();
     }
 
     /**
