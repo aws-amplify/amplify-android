@@ -101,10 +101,13 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfigurationJson, @NonNull Context context) throws ApiException {
+    public void configure(
+            JSONObject pluginConfiguration,
+            @NonNull Context context
+    ) throws ApiException {
         // Null-check for configuration is done inside readFrom method
         AWSApiPluginConfiguration pluginConfig =
-                AWSApiPluginConfigurationReader.readFrom(pluginConfigurationJson);
+                AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
 
         final InterceptorFactory interceptorFactory =
                 new AppSyncSigV4SignerInterceptorFactory(authProvider);

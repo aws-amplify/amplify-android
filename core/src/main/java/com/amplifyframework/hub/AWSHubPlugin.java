@@ -131,7 +131,7 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
     }
 
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
+    public void configure(JSONObject pluginConfiguration, @NonNull Context context) {
     }
 
     @Nullable
