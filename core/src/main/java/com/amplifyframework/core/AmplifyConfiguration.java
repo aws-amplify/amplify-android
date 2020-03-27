@@ -22,6 +22,7 @@ import androidx.annotation.RawRes;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
+import com.amplifyframework.auth.AuthCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
@@ -73,6 +74,7 @@ public final class AmplifyConfiguration {
         final List<CategoryConfiguration> possibleConfigs = Arrays.asList(
             new AnalyticsCategoryConfiguration(),
             new ApiCategoryConfiguration(),
+            new AuthCategoryConfiguration(),
             new DataStoreCategoryConfiguration(),
             new HubCategoryConfiguration(),
             new LoggingCategoryConfiguration(),
