@@ -27,19 +27,19 @@ import androidx.annotation.NonNull;
  */
 public final class TargetText {
     private final String text;
-    private final int index;
+    private final int startIndex;
     private final int length;
 
     /**
      * Constructs a new instance of text position.
      * @param text the target text
-     * @param index the starting index of target text
+     * @param startIndex the starting index of target text
      */
     public TargetText(
             @NonNull String text,
-            int index) {
+            int startIndex) {
         this.text = text;
-        this.index = index;
+        this.startIndex = startIndex;
         this.length = text.length();
     }
 
@@ -57,8 +57,8 @@ public final class TargetText {
      * with respect to the full input text.
      * @return the starting index of target text
      */
-    public int getIndex() {
-        return index;
+    public int getStartIndex() {
+        return startIndex;
     }
 
     /**

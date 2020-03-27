@@ -16,7 +16,7 @@
 package com.amplifyframework.predictions.models;
 
 /**
- * An entity can be assigned any of the following types.
+ * A type of entity that is interpreted from a piece of text.
  *
  * @see <a href=https://docs.aws.amazon.com/comprehend/latest/dg/how-entities.html>Detect Entities</a>
  */

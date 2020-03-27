@@ -27,12 +27,12 @@ import java.util.UUID;
  */
 public abstract class Feature<T> implements Comparable<Feature<T>> {
     private final String id;
-    private final T feature;
+    private final T value;
     private final float confidence;
 
     Feature(Builder<?, ? extends Feature<T>, T> builder) {
         this.id = builder.getId();
-        this.feature = builder.getFeature();
+        this.value = builder.getValue();
         this.confidence = builder.getConfidence();
     }
 
@@ -57,8 +57,8 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
      * @return the detected result
      */
     @NonNull
-    public final T getFeature() {
-        return feature;
+    public final T getValue() {
+        return value;
     }
 
     /**
@@ -100,7 +100,7 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
     @SuppressWarnings("unchecked")
     abstract static class Builder<B extends Builder<B, R, T>, R extends Feature<T>, T> {
         private String id;
-        private T feature;
+        private T value;
         private float confidence;
 
         Builder() {
@@ -120,13 +120,13 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
         }
 
         /**
-         * Sets the feature and return this builder.
-         * @param feature the feature
+         * Sets the feature value and return this builder.
+         * @param value the feature value
          * @return this builder instance
          */
         @NonNull
-        public final B feature(@NonNull T feature) {
-            this.feature = Objects.requireNonNull(feature);
+        public final B value(@NonNull T value) {
+            this.value = Objects.requireNonNull(value);
             return (B) this;
         }
 
@@ -154,8 +154,8 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
         }
 
         @NonNull
-        final T getFeature() {
-            return Objects.requireNonNull(feature);
+        final T getValue() {
+            return Objects.requireNonNull(value);
         }
 
         final float getConfidence() {

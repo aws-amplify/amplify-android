@@ -15,8 +15,6 @@
 
 package com.amplifyframework.predictions.models;
 
-import androidx.annotation.NonNull;
-
 /**
  * Different types of parts of speech.
  *
@@ -27,137 +25,107 @@ public enum SpeechType {
      * Words that typically modify nouns.
      * e.g. 'yellow', 'quick'
      */
-    ADJECTIVE("ADJ"),
+    ADJECTIVE,
 
     /**
      * The head of a prepositional or postpositional phrase.
      * e.g. 'with', 'over', 'to'
      */
-    ADPOSITION("ADP"),
+    ADPOSITION,
 
     /**
      * Words that typically modify verbs. They may also modify
      * adjectives and other adverbs.
      * e.g. 'easily', 'well'
      */
-    ADVERB("ADV"),
+    ADVERB,
 
     /**
      * Function words that accompanies the verb of a verb phrase.
      * e.g. 'can', 'must', 'will'
      */
-    AUXILIARY("AUX"),
+    AUXILIARY,
 
     /**
      * Words that links words or phrases without subordinating
      * one to the other.
      * e.g. 'and', 'but', 'so'
      */
-    COORDINATING_CONJUNCTION("CCONJ"),
+    COORDINATING_CONJUNCTION,
 
     /**
      * Articles and other words that specify a particular
      * noun phrase.
      * e.g. 'the', 'each', 'his'
      */
-    DETERMINER("DET"),
+    DETERMINER,
 
     /**
      * Words used as an exclamation or part of an exclamation.
      * e.g. 'wow', 'yikes'
      */
-    INTERJECTION("INTJ"),
+    INTERJECTION,
 
     /**
      * Words that specify a person, place, thing, animal, or idea.
      * e.g. 'car', 'phone', 'tree'
      */
-    NOUN("NOUN"),
+    NOUN,
 
     /**
      * Words, typically determiners, adjectives, or pronouns,
      * that express a number.
      * e.g. 'seven', '2020'
      */
-    NUMERAL("NUM"),
+    NUMERAL,
 
     /**
      * Function words associated with another word or phrase
      * to impart meaning.
      * e.g. 'up' in 'eat up', 'to' in 'to fly'
      */
-    PARTICLE("PART"),
+    PARTICLE,
 
     /**
      * Words that substitute for nouns or noun phrases.
      * e.g. 'he', 'she', 'I'
      */
-    PRONOUN("PRON"),
+    PRONOUN,
 
     /**
      * A noun that is the name of a specific individual,
      * place or object.
      * e.g. 'AWS', 'John'
      */
-    PROPER_NOUN("PROPN"),
+    PROPER_NOUN,
 
     /**
      * Non-alphabetical characters that delimit text.
      * e.g. '.', ';', '?'
      */
-    PUNCTUATION("PUNCT"),
+    PUNCTUATION,
 
     /**
      * A conjunction that links parts of sentences by making
      * one of them part of the other.
      * e.g. 'after', 'because', 'if'
      */
-    SUBORDINATING_CONJUNCTION("SCONJ"),
+    SUBORDINATING_CONJUNCTION,
 
     /**
      * Word-like entities such as mathematical symbols.
      * e.g. '$', '%', '='
      */
-    SYMBOL("SYM"),
+    SYMBOL,
 
     /**
      * Words that signal events and actions.
      * e.g. 'run', 'eat', 'sleep'
      */
-    VERB("VERB"),
+    VERB,
 
     /**
      * Words that can't be assigned a part of speech category.
      */
-    UNKNOWN("UNKNOWN");
-
-    private final String token;
-
-    SpeechType(String token) {
-        this.token = token;
-    }
-
-    /**
-     * Returns the abbreviated token for a given speech type.
-     * @return the syntax token
-     */
-    @NonNull
-    public String getToken() {
-        return token;
-    }
-
-    /**
-     * Obtains a {@link SpeechType} enum value from syntax token.
-     * If there is no equivalent enum for the given syntax token, a
-     * {@link SpeechType#UNKNOWN} will be returned.
-     * @param token Syntax token to obtain equivalent enum from
-     * @return An enum value of matching language code
-     */
-    public static SpeechType from(String token) {
-        try {
-            return SpeechType.valueOf(token);
-        } catch (IllegalArgumentException noMatchError) {
-            return UNKNOWN;
-        }
-    }
+    UNKNOWN
 }

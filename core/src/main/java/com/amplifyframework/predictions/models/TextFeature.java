@@ -20,9 +20,10 @@ import androidx.annotation.NonNull;
 import java.util.Objects;
 
 /**
- * A generic class to hold information about an inferred
- * feature from text analysis and the confidence score
- * for inference.
+ * A generic representation of an inferred feature from
+ * analyzing a piece of text. Holds the portion of input
+ * text where the feature is relevant and the confidence
+ * score for inference.
  * @param <T> the feature type
  */
 @SuppressWarnings("unchecked")

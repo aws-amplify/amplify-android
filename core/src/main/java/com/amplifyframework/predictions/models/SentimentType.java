@@ -19,7 +19,6 @@ package com.amplifyframework.predictions.models;
  * List of types of sentiments that can be associated
  * with text.
  */
-@SuppressWarnings("JavadocVariable")
 public enum SentimentType {
     /**
      * Exhibits positive sentiments.

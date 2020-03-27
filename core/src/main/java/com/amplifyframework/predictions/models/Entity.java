@@ -21,13 +21,13 @@ import androidx.annotation.NonNull;
  * Holds the entity detection results from text
  * for the predictions category.
  */
-public final class TextEntity extends TextFeature<EntityType> {
+public final class Entity extends TextFeature<EntityType> {
     /**
-     * Feature type for {@link TextEntity}.
+     * Feature type for {@link Entity}.
      */
     public static final String FEATURE_TYPE = EntityType.class.getSimpleName();
 
-    private TextEntity(final Builder builder) {
+    private Entity(final Builder builder) {
         super(builder);
     }
 
@@ -47,13 +47,13 @@ public final class TextEntity extends TextFeature<EntityType> {
     }
 
     /**
-     * Builder for {@link TextEntity}.
+     * Builder for {@link Entity}.
      */
-    public static final class Builder extends TextFeature.Builder<Builder, TextEntity, EntityType> {
+    public static final class Builder extends TextFeature.Builder<Builder, Entity, EntityType> {
         @Override
         @NonNull
-        public TextEntity build() {
-            return new TextEntity(this);
+        public Entity build() {
+            return new Entity(this);
         }
     }
 }

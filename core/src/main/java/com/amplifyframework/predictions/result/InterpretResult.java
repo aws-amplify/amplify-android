@@ -18,12 +18,12 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.predictions.models.Entity;
 import com.amplifyframework.predictions.models.Feature;
 import com.amplifyframework.predictions.models.KeyPhrase;
 import com.amplifyframework.predictions.models.Language;
 import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.Syntax;
-import com.amplifyframework.predictions.models.TextEntity;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
@@ -37,7 +37,7 @@ public final class InterpretResult {
     private final Language language;
     private final Sentiment sentiment;
     private final List<KeyPhrase> keyPhrases;
-    private final List<TextEntity> entities;
+    private final List<Entity> entities;
     private final List<Syntax> syntax;
     private final List<Feature<?>> features;
 
@@ -82,7 +82,7 @@ public final class InterpretResult {
      * @return The entities of the text
      */
     @Nullable
-    public List<TextEntity> getEntities() {
+    public List<Entity> getEntities() {
         return Immutable.of(entities);
     }
 
@@ -121,7 +121,7 @@ public final class InterpretResult {
         private Language language;
         private Sentiment sentiment;
         private List<KeyPhrase> keyPhrases;
-        private List<TextEntity> entities;
+        private List<Entity> entities;
         private List<Syntax> syntax;
         private List<Feature<?>> features;
 
@@ -168,7 +168,7 @@ public final class InterpretResult {
          * @return this builder instance
          */
         @NonNull
-        public Builder entities(@Nullable List<TextEntity> entities) {
+        public Builder entities(@Nullable List<Entity> entities) {
             this.entities = entities;
             return this;
         }
@@ -232,7 +232,7 @@ public final class InterpretResult {
         }
 
         @Nullable
-        List<TextEntity> getEntities() {
+        List<Entity> getEntities() {
             return entities;
         }
 
