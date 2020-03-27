@@ -107,7 +107,10 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     @Override
     @SuppressWarnings("MagicNumber") // TODO: Remove once default values are moved to configuration
-    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws StorageException {
+    public void configure(
+            JSONObject pluginConfiguration,
+            @NonNull Context context
+    ) throws StorageException {
         String regionStr;
         String bucket;
 

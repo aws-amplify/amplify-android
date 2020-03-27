@@ -66,7 +66,7 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
 
     @Override
     public void configure(
-            @NonNull JSONObject pluginConfiguration,
+            JSONObject pluginConfiguration,
             @NonNull Context context)
             throws LoggingException {
         // In the future, accept a log level configuration from JSON?
