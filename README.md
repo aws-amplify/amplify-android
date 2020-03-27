@@ -36,13 +36,13 @@ Gradle can be used alongside Android Studio to declare dependencies on Amplify r
 ``` gradle
 dependencies {
     // Core SDK is required for configuring Amplify
-    implementation 'com.amplifyframework:core:0.9.1'
+    implementation 'com.amplifyframework:core:0.10.0'
     
     // Specify only the modules that the app will use
-    implementation 'com.amplifyframework:aws-datastore:0.9.1'
-    implementation 'com.amplifyframework:aws-api:0.9.1'
-    implementation 'com.amplifyframework:aws-storage-s3:0.9.1'
-    implementation 'com.amplifyframework:aws-analytics-pinpoint:0.9.1'
+    implementation 'com.amplifyframework:aws-datastore:0.10.0'
+    implementation 'com.amplifyframework:aws-api:0.10.0'
+    implementation 'com.amplifyframework:aws-storage-s3:0.10.0'
+    implementation 'com.amplifyframework:aws-analytics-pinpoint:0.10.0'
 }
 ```
 
@@ -64,7 +64,7 @@ buildscript {
         mavenLocal() // This should ideally appear before other repositories
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.5.1'
+        classpath 'com.android.tools.build:gradle:3.6.1'
 
         // NOTE: Do not place your application dependencies here; they belong
         // in the individual module build.gradle files
@@ -102,3 +102,4 @@ You need to ensure `AWSMobileClient` is [initialized](https://aws-amplify.github
 ## License
 
 This library is licensed under the Apache 2.0 License. 
+
