@@ -2,7 +2,7 @@
 
 A declarative library for application development using cloud services.
 
-## 0.10.0
+## 0.10.1
 
 ### Bug Fixes
 
