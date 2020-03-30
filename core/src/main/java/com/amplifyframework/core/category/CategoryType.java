@@ -54,11 +54,17 @@ public enum CategoryType {
 
     /**
      * Logging for troubleshooting of component behaviors during
-     * development, or when deployed in production.  This category is
+     * development, or when deployed in production. This category is
      * expected to operate locally to the device, without talking to the
      * cloud backend services, directly.
      */
     LOGGING("logging"),
+
+    /**
+     * Predictions use machine learning to convert text and/or identify
+     * images using both online and offline trained models.
+     */
+    PREDICTIONS("predictions"),
 
     /**
      * Storage is an interface to a remote repository to store and

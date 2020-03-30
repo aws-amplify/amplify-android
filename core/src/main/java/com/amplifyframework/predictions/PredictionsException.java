@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,24 +13,18 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework;
+package com.amplifyframework.predictions;
 
 import androidx.annotation.NonNull;
 
-import java.util.Objects;
+import com.amplifyframework.AmplifyException;
 
 /**
- * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
+ * Exception thrown by Predictions category upon encountering
+ * an error during setup or operation.
  */
-public class AmplifyException extends Exception {
-    /**
-     * All Amplify Exceptions should have a recovery suggestion. This string can be used as a filler until one is
-     * defined but should ultimately be replaced as all good todos.
-     */
-    public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don't have a suggested fix for this error yet.";
-    private static final long serialVersionUID = 1L;
-
-    private final String recoverySuggestion;
+public final class PredictionsException extends AmplifyException {
+    private static final long serialVersionUID = 6843042852631940595L;
 
     /**
      * Creates a new exception with a message, root cause, and recovery suggestion.
@@ -38,13 +32,12 @@ public class AmplifyException extends Exception {
      * @param cause The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AmplifyException(
+    public PredictionsException(
             @NonNull final String message,
             @NonNull final Throwable cause,
             @NonNull final String recoverySuggestion
     ) {
-        super(message, cause);
-        this.recoverySuggestion = Objects.requireNonNull(recoverySuggestion);
+        super(message, cause, recoverySuggestion);
     }
 
     /**
@@ -52,19 +45,10 @@ public class AmplifyException extends Exception {
      * @param message Explains the reason for the exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AmplifyException(
+    public PredictionsException(
             @NonNull final String message,
-            @NonNull final String recoverySuggestion) {
-        super(message);
-        this.recoverySuggestion = Objects.requireNonNull(recoverySuggestion);
-    }
-
-    /**
-     * Gets the recovery suggestion message.
-     * @return customized recovery suggestion message
-     */
-    @NonNull
-    public final String getRecoverySuggestion() {
-        return recoverySuggestion;
+            @NonNull final String recoverySuggestion
+    ) {
+        super(message, recoverySuggestion);
     }
 }

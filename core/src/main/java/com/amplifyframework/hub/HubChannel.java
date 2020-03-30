@@ -49,6 +49,11 @@ public enum HubChannel {
     LOGGING(CategoryType.LOGGING),
 
     /**
+     * Hub messages relating to Amplify Predictions.
+     */
+    PREDICTIONS(CategoryType.PREDICTIONS),
+
+    /**
      * Hub messages relating to Amplify Storage.
      */
     STORAGE(CategoryType.STORAGE);
