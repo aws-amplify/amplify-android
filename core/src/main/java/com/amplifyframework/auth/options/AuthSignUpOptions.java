@@ -25,6 +25,11 @@ public final class AuthSignUpOptions {
     private final Map<String, String> userAttributes;
     private final Map<String, String> validationData;
 
+    /**
+     * Advanced options for signing in.
+     * @param userAttributes Additional user attributes which should be associated with this user on registration
+     * @param validationData A map of custom key/values to be sent as part of the sign up process
+     */
     private AuthSignUpOptions(
             Map<String, String> userAttributes,
             Map<String, String> validationData
@@ -33,11 +38,19 @@ public final class AuthSignUpOptions {
         this.validationData = validationData;
     }
 
+    /**
+     * Get additional user attributes which should be associated with this user on registration.
+     * @return additional user attributes which should be associated with this user on registration
+     */
     @NonNull
     public Map<String, String> getUserAttributes() {
         return userAttributes;
     }
 
+    /**
+     * Get a map of custom key/values to be sent as part of the sign up process.
+     * @return a map of custom key/values to be sent as part of the sign up process
+     */
     @NonNull
     public Map<String, String> getValidationData() {
         return validationData;

@@ -18,27 +18,27 @@ package com.amplifyframework.auth.cognito;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.AuthState;
 import com.amplifyframework.auth.AuthUserState;
 
 import com.amazonaws.auth.AWSCredentials;
 
 import java.util.Objects;
 
-public final class AWSCognitoAuthSession extends AuthSession {
+public final class AWSCognitoAuthState extends AuthState {
     private AWSCredentials awsCredentials;
     private String identityId;
     private String accessToken;
     private String idToken;
     private String refreshToken;
 
-    public AWSCognitoAuthSession(
+    public AWSCognitoAuthState(
             @NonNull AuthUserState state
     ) {
         super(state);
     }
 
-    public AWSCognitoAuthSession(
+    public AWSCognitoAuthState(
             @NonNull AuthUserState state,
             @Nullable AWSCredentials awsCredentials,
             @Nullable String identityId,

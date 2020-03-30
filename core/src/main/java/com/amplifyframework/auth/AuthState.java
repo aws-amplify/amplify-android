@@ -15,10 +15,15 @@
 
 package com.amplifyframework.auth;
 
-public class AuthSession {
+public class AuthState {
     private final AuthUserState state;
 
-    public AuthSession(AuthUserState state) {
+    /**
+     * Stores the current auth state of the category. When cast to a plugin specific object,
+     * implementation-specific auth details such as tokens can be retrieved as well.
+     * @param state
+     */
+    public AuthState(AuthUserState state) {
         this.state = state;
     }
 

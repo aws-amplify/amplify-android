@@ -141,6 +141,6 @@ public interface AuthCategoryBehavior {
      * @param onError Error callback
      */
     void currentAuthState(
-            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthState> onSuccess,
             @NonNull Consumer<AuthException> onError);
 }

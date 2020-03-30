@@ -24,12 +24,18 @@ import java.util.Objects;
 public final class AuthSignInOptions {
     private final Map<String, String> validationData;
 
-    private AuthSignInOptions(
-            Map<String, String> validationData
-    ) {
+    /**
+     * Advanced options for signing in.
+     * @param validationData A map of custom key/values to be sent as part of the sign in process
+     */
+    private AuthSignInOptions(Map<String, String> validationData) {
         this.validationData = validationData;
     }
 
+    /**
+     * Get a map of custom key/values to be sent as part of the sign in process.
+     * @return a map of custom key/values to be sent as part of the sign in process
+     */
     @NonNull
     public Map<String, String> getValidationData() {
         return validationData;

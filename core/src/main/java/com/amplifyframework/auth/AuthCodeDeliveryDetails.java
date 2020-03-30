@@ -20,20 +20,38 @@ public final class AuthCodeDeliveryDetails {
     private String deliveryMedium;
     private String attributeName;
 
+    /**
+     * Stores information about how the auth code is delivered.
+     * @param destination The address the code was sent to
+     * @param deliveryMedium What method was used to send the code
+     * @param attributeName What attribute was being verified
+     */
     public AuthCodeDeliveryDetails(String destination, String deliveryMedium, String attributeName) {
         this.destination = destination;
         this.deliveryMedium = deliveryMedium;
         this.attributeName = attributeName;
     }
 
+    /**
+     * Get the address of where the code was sent.
+     * @return The address the code was sent to
+     */
     public String getDestination() {
         return destination;
     }
 
+    /**
+     * Get the method used to send the code.
+     * @return The method used to send the code
+     */
     public String getDeliveryMedium() {
         return deliveryMedium;
     }
 
+    /**
+     * Get the attribute being verified.
+     * @return The attribute being verified
+     */
     public String getAttributeName() {
         return attributeName;
     }

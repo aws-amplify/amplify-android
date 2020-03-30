@@ -25,7 +25,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
-import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.AuthState;
 import com.amplifyframework.auth.AuthUserState;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -98,6 +98,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         }
     }
 
+    @Override
     public void signUp(
             String username,
             String password,
@@ -137,6 +138,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         );
     }
 
+    @Override
     public void confirmSignUp(
         String username,
         String code,
@@ -205,6 +207,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         });
     }
 
+    @Override
     public void signIn(
         String username,
         String password,
@@ -245,6 +248,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         });
     }
 
+    @Override
     public void signIn(
             String username,
             String password,
@@ -254,6 +258,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         signIn(username, password, null, onSuccess, onException);
     }
 
+    @Override
     public void signInWithUI(
             Activity callingActivity,
             final Consumer<String> onSuccess,
@@ -281,10 +286,12 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         });
     }
 
+    @Override
     public void handleSignInWithUIResponse(Intent intent) {
         AWSMobileClient.getInstance().handleAuthResponse(intent);
     }
 
+    @Override
     public void signInWithFacebook(
             String token,
             final Consumer<String> onSuccess,
@@ -322,7 +329,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     //   - Cognito Refresh Token
     @Override
     public void currentAuthState(
-            @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthState> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         try {
@@ -335,13 +342,13 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             state.equals(UserState.SIGNED_OUT_FEDERATED_TOKENS_INVALID) ||
                             state.equals(UserState.SIGNED_OUT_USER_POOLS_TOKENS_INVALID)
                     ) {
-                        onSuccess.accept(new AWSCognitoAuthSession(AuthUserState.SIGNED_OUT));
+                        onSuccess.accept(new AWSCognitoAuthState(AuthUserState.SIGNED_OUT));
                     } else {
-                        final AWSCognitoAuthSession session;
+                        final AWSCognitoAuthState session;
                         final CountDownLatch latch = new CountDownLatch(2);
 
                         if (state.equals(UserState.SIGNED_IN) || state.equals(UserState.GUEST)) {
-                            session = new AWSCognitoAuthSession(
+                            session = new AWSCognitoAuthState(
                                     state.equals(UserState.SIGNED_IN)
                                             ? AuthUserState.SIGNED_IN
                                             : AuthUserState.GUEST,

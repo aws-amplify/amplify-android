@@ -19,15 +19,28 @@ public final class AuthUser {
     private String userId;
     private String username;
 
+    /**
+     * Object to represent a logged in user with its associated attributes
+     * @param userId A unique identifier for this user
+     * @param username The username used for logging in
+     */
     public AuthUser(String userId, String username) {
         this.userId = userId;
         this.username = username;
     }
 
+    /**
+     * A unique identifier for this user.
+     * @return a unique identifier for this user
+     */
     public String getUserId() {
         return userId;
     }
 
+    /**
+     * The username used for logging in.
+     * @return the username used for logging in
+     */
     public String getUsername() {
         return username;
     }
