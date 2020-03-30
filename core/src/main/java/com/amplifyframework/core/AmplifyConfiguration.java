@@ -27,6 +27,7 @@ import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
+import com.amplifyframework.predictions.PredictionsCategoryConfiguration;
 import com.amplifyframework.storage.StorageCategoryConfiguration;
 import com.amplifyframework.util.Immutable;
 
@@ -76,6 +77,7 @@ public final class AmplifyConfiguration {
             new DataStoreCategoryConfiguration(),
             new HubCategoryConfiguration(),
             new LoggingCategoryConfiguration(),
+            new PredictionsCategoryConfiguration(),
             new StorageCategoryConfiguration()
         );
 
