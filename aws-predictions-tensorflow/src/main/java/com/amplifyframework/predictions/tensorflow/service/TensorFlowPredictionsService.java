@@ -52,10 +52,10 @@ public final class TensorFlowPredictionsService {
     }
 
     /**
-     * Free up resources used by TensorFlow Lite.
+     * Terminates service and free up resources used by TensorFlow Lite.
      */
-    public void close() {
-        textClassificationService.close();
+    public void terminate() {
+        textClassificationService.release();
     }
 
     /**

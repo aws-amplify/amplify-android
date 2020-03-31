@@ -22,8 +22,8 @@ import com.amplifyframework.predictions.models.SentimentType;
 import java.util.Locale;
 
 /**
- * Utility to convert third-party {@link SentimentType} equivalent
- * into Amplify-compatible data structure.
+ * Utility to convert third-party sentiment feature equivalent
+ * into Amplify-compatible data structure (i.e. {@link SentimentType}).
  */
 public final class SentimentTypeAdapter {
     @SuppressWarnings("checkstyle:all") private SentimentTypeAdapter() {}

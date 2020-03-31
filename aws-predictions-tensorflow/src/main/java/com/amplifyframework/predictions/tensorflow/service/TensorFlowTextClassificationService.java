@@ -56,13 +56,13 @@ final class TensorFlowTextClassificationService {
     private static final String LABEL_PATH = "text_classification_labels.txt";
 
     // The maximum length of an input sentence.
-    private static final int SENTENCE_LEN = 256;
+    private static final int MAX_SENTENCE_LENGTH = 256;
 
     // Percentage multiplier
     private static final int PERCENT = 100;
 
     // Simple delimiter to split words.
-    private static final String SIMPLE_SPACE_OR_PUNCTUATION = "[ ,.!?\n]";
+    private static final String DELIMITER_REGEX = "[ ,.!?\n]";
 
     /*
      * Reserved values in ImdbDataSet dictionary:
@@ -74,13 +74,12 @@ final class TensorFlowTextClassificationService {
     private static final String START = "<START>";
     private static final String UNKNOWN = "<UNKNOWN>";
 
-    private final Map<String, Integer> dictionary = new HashMap<>();
-    private final List<String> labels = new ArrayList<>();
-
     private final Context context;
+    private final Map<String, Integer> dictionary;
+    private final List<String> labels;
+    private final AtomicBoolean loaded;
 
     private Interpreter tflite;
-    private AtomicBoolean loaded;
 
     /**
      * Constructs an instance of service to perform text
@@ -90,6 +89,8 @@ final class TensorFlowTextClassificationService {
      */
     TensorFlowTextClassificationService(Context context) {
         this.context = context;
+        this.dictionary = new HashMap<>();
+        this.labels = new ArrayList<>();
         this.loaded = new AtomicBoolean(false);
 
         try {
@@ -114,6 +115,17 @@ final class TensorFlowTextClassificationService {
         return SERVICE_KEY;
     }
 
+    @WorkerThread
+    synchronized void loadIfNotLoaded() throws PredictionsException {
+        if (loaded.get()) {
+            return;
+        }
+        loadModel();
+        loadDictionary();
+        loadLabels();
+        loaded.set(true);
+    }
+
     /**
      * Classifies text to analyze associated sentiments.
      * @param text the text to classify
@@ -125,39 +137,38 @@ final class TensorFlowTextClassificationService {
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final Sentiment sentiment;
         try {
+            // Handle error for real this time if model not found
             loadIfNotLoaded();
-            sentiment = fetchSentiment(text);
+
+            // Classify sentiment from text
+            final Sentiment sentiment = fetchSentiment(text);
+            onSuccess.accept(InterpretResult.builder()
+                    .sentiment(sentiment)
+                    .build());
         } catch (PredictionsException exception) {
             onError.accept(exception);
-            return;
         }
-
-        InterpretResult result = InterpretResult.builder()
-                .sentiment(sentiment)
-                .build();
-        onSuccess.accept(result);
     }
 
     private Sentiment fetchSentiment(String text) throws PredictionsException {
         float[][] input;
         float[][] output;
 
-        // Pre-process input text
         try {
+            // Pre-process input text
             input = tokenizeInputText(text);
             output = new float[1][labels.size()];
+
+            // Run inference.
+            tflite.run(input, output);
         } catch (IllegalArgumentException exception) {
             throw new PredictionsException(
-                    "TensorFlow Lite failed to make inference.",
+                    "TensorFlow Lite failed to make an inference.",
                     exception,
-                    "Verify that the assets are loaded."
+                    "Verify that the label size matches the output size of the model."
             );
         }
-
-        // Run inference.
-        tflite.run(input, output);
 
         // Find the predominant sentiment
         Sentiment sentiment = null;
@@ -174,15 +185,17 @@ final class TensorFlowTextClassificationService {
         return sentiment;
     }
 
+    // This is some magic code that came from TensorFlow Lite example code
+    // Pre-processes the input text to be compatible with the model's shape
     @SuppressWarnings("ConstantConditions")
     private float[][] tokenizeInputText(String text) {
-        float[] tmp = new float[SENTENCE_LEN];
+        float[] tmp = new float[MAX_SENTENCE_LENGTH];
 
         int index = 0;
         tmp[index++] = dictionary.get(START);
 
-        for (String word : text.split(SIMPLE_SPACE_OR_PUNCTUATION)) {
-            if (index >= SENTENCE_LEN) {
+        for (String word : text.split(DELIMITER_REGEX)) {
+            if (index >= MAX_SENTENCE_LENGTH) {
                 break;
             }
 
@@ -192,19 +205,8 @@ final class TensorFlowTextClassificationService {
         }
 
         // Padding and wrapping.
-        Arrays.fill(tmp, index, SENTENCE_LEN - 1, dictionary.get(PAD));
+        Arrays.fill(tmp, index, MAX_SENTENCE_LENGTH - 1, dictionary.get(PAD));
         return new float[][]{tmp};
-    }
-
-    @WorkerThread
-    private synchronized void loadIfNotLoaded() throws PredictionsException {
-        if (loaded.get()) {
-            return;
-        }
-        loadModel();
-        loadDictionary();
-        loadLabels();
-        loaded.set(true);
     }
 
     @WorkerThread
@@ -306,11 +308,11 @@ final class TensorFlowTextClassificationService {
     }
 
     /**
-     * Closes TensorFlow Lite interpreter and clears
+     * Closes TensorFlow Lite interpreter and releases
      * in-memory assets data to free up resources.
      */
     @WorkerThread
-    synchronized void close() {
+    synchronized void release() {
         if (tflite != null) {
             tflite.close();
         }

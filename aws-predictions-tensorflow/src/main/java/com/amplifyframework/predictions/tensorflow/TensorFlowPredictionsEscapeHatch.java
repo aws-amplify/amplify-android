@@ -19,8 +19,8 @@ import androidx.annotation.NonNull;
 
 import org.tensorflow.lite.Interpreter;
 
+import java.util.HashMap;
 import java.util.Map;
-import java.util.TreeMap;
 
 /**
  * An escape hatch to give low-level access to TensorFlow interpreter.
@@ -29,7 +29,7 @@ public final class TensorFlowPredictionsEscapeHatch {
     private final Map<String, Interpreter> interpreters;
 
     TensorFlowPredictionsEscapeHatch(@NonNull Map<String, Interpreter> interpreters) {
-        this.interpreters = new TreeMap<>();
+        this.interpreters = new HashMap<>();
 
         // Only insert non-null interpreters from the map
         for (String service : interpreters.keySet()) {
