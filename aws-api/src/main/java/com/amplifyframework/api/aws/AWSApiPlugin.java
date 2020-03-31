@@ -929,7 +929,6 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             return ObjectsCompat.equals(subscriptionEndpoint, that.subscriptionEndpoint);
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = apiConfiguration != null ? apiConfiguration.hashCode() : 0;
