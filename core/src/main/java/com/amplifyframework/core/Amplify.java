@@ -87,6 +87,7 @@ public final class Amplify {
         final LinkedHashMap<CategoryType, Category<? extends Plugin<?>>> categories = new LinkedHashMap<>();
         categories.put(CategoryType.ANALYTICS, Analytics);
         categories.put(CategoryType.API, API);
+        categories.put(CategoryType.AUTH, Auth);
         categories.put(CategoryType.LOGGING, Logging);
         categories.put(CategoryType.STORAGE, Storage);
         categories.put(CategoryType.HUB, Hub);

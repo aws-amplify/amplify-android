@@ -18,36 +18,29 @@ package com.amplifyframework.auth.cognito;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.auth.AuthSignedInStatus;
 import com.amplifyframework.auth.AuthState;
-import com.amplifyframework.auth.AuthUserState;
 
 import com.amazonaws.auth.AWSCredentials;
 
 import java.util.Objects;
 
 public final class AWSCognitoAuthState extends AuthState {
-    private AWSCredentials awsCredentials;
-    private String identityId;
-    private String accessToken;
-    private String idToken;
-    private String refreshToken;
+    private final AWSCredentials awsCredentials;
+    private final String identityId;
+    private final String accessToken;
+    private final String idToken;
+    private final String refreshToken;
 
-    public AWSCognitoAuthState(
-            @NonNull AuthUserState state
+    private AWSCognitoAuthState(
+            AuthSignedInStatus signedInStatus,
+            AWSCredentials awsCredentials,
+            String identityId,
+            String accessToken,
+            String idToken,
+            String refreshToken
     ) {
-        super(state);
-    }
-
-    public AWSCognitoAuthState(
-            @NonNull AuthUserState state,
-            @Nullable AWSCredentials awsCredentials,
-            @Nullable String identityId,
-            @Nullable String accessToken,
-            @Nullable String idToken,
-            @Nullable String refreshToken
-    ) {
-        super(Objects.requireNonNull(state));
-
+        super(signedInStatus);
         this.awsCredentials = awsCredentials;
         this.identityId = identityId;
         this.accessToken = accessToken;
@@ -75,23 +68,65 @@ public final class AWSCognitoAuthState extends AuthState {
         return refreshToken;
     }
 
-    public void setAwsCredentials(AWSCredentials awsCredentials) {
-        this.awsCredentials = awsCredentials;
+    @NonNull
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public void setIdentityId(String identityId) {
-        this.identityId = identityId;
-    }
+    public static final class Builder {
+        private AuthSignedInStatus signedInStatus;
+        private AWSCredentials awsCredentials;
+        private String identityId;
+        private String accessToken;
+        private String idToken;
+        private String refreshToken;
 
-    public void setAccessToken(String accessToken) {
-        this.accessToken = accessToken;
-    }
+        @NonNull
+        public Builder signedInStatus(@NonNull AuthSignedInStatus signedInStatus) {
+            this.signedInStatus = Objects.requireNonNull(signedInStatus);
+            return this;
+        }
 
-    public void setIdToken(String idToken) {
-        this.idToken = idToken;
-    }
+        @NonNull
+        public Builder awsCredentials(@Nullable AWSCredentials awsCredentials) {
+            this.awsCredentials = awsCredentials;
+            return this;
+        }
 
-    public void setRefreshToken(String refreshToken) {
-        this.refreshToken = refreshToken;
+        @NonNull
+        public Builder identityId(@Nullable String identityId) {
+            this.identityId = identityId;
+            return this;
+        }
+
+        @NonNull
+        public Builder accessToken(@Nullable String accessToken) {
+            this.accessToken = accessToken;
+            return this;
+        }
+
+        @NonNull
+        public Builder idToken(@Nullable String idToken) {
+            this.idToken = idToken;
+            return this;
+        }
+
+        @NonNull
+        public Builder refreshToken(@Nullable String refreshToken) {
+            this.refreshToken = refreshToken;
+            return this;
+        }
+
+        @NonNull
+        public AWSCognitoAuthState build() {
+            return new AWSCognitoAuthState(
+                    signedInStatus,
+                    awsCredentials,
+                    identityId,
+                    accessToken,
+                    idToken,
+                    refreshToken
+            );
+        }
     }
 }

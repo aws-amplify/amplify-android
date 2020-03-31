@@ -25,8 +25,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.AuthSignedInStatus;
 import com.amplifyframework.auth.AuthState;
-import com.amplifyframework.auth.AuthUserState;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -218,7 +218,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
-                AuthUserState state;
+                AuthSignedInStatus state;
                 UserCodeDeliveryDetails oldDetails = result.getCodeDetails();
                 // Take information from Cognito specific object and wrap it in the new Amplify object
                 AuthCodeDeliveryDetails newDetails =
@@ -231,9 +231,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         : null;
 
                 if (result.getSignInState().equals(SignInState.DONE)) {
-                    state = AuthUserState.SIGNED_IN;
+                    state = AuthSignedInStatus.SIGNED_IN;
                 } else {
-                    state = AuthUserState.SIGNED_OUT;
+                    state = AuthSignedInStatus.SIGNED_OUT;
                 }
 
                 onSuccess.accept(new AuthSignInResult(state, newDetails));
@@ -328,7 +328,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     //   - Cognito ID Token
     //   - Cognito Refresh Token
     @Override
-    public void currentAuthState(
+    public void fetchAuthState(
             @NonNull Consumer<AuthState> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
@@ -338,76 +338,27 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 public void onResult(UserStateDetails result) {
                     UserState state = result.getUserState();
 
-                    if (state.equals(UserState.SIGNED_OUT) ||
-                            state.equals(UserState.SIGNED_OUT_FEDERATED_TOKENS_INVALID) ||
-                            state.equals(UserState.SIGNED_OUT_USER_POOLS_TOKENS_INVALID)
-                    ) {
-                        onSuccess.accept(new AWSCognitoAuthState(AuthUserState.SIGNED_OUT));
-                    } else {
-                        final AWSCognitoAuthState session;
-                        final CountDownLatch latch = new CountDownLatch(2);
-
-                        if (state.equals(UserState.SIGNED_IN) || state.equals(UserState.GUEST)) {
-                            session = new AWSCognitoAuthState(
-                                    state.equals(UserState.SIGNED_IN)
-                                            ? AuthUserState.SIGNED_IN
-                                            : AuthUserState.GUEST,
-                                    null,
-                                    AWSMobileClient.getInstance().getIdentityId(),
-                                    null,
-                                    null,
-                                    null
+                    switch (state) {
+                        case SIGNED_OUT:
+                        case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
+                        case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
+                            onSuccess.accept(
+                                AWSCognitoAuthState.builder().signedInStatus(AuthSignedInStatus.SIGNED_OUT).build()
                             );
-
-                            AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
-                                @Override
-                                public void onResult(Tokens result) {
-                                    session.setAccessToken(result.getAccessToken().getTokenString());
-                                    session.setIdToken(result.getIdToken().getTokenString());
-                                    session.setRefreshToken(result.getRefreshToken().getTokenString());
-                                    latch.countDown();
-                                    if (latch.getCount() == 0) {
-                                        onSuccess.accept(session);
-                                    }
-                                }
-
-                                @Override
-                                public void onError(Exception exception) {
-                                    session.setAccessToken(null);
-                                    session.setIdToken(null);
-                                    session.setRefreshToken(null);
-                                    latch.countDown();
-                                    if (latch.getCount() == 0) {
-                                        onSuccess.accept(session);
-                                    }
-                                }
-                            });
-
-                            AWSMobileClient.getInstance().getAWSCredentials(new Callback<AWSCredentials>() {
-                                @Override
-                                public void onResult(AWSCredentials result) {
-                                    session.setAwsCredentials(result);
-                                    latch.countDown();
-                                    if (latch.getCount() == 0) {
-                                        onSuccess.accept(session);
-                                    }
-                                }
-
-                                @Override
-                                public void onError(Exception exception) {
-                                    session.setAwsCredentials(null);
-                                    latch.countDown();
-                                    if (latch.getCount() == 0) {
-                                        onSuccess.accept(session);
-                                    }
-                                }
-                            });
-                        } else {
+                            break;
+                        case SIGNED_IN:
+                        case GUEST:
+                            try {
+                                onSuccess.accept(buildCognitoAuthState(state));
+                            } catch (AuthException exception) {
+                                onError.accept(exception);
+                            }
+                            break;
+                        default:
                             onError.accept(new AuthException(
                                     "User is in an unknown authorization state",
                                     "This is a bug. Please report it to the AWS team for resolution"
                             ));
-                        }
                     }
                 }
 
@@ -433,5 +384,63 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public AWSMobileClient getEscapeHatch() {
         return AWSMobileClient.getInstance();
+    }
+
+    private AWSCognitoAuthState buildCognitoAuthState(UserState state) throws AuthException {
+        final AWSCognitoAuthState.Builder sessionBuilder;
+        final CountDownLatch latch = new CountDownLatch(2);
+
+        sessionBuilder = AWSCognitoAuthState.builder()
+            .signedInStatus(
+                state.equals(UserState.SIGNED_IN)
+                    ? AuthSignedInStatus.SIGNED_IN
+                    : AuthSignedInStatus.GUEST
+            )
+            .identityId(AWSMobileClient.getInstance().getIdentityId());
+
+        AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
+            @Override
+            public void onResult(Tokens result) {
+                sessionBuilder.accessToken(result.getAccessToken().getTokenString());
+                sessionBuilder.idToken(result.getIdToken().getTokenString());
+                sessionBuilder.refreshToken(result.getRefreshToken().getTokenString());
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                latch.countDown();
+            }
+        });
+
+        AWSMobileClient.getInstance().getAWSCredentials(new Callback<AWSCredentials>() {
+            @Override
+            public void onResult(AWSCredentials result) {
+                sessionBuilder.awsCredentials(result);
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                latch.countDown();
+            }
+        });
+
+        try {
+            if (latch.await(SECONDS_BEFORE_TIMEOUT, TimeUnit.SECONDS)) {
+                return sessionBuilder.build();
+            } else {
+                throw new AuthException(
+                    "Failed to retrieve auth details within " + SECONDS_BEFORE_TIMEOUT + " seconds",
+                    "Check network connectivity"
+                );
+            }
+        } catch (InterruptedException exception) {
+            throw new AuthException(
+                    "Failed to retrieve auth details",
+                    exception,
+                    "See attached exception for more details"
+            );
+        }
     }
 }

@@ -15,7 +15,7 @@
 
 package com.amplifyframework.auth;
 
-public enum AuthUserState {
+public enum AuthSignedInStatus {
     /** User is signed in. **/
     SIGNED_IN,
     /** User is signed out. **/

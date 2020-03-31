@@ -27,13 +27,6 @@ public final class AuthCategoryConfiguration extends CategoryConfiguration {
     // below to fill in these values from the JSON data.
 
     /**
-     * Constructs a new AuthCategoryConfiguration.
-     */
-    public AuthCategoryConfiguration() {
-        super();
-    }
-
-    /**
      * Gets the category type associated with the current object.
      *
      * @return The category type to which the current object is affiliated

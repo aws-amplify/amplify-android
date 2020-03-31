@@ -16,22 +16,22 @@
 package com.amplifyframework.auth;
 
 public class AuthState {
-    private final AuthUserState state;
+    private final AuthSignedInStatus signedInStatus;
 
     /**
      * Stores the current auth state of the category. When cast to a plugin specific object,
      * implementation-specific auth details such as tokens can be retrieved as well.
-     * @param state
+     * @param signedInStatus What state the user is currently in (e.g. Signed Out, Guest, or Signed In)
      */
-    public AuthState(AuthUserState state) {
-        this.state = state;
+    public AuthState(AuthSignedInStatus signedInStatus) {
+        this.signedInStatus = signedInStatus;
     }
 
     /**
      * Returns the user's current logged in state.
      * @return An enum of the user's current logged in state
      */
-    public AuthUserState getState() {
-        return state;
+    public AuthSignedInStatus getSignedInStatus() {
+        return signedInStatus;
     }
 }

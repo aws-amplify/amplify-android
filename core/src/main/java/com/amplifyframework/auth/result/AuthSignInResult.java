@@ -16,21 +16,34 @@
 package com.amplifyframework.auth.result;
 
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
-import com.amplifyframework.auth.AuthUserState;
+import com.amplifyframework.auth.AuthSignedInStatus;
 
 public final class AuthSignInResult {
-    private final AuthUserState state;
+    private final AuthSignedInStatus state;
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 
-    public AuthSignInResult(AuthUserState state, AuthCodeDeliveryDetails codeDeliveryDetails) {
+    /**
+     * Wraps the result of a sign in operation.
+     * @param state What state the user is after the operation finished (e.g. Signed Out, Guest, or Signed In)
+     * @param codeDeliveryDetails Details about how/whether an MFA code was sent
+     */
+    public AuthSignInResult(AuthSignedInStatus state, AuthCodeDeliveryDetails codeDeliveryDetails) {
         this.state = state;
         this.codeDeliveryDetails = codeDeliveryDetails;
     }
 
-    public AuthUserState getState() {
+    /**
+     * The current state of the user after the operation (e.g. Signed Out, Guest, or Signed In).
+     * @return the current state of the user after the operation (e.g. Signed Out, Guest, or Signed In)
+     */
+    public AuthSignedInStatus getState() {
         return state;
     }
 
+    /**
+     * Details about how/whether an MFA code was sent.
+     * @return Details about how/whether an MFA code was sent
+     */
     public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
         return codeDeliveryDetails;
     }

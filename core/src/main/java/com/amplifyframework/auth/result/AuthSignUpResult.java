@@ -21,15 +21,28 @@ public final class AuthSignUpResult {
     private final boolean userConfirmed;
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 
+    /**
+     * Wraps the result of a sign up operation.
+     * @param userConfirmed True if the user has been confirmed, False otherwise
+     * @param codeDeliveryDetails Details about how/whether a confirmation code was sent
+     */
     public AuthSignUpResult(boolean userConfirmed, AuthCodeDeliveryDetails codeDeliveryDetails) {
         this.userConfirmed = userConfirmed;
         this.codeDeliveryDetails = codeDeliveryDetails;
     }
 
+    /**
+     * True if the user has been confirmed, False otherwise.
+     * @return True if the user has been confirmed, False otherwise
+     */
     public boolean isUserConfirmed() {
         return userConfirmed;
     }
 
+    /**
+     * Details about how/whether a confirmation code was sent.
+     * @return Details about how/whether a confirmation code was sent
+     */
     public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
         return codeDeliveryDetails;
     }

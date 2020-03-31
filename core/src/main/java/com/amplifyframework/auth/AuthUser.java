@@ -20,7 +20,7 @@ public final class AuthUser {
     private String username;
 
     /**
-     * Object to represent a logged in user with its associated attributes
+     * Object to represent a logged in user with its associated attributes.
      * @param userId A unique identifier for this user
      * @param username The username used for logging in
      */
