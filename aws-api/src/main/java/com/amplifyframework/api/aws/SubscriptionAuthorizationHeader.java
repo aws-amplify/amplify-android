@@ -24,7 +24,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 final class SubscriptionAuthorizationHeader {
-    @SuppressWarnings("checkstyle:all") private SubscriptionAuthorizationHeader() {}
+    private SubscriptionAuthorizationHeader() {}
 
     /**
      * Return authorization json to be used for connection and subscription registration.

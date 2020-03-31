@@ -28,8 +28,7 @@ import com.amplifyframework.core.plugin.Plugin;
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class RxAmplify {
-
-    @SuppressWarnings("checkstyle:all") private RxAmplify() {}
+    private RxAmplify() {}
 
     // Breaking the rules, here. Don't look.
     @SuppressWarnings({"checkstyle:all", "unused"}) public static final RxApiCategoryBehavior API = new RxApiBinding();

@@ -20,7 +20,6 @@ package com.amplifyframework.datastore;
  * for testing purposes.
  */
 public final class StrictMode {
-    @SuppressWarnings("WhitespaceAround")
     private StrictMode() {}
 
     /**

@@ -197,7 +197,7 @@ public final class MutationProcessorTest {
      * Some arranged data that can be used as expected data, in test.
      */
     static final class Models {
-        @SuppressWarnings("checkstyle:all") private Models() {}
+        private Models() {}
 
         /**
          * Tony is a BlogOwner. Tony has been deleted locally, and the mutation processor
@@ -223,7 +223,7 @@ public final class MutationProcessorTest {
                 .build()
                 .toRecord(RECORD_CONVERTER);
 
-            @SuppressWarnings("checkstyle:all") private Tony() {}
+            private Tony() {}
         }
 
         /**
@@ -246,7 +246,7 @@ public final class MutationProcessorTest {
                 .build()
                 .toRecord(RECORD_CONVERTER);
 
-            @SuppressWarnings("checkstyle:all") private Joe() {}
+            private Joe() {}
         }
 
         /**
@@ -271,7 +271,7 @@ public final class MutationProcessorTest {
                 .build()
                 .toRecord(RECORD_CONVERTER);
 
-            @SuppressWarnings("checkstyle:all") private JoeBlog() {}
+            private JoeBlog() {}
         }
     }
 }

@@ -35,7 +35,7 @@ import java.util.NoSuchElementException;
 public final class SynchronousDataStore {
     private static SynchronousDataStore singleton;
 
-    @SuppressWarnings("checkstyle:all") private SynchronousDataStore() {}
+    private SynchronousDataStore() {}
 
     /**
      * Gets a singleton instance of the SynchronousDataStore.

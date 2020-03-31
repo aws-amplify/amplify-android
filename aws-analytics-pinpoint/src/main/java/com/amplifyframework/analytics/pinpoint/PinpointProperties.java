@@ -27,12 +27,12 @@ public final class PinpointProperties extends Properties {
 
     PinpointProperties(Builder builder) {
         // Populate the attributes
-        for (Map.Entry<String, String> entry: builder.attributes.entrySet()) {
+        for (Map.Entry<String, String> entry : builder.attributes.entrySet()) {
             this.properties.put(entry.getKey(), StringProperty.of(entry.getValue()));
         }
 
         // Populate the metrics
-        for (Map.Entry<String, Double> entry: builder.metrics.entrySet()) {
+        for (Map.Entry<String, Double> entry : builder.metrics.entrySet()) {
             this.properties.put(entry.getKey(), DoubleProperty.of(entry.getValue()));
         }
     }

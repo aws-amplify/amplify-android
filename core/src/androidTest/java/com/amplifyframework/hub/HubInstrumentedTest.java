@@ -165,7 +165,7 @@ public final class HubInstrumentedTest {
 
         Collections.sort(subscriptionsReceived);
         int expectedMessageValue = 0;
-        for (Integer message: subscriptionsReceived) {
+        for (Integer message : subscriptionsReceived) {
             assertEquals(expectedMessageValue, message.intValue());
             expectedMessageValue++;
         }
@@ -214,11 +214,11 @@ public final class HubInstrumentedTest {
 
         Collections.sort(integerSubscriptionsReceived);
         int expectedIntegerSubscriptionValue = 0;
-        for (Integer message: integerSubscriptionsReceived) {
+        for (Integer message : integerSubscriptionsReceived) {
             assertEquals(expectedIntegerSubscriptionValue, message.intValue());
             expectedIntegerSubscriptionValue++;
         }
-        for (String message: stringSubscriptionsReceived) {
+        for (String message : stringSubscriptionsReceived) {
             assertEquals("weatherAlwaysRemainsTheSame", message);
         }
 

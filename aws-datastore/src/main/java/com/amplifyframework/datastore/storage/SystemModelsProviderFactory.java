@@ -29,7 +29,7 @@ public final class SystemModelsProviderFactory {
     // CHANGE this models version whenever any system models are added/removed/updated.
     private static final String SYSTEM_MODELS_VERSION = "2fe6d84d-4772-4089-be16-e06d8469c537";
 
-    @SuppressWarnings("checkstyle:all") private SystemModelsProviderFactory() {}
+    private SystemModelsProviderFactory() {}
 
     @NonNull
     public static ModelProvider create() {

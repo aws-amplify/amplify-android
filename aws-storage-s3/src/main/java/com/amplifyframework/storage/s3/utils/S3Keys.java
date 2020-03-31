@@ -27,7 +27,7 @@ import java.util.Locale;
 public final class S3Keys {
     private static final char BUCKET_SEPARATOR = '/';
 
-    @SuppressWarnings("checkstyle:all") private S3Keys() {}
+    private S3Keys() {}
 
     /**
      * Amplify Storage implementation with S3 integrates access level

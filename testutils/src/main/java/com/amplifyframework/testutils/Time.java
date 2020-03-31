@@ -20,7 +20,7 @@ package com.amplifyframework.testutils;
  * over the place. Instead, what we mean is "the current time," or Time.now().
  */
 public final class Time {
-    @SuppressWarnings("checkstyle:all") private Time() {}
+    private Time() {}
 
     /**
      * Gets the current time, expressed in a duration of milliseconds since the epoch.

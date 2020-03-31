@@ -32,7 +32,7 @@ import org.json.JSONObject;
  */
 @SuppressWarnings("ConstantConditions") // It isn't supposed to be at all usable, just to throw on configure.
 public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
-    @SuppressWarnings("checkstyle:all") private BadInitLoggingPlugin() {}
+    private BadInitLoggingPlugin() {}
 
     public static BadInitLoggingPlugin instance() {
         return new BadInitLoggingPlugin();

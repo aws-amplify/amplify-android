@@ -31,7 +31,7 @@ import io.reactivex.disposables.Disposables;
  * {@link Consumer} and {@link Action}, into {@link Single} and {@link Observable}.
  */
 final class RxAdapters {
-    @SuppressWarnings("checkstyle:all") private RxAdapters() {}
+    private RxAdapters() {}
 
     static <T, E extends Throwable> Completable toCompletable(VoidResultEmitter<T, E> voidResultEmitter) {
         return Completable.defer(() -> Completable.create(emitter ->
@@ -59,7 +59,7 @@ final class RxAdapters {
             final CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
             final Cancelable cancelable = cancelableStreamEmitter.streamTo(
-                new NoOpConsumer<>(),
+                NoOpConsumer.create(),
                 emitter::onNext,
                 emitter::onError,
                 emitter::onComplete

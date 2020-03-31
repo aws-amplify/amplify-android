@@ -50,7 +50,7 @@ public final class SynchronousApi {
     private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private static SynchronousApi singleton = null;
 
-    @SuppressWarnings("checkstyle:all") private SynchronousApi() {}
+    private SynchronousApi() {}
 
     /**
      * Gets a singleton instance of the Synchronous API utility.

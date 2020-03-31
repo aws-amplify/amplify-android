@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 final class Latch {
     private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
 
-    @SuppressWarnings("checkstyle:all") private Latch() {}
+    private Latch() {}
 
     /**
      * Await a latch to count down, for a given number of milliseconds.

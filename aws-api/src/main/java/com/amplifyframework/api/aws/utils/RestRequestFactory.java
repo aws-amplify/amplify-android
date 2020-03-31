@@ -34,7 +34,7 @@ import okhttp3.RequestBody;
  * Factory to create {@link URL}s and OkHttp {@link Request}s for REST-ful behaviors.
  */
 public final class RestRequestFactory {
-    @SuppressWarnings("checkstyle:all") private RestRequestFactory() {}
+    private RestRequestFactory() {}
 
     /**
      * Create an URL by appending the path and queries.
