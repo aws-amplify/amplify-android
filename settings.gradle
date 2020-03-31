@@ -19,7 +19,7 @@ include ':core'
 include ':aws-analytics-pinpoint'
 include ':aws-api'
 include ':aws-datastore'
-include ':aws-predictions-tfl'
+include ':aws-predictions-tensorflow'
 include ':aws-storage-s3'
 
 // Test Utilities and assets
