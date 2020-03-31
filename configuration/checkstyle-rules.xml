@@ -195,7 +195,16 @@
         <module name="MultipleVariableDeclarations" />
         <module name="MissingSwitchDefault" />
         <module name="ModifiedControlVariable" />
-        <module name="MagicNumber" />
+        <module name="MagicNumber">
+            <!--
+                 Android Studio IDE generates a hashCode()
+                 implementation that uses 31 to offset field values.
+                 This appears magic to the tool, but there's history and
+                 meaning behind the choice, which should be accepted as
+                 an acceptable default.
+            -->
+            <property name="ignoreHashCodeMethod" value="true" />
+        </module>
         <module name="FallThrough" />
         <module name="EqualsHashCode" />
         <module name="EqualsAvoidNull" />

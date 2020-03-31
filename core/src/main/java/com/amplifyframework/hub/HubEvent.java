@@ -155,7 +155,6 @@ public final class HubEvent<T> {
         return ObjectsCompat.equals(uuid, that.uuid);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;

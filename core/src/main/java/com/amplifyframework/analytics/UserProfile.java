@@ -85,7 +85,6 @@ public final class UserProfile {
                 that.customProperties == null;
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;
@@ -228,7 +227,6 @@ public final class UserProfile {
             return country != null ? country.equals(location.country) : location.country == null;
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = latitude != null ? latitude.hashCode() : 0;
