@@ -22,12 +22,12 @@ import com.amplifyframework.core.Action;
 /**
  * An action which does nothing, when called.
  */
-@SuppressWarnings("checkstyle:all")
 public final class EmptyAction implements Action {
     private EmptyAction() {}
 
     @Override
-    public void call() {}
+    public void call() {
+    }
 
     @NonNull
     public static EmptyAction instance() {

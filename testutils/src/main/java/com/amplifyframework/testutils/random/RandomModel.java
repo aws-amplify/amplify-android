@@ -23,7 +23,7 @@ import com.amplifyframework.core.model.Model;
  * A test utility to generate random instances of {@link Model}s.
  */
 public final class RandomModel {
-    @SuppressWarnings("checkstyle:all") private RandomModel() {}
+    private RandomModel() {}
 
     /**
      * Creates a random instance of an {@link Model}.

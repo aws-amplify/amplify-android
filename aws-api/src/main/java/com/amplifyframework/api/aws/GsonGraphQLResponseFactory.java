@@ -208,14 +208,14 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
     }
 
+    @SuppressWarnings("checkstyle:WhitespaceAround")
     private List<GraphQLResponse.Error> parseErrors(JsonElement jsonErrors) throws ApiException {
         if (jsonErrors == null || jsonErrors.isJsonNull()) {
             return Collections.emptyList();
         }
 
         JsonArray errors = jsonErrors.getAsJsonArray();
-        @SuppressWarnings("WhitespaceAround")
-        final Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
+        Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
 
         try {
             return gson.fromJson(errors, listType);
@@ -228,4 +228,3 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
     }
 }
-

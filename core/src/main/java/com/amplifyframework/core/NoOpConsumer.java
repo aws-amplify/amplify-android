@@ -16,13 +16,43 @@
 package com.amplifyframework.core;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * An {@link Consumer} that does nothing when accepting a value.
  * @param <T> Type of value accepted by the consumer
  */
 public final class NoOpConsumer<T> implements Consumer<T> {
+    private NoOpConsumer() {}
+
+    /**
+     * Creates an instance of an {@link Consumer} which does nothing
+     * when accepting value.
+     * @param <T> Type of value that the consumer will accept
+     * @return A No-operation consumer
+     */
+    @NonNull
+    public static <T> NoOpConsumer<T> create() {
+        return new NoOpConsumer<>();
+    }
+
     @Override
     public void accept(@NonNull T value) {
+    }
+
+    @Override
+    public int hashCode() {
+        return NoOpConsumer.class.hashCode();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object obj) {
+        return obj instanceof NoOpConsumer;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "NoOpConsumer {}";
     }
 }

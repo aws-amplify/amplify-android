@@ -58,13 +58,13 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         return new InMemoryStorageAdapter();
     }
 
-    @SuppressWarnings("WhitespaceAround") // Looks better this way
     @Override
     public void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
-    ) {}
+    ) {
+    }
 
     @Override
     public <T extends Model> void save(

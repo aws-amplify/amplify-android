@@ -23,7 +23,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 final class ModelProviderFactory {
-    @SuppressWarnings("checkstyle:all") private ModelProviderFactory() {}
+    private ModelProviderFactory() {}
 
     @SafeVarargs
     static ModelProvider createProviderOf(Class<? extends Model>... models) {

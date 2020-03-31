@@ -67,7 +67,7 @@ public final class RxAdaptersTest {
      * The {@link Completable} returned by {@link RxAdapters#toCompletable(VoidResultEmitter)}
      * is cancelable.
      */
-    @SuppressWarnings("checkstyle:WhitespaceAround")
+    @SuppressWarnings("checkstyle:WhitespaceAround") // No-op VoidResultEmitter body
     @Test
     public void completableIsCancellable() {
         Completable completable = RxAdapters.toCompletable(((onResult, onError) -> {}));
