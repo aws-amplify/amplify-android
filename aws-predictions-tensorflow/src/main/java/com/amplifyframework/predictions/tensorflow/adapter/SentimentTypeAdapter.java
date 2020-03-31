@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.adapter;
+package com.amplifyframework.predictions.tensorflow.adapter;
 
 import androidx.annotation.NonNull;
 

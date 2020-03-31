@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.request;
+package com.amplifyframework.predictions.tensorflow.request;
 
 import androidx.annotation.NonNull;
 

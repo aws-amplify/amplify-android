@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions;
+package com.amplifyframework.predictions.tensorflow;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
@@ -21,12 +21,14 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.operation.InterpretOperation;
-import com.amplifyframework.predictions.operation.TFLiteInterpretOperation;
+import com.amplifyframework.predictions.tensorflow.operation.TFLiteInterpretOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
-import com.amplifyframework.predictions.request.TFLiteTextClassificationRequest;
+import com.amplifyframework.predictions.tensorflow.request.TFLiteTextClassificationRequest;
 import com.amplifyframework.predictions.result.InterpretResult;
-import com.amplifyframework.predictions.service.TFLitePredictionsService;
+import com.amplifyframework.predictions.tensorflow.service.TFLitePredictionsService;
 
 import org.json.JSONObject;
 

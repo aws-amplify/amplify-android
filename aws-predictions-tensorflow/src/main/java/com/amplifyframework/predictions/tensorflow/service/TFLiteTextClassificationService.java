@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.service;
+package com.amplifyframework.predictions.tensorflow.service;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -23,7 +23,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.adapter.SentimentTypeAdapter;
+import com.amplifyframework.predictions.tensorflow.adapter.SentimentTypeAdapter;
 import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.SentimentType;
 import com.amplifyframework.predictions.result.InterpretResult;
