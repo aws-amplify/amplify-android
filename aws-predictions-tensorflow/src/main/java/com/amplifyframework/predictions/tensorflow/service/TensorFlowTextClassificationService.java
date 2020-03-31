@@ -47,9 +47,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An implementation of text classification service using
- * pre-trained model from Tensorflow lite.
+ * pre-trained model from TensorFlow Lite.
  */
-final class TFLiteTextClassificationService {
+final class TensorFlowTextClassificationService {
     private static final String SERVICE_KEY = "textClassifier";
     private static final String MODEL_PATH = "text_classification.tflite";
     private static final String DICTIONARY_PATH = "text_classification_vocab.txt";
@@ -84,11 +84,11 @@ final class TFLiteTextClassificationService {
 
     /**
      * Constructs an instance of service to perform text
-     * sentiment interpretation using Tensorflow Lite
+     * sentiment interpretation using TensorFlow Lite
      * interpreter.
      * @param context the Android context for loading model
      */
-    TFLiteTextClassificationService(Context context) {
+    TensorFlowTextClassificationService(Context context) {
         this.context = context;
         this.loaded = new AtomicBoolean(false);
 
@@ -150,7 +150,7 @@ final class TFLiteTextClassificationService {
             output = new float[1][labels.size()];
         } catch (IllegalArgumentException exception) {
             throw new PredictionsException(
-                    "Tensorflow Lite failed to make inference.",
+                    "TensorFlow Lite failed to make inference.",
                     exception,
                     "Verify that the assets are loaded."
             );
@@ -162,7 +162,7 @@ final class TFLiteTextClassificationService {
         // Find the predominant sentiment
         Sentiment sentiment = null;
         for (int i = 0; i < labels.size(); i++) {
-            SentimentType sentimentType = SentimentTypeAdapter.fromTensorflow(labels.get(i));
+            SentimentType sentimentType = SentimentTypeAdapter.fromTensorFlow(labels.get(i));
             float confidenceScore = output[0][i] * PERCENT;
             if (sentiment == null || sentiment.getConfidence() < confidenceScore) {
                 sentiment = Sentiment.builder()
@@ -306,7 +306,7 @@ final class TFLiteTextClassificationService {
     }
 
     /**
-     * Closes Tensorflow lite interpreter and clears
+     * Closes TensorFlow Lite interpreter and clears
      * in-memory assets data to free up resources.
      */
     @WorkerThread

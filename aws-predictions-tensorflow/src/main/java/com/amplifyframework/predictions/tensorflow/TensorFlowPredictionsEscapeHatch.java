@@ -23,12 +23,12 @@ import java.util.Map;
 import java.util.TreeMap;
 
 /**
- * An escape hatch to give low-level access to Tensorflow interpreter.
+ * An escape hatch to give low-level access to TensorFlow interpreter.
  */
-public final class TFLitePredictionsEscapeHatch {
+public final class TensorFlowPredictionsEscapeHatch {
     private final Map<String, Interpreter> interpreters;
 
-    TFLitePredictionsEscapeHatch(@NonNull Map<String, Interpreter> interpreters) {
+    TensorFlowPredictionsEscapeHatch(@NonNull Map<String, Interpreter> interpreters) {
         this.interpreters = new TreeMap<>();
 
         // Only insert non-null interpreters from the map
@@ -41,7 +41,7 @@ public final class TFLitePredictionsEscapeHatch {
     }
 
     /**
-     * Return a map of pre-trained Tensorflow Lite interpreters
+     * Return a map of pre-trained TensorFlow Lite interpreters
      * used by the plugin.
      * @return the map of {service key -> interpreter}
      */

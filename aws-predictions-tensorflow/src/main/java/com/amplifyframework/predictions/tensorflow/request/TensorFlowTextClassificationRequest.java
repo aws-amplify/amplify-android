@@ -22,14 +22,14 @@ import java.util.Objects;
 /**
  * Simple request instance for text classification operation.
  */
-public final class TFLiteTextClassificationRequest {
+public final class TensorFlowTextClassificationRequest {
     private final String text;
 
     /**
-     * Constructs an instance of {@link TFLiteTextClassificationRequest}.
+     * Constructs an instance of {@link TensorFlowTextClassificationRequest}.
      * @param text the text to classify
      */
-    public TFLiteTextClassificationRequest(@NonNull String text) {
+    public TensorFlowTextClassificationRequest(@NonNull String text) {
         this.text = Objects.requireNonNull(text);
     }
 

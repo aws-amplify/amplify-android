@@ -24,11 +24,11 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.operation.InterpretOperation;
-import com.amplifyframework.predictions.tensorflow.operation.TFLiteInterpretOperation;
+import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
-import com.amplifyframework.predictions.tensorflow.request.TFLiteTextClassificationRequest;
+import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.result.InterpretResult;
-import com.amplifyframework.predictions.tensorflow.service.TFLitePredictionsService;
+import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
 import org.json.JSONObject;
 
@@ -37,16 +37,16 @@ import java.util.concurrent.Executors;
 
 /**
  * A plugin for Predictions category that uses models from
- * Tensorflow lite to carry out tasks offline.
+ * TensorFlow Lite to carry out tasks offline.
  */
-public final class TFLitePredictionsPlugin extends PredictionsPlugin<TFLitePredictionsEscapeHatch> {
+public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorFlowPredictionsEscapeHatch> {
     private static final String TFL_PREDICTIONS_PLUGIN_KEY = "tflPredictionsPlugin";
 
     private final ExecutorService executorService;
 
-    private TFLitePredictionsService predictionsService;
+    private TensorFlowPredictionsService predictionsService;
 
-    public TFLitePredictionsPlugin() {
+    public TensorFlowPredictionsPlugin() {
         this.executorService = Executors.newCachedThreadPool();
     }
 
@@ -61,13 +61,13 @@ public final class TFLitePredictionsPlugin extends PredictionsPlugin<TFLitePredi
             @NonNull JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws AmplifyException {
-        this.predictionsService = new TFLitePredictionsService(context);
+        this.predictionsService = new TensorFlowPredictionsService(context);
     }
 
     @Nullable
     @Override
-    public TFLitePredictionsEscapeHatch getEscapeHatch() {
-        return new TFLitePredictionsEscapeHatch(predictionsService.getInterpreters());
+    public TensorFlowPredictionsEscapeHatch getEscapeHatch() {
+        return new TensorFlowPredictionsEscapeHatch(predictionsService.getInterpreters());
     }
 
     @NonNull
@@ -89,11 +89,11 @@ public final class TFLitePredictionsPlugin extends PredictionsPlugin<TFLitePredi
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        // Create interpret request for Tensorflow Lite interpreter
-        TFLiteTextClassificationRequest request =
-                new TFLiteTextClassificationRequest(text);
+        // Create interpret request for TensorFlow Lite interpreter
+        TensorFlowTextClassificationRequest request =
+                new TensorFlowTextClassificationRequest(text);
 
-        TFLiteInterpretOperation operation = new TFLiteInterpretOperation(
+        TensorFlowInterpretOperation operation = new TensorFlowInterpretOperation(
                 predictionsService,
                 executorService,
                 request,

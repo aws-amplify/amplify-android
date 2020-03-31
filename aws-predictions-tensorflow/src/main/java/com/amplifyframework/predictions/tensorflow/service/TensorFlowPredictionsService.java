@@ -28,19 +28,19 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Predictions service that uses Tensorflow lite's
+ * Predictions service that uses TensorFlow Lite's
  * pre-trained models to make predictions offline.
  */
-public final class TFLitePredictionsService {
+public final class TensorFlowPredictionsService {
 
-    private final TFLiteTextClassificationService textClassificationService;
+    private final TensorFlowTextClassificationService textClassificationService;
 
     /**
-     * Constructs an instance of {@link TFLitePredictionsService}.
+     * Constructs an instance of {@link TensorFlowPredictionsService}.
      * @param context Android context
      */
-    public TFLitePredictionsService(@NonNull Context context) {
-        this.textClassificationService = new TFLiteTextClassificationService(context);
+    public TensorFlowPredictionsService(@NonNull Context context) {
+        this.textClassificationService = new TensorFlowTextClassificationService(context);
     }
 
     public void classify(
@@ -52,14 +52,14 @@ public final class TFLitePredictionsService {
     }
 
     /**
-     * Free up resources used by Tensorflow lite.
+     * Free up resources used by TensorFlow Lite.
      */
     public void close() {
         textClassificationService.close();
     }
 
     /**
-     * Return a map of Tensorflow lite interpreters that are
+     * Return a map of TensorFlow Lite interpreters that are
      * initialized with pre-trained models to fulfill their
      * respective services.
      * @return a map of service key to interpreter

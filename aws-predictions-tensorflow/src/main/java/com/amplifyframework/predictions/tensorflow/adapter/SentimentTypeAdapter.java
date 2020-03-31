@@ -29,13 +29,13 @@ public final class SentimentTypeAdapter {
     @SuppressWarnings("checkstyle:all") private SentimentTypeAdapter() {}
 
     /**
-     * Converts the sentiment string returned by Tensorflow Lite
+     * Converts the sentiment string returned by TensorFlow Lite
      * Interpreter into a format supported by Amplify Predictions.
      * @param sentiment Sentiment type returned by AWS Comprehend
      * @return Amplify's {@link SentimentType} enum
      */
     @NonNull
-    public static SentimentType fromTensorflow(@NonNull String sentiment) {
+    public static SentimentType fromTensorFlow(@NonNull String sentiment) {
         switch (sentiment.toLowerCase(Locale.US)) {
             case "positive":
                 return SentimentType.POSITIVE;

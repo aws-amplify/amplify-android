@@ -20,36 +20,36 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.operation.InterpretOperation;
-import com.amplifyframework.predictions.tensorflow.request.TFLiteTextClassificationRequest;
+import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.result.InterpretResult;
-import com.amplifyframework.predictions.tensorflow.service.TFLitePredictionsService;
+import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Operation that uses pre-trained Tensorflow lite model to
+ * Operation that uses pre-trained TensorFlow Lite model to
  * interpret text in an offline state.
  */
-public final class TFLiteInterpretOperation
-        extends InterpretOperation<TFLiteTextClassificationRequest> {
-    private final TFLitePredictionsService predictionsService;
+public final class TensorFlowInterpretOperation
+        extends InterpretOperation<TensorFlowTextClassificationRequest> {
+    private final TensorFlowPredictionsService predictionsService;
     private final ExecutorService executorService;
     private final Consumer<InterpretResult> onSuccess;
     private final Consumer<PredictionsException> onError;
 
     /**
-     * Constructs an instance of {@link TFLiteInterpretOperation}.
+     * Constructs an instance of {@link TensorFlowInterpretOperation}.
      * @param predictionsService instance of tflite service
      * @param executorService async task executor service
      * @param request predictions interpret request
      * @param onSuccess lambda to execute upon task completion
      * @param onError lambda to execute upon task failure
      */
-    public TFLiteInterpretOperation(
-            @NonNull TFLitePredictionsService predictionsService,
+    public TensorFlowInterpretOperation(
+            @NonNull TensorFlowPredictionsService predictionsService,
             @NonNull ExecutorService executorService,
-            @NonNull TFLiteTextClassificationRequest request,
+            @NonNull TensorFlowTextClassificationRequest request,
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
