@@ -17,6 +17,7 @@ package com.amplifyframework.auth.cognito;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.AuthSignedInStatus;
 import com.amplifyframework.auth.AuthState;
@@ -48,7 +49,7 @@ public final class AWSCognitoAuthState extends AuthState {
         this.refreshToken = refreshToken;
     }
 
-    public AWSCredentials getAwsCredentials() {
+    public AWSCredentials getAWSCredentials() {
         return awsCredentials;
     }
 
@@ -71,6 +72,51 @@ public final class AWSCognitoAuthState extends AuthState {
     @NonNull
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+            getAWSCredentials(),
+            getIdentityId(),
+            getAccessToken(),
+            getIdToken(),
+            getRefreshToken()
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AWSCognitoAuthState cognitoAuthState = (AWSCognitoAuthState) obj;
+            return ObjectsCompat.equals(getAWSCredentials(), cognitoAuthState.getAWSCredentials()) &&
+                    ObjectsCompat.equals(getIdentityId(), cognitoAuthState.getIdentityId()) &&
+                    ObjectsCompat.equals(getAccessToken(), cognitoAuthState.getAccessToken()) &&
+                    ObjectsCompat.equals(getIdToken(), cognitoAuthState.getIdToken()) &&
+                    ObjectsCompat.equals(getRefreshToken(), cognitoAuthState.getRefreshToken());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AWSCognitoAuthState { ")
+                .append("awsCredentials: ")
+                .append(getAWSCredentials())
+                .append(", identityId: ")
+                .append(getIdentityId())
+                .append(", accessToken: ")
+                .append(getAccessToken())
+                .append(", idToken: ")
+                .append(getIdToken())
+                .append(", refreshToken: ")
+                .append(getRefreshToken())
+                .append(" }")
+                .toString();
     }
 
     public static final class Builder {

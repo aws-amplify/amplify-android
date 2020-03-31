@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth;
 
+import androidx.core.util.ObjectsCompat;
+
 public final class AuthUser {
     private String userId;
     private String username;
@@ -43,5 +45,38 @@ public final class AuthUser {
      */
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getUserId(),
+                getUsername()
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AuthUser authUser = (AuthUser) obj;
+            return ObjectsCompat.equals(getUserId(), authUser.getUserId()) &&
+                    ObjectsCompat.equals(getUsername(), authUser.getUsername());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AuthUser { ")
+                .append("userId: ")
+                .append(getUserId())
+                .append(", username: ")
+                .append(getUsername())
+                .append(" }")
+                .toString();
     }
 }

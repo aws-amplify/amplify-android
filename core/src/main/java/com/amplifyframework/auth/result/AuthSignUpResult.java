@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 
 public final class AuthSignUpResult {
@@ -45,5 +47,38 @@ public final class AuthSignUpResult {
      */
     public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
         return codeDeliveryDetails;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                isUserConfirmed(),
+                getCodeDeliveryDetails()
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AuthSignUpResult authSignUpResult = (AuthSignUpResult) obj;
+            return ObjectsCompat.equals(isUserConfirmed(), authSignUpResult.isUserConfirmed()) &&
+                    ObjectsCompat.equals(getCodeDeliveryDetails(), authSignUpResult.getCodeDeliveryDetails());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AuthSignUpResult { ")
+                .append("userConfirmed: ")
+                .append(isUserConfirmed())
+                .append(", codeDeliveryDetails: ")
+                .append(getCodeDeliveryDetails())
+                .append(" }")
+                .toString();
     }
 }

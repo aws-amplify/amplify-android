@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth;
 
+import androidx.core.util.ObjectsCompat;
+
 public class AuthState {
     private final AuthSignedInStatus signedInStatus;
 
@@ -33,5 +35,46 @@ public class AuthState {
      */
     public AuthSignedInStatus getSignedInStatus() {
         return signedInStatus;
+    }
+
+    /**
+     * When overriding, be sure to include signedInStatus in the hash.
+     * @return Hash code of this object
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getSignedInStatus()
+        );
+    }
+
+    /**
+     * When overriding, be sure to include signedInStatus in the comparison.
+     * @return True if the two objects are equal, false otherwise
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AuthState authState = (AuthState) obj;
+            return ObjectsCompat.equals(getSignedInStatus(), authState.getSignedInStatus());
+        }
+    }
+
+    /**
+     * When overriding, be sure to include signedInStatus in the output string.
+     * @return A string representation of the object
+     */
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AuthState { ")
+                .append("signedInStatus: ")
+                .append(getSignedInStatus())
+                .append(" }")
+                .toString();
     }
 }

@@ -16,6 +16,7 @@
 package com.amplifyframework.auth.options;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,6 +40,35 @@ public final class AuthSignInOptions {
     @NonNull
     public Map<String, String> getValidationData() {
         return validationData;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getValidationData()
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AuthSignInOptions authSignInOptions = (AuthSignInOptions) obj;
+            return ObjectsCompat.equals(getValidationData(), authSignInOptions.getValidationData());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AuthSignInOptions { ")
+                .append("validationData: ")
+                .append(getValidationData())
+                .append(" }")
+                .toString();
     }
 
     @NonNull

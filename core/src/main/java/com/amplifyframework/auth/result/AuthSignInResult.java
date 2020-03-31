@@ -15,20 +15,22 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.core.util.ObjectsCompat;
+
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthSignedInStatus;
 
 public final class AuthSignInResult {
-    private final AuthSignedInStatus state;
+    private final AuthSignedInStatus signedInStatus;
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 
     /**
      * Wraps the result of a sign in operation.
-     * @param state What state the user is after the operation finished (e.g. Signed Out, Guest, or Signed In)
+     * @param signedInStatus What state the user is after the operation finished (e.g. Signed Out, Guest, or Signed In)
      * @param codeDeliveryDetails Details about how/whether an MFA code was sent
      */
-    public AuthSignInResult(AuthSignedInStatus state, AuthCodeDeliveryDetails codeDeliveryDetails) {
-        this.state = state;
+    public AuthSignInResult(AuthSignedInStatus signedInStatus, AuthCodeDeliveryDetails codeDeliveryDetails) {
+        this.signedInStatus = signedInStatus;
         this.codeDeliveryDetails = codeDeliveryDetails;
     }
 
@@ -36,8 +38,8 @@ public final class AuthSignInResult {
      * The current state of the user after the operation (e.g. Signed Out, Guest, or Signed In).
      * @return the current state of the user after the operation (e.g. Signed Out, Guest, or Signed In)
      */
-    public AuthSignedInStatus getState() {
-        return state;
+    public AuthSignedInStatus getSignedInStatus() {
+        return signedInStatus;
     }
 
     /**
@@ -46,5 +48,38 @@ public final class AuthSignInResult {
      */
     public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
         return codeDeliveryDetails;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getSignedInStatus(),
+                getCodeDeliveryDetails()
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AuthSignInResult authSignInResult = (AuthSignInResult) obj;
+            return ObjectsCompat.equals(getSignedInStatus(), authSignInResult.getSignedInStatus()) &&
+                    ObjectsCompat.equals(getCodeDeliveryDetails(), authSignInResult.getCodeDeliveryDetails());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AuthSignInResult { ")
+                .append("signedInStatus: ")
+                .append(getSignedInStatus())
+                .append(", codeDeliveryDetails: ")
+                .append(getCodeDeliveryDetails())
+                .append(" }")
+                .toString();
     }
 }

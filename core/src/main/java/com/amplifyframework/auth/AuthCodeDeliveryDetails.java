@@ -15,6 +15,8 @@
 
 package com.amplifyframework.auth;
 
+import androidx.core.util.ObjectsCompat;
+
 public final class AuthCodeDeliveryDetails {
     private String destination;
     private String deliveryMedium;
@@ -54,5 +56,42 @@ public final class AuthCodeDeliveryDetails {
      */
     public String getAttributeName() {
         return attributeName;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getDestination(),
+                getDeliveryMedium(),
+                getAttributeName()
+        );
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || getClass() != obj.getClass()) {
+            return false;
+        } else {
+            AuthCodeDeliveryDetails authCodeDeliveryDetails = (AuthCodeDeliveryDetails) obj;
+            return ObjectsCompat.equals(getDestination(), authCodeDeliveryDetails.getDestination()) &&
+                    ObjectsCompat.equals(getDeliveryMedium(), authCodeDeliveryDetails.getDeliveryMedium()) &&
+                    ObjectsCompat.equals(getAttributeName(), authCodeDeliveryDetails.getAttributeName());
+        }
+    }
+
+    @Override
+    public String toString() {
+        return new StringBuilder()
+                .append("AuthCodeDeliveryDetails { ")
+                .append("destination: ")
+                .append(getDestination())
+                .append(", deliveryMedium: ")
+                .append(getDeliveryMedium())
+                .append(", attributeName: ")
+                .append(getAttributeName())
+                .append(" }")
+                .toString();
     }
 }
