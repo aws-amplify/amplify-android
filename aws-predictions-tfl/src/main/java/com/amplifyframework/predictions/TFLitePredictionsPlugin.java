@@ -65,7 +65,7 @@ public final class TFLitePredictionsPlugin extends PredictionsPlugin<TFLitePredi
     @Nullable
     @Override
     public TFLitePredictionsEscapeHatch getEscapeHatch() {
-        return new TFLitePredictionsEscapeHatch();
+        return new TFLitePredictionsEscapeHatch(predictionsService.getInterpreters());
     }
 
     @NonNull

@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.service;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Consumer;
@@ -42,18 +43,23 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * An implementation of text classification service using
  * pre-trained model from Tensorflow lite.
  */
-public final class TFLiteTextClassificationService {
+final class TFLiteTextClassificationService {
+    private static final String SERVICE_KEY = "textClassifier";
     private static final String MODEL_PATH = "text_classification.tflite";
     private static final String DICTIONARY_PATH = "text_classification_vocab.txt";
     private static final String LABEL_PATH = "text_classification_labels.txt";
 
     // The maximum length of an input sentence.
     private static final int SENTENCE_LEN = 256;
+
+    // Percentage multiplier
+    private static final int PERCENT = 100;
 
     // Simple delimiter to split words.
     private static final String SIMPLE_SPACE_OR_PUNCTUATION = "[ ,.!?\n]";
@@ -74,21 +80,38 @@ public final class TFLiteTextClassificationService {
     private final Context context;
 
     private Interpreter tflite;
-    private boolean loaded;
+    private AtomicBoolean loaded;
 
-    public TFLiteTextClassificationService(Context context) {
+    /**
+     * Constructs an instance of service to perform text
+     * sentiment interpretation using Tensorflow Lite
+     * interpreter.
+     * @param context the Android context for loading model
+     */
+    TFLiteTextClassificationService(Context context) {
         this.context = context;
-        this.loaded = false;
+        this.loaded = new AtomicBoolean(false);
+
+        try {
+            // Try loading assets now if possible
+            loadIfNotLoaded();
+        } catch (PredictionsException exception) {
+            // Ignore if it fails to load during configuration.
+
+            // This may sound weird, but we want the model to be loaded in as soon as possible.
+            // But we don't want to throw an error that needs to be caught at configuration time,
+            // since these models are supposed to be optional.
+        }
     }
 
-    private void loadIfNotLoaded() throws PredictionsException {
-        if (loaded) {
-            return;
-        }
-        loadModel();
-        loadDictionary();
-        loadLabels();
-        loaded = true;
+    /**
+     * Gets the associated service key of this service for
+     * identification.
+     * @return the service key
+     */
+    @NonNull
+    String getServiceKey() {
+        return SERVICE_KEY;
     }
 
     /**
@@ -140,7 +163,7 @@ public final class TFLiteTextClassificationService {
         Sentiment sentiment = null;
         for (int i = 0; i < labels.size(); i++) {
             SentimentType sentimentType = SentimentTypeAdapter.fromTensorflow(labels.get(i));
-            float confidenceScore = output[0][i];
+            float confidenceScore = output[0][i] * PERCENT;
             if (sentiment == null || sentiment.getConfidence() < confidenceScore) {
                 sentiment = Sentiment.builder()
                         .value(sentimentType)
@@ -151,7 +174,6 @@ public final class TFLiteTextClassificationService {
         return sentiment;
     }
 
-    // Pre-prosessing: tokenize and map the input words into a float array.
     @SuppressWarnings("ConstantConditions")
     private float[][] tokenizeInputText(String text) {
         float[] tmp = new float[SENTENCE_LEN];
@@ -172,6 +194,17 @@ public final class TFLiteTextClassificationService {
         // Padding and wrapping.
         Arrays.fill(tmp, index, SENTENCE_LEN - 1, dictionary.get(PAD));
         return new float[][]{tmp};
+    }
+
+    @WorkerThread
+    private synchronized void loadIfNotLoaded() throws PredictionsException {
+        if (loaded.get()) {
+            return;
+        }
+        loadModel();
+        loadDictionary();
+        loadLabels();
+        loaded.set(true);
     }
 
     @WorkerThread
@@ -278,9 +311,22 @@ public final class TFLiteTextClassificationService {
      */
     @WorkerThread
     synchronized void close() {
-        tflite.close();
+        if (tflite != null) {
+            tflite.close();
+        }
         dictionary.clear();
         labels.clear();
-        loaded = false;
+        loaded.set(false);
+    }
+
+    /**
+     * Returns the interpreter with a pre-trained model
+     * to detect predominant sentiment from a given text.
+     * Null if the model was not loaded properly.
+     * @return the interpreter with trained model
+     */
+    @Nullable
+    Interpreter getInterpreter() {
+        return tflite;
     }
 }

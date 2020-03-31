@@ -22,6 +22,11 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.result.InterpretResult;
 
+import org.tensorflow.lite.Interpreter;
+
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Predictions service that uses Tensorflow lite's
  * pre-trained models to make predictions offline.
@@ -51,5 +56,20 @@ public final class TFLitePredictionsService {
      */
     public void close() {
         textClassificationService.close();
+    }
+
+    /**
+     * Return a map of Tensorflow lite interpreters that are
+     * initialized with pre-trained models to fulfill their
+     * respective services.
+     * @return a map of service key to interpreter
+     */
+    public Map<String, Interpreter> getInterpreters() {
+        Map<String, Interpreter> interpreters = new HashMap<>();
+        interpreters.put(
+                textClassificationService.getServiceKey(),
+                textClassificationService.getInterpreter()
+        );
+        return interpreters;
     }
 }
