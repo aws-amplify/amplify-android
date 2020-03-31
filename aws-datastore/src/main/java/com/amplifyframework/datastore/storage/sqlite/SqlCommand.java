@@ -202,7 +202,6 @@ final class SqlCommand {
         return ObjectsCompat.equals(selectionArgs, that.selectionArgs);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = tableName != null ? tableName.hashCode() : 0;

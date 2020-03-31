@@ -75,7 +75,6 @@ public final class ModelWithMetadata<M extends Model> {
         return ObjectsCompat.equals(syncMetadata, that.syncMetadata);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = model != null ? model.hashCode() : 0;

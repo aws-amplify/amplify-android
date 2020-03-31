@@ -129,7 +129,6 @@ public final class PersistentModelVersion implements Model {
         return ObjectsCompat.equals(version, versionObject.version);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber") // 31 is IDE-generated
     @Override
     public int hashCode() {
         int result = id.hashCode();

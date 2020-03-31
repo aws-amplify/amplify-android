@@ -98,7 +98,6 @@ public final class GraphQLResponse<T> {
         return ObjectsCompat.equals(errors, that.errors);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = data != null ? data.hashCode() : 0;

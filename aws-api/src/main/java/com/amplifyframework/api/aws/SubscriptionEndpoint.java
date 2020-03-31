@@ -491,7 +491,6 @@ final class SubscriptionEndpoint {
             );
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = onNextItem.hashCode();

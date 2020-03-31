@@ -173,7 +173,6 @@ public final class ModelField {
         return true;
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = name != null ? name.hashCode() : 0;

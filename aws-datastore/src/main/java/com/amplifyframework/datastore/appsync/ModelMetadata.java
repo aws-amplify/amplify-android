@@ -117,7 +117,6 @@ public final class ModelMetadata implements Model {
         return ObjectsCompat.equals(_lastChangedAt, metadata._lastChangedAt);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = id.hashCode();
