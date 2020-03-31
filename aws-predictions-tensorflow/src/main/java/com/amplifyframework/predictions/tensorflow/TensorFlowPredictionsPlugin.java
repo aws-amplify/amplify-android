@@ -24,10 +24,10 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.operation.InterpretOperation;
-import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
-import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
+import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
 import org.json.JSONObject;

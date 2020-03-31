@@ -20,8 +20,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.operation.InterpretOperation;
-import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
 import java.util.Objects;

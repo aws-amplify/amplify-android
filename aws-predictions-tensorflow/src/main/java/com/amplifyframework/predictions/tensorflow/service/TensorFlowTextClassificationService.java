@@ -23,10 +23,10 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.tensorflow.adapter.SentimentTypeAdapter;
 import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.SentimentType;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.tensorflow.adapter.SentimentTypeAdapter;
 
 import org.tensorflow.lite.Interpreter;
 
