@@ -130,7 +130,7 @@ public class AndroidLoggingPluginTest {
     }
 
     static final class LogOutputStream extends ByteArrayOutputStream {
-        @SuppressWarnings("checkstyle:all") private LogOutputStream() {}
+        private LogOutputStream() {}
 
         @NonNull
         List<String> getLines() {

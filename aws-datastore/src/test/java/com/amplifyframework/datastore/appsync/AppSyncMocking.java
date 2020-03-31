@@ -36,7 +36,7 @@ import static org.mockito.Mockito.eq;
  */
 @SuppressWarnings({"unused", "UnusedReturnValue", "WeakerAccess"})
 public final class AppSyncMocking {
-    @SuppressWarnings("checkstyle:all") private AppSyncMocking() {}
+    private AppSyncMocking() {}
 
     /**
      * Prepare mocks on AppSync, to occur when a sync() call is made.

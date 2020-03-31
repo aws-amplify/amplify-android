@@ -22,8 +22,7 @@ import java.util.Map;
  * Utility for common Collection operations which are not otherwise available.
  */
 public final class CollectionUtils {
-
-    @SuppressWarnings("checkstyle:all") private CollectionUtils() {}
+    private CollectionUtils() {}
 
     /**
      * Returns true if collection is null, or if it is instantiated but not populated.

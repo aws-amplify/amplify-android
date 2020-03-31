@@ -53,14 +53,15 @@ import java.util.Set;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
-    @SuppressWarnings("checkstyle:WhitespaceAround")
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
         USER_NAME,
         USER_EMAIL,
         USER_PLAN
     })
+    @SuppressWarnings("checkstyle:WhitespaceAround")
     private @interface PinpointUserProfileAttribute {}
+
     private static final String USER_NAME = "name";
     private static final String USER_EMAIL = "email";
     private static final String USER_PLAN = "plan";
@@ -278,7 +279,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        for (String key: keys) {
+        for (String key : keys) {
             analyticsClient.removeGlobalAttribute(key);
             analyticsClient.removeGlobalMetric(key);
         }

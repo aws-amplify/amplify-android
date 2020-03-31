@@ -36,7 +36,7 @@ import com.amplifyframework.hub.HubEvent;
  * All of this considered, "When ya gotta sleep, ya gotta, sleep." Ya know?
  */
 public final class Sleep {
-    @SuppressWarnings("checkstyle:all") private Sleep() {}
+    private Sleep() {}
 
     /**
      * Sleeps the thread of execution for a duration of milliseconds.

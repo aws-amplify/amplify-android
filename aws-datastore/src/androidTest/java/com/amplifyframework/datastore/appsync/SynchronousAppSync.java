@@ -133,7 +133,7 @@ public final class SynchronousAppSync {
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(@NonNull Class<T> modelClass) {
         return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onCreate(modelClass, new NoOpConsumer<>(), emitter::onNext, emitter::onError, emitter::onComplete)
+            appSync.onCreate(modelClass, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
         ));
     }
 
@@ -146,7 +146,7 @@ public final class SynchronousAppSync {
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onUpdate(@NonNull Class<T> modelClass) {
         return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onUpdate(modelClass, new NoOpConsumer<>(), emitter::onNext, emitter::onError, emitter::onComplete)
+            appSync.onUpdate(modelClass, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
         ));
     }
 
@@ -159,7 +159,7 @@ public final class SynchronousAppSync {
     @NonNull
     public <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onDelete(@NonNull Class<T> modelClass) {
         return Observable.defer(() -> Observable.create(emitter ->
-            appSync.onDelete(modelClass, new NoOpConsumer<>(), emitter::onNext, emitter::onError, emitter::onComplete)
+            appSync.onDelete(modelClass, NoOpConsumer.create(), emitter::onNext, emitter::onError, emitter::onComplete)
         ));
     }
 }

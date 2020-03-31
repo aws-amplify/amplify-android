@@ -32,7 +32,7 @@ import org.mockito.ArgumentMatchers;
  *   2. Making reference to a Consumer matcher without a checked exception
  */
 final class Matchers {
-    @SuppressWarnings("checkstyle:all") private Matchers() {}
+    private Matchers() {}
 
     /**
      * Match any {@link Model}.

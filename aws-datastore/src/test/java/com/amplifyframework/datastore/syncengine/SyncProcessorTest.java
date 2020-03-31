@@ -205,7 +205,7 @@ public final class SyncProcessorTest {
     }
 
     static final class SortByModelId {
-        @SuppressWarnings("checkstyle:all") private SortByModelId() {}
+        private SortByModelId() {}
 
         static int compare(Model left, Model right) {
             return left.getId().compareTo(right.getId());

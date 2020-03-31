@@ -23,7 +23,7 @@ import java.util.UUID;
  * but it has a more semantic name.
  */
 public final class RandomString {
-    @SuppressWarnings("checkstyle:all") private RandomString() {}
+    private RandomString() {}
 
     /**
      * Builds a new random string.

@@ -53,8 +53,7 @@ final class AppSyncRequestFactory {
         "startedAt"
     );
 
-    @SuppressWarnings("checkstyle:all") private AppSyncRequestFactory() {}
-
+    private AppSyncRequestFactory() {}
 
     /**
      * Builds the query document for base and delta sync.
