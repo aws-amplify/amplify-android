@@ -46,25 +46,35 @@ public final class Orchestrator {
      *                       durably store offline changes until
      *                       then can be written to the network
      * @param appSync An AppSync Endpoint
+     * @param baseSyncIntervalProvider Provider the interval in which at most
+     *                                 one base sync may occur
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
-            @NonNull final AppSync appSync) {
+            @NonNull final AppSync appSync,
+            @NonNull final SyncProcessor.BaseSyncIntervalProvider baseSyncIntervalProvider) {
         Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
         RemoteModelMutations remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
-        RemoteModelState remoteModelState = new RemoteModelState(appSync, modelProvider);
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
         Merger merger = new Merger(localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
+        SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
 
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
-        this.syncProcessor = new SyncProcessor(remoteModelState, merger, modelProvider, modelSchemaRegistry);
+        this.syncProcessor = SyncProcessor.builder()
+            .modelProvider(modelProvider)
+            .modelSchemaRegistry(modelSchemaRegistry)
+            .syncTimeRegistry(syncTimeRegistry)
+            .appSync(appSync)
+            .merger(merger)
+            .baseSyncIntervalProvider(baseSyncIntervalProvider)
+            .build();
         this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
     }
