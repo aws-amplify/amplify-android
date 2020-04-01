@@ -21,13 +21,14 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion;
+import com.amplifyframework.datastore.syncengine.LastSyncMetadata;
 
 /**
  * Creates a provide of system models, that are used internally by the DataStore.
  */
 public final class SystemModelsProviderFactory {
     // CHANGE this models version whenever any system models are added/removed/updated.
-    private static final String SYSTEM_MODELS_VERSION = "2fe6d84d-4772-4089-be16-e06d8469c537";
+    private static final String SYSTEM_MODELS_VERSION = "b9357be1-3106-475e-9700-7eaa6051a382";
 
     private SystemModelsProviderFactory() {}
 
@@ -35,6 +36,10 @@ public final class SystemModelsProviderFactory {
     public static ModelProvider create() {
         return SimpleModelProvider.instance(
             SYSTEM_MODELS_VERSION,
+
+            // Metadata about the last time a model type was successfully sync'd with the cloud.
+            // For example, "Post" model was last saved at 1585702708000 milliseconds past the Epoch.
+            LastSyncMetadata.class,
 
             // PersistentModelVersion.class is stores the version of the data schema; that is,
             // which models exist in the system, and what is their shape. When the structure of

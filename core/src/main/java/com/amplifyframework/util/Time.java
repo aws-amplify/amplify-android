@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.util;
 
 /**
  * An almost-worthless wrapper to avoid writing {@link System#currentTimeMillis()} all
