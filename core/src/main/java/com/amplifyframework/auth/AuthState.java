@@ -15,7 +15,10 @@
 
 package com.amplifyframework.auth;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
+
+import java.util.Objects;
 
 public class AuthState {
     private final AuthSignedInStatus signedInStatus;
@@ -25,14 +28,15 @@ public class AuthState {
      * implementation-specific auth details such as tokens can be retrieved as well.
      * @param signedInStatus What state the user is currently in (e.g. Signed Out, Guest, or Signed In)
      */
-    public AuthState(AuthSignedInStatus signedInStatus) {
-        this.signedInStatus = signedInStatus;
+    public AuthState(@NonNull AuthSignedInStatus signedInStatus) {
+        this.signedInStatus = Objects.requireNonNull(signedInStatus);
     }
 
     /**
      * Returns the user's current logged in state.
      * @return An enum of the user's current logged in state
      */
+    @NonNull
     public AuthSignedInStatus getSignedInStatus() {
         return signedInStatus;
     }

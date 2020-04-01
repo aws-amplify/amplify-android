@@ -100,11 +100,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void signUp(
-            String username,
-            String password,
-            AuthSignUpOptions options,
-            final Consumer<AuthSignUpResult> onSuccess,
-            final Consumer<AuthException> onException
+            @NonNull String username,
+            @NonNull String password,
+            @NonNull AuthSignUpOptions options,
+            @NonNull final Consumer<AuthSignUpResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
     ) {
         AWSMobileClient.getInstance().signUp(
             username,
@@ -121,7 +121,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         details != null
                             ? new AuthCodeDeliveryDetails(
                                 details.getDestination(),
-                                details.getDeliveryMedium(),
+                                AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
                                 details.getAttributeName()
                             )
                             : null
@@ -140,10 +140,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void confirmSignUp(
-        String username,
-        String code,
-        final Consumer<AuthSignUpResult> onSuccess,
-        final Consumer<AuthException> onException
+        @NonNull String username,
+        @NonNull String code,
+        @NonNull final Consumer<AuthSignUpResult> onSuccess,
+        @NonNull final Consumer<AuthException> onException
     ) {
         AWSMobileClient.getInstance().confirmSignUp(username, code, new Callback<SignUpResult>() {
             @Override
@@ -155,7 +155,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     details != null
                         ? new AuthCodeDeliveryDetails(
                             details.getDestination(),
-                            details.getDeliveryMedium(),
+                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
                             details.getAttributeName()
                         )
                         : null
@@ -187,7 +187,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     details != null
                         ? new AuthCodeDeliveryDetails(
                             details.getDestination(),
-                            details.getDeliveryMedium(),
+                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
                             details.getAttributeName()
                         )
                         : null
@@ -209,11 +209,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void signIn(
-        String username,
-        String password,
-        AuthSignInOptions options,
-        final Consumer<AuthSignInResult> onSuccess,
-        final Consumer<AuthException> onException
+        @Nullable String username,
+        @Nullable String password,
+        @NonNull AuthSignInOptions options,
+        @NonNull final Consumer<AuthSignInResult> onSuccess,
+        @NonNull final Consumer<AuthException> onException
     ) {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
@@ -225,7 +225,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     oldDetails != null
                         ? new AuthCodeDeliveryDetails(
                             oldDetails.getDestination(),
-                            oldDetails.getDeliveryMedium(),
+                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(oldDetails.getDeliveryMedium()),
                             oldDetails.getAttributeName()
                         )
                         : null;
@@ -250,19 +250,19 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     @Override
     public void signIn(
-            String username,
-            String password,
-            final Consumer<AuthSignInResult> onSuccess,
-            final Consumer<AuthException> onException
+            @Nullable String username,
+            @Nullable String password,
+            @NonNull final Consumer<AuthSignInResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
     ) {
         signIn(username, password, null, onSuccess, onException);
     }
 
     @Override
     public void signInWithUI(
-            Activity callingActivity,
-            final Consumer<String> onSuccess,
-            final Consumer<AmplifyException> onException
+            @NonNull Activity callingActivity,
+            @NonNull final Consumer<String> onSuccess,
+            @NonNull final Consumer<AmplifyException> onException
     ) {
         HostedUIOptions hostedUIOptions = HostedUIOptions.builder()
                 .scopes("openid", "email")
@@ -287,15 +287,15 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
-    public void handleSignInWithUIResponse(Intent intent) {
+    public void handleSignInWithUIResponse(@NonNull Intent intent) {
         AWSMobileClient.getInstance().handleAuthResponse(intent);
     }
 
     @Override
     public void signInWithFacebook(
-            String token,
-            final Consumer<String> onSuccess,
-            final Consumer<AmplifyException> onException
+            @NonNull String token,
+            @NonNull final Consumer<String> onSuccess,
+            @NonNull final Consumer<AmplifyException> onException
     ) {
         AWSMobileClient.getInstance().federatedSignIn(
             IdentityProvider.FACEBOOK.toString(),
@@ -380,7 +380,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         }
     }
 
-    @Nullable
+    @NonNull
     @Override
     public AWSMobileClient getEscapeHatch() {
         return AWSMobileClient.getInstance();

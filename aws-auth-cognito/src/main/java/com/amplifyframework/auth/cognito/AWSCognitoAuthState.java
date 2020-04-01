@@ -49,22 +49,27 @@ public final class AWSCognitoAuthState extends AuthState {
         this.refreshToken = refreshToken;
     }
 
+    @Nullable
     public AWSCredentials getAWSCredentials() {
         return awsCredentials;
     }
 
+    @Nullable
     public String getIdentityId() {
         return identityId;
     }
 
+    @Nullable
     public String getAccessToken() {
         return accessToken;
     }
 
+    @Nullable
     public String getIdToken() {
         return idToken;
     }
 
+    @Nullable
     public String getRefreshToken() {
         return refreshToken;
     }

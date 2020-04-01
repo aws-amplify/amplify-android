@@ -18,6 +18,8 @@ package com.amplifyframework.auth.options;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.util.Immutable;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -93,7 +95,7 @@ public final class AuthSignInOptions {
 
         @NonNull
         public AuthSignInOptions build() {
-            return new AuthSignInOptions(validationData);
+            return new AuthSignInOptions(Immutable.of(validationData));
         }
     }
 }

@@ -15,11 +15,14 @@
 
 package com.amplifyframework.auth;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
+
+import java.util.Objects;
 
 public final class AuthCodeDeliveryDetails {
     private String destination;
-    private String deliveryMedium;
+    private DeliveryMedium deliveryMedium;
     private String attributeName;
 
     /**
@@ -28,16 +31,21 @@ public final class AuthCodeDeliveryDetails {
      * @param deliveryMedium What method was used to send the code
      * @param attributeName What attribute was being verified
      */
-    public AuthCodeDeliveryDetails(String destination, String deliveryMedium, String attributeName) {
-        this.destination = destination;
-        this.deliveryMedium = deliveryMedium;
-        this.attributeName = attributeName;
+    public AuthCodeDeliveryDetails(
+            @NonNull String destination,
+            @NonNull DeliveryMedium deliveryMedium,
+            @NonNull String attributeName
+    ) {
+        this.destination = Objects.requireNonNull(destination);
+        this.deliveryMedium = Objects.requireNonNull(deliveryMedium);
+        this.attributeName = Objects.requireNonNull(attributeName);
     }
 
     /**
      * Get the address of where the code was sent.
      * @return The address the code was sent to
      */
+    @NonNull
     public String getDestination() {
         return destination;
     }
@@ -46,7 +54,8 @@ public final class AuthCodeDeliveryDetails {
      * Get the method used to send the code.
      * @return The method used to send the code
      */
-    public String getDeliveryMedium() {
+    @NonNull
+    public DeliveryMedium getDeliveryMedium() {
         return deliveryMedium;
     }
 
@@ -54,6 +63,7 @@ public final class AuthCodeDeliveryDetails {
      * Get the attribute being verified.
      * @return The attribute being verified
      */
+    @NonNull
     public String getAttributeName() {
         return attributeName;
     }
@@ -93,5 +103,36 @@ public final class AuthCodeDeliveryDetails {
                 .append(getAttributeName())
                 .append(" }")
                 .toString();
+    }
+
+    public enum DeliveryMedium {
+        /** Code was sent via email. */
+        EMAIL("email"),
+        /** Code was sent via text message SMS. */
+        SMS("sms"),
+        /** Code was sent via some other method not listed here. */
+        UNKNOWN("unknown");
+
+        private String value;
+
+        DeliveryMedium(@NonNull String value) {
+            this.value = Objects.requireNonNull(value);
+        }
+
+        @NonNull
+        public String getValue() {
+            return value;
+        }
+
+        @NonNull
+        public static DeliveryMedium getEnum(String value) {
+            for (DeliveryMedium v : values()) {
+                if (v.getValue().equalsIgnoreCase(value)) {
+                    return v;
+                }
+            }
+
+            return DeliveryMedium.UNKNOWN;
+        }
     }
 }

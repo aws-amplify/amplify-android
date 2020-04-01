@@ -15,7 +15,10 @@
 
 package com.amplifyframework.auth;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
+
+import java.util.Objects;
 
 public final class AuthUser {
     private String userId;
@@ -26,15 +29,16 @@ public final class AuthUser {
      * @param userId A unique identifier for this user
      * @param username The username used for logging in
      */
-    public AuthUser(String userId, String username) {
-        this.userId = userId;
-        this.username = username;
+    public AuthUser(@NonNull String userId, @NonNull String username) {
+        this.userId = Objects.requireNonNull(userId);
+        this.username = Objects.requireNonNull(username);
     }
 
     /**
      * A unique identifier for this user.
      * @return a unique identifier for this user
      */
+    @NonNull
     public String getUserId() {
         return userId;
     }
@@ -43,6 +47,7 @@ public final class AuthUser {
      * The username used for logging in.
      * @return the username used for logging in
      */
+    @NonNull
     public String getUsername() {
         return username;
     }
