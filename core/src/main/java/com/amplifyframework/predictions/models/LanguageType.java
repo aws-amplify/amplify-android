@@ -15,9 +15,6 @@
 
 package com.amplifyframework.predictions.models;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Enum of different types of language. These are the languages
  * that are recognized and supported by Amazon Translate Service
@@ -134,17 +131,7 @@ public enum LanguageType {
     YORUBA("yo"),
     UNKNOWN("unknown");
 
-    private static final Map<String, LanguageType> CODES;
-
     private final String languageCode;
-
-    // Reverse look-up table
-    static {
-        CODES = new HashMap<>();
-        for (LanguageType language : LanguageType.values()) {
-            CODES.put(language.getLanguageCode(), language);
-        }
-    }
 
     LanguageType(String languageCode) {
         this.languageCode = languageCode;
@@ -158,10 +145,12 @@ public enum LanguageType {
      * @return An enum value of matching language code
      */
     public static LanguageType from(String languageCode) {
-        if (!CODES.containsKey(languageCode)) {
-            return UNKNOWN;
+        for (LanguageType language : values()) {
+            if (language.getLanguageCode().equals(languageCode)) {
+                return language;
+            }
         }
-        return CODES.get(languageCode);
+        return UNKNOWN;
     }
 
     /**
