@@ -83,4 +83,62 @@ public class MainApplication extends Application {
   }
 }
 ```
-12. HOOORRAYYY!!! You can now call Amplify.Auth methods inside the onCreate method of MainActivity.
+
+12. Follow the steps in [Facebook documentation here](https://developers.facebook.com/docs/facebook-login/android/) to setup the sign in with Facebook button in your app. Your MainActivity should now look like this:
+
+```java
+public class MainActivity extends AppCompatActivity {
+    CallbackManager callbackManager;
+    static final String TAG = "AuthUserAcceptance";
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
+        callbackManager = CallbackManager.Factory.create();
+
+        LoginButton loginButton = findViewById(R.id.login_button);
+
+        // Callback registration
+        loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
+            @Override
+            public void onSuccess(LoginResult loginResult) {
+                Amplify.Auth.signInWithFacebook(
+                        loginResult.getAccessToken().getToken(),
+                        result -> Log.i(TAG, result),
+                        error -> Log.e(TAG, error.toString())
+                );
+            }
+
+            @Override
+            public void onCancel() {
+                Log.i(TAG, "Facebook cancelled");
+            }
+
+            @Override
+            public void onError(FacebookException exception) {
+                Log.e(TAG, exception.toString());
+            }
+        });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Intent activityIntent = getIntent();
+        if (activityIntent.getData() != null &&
+                "myapp".equals(activityIntent.getData().getScheme())) {
+            Amplify.Auth.handleSignInWithUIResponse(activityIntent);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+        super.onActivityResult(requestCode, resultCode, data);
+    }
+}
+```
+13. Go to Cognito Identity Pools, select your app, choose Edit Identity Pool, drop down Authentication Providers, click the Facebook tab, enter your Facebook App ID, and save.
+13. HOOORRAYYY!!! You can now call Amplify.Auth methods inside the onCreate method of MainActivity.
