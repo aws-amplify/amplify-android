@@ -27,11 +27,11 @@ public final class SQLiteColumn {
     private static final String SQLITE_NAME_DELIMITER = ".";
     private static final String CUSTOM_ALIAS_DELIMITER = "_";
 
-    private String name;
-    private String tableName;
-    private String ownedType;
-    private boolean isNonNull;
-    private SqliteDataType dataType;
+    private final String name;
+    private final String tableName;
+    private final String ownedType;
+    private final boolean isNonNull;
+    private final SqliteDataType dataType;
 
     private SQLiteColumn(Builder builder) {
         this.name = builder.name;

@@ -68,7 +68,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     private final Application application;
     private AutoEventSubmitter autoEventSubmitter;
-    private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
     private AutoSessionTracker autoSessionTracker;
     private TargetingClient targetingClient;
@@ -359,7 +358,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             );
         }
 
-        pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
+        AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
         PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
         this.analyticsClient = pinpointManager.getAnalyticsClient();
         this.targetingClient = pinpointManager.getTargetingClient();

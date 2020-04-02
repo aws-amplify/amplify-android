@@ -21,7 +21,7 @@ import androidx.core.util.ObjectsCompat;
  * Represents a contains condition with a target value for comparison.
  */
 public final class ContainsQueryOperator extends QueryOperator<String> {
-    private String value;
+    private final String value;
 
     /**
      * Constructs a contains condition.

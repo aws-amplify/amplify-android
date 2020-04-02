@@ -29,7 +29,7 @@ public class RangeTests {
      */
     @Test
     public void validRangeInitialization() {
-        Range<Integer> range = new Range<Integer>(2, 4);
+        Range<Integer> range = new Range<>(2, 4);
         Assert.assertNotNull("Range should be non null", range);
         Assert.assertTrue("Range should contain the given value", range.contains(3));
     }
@@ -39,7 +39,7 @@ public class RangeTests {
      */
     @Test (expected = IllegalArgumentException.class)
     public void invalidRange() {
-        new Range<Integer>(4, 2);
+        new Range<>(4, 2);
     }
 
     /**
@@ -47,7 +47,7 @@ public class RangeTests {
      */
     @Test
     public void compareRange() {
-        Range<Integer> range = new Range<Integer>(2, 10);
+        Range<Integer> range = new Range<>(2, 10);
         Assert.assertNotNull("Range should be non null", range);
         Assert.assertTrue("Range should contain the given value", range.contains(3));
         Assert.assertTrue("Range should contain the given value", range.contains(10));

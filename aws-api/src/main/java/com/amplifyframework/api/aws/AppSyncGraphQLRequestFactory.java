@@ -46,7 +46,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -63,7 +62,7 @@ final class AppSyncGraphQLRequestFactory {
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
 
-    public static <T extends Model> GraphQLRequest<T> buildQuery(
+    static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
             String objectId
     ) throws ApiException {
@@ -100,7 +99,7 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    public static <T extends Model> GraphQLRequest<T> buildQuery(
+    static <T extends Model> GraphQLRequest<T> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
     ) throws ApiException {
@@ -123,7 +122,7 @@ final class AppSyncGraphQLRequestFactory {
                     .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
                     .append("} nextToken }}");
 
-            if (!predicateIsEmpty(predicate)) {
+            if (predicate != null) {
                 variables.put("filter", parsePredicate(predicate));
                 variables.put("limit", DEFAULT_QUERY_LIMIT);
             }
@@ -144,7 +143,7 @@ final class AppSyncGraphQLRequestFactory {
     }
 
     @SuppressWarnings("unchecked")
-    public static <T extends Model> GraphQLRequest<T> buildMutation(
+    static <T extends Model> GraphQLRequest<T> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
@@ -166,7 +165,7 @@ final class AppSyncGraphQLRequestFactory {
                     .append(StringUtils.capitalizeFirst(graphQlTypeName))
                     .append("Input!");
 
-            if (!predicateIsEmpty(predicate)) {
+            if (predicate != null) {
                 doc.append(", $condition: Model")
                         .append(graphQlTypeName)
                         .append("ConditionInput");
@@ -177,7 +176,7 @@ final class AppSyncGraphQLRequestFactory {
                     .append(StringUtils.capitalizeFirst(graphQlTypeName))
                     .append("(input: $input");
 
-            if (!predicateIsEmpty(predicate)) {
+            if (predicate != null) {
                 doc.append(", condition: $condition");
             }
 
@@ -201,7 +200,7 @@ final class AppSyncGraphQLRequestFactory {
                 }
             }
 
-            if (!predicateIsEmpty(predicate)) {
+            if (predicate != null) {
                 variables.put("condition", parsePredicate(predicate));
             }
 
@@ -220,14 +219,15 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    public static <T extends Model> GraphQLRequest<T> buildSubscription(
+    @SuppressWarnings("SameParameterValue")
+    static <T extends Model> GraphQLRequest<T> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type
     ) throws ApiException {
         return buildSubscription(modelClass, type, null);
     }
 
-    public static <T extends Model> GraphQLRequest<T> buildSubscription(
+    static <T extends Model> GraphQLRequest<T> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type,
             CognitoUserPoolsAuthProvider cognitoAuth
@@ -408,10 +408,8 @@ final class AppSyncGraphQLRequestFactory {
 
         StringBuilder result = new StringBuilder();
         ModelSchema schema = ModelSchema.fromModelClass(clazz);
-        Iterator<Field> iterator = FieldFinder.findFieldsIn(clazz).iterator();
 
-        while (iterator.hasNext()) {
-            Field field = iterator.next();
+        for (Field field : FieldFinder.findFieldsIn(clazz)) {
             String fieldName = field.getName();
 
             if (schema.getAssociations().containsKey(fieldName)) {
@@ -423,15 +421,15 @@ final class AppSyncGraphQLRequestFactory {
                         Class<Model> listTypeClass = (Class<Model>) listType.getActualTypeArguments()[0];
 
                         result.append("{ items {")
-                                .append(getModelFields(listTypeClass, levelsDeepToGo - 1)) // cast checked above
-                                .append("} nextToken }");
+                            .append(getModelFields(listTypeClass, levelsDeepToGo - 1)) // cast checked above
+                            .append("} nextToken }");
                     }
                 } else if (levelsDeepToGo >= 1) {
                     result.append(fieldName).append(" ");
 
                     result.append("{")
-                            .append(getModelFields((Class<Model>) field.getType(), levelsDeepToGo - 1))
-                            .append("}");
+                        .append(getModelFields((Class<Model>) field.getType(), levelsDeepToGo - 1))
+                        .append("}");
                 }
             } else {
                 result.append(fieldName).append(" ");
@@ -439,10 +437,5 @@ final class AppSyncGraphQLRequestFactory {
         }
 
         return result.toString();
-    }
-
-    // While this is currently a simple null check, in the future it could possibly be more complex
-    private static boolean predicateIsEmpty(QueryPredicate predicate) {
-        return predicate == null;
     }
 }
