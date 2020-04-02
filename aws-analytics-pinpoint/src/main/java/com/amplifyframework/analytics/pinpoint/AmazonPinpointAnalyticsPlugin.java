@@ -298,7 +298,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @NonNull
     @Override
     public String getPluginKey() {
-        return "amazonPinpointAnalyticsPlugin";
+        return "awsPinpointAnalyticsPlugin";
     }
 
     /**

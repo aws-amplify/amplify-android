@@ -44,7 +44,7 @@ task clean(type: Delete) {
 ext {
     buildToolsVersion = "29.0.2"
     compileSdkVersion = 29
-    minSdkVersion = 15
+    minSdkVersion = 16
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.8'
@@ -63,6 +63,7 @@ ext {
         aws: [
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
+            cognitoauth: "com.amazonaws:aws-android-sdk-cognitoauth:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion"
         ],
