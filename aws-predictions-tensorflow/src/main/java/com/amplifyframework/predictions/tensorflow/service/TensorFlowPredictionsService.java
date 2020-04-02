@@ -17,8 +17,11 @@ package com.amplifyframework.predictions.tensorflow.service;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
+import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.result.InterpretResult;
 
@@ -33,11 +36,13 @@ import java.util.Map;
  */
 public final class TensorFlowPredictionsService {
 
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-predictions-tensorflow");
+
     private final TensorFlowTextClassificationService textClassificationService;
 
     /**
      * Constructs an instance of {@link TensorFlowPredictionsService}.
-     * @param context Android context
+     * @param context the Android context
      */
     public TensorFlowPredictionsService(@NonNull Context context) {
         this.textClassificationService = new TensorFlowTextClassificationService(context);
@@ -52,9 +57,24 @@ public final class TensorFlowPredictionsService {
     }
 
     /**
+     * Load the models for each of the services. If any service fails
+     * to properly load its assets, the error will be logged, but will
+     * not be thrown.
+     *
+     * The plugin is NOT required to properly initialize any of its
+     * services. It should only explicitly handle errors when an operation
+     * is invoked from a service that is not initialized.
+     */
+    @WorkerThread
+    public synchronized void loadAssets() {
+        textClassificationService.loadIfNotLoaded();
+    }
+
+    /**
      * Terminates service and free up resources used by TensorFlow Lite.
      */
-    public void terminate() {
+    @WorkerThread
+    public synchronized void terminate() {
         textClassificationService.release();
     }
 

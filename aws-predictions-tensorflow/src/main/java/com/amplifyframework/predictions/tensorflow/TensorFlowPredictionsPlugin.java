@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.tensorflow;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
@@ -58,10 +59,16 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
 
     @Override
     public void configure(
-            @NonNull JSONObject pluginConfiguration,
+            JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws AmplifyException {
         this.predictionsService = new TensorFlowPredictionsService(context);
+    }
+
+    @WorkerThread
+    @Override
+    public void initialize(@NonNull Context context) {
+        this.predictionsService.loadAssets();
     }
 
     @Nullable

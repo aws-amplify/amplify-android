@@ -16,7 +16,6 @@
 package com.amplifyframework.predictions.tensorflow.service;
 
 import android.content.Context;
-import android.content.res.AssetFileDescriptor;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
@@ -27,23 +26,16 @@ import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.SentimentType;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.tensorflow.adapter.SentimentTypeAdapter;
+import com.amplifyframework.predictions.tensorflow.asset.Loadable;
+import com.amplifyframework.predictions.tensorflow.asset.TextClassificationDictionary;
+import com.amplifyframework.predictions.tensorflow.asset.TextClassificationLabels;
+import com.amplifyframework.predictions.tensorflow.asset.TextClassificationModel;
 
 import org.tensorflow.lite.Interpreter;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.CountDownLatch;
 
 /**
  * An implementation of text classification service using
@@ -51,57 +43,35 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 final class TensorFlowTextClassificationService {
     private static final String SERVICE_KEY = "textClassifier";
-    private static final String MODEL_PATH = "text_classification.tflite";
-    private static final String DICTIONARY_PATH = "text_classification_vocab.txt";
-    private static final String LABEL_PATH = "text_classification_labels.txt";
-
-    // The maximum length of an input sentence.
-    private static final int MAX_SENTENCE_LENGTH = 256;
 
     // Percentage multiplier
     private static final int PERCENT = 100;
 
-    // Simple delimiter to split words.
-    private static final String DELIMITER_REGEX = "[ ,.!?\n]";
+    private final TextClassificationModel interpreter;
+    private final TextClassificationDictionary dictionary;
+    private final TextClassificationLabels labels;
+    private final List<Loadable<?, PredictionsException>> assets;
+    private final CountDownLatch loaded;
 
-    /*
-     * Reserved values in ImdbDataSet dictionary:
-     * dictionary["<PAD>"] = 0      used for padding
-     * dictionary["<START>"] = 1    mark for the start of a sentence
-     * dictionary["<UNKNOWN>"] = 2  mark for unknown words (OOV)
-     */
-    private static final String PAD = "<PAD>";
-    private static final String START = "<START>";
-    private static final String UNKNOWN = "<UNKNOWN>";
-
-    private final Context context;
-    private final Map<String, Integer> dictionary;
-    private final List<String> labels;
-    private final AtomicBoolean loaded;
-
-    private Interpreter tflite;
+    private PredictionsException loadingError;
 
     /**
      * Constructs an instance of service to perform text
      * sentiment interpretation using TensorFlow Lite
      * interpreter.
-     * @param context the Android context for loading model
+     * @param context the Android context
      */
-    TensorFlowTextClassificationService(Context context) {
-        this.context = context;
-        this.dictionary = new HashMap<>();
-        this.labels = new ArrayList<>();
-        this.loaded = new AtomicBoolean(false);
+    TensorFlowTextClassificationService(@NonNull Context context) {
+        this.interpreter = new TextClassificationModel(context);
+        this.dictionary = new TextClassificationDictionary(context);
+        this.labels = new TextClassificationLabels(context);
 
-        try {
-            // Try loading assets now if possible
-            loadIfNotLoaded();
-        } catch (PredictionsException exception) {
-            // Ignore if it fails to load during configuration.
+        this.assets = Arrays.asList(interpreter, dictionary, labels);
+        this.loaded = new CountDownLatch(assets.size());
 
-            // This may sound weird, but we want the model to be loaded in as soon as possible.
-            // But we don't want to throw an error that needs to be caught at configuration time,
-            // since these models are supposed to be optional.
+        for (Loadable<?, PredictionsException> asset : assets) {
+            asset.onLoaded(onLoad -> this.loaded.countDown());
+            asset.onError(error -> this.loadingError = error);
         }
     }
 
@@ -116,14 +86,10 @@ final class TensorFlowTextClassificationService {
     }
 
     @WorkerThread
-    synchronized void loadIfNotLoaded() throws PredictionsException {
-        if (loaded.get()) {
-            return;
+    synchronized void loadIfNotLoaded() {
+        for (Loadable<?, PredictionsException> asset : assets) {
+            asset.load();
         }
-        loadModel();
-        loadDictionary();
-        loadLabels();
-        loaded.set(true);
     }
 
     /**
@@ -137,11 +103,24 @@ final class TensorFlowTextClassificationService {
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        try {
-            // Handle error for real this time if model not found
-            loadIfNotLoaded();
+        // Escape early if the initialization failed
+        if (loadingError != null) {
+            onError.accept(loadingError);
+            return;
+        }
 
-            // Classify sentiment from text
+        // Wait for initialization to complete
+        // TODO: encapsulate blocking logic elsewhere
+        try {
+            loaded.await();
+        } catch (InterruptedException exception) {
+            onError.accept(new PredictionsException(
+                    "Text classification service initialization was interrupted.",
+                    "Please wait for the required assets to be fully loaded."
+            ));
+        }
+
+        try {
             final Sentiment sentiment = fetchSentiment(text);
             onSuccess.accept(InterpretResult.builder()
                     .sentiment(sentiment)
@@ -157,11 +136,11 @@ final class TensorFlowTextClassificationService {
 
         try {
             // Pre-process input text
-            input = tokenizeInputText(text);
+            input = dictionary.tokenizeInputText(text);
             output = new float[1][labels.size()];
 
             // Run inference.
-            tflite.run(input, output);
+            interpreter.run(input, output);
         } catch (IllegalArgumentException exception) {
             throw new PredictionsException(
                     "TensorFlow Lite failed to make an inference.",
@@ -185,140 +164,15 @@ final class TensorFlowTextClassificationService {
         return sentiment;
     }
 
-    // This is some magic code that came from TensorFlow Lite example code
-    // Pre-processes the input text to be compatible with the model's shape
-    @SuppressWarnings("ConstantConditions")
-    private float[][] tokenizeInputText(String text) {
-        float[] tmp = new float[MAX_SENTENCE_LENGTH];
-
-        int index = 0;
-        tmp[index++] = dictionary.get(START);
-
-        for (String word : text.split(DELIMITER_REGEX)) {
-            if (index >= MAX_SENTENCE_LENGTH) {
-                break;
-            }
-
-            tmp[index++] = dictionary.containsKey(word)
-                    ? dictionary.get(word)
-                    : dictionary.get(UNKNOWN);
-        }
-
-        // Padding and wrapping.
-        Arrays.fill(tmp, index, MAX_SENTENCE_LENGTH - 1, dictionary.get(PAD));
-        return new float[][]{tmp};
-    }
-
-    @WorkerThread
-    private synchronized void loadModel() throws PredictionsException {
-        try {
-            ByteBuffer buffer = loadModelFile(context);
-            tflite = new Interpreter(buffer);
-        } catch (IOException exception) {
-            throw new PredictionsException(
-                    "Error encountered while loading models.",
-                    exception,
-                    "Please verify that " + MODEL_PATH + " is present inside assets directory."
-            );
-        }
-    }
-
-    @WorkerThread
-    private synchronized void loadDictionary() throws PredictionsException {
-        try {
-            loadDictionaryFile(context);
-        } catch (IOException exception) {
-            throw new PredictionsException(
-                    "Error encountered while loading dictionary.",
-                    exception,
-                    "Please verify that " + DICTIONARY_PATH + " is present inside assets directory."
-            );
-        } catch (IllegalArgumentException exception) {
-            throw new PredictionsException(
-                    "Loaded dictionary does not contain required keywords.",
-                    exception,
-                    "Please verify the validity of the dictionary asset."
-            );
-        }
-    }
-
-    @WorkerThread
-    private synchronized void loadLabels() throws PredictionsException {
-        try {
-            loadLabelFile(context);
-        } catch (IOException exception) {
-            throw new PredictionsException(
-                    "Error encountered while loading labels.",
-                    exception,
-                    "Please verify that " + LABEL_PATH + " is present inside assets directory."
-            );
-        }
-    }
-
-    private MappedByteBuffer loadModelFile(Context context) throws IOException {
-        try (
-                AssetFileDescriptor fileDescriptor = context.getAssets().openFd(MODEL_PATH);
-                FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor())
-        ) {
-            FileChannel fileChannel = inputStream.getChannel();
-            long startOffset = fileDescriptor.getStartOffset();
-            long declaredLength = fileDescriptor.getDeclaredLength();
-            return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
-        }
-    }
-
-    private void loadLabelFile(Context context) throws IOException {
-        try (
-                InputStream inputStream = context.getAssets().open(LABEL_PATH);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))
-        ) {
-            // Each line in the label file is a label.
-            while (reader.ready()) {
-                labels.add(reader.readLine());
-            }
-        }
-    }
-
-    private void loadDictionaryFile(Context context) throws IOException {
-        try (
-                InputStream inputStream = context.getAssets().open(DICTIONARY_PATH);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))
-        ) {
-            // Each line in the dictionary has two columns.
-            // First column is a word, and the second is the index of this word.
-            while (reader.ready()) {
-                List<String> line = Arrays.asList(reader.readLine().split(" "));
-                if (line.size() < 2) {
-                    continue;
-                }
-                dictionary.put(line.get(0), Integer.parseInt(line.get(1)));
-            }
-        }
-
-        // Make sure that the reserved words are there
-        if (dictionary.get(PAD) == null) {
-            throw new IllegalArgumentException("Reserved word for padding \"<PAD>\" not found.");
-        }
-        if (dictionary.get(START) == null) {
-            throw new IllegalArgumentException("Reserved word for start indicator \"<START>\" not found.");
-        }
-        if (dictionary.get(UNKNOWN) == null) {
-            throw new IllegalArgumentException("Reserved word for unknown word \"<UNKNOWN>\" not found.");
-        }
-    }
-
     /**
      * Closes TensorFlow Lite interpreter and releases
      * in-memory assets data to free up resources.
      */
     @WorkerThread
     synchronized void release() {
-        if (tflite != null) {
-            tflite.close();
+        for (Loadable<?, PredictionsException> asset : assets) {
+            asset.unload();
         }
-        dictionary.clear();
-        labels.clear();
-        loaded.set(false);
     }
 
     /**
@@ -329,6 +183,6 @@ final class TensorFlowTextClassificationService {
      */
     @Nullable
     Interpreter getInterpreter() {
-        return tflite;
+        return interpreter.value();
     }
 }
