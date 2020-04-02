@@ -37,7 +37,6 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class AutoSessionTrackerTest {
-    private AnalyticsClient analyticsClient;
     private SessionClient sessionClient;
     private Application.ActivityLifecycleCallbacks callbacks;
 
@@ -47,7 +46,7 @@ public final class AutoSessionTrackerTest {
     @Before
     public void setup() {
         // Dependencies
-        this.analyticsClient = mock(AnalyticsClient.class);
+        AnalyticsClient analyticsClient = mock(AnalyticsClient.class);
         this.sessionClient = mock(SessionClient.class);
 
         // Object under test

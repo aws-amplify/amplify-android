@@ -17,6 +17,7 @@ package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
 
@@ -68,21 +69,30 @@ public final class UserProfile {
         return new Builder();
     }
 
-    @SuppressWarnings("checkstyle:NeedBraces")
     @Override
     public boolean equals(@Nullable Object object) {
-        if (this == object) return true;
-        if (object == null || getClass() != object.getClass()) return false;
+        if (this == object) {
+            return true;
+        }
+        if (object == null || getClass() != object.getClass()) {
+            return false;
+        }
 
         UserProfile that = (UserProfile) object;
 
-        if (name != null ? !name.equals(that.name) : that.name != null) return false;
-        if (email != null ? !email.equals(that.email) : that.email != null) return false;
-        if (plan != null ? !plan.equals(that.plan) : that.plan != null) return false;
-        if (location != null ? !location.equals(that.location) : that.location != null)
+        if (!ObjectsCompat.equals(name, that.name)) {
             return false;
-        return customProperties != null ? customProperties.equals(that.customProperties) :
-                that.customProperties == null;
+        }
+        if (!ObjectsCompat.equals(email, that.email)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(plan, that.plan)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(location, that.location)) {
+            return false;
+        }
+        return ObjectsCompat.equals(customProperties, that.customProperties);
     }
 
     @Override
@@ -207,24 +217,33 @@ public final class UserProfile {
             return new Builder();
         }
 
-        @SuppressWarnings("checkstyle:NeedBraces")
         @Override
         public boolean equals(@Nullable Object object) {
-            if (this == object) return true;
-            if (object == null || getClass() != object.getClass()) return false;
+            if (this == object) {
+                return true;
+            }
+            if (object == null || getClass() != object.getClass()) {
+                return false;
+            }
 
             Location location = (Location) object;
 
-            if (latitude != null ? !latitude.equals(location.latitude) : location.latitude != null)
+            if (!ObjectsCompat.equals(latitude, location.latitude)) {
                 return false;
-            if (longitude != null ? !longitude.equals(location.longitude) : location.longitude != null)
+            }
+            if (!ObjectsCompat.equals(longitude, location.longitude)) {
                 return false;
-            if (postalCode != null ? !postalCode.equals(location.postalCode) : location.postalCode != null)
+            }
+            if (!ObjectsCompat.equals(postalCode, location.postalCode)) {
                 return false;
-            if (city != null ? !city.equals(location.city) : location.city != null) return false;
-            if (region != null ? !region.equals(location.region) : location.region != null)
+            }
+            if (!ObjectsCompat.equals(city, location.city)) {
                 return false;
-            return country != null ? country.equals(location.country) : location.country == null;
+            }
+            if (!ObjectsCompat.equals(region, location.region)) {
+                return false;
+            }
+            return ObjectsCompat.equals(country, location.country);
         }
 
         @Override

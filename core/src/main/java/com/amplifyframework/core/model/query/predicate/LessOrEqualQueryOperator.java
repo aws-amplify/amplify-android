@@ -22,7 +22,7 @@ import androidx.core.util.ObjectsCompat;
  * @param <T> Comparable data type of the field
  */
 public final class LessOrEqualQueryOperator<T extends Comparable<T>> extends QueryOperator<T> {
-    private T value;
+    private final T value;
 
     /**
      * Constructs a less than or equal to condition.

@@ -99,7 +99,7 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
         private boolean trackAppLifecycleEvents = false;
         private String region;
         private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
-        private long autoSessionTrackingInterval = DEFAULT_AUTO_SESSION_TRACKING_INTERVAL;
+        private final long autoSessionTrackingInterval = DEFAULT_AUTO_SESSION_TRACKING_INTERVAL;
 
         Builder withAppId(final String appId) {
             this.appId = appId;

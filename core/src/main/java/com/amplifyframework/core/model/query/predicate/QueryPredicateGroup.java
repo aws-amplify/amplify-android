@@ -28,8 +28,8 @@ import java.util.List;
  * operation or wraps a given condition/group in a negation.
  */
 public final class QueryPredicateGroup implements QueryPredicate {
-    private Type type;
-    private List<QueryPredicate> predicates;
+    private final Type type;
+    private final List<QueryPredicate> predicates;
 
     /**
      * Creates a new group given a type to apply to the elements of this group + the elements of this group.
