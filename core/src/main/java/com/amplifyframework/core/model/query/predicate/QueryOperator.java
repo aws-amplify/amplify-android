@@ -21,7 +21,7 @@ package com.amplifyframework.core.model.query.predicate;
  * @param <T> Data type of the field being evaluated
  */
 public abstract class QueryOperator<T> implements Evaluable<T> {
-    private Type type;
+    private final Type type;
 
     /**
      * Constructs a new QueryOperator of the specified type.

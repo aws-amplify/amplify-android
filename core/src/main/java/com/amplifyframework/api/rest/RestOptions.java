@@ -166,7 +166,7 @@ public final class RestOptions {
          */
         public Builder addQueryParameters(final Map<String, String> queryParameters) {
             if (this.queryParameters == null) {
-                this.queryParameters = new HashMap<String, String>();
+                this.queryParameters = new HashMap<>();
             }
             this.queryParameters.putAll(queryParameters);
             return this;
@@ -179,7 +179,7 @@ public final class RestOptions {
          */
         public Builder addHeaders(final Map<String, String> headers) {
             if (this.headers == null) {
-                this.headers = new HashMap<String, String>();
+                this.headers = new HashMap<>();
             }
             this.headers.putAll(headers);
             return this;
@@ -193,7 +193,7 @@ public final class RestOptions {
          */
         public Builder addHeader(final String key, final String value) {
             if (this.headers == null) {
-                this.headers = new HashMap<String, String>();
+                this.headers = new HashMap<>();
             }
             this.headers.put(key, value);
             return this;

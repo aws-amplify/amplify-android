@@ -167,10 +167,7 @@ public final class ModelField {
         if (!ObjectsCompat.equals(type, that.type)) {
             return false;
         }
-        if (!ObjectsCompat.equals(targetType, that.targetType)) {
-            return false;
-        }
-        return true;
+        return ObjectsCompat.equals(targetType, that.targetType);
     }
 
     @Override

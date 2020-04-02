@@ -146,7 +146,7 @@ public final class SimpleModelProvider implements ModelProvider {
      * Configures and builds instances of SimpleModelProvider.
      */
     static final class Builder {
-        private Set<Class<? extends Model>> modelClasses;
+        private final Set<Class<? extends Model>> modelClasses;
         private String version;
 
         Builder() {

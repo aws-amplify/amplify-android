@@ -111,7 +111,7 @@ public final class PeriodicReachabilityCheckerTest {
      * us to toggle the reachability of the {@link Host} without getting involved
      * with any actual networking.
      */
-    final class StubHost implements Host {
+    static final class StubHost implements Host {
         private boolean reachable;
 
         @Override

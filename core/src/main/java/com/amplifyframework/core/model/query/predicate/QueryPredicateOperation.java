@@ -28,8 +28,8 @@ import java.util.Collections;
  * @param <T> Data type of the field being evaluated
  */
 public final class QueryPredicateOperation<T> implements QueryPredicate {
-    private String field;
-    private QueryOperator<T> operator;
+    private final String field;
+    private final QueryOperator<T> operator;
 
     /**
      * Create a new comparison operation with the field to examine and the comparison to perform on it.
