@@ -1,0 +1,9 @@
+{
+  "interpret": {
+    "interpretText": {
+      "region": "us-west-2",
+      "type": "ALL",
+      "defaultNetworkPolicy": "auto"
+    }
+  }
+}
