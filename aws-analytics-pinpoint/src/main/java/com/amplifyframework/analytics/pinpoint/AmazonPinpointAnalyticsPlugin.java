@@ -334,14 +334,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                                 .getLong(PinpointConfigurationKey.AUTO_FLUSH_INTERVAL.getConfigurationKey()));
             }
 
-            if (pluginConfiguration
-                    .has(PinpointConfigurationKey.AUTO_SESSION_TRACKING_INTERVAL.getConfigurationKey())) {
-                configurationBuilder
-                        .withAutoSessionTrackingInterval(pluginConfiguration
-                                .getLong(PinpointConfigurationKey.AUTO_SESSION_TRACKING_INTERVAL
-                                        .getConfigurationKey()));
-            }
-
             if (pluginConfiguration.has(PinpointConfigurationKey.TRACK_APP_LIFECYCLE_EVENTS
                     .getConfigurationKey())) {
                 configurationBuilder
@@ -399,11 +391,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
          * Time interval after which the events are automatically submitted to pinpoint.
          */
         AUTO_FLUSH_INTERVAL("autoFlushEventsInterval"),
-
-        /**
-         * Time interval after which to track lifecycle events.
-         */
-        AUTO_SESSION_TRACKING_INTERVAL("autoSessionTrackingInterval"),
 
         /**
          * Whether to track app lifecycle events automatically.
