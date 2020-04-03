@@ -39,7 +39,6 @@ import io.reactivex.subjects.PublishSubject;
  * contract. This intended for use as a stub in test code.
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
-
     private final List<Model> items;
     private final PublishSubject<StorageItemChange.Record> changeRecordStream;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;

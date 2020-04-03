@@ -62,7 +62,7 @@ public final class Orchestrator {
 
         RemoteModelMutations remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
-        Merger merger = new Merger(localStorageAdapter);
+        Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
 
