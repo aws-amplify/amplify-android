@@ -127,7 +127,6 @@ public final class SimpleModelProvider implements ModelProvider {
         return this.modelClasses.equals(that.modelClasses);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = version.hashCode();
@@ -147,7 +146,7 @@ public final class SimpleModelProvider implements ModelProvider {
      * Configures and builds instances of SimpleModelProvider.
      */
     static final class Builder {
-        private Set<Class<? extends Model>> modelClasses;
+        private final Set<Class<? extends Model>> modelClasses;
         private String version;
 
         Builder() {

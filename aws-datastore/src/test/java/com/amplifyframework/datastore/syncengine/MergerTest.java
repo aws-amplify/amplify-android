@@ -25,7 +25,8 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.Time;
+import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.util.Time;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -51,12 +52,14 @@ public final class MergerTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(2);
 
     private InMemoryStorageAdapter inMemoryStorageAdapter;
+    private MutationOutbox mutationOutbox;
     private Merger merger;
 
     @Before
     public void setup() {
         this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        this.merger = new Merger(inMemoryStorageAdapter);
+        this.mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
+        this.merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
     }
 
     /**
@@ -169,6 +172,46 @@ public final class MergerTest {
         // Assert: the *UPDATED* stuff is in the store, *only*.
         assertEquals(Collections.singletonList(updatedModel), findModels(BlogOwner.class));
         assertEquals(Collections.singletonList(updatedMetadata), findModels(ModelMetadata.class));
+    }
+
+    /**
+     * When a record comes into the merger to be merged,
+     * if there is a pending mutation in the outbox, for a model of the same ID,
+     * then that record shall NOT be merged.
+     * @throws DataStoreException On failure to arrange data into store
+     */
+    @Test
+    public void recordIsNotMergedWhenOutboxHasPendingMutation() throws DataStoreException {
+        // Arrange: some model with a well known ID exists on the system.
+        // We pretend that the user has recently updated it via the DataStore update() API.
+        String knownId = RandomString.string();
+        BlogOwner blogOwner = BlogOwner.builder()
+            .name("Jameson")
+            .id(knownId)
+            .build();
+        ModelMetadata localMetadata =
+            new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
+        putInStore(blogOwner, localMetadata);
+        mutationOutbox.enqueue(StorageItemChange.<BlogOwner>builder()
+            .changeId(knownId)
+            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
+            .item(blogOwner)
+            .itemClass(BlogOwner.class)
+            .type(StorageItemChange.Type.UPDATE)
+            .build());
+
+        // Act: now, cloud sync happens, and the sync engine tries to apply an update
+        // for the same model ID, into the store. According to the cloud, this same
+        // record should be DELETED.
+        ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Time.now());
+        merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata));
+
+        // Assert: the record is NOT deleted from the local store.
+        // The original is still there.
+        // Or in other words, the cloud data was NOT merged.
+        final List<BlogOwner> blogOwnersInStorage = findModels(BlogOwner.class);
+        assertEquals(1, blogOwnersInStorage.size());
+        assertEquals(blogOwner, blogOwnersInStorage.get(0));
     }
 
     /**

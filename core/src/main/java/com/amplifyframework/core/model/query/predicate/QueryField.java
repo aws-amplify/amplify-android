@@ -19,7 +19,7 @@ package com.amplifyframework.core.model.query.predicate;
  * Represents a property in a model with methods for chaining conditions.
  */
 public final class QueryField {
-    private String fieldName;
+    private final String fieldName;
 
     /**
      * Constructs a new QueryField for a given model property.

@@ -136,7 +136,6 @@ public final class StorageItem {
     }
 
     @Override
-    @SuppressWarnings("MagicNumber")
     public int hashCode() {
         int result = key.hashCode();
         result = 31 * result + (int) size;

@@ -36,7 +36,6 @@ import static org.junit.Assert.assertNotNull;
  */
 public final class RestApiInstrumentationTest {
     private static SynchronousApi api;
-    private static SynchronousMobileClient mobileClient;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
@@ -47,7 +46,7 @@ public final class RestApiInstrumentationTest {
     public static void onceBeforeTests() throws AmplifyException, SynchronousMobileClient.MobileClientException {
         AmplifyTestConfigurator.configureIfNotConfigured();
         api = SynchronousApi.singleton();
-        mobileClient = SynchronousMobileClient.instance();
+        SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
     }
 

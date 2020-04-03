@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import androidx.annotation.NonNull;
+
 /**
  * A component which is {@link CategoryType}-able is one that is able to
  * respond by saying to which {@link CategoryType} it belongs.
@@ -25,6 +27,7 @@ public interface CategoryTypeable {
      * Gets the category type associated with the current object.
      * @return The category type to which the current object is affiliated
      */
+    @NonNull
     CategoryType getCategoryType();
 }
 

@@ -22,8 +22,10 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.CompoundModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testutils.Await;
@@ -104,7 +106,9 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         assertFalse(CollectionUtils.isNullOrEmpty(firstResults));
 
         // Assert if version is stored correctly
-        String expectedVersion = modelProvider.version();
+        String expectedVersion =
+            CompoundModelProvider.of(modelProvider, SystemModelsProviderFactory.create())
+                .version();
         PersistentModelVersion persistentModelVersion =
                 PersistentModelVersion
                         .fromLocalStorage(sqliteStorageAdapter)
@@ -131,7 +135,9 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
         assertFalse(CollectionUtils.isNullOrEmpty(secondResults));
 
         // Check if the new version is stored in local storage.
-        expectedVersion = modelProviderThatUpgradesVersion.version();
+        expectedVersion =
+            CompoundModelProvider.of(modelProviderThatUpgradesVersion, SystemModelsProviderFactory.create())
+                .version();
         persistentModelVersion = PersistentModelVersion
                 .fromLocalStorage(sqliteStorageAdapter)
                 .blockingGet()

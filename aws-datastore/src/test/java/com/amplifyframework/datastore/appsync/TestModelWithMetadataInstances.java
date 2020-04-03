@@ -61,7 +61,7 @@ public final class TestModelWithMetadataInstances {
             new ModelMetadata("83ceb757-c8c8-4b6a-bee0-a43afb53a73a", Boolean.TRUE, 5, 123123L)
         );
 
-    @SuppressWarnings("checkstyle:all") private TestModelWithMetadataInstances() {}
+    private TestModelWithMetadataInstances() {}
 
     /**
      * Asserts that two collections of {@link ModelWithMetadata} are equals.

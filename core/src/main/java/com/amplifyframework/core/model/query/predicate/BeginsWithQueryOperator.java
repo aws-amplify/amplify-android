@@ -21,7 +21,7 @@ import androidx.core.util.ObjectsCompat;
  * Represents a begins with condition with a target value for comparison.
  */
 public final class BeginsWithQueryOperator extends QueryOperator<String> {
-    private String value;
+    private final String value;
 
     /**
      * Constructs a begins with condition.

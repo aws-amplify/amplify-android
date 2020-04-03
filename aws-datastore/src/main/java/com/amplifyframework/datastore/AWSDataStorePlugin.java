@@ -78,7 +78,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private Orchestrator createOrchestrator(
             ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry, LocalStorageAdapter storageAdapter) {
-        return new Orchestrator(modelProvider, modelSchemaRegistry, storageAdapter, AppSyncClient.instance());
+        return new Orchestrator(
+            modelProvider,
+            modelSchemaRegistry,
+            storageAdapter,
+            AppSyncClient.instance(),
+            () -> pluginConfiguration.getBaseSyncIntervalMs()
+        );
     }
 
     /**
@@ -107,11 +113,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressLint("CheckResult")
     @Override
     public void configure(
-            @Nullable JSONObject pluginConfigurationJson,
-            @NonNull Context context) throws DataStoreException {
+            @Nullable JSONObject pluginConfiguration,
+            @NonNull Context context
+    ) throws DataStoreException {
         try {
             this.pluginConfiguration =
-                AWSDataStorePluginConfiguration.fromJson(pluginConfigurationJson);
+                AWSDataStorePluginConfiguration.fromJson(pluginConfiguration);
         } catch (DataStoreException badConfigException) {
             throw new DataStoreException(
                 "There was an issue configuring the plugin from the amplifyconfiguration.json",

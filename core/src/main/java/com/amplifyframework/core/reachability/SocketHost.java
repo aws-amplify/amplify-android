@@ -85,7 +85,7 @@ public final class SocketHost implements Host {
         private static final int MIN_PORT = 1;
         private static final int MAX_PORT = 65_535;
 
-        @SuppressWarnings("checkstyle:all") private Port() {}
+        private Port() {}
 
         static int requireWithinRange(int port) {
             if (port < MIN_PORT || port > MAX_PORT) {

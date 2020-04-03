@@ -42,10 +42,10 @@ public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSe
                 .toJson(variables);
     }
 
-    class DateSerializer implements JsonSerializer<Date> {
+    static class DateSerializer implements JsonSerializer<Date> {
         public JsonElement serialize(Date date, Type typeOfSrc, JsonSerializationContext context) {
             DateFormat df = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
-            return new JsonPrimitive(df.format(new Date()));
+            return new JsonPrimitive(df.format(date));
         }
     }
 }

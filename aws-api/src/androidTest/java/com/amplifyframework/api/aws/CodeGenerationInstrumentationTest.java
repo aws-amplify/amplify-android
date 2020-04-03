@@ -37,6 +37,8 @@ import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.List;
 
@@ -72,15 +74,17 @@ public final class CodeGenerationInstrumentationTest {
      * This tests our ability to generate GraphQL queries at runtime, from model primitives,
      * for both queries and mutations. The query also tests functionality of the QueryPredicate filter.
      * @throws ApiException On failure to obtain valid response from endpoint
+     * @throws ParseException If we specify the wrong value for the date String in the test object
      */
     @SuppressWarnings("checkstyle:MagicNumber")
     @Test
-    public void queryMatchesMutationResult() throws ApiException {
+    public void queryMatchesMutationResult() throws ApiException, ParseException {
         // Create a Person
         Person david = Person.builder()
             .firstName("David")
             .lastName("Daudelin")
             .age(29)
+            .dob(new SimpleDateFormat("MM/dd/yyyy").parse("07/25/1990"))
             .relationship(MaritalStatus.married)
             .build();
         Person createdPerson = api.create(PERSON_API_NAME, david);

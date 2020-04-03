@@ -20,8 +20,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.1'
-        classpath 'me.tatarka:gradle-retrolambda:3.7.1'
+        classpath 'com.android.tools.build:gradle:3.6.2'
     }
 }
 
@@ -45,7 +44,7 @@ task clean(type: Delete) {
 ext {
     buildToolsVersion = "29.0.2"
     compileSdkVersion = 29
-    minSdkVersion = 15
+    minSdkVersion = 16
     targetSdkVersion = 29
 
     awsSdkVersion = '2.16.8'
@@ -86,9 +85,6 @@ subprojects { project ->
 }
 
 private void configureAndroidLibrary(Project project) {
-    project.apply plugin: 'me.tatarka.retrolambda'
-    project.retrolambda.jvmArgs += '-Dretrolambda.quiet=true'
-
     project.android {
         buildToolsVersion rootProject.ext.buildToolsVersion
         compileSdkVersion rootProject.ext.compileSdkVersion

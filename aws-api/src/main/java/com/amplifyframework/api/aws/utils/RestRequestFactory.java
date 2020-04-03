@@ -15,11 +15,15 @@
 
 package com.amplifyframework.api.aws.utils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.amplifyframework.api.rest.HttpMethod;
 
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Map;
+import java.util.Objects;
 
 import okhttp3.Headers;
 import okhttp3.HttpUrl;
@@ -27,66 +31,58 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 /**
- * Util class to handle Rest url request.
+ * Factory to create {@link URL}s and OkHttp {@link Request}s for REST-ful behaviors.
  */
-public final class RestOperationRequestUtils {
-
-    private static final String CONTENT_TYPE = "application/json";
-
-    /**
-     * Private constructor since this is a utility class.
-     */
-    private RestOperationRequestUtils() {
-        //not called
-    }
+public final class RestRequestFactory {
+    private RestRequestFactory() {}
 
     /**
      * Create an URL by appending the path and queries.
-     * <p>
      * Throws exception if the url is malformed.
-     *
      * @param endpoint        A valid endpoint
      * @param path            path to be appended.
      * @param queryParameters query parameters
      * @return Valid URL
      * @throws MalformedURLException Throw when the exception is not valid
      */
-    public static URL constructURL(String endpoint,
-                                   String path,
-                                   Map<String, String> queryParameters)
+    @NonNull
+    public static URL createURL(
+            @NonNull String endpoint,
+            @Nullable String path,
+            @Nullable Map<String, String> queryParameters)
             throws MalformedURLException {
-        String urlPath = "";
-        if (path != null) {
-            urlPath = path;
-        }
         URL url = new URL(endpoint);
         HttpUrl.Builder builder = new HttpUrl.Builder()
-                .scheme(url.getProtocol())
-                .host(url.getHost())
-                .addPathSegment(url.getPath().replaceFirst("/", ""))
-                .addPathSegment(urlPath);
+            .scheme(url.getProtocol())
+            .host(url.getHost())
+            .addPathSegment(url.getPath().replaceFirst("/", ""))
+            .addPathSegments(path == null ? "" : path);
 
         if (queryParameters != null) {
             for (Map.Entry<String, String> entry : queryParameters.entrySet()) {
                 builder.addQueryParameter(entry.getKey(), entry.getValue());
             }
         }
+
         return builder.build().url();
     }
 
     /**
      * Constructs the ok http request.
-     *
      * @param url         URL endpoint to make the request
      * @param requestData Data for the request
      * @param headers     Header map for th request
      * @param type        Rest operation type
      * @return Returns the request
      */
-    public static Request constructOKHTTPRequest(final URL url,
-                                                 final byte[] requestData,
-                                                 final Map<String, String> headers,
-                                                 final HttpMethod type) {
+    @NonNull
+    public static Request createRequest(
+            @NonNull URL url,
+            @Nullable byte[] requestData,
+            @Nullable Map<String, String> headers,
+            @NonNull HttpMethod type) {
+        Objects.requireNonNull(url);
+        Objects.requireNonNull(type);
         Request.Builder requestBuilder = new Request.Builder()
                 .url(url);
         switch (type) {
@@ -126,9 +122,10 @@ public final class RestOperationRequestUtils {
         return requestBuilder.build();
     }
 
-    private static void populateBody(final Request.Builder builder,
-                                     final byte[] data,
-                                     BodyCreationStrategy strategy) {
+    private static void populateBody(
+            Request.Builder builder,
+            byte[] data,
+            BodyCreationStrategy strategy) {
         if (data != null) {
             strategy.buildRequest(builder, data);
         }

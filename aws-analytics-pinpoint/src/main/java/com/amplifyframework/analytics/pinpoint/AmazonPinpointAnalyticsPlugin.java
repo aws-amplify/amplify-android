@@ -53,21 +53,21 @@ import java.util.Set;
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
-    @SuppressWarnings("checkstyle:WhitespaceAround")
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
         USER_NAME,
         USER_EMAIL,
         USER_PLAN
     })
+    @SuppressWarnings("checkstyle:WhitespaceAround")
     private @interface PinpointUserProfileAttribute {}
+
     private static final String USER_NAME = "name";
     private static final String USER_EMAIL = "email";
     private static final String USER_PLAN = "plan";
 
     private final Application application;
     private AutoEventSubmitter autoEventSubmitter;
-    private AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration;
     private AnalyticsClient analyticsClient;
     private AutoSessionTracker autoSessionTracker;
     private TargetingClient targetingClient;
@@ -278,7 +278,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        for (String key: keys) {
+        for (String key : keys) {
             analyticsClient.removeGlobalAttribute(key);
             analyticsClient.removeGlobalMetric(key);
         }
@@ -298,14 +298,24 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     @NonNull
     @Override
     public String getPluginKey() {
-        return "amazonPinpointAnalyticsPlugin";
+        return "awsPinpointAnalyticsPlugin";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws AnalyticsException {
+    public void configure(
+            JSONObject pluginConfiguration,
+            @NonNull Context context
+    ) throws AnalyticsException {
+        if (pluginConfiguration == null) {
+            throw new AnalyticsException(
+                    "Missing configuration for " + getPluginKey(),
+                    "Check amplifyconfiguration.json to make sure that there is a section for " +
+                            getPluginKey() + " under the analytics category."
+            );
+        }
 
         AmazonPinpointAnalyticsPluginConfiguration.Builder configurationBuilder =
                 AmazonPinpointAnalyticsPluginConfiguration.builder();
@@ -336,11 +346,11 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
                 "Unable to read appId or region from the amplify configuration json.",
                 exception,
                 "Make sure amplifyconfiguration.json is a valid json object in expected format. " +
-                "Please take a look at the documentation for expected format of amplifyconfiguration.json."
+                    "Please take a look at the documentation for expected format of amplifyconfiguration.json."
             );
         }
 
-        pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
+        AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
         PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
         this.analyticsClient = pinpointManager.getAnalyticsClient();
         this.targetingClient = pinpointManager.getTargetingClient();

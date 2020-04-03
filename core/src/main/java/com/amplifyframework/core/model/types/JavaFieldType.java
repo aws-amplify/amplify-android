@@ -90,7 +90,7 @@ public enum JavaFieldType {
      * @return the enumeration constant.
      */
     public static JavaFieldType from(@NonNull String javaFieldType) {
-        for (final JavaFieldType type: JavaFieldType.values()) {
+        for (final JavaFieldType type : JavaFieldType.values()) {
             if (javaFieldType.equals(type.stringValue())) {
                 return type;
             }

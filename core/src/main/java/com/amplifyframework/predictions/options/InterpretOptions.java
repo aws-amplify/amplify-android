@@ -13,20 +13,24 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.predictions.options;
+
+import com.amplifyframework.core.async.Options;
 
 /**
- * An almost-worthless wrapper to avoid writing {@link System#currentTimeMillis()} all
- * over the place. Instead, what we mean is "the current time," or Time.now().
+ * Options for text interpretation operation.
  */
-public final class Time {
-    @SuppressWarnings("checkstyle:all") private Time() {}
+public final class InterpretOptions implements Options {
+
+    private InterpretOptions() {
+        // TODO: Add options
+    }
 
     /**
-     * Gets the current time, expressed in a duration of milliseconds since the epoch.
-     * @return Current time in ms since epoch
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
      */
-    public static long now() {
-        return System.currentTimeMillis();
+    public static InterpretOptions defaultInstance() {
+        return new InterpretOptions();
     }
 }

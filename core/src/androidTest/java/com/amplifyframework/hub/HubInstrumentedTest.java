@@ -43,7 +43,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class HubInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:core:test");
-    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_MS = 100;
+    private static final long SUBSCRIPTION_RECEIVE_TIMEOUT_MS = 300;
 
     /**
      * Before any test is run, configure Amplify to use an
@@ -165,7 +165,7 @@ public final class HubInstrumentedTest {
 
         Collections.sort(subscriptionsReceived);
         int expectedMessageValue = 0;
-        for (Integer message: subscriptionsReceived) {
+        for (Integer message : subscriptionsReceived) {
             assertEquals(expectedMessageValue, message.intValue());
             expectedMessageValue++;
         }
@@ -214,11 +214,11 @@ public final class HubInstrumentedTest {
 
         Collections.sort(integerSubscriptionsReceived);
         int expectedIntegerSubscriptionValue = 0;
-        for (Integer message: integerSubscriptionsReceived) {
+        for (Integer message : integerSubscriptionsReceived) {
             assertEquals(expectedIntegerSubscriptionValue, message.intValue());
             expectedIntegerSubscriptionValue++;
         }
-        for (String message: stringSubscriptionsReceived) {
+        for (String message : stringSubscriptionsReceived) {
             assertEquals("weatherAlwaysRemainsTheSame", message);
         }
 

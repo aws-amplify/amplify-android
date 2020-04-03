@@ -21,7 +21,7 @@ import androidx.core.util.ObjectsCompat;
  * Represents an equality condition with a target value for comparison.
  */
 public final class EqualQueryOperator extends QueryOperator<Object> {
-    private Object value;
+    private final Object value;
 
     /**
      * Constructs an equality condition.

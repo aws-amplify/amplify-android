@@ -70,7 +70,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                 if (keyProvider == null) {
                     keyProvider = config::getApiKey;
                 }
-                return new AppSyncSigV4SignerInterceptor(keyProvider, config.getEndpointType());
+                return new AppSyncSigV4SignerInterceptor(config.getEndpointType(), keyProvider);
             case AWS_IAM:
                 // Initializes mobile client once and remembers the instance.
                 // This instance is reused by this factory.
@@ -103,7 +103,7 @@ final class AppSyncSigV4SignerInterceptorFactory implements InterceptorFactory {
                         );
                     };
                 }
-                return new AppSyncSigV4SignerInterceptor(oidcProvider, config.getEndpointType());
+                return new AppSyncSigV4SignerInterceptor(config.getEndpointType(), oidcProvider);
             default:
                 throw new ApiException(
                         "Unsupported authorization mode.",

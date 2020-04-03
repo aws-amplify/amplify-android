@@ -54,14 +54,17 @@ public interface Plugin<E> extends CategoryTypeable {
     String getPluginKey();
 
     /**
-     * Configure the plugin with customized configuration object.
+     * Configure the plugin with customized configuration object. A
+     * plugin may or may not require plugin configuration, so see
+     * the documentation for details.
+     *
      * This hook provides a good opportunity to instantiate resources.
      * Any long-lived initialization should take place in {@link #initialize(Context)}, instead.
      * @param pluginConfiguration plugin-specific configuration data
      * @param context An Android Context
      * @throws AmplifyException an error is encountered during configuration.
      */
-    void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException;
+    void configure(JSONObject pluginConfiguration, @NonNull Context context) throws AmplifyException;
 
     /**
      * Initializes the plugin.

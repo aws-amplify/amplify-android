@@ -17,6 +17,8 @@ package com.amplifyframework;
 
 import androidx.annotation.NonNull;
 
+import java.util.Objects;
+
 /**
  * Top-level exception in the Amplify framework. All other Amplify exceptions should extend this.
  */
@@ -33,16 +35,16 @@ public class AmplifyException extends Exception {
     /**
      * Creates a new exception with a message, root cause, and recovery suggestion.
      * @param message An error message describing why this exception was thrown
-     * @param throwable The underlying cause of this exception
+     * @param cause The underlying cause of this exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
     public AmplifyException(
             @NonNull final String message,
-            final Throwable throwable,
+            @NonNull final Throwable cause,
             @NonNull final String recoverySuggestion
     ) {
-        super(message, throwable);
-        this.recoverySuggestion = recoverySuggestion;
+        super(message, cause);
+        this.recoverySuggestion = Objects.requireNonNull(recoverySuggestion);
     }
 
     /**
@@ -50,14 +52,18 @@ public class AmplifyException extends Exception {
      * @param message Explains the reason for the exception
      * @param recoverySuggestion Text suggesting a way to recover from the error being described
      */
-    public AmplifyException(final String message, final String recoverySuggestion) {
-        this(message, null, recoverySuggestion);
+    public AmplifyException(
+            @NonNull final String message,
+            @NonNull final String recoverySuggestion) {
+        super(message);
+        this.recoverySuggestion = Objects.requireNonNull(recoverySuggestion);
     }
 
     /**
      * Gets the recovery suggestion message.
      * @return customized recovery suggestion message
      */
+    @NonNull
     public final String getRecoverySuggestion() {
         return recoverySuggestion;
     }

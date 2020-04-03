@@ -132,7 +132,6 @@ public final class DataStoreItemChange<T extends Model> {
         return initiator == that.initiator;
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber") // 31 is IDE-generated
     @Override
     public int hashCode() {
         int result = uuid.hashCode();

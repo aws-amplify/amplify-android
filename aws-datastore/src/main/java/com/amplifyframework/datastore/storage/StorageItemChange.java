@@ -165,7 +165,6 @@ public final class StorageItemChange<T extends Model> {
         return itemClass.equals(that.itemClass);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber") // 31 is IDE-generated
     @Override
     public int hashCode() {
         int result = changeId.hashCode();
@@ -383,7 +382,6 @@ public final class StorageItemChange<T extends Model> {
             return itemClass.equals(record.itemClass);
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber") // 31 is IDE-generated
         @Override
         public int hashCode() {
             int result = id.hashCode();

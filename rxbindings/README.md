@@ -23,8 +23,8 @@ Take an `implementation` dependency on this library. In your module's
 ```
 dependencies {
     # ...
-    implementation 'com.amplifyframework:core:0.9.1'
-    implementation 'com.amplifyframework:rxbindings:0.9.1'
+    implementation 'com.amplifyframework:core:0.10.0'
+    implementation 'com.amplifyframework:rxbindings:0.10.0'
     # ...
 }
 ```

@@ -22,9 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.BasicAnalyticsEvent;
 import com.amplifyframework.analytics.UserProfile;
-import com.amplifyframework.analytics.pinpoint.test.R;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
@@ -60,7 +58,6 @@ public class AnalyticsPinpointInstrumentedTest {
     private static final int EVENT_FLUSH_TIMEOUT = 60;
     private static final int EVENT_FLUSH_WAIT = 2;
 
-    private static AmazonPinpointAnalyticsPlugin plugin;
     private static AnalyticsClient analyticsClient;
     private static TargetingClient targetingClient;
 
@@ -71,11 +68,9 @@ public class AnalyticsPinpointInstrumentedTest {
     @BeforeClass
     public static void setUp() throws AmplifyException {
         Context context = getApplicationContext();
-        AmplifyConfiguration configuration =
-                AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
-        plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
+        AmazonPinpointAnalyticsPlugin plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
         Amplify.addPlugin(plugin);
-        Amplify.configure(configuration, context);
+        Amplify.configure(context);
         analyticsClient = plugin.getAnalyticsClient();
         targetingClient = plugin.getTargetingClient();
     }

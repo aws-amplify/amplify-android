@@ -30,7 +30,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class Await {
     private static final long DEFAULT_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
 
-    @SuppressWarnings("checkstyle:all") private Await() {}
+    private Await() {}
 
     /**
      * Awaits emission of either a result of an error.

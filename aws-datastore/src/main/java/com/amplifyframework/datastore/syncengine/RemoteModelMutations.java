@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
@@ -146,10 +147,9 @@ final class RemoteModelMutations {
                 return this;
             }
 
-            @SuppressWarnings("checkstyle:WhitespaceAround")
             @SuppressLint("SyntheticAccessor")
             Subscription begin() throws DataStoreException {
-                final Consumer<String> onStarted = ignored -> {};
+                final Consumer<String> onStarted = NoOpConsumer.create();
 
                 final Consumer<GraphQLResponse<ModelWithMetadata<T>>> onNext =
                     itemConsumer(commonEmitter, modelClass, subscriptionType);

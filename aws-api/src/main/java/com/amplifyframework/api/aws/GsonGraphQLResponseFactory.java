@@ -31,7 +31,6 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -188,10 +187,8 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private <T> Iterable<T> parseDataAsList(JsonElement jsonData, Class<T> classToCast) throws ApiException {
         try {
             ArrayList<T> dataAsList = new ArrayList<>();
-            Iterator<JsonElement> iterator = jsonData.getAsJsonArray().iterator();
 
-            while (iterator.hasNext()) {
-                final JsonElement current = iterator.next();
+            for (JsonElement current : jsonData.getAsJsonArray()) {
                 if (String.class.isAssignableFrom(classToCast)) {
                     dataAsList.add((T) current.toString());
                 } else {
@@ -208,14 +205,14 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
     }
 
+    @SuppressWarnings("checkstyle:WhitespaceAround")
     private List<GraphQLResponse.Error> parseErrors(JsonElement jsonErrors) throws ApiException {
         if (jsonErrors == null || jsonErrors.isJsonNull()) {
             return Collections.emptyList();
         }
 
         JsonArray errors = jsonErrors.getAsJsonArray();
-        @SuppressWarnings("WhitespaceAround")
-        final Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
+        Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
 
         try {
             return gson.fromJson(errors, listType);
@@ -228,4 +225,3 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
     }
 }
-

@@ -88,7 +88,24 @@
         <module name="NoWhitespaceBefore" />
         <module name="ParenPad" />
         <module name="WhitespaceAfter" />
-        <module name="WhitespaceAround" />
+        <module name="WhitespaceAround">
+            <property name="ignoreEnhancedForColon" value="false" />
+            <!--
+                Utility class constructors should be private. This
+                happens widely in the code base, and is the desirable
+                default. These should also have empty construtors, which
+                might as well be consisely written.
+            -->
+            <property name="allowEmptyConstructors" value="true" />
+            <!--
+                 false is already the default value for
+                 WhitespaceAround.  This documents that we have this
+                 rule, intentionally. Don't use an empty lambda.  Create
+                 a subclass which expresses this semantically:
+                 EmptyConsumer.create(), etc., instead of value -> {}.
+            -->
+            <property name="allowEmptyLambdas" value="false" />
+        </module>
 
         <!-- Disallow methods from having too many parameters. -->
         <module name="ParameterNumber" />
@@ -178,7 +195,16 @@
         <module name="MultipleVariableDeclarations" />
         <module name="MissingSwitchDefault" />
         <module name="ModifiedControlVariable" />
-        <module name="MagicNumber" />
+        <module name="MagicNumber">
+            <!--
+                 Android Studio IDE generates a hashCode()
+                 implementation that uses 31 to offset field values.
+                 This appears magic to the tool, but there's history and
+                 meaning behind the choice, which should be accepted as
+                 an acceptable default.
+            -->
+            <property name="ignoreHashCodeMethod" value="true" />
+        </module>
         <module name="FallThrough" />
         <module name="EqualsHashCode" />
         <module name="EqualsAvoidNull" />
