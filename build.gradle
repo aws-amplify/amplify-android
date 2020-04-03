@@ -62,6 +62,7 @@ ext {
         ],
         aws: [
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
+            comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion"
