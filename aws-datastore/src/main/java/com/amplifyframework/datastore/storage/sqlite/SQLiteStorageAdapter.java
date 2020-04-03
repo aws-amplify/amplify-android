@@ -336,6 +336,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 @SuppressWarnings("unchecked")
                 // item.getClass() is Class<? extends Model>, builder wants Class<T>.
                 final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                    .changeId(item.getId())
                     .item(item)
                     .itemClass((Class<T>) item.getClass())
                     .type(type)
@@ -496,6 +497,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     }
                 }
                 final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                    .changeId(item.getId())
                     .item(item)
                     .itemClass((Class<T>) item.getClass())
                     .type(StorageItemChange.Type.DELETE)

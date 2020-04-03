@@ -89,8 +89,10 @@ public final class SyncProcessorTest {
         modelSchemaRegistry.load(modelProvider.models());
 
         this.appSync = mock(AppSync.class);
-        final Merger merger = new Merger(inMemoryStorageAdapter);
+
         final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(inMemoryStorageAdapter);
+        final MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
+        final Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
 
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)

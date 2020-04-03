@@ -43,7 +43,7 @@ public final class PersistentModelVersion implements Model {
     // 
     // Once the limitation is addressed, remove this static identifier and provide an appropriate
     // update strategy for the PersistentModelVersion to move to the new architecture.
-    private static final String STATIC_IDENTIFIER_FOR_VERSION = "version-in-local-storage";
+    private static final String STATIC_IDENTIFIER_FOR_VERSION = "1ae1b4d0-7894-4f23-831e-ccf6c8439e1c";
 
     @ModelField(targetType = "ID", isRequired = true)
     private final String id;
@@ -56,9 +56,8 @@ public final class PersistentModelVersion implements Model {
      * @param version version of the {@link com.amplifyframework.core.model.ModelProvider}
      */
     PersistentModelVersion(@NonNull String version) {
-        Objects.requireNonNull(version);
+        this.version = Objects.requireNonNull(version);
         this.id = STATIC_IDENTIFIER_FOR_VERSION;
-        this.version = version;
     }
 
     /**
@@ -108,6 +107,7 @@ public final class PersistentModelVersion implements Model {
      * Return the version of the models.
      * @return the version of the models.
      */
+    @NonNull
     public String getVersion() {
         return this.version;
     }

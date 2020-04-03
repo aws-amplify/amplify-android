@@ -66,7 +66,7 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
 
         MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
-        Merger merger = new Merger(inMemoryStorageAdapter);
+        Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
 
