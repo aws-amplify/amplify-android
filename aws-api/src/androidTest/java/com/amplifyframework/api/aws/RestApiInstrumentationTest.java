@@ -45,7 +45,7 @@ public final class RestApiInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException, SynchronousMobileClient.MobileClientException {
         AmplifyTestConfigurator.configureIfNotConfigured();
-        api = SynchronousApi.singleton();
+        api = SynchronousApi.delegatingToAmplify();
         SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
     }

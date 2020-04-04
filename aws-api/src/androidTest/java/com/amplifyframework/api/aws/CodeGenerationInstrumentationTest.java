@@ -66,7 +66,7 @@ public final class CodeGenerationInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         AmplifyTestConfigurator.configureIfNotConfigured();
-        api = SynchronousApi.singleton();
+        api = SynchronousApi.delegatingToAmplify();
     }
 
     /**

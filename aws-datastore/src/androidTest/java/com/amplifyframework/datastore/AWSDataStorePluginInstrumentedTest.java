@@ -15,17 +15,21 @@
 
 package com.amplifyframework.datastore;
 
-import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
+import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
@@ -33,10 +37,10 @@ import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.Objects;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -47,12 +51,9 @@ import static org.junit.Assert.assertNotNull;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-@Ignore("Currently does not pass.") // TODO: fix the error; re-enable test
 public final class AWSDataStorePluginInstrumentedTest {
-    private static final String DATABASE_NAME = "AmplifyDatastore.db";
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore:test");
 
-    private static Context context;
-    private static AWSDataStorePlugin awsDataStorePlugin;
     private static SynchronousApi api;
     private static SynchronousAppSync appSync;
     private static SynchronousDataStore dataStore;
@@ -70,11 +71,9 @@ public final class AWSDataStorePluginInstrumentedTest {
      * @throws AmplifyException from Amplify configuration
      */
     @BeforeClass
-    public static void configureAmplify() throws AmplifyException {
-        final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
-        awsDataStorePlugin = testConfig.plugin();
-        context = ApplicationProvider.getApplicationContext();
-        api = SynchronousApi.singleton();
+    public static void beforeTests() throws AmplifyException {
+        TestConfiguration.configureIfNotConfigured();
+        api = SynchronousApi.delegatingToAmplify();
         appSync = SynchronousAppSync.defaultInstance();
         dataStore = SynchronousDataStore.singleton();
     }
@@ -87,14 +86,20 @@ public final class AWSDataStorePluginInstrumentedTest {
      */
     @Test
     public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() throws DataStoreException, ApiException {
+        // Arrange an ID that we can watch for.
+        String expectedId = RandomString.string();
+
         // Start listening for model publication events on the Hub.
         HubAccumulator outboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
+            HubAccumulator.create(HubChannel.DATASTORE,
+                NameAndIdFilter.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, expectedId)
+            );
         outboundModelEventAccumulator.clear().start();
 
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
+            .id(expectedId)
             .build();
         dataStore.save(localCharley);
 
@@ -117,7 +122,6 @@ public final class AWSDataStorePluginInstrumentedTest {
      * @throws DataStoreException On failure to query the local data store for
      *                            local presence of arranged data (second step)
      */
-    @SuppressWarnings("unchecked")
     @Test
     public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() throws DataStoreException {
         // Arrange a stable ID for the model we create/update,
@@ -127,18 +131,9 @@ public final class AWSDataStorePluginInstrumentedTest {
         // Now, start watching the Hub for notifications that we received and processed models
         // from the Cloud. Look specifically for events relating to the model with the above ID.
         HubAccumulator inboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, (HubEventFilter) hubEvent -> {
-                if (!DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(hubEvent.getName())) {
-                    return false;
-                }
-
-                ModelWithMetadata<BlogOwner> modelWithMetadata =
-                    (ModelWithMetadata<BlogOwner>) hubEvent.getData();
-                if (modelWithMetadata == null) {
-                    return false;
-                }
-                return modelWithMetadata.getSyncMetadata().getId().equals(expectedId);
-            });
+            HubAccumulator.create(HubChannel.DATASTORE,
+                NameAndIdFilter.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, expectedId)
+            );
         inboundModelEventAccumulator.clear().start();
 
         // Act: externally in the Cloud, someone creates a record for a blog owner,
@@ -170,7 +165,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Another HubEvent tells us that an update occurred in the Cloud;
         // the update was applied locally, to an existing record.
-        inboundModelEventAccumulator.take(1);
+        inboundModelEventAccumulator.takeOne();
         inboundModelEventAccumulator.stop().clear();
 
         // Jameson should be in the local DataStore, and last name should be updated.
@@ -179,12 +174,66 @@ public final class AWSDataStorePluginInstrumentedTest {
     }
 
     /**
-     * Drop all tables and database, terminate and delete the database.
-     * @throws AmplifyException from terminate if anything goes wrong
+     * A {@link HubEventFilter} which will return true if the received event
+     * has a matching DataStore event name, and refers to a given model ID.
+     * For example,
+     *     NameAndIdFilter.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, "asdf-asdfasdf")
+     * Would match event with PUBLISHED_TO_CLOUD as the name, and "asdf-asdfasdf"
+     * as the ID of the thing that was published to the cloud.
      */
-    @AfterClass
-    public static void tearDown() throws AmplifyException {
-        awsDataStorePlugin.terminate();
-        context.deleteDatabase(DATABASE_NAME);
+    private static final class NameAndIdFilter implements HubEventFilter {
+        private final DataStoreChannelEventName expectedEventName;
+        private final String expectedId;
+
+        NameAndIdFilter(DataStoreChannelEventName expectedEventName, String expectedId) {
+            this.expectedEventName = expectedEventName;
+            this.expectedId = expectedId;
+        }
+
+        static NameAndIdFilter create(DataStoreChannelEventName expectedEventName, String expectedId) {
+            Objects.requireNonNull(expectedEventName);
+            Objects.requireNonNull(expectedId);
+            return new NameAndIdFilter(expectedEventName, expectedId);
+        }
+
+        @Override
+        public boolean filter(@NonNull HubEvent<?> hubEvent) {
+            final DataStoreChannelEventName actualEventName;
+            try {
+                actualEventName = DataStoreChannelEventName.fromString(hubEvent.getName());
+            } catch (IllegalArgumentException noSuchValue) {
+                return false;
+            }
+            if (!expectedEventName.equals(actualEventName)) {
+                return false;
+            }
+
+            String actualId = null;
+            switch (actualEventName) {
+                case PUBLISHED_TO_CLOUD:
+                    StorageItemChange<? extends Model> storageItemChange =
+                        ((StorageItemChange<? extends Model>) hubEvent.getData());
+                    if (storageItemChange != null) {
+                        actualId = storageItemChange.item().getId();
+                    }
+                    break;
+                case RECEIVED_FROM_CLOUD:
+                    ModelWithMetadata<? extends Model> modelWithMetadata =
+                        ((ModelWithMetadata<? extends Model>) hubEvent.getData());
+                    if (modelWithMetadata != null) {
+                        actualId = modelWithMetadata.getModel().getId();
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if (expectedId.equals(actualId)) {
+                LOG.info("Found a match for id=" + expectedId);
+                return true;
+            } else {
+                return false;
+            }
+        }
     }
 }

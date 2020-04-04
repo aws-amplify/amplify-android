@@ -16,8 +16,6 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
-import androidx.annotation.NonNull;
-import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.aws.AWSApiPlugin;
@@ -26,17 +24,15 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.datastore.test.R;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+
 final class TestConfiguration {
     private static TestConfiguration singleton;
-    private final AWSDataStorePlugin plugin;
 
     private TestConfiguration(Context context) throws AmplifyException {
-        plugin = AWSDataStorePlugin.forModels(AmplifyModelProvider.getInstance());
-
         // We need to use an API plugin, so that we can validate remote sync.
         Amplify.addPlugin(new AWSApiPlugin());
-        Amplify.addPlugin(plugin);
-
+        Amplify.addPlugin(AWSDataStorePlugin.forModels(AmplifyModelProvider.getInstance()));
         AmplifyConfiguration amplifyConfiguration =
             AmplifyConfiguration.fromConfigFile(context, R.raw.amplifyconfiguration);
         Amplify.configure(amplifyConfiguration, context);
@@ -44,17 +40,13 @@ final class TestConfiguration {
 
     /**
      * Process-wide configuration for the DataStore instrumentation tests.
-     * @return A TestConfiguration instance
      */
-    @NonNull
-    static synchronized TestConfiguration configureIfNotConfigured() throws AmplifyException {
+    static synchronized void configureIfNotConfigured() throws AmplifyException {
         if (singleton == null) {
-            singleton = new TestConfiguration(ApplicationProvider.getApplicationContext());
+            Context context = getApplicationContext();
+            context.deleteDatabase("AmplifyDatastore.db");
+            AppSyncCleanup.instance(context).deleteAll(AmplifyModelProvider.getInstance());
+            singleton = new TestConfiguration(context);
         }
-        return singleton;
-    }
-
-    AWSDataStorePlugin plugin() {
-        return plugin;
     }
 }

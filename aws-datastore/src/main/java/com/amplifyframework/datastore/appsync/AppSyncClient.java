@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
@@ -56,12 +55,7 @@ public final class AppSyncClient implements AppSync {
     private final GraphQLRequest.VariablesSerializer variablesSerializer;
     private final ResponseDeserializer responseDeserializer;
 
-    /**
-     * Constructs a new AppSyncClient.
-     * @param api The API Category, configured with a DataStore API
-     */
-    @VisibleForTesting
-    AppSyncClient(@NonNull final GraphQlBehavior api) {
+    private AppSyncClient(@NonNull final GraphQlBehavior api) {
         this.api = Objects.requireNonNull(api);
         this.variablesSerializer = new AppSyncVariablesSerializer();
         this.responseDeserializer = new AppSyncResponseDeserializer();
@@ -75,6 +69,17 @@ public final class AppSyncClient implements AppSync {
     @NonNull
     public static AppSyncClient instance() {
         return new AppSyncClient(Amplify.API);
+    }
+
+    /**
+     * Creates a new AppSyncClient.
+     * @param graphQlApi A GraphQL API that knows how to talk the AppSync protocol
+     * @return An AppSyncClient instance which delegates to the provided GraphQL behavior
+     */
+    @NonNull
+    public static AppSyncClient delegatingTo(@NonNull GraphQlBehavior graphQlApi) {
+        Objects.requireNonNull(graphQlApi);
+        return new AppSyncClient(graphQlApi);
     }
 
     @SuppressWarnings("checkstyle:LineLength")

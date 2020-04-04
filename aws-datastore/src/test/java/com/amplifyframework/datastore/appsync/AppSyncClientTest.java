@@ -60,7 +60,7 @@ public final class AppSyncClientTest {
     @Before
     public void setup() {
         this.api = mock(ApiCategoryBehavior.class);
-        this.endpoint = new AppSyncClient(api);
+        this.endpoint = AppSyncClient.delegatingTo(api);
 
         // We need it to response with **something** by default.
         // Use this same method to send more interesting test values back...

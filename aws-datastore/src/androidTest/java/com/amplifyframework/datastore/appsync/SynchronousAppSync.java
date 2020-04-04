@@ -25,6 +25,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
 
@@ -32,12 +33,15 @@ import io.reactivex.Observable;
  * A synchronous wrapper around an AppSync client, useful in test, so you can just
  * wait for the results of network operations.
  */
-@SuppressWarnings("unused") // Oh, that it might be, someday, though!
+@SuppressWarnings("unused") // Subscription methods, https://www.youtube.com/watch?v=fWNaR-rxAic ?
 public final class SynchronousAppSync {
+    private static final long DEFAULT_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private final AppSync appSync;
+    private final long operationTimeoutMs;
 
-    private SynchronousAppSync(AppSync appSync) {
+    private SynchronousAppSync(AppSync appSync, long operationTimeoutMs) {
         this.appSync = appSync;
+        this.operationTimeoutMs = operationTimeoutMs;
     }
 
     /**
@@ -45,19 +49,34 @@ public final class SynchronousAppSync {
      * AppSync client returned by {@link AppSyncClient#instance()}.
      * @return A synchronous app sync facade
      */
+    @NonNull
     public static SynchronousAppSync defaultInstance() {
-        return new SynchronousAppSync(AppSyncClient.instance());
+        return new SynchronousAppSync(AppSyncClient.instance(), DEFAULT_OPERATION_TIMEOUT_MS);
     }
 
     /**
-     * Creates a new SynchronousAppSync instance, that proxies calls into
+     * Creates a new SynchronousAppSync instance, that delegates calls into
      * the provided async AppSync client.
      * @param appSync AppSync client
      * @return Synchronous wrapper around app sync client
      */
-    public static SynchronousAppSync using(@NonNull AppSync appSync) {
+    @NonNull
+    public static SynchronousAppSync delegatingTo(@NonNull AppSync appSync) {
         Objects.requireNonNull(appSync);
-        return new SynchronousAppSync(appSync);
+        return new SynchronousAppSync(appSync, DEFAULT_OPERATION_TIMEOUT_MS);
+    }
+
+    /**
+     * Creates a new SynchronousAppSync client, which delegates to the provided async
+     * client, and used the provided operation timeout.
+     * @param appSync This interacts with app sync in an aysnc way; we just wrap calls to it
+     * @param operationTimeoutMs The amount of time wait async client to complete operations
+     * @return A {@link SynchronousAppSync} instance
+     */
+    @NonNull
+    public static SynchronousAppSync create(@NonNull AppSync appSync, long operationTimeoutMs) {
+        Objects.requireNonNull(appSync);
+        return new SynchronousAppSync(appSync, operationTimeoutMs);
     }
 
     /**
@@ -72,8 +91,8 @@ public final class SynchronousAppSync {
     public <T extends Model> GraphQLResponse<Iterable<ModelWithMetadata<T>>> sync(
             @NonNull Class<T> modelClass,
             @Nullable Long lastSync) throws DataStoreException {
-        return Await.<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException>result((onResult, onError) ->
-            appSync.sync(modelClass, lastSync, onResult, onError)
+        return Await.<GraphQLResponse<Iterable<ModelWithMetadata<T>>>, DataStoreException>result(
+            operationTimeoutMs, (onResult, onError) -> appSync.sync(modelClass, lastSync, onResult, onError)
         );
     }
 
@@ -86,8 +105,8 @@ public final class SynchronousAppSync {
      */
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> create(@NonNull T model) throws DataStoreException {
-        return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
-            appSync.create(model, onResult, onError)
+        return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(
+            operationTimeoutMs, (onResult, onError) -> appSync.create(model, onResult, onError)
         );
     }
 
@@ -102,9 +121,9 @@ public final class SynchronousAppSync {
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
         @NonNull T model, @NonNull Integer version) throws DataStoreException {
-        return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(((onResult, onError) ->
-            appSync.update(model, version, onResult, onError)
-        ));
+        return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(
+            operationTimeoutMs, (onResult, onError) -> appSync.update(model, version, onResult, onError)
+        );
     }
 
     /**
@@ -117,10 +136,10 @@ public final class SynchronousAppSync {
      * @throws DataStoreException On failure to obtain response data
      */
     @NonNull
-    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
+    public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
             @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
-        return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
-            appSync.delete(clazz, objectId, version, onResult, onError)
+        return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(
+            operationTimeoutMs, (onResult, onError) -> appSync.delete(clazz, objectId, version, onResult, onError)
         );
     }
 
