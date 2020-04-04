@@ -24,12 +24,11 @@ import com.amplifyframework.core.category.CategoryType;
  * @param <R> Type of request being made
  */
 public abstract class ApiOperation<R> extends AmplifyOperation<R> implements Cancelable {
-
     /**
      * Constructs a new ApiOperation.
      * @param request An operation request
      */
-    public ApiOperation(final R request) {
+    protected ApiOperation(final R request) {
         super(CategoryType.API, request);
     }
 }

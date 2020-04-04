@@ -34,7 +34,7 @@ public enum LogLevel {
     VERBOSE,
 
     /**
-     * Debug logs are useful during development to understand the behavior of the sytem.
+     * Debug logs are useful during development to understand the behavior of the system.
      * These logs may contain information that is inappropriate for emission in a production
      * environment.
      */

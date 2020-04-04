@@ -23,7 +23,7 @@ import androidx.annotation.Nullable;
 import org.json.JSONObject;
 
 /**
- * AWS's default implementation of the {@link LoggingCategoryBehavior},
+ * AWS' default implementation of the {@link LoggingCategoryBehavior},
  * which emits logs to Android's {@link Log} class.
  */
 @SuppressWarnings("WeakerAccess")
@@ -67,8 +67,7 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public void configure(
             JSONObject pluginConfiguration,
-            @NonNull Context context)
-            throws LoggingException {
+            @NonNull Context context) {
         // In the future, accept a log level configuration from JSON?
     }
 

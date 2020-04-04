@@ -74,13 +74,9 @@ public final class NotEqualQueryOperator extends QueryOperator<Object> {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("NotEqualQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "NotEqualQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }

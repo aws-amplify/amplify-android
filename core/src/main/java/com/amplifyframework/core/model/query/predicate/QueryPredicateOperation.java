@@ -135,13 +135,9 @@ public final class QueryPredicateOperation<T> implements QueryPredicate {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("QueryPredicateOperation { ")
-                .append("field: ")
-                .append(field())
-                .append(", operator: ")
-                .append(operator())
-                .append(" }")
-                .toString();
+        return "QueryPredicateOperation { " +
+            "field: " + field() +
+            ", operator: " + operator() +
+            " }";
     }
 }
