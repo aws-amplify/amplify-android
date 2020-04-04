@@ -76,13 +76,9 @@ public final class LessOrEqualQueryOperator<T extends Comparable<T>> extends Que
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("LessOrEqualQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "LessOrEqualQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }

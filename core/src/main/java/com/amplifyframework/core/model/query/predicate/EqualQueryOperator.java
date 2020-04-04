@@ -74,13 +74,9 @@ public final class EqualQueryOperator extends QueryOperator<Object> {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("EqualQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "EqualQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }

@@ -141,6 +141,6 @@ public final class RestApiInstrumentationTest {
             .build();
         RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
-        assertFalse("Response should be unsuccessful", response.getCode().isSucessful());
+        assertFalse("Response should be unsuccessful", response.getCode().isSuccessful());
     }
 }

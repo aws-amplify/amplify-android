@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -80,7 +81,7 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
      * @return positive if this item comes after
      */
     @Override
-    public int compareTo(Feature<T> other) {
+    public int compareTo(@Nullable Feature<T> other) {
         if (other == null) {
             return -1;
         }

@@ -82,7 +82,7 @@ public final class PeriodicReachabilityCheckerTest {
      * {@link PeriodicReachabilityChecker#whenReachable(Host, Reachability.OnHostReachableAction)},
      * but is then cancelled via the returned {@link Cancelable}, then the action will never
      * be executed. This is the case even if the checker would have determined that the host was
-     * online -- because, the checker will not actuall perform the check, without any action
+     * online -- because, the checker will not actually perform the check, without any action
      * to call.
      */
     @Test(expected = LatchingAction.ActionNotExecutedException.class)

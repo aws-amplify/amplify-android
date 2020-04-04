@@ -130,6 +130,7 @@ public final class RestOptions {
      * instances of the {@link Builder}, by chaining
      * fluent configuration method calls.
      */
+    @SuppressWarnings({"UnusedReturnValue", "WeakerAccess"}) // Chain-able configurators are public API
     public static final class Builder {
 
         private String path;

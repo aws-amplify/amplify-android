@@ -75,13 +75,9 @@ public final class BeginsWithQueryOperator extends QueryOperator<String> {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("BeginsWithQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "BeginsWithQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }

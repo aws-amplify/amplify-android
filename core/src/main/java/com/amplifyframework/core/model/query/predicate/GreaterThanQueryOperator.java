@@ -76,13 +76,9 @@ public final class GreaterThanQueryOperator<T extends Comparable<T>> extends Que
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("GreaterThanQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "GreaterThanQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }
