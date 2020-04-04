@@ -90,15 +90,10 @@ public final class BetweenQueryOperator<T extends Comparable<T>> extends QueryOp
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("BetweenQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", start: ")
-                .append(start)
-                .append(", end: ")
-                .append(end)
-                .append(" }")
-                .toString();
+        return "BetweenQueryOperator { " +
+            "type: " + type() +
+            ", start: " + start +
+            ", end: " + end +
+            " }";
     }
 }

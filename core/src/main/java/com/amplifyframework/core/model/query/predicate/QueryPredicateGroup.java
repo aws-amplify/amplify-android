@@ -160,14 +160,10 @@ public final class QueryPredicateGroup implements QueryPredicate {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("QueryPredicateGroup { ")
-                .append("type: ")
-                .append(type())
-                .append(", predicates: ")
-                .append(predicates())
-                .append(" }")
-                .toString();
+        return "QueryPredicateGroup { " +
+            "type: " + type() +
+            ", predicates: " + predicates() +
+            " }";
     }
 
     /**
