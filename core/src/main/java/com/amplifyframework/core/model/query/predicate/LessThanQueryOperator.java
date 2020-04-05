@@ -76,13 +76,9 @@ public final class LessThanQueryOperator<T extends Comparable<T>> extends QueryO
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("LessThanQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "LessThanQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }

@@ -30,6 +30,7 @@ final class SimpleCategory<T> extends Category<Plugin<T>> {
         return new SimpleCategory<>(categoryType);
     }
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return categoryType;

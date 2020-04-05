@@ -156,7 +156,7 @@ public final class RestResponse {
          * Returns true if the status code is of range 2xx.
          * @return true if response has success code.
          */
-        public boolean isSucessful() {
+        public boolean isSuccessful() {
             return successCodes.contains(statusCode);
         }
     }

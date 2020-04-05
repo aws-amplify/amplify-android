@@ -24,7 +24,7 @@ import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.testutils.Time;
+import com.amplifyframework.util.Time;
 
 import org.junit.Before;
 import org.junit.Test;

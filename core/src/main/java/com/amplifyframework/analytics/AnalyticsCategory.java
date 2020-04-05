@@ -48,6 +48,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
      * Retrieve the Analytics category type enum.
      * @return enum that represents Analytics category
      */
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.ANALYTICS;

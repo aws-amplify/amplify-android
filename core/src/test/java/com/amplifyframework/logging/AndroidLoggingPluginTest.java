@@ -45,11 +45,11 @@ public class AndroidLoggingPluginTest {
     private AndroidLoggingPlugin plugin;
 
     /**
-     * Redirect the system output to a capturing gizmo.
-     * @throws LoggingException from logging configuration
+     * Setup logging plugin, for test. Redirect system output a buffer,
+     * against which we'll be able to make assertions.
      */
     @Before
-    public void redirectLogOutput() throws LoggingException {
+    public void setup() {
         systemLog = new LogOutputStream();
         ShadowLog.stream = new PrintStream(systemLog);
         plugin = new AndroidLoggingPlugin();

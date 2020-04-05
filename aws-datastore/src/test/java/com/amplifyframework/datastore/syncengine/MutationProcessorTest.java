@@ -33,6 +33,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.util.Time;
 
 import org.junit.After;
 import org.junit.Before;
@@ -65,7 +66,7 @@ public final class MutationProcessorTest {
         this.appSync = mock(AppSync.class);
 
         MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
-        Merger merger = new Merger(inMemoryStorageAdapter);
+        Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
 
@@ -213,7 +214,7 @@ public final class MutationProcessorTest {
                 .build();
 
             static final ModelMetadata MODEL_METADATA =
-                new ModelMetadata(Tony.MODEL.getId(), false, 1, System.currentTimeMillis());
+                new ModelMetadata(Tony.MODEL.getId(), false, 1, Time.now());
 
             static final StorageItemChange.Record DELETION_RECORD = StorageItemChange.<BlogOwner>builder()
                 .itemClass(BlogOwner.class)
@@ -236,7 +237,7 @@ public final class MutationProcessorTest {
                 .build();
 
             static final ModelMetadata MODEL_METADATA =
-                new ModelMetadata(Joe.MODEL.getId(), false, 1, System.currentTimeMillis());
+                new ModelMetadata(Joe.MODEL.getId(), false, 1, Time.now());
 
             static final StorageItemChange.Record CREATION_RECORD = StorageItemChange.<BlogOwner>builder()
                 .itemClass(BlogOwner.class)
@@ -261,7 +262,7 @@ public final class MutationProcessorTest {
                 .build();
 
             static final ModelMetadata MODEL_METADATA =
-                new ModelMetadata(JoeBlog.MODEL.getId(), false, 1, System.currentTimeMillis());
+                new ModelMetadata(JoeBlog.MODEL.getId(), false, 1, Time.now());
 
             static final StorageItemChange.Record CREATION_RECORD = StorageItemChange.<Blog>builder()
                 .type(StorageItemChange.Type.CREATE)

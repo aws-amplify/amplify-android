@@ -17,6 +17,15 @@ package com.amplifyframework.datastore;
 
 import android.content.Context;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.random.RandomString;
@@ -28,15 +37,22 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
+
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
-
+    private Context context;
     private AWSDataStorePlugin awsDataStorePlugin;
 
     @Before
     public void setup() {
+        this.context = getApplicationContext();
         ModelProvider modelProvider = SimpleModelProvider.builder()
             .version(RandomString.string())
             .addModel(Person.class)
@@ -51,12 +67,70 @@ public final class AWSDataStorePluginTest {
      * @throws DataStoreException Not expected; on failure to configure of initialize plugin
      */
     @Test
-    public void configureAndInitializeWithSyncMode() throws DataStoreException, JSONException {
-        Context context = getApplicationContext();
-        JSONObject json = new JSONObject()
-            .put("awsDataStorePlugin", new JSONObject()
-                .put("syncMode", "api"));
-        awsDataStorePlugin.configure(json, context);
+    public void configureAndInitializeInLocalMode() throws DataStoreException, JSONException {
+        JSONObject pluginJson = new JSONObject().put("syncMode", "none");
+        awsDataStorePlugin.configure(pluginJson, context);
         awsDataStorePlugin.initialize(context);
+    }
+
+    /**
+     * Configuring and initialization the plugin when in API sync mode succeeds without
+     * freezing or crashing the the calling thread.
+     * @throws JSONException on failure to arrange plugin config
+     * @throws DataStoreException on failure to configure
+     * @throws AmplifyException on failure to arrange API plugin via Amplify facade
+     */
+    @SuppressWarnings("checkstyle:MagicNumber")
+    @Test
+    public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
+        Amplify.addPlugin(mockApiPlugin());
+        JSONObject amplifyJson = new JSONObject().put("api", new JSONObject());
+        AmplifyConfiguration configuration = AmplifyConfiguration.fromJson(amplifyJson);
+        Amplify.configure(configuration, context);
+
+        JSONObject pluginJson = new JSONObject()
+            .put("syncMode", "api")
+            .put("baseSyncIntervalMs", 1_000);
+        awsDataStorePlugin.configure(pluginJson, context);
+        awsDataStorePlugin.initialize(context);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ApiPlugin<Void> mockApiPlugin() {
+        ApiPlugin<Void> mockApiPlugin = mock(ApiPlugin.class);
+        when(mockApiPlugin.getPluginKey()).thenReturn("awsApiPlugin");
+        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
+
+        // Make believe that queries return response immediately
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<Iterable<String>>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            onResponse.accept(new GraphQLResponse<>(Collections.emptyList(), Collections.emptyList()));
+            return null;
+        }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
+
+        // Make believe that mutations return response immediately
+        doAnswer(invocation -> {
+            int indexOfResponseConsumer = 1;
+            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
+            onResponse.accept(new GraphQLResponse<>("{}", Collections.emptyList()));
+            return null;
+        }).when(mockApiPlugin).mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
+
+        // Make believe that subscriptions return response immediately
+        doAnswer(invocation -> {
+            int indexOfStartConsumer = 2;
+            Consumer<String> onResponse = invocation.getArgument(indexOfStartConsumer);
+            onResponse.accept(RandomString.string());
+            return null;
+        }).when(mockApiPlugin).subscribe(
+            any(GraphQLRequest.class),
+            any(Consumer.class),
+            any(Consumer.class),
+            any(Consumer.class),
+            any(Action.class)
+        );
+
+        return mockApiPlugin;
     }
 }

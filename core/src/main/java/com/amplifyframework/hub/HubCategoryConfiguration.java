@@ -15,6 +15,8 @@
 
 package com.amplifyframework.hub;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -37,6 +39,7 @@ public final class HubCategoryConfiguration extends CategoryConfiguration {
      *
      * @return The category type to which the current object is affiliated
      */
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.HUB;
