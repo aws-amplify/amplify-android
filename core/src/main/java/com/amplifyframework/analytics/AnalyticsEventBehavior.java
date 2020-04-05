@@ -15,11 +15,21 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.core.async.Result;
-
 /**
- * Result object returned when the analytics events are
- * successfully submitted.
+ * Defines the interface for analytics events.
  */
-public class AnalyticsResult implements Result {
+public interface AnalyticsEventBehavior {
+    /**
+     * Returns the name of the event.
+     *
+     * @return event name
+     */
+    String getName();
+
+    /**
+     * Returns the properties of the event.
+     *
+     * @return event properties
+     */
+    AnalyticsProperties getProperties();
 }

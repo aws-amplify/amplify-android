@@ -18,8 +18,6 @@ package com.amplifyframework.analytics;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.Set;
-
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
@@ -31,7 +29,7 @@ public interface AnalyticsCategoryBehavior {
      * Allows you to tie a user to their actions and record traits about them. It includes
      * an unique User ID and any optional traits you know about them like their email, name, etc.
      *
-     * @param userId The unique identifier for the user
+     * @param userId  The unique identifier for the user
      * @param profile User specific data (e.g. plan, accountType, email, age, location, etc).
      *                If profile is null, no user data other than id will be attached to the endpoint.
      */
@@ -49,47 +47,40 @@ public interface AnalyticsCategoryBehavior {
 
     /**
      * Record the event by storing in the local database.
-     * @param eventName name of the event. An AnalyticsEvent is constructed
+     *
+     * @param eventName name of the event. An AnalyticsEventBehavior is constructed
      *                  based on the name of the event.
      */
     void recordEvent(@NonNull String eventName);
 
     /**
      * Record the event by storing in the local database.
-     * @param analyticsEvent object that encapsulates the details of an AnalyticsEvent
-     * @throws AnalyticsException when there is an error in
-     *                            storing the event in the local database.
+     *
+     * @param analyticsEvent object that encapsulates the details of an AnalyticsEventBehavior
      */
-    void recordEvent(@NonNull AnalyticsEvent analyticsEvent) throws AnalyticsException;
+    void recordEvent(@NonNull AnalyticsEventBehavior analyticsEvent);
 
     /**
      * Register properties that will be recorded by all the subsequent calls to
-     * {@link #recordEvent(AnalyticsEvent)}. Properties registered here can be overridden
-     * by the ones with the same name when calling `recordEvent`.
-     *
+     * {@link #recordEvent(AnalyticsEventBehavior)}. AnalyticsProperties registered here can be overridden
+     * by passing the same name when calling `recordEvent`.
+     * <p>
      * Examples of global properties would be `selectedPlan`, `campaignSource`
      *
-     * @param properties Map of global properties wrapped as an instance of {@link Properties}
-     * @throws AnalyticsException thrown if an error condition is encountered while registering global properties
-     * and Amplify fails to publish the error message to the hub. If registration fails,
-     * a {@link com.amplifyframework.hub.HubEvent} containing details of the failure is published
-     * to the {@link com.amplifyframework.hub.HubChannel} for analytics.
+     * @param properties Map of global properties wrapped as an instance of {@link AnalyticsProperties}
      */
-    void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException;
+    void registerGlobalProperties(@NonNull AnalyticsProperties properties);
 
     /**
-     * Registered global properties can be unregistered though this method.
+     * Remove specific registered global properties by name.
      *
-     * **Note:** In case no keys are provided, *all* registered global properties will
-     * be unregistered.
-     *
-     * @param keys a collection of property names to unregister
+     * @param propertyNames a variable number of property names to unregister
      */
-    void unregisterGlobalProperties(@NonNull Set<String> keys);
+    void unregisterGlobalProperties(@NonNull String... propertyNames);
 
     /**
      * Attempts to submit the locally stored events to the underlying service.
-     *
+     * <p>
      * **Note:** Implementations do not guarantee that all the stored data will be sent in one
      * request. Some analytics services have hard limits on how much data you can send at once.
      * What is the behavior in this case? Naming ??
