@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -27,7 +28,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Set;
+import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -70,7 +71,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.delete(raphael);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.isEmpty());
     }
 
@@ -99,11 +100,11 @@ public final class SQLiteStorageAdapterDeleteTest {
         adapter.delete(raphael);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.isEmpty());
 
         // Get the Blog record from the database
-        final Set<Blog> blogs = adapter.query(Blog.class);
+        final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.isEmpty());
     }
 
@@ -134,7 +135,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         //noinspection ThrowableNotThrown This is the point of this method.
         adapter.deleteExpectingError(mark, predicate); // Should not be deleted
 
-        Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(mark));
     }

@@ -21,12 +21,16 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.CompoundModelProvider;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
@@ -69,8 +73,8 @@ public final class SyncProcessorTest {
 
     private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
     private AppSync appSync;
-    private InMemoryStorageAdapter inMemoryStorageAdapter;
     private ModelProvider modelProvider;
+    private SynchronousStorageAdapter storageAdapter;
 
     private SyncProcessor syncProcessor;
 
@@ -81,14 +85,17 @@ public final class SyncProcessorTest {
     @Before
     public void setup() throws AmplifyException {
         this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
-        this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        this.modelProvider = AmplifyModelProvider.getInstance();
+        this.modelProvider =
+            CompoundModelProvider.of(AmplifyModelProvider.getInstance(), SystemModelsProviderFactory.create());
 
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
         modelSchemaRegistry.load(modelProvider.models());
 
         this.appSync = mock(AppSync.class);
+
+        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
 
         final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(inMemoryStorageAdapter);
         final MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
@@ -107,19 +114,17 @@ public final class SyncProcessorTest {
     /**
      * When {@link SyncProcessor#hydrate()}'s {@link Completable} completes,
      * then the local storage adapter should have all of the remote model state.
+     * @throws DataStoreException On failure interacting with storage adapter
      */
     @Test
-    public void localStorageAdapterIsHydratedFromRemoteModelState() {
+    public void localStorageAdapterIsHydratedFromRemoteModelState() throws DataStoreException {
         // Arrange: drum post is already in the adapter before hydration.
-        inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
+        storageAdapter.save(DRUM_POST.getModel());
 
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the SyncProcessor applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = TestObserver.create();
-        Observable.<StorageItemChange.Record>create(
-            emitter ->
-                inMemoryStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
-            )
+        storageAdapter.observe()
             .map(record -> record.toStorageItemChange(storageRecordDeserializer))
             .subscribe(adapterObserver);
 
@@ -167,19 +172,25 @@ public final class SyncProcessorTest {
         // There should be 2 BlogOwners, 0 Posts, and 3 MetaData records:
         //   - two for the BlogOwner,
         //   - and 1 for the deleted drum post
-        // Additionally, 6 sync time records.
-        assertEquals(5 + 6, inMemoryStorageAdapter.items().size());
+        List<? extends Model> itemsInStorage = storageAdapter.query(modelProvider);
+        assertEquals(
+            itemsInStorage.toString(),
+            2 + 3 + modelProvider.models().size(),
+            itemsInStorage.size()
+        );
         assertEquals(
             // Expect the 4 items for the bloggers (2 models and their metadata)
             Observable.fromArray(BLOGGER_ISLA, BLOGGER_JAMESON)
                 .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
                 // And also the one metadata record for a deleted post
                 .startWith(DELETED_DRUM_POST.getSyncMetadata())
-                .toSortedList(SortByModelId::compare)
+                .toList()
+                .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(inMemoryStorageAdapter.items())
+            Observable.fromIterable(storageAdapter.query(modelProvider))
                 .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
-                .toSortedList(SortByModelId::compare)
+                .toList()
+                .map(HashSet::new)
                 .blockingGet()
         );
 
@@ -190,7 +201,7 @@ public final class SyncProcessorTest {
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(inMemoryStorageAdapter.items())
+            Observable.fromIterable(storageAdapter.query(modelProvider))
                 .filter(item -> LastSyncMetadata.class.isAssignableFrom(item.getClass()))
                 .map(item -> (LastSyncMetadata) item)
                 .map(LastSyncMetadata::getModelClassName)
@@ -208,9 +219,10 @@ public final class SyncProcessorTest {
      * delete a record. But suppose the client is sync'ing for the first time. So, the client
      * doesn't actually need to delete this record. The deletion attempt will fail. But, that's
      * okay. Generally speaking, we want to do a "best effort" to apply the remote updates.
+     * @throws DataStoreException On failure to query items in storage
      */
     @Test
-    public void hydrationContinuesEvenIfOneItemFailsToSync() {
+    public void hydrationContinuesEvenIfOneItemFailsToSync() throws DataStoreException {
         // The local store does NOT have the drum post to start (or, for that matter, any items.)
         // inMemoryStorageAdapter.items().add(DRUM_POST.getModel());
 
@@ -229,9 +241,13 @@ public final class SyncProcessorTest {
 
         // Local storage should have a metadata record for the deletion, but no entry for the drum post. +1
         // There should be an entry and a metadata for Jameson the BlogOwner. +2.
-        // There should be 6 additional entries for the sync times. +6.
-        final List<? extends Model> storageItems = inMemoryStorageAdapter.items();
-        assertEquals(9, storageItems.size());
+        // Plus an entry for last sync time for every model type.
+        List<? extends Model> storageItems = storageAdapter.query(modelProvider);
+        assertEquals(
+            storageItems.toString(),
+            1 + 2 + modelProvider.models().size(),
+            storageItems.size()
+        );
 
         // Consider the model instances and their metadata.
         assertEquals(
@@ -239,12 +255,14 @@ public final class SyncProcessorTest {
             Observable.fromArray(BLOGGER_JAMESON)
                 .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
                 .startWith(DELETED_DRUM_POST.getSyncMetadata())
-                .toSortedList(SortByModelId::compare)
+                .toList()
+                .map(HashSet::new)
                 .blockingGet(),
             Observable.fromIterable(storageItems)
                 // Ignore the sync time records, for this check.
                 .filter(item -> !LastSyncMetadata.class.isAssignableFrom(item.getClass()))
-                .toSortedList(SortByModelId::compare)
+                .toList()
+                .map(HashSet::new)
                 .blockingGet()
         );
 
@@ -257,7 +275,7 @@ public final class SyncProcessorTest {
             .flatMapObservable(Observable::fromIterable);
 
         assertEquals(
-            6,
+            modelProvider.models().size(),
             actualSyncTimeRecords.toList()
                 .blockingGet()
                 .size()
@@ -295,10 +313,9 @@ public final class SyncProcessorTest {
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval.
         long longAgoTimeMs = Time.now() - (BASE_SYNC_INTERVAL_MS * 2);
-        final List<Model> storageItems = inMemoryStorageAdapter.items();
         Observable.fromIterable(modelProvider.models())
             .map(modelClass -> LastSyncMetadata.lastSyncedAt(modelClass, longAgoTimeMs))
-            .blockingForEach(storageItems::add);
+            .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
         AppSyncMocking.onSync(appSync)
@@ -335,10 +352,9 @@ public final class SyncProcessorTest {
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd very recently (within the interval.)
         long recentTimeMs = Time.now();
-        final List<Model> storageItems = inMemoryStorageAdapter.items();
         Observable.fromIterable(modelProvider.models())
             .map(modelClass -> LastSyncMetadata.lastSyncedAt(modelClass, recentTimeMs))
-            .blockingForEach(storageItems::add);
+            .blockingForEach(storageAdapter::save);
 
         // Arrange: return some content from the fake AppSync endpoint
         AppSyncMocking.onSync(appSync)
@@ -364,14 +380,6 @@ public final class SyncProcessorTest {
         }
     }
 
-    static final class SortByModelId {
-        private SortByModelId() {}
-
-        static int compare(Model left, Model right) {
-            return left.getId().compareTo(right.getId());
-        }
-    }
-
     static final class RecentTimeWindow {
         private static final long ACCEPTABLE_DRIFT_MS = TimeUnit.SECONDS.toMillis(1);
 
@@ -386,6 +394,23 @@ public final class SyncProcessorTest {
             long low = Time.now() - ACCEPTABLE_DRIFT_MS;
             long high = Time.now() + ACCEPTABLE_DRIFT_MS;
             return Range.create(low, high).contains(millisSinceEpoch);
+        }
+    }
+
+    /**
+     * Utilities for sorting collections of models, by their IDs.
+     */
+    public static final class SortByModelId {
+        private SortByModelId() {}
+
+        /**
+         * A comparator implementation to sort models by ID.
+         * @param left A model
+         * @param right Another model
+         * @return negative if left is first, positive if right is; zero if equivalent
+         */
+        static int compare(Model left, Model right) {
+            return left.getId().compareTo(right.getId());
         }
     }
 }

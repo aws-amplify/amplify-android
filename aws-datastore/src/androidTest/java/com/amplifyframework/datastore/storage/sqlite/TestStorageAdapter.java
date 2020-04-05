@@ -24,6 +24,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 
 import java.util.Objects;
 
@@ -54,7 +55,7 @@ final class TestStorageAdapter {
             SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
 
         SynchronousStorageAdapter synchronousStorageAdapter =
-            SynchronousStorageAdapter.instance(sqLiteStorageAdapter);
+            SynchronousStorageAdapter.delegatingTo(sqLiteStorageAdapter);
         Context context = ApplicationProvider.getApplicationContext();
         try {
             synchronousStorageAdapter.initialize(context);
