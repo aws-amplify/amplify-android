@@ -22,7 +22,9 @@ import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import java.util.Objects;
 
 /**
- * An escape hatch to give low-level access to the AWS SDK.
+ * An escape hatch for Predictions, which gives direct access to
+ * the AWS service APIs. Use this to perform low-level operations
+ * that are not exposed by Amplify, directly.
  */
 public final class AWSPredictionsEscapeHatch {
     private final AmazonComprehendClient comprehend;

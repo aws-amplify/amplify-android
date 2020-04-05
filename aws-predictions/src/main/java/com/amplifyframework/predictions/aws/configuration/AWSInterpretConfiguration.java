@@ -17,6 +17,8 @@ package com.amplifyframework.predictions.aws.configuration;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.predictions.aws.NetworkPolicy;
 
 import org.json.JSONException;
@@ -26,6 +28,7 @@ import org.json.JSONObject;
  * Configures the behavior for text interpretation.
  */
 public final class AWSInterpretConfiguration {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-predictions");
 
     private static final InterpretType DEFAULT_INTERPRET_TYPE = InterpretType.ALL;
     private static final NetworkPolicy DEFAULT_NETWORK_POLICY = NetworkPolicy.AUTO;
@@ -52,6 +55,7 @@ public final class AWSInterpretConfiguration {
     public static AWSInterpretConfiguration fromJson(@NonNull JSONObject configurationJson) throws JSONException {
         // Use default values if the section is missing
         if (!configurationJson.has("interpret")) {
+            LOG.info("Interpret configuration not found. Using defaults...");
             return new AWSInterpretConfiguration(
                     DEFAULT_INTERPRET_TYPE,
                     DEFAULT_NETWORK_POLICY
@@ -99,12 +103,12 @@ public final class AWSInterpretConfiguration {
         /**
          * Detect entities from text.
          */
-        ENTITY,
+        ENTITIES,
 
         /**
          * Pick out key phrases from text.
          */
-        KEY_PHRASE,
+        KEY_PHRASES,
 
         /**
          * Determine predominant sentiment from text.

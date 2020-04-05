@@ -27,7 +27,7 @@ import java.util.Locale;
  * (i.e. {@link SpeechType}).
  */
 public final class SpeechTypeAdapter {
-    @SuppressWarnings("checkstyle:all") private SpeechTypeAdapter() {}
+    private SpeechTypeAdapter() {}
 
     /**
      * Converts the part of speech tag returned by AWS Comprehend

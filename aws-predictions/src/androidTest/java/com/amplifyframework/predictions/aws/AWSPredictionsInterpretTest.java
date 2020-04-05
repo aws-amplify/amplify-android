@@ -64,7 +64,7 @@ public final class AWSPredictionsInterpretTest {
      */
     @Test(expected = PredictionsException.class)
     public void testInterpretFailsForNullInput() throws Exception {
-        predictions.interpret("", InterpretOptions.defaultInstance());
+        predictions.interpret("", InterpretOptions.defaults());
     }
 
     /**
@@ -76,7 +76,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret english text and assert non-null result
         InterpretResult result = predictions.interpret(
                 Assets.readAsString("sample-text-en.txt"),
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 
@@ -95,7 +95,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret french text and assert non-null result
         InterpretResult result = predictions.interpret(
                 Assets.readAsString("sample-text-fr.txt"),
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 
@@ -114,7 +114,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret positive text and assert non-null result
         InterpretResult result = predictions.interpret(
                 Assets.readAsString("positive-review.txt"),
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 
@@ -133,7 +133,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret negative text and assert non-null result
         InterpretResult result = predictions.interpret(
                 Assets.readAsString("negative-review.txt"),
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 
@@ -152,7 +152,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret sample text and assert non-null result
         InterpretResult result = predictions.interpret(
                 Assets.readAsString("sample-text-en.txt"),
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 
@@ -171,7 +171,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret sample text and assert non-null result
         InterpretResult result = predictions.interpret(
                 Assets.readAsString("sample-text-en.txt"),
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 
@@ -193,7 +193,7 @@ public final class AWSPredictionsInterpretTest {
         // Interpret sample text and assert non-null result
         InterpretResult result = predictions.interpret(
                 sampleText,
-                InterpretOptions.defaultInstance()
+                InterpretOptions.defaults()
         );
         assertNotNull(result);
 

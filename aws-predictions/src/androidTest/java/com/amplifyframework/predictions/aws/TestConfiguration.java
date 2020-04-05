@@ -36,27 +36,26 @@ final class TestConfiguration {
     private static final String AMPLIFY_CONFIGURATION_IDENTIFIER = "amplifyconfiguration";
     private static final String AWS_CONFIGURATION_IDENTIFIER = "awsconfiguration";
 
-    private static TestConfiguration singleton;
+    private static boolean isConfigured;
 
-    private TestConfiguration() throws Exception {
-        Context context = ApplicationProvider.getApplicationContext();
-
-        Amplify.addPlugin(new AWSPredictionsPlugin());
-        configureAmplify(context);
-        setUpCredentials(context);
-    }
+    private TestConfiguration() {}
 
     /**
-     * Process-wide configuration for the Storage instrumentation tests.
-     * @return A TestConfiguration instance
+     * Process-wide configuration for the Predictions instrumentation tests.
      * @throws Exception if configuration fails
      */
     @NonNull
-    static synchronized TestConfiguration configureIfNotConfigured() throws Exception {
-        if (singleton == null) {
-            singleton = new TestConfiguration();
+    static synchronized void configureIfNotConfigured() throws Exception {
+        if (isConfigured) {
+            return;
         }
-        return singleton;
+
+        Context context = ApplicationProvider.getApplicationContext();
+        Amplify.addPlugin(new AWSPredictionsPlugin());
+        configureAmplify(context);
+        setUpCredentials(context);
+
+        isConfigured = true;
     }
 
     private static void configureAmplify(Context context) throws AmplifyException {

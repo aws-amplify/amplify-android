@@ -77,7 +77,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final InterpretOptions options = InterpretOptions.defaultInstance();
+        final InterpretOptions options = InterpretOptions.defaults();
         return interpret(text, options, onSuccess, onError);
     }
 

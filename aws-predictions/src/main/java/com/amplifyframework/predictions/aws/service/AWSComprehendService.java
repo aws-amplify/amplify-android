@@ -67,7 +67,7 @@ final class AWSComprehendService {
     private final AmazonComprehendClient comprehend;
     private final AWSInterpretConfiguration configuration;
 
-    AWSComprehendService(@Nullable AWSInterpretConfiguration configuration) throws PredictionsException {
+    AWSComprehendService(@Nullable AWSInterpretConfiguration configuration) {
         this.comprehend = createComprehendClient();
         this.configuration = configuration;
     }
@@ -207,7 +207,7 @@ final class AWSComprehendService {
     private List<KeyPhrase> fetchKeyPhrases(String text, LanguageType language) throws PredictionsException {
         // Skip if configuration specifies NOT key phrase
         if (!AWSInterpretConfiguration.InterpretType.ALL.equals(configuration.getType())
-                && !AWSInterpretConfiguration.InterpretType.KEY_PHRASE.equals(configuration.getType())) {
+                && !AWSInterpretConfiguration.InterpretType.KEY_PHRASES.equals(configuration.getType())) {
             return null;
         }
 
@@ -248,7 +248,7 @@ final class AWSComprehendService {
     private List<Entity> fetchEntities(String text, LanguageType language) throws PredictionsException {
         // Skip if configuration specifies NOT entities
         if (!AWSInterpretConfiguration.InterpretType.ALL.equals(configuration.getType())
-                && !AWSInterpretConfiguration.InterpretType.ENTITY.equals(configuration.getType())) {
+                && !AWSInterpretConfiguration.InterpretType.ENTITIES.equals(configuration.getType())) {
             return null;
         }
 

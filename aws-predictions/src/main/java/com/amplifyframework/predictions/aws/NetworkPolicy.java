@@ -23,7 +23,7 @@ import androidx.annotation.NonNull;
  */
 public enum NetworkPolicy {
     /**
-     * Only use AWS cloud resources to perform online Predictions
+     * Only use cloud resources to perform online Predictions
      * operation.
      */
     ONLINE("online"),

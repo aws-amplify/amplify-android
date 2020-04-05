@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.predictions.PredictionsCategory;
+import com.amplifyframework.predictions.PredictionsCategoryBehavior;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
@@ -33,22 +34,33 @@ import java.util.concurrent.TimeUnit;
  * performing various operations.
  */
 public final class SynchronousPredictions {
-    private static final long PREDICTIONS_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(60);
+    private static final long PREDICTIONS_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
-    private static SynchronousPredictions singleton = null;
+    private final PredictionsCategoryBehavior predictions;
 
-    @SuppressWarnings("checkstyle:all") private SynchronousPredictions() {}
+    private SynchronousPredictions(PredictionsCategoryBehavior predictions) {
+        this.predictions = predictions;
+    }
 
     /**
-     * Gets a singleton instance of the Synchronous Predictions utility.
-     * @return Singleton instance of Synchronous Predictions
+     * Gets an instance of the Synchronous Predictions utility that
+     * delegates tasks to Amplify.Predictions.
+     * @return new instance of Synchronous Predictions
      */
     @NonNull
-    public static synchronized SynchronousPredictions singleton() {
-        if (SynchronousPredictions.singleton == null) {
-            SynchronousPredictions.singleton = new SynchronousPredictions();
-        }
-        return SynchronousPredictions.singleton;
+    public static synchronized SynchronousPredictions create() {
+        return create(Amplify.Predictions);
+    }
+
+    /**
+     * Gets an instance of the Synchronous Predictions utility that
+     * delegates tasks to the given asynchronous implementation of
+     * predictions behavior.
+     * @return new instance of Synchronous Predictions
+     */
+    @NonNull
+    public static synchronized SynchronousPredictions create(@NonNull PredictionsCategoryBehavior predictions) {
+        return new SynchronousPredictions(predictions);
     }
 
     /**
@@ -66,7 +78,7 @@ public final class SynchronousPredictions {
     ) throws PredictionsException {
         return Await.<InterpretResult, PredictionsException>result(
             PREDICTIONS_OPERATION_TIMEOUT_MS,
-            (onResult, onError) -> Amplify.Predictions.interpret(
+            (onResult, onError) -> predictions.interpret(
                     text,
                     options,
                     onResult,

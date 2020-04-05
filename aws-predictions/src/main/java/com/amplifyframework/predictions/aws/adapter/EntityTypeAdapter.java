@@ -27,7 +27,7 @@ import java.util.Locale;
  * (i.e. {@link EntityType}).
  */
 public final class EntityTypeAdapter {
-    @SuppressWarnings("checkstyle:all") private EntityTypeAdapter() {}
+    private EntityTypeAdapter() {}
 
     /**
      * Converts the entity type string returned by AWS Comprehend
