@@ -39,7 +39,6 @@ import io.reactivex.subjects.PublishSubject;
  * contract. This intended for use as a stub in test code.
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
-
     private final List<Model> items;
     private final PublishSubject<StorageItemChange.Record> changeRecordStream;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
@@ -58,13 +57,13 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         return new InMemoryStorageAdapter();
     }
 
-    @SuppressWarnings("WhitespaceAround") // Looks better this way
     @Override
     public void initialize(
             @NonNull Context context,
             @NonNull Consumer<List<ModelSchema>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
-    ) {}
+    ) {
+    }
 
     @Override
     public <T extends Model> void save(

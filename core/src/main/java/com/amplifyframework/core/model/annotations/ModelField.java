@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 /**
  * This annotation is used to indicate that a member of a class which extends
  * {@link com.amplifyframework.core.model.Model} should be serialized or
- * deserialized into the Datastore.
+ * deserialized into the DataStore.
  *
  * The {@link RetentionPolicy#RUNTIME} annotation is added to
  * retain {@link ModelField} at runtime for the reflection capabilities to work

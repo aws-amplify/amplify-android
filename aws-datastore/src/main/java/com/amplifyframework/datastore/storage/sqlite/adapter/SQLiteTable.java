@@ -143,7 +143,7 @@ public final class SQLiteTable {
      */
     @Nullable
     public SQLiteColumn getPrimaryKey() {
-        for (SQLiteColumn column: sortedColumns) {
+        for (SQLiteColumn column : sortedColumns) {
             if (column.isPrimaryKey()) {
                 return column;
             }
@@ -171,7 +171,7 @@ public final class SQLiteTable {
     @NonNull
     public List<SQLiteColumn> getForeignKeys() {
         List<SQLiteColumn> foreignKeys = new LinkedList<>();
-        for (SQLiteColumn column: sortedColumns) {
+        for (SQLiteColumn column : sortedColumns) {
             if (column.isForeignKey()) {
                 foreignKeys.add(column);
             }

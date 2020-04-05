@@ -28,7 +28,7 @@ import com.amazonaws.amplify.core.BuildConfig;
 public final class UserAgent {
     private static String instance = null;
 
-    @SuppressWarnings("checkstyle:all") private UserAgent() {}
+    private UserAgent() {}
 
     /**
      * Gets a String to use as the value of a User-Agent header.

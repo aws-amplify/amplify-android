@@ -70,7 +70,7 @@ public enum SqliteDataType {
      * @return the enumeration constant.
      */
     public static SqliteDataType from(@NonNull String sqliteDataType) {
-        for (final SqliteDataType type: SqliteDataType.values()) {
+        for (final SqliteDataType type : SqliteDataType.values()) {
             if (sqliteDataType.equals(type.getSqliteDataType())) {
                 return type;
             }

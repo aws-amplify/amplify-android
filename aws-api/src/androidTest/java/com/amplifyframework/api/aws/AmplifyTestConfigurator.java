@@ -31,7 +31,7 @@ import com.amplifyframework.core.AmplifyConfiguration;
 final class AmplifyTestConfigurator {
     private static boolean alreadyConfigured = false;
 
-    @SuppressWarnings("checkstyle:all") private AmplifyTestConfigurator() {}
+    private AmplifyTestConfigurator() {}
 
     /**
      * Gets the singleton instance of Amplify, configured for the API

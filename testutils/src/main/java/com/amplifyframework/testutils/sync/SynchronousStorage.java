@@ -45,7 +45,7 @@ public final class SynchronousStorage {
 
     private static SynchronousStorage singleton = null;
 
-    @SuppressWarnings("checkstyle:all") private SynchronousStorage() {}
+    private SynchronousStorage() {}
 
     /**
      * Gets a singleton instance of the Synchronous Storage utility.

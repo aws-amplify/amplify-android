@@ -30,7 +30,7 @@ import java.security.NoSuchAlgorithmException;
  * Test utility for comparing file content.
  */
 public final class FileAssert {
-    @SuppressWarnings("checkstyle:all") private FileAssert() {} // Prevent instantiation
+    private FileAssert() {}
 
     /**
      * Asserts that two files are equal in the respect that:

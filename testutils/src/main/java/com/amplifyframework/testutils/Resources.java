@@ -34,13 +34,8 @@ import java.util.List;
  * A little utility to load test content from src/test/resources.
  */
 public final class Resources {
-
     private static final String RESOURCE_BASE = "src/test/resources";
 
-    /**
-     * Dis-allows instantiation of this test utility.
-     */
-    @SuppressWarnings("WhitespaceAround")
     private Resources() {}
 
     /**

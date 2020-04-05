@@ -35,10 +35,10 @@ public final class GraphQLResponse<T> {
     private final List<Error> errors;
 
     /**
-     * Constructs a wrapper for graphql response.
+     * Constructs a wrapper for GraphQL response.
      * @param data response data with user-defined cast type
      * @param errors list of error responses as defined
-     *               by graphql doc
+     *               by GraphQL doc
      */
     public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {
         this.data = data;
@@ -98,7 +98,6 @@ public final class GraphQLResponse<T> {
         return ObjectsCompat.equals(errors, that.errors);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = data != null ? data.hashCode() : 0;

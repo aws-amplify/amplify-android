@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
@@ -35,10 +36,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -92,10 +93,15 @@ public final class StorageItemChangeRecordIntegrationTest {
             actualNames.add(modelSchema.getName());
         }
         Collections.sort(actualNames);
-        assertEquals(
-            Arrays.asList("BlogOwner", "ModelMetadata", "PersistentModelVersion", "Record"),
-            actualNames
-        );
+
+        final Set<Class<? extends Model>> systemModelClasses = SystemModelsProviderFactory.create().models();
+        final List<String> expectedNames = Observable.fromIterable(systemModelClasses)
+            .startWith(BlogOwner.class)
+            .map(Class::getSimpleName)
+            .toSortedList()
+            .blockingGet();
+
+        assertEquals(expectedNames, actualNames);
     }
 
     /**

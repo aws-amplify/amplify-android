@@ -13,14 +13,14 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.util;
 
 /**
  * An almost-worthless wrapper to avoid writing {@link System#currentTimeMillis()} all
  * over the place. Instead, what we mean is "the current time," or Time.now().
  */
 public final class Time {
-    @SuppressWarnings("checkstyle:all") private Time() {}
+    private Time() {}
 
     /**
      * Gets the current time, expressed in a duration of milliseconds since the epoch.

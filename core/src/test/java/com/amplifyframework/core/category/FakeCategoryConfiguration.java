@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -39,6 +41,7 @@ final class FakeCategoryConfiguration extends CategoryConfiguration {
         return instance(categoryType, new JSONObject());
     }
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return categoryType;

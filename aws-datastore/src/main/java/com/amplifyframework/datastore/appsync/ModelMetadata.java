@@ -46,7 +46,6 @@ public final class ModelMetadata implements Model {
      * @param version What version this object was last seen at
      * @param lastChangedAt When was this object last changed
      */
-    @SuppressWarnings("WeakerAccess")
     public ModelMetadata(
             @NonNull String id,
             @Nullable Boolean deleted,
@@ -117,7 +116,6 @@ public final class ModelMetadata implements Model {
         return ObjectsCompat.equals(_lastChangedAt, metadata._lastChangedAt);
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Override
     public int hashCode() {
         int result = id.hashCode();

@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -32,7 +34,7 @@ import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 /*
- * An {@link MutationOutbox} is a persistently-backed in-order staging ground
+ * The {@link MutationOutbox} is a persistently-backed in-order staging ground
  * for changes that have already occurred in the storage adapter, and need
  * to be synchronized with a remote GraphQL API, via (a) GraphQL mutation(s).
  *
@@ -56,6 +58,23 @@ final class MutationOutbox {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
         this.pendingStorageItemChanges = PublishSubject.create();
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
+    }
+
+    /**
+     * Checks to see if there is a pending mutation for a model with the given ID.
+     * @param modelId ID of any model
+     * @return An {@link Single} which emits true if there is a pending mutation for
+     *         the model id, emits false if not, emits error if it can't tell due to an error
+     */
+    @NonNull
+    Single<Boolean> hasPendingMutation(String modelId) {
+        QueryPredicate hasMatchingId = QueryField.field("id").eq(modelId);
+        return Single.create(emitter -> {
+            localStorageAdapter.query(StorageItemChange.Record.class, hasMatchingId,
+                results -> emitter.onSuccess(results.hasNext()),
+                emitter::onError
+            );
+        });
     }
 
     /**

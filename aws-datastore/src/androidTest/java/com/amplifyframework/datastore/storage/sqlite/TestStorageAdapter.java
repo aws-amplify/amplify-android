@@ -32,7 +32,7 @@ import java.util.Objects;
  * the system when done using those instances.
  */
 final class TestStorageAdapter {
-    @SuppressWarnings("checkstyle:all") private TestStorageAdapter() {}
+    private TestStorageAdapter() {}
 
     /**
      * Creates an instance of the {@link SynchronousStorageAdapter}, which has been initialized

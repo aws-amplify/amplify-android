@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.types;
 
+import androidx.annotation.NonNull;
+
 /**
  * An enumeration of the various AWS AppSync scalar types.
  * @see <a href="https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html">Appsync Scalars</a>
@@ -123,6 +125,7 @@ public enum AWSAppSyncScalarType {
         return stringValue;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return stringValue();
@@ -134,7 +137,7 @@ public enum AWSAppSyncScalarType {
      * @param string An arbitrary string, possibly a string representation of one of the
      *               enumerated {@link AWSAppSyncScalarType}.
      * @return An {@link AWSAppSyncScalarType}, if provided string is one of the enumerated values
-     * @throws IllegalArgumentException If provided stirng is not one of the enumerated values
+     * @throws IllegalArgumentException If provided String is not one of the enumerated values
      */
     public static AWSAppSyncScalarType fromString(final String string) {
         for (AWSAppSyncScalarType possibleMatch : values()) {

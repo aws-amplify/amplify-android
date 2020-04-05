@@ -64,6 +64,7 @@ final class FakePlugin<T> implements Plugin<T> {
         return escapeHatch;
     }
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return categoryType;

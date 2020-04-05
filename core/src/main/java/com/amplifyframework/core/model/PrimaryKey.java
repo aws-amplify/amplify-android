@@ -25,7 +25,7 @@ public final class PrimaryKey {
     // of any {@link Model}.
     private static final String ID = "id";
 
-    @SuppressWarnings("checkstyle:all") private PrimaryKey() {}
+    private PrimaryKey() {}
 
     /**
      * Checks if the provided object is a primary key.
