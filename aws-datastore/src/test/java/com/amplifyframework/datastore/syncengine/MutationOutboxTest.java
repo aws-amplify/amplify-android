@@ -16,15 +16,18 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.List;
 
 import io.reactivex.observers.TestObserver;
 
@@ -34,17 +37,18 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the {@link MutationOutbox}.
  */
-public class MutationOutboxTest {
-    private InMemoryStorageAdapter inMemoryStorageAdapter;
+public final class MutationOutboxTest {
     private MutationOutbox mutationOutbox;
     private GsonStorageItemChangeConverter storageItemChangeConverter;
+    private SynchronousStorageAdapter storageAdapter;
 
     /**
      * Set up the object under test.
      */
     @Before
     public void setup() {
-        inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
         mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
         storageItemChangeConverter = new GsonStorageItemChangeConverter();
     }
@@ -53,9 +57,10 @@ public class MutationOutboxTest {
      * Enqueueing a change should have the result of persisting
      * the change to storage, and notifying any observers that
      * there is a new change available.
+     * @throws DataStoreException On failure to query results, for assertions
      */
     @Test
-    public void enqueuePersistsChangeAndNotifiesObserver() {
+    public void enqueuePersistsChangeAndNotifiesObserver() throws DataStoreException {
         // Observe the queue
         TestObserver<StorageItemChange<? extends Model>> queueObserver = TestObserver.create();
         mutationOutbox.observe().subscribe(queueObserver);
@@ -82,19 +87,22 @@ public class MutationOutboxTest {
         queueObserver.dispose();
 
         // Assert that the storage contains the mutation
-        assertEquals(1, inMemoryStorageAdapter.items().size());
+        List<StorageItemChange.Record> recordsInStorage =
+            storageAdapter.query(StorageItemChange.Record.class);
+        assertEquals(1, recordsInStorage.size());
         assertEquals(
             createJameson.toRecord(storageItemChangeConverter),
-            inMemoryStorageAdapter.items().get(0)
+            recordsInStorage.get(0)
         );
     }
 
     /**
      * The enqueue() returns a Single, but that Single doesn't actually invoke
      * any behavior until you subscribe to it.
+     * @throws DataStoreException On failure to query results, for assertions
      */
     @Test
-    public void enqueueDoesNothingBeforeSubscription() {
+    public void enqueueDoesNothingBeforeSubscription() throws DataStoreException {
         // Watch for notifications on the observe() API.
         TestObserver<StorageItemChange<?>> testObserver = TestObserver.create();
         mutationOutbox.observe().subscribe(testObserver);
@@ -116,7 +124,9 @@ public class MutationOutboxTest {
         testObserver.assertNotTerminated();
 
         // And nothing is in storage.
-        assertTrue(inMemoryStorageAdapter.items().isEmpty());
+        List<StorageItemChange.Record> recordsInStorage =
+            storageAdapter.query(StorageItemChange.Record.class);
+        assertTrue(recordsInStorage.isEmpty());
     }
 
     /**
@@ -169,9 +179,10 @@ public class MutationOutboxTest {
 
     /**
      * Tests {@link MutationOutbox#remove(StorageItemChange)}.
+     * @throws DataStoreException On failure to query results, for assertions
      */
     @Test
-    public void removeRemovesChangesFromQueue() {
+    public void removeRemovesChangesFromQueue() throws DataStoreException {
         // Arrange: there is a change in the queue.
         StorageItemChange<BlogOwner> deleteBillGates = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.DELETE)
@@ -181,13 +192,15 @@ public class MutationOutboxTest {
                 .build())
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
-        inMemoryStorageAdapter.items().add(deleteBillGates.toRecord(storageItemChangeConverter));
+        storageAdapter.save(deleteBillGates.toRecord(storageItemChangeConverter));
 
         TestObserver<StorageItemChange<BlogOwner>> testObserver = TestObserver.create();
         mutationOutbox.remove(deleteBillGates).subscribe(testObserver);
 
         testObserver.assertValue(deleteBillGates);
 
-        assertEquals(0, inMemoryStorageAdapter.items().size());
+        List<StorageItemChange.Record> recordsInStorage =
+            storageAdapter.query(StorageItemChange.Record.class);
+        assertEquals(0, recordsInStorage.size());
     }
 }

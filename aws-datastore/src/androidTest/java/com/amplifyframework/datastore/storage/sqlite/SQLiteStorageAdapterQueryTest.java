@@ -19,6 +19,7 @@ import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -31,10 +32,10 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+
+import io.reactivex.Observable;
 
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
 import static org.junit.Assert.assertEquals;
@@ -73,7 +74,7 @@ public final class SQLiteStorageAdapterQueryTest {
             .build();
         adapter.save(blogOwner);
 
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.contains(blogOwner));
     }
 
@@ -83,7 +84,7 @@ public final class SQLiteStorageAdapterQueryTest {
      */
     @Test
     public void querySavedDataWithMultipleItems() throws DataStoreException {
-        final Set<BlogOwner> savedModels = new HashSet<>();
+        final List<BlogOwner> savedModels = new ArrayList<>();
         final int numModels = 10;
         for (int counter = 0; counter < numModels; counter++) {
             final BlogOwner blogOwner = BlogOwner.builder()
@@ -93,8 +94,16 @@ public final class SQLiteStorageAdapterQueryTest {
             savedModels.add(blogOwner);
         }
 
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
-        assertEquals(savedModels, blogOwners);
+        assertEquals(
+            Observable.fromIterable(savedModels)
+                .toList()
+                .map(HashSet::new)
+                .blockingGet(),
+            Observable.fromIterable(adapter.query(BlogOwner.class))
+                .toList()
+                .map(HashSet::new)
+                .blockingGet()
+        );
     }
 
     /**
@@ -116,7 +125,7 @@ public final class SQLiteStorageAdapterQueryTest {
         adapter.save(blogOwner);
         adapter.save(blog);
 
-        final Set<Blog> blogs = adapter.query(Blog.class);
+        final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.contains(blog));
     }
 
@@ -144,14 +153,17 @@ public final class SQLiteStorageAdapterQueryTest {
         QueryPredicate predicate = Post.RATING.ge(4).and(Post.RATING.lt(7))
                 .or(Post.RATING.eq(1).and(Post.RATING.ne(7)));
 
-        final Set<Post> expectedPosts = new HashSet<>(Arrays.asList(
-            savedModels.get(1),
-            savedModels.get(4),
-            savedModels.get(5),
-            savedModels.get(6)
-        ));
-        final Set<Post> actualPosts = adapter.query(Post.class, predicate);
-        assertEquals(expectedPosts, actualPosts);
+        assertEquals(
+            Observable.fromArray(1, 4, 5, 6)
+                .map(savedModels::get)
+                .toList()
+                .map(HashSet::new)
+                .blockingGet(),
+            Observable.fromIterable(adapter.query(Post.class, predicate))
+                .toList()
+                .map(HashSet::new)
+                .blockingGet()
+        );
     }
 
     /**
@@ -174,17 +186,23 @@ public final class SQLiteStorageAdapterQueryTest {
             savedModels.add(post);
         }
 
-        final Set<Post> expectedPosts = new HashSet<>(Arrays.asList(
-                savedModels.get(4),
-                savedModels.get(7)
-        ));
-        final Set<Post> actualPosts = adapter.query(Post.class, Post.TITLE
+        final List<Post> actualPosts = adapter.query(Post.class, Post.TITLE
             .beginsWith("4")
                 .or(Post.TITLE.beginsWith("7"))
                 .or(Post.TITLE.beginsWith("9"))
             .and(not(Post.TITLE.gt(8)))
         );
-        assertEquals(expectedPosts, actualPosts);
+        assertEquals(
+            Observable.fromArray(4, 7)
+                .map(savedModels::get)
+                .toList()
+                .map(HashSet::new)
+                .blockingGet(),
+            Observable.fromIterable(actualPosts)
+                .toList()
+                .map(HashSet::new)
+                .blockingGet()
+        );
     }
 
     /**
@@ -204,7 +222,7 @@ public final class SQLiteStorageAdapterQueryTest {
             .build();
         adapter.save(blog);
 
-        final Set<Blog> blogsOwnedByJaneDoe =
+        final List<Blog> blogsOwnedByJaneDoe =
             adapter.query(Blog.class, QueryField.field("BlogOwner.name").eq("Jane Doe"));
         assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }
@@ -221,10 +239,10 @@ public final class SQLiteStorageAdapterQueryTest {
         adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-        final Set<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, predicate);
+        final List<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, predicate);
         assertTrue(resultOfMaliciousQuery.isEmpty());
 
-        final Set<BlogOwner> resultAfterMaliciousQuery = adapter.query(BlogOwner.class);
+        final List<BlogOwner> resultAfterMaliciousQuery = adapter.query(BlogOwner.class);
         assertTrue(resultAfterMaliciousQuery.contains(jane));
     }
 }
