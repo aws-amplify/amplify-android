@@ -215,14 +215,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         changeRecordStream.onComplete();
     }
 
-    /**
-     * Get the items that are in the storage.
-     * @return Items in storage
-     */
-    public List<Model> items() {
-        return items;
-    }
-
     private int indexOf(Model item) {
         int index = 0;
         for (Model savedItem : items) {

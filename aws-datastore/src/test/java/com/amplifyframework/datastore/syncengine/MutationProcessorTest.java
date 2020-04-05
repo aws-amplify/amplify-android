@@ -15,8 +15,6 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import androidx.annotation.NonNull;
-
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
@@ -26,11 +24,11 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.Time;
@@ -55,15 +53,17 @@ import static org.mockito.Mockito.mock;
 public final class MutationProcessorTest {
     private static final GsonStorageItemChangeConverter RECORD_CONVERTER = new GsonStorageItemChangeConverter();
 
-    private InMemoryStorageAdapter inMemoryStorageAdapter;
     private AppSync appSync;
+    private SynchronousStorageAdapter storageAdapter;
     private MutationProcessor mutationProcessor;
     private HubAccumulator publicationEventAccumulator;
 
     @Before
     public void setup() {
-        this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         this.appSync = mock(AppSync.class);
+
+        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
 
         MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
         Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
@@ -92,7 +92,7 @@ public final class MutationProcessorTest {
     public void canDrainMutationOutbox() throws DataStoreException {
         // Arrange some local state, in the LocalStorageAdapter.
         // The "outbox" has three changes pending: 1 deletions, 2 creations.
-        saveModels(
+        storageAdapter.save(
             // Tony has been deleted locally, so is not present. But, he still has
             // metadata, and there is a pending deletion record in the outbox, waiting
             // to be sync'd remotely.
@@ -141,25 +141,7 @@ public final class MutationProcessorTest {
 
         // Finally, we expect the mutation outbox to be empty, now, that the mutation
         // processor has drained it.
-        assertEquals(0, findInStorage(StorageItemChange.Record.class).size());
-    }
-
-    /**
-     * Find items in storage that are of the given class.
-     * @param itemClass Type of item to look for
-     * @param <T> Class of item to look for
-     * @return A list of matching items, possible empty, never null.
-     */
-    @SuppressWarnings({"SameParameterValue", "unchecked"})
-    @NonNull
-    private <T> List<T> findInStorage(Class<T> itemClass) {
-        final List<T> matches = new ArrayList<>();
-        for (Model item : inMemoryStorageAdapter.items()) {
-            if (itemClass.isAssignableFrom(item.getClass())) {
-                matches.add((T) item);
-            }
-        }
-        return matches;
+        assertEquals(0, storageAdapter.query(StorageItemChange.Record.class).size());
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -174,24 +156,6 @@ public final class MutationProcessorTest {
             changeRecords.add(record);
         }
         return changeRecords;
-    }
-
-    /**
-     * Save a list of models.
-     * @param models Various models
-     * @param <T> The type of the models
-     * @throws DataStoreException On failure to save models
-     */
-    @SafeVarargs
-    private final <T extends Model> void saveModels(T... models) throws DataStoreException {
-        for (T model : models) {
-            Await.<T, DataStoreException>result((onResult, onError) -> inMemoryStorageAdapter.save(
-                model,
-                StorageItemChange.Initiator.DATA_STORE_API,
-                record -> onResult.accept(model),
-                onError
-            ));
-        }
     }
 
     /**

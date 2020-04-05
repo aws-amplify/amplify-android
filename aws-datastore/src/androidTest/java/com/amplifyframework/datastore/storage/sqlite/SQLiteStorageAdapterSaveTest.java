@@ -20,6 +20,7 @@ import android.util.Log;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -29,9 +30,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
+
+import io.reactivex.Observable;
 
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -81,7 +83,7 @@ public final class SQLiteStorageAdapterSaveTest {
         adapter.save(raph);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertFalse(blogOwners.contains(raphael)); // Replaced by "Raph Kim"
         assertTrue(blogOwners.contains(raph));
@@ -99,7 +101,7 @@ public final class SQLiteStorageAdapterSaveTest {
         adapter.save(alan);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(alan));
     }
@@ -118,7 +120,7 @@ public final class SQLiteStorageAdapterSaveTest {
         adapter.save(tony);
 
         // Get the BlogOwner record from the database
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(tony));
     }
@@ -141,7 +143,7 @@ public final class SQLiteStorageAdapterSaveTest {
         adapter.save(blog);
 
         // Get the Blog record from the database
-        final Set<Blog> blogs = adapter.query(Blog.class);
+        final List<Blog> blogs = adapter.query(Blog.class);
         assertEquals(1, blogs.size());
         assertTrue(blogs.contains(blog));
     }
@@ -182,7 +184,7 @@ public final class SQLiteStorageAdapterSaveTest {
             .build();
         adapter.save(blogOwner);
 
-        final Set<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
+        final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.contains(blogOwner));
     }
 
@@ -222,12 +224,15 @@ public final class SQLiteStorageAdapterSaveTest {
         //noinspection ThrowableNotThrown
         adapter.saveExpectingError(newMark, predicate); // Should not update
 
-        final Set<BlogOwner> expectedBlogOwners = new HashSet<>(Arrays.asList(
-                newJohn,
-                newJane,
-                mark
-        ));
-        final Set<BlogOwner> actualBlogOwners = adapter.query(BlogOwner.class);
-        assertEquals(expectedBlogOwners, actualBlogOwners);
+        assertEquals(
+            Observable.fromArray(newJohn, newJane, mark)
+                .toList()
+                .map(HashSet::new)
+                .blockingGet(),
+            Observable.fromIterable(adapter.query(BlogOwner.class))
+                .toList()
+                .map(HashSet::new)
+                .blockingGet()
+        );
     }
 }
