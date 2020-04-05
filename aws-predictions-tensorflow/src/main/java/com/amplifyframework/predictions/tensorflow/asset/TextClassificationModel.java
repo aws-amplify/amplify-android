@@ -19,7 +19,6 @@ import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Action;
@@ -46,8 +45,8 @@ public final class TextClassificationModel implements Loadable<Interpreter, Pred
 
     private Interpreter interpreter;
     private Consumer<Interpreter> onLoaded;
-    private Consumer<PredictionsException> onError;
     private Action onUnloaded;
+    private Consumer<PredictionsException> onLoadError;
     private boolean loaded;
 
     /**
@@ -96,8 +95,8 @@ public final class TextClassificationModel implements Loadable<Interpreter, Pred
             }
             loaded = true;
         } catch (PredictionsException exception) {
-            if (onError != null) {
-                onError.accept(exception);
+            if (onLoadError != null) {
+                onLoadError.accept(exception);
             }
         }
     }
@@ -134,8 +133,12 @@ public final class TextClassificationModel implements Loadable<Interpreter, Pred
      * {@inheritDoc}
      */
     @Override
-    public TextClassificationModel onLoaded(Consumer<Interpreter> onLoaded) {
+    public TextClassificationModel onLoaded(
+            Consumer<Interpreter> onLoaded,
+            Consumer<PredictionsException> onLoadError
+    ) {
         this.onLoaded = onLoaded;
+        this.onLoadError = onLoadError;
         return this;
     }
 
@@ -143,16 +146,10 @@ public final class TextClassificationModel implements Loadable<Interpreter, Pred
      * {@inheritDoc}
      */
     @Override
-    public TextClassificationModel onError(Consumer<PredictionsException> onError) {
-        this.onError = onError;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TextClassificationModel onUnloaded(Action onUnloaded) {
+    public TextClassificationModel onUnloaded(
+            Action onUnloaded,
+            Consumer<PredictionsException> onUnloadError
+    ) {
         this.onUnloaded = onUnloaded;
         return this;
     }
@@ -160,9 +157,12 @@ public final class TextClassificationModel implements Loadable<Interpreter, Pred
     /**
      * {@inheritDoc}
      */
-    @Nullable
+    @NonNull
     @Override
-    public Interpreter value() {
+    public Interpreter getValue() {
+        if (interpreter == null) {
+            throw new IllegalStateException("Interpreter has not been loaded successfully yet.");
+        }
         return interpreter;
     }
 

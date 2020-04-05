@@ -26,7 +26,7 @@ import java.util.Locale;
  * into Amplify-compatible data structure (i.e. {@link SentimentType}).
  */
 public final class SentimentTypeAdapter {
-    @SuppressWarnings("checkstyle:all") private SentimentTypeAdapter() {}
+    private SentimentTypeAdapter() {}
 
     /**
      * Converts the sentiment string returned by TensorFlow Lite

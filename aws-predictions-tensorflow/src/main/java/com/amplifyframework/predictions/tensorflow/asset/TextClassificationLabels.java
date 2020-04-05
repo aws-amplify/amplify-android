@@ -18,7 +18,6 @@ package com.amplifyframework.predictions.tensorflow.asset;
 import android.content.Context;
 import android.content.res.AssetManager;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Action;
@@ -43,8 +42,8 @@ public class TextClassificationLabels implements Loadable<List<String>, Predicti
     private final List<String> labels;
 
     private Consumer<List<String>> onLoaded;
-    private Consumer<PredictionsException> onError;
     private Action onUnloaded;
+    private Consumer<PredictionsException> onLoadError;
     private boolean loaded;
 
     /**
@@ -92,8 +91,8 @@ public class TextClassificationLabels implements Loadable<List<String>, Predicti
             }
             loaded = true;
         } catch (PredictionsException exception) {
-            if (onError != null) {
-                onError.accept(exception);
+            if (onLoadError != null) {
+                onLoadError.accept(exception);
             }
         }
     }
@@ -130,8 +129,12 @@ public class TextClassificationLabels implements Loadable<List<String>, Predicti
      * {@inheritDoc}
      */
     @Override
-    public TextClassificationLabels onLoaded(Consumer<List<String>> onLoaded) {
+    public TextClassificationLabels onLoaded(
+            Consumer<List<String>> onLoaded,
+            Consumer<PredictionsException> onLoadError
+    ) {
         this.onLoaded = onLoaded;
+        this.onLoadError = onLoadError;
         return this;
     }
 
@@ -139,16 +142,10 @@ public class TextClassificationLabels implements Loadable<List<String>, Predicti
      * {@inheritDoc}
      */
     @Override
-    public TextClassificationLabels onError(Consumer<PredictionsException> onError) {
-        this.onError = onError;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TextClassificationLabels onUnloaded(Action onUnloaded) {
+    public TextClassificationLabels onUnloaded(
+            Action onUnloaded,
+            Consumer<PredictionsException> onUnloadError
+    ) {
         this.onUnloaded = onUnloaded;
         return this;
     }
@@ -156,9 +153,9 @@ public class TextClassificationLabels implements Loadable<List<String>, Predicti
     /**
      * {@inheritDoc}
      */
-    @Nullable
+    @NonNull
     @Override
-    public List<String> value() {
+    public List<String> getValue() {
         return labels;
     }
 

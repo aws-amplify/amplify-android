@@ -18,7 +18,6 @@ package com.amplifyframework.predictions.tensorflow.asset;
 import android.content.Context;
 import android.content.res.AssetManager;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Action;
@@ -71,8 +70,8 @@ public class TextClassificationDictionary implements Loadable<Map<String, Intege
     private final Map<String, Integer> dictionary;
 
     private Consumer<Map<String, Integer>> onLoaded;
-    private Consumer<PredictionsException> onError;
     private Action onUnloaded;
+    private Consumer<PredictionsException> onLoadError;
     private boolean loaded;
 
     /**
@@ -133,8 +132,8 @@ public class TextClassificationDictionary implements Loadable<Map<String, Intege
             }
             loaded = true;
         } catch (PredictionsException exception) {
-            if (onError != null) {
-                onError.accept(exception);
+            if (onLoadError != null) {
+                onLoadError.accept(exception);
             }
         }
     }
@@ -171,8 +170,12 @@ public class TextClassificationDictionary implements Loadable<Map<String, Intege
      * {@inheritDoc}
      */
     @Override
-    public TextClassificationDictionary onLoaded(Consumer<Map<String, Integer>> onLoaded) {
+    public TextClassificationDictionary onLoaded(
+            Consumer<Map<String, Integer>> onLoaded,
+            Consumer<PredictionsException> onLoadError
+    ) {
         this.onLoaded = onLoaded;
+        this.onLoadError = onLoadError;
         return this;
     }
 
@@ -180,16 +183,10 @@ public class TextClassificationDictionary implements Loadable<Map<String, Intege
      * {@inheritDoc}
      */
     @Override
-    public TextClassificationDictionary onError(Consumer<PredictionsException> onError) {
-        this.onError = onError;
-        return this;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public TextClassificationDictionary onUnloaded(Action onUnloaded) {
+    public TextClassificationDictionary onUnloaded(
+            Action onUnloaded,
+            Consumer<PredictionsException> onUnloadError
+    ) {
         this.onUnloaded = onUnloaded;
         return this;
     }
@@ -197,9 +194,9 @@ public class TextClassificationDictionary implements Loadable<Map<String, Intege
     /**
      * {@inheritDoc}
      */
-    @Nullable
+    @NonNull
     @Override
-    public Map<String, Integer> value() {
+    public Map<String, Integer> getValue() {
         return dictionary;
     }
 

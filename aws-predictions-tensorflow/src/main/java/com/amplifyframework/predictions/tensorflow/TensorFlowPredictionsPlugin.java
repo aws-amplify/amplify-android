@@ -41,12 +41,17 @@ import java.util.concurrent.Executors;
  * TensorFlow Lite to carry out tasks offline.
  */
 public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorFlowPredictionsEscapeHatch> {
-    private static final String TFL_PREDICTIONS_PLUGIN_KEY = "tflPredictionsPlugin";
+    private static final String TENSOR_FLOW_PREDICTIONS_PLUGIN_KEY = "tensorFlowPredictionsPlugin";
 
     private final ExecutorService executorService;
 
     private TensorFlowPredictionsService predictionsService;
 
+    /**
+     * Construct an instance of Predictions Plugin that uses
+     * pre-trained models from TensorFlow Lite to make inferences
+     * offline.
+     */
     public TensorFlowPredictionsPlugin() {
         this.executorService = Executors.newCachedThreadPool();
     }
@@ -54,7 +59,7 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
     @NonNull
     @Override
     public String getPluginKey() {
-        return TFL_PREDICTIONS_PLUGIN_KEY;
+        return TENSOR_FLOW_PREDICTIONS_PLUGIN_KEY;
     }
 
     @Override

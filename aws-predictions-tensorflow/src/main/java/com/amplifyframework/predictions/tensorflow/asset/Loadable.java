@@ -15,7 +15,7 @@
 
 package com.amplifyframework.predictions.tensorflow.asset;
 
-import androidx.annotation.Nullable;
+import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -44,33 +44,29 @@ public interface Loadable<V, E extends Exception> {
 
     /**
      * Sets the consumer of the loaded value to be
-     * triggered upon load completion.
+     * triggered upon load completion. Triggers the
+     * error consumer upon encountering an error while
+     * loading.
      * @param onLoaded the consumer of the loaded value
+     * @param onLoadError the consumer of the thrown exception
      * @return this loadable instance for chaining
      */
-    Loadable<V, E> onLoaded(Consumer<V> onLoaded);
-
-    /**
-     * Sets the consumer of an error which will be triggered
-     * upon encountering an error while loading/unloading.
-     * @param onError the consumer of the thrown exception
-     * @return this loadable instance for chaining
-     */
-    Loadable<V, E> onError(Consumer<E> onError);
+    Loadable<V, E> onLoaded(Consumer<V> onLoaded, Consumer<E> onLoadError);
 
     /**
      * Sets the action item to be triggered upon unload
-     * completion.
+     * completion. Triggers the error consumer upon
+     * encountering an error while loading.
      * @param onUnloaded the action to invoke upon unload
+     * @param onUnloadError the consumer of the thrown exception
      * @return this loadable instance for chaining
      */
-    Loadable<V, E> onUnloaded(Action onUnloaded);
+    Loadable<V, E> onUnloaded(Action onUnloaded, Consumer<E> onUnloadError);
 
     /**
-     * Gets the loaded value. Null if the resource was
-     * not loaded or fully loaded yet.
+     * Gets the loaded value.
      * @return the loaded value
      */
-    @Nullable
-    V value();
+    @NonNull
+    V getValue();
 }

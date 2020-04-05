@@ -70,8 +70,10 @@ final class TensorFlowTextClassificationService {
         this.loaded = new CountDownLatch(assets.size());
 
         for (Loadable<?, PredictionsException> asset : assets) {
-            asset.onLoaded(onLoad -> this.loaded.countDown());
-            asset.onError(error -> this.loadingError = error);
+            asset.onLoaded(
+                onLoad -> this.loaded.countDown(),
+                error -> this.loadingError = error
+            );
         }
     }
 
@@ -183,6 +185,6 @@ final class TensorFlowTextClassificationService {
      */
     @Nullable
     Interpreter getInterpreter() {
-        return interpreter.value();
+        return interpreter.getValue();
     }
 }
