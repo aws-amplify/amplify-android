@@ -53,7 +53,7 @@ public final class AWSPredictionsInterpretTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         TestConfiguration.configureIfNotConfigured();
-        predictions = SynchronousPredictions.singleton();
+        predictions = SynchronousPredictions.delegatingToAmplify();
     }
 
     /**

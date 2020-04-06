@@ -48,18 +48,19 @@ public final class SynchronousPredictions {
      * @return new instance of Synchronous Predictions
      */
     @NonNull
-    public static synchronized SynchronousPredictions create() {
-        return create(Amplify.Predictions);
+    public static synchronized SynchronousPredictions delegatingToAmplify() {
+        return delegatingTo(Amplify.Predictions);
     }
 
     /**
      * Gets an instance of the Synchronous Predictions utility that
      * delegates tasks to the given asynchronous implementation of
-     * predictions behavior.
+     * Predictions behavior.
+     * @param predictions an implementation of Predictions behavior
      * @return new instance of Synchronous Predictions
      */
     @NonNull
-    public static synchronized SynchronousPredictions create(@NonNull PredictionsCategoryBehavior predictions) {
+    public static synchronized SynchronousPredictions delegatingTo(@NonNull PredictionsCategoryBehavior predictions) {
         return new SynchronousPredictions(predictions);
     }
 
