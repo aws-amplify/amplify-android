@@ -17,6 +17,8 @@ package com.amplifyframework.predictions.tensorflow;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.util.Immutable;
+
 import org.tensorflow.lite.Interpreter;
 
 import java.util.HashMap;
@@ -46,6 +48,6 @@ public final class TensorFlowPredictionsEscapeHatch {
      * @return the map of {service key -> interpreter}
      */
     public Map<String, Interpreter> getInterpreters() {
-        return interpreters;
+        return Immutable.of(interpreters);
     }
 }
