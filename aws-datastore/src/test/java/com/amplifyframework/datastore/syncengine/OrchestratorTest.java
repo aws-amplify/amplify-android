@@ -28,7 +28,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
@@ -90,7 +89,7 @@ public final class OrchestratorTest {
         }).when(appSync)
             .create(eq(susan), any(Consumer.class), any(Consumer.class));
 
-        LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
+        InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion();
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();

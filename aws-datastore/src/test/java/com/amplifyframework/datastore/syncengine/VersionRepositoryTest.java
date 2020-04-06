@@ -15,22 +15,17 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import androidx.annotation.NonNull;
-
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.Await;
 import com.amplifyframework.util.Time;
 
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
@@ -44,12 +39,13 @@ import static org.junit.Assert.assertTrue;
 public final class VersionRepositoryTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(1);
 
-    private InMemoryStorageAdapter inMemoryStorageAdapter;
+    private SynchronousStorageAdapter storageAdapter;
     private VersionRepository versionRepository;
 
     @Before
     public void setup() {
-        this.inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
         this.versionRepository = new VersionRepository(inMemoryStorageAdapter);
     }
 
@@ -95,7 +91,7 @@ public final class VersionRepositoryTest {
             .name("Jameson")
             .build();
         ModelMetadata metadata = new ModelMetadata(blogOwner.getId(), null, null, null);
-        putInStore(blogOwner, metadata);
+        storageAdapter.save(blogOwner, metadata);
 
         // Act: try to get the version.
         TestObserver<Integer> observer = versionRepository.findModelVersion(blogOwner).test();
@@ -114,15 +110,15 @@ public final class VersionRepositoryTest {
      * for heaven's sake, man - do please emit the dang thing.
      * @throws DataStoreException On failure to arrange data into store
      */
-    @SuppressWarnings("checkstyle:MagicNumber") // 1_000 is magic. Big. Whooping. Deal.
     @Test
     public void emitsSuccessWithValueWhenVersionInStore() throws DataStoreException {
         // Arrange versioning info into the store.
         BlogOwner owner = BlogOwner.builder()
             .name("Jameson")
             .build();
-        int expectedVersion = new Random().nextInt(1_000);
-        putInStore(new ModelMetadata(owner.getId(), false, expectedVersion, Time.now()));
+        final int maxRandomVersion = 1_000;
+        int expectedVersion = new Random().nextInt(maxRandomVersion);
+        storageAdapter.save(new ModelMetadata(owner.getId(), false, expectedVersion, Time.now()));
 
         // Act! Try to obtain it via the Versioning Repository.
         TestObserver<Integer> observer = versionRepository.findModelVersion(owner).test();
@@ -133,16 +129,5 @@ public final class VersionRepositoryTest {
             .assertNoErrors()
             .assertComplete()
             .assertValue(expectedVersion);
-    }
-
-    @SafeVarargs
-    @SuppressWarnings("varargs")
-    private final <T extends Model> void putInStore(@NonNull T... models) throws DataStoreException {
-        Objects.requireNonNull(models);
-        for (T model : models) {
-            Await.<StorageItemChange.Record, DataStoreException>result((onResult, onError) ->
-                inMemoryStorageAdapter.save(model, StorageItemChange.Initiator.DATA_STORE_API, onResult, onError)
-            );
-        }
     }
 }
