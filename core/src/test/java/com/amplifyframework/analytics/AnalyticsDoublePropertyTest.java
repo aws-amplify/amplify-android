@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 public class AnalyticsDoublePropertyTest {
 
     @Test
-    @SuppressWarnings("MagicNumber")
     public void fromReturnsDoublePropertyWithPassedValue() {
         // Arrange: Create the property
         AnalyticsDoubleProperty property = AnalyticsDoubleProperty.from(8675.309);

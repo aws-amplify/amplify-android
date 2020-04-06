@@ -25,7 +25,6 @@ import static org.junit.Assert.assertThrows;
 
 public class AnalyticsPropertiesTest {
     @Test
-    @SuppressWarnings("MagicNumber")
     public void builderConfiguresCompleteProperties() {
         // Arrange: Build a new AnalyticsProperties object
         AnalyticsProperties properties = AnalyticsProperties.builder()

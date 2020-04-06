@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 public class AnalyticsIntegerPropertyTest {
 
     @Test
-    @SuppressWarnings("MagicNumber")
     public void fromReturnsIntegerPropertyWithPassedValue() {
         // Arrange: Create the property
         AnalyticsIntegerProperty property = AnalyticsIntegerProperty.from(5040);

@@ -37,7 +37,6 @@ public class GsonStorageItemChangeConverterTest {
      * {@link StorageItemChange.Record}, and vice-versa.
      * @throws DataStoreException from DataStore conversion
      */
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void convertStorageItemChangeToRecordAndBack() throws DataStoreException {
         // Arrange a StorageItemChange<Blog> with an expected change ID

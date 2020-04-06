@@ -48,7 +48,6 @@ public final class AppSyncRequestFactoryTest {
      * Validates the construction of a delta-sync query document.
      * @throws DataStoreException On failure to interrogate fields in Blog.class.
      */
-    @SuppressWarnings("checkstyle:MagicNumber") // lastSync time is an arbitrarily-chosen, stable value
     @Test
     public void validateRequestGenerationForDeltaSync() throws DataStoreException {
         assertEquals(

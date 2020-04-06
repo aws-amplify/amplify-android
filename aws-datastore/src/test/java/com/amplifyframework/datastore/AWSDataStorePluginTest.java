@@ -80,7 +80,6 @@ public final class AWSDataStorePluginTest {
      * @throws DataStoreException on failure to configure
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
         Amplify.addPlugin(mockApiPlugin());

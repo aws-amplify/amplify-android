@@ -22,7 +22,6 @@ import static org.junit.Assert.assertEquals;
 public class AnalyticsEventTest {
 
     @Test
-    @SuppressWarnings("MagicNumber")
     public void builderConfiguresCompleteBasicAnalyticsEvent() {
         // Arrange: Build a new AnalyticsEvent
         AnalyticsEvent analyticsEvent = AnalyticsEvent.builder()

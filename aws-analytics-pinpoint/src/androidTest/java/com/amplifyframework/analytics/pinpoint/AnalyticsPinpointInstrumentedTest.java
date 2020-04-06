@@ -92,7 +92,6 @@ public class AnalyticsPinpointInstrumentedTest {
      * @throws JSONException Caused by unexpected event structure.
      */
     @Test
-    @SuppressWarnings("MagicNumber")
     public void recordEventStoresPassedBasicAnalyticsEvent() throws JSONException {
         // Arrange: Create an event
         AnalyticsEvent event = AnalyticsEvent.builder()
@@ -227,7 +226,6 @@ public class AnalyticsPinpointInstrumentedTest {
         assertFalse(analyticsClient.getAllEvents().get(1).has("attributes"));
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void testIdentifyUser() {
         UserProfile.Location location = UserProfile.Location.builder()

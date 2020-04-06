@@ -83,7 +83,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
      * and an {@link MutationType}.
      * @throws AmplifyException From buildMutation().
      */
-    @SuppressWarnings({"deprecation", "checkstyle:MagicNumber"})
+    @SuppressWarnings("deprecation")
     @Test
     public void buildMutationFromPredicateAndMutationType() throws AmplifyException {
         // Arrange a person to delete, using UUID from test resource file
