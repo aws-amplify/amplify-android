@@ -47,7 +47,7 @@ public final class RestApiInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException, SynchronousMobileClient.MobileClientException {
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
-        api = SynchronousApi.delegatingTo(asyncDelegate);
+        api = SynchronousApi.delegateTo(asyncDelegate);
         SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
     }

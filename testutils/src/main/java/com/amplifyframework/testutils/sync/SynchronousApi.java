@@ -26,7 +26,6 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -49,7 +48,8 @@ import io.reactivex.disposables.Disposables;
  * performing various operations.
  */
 public final class SynchronousApi {
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+
     private final ApiCategoryBehavior asyncDelegate;
 
     private SynchronousApi(ApiCategoryBehavior asyncDelegate) {
@@ -63,18 +63,9 @@ public final class SynchronousApi {
      * @return A synchronous API wrapper which delegates to the provided category behavior
      */
     @NonNull
-    public static SynchronousApi delegatingTo(@NonNull ApiCategoryBehavior asyncDelegate) {
+    public static SynchronousApi delegateTo(@NonNull ApiCategoryBehavior asyncDelegate) {
         Objects.requireNonNull(asyncDelegate);
         return new SynchronousApi(asyncDelegate);
-    }
-
-    /**
-     * Creates a Synchronous API wrapper which delegates call to {@link Amplify#API}.
-     * @return A synchronous API wrapper which delegates to the Amplify facade
-     */
-    @NonNull
-    public static SynchronousApi delegatingToAmplify() {
-        return new SynchronousApi(Amplify.API);
     }
 
     /**

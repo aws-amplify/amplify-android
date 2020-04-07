@@ -16,28 +16,35 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
-import androidx.test.core.app.ApplicationProvider;
+import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEventFilter;
+import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
+import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -47,12 +54,8 @@ import static org.junit.Assert.assertNotNull;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-@Ignore("Currently does not pass.") // TODO: fix the error; re-enable test
+@Ignore("Flaky, right now.")
 public final class AWSDataStorePluginInstrumentedTest {
-    private static final String DATABASE_NAME = "AmplifyDatastore.db";
-
-    private static Context context;
-    private static AWSDataStorePlugin awsDataStorePlugin;
     private static SynchronousApi api;
     private static SynchronousAppSync appSync;
     private static SynchronousDataStore dataStore;
@@ -65,18 +68,26 @@ public final class AWSDataStorePluginInstrumentedTest {
         StrictMode.enable();
     }
 
-    /**
-     * Setup the Android application context.
-     * @throws AmplifyException from Amplify configuration
-     */
     @BeforeClass
-    public static void configureAmplify() throws AmplifyException {
-        final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
-        awsDataStorePlugin = testConfig.plugin();
-        context = ApplicationProvider.getApplicationContext();
-        api = SynchronousApi.delegatingToAmplify();
-        appSync = SynchronousAppSync.defaultInstance();
-        dataStore = SynchronousDataStore.singleton();
+    public static void beforeAllTests() throws AmplifyException {
+        Context context = getApplicationContext();
+        @RawRes int configResourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
+
+        // Setup an API
+        ApiCategory apiCategory = new ApiCategory();
+        apiCategory.addPlugin(new AWSApiPlugin());
+        apiCategory.configure(AmplifyConfiguration.fromConfigFile(context, configResourceId)
+            .forCategoryType(CategoryType.API), context);
+
+        api = SynchronousApi.delegateTo(apiCategory);
+        appSync = SynchronousAppSync.using(AppSyncClient.via(apiCategory));
+        dataStore = SynchronousDataStore.delegatingTo(DataStoreCategoryConfigurator.begin()
+            .api(apiCategory)
+            .clearDatabase(true)
+            .context(context)
+            .modelProvider(AmplifyModelProvider.getInstance())
+            .resourceId(configResourceId)
+            .finish());
     }
 
     /**
@@ -176,15 +187,5 @@ public final class AWSDataStorePluginInstrumentedTest {
         // Jameson should be in the local DataStore, and last name should be updated.
         BlogOwner localOwner = dataStore.get(BlogOwner.class, originalModel.getId());
         assertEquals("Jameson Williams", localOwner.getName());
-    }
-
-    /**
-     * Drop all tables and database, terminate and delete the database.
-     * @throws AmplifyException from terminate if anything goes wrong
-     */
-    @AfterClass
-    public static void tearDown() throws AmplifyException {
-        awsDataStorePlugin.terminate();
-        context.deleteDatabase(DATABASE_NAME);
     }
 }

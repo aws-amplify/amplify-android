@@ -62,7 +62,7 @@ public final class GraphQLInstrumentationTest {
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
-        api = SynchronousApi.delegatingTo(asyncDelegate);
+        api = SynchronousApi.delegateTo(asyncDelegate);
     }
 
     /**
