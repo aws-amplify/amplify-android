@@ -21,9 +21,7 @@ dependencies {
     implementation project(path: ':core')
     implementation dependency.androidx.appcompat
     implementation dependency.aws.s3
-    implementation (dependency.aws.mobileclient) {
-        transitive = true
-    }
+    implementation dependency.aws.mobileclient
 
     testImplementation project(path: ':testutils')
     testImplementation dependency.junit

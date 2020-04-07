@@ -21,9 +21,7 @@ dependencies {
     implementation project(path: ':core')
     implementation dependency.androidx.appcompat
     implementation dependency.aws.pinpoint
-    implementation (dependency.aws.mobileclient) {
-        transitive = true
-    }
+    implementation dependency.aws.mobileclient
 
     testImplementation dependency.junit
     testImplementation dependency.mockito
@@ -31,6 +29,7 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
+
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
