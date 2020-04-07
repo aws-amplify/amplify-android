@@ -63,6 +63,7 @@ import java.util.List;
  * Predictions service for performing text interpretation.
  */
 final class AWSComprehendService {
+    private static final int PERCENT = 100;
 
     private final AmazonComprehendClient comprehend;
     private final AWSInterpretConfiguration configuration;
@@ -149,7 +150,7 @@ final class AWSComprehendService {
 
         return Language.builder()
                 .value(language)
-                .confidence(score)
+                .confidence(score * PERCENT)
                 .build();
     }
 
@@ -200,7 +201,7 @@ final class AWSComprehendService {
 
         return Sentiment.builder()
                 .value(predominantSentiment)
-                .confidence(score)
+                .confidence(score * PERCENT)
                 .build();
     }
 
@@ -236,7 +237,7 @@ final class AWSComprehendService {
             );
             KeyPhrase amplifyKeyPhrase = KeyPhrase.builder()
                     .value(target.getText())
-                    .confidence(comprehendKeyPhrase.getScore())
+                    .confidence(comprehendKeyPhrase.getScore() * PERCENT)
                     .target(target)
                     .build();
             keyPhrases.add(amplifyKeyPhrase);
@@ -278,7 +279,7 @@ final class AWSComprehendService {
             );
             Entity amplifyEntity = Entity.builder()
                     .value(entityType)
-                    .confidence(comprehendEntity.getScore())
+                    .confidence(comprehendEntity.getScore() * PERCENT)
                     .target(target)
                     .build();
             entities.add(amplifyEntity);
@@ -322,7 +323,7 @@ final class AWSComprehendService {
             Syntax amplifySyntax = Syntax.builder()
                     .id(comprehendSyntax.getTokenId().toString())
                     .value(partOfSpeech)
-                    .confidence(comprehendPartOfSpeech.getScore())
+                    .confidence(comprehendPartOfSpeech.getScore() * PERCENT)
                     .target(target)
                     .build();
             syntaxTokens.add(amplifySyntax);
