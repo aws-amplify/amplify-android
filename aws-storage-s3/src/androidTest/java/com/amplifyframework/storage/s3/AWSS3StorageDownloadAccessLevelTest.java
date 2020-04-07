@@ -15,10 +15,16 @@
 
 package com.amplifyframework.storage.s3;
 
+import android.content.Context;
+
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.UserCredentials.Credential;
+import com.amplifyframework.storage.s3.UserCredentials.IdentityIdSource;
+import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
@@ -29,18 +35,15 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.io.File;
-import java.util.HashMap;
 import java.util.Iterator;
-import java.util.Map;
 
-import static org.junit.Assert.assertTrue;
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
 /**
  * Instrumentation test to confirm that Storage Download behaves
  * correctly with regards to the provided storage access level.
  */
 public final class AWSS3StorageDownloadAccessLevelTest {
-
     private static final long UPLOAD_SIZE = 100L;
     private static final String UPLOAD_NAME = "test-" + System.currentTimeMillis();
 
@@ -49,9 +52,8 @@ public final class AWSS3StorageDownloadAccessLevelTest {
     private static SynchronousStorage storage;
     private static SynchronousMobileClient mobileClient;
 
-    private static String userOne;
-    private static String userTwo;
-    private static Map<String, String> userIdentityIds;
+    private static Credential userOne;
+    private static Credential userTwo;
 
     private File downloadFile;
     private String downloadPath;
@@ -63,31 +65,18 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      */
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        // Configure Amplify if not already configured
-        TestConfiguration configuration = TestConfiguration.configureIfNotConfigured();
-        Map<String, String> userCredentials = configuration.getUserCredentials();
+        Context context = getApplicationContext();
 
-        // This test suite requires at least two verified users in User Pools
-        assertTrue(userCredentials.size() >= 2);
-
-        // Get registered user names from test resources
-        Iterator<String> users = userCredentials.keySet().iterator();
+        mobileClient = SynchronousMobileClient.instance();
+        mobileClient.initialize();
+        IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(mobileClient);
+        UserCredentials userCredentials = UserCredentials.create(identityIdSource, context);
+        Iterator<Credential> users = userCredentials.iterator();
         userOne = users.next();
         userTwo = users.next();
 
-        // Obtain synchronous storage and mobile client singletons
-        storage = SynchronousStorage.singleton();
-        mobileClient = SynchronousMobileClient.instance(userCredentials);
-
-        // Obtain the user identity ID values of each user ahead of time
-        userIdentityIds = new HashMap<>();
-        mobileClient.signOut();
-        mobileClient.signIn(userOne);
-        userIdentityIds.put(userOne, mobileClient.getIdentityId());
-
-        mobileClient.signOut();
-        mobileClient.signIn(userTwo);
-        userIdentityIds.put(userTwo, mobileClient.getIdentityId());
+        StorageCategory asyncDelegate = TestStorageCategory.create(R.raw.amplifyconfiguration, context);
+        storage = SynchronousStorage.delegatingTo(asyncDelegate);
 
         // Upload test file in S3 ahead of time
         uploadTestFile();
@@ -137,7 +126,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
     public void testDownloadUnauthenticatedProtectedAccess() throws Exception {
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
-                .targetIdentityId(userIdentityIds.get(userOne))
+                .targetIdentityId(userOne.getIdentityId())
                 .build();
         storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
@@ -156,7 +145,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
     public void testDownloadUnauthenticatedPrivateAccess() throws Exception {
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
-                .targetIdentityId(userIdentityIds.get(userOne))
+                .targetIdentityId(userOne.getIdentityId())
                 .build();
         storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
@@ -169,10 +158,10 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      */
     @Test
     public void testDownloadAuthenticatedProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne);
+        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
-                .targetIdentityId(userIdentityIds.get(userOne))
+                .targetIdentityId(userOne.getIdentityId())
                 .build();
         storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
@@ -185,10 +174,10 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      */
     @Test
     public void testDownloadAuthenticatedPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne);
+        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
-                .targetIdentityId(userIdentityIds.get(userOne))
+                .targetIdentityId(userOne.getIdentityId())
                 .build();
         storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
@@ -205,10 +194,10 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      */
     @Test
     public void testDownloadDifferentUsersProtectedAccess() throws Exception {
-        mobileClient.signIn(userOne);
+        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
-                .targetIdentityId(userIdentityIds.get(userTwo))
+                .targetIdentityId(userTwo.getIdentityId())
                 .build();
         storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
@@ -225,10 +214,10 @@ public final class AWSS3StorageDownloadAccessLevelTest {
      */
     @Test(expected = StorageException.class)
     public void testDownloadDifferentUsersPrivateAccess() throws Exception {
-        mobileClient.signIn(userOne);
+        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
-                .targetIdentityId(userIdentityIds.get(userTwo))
+                .targetIdentityId(userTwo.getIdentityId())
                 .build();
         storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
@@ -251,7 +240,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
 
         // Upload as user one
         mobileClient.signOut();
-        mobileClient.signIn(userOne);
+        mobileClient.signIn(userOne.getUsername(), userOne.getPassword());
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
@@ -263,7 +252,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
 
         // Upload as user two
         mobileClient.signOut();
-        mobileClient.signIn(userTwo);
+        mobileClient.signIn(userTwo.getUsername(), userTwo.getPassword());
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
@@ -273,5 +262,4 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .build();
         storage.uploadFile(key, local, options);
     }
-
 }

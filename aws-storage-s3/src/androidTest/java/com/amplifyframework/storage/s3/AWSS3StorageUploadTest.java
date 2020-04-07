@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3;
 
+import android.content.Context;
+
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -22,9 +24,11 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.Sleep;
 import com.amplifyframework.testutils.random.RandomTempFile;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
@@ -43,6 +47,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -51,7 +56,6 @@ import static org.junit.Assert.assertTrue;
  */
 @Ignore("This is causing the test process to hang, which fails the suite.")
 public final class AWSS3StorageUploadTest {
-
     // This is a temporary work-around to resolve a race-condition.
     // TransferUtility crashes if a transfer is paused and instantly resumed.
     private static final long SLEEP_DURATION_MS = 300;
@@ -61,18 +65,17 @@ public final class AWSS3StorageUploadTest {
     private static final long LARGE_FILE_SIZE = 10 * 1024 * 1024L; // 10 MB
     private static final long SMALL_FILE_SIZE = 100L;
 
-    private static SynchronousStorage storage;
+    private static StorageCategory storageCategory;
+    private static SynchronousStorage synchronousStorage;
 
     private StorageUploadFileOptions options;
     private Set<SubscriptionToken> subscriptions;
 
     @BeforeClass
-    public static void setUpOnce() throws Exception {
-        // Configure Amplify if not already configured
-        TestConfiguration.configureIfNotConfigured();
-
-        // Obtain synchronous storage singleton
-        storage = SynchronousStorage.singleton();
+    public static void setUpOnce() {
+        Context context = getApplicationContext();
+        storageCategory = TestStorageCategory.create(R.raw.amplifyconfiguration, context);
+        synchronousStorage = SynchronousStorage.delegatingTo(storageCategory);
     }
 
     /**
@@ -110,7 +113,7 @@ public final class AWSS3StorageUploadTest {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
         String filePath = uploadFile.getPath();
-        storage.uploadFile(fileName, filePath, options);
+        synchronousStorage.uploadFile(fileName, filePath, options);
     }
 
     /**
@@ -123,7 +126,7 @@ public final class AWSS3StorageUploadTest {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
         String filePath = uploadFile.getPath();
-        storage.uploadFile(fileName, filePath, options, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.uploadFile(fileName, filePath, options, EXTENDED_TIMEOUT_MS);
     }
 
     /**
@@ -168,7 +171,7 @@ public final class AWSS3StorageUploadTest {
         subscriptions.add(cancelToken);
 
         // Begin uploading a large file
-        StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
+        StorageUploadFileOperation<?> op = storageCategory.uploadFile(
             uploadFile.getName(),
             uploadFile.getAbsolutePath(),
             options,
@@ -231,7 +234,7 @@ public final class AWSS3StorageUploadTest {
         subscriptions.add(resumeToken);
 
         // Begin uploading a large file
-        StorageUploadFileOperation<?> op = Amplify.Storage.uploadFile(
+        StorageUploadFileOperation<?> op = storageCategory.uploadFile(
             uploadFile.getName(),
             uploadFile.getAbsolutePath(),
             options,
