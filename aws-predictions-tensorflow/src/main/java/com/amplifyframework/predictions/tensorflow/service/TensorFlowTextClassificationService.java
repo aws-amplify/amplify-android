@@ -36,6 +36,7 @@ import org.tensorflow.lite.Interpreter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -61,14 +62,12 @@ final class TensorFlowTextClassificationService {
      * Constructs an instance of service to perform text
      * sentiment interpretation using TensorFlow Lite
      * interpreter.
-     * @param context the Android context
+     * @param interpreter the TensorFlow Lite interpreter with
+     *                    loaded model
+     * @param dictionary the dictionary of words and respective
+     *                   tokens
+     * @param labels the list of labels for a feature
      */
-    TensorFlowTextClassificationService(@NonNull Context context) {
-        this(new TextClassificationModel(context),
-                new TextClassificationDictionary(context),
-                new TextClassificationLabels(context));
-    }
-
     @VisibleForTesting
     TensorFlowTextClassificationService(
             TextClassificationModel interpreter,
@@ -87,6 +86,20 @@ final class TensorFlowTextClassificationService {
                 error -> this.loadingError = error
             );
         }
+    }
+
+    /**
+     * Constructs an instance of text classifier service by
+     * loading the assets from provided Android context.
+     * @param context the Android context
+     * @return an instance of text classification service
+     */
+    static TensorFlowTextClassificationService fromContext(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        TextClassificationModel model = new TextClassificationModel(context);
+        TextClassificationDictionary dictionary = new TextClassificationDictionary(context);
+        TextClassificationLabels labels = new TextClassificationLabels(context);
+        return new TensorFlowTextClassificationService(model, dictionary, labels);
     }
 
     /**

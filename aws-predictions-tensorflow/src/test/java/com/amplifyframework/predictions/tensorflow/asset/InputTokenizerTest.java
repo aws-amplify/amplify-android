@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.res.AssetManager;
 
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.testutils.Await;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -26,13 +27,9 @@ import org.junit.Test;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -42,8 +39,6 @@ import static org.mockito.Mockito.when;
  * works as intended.
  */
 public final class InputTokenizerTest {
-    private static final long LOAD_TIMEOUT_MS = 100;
-
     private Context mockContext;
     private AssetManager mockAssets;
 
@@ -65,10 +60,6 @@ public final class InputTokenizerTest {
     @Test
     @SuppressWarnings("MagicNumber") // word tokens
     public void testInputTextTokenizer() throws Exception {
-        final CountDownLatch loaded = new CountDownLatch(1);
-        final AtomicReference<Map<String, Integer>> tokens = new AtomicReference<>();
-        final AtomicReference<PredictionsException> error = new AtomicReference<>();
-
         final String inputText = "Where is the bathroom?";
         final InputStream stream = new FileInputStream("src/test/resources/word-tokens.txt");
 
@@ -79,29 +70,20 @@ public final class InputTokenizerTest {
         when(mockAssets.open(anyString())).thenReturn(stream);
 
         // Load!! (from mock assets)
-        TextClassificationDictionary dictionary = new TextClassificationDictionary(mockContext)
-                .onLoaded(
-                    onLoad -> {
-                        loaded.countDown();
-                        tokens.set(onLoad);
-                    },
-                    onError -> {
-                        loaded.countDown();
-                        error.set(onError);
-                    }
-                );
-        dictionary.load();
-        loaded.await(LOAD_TIMEOUT_MS, TimeUnit.MICROSECONDS);
-        if (error.get() != null) {
-            fail("Failed to load dictionary.");
-        }
+        TextClassificationDictionary dictionary = new TextClassificationDictionary(mockContext);
+        Map<String, Integer> tokens = Await.<Map<String, Integer>, PredictionsException>result(
+            (onResult, onError) -> {
+                dictionary.onLoaded(onResult, onError);
+                dictionary.load();
+            }
+        );
 
         // Assert that load was successful
-        assertEquals(tokens.get(), dictionary.getValue());
+        assertEquals(tokens, dictionary.getValue());
 
         // Tokenize input
         float[][] input = dictionary.tokenizeInputText(inputText);
-        float[][] expected = new float[1][input[0].length];
+        float[][] expected = new float[1][256]; // 256 = Max sentence size
         expected[0][0] = 1; // <START>
         expected[0][1] = 2; // Where (<UNKNOWN>)
         expected[0][2] = 9; // is
