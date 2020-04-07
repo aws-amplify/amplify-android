@@ -70,6 +70,7 @@ ext {
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
+        tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
 
         junit: 'junit:junit:4.13',
         mockito: 'org.mockito:mockito-core:3.1.0',
