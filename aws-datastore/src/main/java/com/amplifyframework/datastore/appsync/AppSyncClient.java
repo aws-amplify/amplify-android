@@ -17,7 +17,6 @@ package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
@@ -27,7 +26,6 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
@@ -38,7 +36,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * An implementation of the {@link AppSync} client interface.
@@ -60,9 +57,8 @@ public final class AppSyncClient implements AppSync {
      * Constructs a new AppSyncClient.
      * @param api The API Category, configured with a DataStore API
      */
-    @VisibleForTesting
-    AppSyncClient(@NonNull final GraphQlBehavior api) {
-        this.api = Objects.requireNonNull(api);
+    private AppSyncClient(GraphQlBehavior api) {
+        this.api = api;
         this.variablesSerializer = new AppSyncVariablesSerializer();
         this.responseDeserializer = new AppSyncResponseDeserializer();
     }
@@ -70,11 +66,12 @@ public final class AppSyncClient implements AppSync {
     /**
      * Obtain an instance of the AppSyncAPI, which uses the Amplify API category
      * as its backing implementation for GraphQL behaviors.
+     * @param api GraphQL api behavior through which this app sync client will talk
      * @return An App Sync API instance
      */
     @NonNull
-    public static AppSyncClient instance() {
-        return new AppSyncClient(Amplify.API);
+    public static AppSyncClient via(@NonNull GraphQlBehavior api) {
+        return new AppSyncClient(api);
     }
 
     @SuppressWarnings("checkstyle:LineLength")
