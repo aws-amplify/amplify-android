@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.tensorflow.service;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Consumer;
@@ -50,6 +51,7 @@ final class TensorFlowTextClassificationService {
     private final TextClassificationModel interpreter;
     private final TextClassificationDictionary dictionary;
     private final TextClassificationLabels labels;
+
     private final List<Loadable<?, PredictionsException>> assets;
     private final CountDownLatch loaded;
 
@@ -62,13 +64,23 @@ final class TensorFlowTextClassificationService {
      * @param context the Android context
      */
     TensorFlowTextClassificationService(@NonNull Context context) {
-        this.interpreter = new TextClassificationModel(context);
-        this.dictionary = new TextClassificationDictionary(context);
-        this.labels = new TextClassificationLabels(context);
+        this(new TextClassificationModel(context),
+                new TextClassificationDictionary(context),
+                new TextClassificationLabels(context));
+    }
+
+    @VisibleForTesting
+    TensorFlowTextClassificationService(
+            TextClassificationModel interpreter,
+            TextClassificationDictionary dictionary,
+            TextClassificationLabels labels
+    ) {
+        this.interpreter = interpreter;
+        this.dictionary = dictionary;
+        this.labels = labels;
 
         this.assets = Arrays.asList(interpreter, dictionary, labels);
         this.loaded = new CountDownLatch(assets.size());
-
         for (Loadable<?, PredictionsException> asset : assets) {
             asset.onLoaded(
                 onLoad -> this.loaded.countDown(),
@@ -87,6 +99,10 @@ final class TensorFlowTextClassificationService {
         return SERVICE_KEY;
     }
 
+    /**
+     * Load all of the required assets. No-op for each asset
+     * that is already loaded.
+     */
     @WorkerThread
     synchronized void loadIfNotLoaded() {
         for (Loadable<?, PredictionsException> asset : assets) {
@@ -132,7 +148,8 @@ final class TensorFlowTextClassificationService {
         }
     }
 
-    private Sentiment fetchSentiment(String text) throws PredictionsException {
+    @VisibleForTesting
+    Sentiment fetchSentiment(String text) throws PredictionsException {
         float[][] input;
         float[][] output;
 
