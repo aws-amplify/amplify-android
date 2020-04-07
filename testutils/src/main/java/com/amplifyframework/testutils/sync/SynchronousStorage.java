@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageCategory;
+import com.amplifyframework.storage.StorageCategoryBehavior;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageListOptions;
@@ -30,6 +31,7 @@ import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.testutils.Await;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -38,25 +40,33 @@ import java.util.concurrent.TimeUnit;
  * code, where we want to make a series of sequential assertions after
  * performing various operations.
  */
-@SuppressWarnings("unused")
 public final class SynchronousStorage {
-    // 5 seconds seemed to be insufficient to reliably cover both initial auth calls + storage network ops
-    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final long STORAGE_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+    private final StorageCategoryBehavior asyncDelegate;
 
-    private static SynchronousStorage singleton = null;
-
-    private SynchronousStorage() {}
+    private SynchronousStorage(StorageCategoryBehavior asyncDelegate) {
+        this.asyncDelegate = asyncDelegate;
+    }
 
     /**
-     * Gets a singleton instance of the Synchronous Storage utility.
-     * @return Singleton instance of Synchronous Storage
+     * Creates a synchronous storage wrapper which delegates calls to the provided storage
+     * category behavior.
+     * @param asyncDelegate Performs the actual storage operations
+     * @return A synchronous storage wrapper
      */
     @NonNull
-    public static synchronized SynchronousStorage singleton() {
-        if (SynchronousStorage.singleton == null) {
-            SynchronousStorage.singleton = new SynchronousStorage();
-        }
-        return SynchronousStorage.singleton;
+    public static SynchronousStorage delegatingTo(@NonNull StorageCategoryBehavior asyncDelegate) {
+        Objects.requireNonNull(asyncDelegate);
+        return new SynchronousStorage(asyncDelegate);
+    }
+
+    /**
+     * Creates a synchronous storage wrapper which delegates to the {@link Amplify#Storage} facade.
+     * @return A synchronous storage wrapper
+     */
+    @NonNull
+    public static SynchronousStorage delegatingToAmplify() {
+        return new SynchronousStorage(Amplify.Storage);
     }
 
     /**
@@ -93,7 +103,7 @@ public final class SynchronousStorage {
             long timeoutMs
     ) throws StorageException {
         return Await.<StorageDownloadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
-                Amplify.Storage.downloadFile(key, local, options, onResult, onError)
+                asyncDelegate.downloadFile(key, local, options, onResult, onError)
         );
     }
 
@@ -131,7 +141,7 @@ public final class SynchronousStorage {
             long timeoutMs
     ) throws StorageException {
         return Await.<StorageUploadFileResult, StorageException>result(timeoutMs, (onResult, onError) ->
-                Amplify.Storage.uploadFile(key, local, options, onResult, onError)
+                asyncDelegate.uploadFile(key, local, options, onResult, onError)
         );
     }
 
@@ -165,7 +175,7 @@ public final class SynchronousStorage {
             long timeoutMs
     ) throws StorageException {
         return Await.<StorageRemoveResult, StorageException>result(timeoutMs, (onResult, onError) ->
-                Amplify.Storage.remove(key, options, onResult, onError)
+                asyncDelegate.remove(key, options, onResult, onError)
         );
     }
 
@@ -199,7 +209,7 @@ public final class SynchronousStorage {
             long timeoutMs
     ) throws StorageException {
         return Await.<StorageListResult, StorageException>result(timeoutMs, (onResult, onError) ->
-                Amplify.Storage.list(path, options, onResult, onError)
+                asyncDelegate.list(path, options, onResult, onError)
         );
     }
 }
