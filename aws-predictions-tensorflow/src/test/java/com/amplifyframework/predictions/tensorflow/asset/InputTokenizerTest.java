@@ -22,8 +22,6 @@ import com.amplifyframework.predictions.PredictionsException;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
@@ -43,7 +41,6 @@ import static org.mockito.Mockito.when;
  * Test that input conversion to TensorFlow Lite tokens
  * works as intended.
  */
-@RunWith(JUnit4.class)
 public final class InputTokenizerTest {
     private static final long LOAD_TIMEOUT_MS = 100;
 

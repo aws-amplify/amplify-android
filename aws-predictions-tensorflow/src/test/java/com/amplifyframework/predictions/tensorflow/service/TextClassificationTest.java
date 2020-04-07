@@ -24,8 +24,6 @@ import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 import java.util.Arrays;
 import java.util.List;
@@ -43,7 +41,6 @@ import static org.mockito.Mockito.when;
  * Test that sentiment detection using TensorFlow Lite interpreter
  * to output Amplify text interpretation result works.
  */
-@RunWith(JUnit4.class)
 public final class TextClassificationTest {
 
     private TextClassificationModel mockInterpreter;
