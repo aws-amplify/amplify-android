@@ -13,24 +13,28 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.options;
+package com.amplifyframework.predictions.aws.request;
 
-import com.amplifyframework.core.async.Options;
+import androidx.annotation.NonNull;
+
+import java.util.Objects;
 
 /**
- * Options for text interpretation operation.
+ * Simple request instance for text interpretation operation.
  */
-public final class InterpretOptions implements Options {
-
-    private InterpretOptions() {
-        // TODO: Add options
-    }
+public final class AWSComprehendRequest {
+    private final String text;
 
     /**
-     * Creates an instance of options with default values assigned.
-     * @return Default instance of options
+     * Constructs an instance of {@link AWSComprehendRequest}.
+     * @param text the text to interpret
      */
-    public static InterpretOptions defaults() {
-        return new InterpretOptions();
+    public AWSComprehendRequest(@NonNull String text) {
+        this.text = Objects.requireNonNull(text);
+    }
+
+    @NonNull
+    public String getText() {
+        return text;
     }
 }

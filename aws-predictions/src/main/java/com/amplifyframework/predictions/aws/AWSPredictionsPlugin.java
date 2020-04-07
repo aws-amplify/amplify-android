@@ -13,23 +13,21 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.tensorflow;
+package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
+import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
+import com.amplifyframework.predictions.aws.request.AWSComprehendRequest;
+import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.operation.InterpretOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
-import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
-import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
-import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
 import org.json.JSONObject;
 
@@ -37,49 +35,39 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 /**
- * A plugin for Predictions category that uses models from
- * TensorFlow Lite to carry out tasks offline.
+ * A plugin for the predictions category.
  */
-public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorFlowPredictionsEscapeHatch> {
-    private static final String TENSOR_FLOW_PREDICTIONS_PLUGIN_KEY = "tensorFlowPredictionsPlugin";
+public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictionsEscapeHatch> {
+    private static final String AWS_PREDICTIONS_PLUGIN_KEY = "awsPredictionsPlugin";
 
     private final ExecutorService executorService;
 
-    private TensorFlowPredictionsService predictionsService;
+    private AWSPredictionsPluginConfiguration configuration;
+    private AWSPredictionsService predictionsService;
 
     /**
-     * Construct an instance of Predictions Plugin that uses
-     * pre-trained models from TensorFlow Lite to make inferences
-     * offline.
+     * Constructs the AWS Predictions Plugin initializing the executor service.
      */
-    public TensorFlowPredictionsPlugin() {
+    public AWSPredictionsPlugin() {
         this.executorService = Executors.newCachedThreadPool();
     }
 
     @NonNull
     @Override
     public String getPluginKey() {
-        return TENSOR_FLOW_PREDICTIONS_PLUGIN_KEY;
+        return AWS_PREDICTIONS_PLUGIN_KEY;
     }
 
     @Override
-    public void configure(
-            JSONObject pluginConfiguration,
-            @NonNull Context context
-    ) throws AmplifyException {
-        this.predictionsService = new TensorFlowPredictionsService(context);
-    }
-
-    @WorkerThread
-    @Override
-    public void initialize(@NonNull Context context) {
-        this.predictionsService.loadAssets();
+    public void configure(JSONObject pluginConfiguration, @NonNull Context context) throws PredictionsException {
+        this.configuration = AWSPredictionsPluginConfiguration.fromJson(pluginConfiguration);
+        this.predictionsService = new AWSPredictionsService(configuration);
     }
 
     @Nullable
     @Override
-    public TensorFlowPredictionsEscapeHatch getEscapeHatch() {
-        return new TensorFlowPredictionsEscapeHatch(predictionsService.getInterpreters());
+    public AWSPredictionsEscapeHatch getEscapeHatch() {
+        return new AWSPredictionsEscapeHatch(predictionsService.getComprehendClient());
     }
 
     @NonNull
@@ -99,13 +87,11 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull String text,
             @NonNull InterpretOptions options,
             @NonNull Consumer<InterpretResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    ) {
-        // Create interpret request for TensorFlow Lite interpreter
-        TensorFlowTextClassificationRequest request =
-                new TensorFlowTextClassificationRequest(text);
+            @NonNull Consumer<PredictionsException> onError) {
+        // Create interpret request for AWS Comprehend
+        AWSComprehendRequest request = new AWSComprehendRequest(text);
 
-        TensorFlowInterpretOperation operation = new TensorFlowInterpretOperation(
+        AWSInterpretOperation operation = new AWSInterpretOperation(
                 predictionsService,
                 executorService,
                 request,

@@ -1,0 +1,10 @@
+{
+  "defaultRegion": "us-east-1",
+  "interpret": {
+    "interpretText": {
+      "region": "us-west-2",
+      "type": "SENTIMENT",
+      "defaultNetworkPolicy": "offline"
+    }
+  }
+}
