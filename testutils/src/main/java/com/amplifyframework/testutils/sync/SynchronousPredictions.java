@@ -17,7 +17,6 @@ package com.amplifyframework.testutils.sync;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsCategoryBehavior;
 import com.amplifyframework.predictions.PredictionsException;
@@ -35,21 +34,10 @@ import java.util.concurrent.TimeUnit;
  */
 public final class SynchronousPredictions {
     private static final long PREDICTIONS_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
-
-    private final PredictionsCategoryBehavior predictions;
+    private final PredictionsCategoryBehavior asyncDelegate;
 
     private SynchronousPredictions(PredictionsCategoryBehavior predictions) {
-        this.predictions = predictions;
-    }
-
-    /**
-     * Gets an instance of the Synchronous Predictions utility that
-     * delegates tasks to Amplify.Predictions.
-     * @return new instance of Synchronous Predictions
-     */
-    @NonNull
-    public static synchronized SynchronousPredictions delegatingToAmplify() {
-        return delegatingTo(Amplify.Predictions);
+        this.asyncDelegate = predictions;
     }
 
     /**
@@ -79,7 +67,7 @@ public final class SynchronousPredictions {
     ) throws PredictionsException {
         return Await.<InterpretResult, PredictionsException>result(
             PREDICTIONS_OPERATION_TIMEOUT_MS,
-            (onResult, onError) -> predictions.interpret(
+            (onResult, onError) -> asyncDelegate.interpret(
                     text,
                     options,
                     onResult,
