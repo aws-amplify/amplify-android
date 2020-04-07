@@ -41,15 +41,6 @@ public final class SynchronousAppSync {
     }
 
     /**
-     * Creates a new SynchronousAppSync instance, that proxies calls into the default
-     * AppSync client returned by {@link AppSyncClient#instance()}.
-     * @return A synchronous app sync facade
-     */
-    public static SynchronousAppSync defaultInstance() {
-        return new SynchronousAppSync(AppSyncClient.instance());
-    }
-
-    /**
      * Creates a new SynchronousAppSync instance, that proxies calls into
      * the provided async AppSync client.
      * @param appSync AppSync client
