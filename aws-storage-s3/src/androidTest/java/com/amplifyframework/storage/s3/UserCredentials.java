@@ -34,6 +34,34 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * UserCredentials houses Cognito usernames, passwords, and identity IDs. The usernames and passwords
+ * are read in from a file, `src/androidTest/res/raw/credentials.json`, which is expected to have this
+ * shape:
+ *
+ * <pre>
+ * {
+ *   "credentials": [
+ *     {
+ *       "username": "username1",
+ *       "password": "kool@pass22"
+ *     },
+ *     {
+ *       "username": "username2",
+ *       "password": "$ecurePass1"
+ *     }
+ *   ]
+ * }
+ * </pre>
+ *
+ * {@link UserCredentials#create(Context, IdentityIdSource)} will read this configuration file,
+ * and extract its usernames and passwords. For each pair, it will fetch the associated Identity ID from
+ * {@link IdentityIdSource#fetchIdentityId(String, String)}. These three values are then stored into
+ * an {@link Credential} object.
+ *
+ * After create() is done, the {@link UserCredentials#iterator()} provides a window into the
+ * test credentials.
+ */
 final class UserCredentials implements Iterable<UserCredentials.Credential> {
     private static final String CREDENTIALS_RESOURCE_NAME = "credentials";
     private final List<Credential> credentials;
@@ -42,9 +70,9 @@ final class UserCredentials implements Iterable<UserCredentials.Credential> {
         this.credentials = credentials;
     }
 
-    static UserCredentials create(@NonNull IdentityIdSource identityIdSource, @NonNull Context context) {
-        Objects.requireNonNull(identityIdSource);
+    static UserCredentials create(@NonNull Context context, @NonNull IdentityIdSource identityIdSource) {
         Objects.requireNonNull(context);
+        Objects.requireNonNull(identityIdSource);
 
         @RawRes int resourceId = Resources.getRawResourceId(context, CREDENTIALS_RESOURCE_NAME);
         Map<String, String> userAndPasswordMap = readCredentialsFromResource(context, resourceId);

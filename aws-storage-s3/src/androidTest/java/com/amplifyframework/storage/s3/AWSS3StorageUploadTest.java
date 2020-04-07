@@ -74,7 +74,7 @@ public final class AWSS3StorageUploadTest {
     @BeforeClass
     public static void setUpOnce() {
         Context context = getApplicationContext();
-        storageCategory = TestStorageCategory.create(R.raw.amplifyconfiguration, context);
+        storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         synchronousStorage = SynchronousStorage.delegatingTo(storageCategory);
     }
 

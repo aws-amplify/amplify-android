@@ -67,13 +67,13 @@ public final class AWSS3StorageUploadAccessLevelTest {
         mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
         IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(mobileClient);
-        UserCredentials userCredentials = UserCredentials.create(identityIdSource, context);
+        UserCredentials userCredentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> iterator = userCredentials.iterator();
         userOne = iterator.next();
         userTwo = iterator.next();
 
         // Setup storage.
-        StorageCategory asyncDelegate = TestStorageCategory.create(R.raw.amplifyconfiguration, context);
+        StorageCategory asyncDelegate = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
     }
 

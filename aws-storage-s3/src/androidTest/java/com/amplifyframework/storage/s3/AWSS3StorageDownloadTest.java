@@ -84,7 +84,7 @@ public final class AWSS3StorageDownloadTest {
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
-        storageCategory = TestStorageCategory.create(R.raw.amplifyconfiguration, context);
+        storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         synchronousStorage = SynchronousStorage.delegatingTo(storageCategory);
 
         // Upload to PUBLIC for consistency

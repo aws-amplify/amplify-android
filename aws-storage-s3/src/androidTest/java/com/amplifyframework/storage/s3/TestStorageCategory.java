@@ -35,12 +35,13 @@ final class TestStorageCategory {
 
     /**
      * Creates an instance of {@link StorageCategory} using the provided configuration resource.
-     * @param resourceId Android resource ID for a configuration file
      * @param context Android Context
+     * @param resourceId Android resource ID for a configuration file
      * @return A StorageCategory instance using the provided configuration
      */
-    static StorageCategory create(@RawRes int resourceId, @NonNull Context context) {
+    static StorageCategory create(@NonNull Context context, @RawRes int resourceId) {
         Objects.requireNonNull(context);
+
         final StorageCategory storageCategory = new StorageCategory();
         try {
             storageCategory.addPlugin(new AWSS3StoragePlugin());

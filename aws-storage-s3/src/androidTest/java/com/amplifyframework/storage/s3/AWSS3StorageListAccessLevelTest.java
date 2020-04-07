@@ -72,13 +72,13 @@ public final class AWSS3StorageListAccessLevelTest {
         mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
         IdentityIdSource identityIdSource = MobileClientIdentityIdSource.create(mobileClient);
-        UserCredentials credentials = UserCredentials.create(identityIdSource, context);
+        UserCredentials credentials = UserCredentials.create(context, identityIdSource);
         Iterator<Credential> users = credentials.iterator();
         userOne = users.next();
         userTwo = users.next();
 
         // Get a handle to storage
-        StorageCategory asyncDelegate = TestStorageCategory.create(R.raw.amplifyconfiguration, context);
+        StorageCategory asyncDelegate = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         storage = SynchronousStorage.delegatingTo(asyncDelegate);
 
         // Upload test file in S3 ahead of time
