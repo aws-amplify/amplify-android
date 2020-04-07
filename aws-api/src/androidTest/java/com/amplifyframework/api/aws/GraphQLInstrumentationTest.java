@@ -16,7 +16,9 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.testutils.Assets;
@@ -59,8 +61,8 @@ public final class GraphQLInstrumentationTest {
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
-        AmplifyTestConfigurator.configureIfNotConfigured();
-        api = SynchronousApi.singleton();
+        ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
+        api = SynchronousApi.delegatingTo(asyncDelegate);
     }
 
     /**

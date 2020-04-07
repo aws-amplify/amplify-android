@@ -16,7 +16,9 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.testutils.sync.SynchronousApi;
@@ -44,8 +46,8 @@ public final class RestApiInstrumentationTest {
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException, SynchronousMobileClient.MobileClientException {
-        AmplifyTestConfigurator.configureIfNotConfigured();
-        api = SynchronousApi.singleton();
+        ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
+        api = SynchronousApi.delegatingTo(asyncDelegate);
         SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
     }
