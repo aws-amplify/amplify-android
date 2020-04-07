@@ -15,13 +15,19 @@
 
 package com.amplifyframework.datastore;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
@@ -31,6 +37,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.Resources;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -44,14 +51,16 @@ import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposables;
 import io.reactivex.observers.TestObserver;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the DataStore API Interface.
  */
-@Ignore("Multiple tests can't subscribe in a single process right now.")
+@Ignore("Subscription issues")
 public final class AppSyncClientInstrumentationTest {
     private static AppSync api;
 
@@ -61,8 +70,16 @@ public final class AppSyncClientInstrumentationTest {
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException {
-        TestConfiguration.configureIfNotConfigured();
-        api = AppSyncClient.instance();
+        Context context = getApplicationContext();
+        @RawRes int resourceId = Resources.getRawResourceId(context, "amplifyconfiguration");
+
+        ApiCategory asyncDelegate = new ApiCategory();
+        asyncDelegate.addPlugin(new AWSApiPlugin());
+        asyncDelegate.configure(AmplifyConfiguration.fromConfigFile(context, resourceId)
+            .forCategoryType(CategoryType.API), context);
+        asyncDelegate.initialize(context);
+
+        api = AppSyncClient.via(asyncDelegate);
     }
 
     /**
@@ -103,7 +120,9 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(blog.getOwner().getId(), blogCreateResult.getModel().getOwner().getId());
         assertEquals(new Integer(1), blogCreateResult.getSyncMetadata().getVersion());
         assertNull(blogCreateResult.getSyncMetadata().isDeleted());
-        assertTrue(blogCreateResult.getSyncMetadata().getLastChangedAt() > startTime);
+        Long createdBlogLastChangedAt = blogCreateResult.getSyncMetadata().getLastChangedAt();
+        assertNotNull(createdBlogLastChangedAt);
+        assertTrue(createdBlogLastChangedAt > startTime);
         assertEquals(blog.getId(), blogCreateResult.getSyncMetadata().getId());
 
         // Validate that subscription picked up the mutation
@@ -158,7 +177,9 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(2, blogUpdateResult.getModel().getPosts().size());
         assertEquals(new Integer(2), blogUpdateResult.getSyncMetadata().getVersion());
         assertNull(blogUpdateResult.getSyncMetadata().isDeleted());
-        assertTrue(blogUpdateResult.getSyncMetadata().getLastChangedAt() > updateBlogStartTime);
+        Long updatedBlogLastChangedAt = blogUpdateResult.getSyncMetadata().getLastChangedAt();
+        assertNotNull(updatedBlogLastChangedAt);
+        assertTrue(updatedBlogLastChangedAt > updateBlogStartTime);
 
         // Delete one of the posts
         ModelWithMetadata<Post> post1DeleteResult = delete(Post.class, post1.getId(), 1);
@@ -168,7 +189,8 @@ public final class AppSyncClientInstrumentationTest {
                 .build(),
             post1DeleteResult.getModel()
         );
-        assertTrue(post1DeleteResult.getSyncMetadata().isDeleted());
+        Boolean isDeleted = post1DeleteResult.getSyncMetadata().isDeleted();
+        assertEquals(Boolean.TRUE, isDeleted);
 
         // Try to delete a post with a bad version number
         List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(Post.class, post2.getId(), 0);
@@ -311,4 +333,3 @@ public final class AppSyncClientInstrumentationTest {
         });
     }
 }
-

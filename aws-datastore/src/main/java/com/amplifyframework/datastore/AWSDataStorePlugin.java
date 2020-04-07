@@ -22,6 +22,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.GraphQlBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -42,6 +43,7 @@ import com.amplifyframework.hub.HubChannel;
 import org.json.JSONObject;
 
 import java.util.Iterator;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 import io.reactivex.Completable;
@@ -69,33 +71,48 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     private AWSDataStorePlugin(
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
-            @NonNull ModelProvider modelProvider) {
+            @NonNull ModelProvider modelProvider,
+            @NonNull GraphQlBehavior api) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
-        this.orchestrator = createOrchestrator(modelProvider, modelSchemaRegistry, sqliteStorageAdapter);
         this.categoryInitializationsPending = new CountDownLatch(1);
-    }
-
-    private Orchestrator createOrchestrator(
-            ModelProvider modelProvider, ModelSchemaRegistry modelSchemaRegistry, LocalStorageAdapter storageAdapter) {
-        return new Orchestrator(
+        this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
-            storageAdapter,
-            AppSyncClient.instance(),
+            sqliteStorageAdapter,
+            AppSyncClient.via(api),
             () -> pluginConfiguration.getBaseSyncIntervalMs()
         );
     }
 
     /**
-     * Return the instance for the model provider.
+     * Creates an {@link AWSDataStorePlugin} which can warehouse the model types provided by
+     * the supplied {@link ModelProvider}. If remote synchronization is enabled, it will be
+     * performed through {@link Amplify#API}.
      * @param modelProvider Provider of models to be usable by plugin
-     * @return the plugin instance for the model provider.
+     * @return An {@link AWSDataStorePlugin} which warehouses the provided models
      */
     @NonNull
     @SuppressWarnings("WeakerAccess")
-    public static synchronized AWSDataStorePlugin forModels(@NonNull final ModelProvider modelProvider) {
-        return new AWSDataStorePlugin(ModelSchemaRegistry.instance(), modelProvider);
+    public static AWSDataStorePlugin forModels(@NonNull ModelProvider modelProvider) {
+        Objects.requireNonNull(modelProvider);
+        return create(modelProvider, Amplify.API);
+    }
+
+    /**
+     * Creates an {@link AWSDataStorePlugin} which can warehouse the model types provided by the
+     * supplied {@link ModelProvider}. If remote synchronization is enabled, it will be performed
+     * through the provided {@link GraphQlBehavior}.
+     * @param modelProvider Provides the set of models to be warehouse-able by this system
+     * @param api Interface to a remote system where models will be synchronized
+     * @return An {@link AWSDataStorePlugin} which warehouses the provided model types
+     */
+    @NonNull
+    public static AWSDataStorePlugin create(@NonNull ModelProvider modelProvider, @NonNull GraphQlBehavior api) {
+        Objects.requireNonNull(modelProvider);
+        Objects.requireNonNull(api);
+        ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
+        return new AWSDataStorePlugin(modelSchemaRegistry, modelProvider, api);
     }
 
     /**
