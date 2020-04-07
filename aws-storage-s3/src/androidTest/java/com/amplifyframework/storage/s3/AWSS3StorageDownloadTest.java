@@ -15,6 +15,8 @@
 
 package com.amplifyframework.storage.s3;
 
+import android.content.Context;
+
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.Resumable;
@@ -22,10 +24,12 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.SubscriptionToken;
 import com.amplifyframework.storage.StorageAccessLevel;
+import com.amplifyframework.storage.StorageCategory;
 import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
+import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.FileAssert;
 import com.amplifyframework.testutils.Sleep;
 import com.amplifyframework.testutils.random.RandomTempFile;
@@ -45,6 +49,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -68,7 +73,8 @@ public final class AWSS3StorageDownloadTest {
     private static File largeFile;
     private static File smallFile;
 
-    private static SynchronousStorage storage;
+    private static StorageCategory storageCategory;
+    private static SynchronousStorage synchronousStorage;
 
     private File downloadFile;
     private String downloadPath;
@@ -77,11 +83,9 @@ public final class AWSS3StorageDownloadTest {
 
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        // Configure Amplify if not already configured
-        TestConfiguration.configureIfNotConfigured();
-
-        // Obtain synchronous storage singleton
-        storage = SynchronousStorage.singleton();
+        Context context = getApplicationContext();
+        storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
+        synchronousStorage = SynchronousStorage.delegatingTo(storageCategory);
 
         // Upload to PUBLIC for consistency
         String key;
@@ -94,13 +98,13 @@ public final class AWSS3StorageDownloadTest {
         largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
         key = LARGE_FILE_NAME;
         local = largeFile.getAbsolutePath();
-        storage.uploadFile(key, local, uploadOptions, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.uploadFile(key, local, uploadOptions, EXTENDED_TIMEOUT_MS);
 
         // Upload small test file
         smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
         key = SMALL_FILE_NAME;
         local = smallFile.getAbsolutePath();
-        storage.uploadFile(key, local, uploadOptions);
+        synchronousStorage.uploadFile(key, local, uploadOptions);
     }
 
     /**
@@ -141,7 +145,7 @@ public final class AWSS3StorageDownloadTest {
      */
     @Test
     public void testDownloadSmallFile() throws Exception {
-        storage.downloadFile(SMALL_FILE_NAME, downloadPath, options);
+        synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadPath, options);
         FileAssert.assertEquals(smallFile, downloadFile);
     }
 
@@ -152,7 +156,7 @@ public final class AWSS3StorageDownloadTest {
      */
     @Test
     public void testDownloadLargeFile() throws Exception {
-        storage.downloadFile(LARGE_FILE_NAME, downloadPath, options, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadPath, options, EXTENDED_TIMEOUT_MS);
         FileAssert.assertEquals(largeFile, downloadFile);
     }
 
@@ -195,7 +199,7 @@ public final class AWSS3StorageDownloadTest {
         subscriptions.add(cancelToken);
 
         // Begin downloading a large file
-        StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
+        StorageDownloadFileOperation<?> op = storageCategory.downloadFile(
             LARGE_FILE_NAME,
             downloadPath,
             options,
@@ -255,7 +259,7 @@ public final class AWSS3StorageDownloadTest {
         subscriptions.add(resumeToken);
 
         // Begin downloading a large file
-        StorageDownloadFileOperation<?> op = Amplify.Storage.downloadFile(
+        StorageDownloadFileOperation<?> op = storageCategory.downloadFile(
             LARGE_FILE_NAME,
             downloadPath,
             options,

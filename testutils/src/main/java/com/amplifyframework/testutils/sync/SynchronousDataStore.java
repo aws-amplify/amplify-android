@@ -17,14 +17,15 @@ package com.amplifyframework.testutils.sync;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.testutils.Await;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 
 /**
  * A utility to facilitate synchronous calls to the Amplify DataStore category.
@@ -33,20 +34,21 @@ import java.util.NoSuchElementException;
  * that a DataStore operation has completed with some kind of terminal result.
  */
 public final class SynchronousDataStore {
-    private static SynchronousDataStore singleton;
+    private final DataStoreCategoryBehavior asyncDelegate;
 
-    private SynchronousDataStore() {}
+    private SynchronousDataStore(DataStoreCategoryBehavior asyncDelegate) {
+        this.asyncDelegate = asyncDelegate;
+    }
 
     /**
-     * Gets a singleton instance of the SynchronousDataStore.
-     * @return Singleton instance of Synchronous DataStore
+     * Creates a synchronizing wrapper around the provided {@link DataStoreCategoryBehavior}.
+     * @param asyncDelegate This performs actual DataStore operations
+     * @return A synchronizing wrapper around the provided {@link DataStoreCategoryBehavior}
      */
     @NonNull
-    public static synchronized SynchronousDataStore singleton() {
-        if (SynchronousDataStore.singleton == null) {
-            SynchronousDataStore.singleton = new SynchronousDataStore();
-        }
-        return SynchronousDataStore.singleton;
+    public static SynchronousDataStore delegatingTo(@NonNull DataStoreCategoryBehavior asyncDelegate) {
+        Objects.requireNonNull(asyncDelegate);
+        return new SynchronousDataStore(asyncDelegate);
     }
 
     /**
@@ -57,7 +59,7 @@ public final class SynchronousDataStore {
      */
     public <T extends Model> void save(@NonNull T item) throws DataStoreException {
         awaitDataStoreItemChange((onResult, onError) ->
-            Amplify.DataStore.save(item, onResult, onError));
+            asyncDelegate.save(item, onResult, onError));
     }
 
     /**
@@ -72,7 +74,7 @@ public final class SynchronousDataStore {
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) throws DataStoreException {
         final Iterator<T> iterator = awaitIterator((onResult, onError) ->
-            Amplify.DataStore.query(clazz, onResult, onError));
+            asyncDelegate.query(clazz, onResult, onError));
 
         while (iterator.hasNext()) {
             T value = iterator.next();

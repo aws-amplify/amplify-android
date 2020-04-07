@@ -33,7 +33,7 @@ dependencies {
     testImplementation dependency.androidx.test.core
     testImplementation dependency.jsonassert
 
-    androidTestImplementation(project(path: ':testutils')) {
+    androidTestImplementation (project(path: ':testutils')) {
         transitive = false
     }
     androidTestImplementation dependency.androidx.annotation
