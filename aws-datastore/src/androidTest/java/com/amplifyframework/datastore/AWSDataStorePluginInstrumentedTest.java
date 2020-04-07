@@ -74,7 +74,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         final TestConfiguration testConfig = TestConfiguration.configureIfNotConfigured();
         awsDataStorePlugin = testConfig.plugin();
         context = ApplicationProvider.getApplicationContext();
-        api = SynchronousApi.singleton();
+        api = SynchronousApi.delegatingToAmplify();
         appSync = SynchronousAppSync.defaultInstance();
         dataStore = SynchronousDataStore.singleton();
     }
