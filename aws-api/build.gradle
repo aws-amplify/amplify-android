@@ -23,11 +23,8 @@ dependencies {
     implementation dependency.androidx.appcompat
     implementation dependency.okhttp
     implementation dependency.gson
-
     implementation dependency.aws.authcore
-    implementation (dependency.aws.mobileclient) {
-        transitive = true
-    }
+    implementation dependency.aws.mobileclient
 
     testImplementation project(path: ':testutils')
     testImplementation project(path: ':testmodels')
