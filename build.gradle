@@ -47,7 +47,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 29
 
-    awsSdkVersion = '2.16.8'
+    awsSdkVersion = '2.16.11'
     dependency = [
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
