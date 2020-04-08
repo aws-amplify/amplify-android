@@ -33,7 +33,6 @@ import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.SentimentType;
 import com.amplifyframework.predictions.models.SpeechType;
 import com.amplifyframework.predictions.models.Syntax;
-import com.amplifyframework.predictions.models.TargetText;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.util.UserAgent;
 
@@ -231,14 +230,11 @@ final class AWSComprehendService {
         // Convert AWS Comprehend's detection result to Amplify-compatible format
         List<KeyPhrase> keyPhrases = new ArrayList<>();
         for (com.amazonaws.services.comprehend.model.KeyPhrase comprehendKeyPhrase : result.getKeyPhrases()) {
-            TargetText target = new TargetText(
-                    comprehendKeyPhrase.getText(),
-                    comprehendKeyPhrase.getBeginOffset()
-            );
             KeyPhrase amplifyKeyPhrase = KeyPhrase.builder()
-                    .value(target.getText())
+                    .value(comprehendKeyPhrase.getText())
                     .confidence(comprehendKeyPhrase.getScore() * PERCENT)
-                    .target(target)
+                    .targetText(comprehendKeyPhrase.getText())
+                    .startIndex(comprehendKeyPhrase.getBeginOffset())
                     .build();
             keyPhrases.add(amplifyKeyPhrase);
         }
@@ -273,14 +269,11 @@ final class AWSComprehendService {
         List<Entity> entities = new ArrayList<>();
         for (com.amazonaws.services.comprehend.model.Entity comprehendEntity : result.getEntities()) {
             EntityType entityType = EntityTypeAdapter.fromComprehend(comprehendEntity.getType());
-            TargetText target = new TargetText(
-                    comprehendEntity.getText(),
-                    comprehendEntity.getBeginOffset()
-            );
             Entity amplifyEntity = Entity.builder()
                     .value(entityType)
                     .confidence(comprehendEntity.getScore() * PERCENT)
-                    .target(target)
+                    .targetText(comprehendEntity.getText())
+                    .startIndex(comprehendEntity.getBeginOffset())
                     .build();
             entities.add(amplifyEntity);
         }
@@ -316,15 +309,12 @@ final class AWSComprehendService {
         for (com.amazonaws.services.comprehend.model.SyntaxToken comprehendSyntax : result.getSyntaxTokens()) {
             PartOfSpeechTag comprehendPartOfSpeech = comprehendSyntax.getPartOfSpeech();
             SpeechType partOfSpeech = SpeechTypeAdapter.fromComprehend(comprehendPartOfSpeech.getTag());
-            TargetText target = new TargetText(
-                    comprehendSyntax.getText(),
-                    comprehendSyntax.getBeginOffset()
-            );
             Syntax amplifySyntax = Syntax.builder()
                     .id(comprehendSyntax.getTokenId().toString())
                     .value(partOfSpeech)
                     .confidence(comprehendPartOfSpeech.getScore() * PERCENT)
-                    .target(target)
+                    .targetText(comprehendSyntax.getText())
+                    .startIndex(comprehendSyntax.getBeginOffset())
                     .build();
             syntaxTokens.add(amplifySyntax);
         }
