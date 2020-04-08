@@ -28,20 +28,41 @@ import java.util.Objects;
  */
 @SuppressWarnings("unchecked")
 public abstract class TextFeature<T> extends Feature<T> {
-    private final TargetText target;
+    private final String targetText;
+    private final int startIndex;
+    private final int length;
 
     TextFeature(Builder<?, ? extends TextFeature<T>, T> builder) {
         super(builder);
-        this.target = builder.getTarget();
+        this.targetText = builder.getTargetText();
+        this.startIndex = builder.getStartIndex();
+        this.length = targetText.length();
     }
 
     /**
-     * Gets the target text and associated index.
-     * @return the target text
+     * Gets the target text to which this feature applies.
+     * @return the target portion of the input text
      */
     @NonNull
-    public final TargetText getTarget() {
-        return target;
+    public final String getTargetText() {
+        return targetText;
+    }
+
+    /**
+     * Gets the starting position of the target text
+     * with respect to the full input text.
+     * @return the starting index of target text
+     */
+    public int getStartIndex() {
+        return startIndex;
+    }
+
+    /**
+     * Gets the length of target text.
+     * @return the length of target text
+     */
+    public int getLength() {
+        return length;
     }
 
     /**
@@ -52,22 +73,38 @@ public abstract class TextFeature<T> extends Feature<T> {
      */
     abstract static class Builder<B extends Builder<B, R, T>, R extends TextFeature<T>, T>
             extends Feature.Builder<B, R, T> {
-        private TargetText target;
+        private String targetText;
+        private int startIndex;
 
         /**
          * Sets the target text and returns this builder.
-         * @param target the target text
+         * @param targetText the target text
          * @return this builder instance
          */
         @NonNull
-        public final B target(@NonNull TargetText target) {
-            this.target = Objects.requireNonNull(target);
+        public final B targetText(@NonNull String targetText) {
+            this.targetText = Objects.requireNonNull(targetText);
+            return (B) this;
+        }
+
+        /**
+         * Sets the start index and returns this builder.
+         * @param startIndex the starting index of the target
+         * @return this builder instance
+         */
+        @NonNull
+        public final B startIndex(int startIndex) {
+            this.startIndex = startIndex;
             return (B) this;
         }
 
         @NonNull
-        final TargetText getTarget() {
-            return Objects.requireNonNull(target);
+        final String getTargetText() {
+            return Objects.requireNonNull(targetText);
+        }
+
+        final int getStartIndex() {
+            return startIndex;
         }
     }
 }
