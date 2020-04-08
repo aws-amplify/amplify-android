@@ -18,9 +18,11 @@ include ':core'
 // Plugin Modules
 include ':aws-analytics-pinpoint'
 include ':aws-api'
-include ':aws-storage-s3'
 include ':aws-datastore'
 include ':aws-auth-cognito'
+include ':aws-predictions'
+include ':aws-predictions-tensorflow'
+include ':aws-storage-s3'
 
 // Test Utilities and assets
 include ':testutils'
@@ -28,4 +30,3 @@ include ':testmodels'
 
 // Bindings and accessory modules
 include ':rxbindings'
-

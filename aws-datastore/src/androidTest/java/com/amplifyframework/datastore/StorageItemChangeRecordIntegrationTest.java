@@ -18,7 +18,6 @@ package com.amplifyframework.datastore;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -26,24 +25,21 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.Await;
 
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+import java.util.Set;
 
 import io.reactivex.Observable;
-import io.reactivex.disposables.CompositeDisposable;
-import io.reactivex.disposables.Disposables;
 import io.reactivex.observers.TestObserver;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
@@ -55,10 +51,9 @@ import static org.junit.Assert.assertEquals;
  */
 public final class StorageItemChangeRecordIntegrationTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
 
     private GsonStorageItemChangeConverter storageItemChangeConverter;
-    private LocalStorageAdapter localStorageAdapter;
+    private SynchronousStorageAdapter storageAdapter;
 
     /**
      * Prepare an instance of {@link LocalStorageAdapter}, and ensure that it will
@@ -77,12 +72,11 @@ public final class StorageItemChangeRecordIntegrationTest {
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
         modelSchemaRegistry.load(modelProvider.models());
-        this.localStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
-        List<ModelSchema> initializationResults = Await.result(
-            OPERATION_TIMEOUT_MS,
-            (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.initialize(getApplicationContext(), onResult, onError)
-        );
+
+        LocalStorageAdapter localStorageAdapter =
+            SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
+        this.storageAdapter = SynchronousStorageAdapter.delegatingTo(localStorageAdapter);
+        List<ModelSchema> initializationResults = storageAdapter.initialize(getApplicationContext());
 
         // Evaluate the returned set of ModelSchema. Make sure that there is one
         // for the StorageItemChange.Record system class, and one for
@@ -92,10 +86,15 @@ public final class StorageItemChangeRecordIntegrationTest {
             actualNames.add(modelSchema.getName());
         }
         Collections.sort(actualNames);
-        assertEquals(
-            Arrays.asList("BlogOwner", "ModelMetadata", "PersistentModelVersion", "Record"),
-            actualNames
-        );
+
+        final Set<Class<? extends Model>> systemModelClasses = SystemModelsProviderFactory.create().models();
+        final List<String> expectedNames = Observable.fromIterable(systemModelClasses)
+            .startWith(BlogOwner.class)
+            .map(Class::getSimpleName)
+            .toSortedList()
+            .blockingGet();
+
+        assertEquals(expectedNames, actualNames);
     }
 
     /**
@@ -104,7 +103,7 @@ public final class StorageItemChangeRecordIntegrationTest {
      */
     @After
     public void terminateLocalStorageAdapter() throws DataStoreException {
-        localStorageAdapter.terminate();
+        storageAdapter.terminate();
         getApplicationContext().deleteDatabase(DATABASE_NAME);
     }
 
@@ -130,10 +129,11 @@ public final class StorageItemChangeRecordIntegrationTest {
         // Save the creation mutation for Tony, as a Record object.
         StorageItemChange.Record originalTonyCreationAsRecord =
             originalTonyCreation.toRecord(storageItemChangeConverter);
-        save(originalTonyCreationAsRecord);
+        storageAdapter.save(originalTonyCreationAsRecord);
 
         // Now, lookup what records we have in the storage.
-        List<StorageItemChange.Record> recordsInStorage = query();
+        List<StorageItemChange.Record> recordsInStorage =
+            storageAdapter.query(StorageItemChange.Record.class);
 
         // There should be 1, and it should be the original creation for Tony.
         assertEquals(1, recordsInStorage.size());
@@ -158,7 +158,7 @@ public final class StorageItemChangeRecordIntegrationTest {
     public void saveIsObservedForChangeRecord() throws DataStoreException {
         // Start watching observe() ...
         TestObserver<StorageItemChange.Record> saveObserver = TestObserver.create();
-        records().subscribe(saveObserver);
+        storageAdapter.observe().subscribe(saveObserver);
 
         // Save something ..
         StorageItemChange.Record record = StorageItemChange.<BlogOwner>builder()
@@ -172,14 +172,7 @@ public final class StorageItemChangeRecordIntegrationTest {
             .toRecord(storageItemChangeConverter);
 
         // Wait for it to save...
-        Await.result(OPERATION_TIMEOUT_MS,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.save(
-                    record,
-                    StorageItemChange.Initiator.SYNC_ENGINE,
-                    onResult, onError
-                )
-        );
+        storageAdapter.save(record);
 
         // Assert that our observer got the item;
         // The record we get back has the saved record inside of it, as the contained item field.
@@ -210,7 +203,7 @@ public final class StorageItemChangeRecordIntegrationTest {
     public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
         TestObserver<StorageItemChange.Record> storageObserver = TestObserver.create();
-        records().subscribe(storageObserver);
+        storageAdapter.observe().subscribe(storageObserver);
 
         // Create a record for Joe, and a change to save him into storage
         BlogOwner joeLastNameMispelled = BlogOwner.builder()
@@ -226,7 +219,7 @@ public final class StorageItemChangeRecordIntegrationTest {
             createJoeWrongLastName.toRecord(storageItemChangeConverter);
 
         // Save our saveJoeWrongLastName change item, as a record.
-        save(createJoeWrongLastNameAsRecord);
+        storageAdapter.save(createJoeWrongLastNameAsRecord);
 
         // Now, suppose we have to update that change object. Maybe it contained a bad item payload.
         BlogOwner joeWithLastNameFix = BlogOwner.builder()
@@ -243,7 +236,7 @@ public final class StorageItemChangeRecordIntegrationTest {
             createJoeCorrectLastName.toRecord(storageItemChangeConverter);
 
         // Save an update (same model type, same unique ID) to the change we saved previously.
-        save(createJoeCorrectLastNameAsRecord);
+        storageAdapter.save(createJoeCorrectLastNameAsRecord);
 
         // Our observer got the records to save Joe with wrong age, and also to save joe with right age
         List<StorageItemChange.Record> values = storageObserver.awaitCount(2).values();
@@ -275,7 +268,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         // What we are really observing are items of type StorageItemChange.Record that contain
         // StorageItemChange.Record of BlogOwner
         TestObserver<StorageItemChange.Record> storageObserver = TestObserver.create();
-        records().subscribe(storageObserver);
+        storageAdapter.observe().subscribe(storageObserver);
 
         BlogOwner beatrice = BlogOwner.builder()
             .name("Beatrice Stone")
@@ -289,7 +282,7 @@ public final class StorageItemChangeRecordIntegrationTest {
         StorageItemChange.Record createBeatriceRecord =
             createBeatrice.toRecord(storageItemChangeConverter);
 
-        save(createBeatriceRecord);
+        storageAdapter.save(createBeatriceRecord);
 
         // Assert that we do observe the record being saved ...
         assertEquals(
@@ -303,10 +296,10 @@ public final class StorageItemChangeRecordIntegrationTest {
         storageObserver.dispose();
 
         TestObserver<StorageItemChange.Record> deletionObserver = TestObserver.create();
-        records().subscribe(deletionObserver);
+        storageAdapter.observe().subscribe(deletionObserver);
 
         // The mutation record doesn't change, but we want to delete it, itself.
-        delete(createBeatriceRecord);
+        storageAdapter.delete(createBeatriceRecord);
 
         assertEquals(
             createBeatriceRecord,
@@ -318,78 +311,5 @@ public final class StorageItemChangeRecordIntegrationTest {
                 .item()
         );
         deletionObserver.dispose();
-    }
-
-    private void save(StorageItemChange.Record storageItemChangeRecord) throws DataStoreException {
-        // The thing we are saving is a StorageItemChange.Record.
-        // The fact that it is getting saved means it gets wrapped into another
-        // StorageItemChange.Record, which itself contains the original StorageItemChange.Record.
-        final StorageItemChange<?> convertedResult = Await.result(OPERATION_TIMEOUT_MS,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.save(
-                    storageItemChangeRecord,
-                    StorageItemChange.Initiator.SYNC_ENGINE,
-                    onResult,
-                    onError
-                )
-        ).toStorageItemChange(storageItemChangeConverter);
-
-        // Peel out the item from the save result - the item inside is the thing we tried to save,
-        // e.g., the mutation to create BlogOwner
-        // It should be identical to the thing that we tried to save.
-        assertEquals(storageItemChangeRecord, convertedResult.item());
-    }
-
-    private List<StorageItemChange.Record> query() throws DataStoreException {
-        // TODO: if/when there is a form of query() which shall accept QueryPredicate, use that instead.
-        final Iterator<StorageItemChange.Record> queryResultsIterator = Await.result(
-            (Consumer<Iterator<StorageItemChange.Record>> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.query(
-                    StorageItemChange.Record.class,
-                    onResult,
-                    onError
-                )
-            );
-
-        final List<StorageItemChange.Record> storageItemChangeRecords = new ArrayList<>();
-        while (queryResultsIterator.hasNext()) {
-            storageItemChangeRecords.add(queryResultsIterator.next());
-        }
-        return storageItemChangeRecords;
-    }
-
-    private void delete(StorageItemChange.Record record) throws DataStoreException {
-        // The thing we are deleting is a StorageItemChange.Record, which is wrapping
-        // a StorageItemChange.Record, which is wrapping an item.
-        StorageItemChange.Record deletionResult = Await.result(
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.delete(
-                    record,
-                    StorageItemChange.Initiator.SYNC_ENGINE,
-                    onResult,
-                    onError
-                )
-        );
-
-        // Peel out the inner record out from the save result -
-        // the record inside is the thing we tried to save,
-        // that is, the record to change an item
-        // That interior record should be identical to the thing that we tried to save.
-        StorageItemChange<StorageItemChange.Record> recordOfDeletion =
-            deletionResult.toStorageItemChange(storageItemChangeConverter);
-        assertEquals(record, recordOfDeletion.item());
-
-        // The record of the record itself has type DELETE, corresponding to our call to delete().
-        assertEquals(StorageItemChange.Type.DELETE, recordOfDeletion.type());
-    }
-
-    private Observable<StorageItemChange.Record> records() {
-        return Observable.create(emitter -> {
-            CompositeDisposable disposable = new CompositeDisposable();
-            emitter.setDisposable(disposable);
-            Cancelable cancelable =
-                localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete);
-            disposable.add(Disposables.fromAction(cancelable::cancel));
-        });
     }
 }

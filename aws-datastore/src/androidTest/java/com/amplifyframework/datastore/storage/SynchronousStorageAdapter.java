@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage.sqlite;
+package com.amplifyframework.datastore.storage;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
@@ -23,16 +23,15 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testutils.Await;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.concurrent.TimeUnit;
+
+import io.reactivex.Observable;
 
 /**
  * A synchronization wrapper on top of a {@link LocalStorageAdapter} instance, which presents
@@ -46,12 +45,10 @@ public final class SynchronousStorageAdapter {
     private static final long DEFAULT_OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
 
     private final long operationTimeoutMs;
-    private final LocalStorageAdapter localStorageAdapter;
+    private final LocalStorageAdapter asyncDelegate;
 
-    private SynchronousStorageAdapter(
-            @NonNull LocalStorageAdapter localStorageAdapter,
-            long operationTimeoutMs) {
-        this.localStorageAdapter = localStorageAdapter;
+    private SynchronousStorageAdapter(LocalStorageAdapter asyncDelegate, long operationTimeoutMs) {
+        this.asyncDelegate = asyncDelegate;
         this.operationTimeoutMs = operationTimeoutMs;
     }
 
@@ -59,26 +56,26 @@ public final class SynchronousStorageAdapter {
      * Creates a new instance which will proxy calls to the provided {@link LocalStorageAdapter}.
      * The synchronous operations exposed by the returned adapter will timeout after a default,
      * "reasonable" delay.
-     * @param localStorageAdapter Adapter to which calls will be proxied
+     * @param asyncDelegate Adapter to which calls will be delegated
      * @return A SynchronousStorageAdapter configured to proxy towards the provided async storage adapter
      */
-    public static SynchronousStorageAdapter instance(@NonNull LocalStorageAdapter localStorageAdapter) {
-        Objects.requireNonNull(localStorageAdapter);
-        return new SynchronousStorageAdapter(localStorageAdapter, DEFAULT_OPERATION_TIMEOUT_MS);
+    public static SynchronousStorageAdapter delegatingTo(@NonNull LocalStorageAdapter asyncDelegate) {
+        Objects.requireNonNull(asyncDelegate);
+        return new SynchronousStorageAdapter(asyncDelegate, DEFAULT_OPERATION_TIMEOUT_MS);
     }
 
     /**
      * Creates a new instance which will proxy calls to the provided {@link LocalStorageAdapter}.
      * The synchronous operations exposed by the returned adapter will timeout after the provided
      * amount of time, in milliseconds.
-     * @param localStorageAdapter Adapter to which calls will be proxied
+     * @param asyncDelegate Adapter to which calls will be delegated
      * @param operationTimeoutMs Amount of time after which an operation will time out
      * @return A SynchronousStorageAdapter configured to proxy towards the provided async storage adapter
      */
-    public static SynchronousStorageAdapter instance(
-            @NonNull LocalStorageAdapter localStorageAdapter, long operationTimeoutMs) {
-        Objects.requireNonNull(localStorageAdapter);
-        return new SynchronousStorageAdapter(localStorageAdapter, operationTimeoutMs);
+    public static SynchronousStorageAdapter create(
+            @NonNull LocalStorageAdapter asyncDelegate, long operationTimeoutMs) {
+        Objects.requireNonNull(asyncDelegate);
+        return new SynchronousStorageAdapter(asyncDelegate, operationTimeoutMs);
     }
 
     /**
@@ -88,11 +85,11 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any initialization failure
      */
     @SuppressWarnings("UnusedReturnValue")
-    List<ModelSchema> initialize(@NonNull Context context) throws DataStoreException {
+    public List<ModelSchema> initialize(@NonNull Context context) throws DataStoreException {
         return Await.result(
             operationTimeoutMs,
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.initialize(context, onResult, onError)
+                asyncDelegate.initialize(context, onResult, onError)
         );
     }
 
@@ -100,8 +97,8 @@ public final class SynchronousStorageAdapter {
      * Terminate use of the storage adapter.
      * @throws DataStoreException On failure to terminate
      */
-    void terminate() throws DataStoreException {
-        localStorageAdapter.terminate();
+    public void terminate() throws DataStoreException {
+        asyncDelegate.terminate();
     }
 
     /**
@@ -110,7 +107,7 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of model being saved
      * @throws DataStoreException On any failure to save model into storage adapter
      */
-    <T extends Model> void save(@NonNull T model) throws DataStoreException {
+    public <T extends Model> void save(@NonNull T model) throws DataStoreException {
         //noinspection ConstantConditions
         save(model, null);
     }
@@ -123,12 +120,12 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of model being saved
      * @throws DataStoreException On any failure to save the model
      */
-    <T extends Model> void save(@NonNull T model, @NonNull QueryPredicate predicate)
+    public <T extends Model> void save(@NonNull T model, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Await.result(
             operationTimeoutMs,
             (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.save(
+                asyncDelegate.save(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
                     predicate,
@@ -144,7 +141,7 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of model being saved
      * @return The exception that was raised while attempting to save the model
      */
-    <T extends Model> DataStoreException saveExpectingError(@NonNull T model) {
+    public <T extends Model> DataStoreException saveExpectingError(@NonNull T model) {
         //noinspection ConstantConditions
         return saveExpectingError(model, null);
     }
@@ -157,11 +154,12 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of model being deleted
      * @return The exception that occured while attempting the deletion
      */
-    <T extends Model> DataStoreException saveExpectingError(@NonNull T model, @NonNull QueryPredicate predicate) {
+    public <T extends Model> DataStoreException saveExpectingError(
+            @NonNull T model, @NonNull QueryPredicate predicate) {
         return Await.error(
             operationTimeoutMs,
             (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.save(
+                asyncDelegate.save(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
                     predicate,
@@ -175,10 +173,10 @@ public final class SynchronousStorageAdapter {
      * Query the storage adapter for models of a given class.
      * @param modelClass Class of models being queried
      * @param <T> Type of models being queried
-     * @return The set of models in the storage adapter that are of the requested class
+     * @return The list of models in the storage adapter that are of the requested class
      * @throws DataStoreException On any failure to query storage adapter
      */
-    <T extends Model> Set<T> query(@NonNull Class<T> modelClass) throws DataStoreException {
+    public <T extends Model> List<T> query(@NonNull Class<T> modelClass) throws DataStoreException {
         //noinspection ConstantConditions
         return query(modelClass, null);
     }
@@ -189,17 +187,17 @@ public final class SynchronousStorageAdapter {
      * @param modelClass Class of models being queried
      * @param predicate Additional criteria that the models must match
      * @param <T> Type of model being queried
-     * @return The set of models which are of the requested class and meet the requested criteria
+     * @return The list of models which are of the requested class and meet the requested criteria
      * @throws DataStoreException On any failure to query the storage adapter
      */
-    <T extends Model> Set<T> query(@NonNull Class<T> modelClass, @NonNull QueryPredicate predicate)
+    public <T extends Model> List<T> query(@NonNull Class<T> modelClass, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Iterator<T> resultIterator = Await.result(
             operationTimeoutMs,
             (Consumer<Iterator<T>> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.query(modelClass, predicate, onResult, onError)
+                asyncDelegate.query(modelClass, predicate, onResult, onError)
         );
-        final Set<T> resultSet = new HashSet<>();
+        final List<T> resultSet = new ArrayList<>();
         while (resultIterator.hasNext()) {
             resultSet.add(resultIterator.next());
         }
@@ -212,7 +210,7 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of model being deleted
      * @throws DataStoreException On any failure to delete model
      */
-    <T extends Model> void delete(@NonNull T model) throws DataStoreException {
+    public <T extends Model> void delete(@NonNull T model) throws DataStoreException {
         //noinspection ConstantConditions
         delete(model, null);
     }
@@ -224,12 +222,12 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of model being deleted
      * @throws DataStoreException On any failure to delete the model
      */
-    <T extends Model> void delete(@NonNull T model, @NonNull QueryPredicate predicate)
+    public <T extends Model> void delete(@NonNull T model, @NonNull QueryPredicate predicate)
             throws DataStoreException {
         Await.result(
             operationTimeoutMs,
             (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.delete(
+                asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
                     predicate,
@@ -248,7 +246,7 @@ public final class SynchronousStorageAdapter {
      * @return The exception that was thrown while attempting to delete
      */
     @SuppressWarnings("unused")
-    <T extends Model> DataStoreException deleteExpectingError(@NonNull T model) {
+    public <T extends Model> DataStoreException deleteExpectingError(@NonNull T model) {
         //noinspection ConstantConditions
         return deleteExpectingError(model, null);
     }
@@ -263,17 +261,28 @@ public final class SynchronousStorageAdapter {
      * @param <T> Type of thing being deleted
      * @return The exception that was thrown while attempting to delete
      */
-    <T extends Model> DataStoreException deleteExpectingError(@NonNull T model, @NonNull QueryPredicate predicate) {
+    public <T extends Model> DataStoreException deleteExpectingError(
+            @NonNull T model, @NonNull QueryPredicate predicate) {
         return Await.error(
             operationTimeoutMs,
             (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.delete(
+                asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
                     predicate,
                     onResult,
                     onError
                 )
+        );
+    }
+
+    /**
+     * Observe changes to the local storage.
+     * @return An observable stream of changes to the local storage.
+     */
+    public Observable<? extends StorageItemChange.Record> observe() {
+        return Observable.create(emitter ->
+            asyncDelegate.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );
     }
 }

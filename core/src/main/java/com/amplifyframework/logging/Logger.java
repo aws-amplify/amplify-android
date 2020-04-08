@@ -33,7 +33,7 @@ public interface Logger {
 
     /**
      * Logs a message at the {@link LogLevel#ERROR} level.
-     * @param message An error messsage
+     * @param message An error message
      */
     void error(@Nullable String message);
 

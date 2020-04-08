@@ -145,11 +145,42 @@ public enum LanguageType {
      * @return An enum value of matching language code
      */
     public static LanguageType from(String languageCode) {
-        try {
-            return LanguageType.valueOf(languageCode);
-        } catch (IllegalArgumentException noMatchError) {
-            return UNKNOWN;
+        // Micro-optimization... for fun :)
+        // https://en.wikipedia.org/wiki/List_of_languages_by_number_of_native_speakers
+        switch (languageCode) {
+            case "zh":
+                return CHINESE_SIMPLIFIED;
+            case "zh-TW":
+                return CHINESE_TRADITIONAL;
+            case "es":
+                return SPANISH;
+            case "en":
+                return ENGLISH;
+            case "hi":
+                return HINDI;
+            case "bn":
+                return BENGALI;
+            case "pt":
+                return PORTUGUESE;
+            case "ru":
+                return RUSSIAN;
+            case "ja":
+                return JAPANESE;
+            case "pa":
+                return PUNJABI;
+            case "mr":
+                return MARATHI;
+            default:
+                // Move on... your language isn't popular
         }
+
+        // Linear-search for rest
+        for (LanguageType language : values()) {
+            if (language.getLanguageCode().equals(languageCode)) {
+                return language;
+            }
+        }
+        return UNKNOWN;
     }
 
     /**

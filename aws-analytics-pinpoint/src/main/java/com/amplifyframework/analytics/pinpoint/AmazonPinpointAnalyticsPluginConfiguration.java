@@ -18,24 +18,21 @@ package com.amplifyframework.analytics.pinpoint;
 /**
  * Configuration options for Amplify Analytics Pinpoint plugin.
  */
-public final class AmazonPinpointAnalyticsPluginConfiguration {
+final class AmazonPinpointAnalyticsPluginConfiguration {
 
     private static final long DEFAULT_AUTO_FLUSH_INTERVAL = 30000L;
-    private static final long DEFAULT_AUTO_SESSION_TRACKING_INTERVAL = 30000L;
 
     // Pinpoint plugin configuration options
     private final String appId;
     private final boolean trackAppLifecycleEvents;
     private final String region;
     private final long autoFlushEventsInterval;
-    private final long autoSessionTrackingInterval;
 
     private AmazonPinpointAnalyticsPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.region = builder.region;
         this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
         this.autoFlushEventsInterval = builder.autoFlushEventsInterval;
-        this.autoSessionTrackingInterval = builder.autoSessionTrackingInterval;
     }
 
     /**
@@ -43,7 +40,7 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
      *
      * @return appId
      */
-    public String getAppId() {
+    String getAppId() {
         return appId;
     }
 
@@ -52,7 +49,7 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
      *
      * @return pinpoint region.
      */
-    public String getRegion() {
+    String getRegion() {
         return region;
     }
 
@@ -61,24 +58,15 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
      *
      * @return auto event flush interval.
      */
-    public long getAutoFlushEventsInterval() {
+    long getAutoFlushEventsInterval() {
         return autoFlushEventsInterval;
-    }
-
-    /**
-     * Accessor for auto session tracking interval.
-     *
-     * @return auto session tracking interval.
-     */
-    public long getAutoSessionTrackingInterval() {
-        return autoSessionTrackingInterval;
     }
 
     /**
      * Is auto session tracking enabled.
      * @return Is auto session tracking enabled.
      */
-    public boolean isTrackAppLifecycleEvents() {
+    boolean isTrackAppLifecycleEvents() {
         return trackAppLifecycleEvents;
     }
 
@@ -87,19 +75,18 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
      * {@link AmazonPinpointAnalyticsPluginConfiguration}.
      * @return An {@link PinpointProperties.Builder} instance
      */
-    public static Builder builder() {
+    static Builder builder() {
         return new Builder();
     }
 
     /**
      * Used for fluent construction of an immutable {@link AmazonPinpointAnalyticsPluginConfiguration} object.
      */
-    public static final class Builder {
+    static final class Builder {
         private String appId;
         private boolean trackAppLifecycleEvents = false;
         private String region;
         private long autoFlushEventsInterval = DEFAULT_AUTO_FLUSH_INTERVAL;
-        private long autoSessionTrackingInterval = DEFAULT_AUTO_SESSION_TRACKING_INTERVAL;
 
         Builder withAppId(final String appId) {
             this.appId = appId;
@@ -113,11 +100,6 @@ public final class AmazonPinpointAnalyticsPluginConfiguration {
 
         Builder withAutoFlushEventsInterval(final long autoFlushEventsInterval) {
             this.autoFlushEventsInterval = autoFlushEventsInterval;
-            return this;
-        }
-
-        Builder withAutoSessionTrackingInterval(final long autoSessionTrackingInterval) {
-            this.autoFlushEventsInterval = autoSessionTrackingInterval;
             return this;
         }
 

@@ -21,6 +21,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.util.Time;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -34,7 +35,7 @@ import static org.mockito.Mockito.eq;
 /**
  * A utility to mock behaviors of an {@link AppSync} from test code.
  */
-@SuppressWarnings({"unused", "UnusedReturnValue", "WeakerAccess"})
+@SuppressWarnings({"UnusedReturnValue", "WeakerAccess"})
 public final class AppSyncMocking {
     private AppSyncMocking() {}
 
@@ -99,7 +100,7 @@ public final class AppSyncMocking {
 
                 // Pass back a ModelWithMetadata. Model is the one provided.
                 ModelMetadata metadata =
-                    new ModelMetadata(capturedModel.getId(), false, 1, System.currentTimeMillis());
+                    new ModelMetadata(capturedModel.getId(), false, 1, Time.now());
                 ModelWithMetadata<T> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
                 Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult =
                     invocation.getArgument(indexOfResultConsumer);
@@ -151,8 +152,7 @@ public final class AppSyncMocking {
 
                 String modelId = invocation.getArgument(indexOfModelId);
                 int version = invocation.getArgument(indexOfVersion);
-                long time = System.currentTimeMillis();
-                ModelMetadata metadata = new ModelMetadata(modelId, true, version, time);
+                ModelMetadata metadata = new ModelMetadata(modelId, true, version, Time.now());
                 ModelWithMetadata<? extends Model> modelWithMetadata = new ModelWithMetadata<>(model, metadata);
 
                 onResult.accept(new GraphQLResponse<>(modelWithMetadata, Collections.emptyList()));

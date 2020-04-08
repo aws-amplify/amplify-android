@@ -16,7 +16,9 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.testutils.sync.SynchronousApi;
@@ -36,7 +38,6 @@ import static org.junit.Assert.assertNotNull;
  */
 public final class RestApiInstrumentationTest {
     private static SynchronousApi api;
-    private static SynchronousMobileClient mobileClient;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
@@ -45,9 +46,9 @@ public final class RestApiInstrumentationTest {
      */
     @BeforeClass
     public static void onceBeforeTests() throws AmplifyException, SynchronousMobileClient.MobileClientException {
-        AmplifyTestConfigurator.configureIfNotConfigured();
-        api = SynchronousApi.singleton();
-        mobileClient = SynchronousMobileClient.instance();
+        ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
+        api = SynchronousApi.delegatingTo(asyncDelegate);
+        SynchronousMobileClient mobileClient = SynchronousMobileClient.instance();
         mobileClient.initialize();
     }
 
@@ -142,6 +143,6 @@ public final class RestApiInstrumentationTest {
             .build();
         RestResponse response = api.get("iamAuthApi", options);
         assertNotNull("Should return non-null data", response.getData());
-        assertFalse("Response should be unsuccessful", response.getCode().isSucessful());
+        assertFalse("Response should be unsuccessful", response.getCode().isSuccessful());
     }
 }

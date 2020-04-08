@@ -22,7 +22,7 @@ import androidx.core.util.ObjectsCompat;
  * @param <T> Comparable data type of the field
  */
 public final class GreaterThanQueryOperator<T extends Comparable<T>> extends QueryOperator<T> {
-    private T value;
+    private final T value;
 
     /**
      * Constructs a greater than condition.
@@ -76,13 +76,9 @@ public final class GreaterThanQueryOperator<T extends Comparable<T>> extends Que
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("GreaterThanQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", value: ")
-                .append(value())
-                .append(" }")
-                .toString();
+        return "GreaterThanQueryOperator { " +
+            "type: " + type() +
+            ", value: " + value() +
+            " }";
     }
 }

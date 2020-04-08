@@ -56,8 +56,8 @@ public abstract class AmplifyOperation<R> implements AsyncOperation {
      *                     fulfilling a request
      * @param request The request object of the operation
      */
-    public AmplifyOperation(@NonNull final CategoryType categoryType,
-                            @Nullable final R request) {
+    protected AmplifyOperation(@NonNull final CategoryType categoryType,
+                               @Nullable final R request) {
         this.categoryType = categoryType;
         this.operationId = UUID.randomUUID();
         this.request = request;

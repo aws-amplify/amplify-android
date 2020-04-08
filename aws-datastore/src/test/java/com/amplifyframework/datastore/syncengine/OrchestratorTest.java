@@ -23,11 +23,11 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.AWSDataStorePluginConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
@@ -89,14 +89,16 @@ public final class OrchestratorTest {
         }).when(appSync)
             .create(eq(susan), any(Consumer.class), any(Consumer.class));
 
-        LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
+        InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion();
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();
         modelSchemaRegistry.load(modelProvider.models());
 
         Orchestrator orchestrator =
-            new Orchestrator(modelProvider, modelSchemaRegistry, localStorageAdapter, appSync);
+            new Orchestrator(modelProvider, modelSchemaRegistry, localStorageAdapter, appSync,
+                () -> AWSDataStorePluginConfiguration.DEFAULT_BASE_SYNC_INTERVAL_MS
+            );
 
         // Arrange: storage engine is running
         orchestrator.start().blockingAwait();

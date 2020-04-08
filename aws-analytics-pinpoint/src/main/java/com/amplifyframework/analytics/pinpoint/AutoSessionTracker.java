@@ -27,7 +27,7 @@ import com.amazonaws.mobileconnectors.pinpoint.analytics.SessionClient;
  * Tracks when the host application enters or leaves foreground.
  * The constructor registers to receive activity lifecycle events.
  **/
-public final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
+final class AutoSessionTracker implements Application.ActivityLifecycleCallbacks {
     private static final String LOG_TAG = AutoSessionTracker.class.getSimpleName();
     private final SessionClient sessionClient;
     private final AnalyticsClient analyticsClient;
@@ -39,7 +39,7 @@ public final class AutoSessionTracker implements Application.ActivityLifecycleCa
      * @param analyticsClient Amazon pinpoint analytics client
      * @param sessionClient Amazon pinpoint session client
      */
-    public AutoSessionTracker(final AnalyticsClient analyticsClient,
+    AutoSessionTracker(final AnalyticsClient analyticsClient,
                               final SessionClient sessionClient) {
         this.analyticsClient = analyticsClient;
         this.sessionClient = sessionClient;

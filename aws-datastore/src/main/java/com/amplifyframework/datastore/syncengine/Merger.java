@@ -41,13 +41,15 @@ import io.reactivex.Completable;
  */
 @SuppressWarnings("CodeBlock2Expr")
 final class Merger {
+    private final MutationOutbox mutationOutbox;
     private final LocalStorageAdapter localStorageAdapter;
 
     /**
      * Constructs a Merger.
      * @param localStorageAdapter A local storage adapter
      */
-    Merger(@NonNull LocalStorageAdapter localStorageAdapter) {
+    Merger(@NonNull MutationOutbox mutationOutbox, @NonNull LocalStorageAdapter localStorageAdapter) {
+        this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
     }
 
@@ -60,17 +62,19 @@ final class Merger {
      */
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
+        boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
         T model = modelWithMetadata.getModel();
 
-        final Completable modelModification;
-        if (Boolean.TRUE.equals(metadata.isDeleted())) {
-            modelModification = delete(model);
-        } else {
-            modelModification = save(model);
-        }
-
-        return modelModification
+        // Check if there is a pending mutation for this model, in the outbox.
+        return mutationOutbox.hasPendingMutation(model.getId())
+            // If there is *not* a pending mutation, we will proceed. Otherwise, not.
+            .filter(value -> !Boolean.TRUE.equals(value))
+            .ignoreElement() // ignore the always-`false` element
+            // Apply the model change (delete/save)
+            .andThen(isDelete ? delete(model) : save(model))
+            // Update the metadata for it
             .andThen(save(metadata))
+            // Let the world know that we've done a good thing.
             .andThen(announceMergeOverHub(modelWithMetadata));
     }
 
