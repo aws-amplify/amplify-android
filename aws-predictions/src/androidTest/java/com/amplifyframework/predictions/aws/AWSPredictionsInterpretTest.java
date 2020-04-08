@@ -15,7 +15,11 @@
 
 package com.amplifyframework.predictions.aws;
 
+import android.content.Context;
+
+import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.Entity;
 import com.amplifyframework.predictions.models.EntityType;
 import com.amplifyframework.predictions.models.KeyPhrase;
@@ -29,14 +33,17 @@ import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.FeatureAssert;
+import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -45,16 +52,28 @@ import static org.junit.Assert.assertNotNull;
  */
 public final class AWSPredictionsInterpretTest {
 
-    private static SynchronousPredictions predictions;
+    private SynchronousPredictions predictions;
 
     /**
-     * Configure Amplify and Predictions plugin before the tests.
-     * @throws Exception if configuration fails
+     * Initialize mobile client singleton.
+     * @throws Exception if mobile client initialization fails
      */
     @BeforeClass
     public static void setUpOnce() throws Exception {
-        TestConfiguration.configureIfNotConfigured();
-        predictions = SynchronousPredictions.delegatingToAmplify();
+        SynchronousMobileClient.instance().initialize();
+    }
+
+    /**
+     * Configure Predictions category before each test.
+     */
+    @Before
+    public void setUp() {
+        Context context = getApplicationContext();
+
+        // Delegate to Predictions category
+        PredictionsCategory asyncDelegate =
+                TestPredictionsCategory.create(context, R.raw.amplifyconfiguration);
+        predictions = SynchronousPredictions.delegatingTo(asyncDelegate);
     }
 
     /**
