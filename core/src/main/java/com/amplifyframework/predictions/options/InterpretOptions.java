@@ -30,7 +30,7 @@ public final class InterpretOptions implements Options {
      * Creates an instance of options with default values assigned.
      * @return Default instance of options
      */
-    public static InterpretOptions defaultInstance() {
+    public static InterpretOptions defaults() {
         return new InterpretOptions();
     }
 }

@@ -18,11 +18,8 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 
 dependencies {
     implementation project(path: ':core')
-    implementation (dependency.aws.mobileclient) {
-        transitive = true
-    }
+    implementation dependency.aws.mobileclient
     implementation dependency.junit
     implementation dependency.androidx.test.core
     implementation dependency.rxjava
 }
-

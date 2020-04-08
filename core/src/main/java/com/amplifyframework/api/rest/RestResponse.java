@@ -114,10 +114,10 @@ public final class RestResponse {
     public static final class Code {
 
         private final int statusCode;
-        private final Range<Integer> validCodes = new Range<Integer>(100, 599);
-        private final Range<Integer> serviceFailureCodes = new Range<Integer>(500, 599);
-        private final Range<Integer> clientErrorCodes = new Range<Integer>(400, 499);
-        private final Range<Integer> successCodes = new Range<Integer>(200, 299);
+        private final Range<Integer> validCodes = new Range<>(100, 599);
+        private final Range<Integer> serviceFailureCodes = new Range<>(500, 599);
+        private final Range<Integer> clientErrorCodes = new Range<>(400, 499);
+        private final Range<Integer> successCodes = new Range<>(200, 299);
 
         /**
          * Constructs the Code object.
@@ -156,7 +156,7 @@ public final class RestResponse {
          * Returns true if the status code is of range 2xx.
          * @return true if response has success code.
          */
-        public boolean isSucessful() {
+        public boolean isSuccessful() {
             return successCodes.contains(statusCode);
         }
     }

@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.plugin.Plugin;
 
 final class FakeCategory extends Category<Plugin<?>> {
@@ -24,6 +26,7 @@ final class FakeCategory extends Category<Plugin<?>> {
         this.categoryType = categoryType;
     }
 
+    @NonNull
     @Override
     public CategoryType getCategoryType() {
         return categoryType;

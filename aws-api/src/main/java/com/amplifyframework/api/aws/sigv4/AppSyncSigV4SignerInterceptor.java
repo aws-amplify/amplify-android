@@ -81,11 +81,10 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
     /**
      * Constructs an instance of AppSyncSigV4SignerInterceptor that
      * uses API key for authorization.
-     * @param apiKeyProvider An instance of {@link ApiKeyAuthProvider}
      * @param endpointType Endpoint type for the api
+     * @param apiKeyProvider An instance of {@link ApiKeyAuthProvider}
      */
-    public AppSyncSigV4SignerInterceptor(@NonNull ApiKeyAuthProvider apiKeyProvider,
-                                         final EndpointType endpointType) {
+    public AppSyncSigV4SignerInterceptor(final EndpointType endpointType, @NonNull ApiKeyAuthProvider apiKeyProvider) {
         this(null,
                 Objects.requireNonNull(apiKeyProvider),
                 null,
@@ -134,11 +133,10 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
     /**
      * Constructs an instance of AppSyncSigV4SignerInterceptor that
      * authorizes user with OpenID Connect token.
-     * @param oidcAuthProvider An instance of {@link OidcAuthProvider}
      * @param endpointType Endpoint type for the api
+     * @param oidcAuthProvider An instance of {@link OidcAuthProvider}
      */
-    public AppSyncSigV4SignerInterceptor(@NonNull OidcAuthProvider oidcAuthProvider,
-                                         final EndpointType endpointType) {
+    public AppSyncSigV4SignerInterceptor(final EndpointType endpointType, @NonNull OidcAuthProvider oidcAuthProvider) {
         this(null,
                 null,
                 null,

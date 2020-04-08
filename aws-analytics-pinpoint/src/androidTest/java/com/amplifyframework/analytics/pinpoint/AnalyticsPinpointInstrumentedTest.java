@@ -58,7 +58,6 @@ public class AnalyticsPinpointInstrumentedTest {
     private static final int EVENT_FLUSH_TIMEOUT = 60;
     private static final int EVENT_FLUSH_WAIT = 2;
 
-    private static AmazonPinpointAnalyticsPlugin plugin;
     private static AnalyticsClient analyticsClient;
     private static TargetingClient targetingClient;
 
@@ -69,7 +68,7 @@ public class AnalyticsPinpointInstrumentedTest {
     @BeforeClass
     public static void setUp() throws AmplifyException {
         Context context = getApplicationContext();
-        plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
+        AmazonPinpointAnalyticsPlugin plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
         Amplify.addPlugin(plugin);
         Amplify.configure(context);
         analyticsClient = plugin.getAnalyticsClient();

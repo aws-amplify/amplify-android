@@ -22,8 +22,8 @@ import androidx.core.util.ObjectsCompat;
  * @param <T> Comparable data type of the field
  */
 public final class BetweenQueryOperator<T extends Comparable<T>> extends QueryOperator<T> {
-    private T start;
-    private T end;
+    private final T start;
+    private final T end;
 
     /**
      * Constructs a between condition.
@@ -90,15 +90,10 @@ public final class BetweenQueryOperator<T extends Comparable<T>> extends QueryOp
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("BetweenQueryOperator { ")
-                .append("type: ")
-                .append(type())
-                .append(", start: ")
-                .append(start)
-                .append(", end: ")
-                .append(end)
-                .append(" }")
-                .toString();
+        return "BetweenQueryOperator { " +
+            "type: " + type() +
+            ", start: " + start +
+            ", end: " + end +
+            " }";
     }
 }

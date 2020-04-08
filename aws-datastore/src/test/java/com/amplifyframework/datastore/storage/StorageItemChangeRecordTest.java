@@ -35,7 +35,6 @@ import static org.junit.Assert.assertEquals;
  * API category.
  */
 public class StorageItemChangeRecordTest {
-
     /**
      * Generation of a ModelSchema for the {@link StorageItemChange.Record}
      * succeeds.

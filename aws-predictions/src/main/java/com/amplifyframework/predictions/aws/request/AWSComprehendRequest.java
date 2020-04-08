@@ -13,20 +13,28 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.testutils;
+package com.amplifyframework.predictions.aws.request;
+
+import androidx.annotation.NonNull;
+
+import java.util.Objects;
 
 /**
- * An almost-worthless wrapper to avoid writing {@link System#currentTimeMillis()} all
- * over the place. Instead, what we mean is "the current time," or Time.now().
+ * Simple request instance for text interpretation operation.
  */
-public final class Time {
-    private Time() {}
+public final class AWSComprehendRequest {
+    private final String text;
 
     /**
-     * Gets the current time, expressed in a duration of milliseconds since the epoch.
-     * @return Current time in ms since epoch
+     * Constructs an instance of {@link AWSComprehendRequest}.
+     * @param text the text to interpret
      */
-    public static long now() {
-        return System.currentTimeMillis();
+    public AWSComprehendRequest(@NonNull String text) {
+        this.text = Objects.requireNonNull(text);
+    }
+
+    @NonNull
+    public String getText() {
+        return text;
     }
 }

@@ -31,6 +31,10 @@ readonly sources=(
     "s3://$config_bucket/DataStore/amplifyconfiguration.json"
     "s3://$config_bucket/DataStore/awsconfiguration.json"
 
+    # Predictions
+    "s3://$config_bucket/Predictions/amplifyconfiguration.json"
+    "s3://$config_bucket/Predictions/awsconfiguration.json"
+
     # Storage
     "s3://$config_bucket/Storage/amplifyconfiguration.json"
     "s3://$config_bucket/Storage/awsconfiguration.json"
@@ -51,6 +55,10 @@ readonly targets=(
     # DataStore
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-datastore/src/androidTest/res/raw/awsconfiguration.json"
+
+    # Predictions
+    "aws-predictions/src/androidTest/res/raw/amplifyconfiguration.json"
+    "aws-predictions/src/androidTest/res/raw/awsconfiguration.json"
 
     # Storage
     "aws-storage-s3/src/androidTest/res/raw/amplifyconfiguration.json"

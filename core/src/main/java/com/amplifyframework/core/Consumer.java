@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
  * A consumer of a value type.
  * @param <T> Type of thing being consumed
  */
+@SuppressWarnings("EmptyMethod") // Lint looks for class impl, not lambda (as almost all uses are)
 public interface Consumer<T> {
 
     /**

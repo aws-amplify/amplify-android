@@ -39,7 +39,6 @@ import io.reactivex.subjects.PublishSubject;
  * contract. This intended for use as a stub in test code.
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
-
     private final List<Model> items;
     private final PublishSubject<StorageItemChange.Record> changeRecordStream;
     private final GsonStorageItemChangeConverter storageItemChangeConverter;
@@ -214,14 +213,6 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public void terminate() {
         items.clear();
         changeRecordStream.onComplete();
-    }
-
-    /**
-     * Get the items that are in the storage.
-     * @return Items in storage
-     */
-    public List<Model> items() {
-        return items;
     }
 
     private int indexOf(Model item) {

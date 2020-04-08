@@ -19,7 +19,7 @@ package com.amplifyframework.core;
  * An action is a simple executable building block, which accepts
  * no argument(s), and returns no result(s).
  *
- * It is modeled after the {@link io.reactivex.functions.Action}.
+ * It is modeled after RxJava2's io.reactivex.functions.Action.
  */
 public interface Action {
 

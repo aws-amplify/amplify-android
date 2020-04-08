@@ -104,11 +104,7 @@ public final class ModelAssociation {
      * @return True if this field owns the identity of another model
      */
     public boolean isOwner() {
-        if (getName().equals(BelongsTo.class.getSimpleName())) {
-            return true;
-        }
-
-        return false;
+        return getName().equals(BelongsTo.class.getSimpleName());
     }
 
     @Override
@@ -130,10 +126,7 @@ public final class ModelAssociation {
         if (!ObjectsCompat.equals(associatedName, that.associatedName)) {
             return false;
         }
-        if (!ObjectsCompat.equals(associatedType, that.associatedType)) {
-            return false;
-        }
-        return true;
+        return ObjectsCompat.equals(associatedType, that.associatedType);
     }
 
     @Override

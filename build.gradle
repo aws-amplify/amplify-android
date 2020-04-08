@@ -47,7 +47,7 @@ ext {
     minSdkVersion = 16
     targetSdkVersion = 29
 
-    awsSdkVersion = '2.16.8'
+    awsSdkVersion = '2.16.11'
     dependency = [
         androidx: [
             v4support: 'androidx.legacy:legacy-support-v4:1.0.0',
@@ -62,6 +62,7 @@ ext {
         ],
         aws: [
             s3: "com.amazonaws:aws-android-sdk-s3:$awsSdkVersion",
+            comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
             cognitoauth: "com.amazonaws:aws-android-sdk-cognitoauth:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
@@ -71,6 +72,7 @@ ext {
         gson: 'com.google.code.gson:gson:2.8.6',
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
+        tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
 
         junit: 'junit:junit:4.13',
         mockito: 'org.mockito:mockito-core:3.1.0',

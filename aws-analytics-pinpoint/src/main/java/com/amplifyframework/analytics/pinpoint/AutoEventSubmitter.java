@@ -32,13 +32,12 @@ final class AutoEventSubmitter {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 
     private final Handler handler;
-    private final HandlerThread handlerThread;
     private Runnable submitRunnable;
-    private long autoFlushInterval;
+    private final long autoFlushInterval;
 
     AutoEventSubmitter(final AnalyticsClient analyticsClient, final long autoFlushInterval) {
-        this.handlerThread = new HandlerThread("AutoEventSubmitter");
-        this.handlerThread.start();
+        HandlerThread handlerThread = new HandlerThread("AutoEventSubmitter");
+        handlerThread.start();
         this.handler = new Handler(handlerThread.getLooper());
         this.autoFlushInterval = autoFlushInterval;
         this.submitRunnable = () -> {

@@ -18,6 +18,7 @@ package com.amplifyframework.testutils.sync;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -25,7 +26,6 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -34,6 +34,7 @@ import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
@@ -47,21 +48,24 @@ import io.reactivex.disposables.Disposables;
  * performing various operations.
  */
 public final class SynchronousApi {
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
-    private static SynchronousApi singleton = null;
+    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 
-    private SynchronousApi() {}
+    private final ApiCategoryBehavior asyncDelegate;
+
+    private SynchronousApi(ApiCategoryBehavior asyncDelegate) {
+        this.asyncDelegate = asyncDelegate;
+    }
 
     /**
-     * Gets a singleton instance of the Synchronous API utility.
-     * @return Singleton instance of Synchronous API
+     * Creates a Synchronous API wrapper which delegates calls to the provided
+     * {@link ApiCategoryBehavior}.
+     * @param asyncDelegate Calls are delegated to this Api Category Behavior
+     * @return A synchronous API wrapper which delegates to the provided category behavior
      */
     @NonNull
-    public static synchronized SynchronousApi singleton() {
-        if (SynchronousApi.singleton == null) {
-            SynchronousApi.singleton = new SynchronousApi();
-        }
-        return SynchronousApi.singleton;
+    public static SynchronousApi delegatingTo(@NonNull ApiCategoryBehavior asyncDelegate) {
+        Objects.requireNonNull(asyncDelegate);
+        return new SynchronousApi(asyncDelegate);
     }
 
     /**
@@ -75,7 +79,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T create(@NonNull String apiName, @NonNull T model) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.mutate(apiName, model, MutationType.CREATE, onResponse, onFailure));
+            asyncDelegate.mutate(apiName, model, MutationType.CREATE, onResponse, onFailure));
     }
 
     /**
@@ -88,7 +92,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T create(@NonNull T model) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.mutate(model, MutationType.CREATE, onResponse, onFailure));
+            asyncDelegate.mutate(model, MutationType.CREATE, onResponse, onFailure));
     }
 
     /**
@@ -102,7 +106,7 @@ public final class SynchronousApi {
     @NonNull
     public <T> T create(@NonNull String apiName, @NonNull GraphQLRequest<T> request) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.mutate(apiName, request, onResponse, onFailure));
+            asyncDelegate.mutate(apiName, request, onResponse, onFailure));
     }
 
     /**
@@ -118,7 +122,7 @@ public final class SynchronousApi {
     public <T extends Model> T update(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
+            asyncDelegate.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
     }
 
     /**
@@ -132,7 +136,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T update(@NonNull T model) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.mutate(model, MutationType.UPDATE, onResponse, onFailure));
+            asyncDelegate.mutate(model, MutationType.UPDATE, onResponse, onFailure));
     }
 
     /**
@@ -149,7 +153,7 @@ public final class SynchronousApi {
     public <T extends Model> List<GraphQLResponse.Error> updateExpectingErrors(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
         return this.<T>awaitResponseErrors((onResponse, onFailure) ->
-            Amplify.API.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
+            asyncDelegate.mutate(apiName, model, predicate, MutationType.UPDATE, onResponse, onFailure));
     }
 
     /**
@@ -165,7 +169,7 @@ public final class SynchronousApi {
     public <T extends Model> T get(
             @NonNull final String apiName, @NonNull Class<T> clazz, @NonNull String modelId) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.query(apiName, clazz, modelId, onResponse, onFailure));
+            asyncDelegate.query(apiName, clazz, modelId, onResponse, onFailure));
     }
 
     /**
@@ -180,7 +184,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String modelId) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.query(clazz, modelId, onResponse, onFailure));
+            asyncDelegate.query(clazz, modelId, onResponse, onFailure));
     }
 
     /**
@@ -193,7 +197,7 @@ public final class SynchronousApi {
     @NonNull
     public RestResponse get(@NonNull String apiName, @NonNull RestOptions options) throws ApiException {
         return awaitRestResponse((onResponse, onFailure) ->
-            Amplify.API.get(apiName, options, onResponse, onFailure));
+            asyncDelegate.get(apiName, options, onResponse, onFailure));
     }
 
     /**
@@ -206,7 +210,7 @@ public final class SynchronousApi {
     @NonNull
     public RestResponse post(@NonNull String apiName, @NonNull RestOptions options) throws ApiException {
         return awaitRestResponse((onResponse, onFailure) ->
-            Amplify.API.post(apiName, options, onResponse, onFailure));
+            asyncDelegate.post(apiName, options, onResponse, onFailure));
     }
 
     /**
@@ -224,7 +228,7 @@ public final class SynchronousApi {
             @NonNull Class<T> clazz,
             @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate) throws ApiException {
         final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.query(apiName, clazz, predicate, onResponse, onFailure));
+            asyncDelegate.query(apiName, clazz, predicate, onResponse, onFailure));
         final List<T> results = new ArrayList<>();
         for (T item : queryResults) {
             results.add(item);
@@ -257,7 +261,7 @@ public final class SynchronousApi {
     @NonNull
     public <T extends Model> T delete(@NonNull String apiName, @NonNull T modelToDelete) throws ApiException {
         return awaitResponseData((onResponse, onFailure) ->
-            Amplify.API.mutate(apiName, modelToDelete, MutationType.DELETE, onResponse, onFailure));
+            asyncDelegate.mutate(apiName, modelToDelete, MutationType.DELETE, onResponse, onFailure));
     }
 
     /**
@@ -274,7 +278,7 @@ public final class SynchronousApi {
             emitter.setDisposable(disposable);
             Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
                 (onSubscriptionStarted, onError) -> {
-                    Cancelable cancelable = Amplify.API.subscribe(
+                    Cancelable cancelable = asyncDelegate.subscribe(
                         apiName,
                         clazz,
                         SubscriptionType.ON_CREATE,
@@ -305,7 +309,7 @@ public final class SynchronousApi {
             emitter.setDisposable(disposable);
             Await.<String, ApiException>result(OPERATION_TIMEOUT_MS,
                 (onSubscriptionStarted, onError) -> {
-                    Cancelable cancelable = Amplify.API.subscribe(
+                    Cancelable cancelable = asyncDelegate.subscribe(
                         apiName,
                         request,
                         onSubscriptionStarted,
