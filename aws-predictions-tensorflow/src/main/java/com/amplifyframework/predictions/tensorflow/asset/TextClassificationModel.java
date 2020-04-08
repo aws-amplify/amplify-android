@@ -37,7 +37,7 @@ import java.nio.channels.FileChannel;
  * Loads the pre-trained text classification model into
  * a TensorFlow Lite interpreter instance.
  */
-public final class TextClassificationModel implements Loadable<Interpreter, PredictionsException> {
+public class TextClassificationModel implements Loadable<Interpreter, PredictionsException> {
 
     private static final String MODEL_PATH = "text_classification.tflite";
 

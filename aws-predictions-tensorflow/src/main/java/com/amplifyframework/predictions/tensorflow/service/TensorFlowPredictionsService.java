@@ -45,7 +45,7 @@ public final class TensorFlowPredictionsService {
      * @param context the Android context
      */
     public TensorFlowPredictionsService(@NonNull Context context) {
-        this.textClassificationService = new TensorFlowTextClassificationService(context);
+        this.textClassificationService = TensorFlowTextClassificationService.fromContext(context);
     }
 
     public void classify(

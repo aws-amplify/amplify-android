@@ -1,0 +1,10 @@
+<PAD> 0
+<START> 1
+<UNKNOWN> 2
+<UNUSED> 3
+the 4
+and 5
+a 6
+of 7
+to 8
+is 9

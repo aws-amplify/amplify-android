@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.tensorflow.service;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Consumer;
@@ -35,6 +36,7 @@ import org.tensorflow.lite.Interpreter;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 /**
@@ -50,6 +52,7 @@ final class TensorFlowTextClassificationService {
     private final TextClassificationModel interpreter;
     private final TextClassificationDictionary dictionary;
     private final TextClassificationLabels labels;
+
     private final List<Loadable<?, PredictionsException>> assets;
     private final CountDownLatch loaded;
 
@@ -59,22 +62,44 @@ final class TensorFlowTextClassificationService {
      * Constructs an instance of service to perform text
      * sentiment interpretation using TensorFlow Lite
      * interpreter.
-     * @param context the Android context
+     * @param interpreter the TensorFlow Lite interpreter with
+     *                    loaded model
+     * @param dictionary the dictionary of words and respective
+     *                   tokens
+     * @param labels the list of labels for a feature
      */
-    TensorFlowTextClassificationService(@NonNull Context context) {
-        this.interpreter = new TextClassificationModel(context);
-        this.dictionary = new TextClassificationDictionary(context);
-        this.labels = new TextClassificationLabels(context);
+    @VisibleForTesting
+    TensorFlowTextClassificationService(
+            TextClassificationModel interpreter,
+            TextClassificationDictionary dictionary,
+            TextClassificationLabels labels
+    ) {
+        this.interpreter = interpreter;
+        this.dictionary = dictionary;
+        this.labels = labels;
 
         this.assets = Arrays.asList(interpreter, dictionary, labels);
         this.loaded = new CountDownLatch(assets.size());
-
         for (Loadable<?, PredictionsException> asset : assets) {
             asset.onLoaded(
                 onLoad -> this.loaded.countDown(),
                 error -> this.loadingError = error
             );
         }
+    }
+
+    /**
+     * Constructs an instance of text classifier service by
+     * loading the assets from provided Android context.
+     * @param context the Android context
+     * @return an instance of text classification service
+     */
+    static TensorFlowTextClassificationService fromContext(@NonNull Context context) {
+        Objects.requireNonNull(context);
+        TextClassificationModel model = new TextClassificationModel(context);
+        TextClassificationDictionary dictionary = new TextClassificationDictionary(context);
+        TextClassificationLabels labels = new TextClassificationLabels(context);
+        return new TensorFlowTextClassificationService(model, dictionary, labels);
     }
 
     /**
@@ -87,6 +112,10 @@ final class TensorFlowTextClassificationService {
         return SERVICE_KEY;
     }
 
+    /**
+     * Load all of the required assets. No-op for each asset
+     * that is already loaded.
+     */
     @WorkerThread
     synchronized void loadIfNotLoaded() {
         for (Loadable<?, PredictionsException> asset : assets) {
@@ -132,7 +161,8 @@ final class TensorFlowTextClassificationService {
         }
     }
 
-    private Sentiment fetchSentiment(String text) throws PredictionsException {
+    @VisibleForTesting
+    Sentiment fetchSentiment(String text) throws PredictionsException {
         float[][] input;
         float[][] output;
 
