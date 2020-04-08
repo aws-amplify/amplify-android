@@ -28,6 +28,7 @@ import com.amplifyframework.predictions.models.Syntax;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 
 import org.junit.BeforeClass;

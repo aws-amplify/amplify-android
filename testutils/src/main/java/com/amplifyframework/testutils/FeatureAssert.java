@@ -13,21 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.aws;
+package com.amplifyframework.testutils;
 
 import com.amplifyframework.predictions.models.Feature;
+
+import org.junit.Assert;
 
 import java.util.Collection;
 import java.util.Iterator;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 /**
- * Utility class to assert that two features have matching values
- * without regarding their IDs or confidence scores.
+ * Utility class to assert that a feature or features have
+ * expected values.
  */
-final class FeatureAssert {
+public final class FeatureAssert {
     private FeatureAssert() {}
 
     /**
@@ -36,10 +35,10 @@ final class FeatureAssert {
      * @param actual the actual feature
      * @param <T> the type of expected value
      */
-    static <T> void assertMatches(T expectedValue, Feature<T> actual) {
-        assertNotNull(expectedValue);
-        assertNotNull(actual);
-        assertEquals(expectedValue, actual.getValue());
+    public static <T> void assertMatches(T expectedValue, Feature<T> actual) {
+        Assert.assertNotNull(expectedValue);
+        Assert.assertNotNull(actual);
+        Assert.assertEquals(expectedValue, actual.getValue());
     }
 
     /**
@@ -49,10 +48,10 @@ final class FeatureAssert {
      * @param <F> the data type of the feature
      * @param <T> the data type of the value of the feature
      */
-    static <F extends Feature<T>, T> void assertMatches(Collection<T> expected, Collection<F> actual) {
-        assertNotNull(expected);
-        assertNotNull(actual);
-        assertEquals("Size mismatch:", expected.size(), actual.size());
+    public static <F extends Feature<T>, T> void assertMatches(Collection<T> expected, Collection<F> actual) {
+        Assert.assertNotNull(expected);
+        Assert.assertNotNull(actual);
+        Assert.assertEquals("Size mismatch:", expected.size(), actual.size());
         Iterator<T> expectedIterator = expected.iterator();
         Iterator<F> actualIterator = actual.iterator();
         while (expectedIterator.hasNext()) {
