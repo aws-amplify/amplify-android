@@ -110,6 +110,8 @@ public final class AuthCodeDeliveryDetails {
         EMAIL("email"),
         /** Code was sent via text message SMS. */
         SMS("sms"),
+        /** Code was sent via phone call. */
+        PHONE("phone"),
         /** Code was sent via some other method not listed here. */
         UNKNOWN("unknown");
 

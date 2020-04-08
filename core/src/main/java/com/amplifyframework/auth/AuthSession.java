@@ -18,27 +18,25 @@ package com.amplifyframework.auth;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import java.util.Objects;
-
-public class AuthState {
-    private final AuthSignedInStatus signedInStatus;
+public class AuthSession {
+    private final boolean isSignedIn;
 
     /**
      * Stores the current auth state of the category. When cast to a plugin specific object,
      * implementation-specific auth details such as tokens can be retrieved as well.
-     * @param signedInStatus What state the user is currently in (e.g. Signed Out, Guest, or Signed In)
+     * @param isSignedIn true if the user has been signed in, false otherwise
      */
-    public AuthState(@NonNull AuthSignedInStatus signedInStatus) {
-        this.signedInStatus = Objects.requireNonNull(signedInStatus);
+    public AuthSession(boolean isSignedIn) {
+        this.isSignedIn = isSignedIn;
     }
 
     /**
-     * Returns the user's current logged in state.
-     * @return An enum of the user's current logged in state
+     * Returns true if the user has been signed in, false otherwise.
+     * @return true if the user has been signed in, false otherwise
      */
     @NonNull
-    public AuthSignedInStatus getSignedInStatus() {
-        return signedInStatus;
+    public boolean isSignedIn() {
+        return isSignedIn;
     }
 
     /**
@@ -48,7 +46,7 @@ public class AuthState {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getSignedInStatus()
+                isSignedIn()
         );
     }
 
@@ -63,8 +61,8 @@ public class AuthState {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            AuthState authState = (AuthState) obj;
-            return ObjectsCompat.equals(getSignedInStatus(), authState.getSignedInStatus());
+            AuthSession authSession = (AuthSession) obj;
+            return ObjectsCompat.equals(isSignedIn(), authSession.isSignedIn());
         }
     }
 
@@ -77,7 +75,7 @@ public class AuthState {
         return new StringBuilder()
                 .append("AuthState { ")
                 .append("signedInStatus: ")
-                .append(getSignedInStatus())
+                .append(isSignedIn())
                 .append(" }")
                 .toString();
     }

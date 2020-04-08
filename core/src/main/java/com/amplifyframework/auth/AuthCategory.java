@@ -56,11 +56,11 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void confirmSignUp(
             @NonNull String username,
-            @NonNull String code,
+            @NonNull String confirmationCode,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmSignUp(username, code, onSuccess, onError);
+        getSelectedPlugin().confirmSignUp(username, confirmationCode, onSuccess, onError);
     }
 
     @Override
@@ -117,11 +117,11 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void fetchAuthState(
-            @NonNull Consumer<AuthState> onSuccess,
+    public void fetchAuthSession(
+            @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().fetchAuthState(onSuccess, onError);
+        getSelectedPlugin().fetchAuthSession(onSuccess, onError);
     }
 }
 
