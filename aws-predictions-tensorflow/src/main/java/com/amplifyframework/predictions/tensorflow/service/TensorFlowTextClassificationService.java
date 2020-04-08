@@ -27,17 +27,14 @@ import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.SentimentType;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.tensorflow.adapter.SentimentTypeAdapter;
-import com.amplifyframework.predictions.tensorflow.asset.Loadable;
+import com.amplifyframework.predictions.tensorflow.asset.LatchedCompoundLoader;
 import com.amplifyframework.predictions.tensorflow.asset.TextClassificationDictionary;
 import com.amplifyframework.predictions.tensorflow.asset.TextClassificationLabels;
 import com.amplifyframework.predictions.tensorflow.asset.TextClassificationModel;
 
 import org.tensorflow.lite.Interpreter;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CountDownLatch;
 
 /**
  * An implementation of text classification service using
@@ -52,11 +49,7 @@ final class TensorFlowTextClassificationService {
     private final TextClassificationModel interpreter;
     private final TextClassificationDictionary dictionary;
     private final TextClassificationLabels labels;
-
-    private final List<Loadable<?, PredictionsException>> assets;
-    private final CountDownLatch loaded;
-
-    private PredictionsException loadingError;
+    private final LatchedCompoundLoader loader;
 
     /**
      * Constructs an instance of service to perform text
@@ -77,15 +70,7 @@ final class TensorFlowTextClassificationService {
         this.interpreter = interpreter;
         this.dictionary = dictionary;
         this.labels = labels;
-
-        this.assets = Arrays.asList(interpreter, dictionary, labels);
-        this.loaded = new CountDownLatch(assets.size());
-        for (Loadable<?, PredictionsException> asset : assets) {
-            asset.onLoaded(
-                onLoad -> this.loaded.countDown(),
-                error -> this.loadingError = error
-            );
-        }
+        this.loader = LatchedCompoundLoader.with(interpreter, dictionary, labels);
     }
 
     /**
@@ -118,9 +103,7 @@ final class TensorFlowTextClassificationService {
      */
     @WorkerThread
     synchronized void loadIfNotLoaded() {
-        for (Loadable<?, PredictionsException> asset : assets) {
-            asset.load();
-        }
+        loader.start();
     }
 
     /**
@@ -134,24 +117,8 @@ final class TensorFlowTextClassificationService {
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        // Escape early if the initialization failed
-        if (loadingError != null) {
-            onError.accept(loadingError);
-            return;
-        }
-
-        // Wait for initialization to complete
-        // TODO: encapsulate blocking logic elsewhere
         try {
-            loaded.await();
-        } catch (InterruptedException exception) {
-            onError.accept(new PredictionsException(
-                    "Text classification service initialization was interrupted.",
-                    "Please wait for the required assets to be fully loaded."
-            ));
-        }
-
-        try {
+            loader.await(); // Block this operation until load is completed
             final Sentiment sentiment = fetchSentiment(text);
             onSuccess.accept(InterpretResult.builder()
                     .sentiment(sentiment)
@@ -202,9 +169,9 @@ final class TensorFlowTextClassificationService {
      */
     @WorkerThread
     synchronized void release() {
-        for (Loadable<?, PredictionsException> asset : assets) {
-            asset.unload();
-        }
+        interpreter.unload();
+        dictionary.unload();
+        labels.unload();
     }
 
     /**
@@ -215,6 +182,9 @@ final class TensorFlowTextClassificationService {
      */
     @Nullable
     Interpreter getInterpreter() {
+        if (!interpreter.isLoaded()) {
+            return null;
+        }
         return interpreter.getValue();
     }
 }
