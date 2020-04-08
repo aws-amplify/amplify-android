@@ -66,6 +66,10 @@ public final class AWSS3StorageUploadTest {
     private StorageUploadFileOptions options;
     private Set<SubscriptionToken> subscriptions;
 
+    /**
+     * Initialize mobile client and configure the storage.
+     * @throws Exception if mobile client initialization fails
+     */
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
