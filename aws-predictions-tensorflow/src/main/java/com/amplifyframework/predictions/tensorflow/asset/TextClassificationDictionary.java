@@ -47,7 +47,7 @@ import java.util.Map;
  * ...
  * </pre>
  */
-public final class TextClassificationDictionary implements Loadable<Map<String, Integer>, PredictionsException> {
+public class TextClassificationDictionary implements Loadable<Map<String, Integer>, PredictionsException> {
     private static final String DICTIONARY_PATH = "text_classification_vocab.txt";
 
     // The maximum length of an input sentence.

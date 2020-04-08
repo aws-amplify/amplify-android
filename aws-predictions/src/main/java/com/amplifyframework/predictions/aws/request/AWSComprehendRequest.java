@@ -13,17 +13,28 @@
  * permissions and limitations under the License.
  */
 
-apply plugin: 'com.android.library'
-apply from: rootProject.file("configuration/checkstyle.gradle")
-apply from: rootProject.file("configuration/publishing.gradle")
+package com.amplifyframework.predictions.aws.request;
 
-dependencies {
-    implementation project(':core')
-    implementation dependency.androidx.appcompat
-    implementation dependency.tensorflow
+import androidx.annotation.NonNull;
 
-    testImplementation project(':testutils')
-    testImplementation dependency.junit
-    testImplementation dependency.mockito
+import java.util.Objects;
+
+/**
+ * Simple request instance for text interpretation operation.
+ */
+public final class AWSComprehendRequest {
+    private final String text;
+
+    /**
+     * Constructs an instance of {@link AWSComprehendRequest}.
+     * @param text the text to interpret
+     */
+    public AWSComprehendRequest(@NonNull String text) {
+        this.text = Objects.requireNonNull(text);
+    }
+
+    @NonNull
+    public String getText() {
+        return text;
+    }
 }
-

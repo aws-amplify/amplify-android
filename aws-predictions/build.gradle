@@ -18,12 +18,20 @@ apply from: rootProject.file("configuration/checkstyle.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
-    implementation project(':core')
+    implementation project(path: ':core')
     implementation dependency.androidx.appcompat
-    implementation dependency.tensorflow
+    implementation dependency.aws.comprehend
+    implementation dependency.aws.mobileclient
 
-    testImplementation project(':testutils')
+    testImplementation project(path: ':testutils')
     testImplementation dependency.junit
-    testImplementation dependency.mockito
+    testImplementation (dependency.robolectric) {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+    }
+
+    androidTestImplementation project(path: ':testutils')
+    androidTestImplementation dependency.androidx.test.core
+    androidTestImplementation dependency.androidx.test.runner
 }
 
