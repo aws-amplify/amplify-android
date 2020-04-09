@@ -87,7 +87,7 @@ public final class AppSyncClientInstrumentationTest {
      * @throws DataStoreException If any call to AppSync endpoint fails to return a response
      */
     @Test
-    @SuppressWarnings({"MethodLength", "checkstyle:MagicNumber"})
+    @SuppressWarnings("MethodLength")
     public void testAllOperations() throws DataStoreException {
         Long startTime = new Date().getTime();
 

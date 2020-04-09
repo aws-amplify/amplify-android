@@ -21,16 +21,16 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 
-import com.amplifyframework.analytics.AnalyticsChannelEventName;
-import com.amplifyframework.analytics.AnalyticsEvent;
+import com.amplifyframework.analytics.AnalyticsBooleanProperty;
+import com.amplifyframework.analytics.AnalyticsDoubleProperty;
+import com.amplifyframework.analytics.AnalyticsEventBehavior;
 import com.amplifyframework.analytics.AnalyticsException;
+import com.amplifyframework.analytics.AnalyticsIntegerProperty;
 import com.amplifyframework.analytics.AnalyticsPlugin;
-import com.amplifyframework.analytics.Properties;
-import com.amplifyframework.analytics.Property;
+import com.amplifyframework.analytics.AnalyticsProperties;
+import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
+import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.hub.HubEvent;
 
 import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
@@ -47,7 +47,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
@@ -55,9 +54,9 @@ import java.util.Set;
 public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
-        USER_NAME,
-        USER_EMAIL,
-        USER_PLAN
+            USER_NAME,
+            USER_EMAIL,
+            USER_PLAN
     })
     @SuppressWarnings("checkstyle:WhitespaceAround")
     private @interface PinpointUserProfileAttribute {}
@@ -83,6 +82,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     /**
      * Accessor method for pinpoint analytics client.
+     *
      * @return returns pinpoint analytics client.
      */
     AnalyticsClient getAnalyticsClient() {
@@ -91,6 +91,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     /**
      * Accessor method for pinpoint targeting client.
+     *
      * @return returns pinpoint targeting client.
      */
     TargetingClient getTargetingClient() {
@@ -128,8 +129,9 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     /**
      * Add user specific data from {@link UserProfile} to the endpoint profile.
+     *
      * @param endpointProfile endpoint profile.
-     * @param userProfile user specific data to be added to the endpoint.
+     * @param userProfile     user specific data to be added to the endpoint.
      */
     private void addUserProfileToEndpoint(@NonNull EndpointProfile endpointProfile,
                                           @NonNull UserProfile userProfile) {
@@ -151,9 +153,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     /**
      * Add user profile attribute to the endpoint profile. If an attribute value is null. It is
      * removed from the set of endpoint attributes.
-     * @param endpointProfile current endpoint profile.
+     *
+     * @param endpointProfile              current endpoint profile.
      * @param pinpointUserProfileAttribute String def enumerating the allowed user attributes.
-     * @param attributeValue user attribute value.
+     * @param attributeValue               user attribute value.
      */
     private void addAttribute(@NonNull EndpointProfile endpointProfile,
                               @PinpointUserProfileAttribute String pinpointUserProfileAttribute,
@@ -169,32 +172,37 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
     /**
      * Add custom user properties to the endpoint profile.
-     * @param endpointProfile endpoint profile.
-     * @param customProperties custom user properties to be added to the endpoint profile.
+     *
+     * @param endpointProfile  endpoint profile.
+     * @param properties custom user properties to be added to the endpoint profile.
      */
     private void addCustomProperties(@NonNull EndpointProfile endpointProfile,
-                                     @NonNull Properties customProperties) {
-        for (Map.Entry<String, Property<?>> entry : customProperties.get().entrySet()) {
-            if (entry.getValue() instanceof StringProperty) {
-                endpointProfile.addAttribute(entry.getKey(),
-                        Collections.singletonList(((StringProperty) entry.getValue()).getValue()));
-            } else if (entry.getValue() instanceof DoubleProperty) {
-                endpointProfile.addMetric(entry.getKey(),
-                        ((DoubleProperty) entry.getValue()).getValue());
-            } else {
-                Amplify.Hub.publish(HubChannel.ANALYTICS,
-                        HubEvent.create(AnalyticsChannelEventName.INVALID_PROPERTY_TYPE,
-                        new AnalyticsException("Invalid Property type detected.",
-                                "AmazonPinpointAnalyticsPlugin supports only StringProperty or " +
-                                        "DoubleProperty.")));
+                                     @NonNull AnalyticsProperties properties) {
+        for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : properties) {
+            String key = entry.getKey();
+            AnalyticsPropertyBehavior<?> property = entry.getValue();
+
+            if (property instanceof AnalyticsStringProperty) {
+                String value = ((AnalyticsStringProperty) property).getValue();
+                endpointProfile.addAttribute(key, Collections.singletonList(value));
+            } else if (property instanceof AnalyticsBooleanProperty) {
+                String value = ((AnalyticsBooleanProperty) property).getValue().toString();
+                endpointProfile.addAttribute(key, Collections.singletonList(value));
+            } else if (property instanceof AnalyticsDoubleProperty) {
+                Double value = ((AnalyticsDoubleProperty) property).getValue();
+                endpointProfile.addMetric(entry.getKey(), value);
+            } else if (property instanceof AnalyticsIntegerProperty) {
+                Double value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
+                endpointProfile.addMetric(entry.getKey(), value);
             }
         }
     }
 
     /**
      * Add location details to the endpoint profile location.
+     *
      * @param endpointProfileLocation endpoint location.
-     * @param location location details.
+     * @param location                location details.
      */
     private void addLocation(@NonNull EndpointProfileLocation endpointProfileLocation,
                              @NonNull UserProfile.Location location) {
@@ -221,7 +229,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      */
     @Override
     public void recordEvent(@NonNull String eventName) {
-
         final com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(eventName);
         analyticsClient.recordEvent(pinpointEvent);
@@ -231,44 +238,51 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void recordEvent(@NonNull AnalyticsEvent analyticsEvent)
-            throws AnalyticsException {
-
+    public void recordEvent(@NonNull AnalyticsEventBehavior analyticsEvent) {
         final com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent pinpointEvent =
                 analyticsClient.createEvent(analyticsEvent.getName());
 
         if (analyticsEvent.getProperties() != null) {
-            for (Map.Entry<String, Property<?>> entry : analyticsEvent.getProperties().get().entrySet()) {
-                if (entry.getValue() instanceof StringProperty) {
-                    pinpointEvent.addAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
-                } else if (entry.getValue() instanceof DoubleProperty) {
-                    pinpointEvent.addMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
-                } else {
-                    throw new AnalyticsException("Invalid property type detected.",
-                            "AmazonPinpointAnalyticsPlugin supports only StringProperty or DoubleProperty. " +
-                                    "Refer to the documentation for details.");
+            for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : analyticsEvent.getProperties()) {
+                String key = entry.getKey();
+                AnalyticsPropertyBehavior<?> property = entry.getValue();
+
+                if (property instanceof AnalyticsStringProperty) {
+                    pinpointEvent.addAttribute(key, ((AnalyticsStringProperty) property).getValue());
+                } else if (property instanceof AnalyticsBooleanProperty) {
+                    String value = ((AnalyticsBooleanProperty) property).getValue().toString();
+                    pinpointEvent.addAttribute(key, value);
+                } else if (property instanceof AnalyticsDoubleProperty) {
+                    pinpointEvent.addMetric(key, ((AnalyticsDoubleProperty) property).getValue());
+                } else if (property instanceof AnalyticsIntegerProperty) {
+                    Double value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
+                    pinpointEvent.addMetric(key, value);
                 }
             }
+
+            analyticsClient.recordEvent(pinpointEvent);
         }
-        analyticsClient.recordEvent(pinpointEvent);
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
-        for (Map.Entry<String, Property<?>> entry : properties.get().entrySet()) {
-            if (entry.getValue() instanceof StringProperty) {
-                analyticsClient.addGlobalAttribute(entry.getKey(), ((StringProperty) entry.getValue()).getValue());
-            } else if (entry.getValue() instanceof DoubleProperty) {
-                analyticsClient.addGlobalMetric(entry.getKey(), ((DoubleProperty) entry.getValue()).getValue());
-            } else {
-                Amplify.Hub.publish(HubChannel.ANALYTICS,
-                        HubEvent.create(AnalyticsChannelEventName.INVALID_PROPERTY_TYPE,
-                                new AnalyticsException("Invalid Property type detected.",
-                                        "AmazonPinpointAnalyticsPlugin supports only StringProperty or " +
-                                                "DoubleProperty.")));
+    public void registerGlobalProperties(@NonNull AnalyticsProperties properties) {
+        for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : properties) {
+            String key = entry.getKey();
+            AnalyticsPropertyBehavior<?> property = entry.getValue();
+
+            if (property instanceof AnalyticsStringProperty) {
+                analyticsClient.addGlobalAttribute(key, ((AnalyticsStringProperty) property).getValue());
+            } else if (property instanceof AnalyticsBooleanProperty) {
+                String value = ((AnalyticsBooleanProperty) property).getValue().toString();
+                analyticsClient.addGlobalAttribute(key, value);
+            } else if (property instanceof AnalyticsDoubleProperty) {
+                analyticsClient.addGlobalMetric(key, ((AnalyticsDoubleProperty) property).getValue());
+            } else if (property instanceof AnalyticsIntegerProperty) {
+                Double value = ((AnalyticsIntegerProperty) property).getValue().doubleValue();
+                analyticsClient.addGlobalMetric(key, value);
             }
         }
     }
@@ -277,10 +291,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
      * {@inheritDoc}
      */
     @Override
-    public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        for (String key : keys) {
-            analyticsClient.removeGlobalAttribute(key);
-            analyticsClient.removeGlobalMetric(key);
+    public void unregisterGlobalProperties(@NonNull String... propertyNames) {
+        for (String propertyName : propertyNames) {
+            analyticsClient.removeGlobalAttribute(propertyName);
+            analyticsClient.removeGlobalMetric(propertyName);
         }
     }
 
@@ -343,10 +357,10 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             }
         } catch (JSONException exception) {
             throw new AnalyticsException(
-                "Unable to read appId or region from the amplify configuration json.",
-                exception,
-                "Make sure amplifyconfiguration.json is a valid json object in expected format. " +
-                    "Please take a look at the documentation for expected format of amplifyconfiguration.json."
+                    "Unable to read appId or region from the amplify configuration json.",
+                    exception,
+                    "Make sure amplifyconfiguration.json is a valid json object in expected format. " +
+                            "Please take a look at the documentation for expected format of amplifyconfiguration.json."
             );
         }
 
@@ -404,6 +418,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
         /**
          * Construct the enum with the config key.
+         *
          * @param configurationKey The key this property is listed under in the config JSON.
          */
         PinpointConfigurationKey(final String configurationKey) {
@@ -412,6 +427,7 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
 
         /**
          * Returns the key this property is listed under in the config JSON.
+         *
          * @return The key as a string
          */
         public String getConfigurationKey() {

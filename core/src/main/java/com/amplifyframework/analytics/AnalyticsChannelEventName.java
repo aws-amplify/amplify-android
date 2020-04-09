@@ -31,7 +31,7 @@ import java.util.Objects;
  */
 public enum AnalyticsChannelEventName {
     /**
-     * An attempt was made to add a {@link Property} of type T that is not supported
+     * An attempt was made to add a {@link AnalyticsPropertyBehavior} of type T that is not supported
      * by the plugin in use.
      */
     INVALID_PROPERTY_TYPE("invalid_property_type");
