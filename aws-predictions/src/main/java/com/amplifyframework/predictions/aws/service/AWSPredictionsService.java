@@ -18,15 +18,15 @@ package com.amplifyframework.predictions.aws.service;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amazonaws.services.translate.AmazonTranslateClient;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
-import com.amplifyframework.predictions.result.TranslateTextResult;
+import com.amazonaws.services.translate.AmazonTranslateClient;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.

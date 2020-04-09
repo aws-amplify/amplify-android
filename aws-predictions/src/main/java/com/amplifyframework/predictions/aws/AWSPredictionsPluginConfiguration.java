@@ -16,14 +16,12 @@
 package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
-
-import com.amazonaws.regions.Region;
 import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
 
+import com.amazonaws.regions.Region;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -126,6 +124,7 @@ public final class AWSPredictionsPluginConfiguration {
      * Gets the configuration for text translation.
      * Null if not configured.
      * @return the configuration for text translation
+     * @throws PredictionsException if not configured
      */
     @NonNull
     public TranslateTextConfiguration getTranslateTextConfiguration() throws PredictionsException {
@@ -142,6 +141,7 @@ public final class AWSPredictionsPluginConfiguration {
      * Gets the configuration for text interpretation.
      * Null if not configured.
      * @return the configuration for text interpretation
+     * @throws PredictionsException if not configured
      */
     @NonNull
     public InterpretTextConfiguration getInterpretTextConfiguration() throws PredictionsException {

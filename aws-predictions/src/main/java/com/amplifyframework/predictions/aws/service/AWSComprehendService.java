@@ -16,7 +16,6 @@
 package com.amplifyframework.predictions.aws.service;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
