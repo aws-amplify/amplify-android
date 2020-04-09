@@ -50,13 +50,13 @@ public interface AuthCategoryBehavior {
      * If you have attribute confirmation enabled, this will allow the user
      * to enter the confirmation code they received to activate their account.
      * @param username The username of the account to confirm
-     * @param code The confirmation code the user received
+     * @param confirmationCode The confirmation code the user received
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void confirmSignUp(
             @NonNull String username,
-            @NonNull String code,
+            @NonNull String confirmationCode,
             @NonNull Consumer<AuthSignUpResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
@@ -132,15 +132,15 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AmplifyException> onError);
 
     /**
-     * Retrieve the user's current state - Signed Out, Guest, or Signed In.
+     * Retrieve the user's current session information - by default just whether they are signed out or in.
      * Depending on how a plugin implements this, the resulting AuthSession can also be cast to a type specific
-     * to that plugin which contains the various security tokens as an escape hatch if you want to manually use
-     * them outside the plugin. Within Amplify this should not be needed as the other categories will automatically
-     * work as long as you are signed in.
+     * to that plugin which contains the various security tokens and other identifying information if you want to
+     * manually use them outside the plugin. Within Amplify this should not be needed as the other categories will
+     * automatically work as long as you are signed in.
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void fetchAuthState(
-            @NonNull Consumer<AuthState> onSuccess,
+    void fetchAuthSession(
+            @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError);
 }

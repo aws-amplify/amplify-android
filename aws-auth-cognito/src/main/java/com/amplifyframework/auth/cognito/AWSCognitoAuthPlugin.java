@@ -25,8 +25,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
-import com.amplifyframework.auth.AuthSignedInStatus;
-import com.amplifyframework.auth.AuthState;
+import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.AuthSignInState;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -42,13 +42,13 @@ import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.SignInResult;
-import com.amazonaws.mobile.client.results.SignInState;
 import com.amazonaws.mobile.client.results.SignUpResult;
 import com.amazonaws.mobile.client.results.Tokens;
 import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
 import org.json.JSONObject;
 
+import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -121,7 +121,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         details != null
                             ? new AuthCodeDeliveryDetails(
                                 details.getDestination(),
-                                AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
+                                AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
                                 details.getAttributeName()
                             )
                             : null
@@ -141,11 +141,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void confirmSignUp(
         @NonNull String username,
-        @NonNull String code,
+        @NonNull String confirmationCode,
         @NonNull final Consumer<AuthSignUpResult> onSuccess,
         @NonNull final Consumer<AuthException> onException
     ) {
-        AWSMobileClient.getInstance().confirmSignUp(username, code, new Callback<SignUpResult>() {
+        AWSMobileClient.getInstance().confirmSignUp(username, confirmationCode, new Callback<SignUpResult>() {
             @Override
             public void onResult(SignUpResult result) {
                 UserCodeDeliveryDetails details = result.getUserCodeDeliveryDetails();
@@ -155,7 +155,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     details != null
                         ? new AuthCodeDeliveryDetails(
                             details.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
                             details.getAttributeName()
                         )
                         : null
@@ -187,7 +187,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     details != null
                         ? new AuthCodeDeliveryDetails(
                             details.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
                             details.getAttributeName()
                         )
                         : null
@@ -218,25 +218,21 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
-                AuthSignedInStatus state;
+                AuthSignInState state;
                 UserCodeDeliveryDetails oldDetails = result.getCodeDetails();
                 // Take information from Cognito specific object and wrap it in the new Amplify object
                 AuthCodeDeliveryDetails newDetails =
                     oldDetails != null
                         ? new AuthCodeDeliveryDetails(
                             oldDetails.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(oldDetails.getDeliveryMedium()),
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(oldDetails.getDeliveryMedium()),
                             oldDetails.getAttributeName()
                         )
                         : null;
 
-                if (result.getSignInState().equals(SignInState.DONE)) {
-                    state = AuthSignedInStatus.SIGNED_IN;
-                } else {
-                    state = AuthSignedInStatus.SIGNED_OUT;
-                }
-
-                onSuccess.accept(new AuthSignInResult(state, newDetails));
+                onSuccess.accept(
+                        new AuthSignInResult(AuthSignInState.fromString(result.getSignInState().toString()), newDetails)
+                );
             }
 
             @Override
@@ -328,8 +324,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     //   - Cognito ID Token
     //   - Cognito Refresh Token
     @Override
-    public void fetchAuthState(
-            @NonNull Consumer<AuthState> onSuccess,
+    public void fetchAuthSession(
+            @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
         try {
@@ -343,13 +339,13 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
                         case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
                             onSuccess.accept(
-                                AWSCognitoAuthState.builder().signedInStatus(AuthSignedInStatus.SIGNED_OUT).build()
+                                AWSCognitoAuthSession.builder().isSignedIn(false).build()
                             );
                             break;
                         case SIGNED_IN:
                         case GUEST:
                             try {
-                                onSuccess.accept(buildCognitoAuthState(state));
+                                onSuccess.accept(buildCognitoAuthSession(state));
                             } catch (AuthException exception) {
                                 onError.accept(exception);
                             }
@@ -386,16 +382,12 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         return AWSMobileClient.getInstance();
     }
 
-    private AWSCognitoAuthState buildCognitoAuthState(UserState state) throws AuthException {
-        final AWSCognitoAuthState.Builder sessionBuilder;
-        final CountDownLatch latch = new CountDownLatch(2);
+    private AWSCognitoAuthSession buildCognitoAuthSession(UserState state) throws AuthException {
+        final AWSCognitoAuthSession.Builder sessionBuilder;
+        final CountDownLatch latch = new CountDownLatch(3);
 
-        sessionBuilder = AWSCognitoAuthState.builder()
-            .signedInStatus(
-                state.equals(UserState.SIGNED_IN)
-                    ? AuthSignedInStatus.SIGNED_IN
-                    : AuthSignedInStatus.GUEST
-            )
+        sessionBuilder = AWSCognitoAuthSession.builder()
+            .isSignedIn(state.equals(UserState.SIGNED_IN))
             .identityId(AWSMobileClient.getInstance().getIdentityId());
 
         AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
@@ -417,6 +409,19 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @Override
             public void onResult(AWSCredentials result) {
                 sessionBuilder.awsCredentials(result);
+                latch.countDown();
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                latch.countDown();
+            }
+        });
+
+        AWSMobileClient.getInstance().getUserAttributes(new Callback<Map<String, String>>() {
+            @Override
+            public void onResult(Map<String, String> result) {
+                sessionBuilder.userSub(result.get("sub"));
                 latch.countDown();
             }
 

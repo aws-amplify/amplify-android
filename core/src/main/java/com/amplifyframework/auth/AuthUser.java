@@ -75,13 +75,9 @@ public final class AuthUser {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthUser { ")
-                .append("userId: ")
-                .append(getUserId())
-                .append(", username: ")
-                .append(getUsername())
-                .append(" }")
-                .toString();
+        return "AuthUser{" +
+                "userId='" + userId + '\'' +
+                ", username='" + username + '\'' +
+                '}';
     }
 }

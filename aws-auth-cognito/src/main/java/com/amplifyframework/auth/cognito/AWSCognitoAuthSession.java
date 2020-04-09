@@ -19,30 +19,31 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.auth.AuthSignedInStatus;
-import com.amplifyframework.auth.AuthState;
+import com.amplifyframework.auth.AuthSession;
 
 import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.AWSCredentialsProvider;
 
-import java.util.Objects;
-
-public final class AWSCognitoAuthState extends AuthState {
+public final class AWSCognitoAuthSession extends AuthSession implements AWSCredentialsProvider {
     private final AWSCredentials awsCredentials;
+    private final String userSub;
     private final String identityId;
     private final String accessToken;
     private final String idToken;
     private final String refreshToken;
 
-    private AWSCognitoAuthState(
-            AuthSignedInStatus signedInStatus,
+    private AWSCognitoAuthSession(
+            boolean isSignedIn,
             AWSCredentials awsCredentials,
+            String userSub,
             String identityId,
             String accessToken,
             String idToken,
             String refreshToken
     ) {
-        super(signedInStatus);
+        super(isSignedIn);
         this.awsCredentials = awsCredentials;
+        this.userSub = userSub;
         this.identityId = identityId;
         this.accessToken = accessToken;
         this.idToken = idToken;
@@ -52,6 +53,11 @@ public final class AWSCognitoAuthState extends AuthState {
     @Nullable
     public AWSCredentials getAWSCredentials() {
         return awsCredentials;
+    }
+
+    @Nullable
+    public String getUserSub() {
+        return userSub;
     }
 
     @Nullable
@@ -82,7 +88,9 @@ public final class AWSCognitoAuthState extends AuthState {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
+            isSignedIn(),
             getAWSCredentials(),
+            getUserSub(),
             getIdentityId(),
             getAccessToken(),
             getIdToken(),
@@ -97,8 +105,10 @@ public final class AWSCognitoAuthState extends AuthState {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            AWSCognitoAuthState cognitoAuthState = (AWSCognitoAuthState) obj;
-            return ObjectsCompat.equals(getAWSCredentials(), cognitoAuthState.getAWSCredentials()) &&
+            AWSCognitoAuthSession cognitoAuthState = (AWSCognitoAuthSession) obj;
+            return ObjectsCompat.equals(isSignedIn(), cognitoAuthState.isSignedIn()) &&
+                    ObjectsCompat.equals(getAWSCredentials(), cognitoAuthState.getAWSCredentials()) &&
+                    ObjectsCompat.equals(getUserSub(), cognitoAuthState.getUserSub()) &&
                     ObjectsCompat.equals(getIdentityId(), cognitoAuthState.getIdentityId()) &&
                     ObjectsCompat.equals(getAccessToken(), cognitoAuthState.getAccessToken()) &&
                     ObjectsCompat.equals(getIdToken(), cognitoAuthState.getIdToken()) &&
@@ -108,39 +118,51 @@ public final class AWSCognitoAuthState extends AuthState {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AWSCognitoAuthState { ")
-                .append("awsCredentials: ")
-                .append(getAWSCredentials())
-                .append(", identityId: ")
-                .append(getIdentityId())
-                .append(", accessToken: ")
-                .append(getAccessToken())
-                .append(", idToken: ")
-                .append(getIdToken())
-                .append(", refreshToken: ")
-                .append(getRefreshToken())
-                .append(" }")
-                .toString();
+        return "AWSCognitoAuthSession{" +
+                "isSignedIn=" + isSignedIn() +
+                ", awsCredentials=" + awsCredentials +
+                ", userSub='" + userSub + '\'' +
+                ", identityId='" + identityId + '\'' +
+                ", accessToken='" + accessToken + '\'' +
+                ", idToken='" + idToken + '\'' +
+                ", refreshToken='" + refreshToken + '\'' +
+                '}';
+    }
+
+    @Override
+    public AWSCredentials getCredentials() {
+        return awsCredentials;
+    }
+
+    @Override
+    public void refresh() {
+        // NO-OP since this is a session snapshot
     }
 
     public static final class Builder {
-        private AuthSignedInStatus signedInStatus;
+        private boolean isSignedIn;
         private AWSCredentials awsCredentials;
+        private String userSub;
         private String identityId;
         private String accessToken;
         private String idToken;
         private String refreshToken;
 
         @NonNull
-        public Builder signedInStatus(@NonNull AuthSignedInStatus signedInStatus) {
-            this.signedInStatus = Objects.requireNonNull(signedInStatus);
+        public Builder isSignedIn(boolean isSignedIn) {
+            this.isSignedIn = isSignedIn;
             return this;
         }
 
         @NonNull
         public Builder awsCredentials(@Nullable AWSCredentials awsCredentials) {
             this.awsCredentials = awsCredentials;
+            return this;
+        }
+
+        @NonNull
+        public Builder userSub(@Nullable String userSub) {
+            this.userSub = userSub;
             return this;
         }
 
@@ -169,10 +191,11 @@ public final class AWSCognitoAuthState extends AuthState {
         }
 
         @NonNull
-        public AWSCognitoAuthState build() {
-            return new AWSCognitoAuthState(
-                    signedInStatus,
+        public AWSCognitoAuthSession build() {
+            return new AWSCognitoAuthSession(
+                    isSignedIn,
                     awsCredentials,
+                    userSub,
                     identityId,
                     accessToken,
                     idToken,

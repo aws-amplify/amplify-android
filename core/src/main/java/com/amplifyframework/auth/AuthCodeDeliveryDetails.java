@@ -93,16 +93,11 @@ public final class AuthCodeDeliveryDetails {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthCodeDeliveryDetails { ")
-                .append("destination: ")
-                .append(getDestination())
-                .append(", deliveryMedium: ")
-                .append(getDeliveryMedium())
-                .append(", attributeName: ")
-                .append(getAttributeName())
-                .append(" }")
-                .toString();
+        return "AuthCodeDeliveryDetails{" +
+                "destination='" + destination + '\'' +
+                ", deliveryMedium=" + deliveryMedium +
+                ", attributeName='" + attributeName + '\'' +
+                '}';
     }
 
     public enum DeliveryMedium {
@@ -110,6 +105,8 @@ public final class AuthCodeDeliveryDetails {
         EMAIL("email"),
         /** Code was sent via text message SMS. */
         SMS("sms"),
+        /** Code was sent via phone call. */
+        PHONE("phone"),
         /** Code was sent via some other method not listed here. */
         UNKNOWN("unknown");
 
@@ -125,7 +122,7 @@ public final class AuthCodeDeliveryDetails {
         }
 
         @NonNull
-        public static DeliveryMedium getEnum(String value) {
+        public static DeliveryMedium fromString(String value) {
             for (DeliveryMedium v : values()) {
                 if (v.getValue().equalsIgnoreCase(value)) {
                     return v;

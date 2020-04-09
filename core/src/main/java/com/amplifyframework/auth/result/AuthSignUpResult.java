@@ -72,13 +72,9 @@ public final class AuthSignUpResult {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthSignUpResult { ")
-                .append("userConfirmed: ")
-                .append(isUserConfirmed())
-                .append(", codeDeliveryDetails: ")
-                .append(getCodeDeliveryDetails())
-                .append(" }")
-                .toString();
+        return "AuthSignUpResult{" +
+                "userConfirmed=" + userConfirmed +
+                ", codeDeliveryDetails=" + codeDeliveryDetails +
+                '}';
     }
 }

@@ -87,14 +87,10 @@ public final class AuthSignUpOptions {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthSignUpOptions { ")
-                .append("validationData: ")
-                .append(getValidationData())
-                .append(", userAttributes: ")
-                .append(getUserAttributes())
-                .append(" }")
-                .toString();
+        return "AuthSignUpOptions{" +
+                "userAttributes=" + userAttributes +
+                ", validationData=" + validationData +
+                '}';
     }
 
     public static final class Builder {
