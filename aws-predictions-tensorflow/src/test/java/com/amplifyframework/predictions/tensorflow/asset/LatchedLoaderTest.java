@@ -47,7 +47,7 @@ public final class LatchedLoaderTest {
         List<Loadable<?, PredictionsException>> assets = new ArrayList<>();
         for (int i = 1; i <= count; i++) {
             final long loadDuration = i * UNIT_TIME_MS;
-            assets.add(new MockLoadable(loadDuration));
+            assets.add(new FakeLoadable(loadDuration));
         }
 
         // Create latched compound loader with mock loadable instances
@@ -77,7 +77,7 @@ public final class LatchedLoaderTest {
         // Create a loadable that takes 400ms to load
         final int loadDuration = 400;
         final int waitDuration = 100;
-        Loadable<String, PredictionsException> loadable = new MockLoadable(loadDuration);
+        Loadable<String, PredictionsException> loadable = new FakeLoadable(loadDuration);
         LatchedCompoundLoader loader = LatchedCompoundLoader.with(loadable);
 
         // Start a thread that sleeps for 100ms

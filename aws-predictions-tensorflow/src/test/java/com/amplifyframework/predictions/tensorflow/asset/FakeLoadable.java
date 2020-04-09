@@ -24,22 +24,22 @@ import com.amplifyframework.testutils.Sleep;
 import com.amplifyframework.testutils.random.RandomString;
 
 /**
- * Simple mock loadable class that completes load after
+ * Simple fake loadable class that completes load after
  * a pre-determined amount of time.
  */
-final class MockLoadable implements Loadable<String, PredictionsException> {
+final class FakeLoadable implements Loadable<String, PredictionsException> {
     private final long loadDuration;
 
     private Consumer<String> onLoaded;
     private boolean loaded;
 
     /**
-     * Constructs a new instance of {@link MockLoadable}
+     * Constructs a new instance of {@link FakeLoadable}
      * with the given load duration.
      * @param millis the amount of time that passes before
      *               load completes after being called
      */
-    MockLoadable(long millis) {
+    FakeLoadable(long millis) {
         this.loadDuration = millis;
     }
 
