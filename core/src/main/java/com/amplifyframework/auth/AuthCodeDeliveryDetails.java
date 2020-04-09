@@ -122,7 +122,7 @@ public final class AuthCodeDeliveryDetails {
         }
 
         @NonNull
-        public static DeliveryMedium getEnum(String value) {
+        public static DeliveryMedium fromString(String value) {
             for (DeliveryMedium v : values()) {
                 if (v.getValue().equalsIgnoreCase(value)) {
                     return v;

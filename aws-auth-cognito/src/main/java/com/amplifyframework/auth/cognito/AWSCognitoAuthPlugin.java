@@ -121,7 +121,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         details != null
                             ? new AuthCodeDeliveryDetails(
                                 details.getDestination(),
-                                AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
+                                AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
                                 details.getAttributeName()
                             )
                             : null
@@ -155,7 +155,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     details != null
                         ? new AuthCodeDeliveryDetails(
                             details.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
                             details.getAttributeName()
                         )
                         : null
@@ -187,7 +187,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     details != null
                         ? new AuthCodeDeliveryDetails(
                             details.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(details.getDeliveryMedium()),
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
                             details.getAttributeName()
                         )
                         : null
@@ -225,7 +225,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                     oldDetails != null
                         ? new AuthCodeDeliveryDetails(
                             oldDetails.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.getEnum(oldDetails.getDeliveryMedium()),
+                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(oldDetails.getDeliveryMedium()),
                             oldDetails.getAttributeName()
                         )
                         : null;
