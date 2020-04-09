@@ -17,7 +17,6 @@ package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
@@ -70,7 +69,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
         this.predictionsService = new AWSPredictionsService(configuration);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public AWSPredictionsEscapeHatch getEscapeHatch() {
         return new AWSPredictionsEscapeHatch(

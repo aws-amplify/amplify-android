@@ -34,7 +34,7 @@ public final class AWSComprehendRequest {
     }
 
     /**
-     * Gets the text to translate.
+     * Gets the text to interpret.
      * @return the input text
      */
     @NonNull
