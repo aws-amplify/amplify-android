@@ -31,15 +31,14 @@ import com.amplifyframework.storage.options.StorageDownloadFileOptions;
 import com.amplifyframework.storage.options.StorageUploadFileOptions;
 import com.amplifyframework.storage.s3.test.R;
 import com.amplifyframework.testutils.FileAssert;
-import com.amplifyframework.testutils.Sleep;
 import com.amplifyframework.testutils.random.RandomTempFile;
+import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousStorage;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -56,12 +55,7 @@ import static org.junit.Assert.assertTrue;
 /**
  * Instrumentation test for operational work on download.
  */
-@Ignore("This is causing the test process to hang, which fails the suite.")
 public final class AWSS3StorageDownloadTest {
-
-    // This is a temporary work-around to resolve a race-condition.
-    // TransferUtility crashes if a transfer is paused and instantly resumed.
-    private static final long SLEEP_DURATION_MS = 300;
     private static final long EXTENDED_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(20);
 
     private static final StorageAccessLevel TESTING_ACCESS_LEVEL = StorageAccessLevel.PUBLIC;
@@ -81,9 +75,19 @@ public final class AWSS3StorageDownloadTest {
     private StorageDownloadFileOptions options;
     private Set<SubscriptionToken> subscriptions;
 
+    /**
+     * Initialize mobile client and configure the storage.
+     * Upload the test files ahead of time.
+     * @throws Exception if mobile client initialization fails
+     */
     @BeforeClass
     public static void setUpOnce() throws Exception {
         Context context = getApplicationContext();
+
+        // Init auth stuff
+        SynchronousMobileClient.instance().initialize();
+
+        // Get a handle to storage
         storageCategory = TestStorageCategory.create(context, R.raw.amplifyconfiguration);
         synchronousStorage = SynchronousStorage.delegatingTo(storageCategory);
 
@@ -248,9 +252,6 @@ public final class AWSS3StorageDownloadTest {
                 if (TransferState.PAUSED.equals(state)) {
                     // So it doesn't pause on each progress report
                     Amplify.Hub.unsubscribe(pauseToken);
-                    // TODO: Resolve race condition and remove
-                    // Wait briefly for transfer to pause successfully
-                    Sleep.milliseconds(SLEEP_DURATION_MS);
                     opContainer.get().resume();
                     resumed.countDown();
                 }

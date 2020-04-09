@@ -21,6 +21,7 @@ import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.Entity;
+import com.amplifyframework.predictions.models.EntityType;
 import com.amplifyframework.predictions.models.KeyPhrase;
 import com.amplifyframework.predictions.models.Language;
 import com.amplifyframework.predictions.models.LanguageType;
@@ -31,6 +32,7 @@ import com.amplifyframework.predictions.models.Syntax;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 
@@ -38,11 +40,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 
 /**
@@ -101,8 +102,7 @@ public final class AWSPredictionsInterpretTest {
 
         // Assert detected language is English
         Language language = result.getLanguage();
-        assertNotNull(language);
-        assertEquals(LanguageType.ENGLISH, language.getValue());
+        FeatureAssert.assertMatches(LanguageType.ENGLISH, language);
     }
 
     /**
@@ -120,8 +120,7 @@ public final class AWSPredictionsInterpretTest {
 
         // Assert detected language is French
         Language language = result.getLanguage();
-        assertNotNull(language);
-        assertEquals(LanguageType.FRENCH, language.getValue());
+        FeatureAssert.assertMatches(LanguageType.FRENCH, language);
     }
 
     /**
@@ -139,8 +138,7 @@ public final class AWSPredictionsInterpretTest {
 
         // Assert detected sentiment is positive
         Sentiment sentiment = result.getSentiment();
-        assertNotNull(sentiment);
-        assertEquals(SentimentType.POSITIVE, sentiment.getValue());
+        FeatureAssert.assertMatches(SentimentType.POSITIVE, sentiment);
     }
 
     /**
@@ -158,8 +156,7 @@ public final class AWSPredictionsInterpretTest {
 
         // Assert detected sentiment is negative
         Sentiment sentiment = result.getSentiment();
-        assertNotNull(sentiment);
-        assertEquals(SentimentType.NEGATIVE, sentiment.getValue());
+        FeatureAssert.assertMatches(SentimentType.NEGATIVE, sentiment);
     }
 
     /**
@@ -168,17 +165,24 @@ public final class AWSPredictionsInterpretTest {
      */
     @Test
     public void testKeyPhraseDetection() throws Exception {
+        final String sampleText = "My mama always said life was like a box of chocolates.";
+
         // Interpret sample text and assert non-null result
         InterpretResult result = predictions.interpret(
-                Assets.readAsString("sample-text-en.txt"),
+                sampleText,
                 InterpretOptions.defaults()
         );
         assertNotNull(result);
 
-        // Assert detected key phrases are not empty
-        List<KeyPhrase> keyPhrases = result.getKeyPhrases();
-        assertNotNull(keyPhrases);
-        assertFalse(keyPhrases.isEmpty());
+        // Assert key phrase detection
+        List<KeyPhrase> actual = result.getKeyPhrases();
+        List<String> expected = Arrays.asList(
+                "My mama",
+                "life",
+                "a box",
+                "chocolates"
+        );
+        FeatureAssert.assertMatches(expected, actual);
     }
 
     /**
@@ -187,17 +191,22 @@ public final class AWSPredictionsInterpretTest {
      */
     @Test
     public void testEntityDetection() throws Exception {
+        final String sampleText = "Toto, I've a feeling we're not in Kansas anymore.";
+
         // Interpret sample text and assert non-null result
         InterpretResult result = predictions.interpret(
-                Assets.readAsString("sample-text-en.txt"),
+                sampleText,
                 InterpretOptions.defaults()
         );
         assertNotNull(result);
 
-        // Assert detected entities are not empty
-        List<Entity> entities = result.getEntities();
-        assertNotNull(entities);
-        assertFalse(entities.isEmpty());
+        // Assert entities detection
+        List<Entity> actual = result.getEntities();
+        List<EntityType> expected = Arrays.asList(
+                EntityType.PERSON,  // Toto (it's a dog, but close enough)
+                EntityType.LOCATION // Kansas
+        );
+        FeatureAssert.assertMatches(expected, actual);
     }
 
     /**
@@ -205,7 +214,6 @@ public final class AWSPredictionsInterpretTest {
      * @throws Exception if prediction fails
      */
     @Test
-    @SuppressWarnings("MagicNumber") // TODO: What's a better way to compare results?
     public void testSyntaxDetection() throws Exception {
         final String sampleText = "I am inevitable.";
 
@@ -217,14 +225,13 @@ public final class AWSPredictionsInterpretTest {
         assertNotNull(result);
 
         // Assert syntax detection
-        List<Syntax> syntax = result.getSyntax();
-        assertNotNull(syntax);
-        assertEquals(4, syntax.size());
-
-        // Assert that evaluation matches
-        assertEquals(SpeechType.PRONOUN, syntax.get(0).getValue());     // I
-        assertEquals(SpeechType.VERB, syntax.get(1).getValue());        // am
-        assertEquals(SpeechType.ADJECTIVE, syntax.get(2).getValue());   // inevitable
-        assertEquals(SpeechType.PUNCTUATION, syntax.get(3).getValue()); // .
+        List<Syntax> actual = result.getSyntax();
+        List<SpeechType> expected = Arrays.asList(
+                SpeechType.PRONOUN,     // I
+                SpeechType.VERB,        // am
+                SpeechType.ADJECTIVE,   // inevitable
+                SpeechType.PUNCTUATION  // .
+        );
+        FeatureAssert.assertMatches(expected, actual);
     }
 }
