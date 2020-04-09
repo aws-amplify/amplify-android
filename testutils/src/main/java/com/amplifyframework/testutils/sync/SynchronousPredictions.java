@@ -69,13 +69,13 @@ public final class SynchronousPredictions {
             @NonNull TranslateTextOptions options
     ) throws PredictionsException {
         return Await.<TranslateTextResult, PredictionsException>result(
-                PREDICTIONS_OPERATION_TIMEOUT_MS,
-                (onResult, onError) -> asyncDelegate.translateText(
-                        text,
-                        options,
-                        onResult,
-                        onError
-                )
+            PREDICTIONS_OPERATION_TIMEOUT_MS,
+            (onResult, onError) -> asyncDelegate.translateText(
+                    text,
+                    options,
+                    onResult,
+                    onError
+            )
         );
     }
 
@@ -97,15 +97,15 @@ public final class SynchronousPredictions {
             @NonNull TranslateTextOptions options
     ) throws PredictionsException {
         return Await.<TranslateTextResult, PredictionsException>result(
-                PREDICTIONS_OPERATION_TIMEOUT_MS,
-                (onResult, onError) -> asyncDelegate.translateText(
-                        text,
-                        fromLanguage,
-                        toLanguage,
-                        options,
-                        onResult,
-                        onError
-                )
+            PREDICTIONS_OPERATION_TIMEOUT_MS,
+            (onResult, onError) -> asyncDelegate.translateText(
+                    text,
+                    fromLanguage,
+                    toLanguage,
+                    options,
+                    onResult,
+                    onError
+            )
         );
     }
 
@@ -123,13 +123,13 @@ public final class SynchronousPredictions {
             @NonNull InterpretOptions options
     ) throws PredictionsException {
         return Await.<InterpretResult, PredictionsException>result(
-                PREDICTIONS_OPERATION_TIMEOUT_MS,
-                (onResult, onError) -> asyncDelegate.interpret(
-                        text,
-                        options,
-                        onResult,
-                        onError
-                )
+            PREDICTIONS_OPERATION_TIMEOUT_MS,
+            (onResult, onError) -> asyncDelegate.interpret(
+                    text,
+                    options,
+                    onResult,
+                    onError
+            )
         );
     }
 }
