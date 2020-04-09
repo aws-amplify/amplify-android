@@ -31,5 +31,6 @@
         are encouraged in test, to obviate the test language.
     -->
     <suppress checks="AvoidStaticImport" files="src/(androidTest|test)" />
+    <suppress checks="MagicNumber" files="src/(androidTest|test)" />
 </suppressions>
 

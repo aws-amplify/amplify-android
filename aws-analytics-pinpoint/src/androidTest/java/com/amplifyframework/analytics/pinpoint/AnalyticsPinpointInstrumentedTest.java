@@ -19,8 +19,9 @@ import android.app.Application;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsException;
-import com.amplifyframework.analytics.BasicAnalyticsEvent;
+import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
@@ -36,8 +37,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -63,6 +63,7 @@ public class AnalyticsPinpointInstrumentedTest {
 
     /**
      * Configure the Amplify framework.
+     *
      * @throws AmplifyException From Amplify configuration.
      */
     @BeforeClass
@@ -87,34 +88,52 @@ public class AnalyticsPinpointInstrumentedTest {
     /**
      * Record a basic analytics event and verify that it has been recorded using Analytics
      * pinpoint client.
-     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
+     *
+     * @throws JSONException Caused by unexpected event structure.
      */
     @Test
-    public void testRecordEvent() throws AnalyticsException {
-        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
-                PinpointProperties.builder()
-                .add("DemoProperty1", "DemoValue1")
-                .add("DemoDoubleProperty2", 2.0)
-                .build());
+    public void recordEventStoresPassedBasicAnalyticsEvent() throws JSONException {
+        // Arrange: Create an event
+        AnalyticsEvent event = AnalyticsEvent.builder()
+                .name("Amplify-event" + UUID.randomUUID().toString())
+                .addProperty("AnalyticsStringProperty", "Pancakes")
+                .addProperty("AnalyticsBooleanProperty", true)
+                .addProperty("AnalyticsDoubleProperty", 3.14)
+                .addProperty("AnalyticsIntegerProperty", 42)
+                .build();
 
+        // Act: Record the event
         Amplify.Analytics.recordEvent(event);
 
-        assertEquals(1, analyticsClient.getAllEvents().size());
+        // Assert: Verify the event was recorded and its attributes are present
+        List<JSONObject> events = analyticsClient.getAllEvents();
+        assertEquals(1, events.size());
+        JSONObject json = events.get(0);
+
+        JSONObject attributes = json.getJSONObject("attributes");
+        assertEquals("Pancakes", attributes.getString("AnalyticsStringProperty"));
+        // Booleans will be translated into Strings as Pinpoint doesn't support booleans.
+        assertEquals("true", attributes.getString("AnalyticsBooleanProperty"));
+
+        JSONObject metrics = json.getJSONObject("metrics");
+        assertEquals(3.14, metrics.getDouble("AnalyticsDoubleProperty"), 0);
+        assertEquals(42, metrics.getInt("AnalyticsIntegerProperty"));
     }
 
     /**
      * Record a basic analytics event and test that events are flushed from local database periodically.
+     *
      * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
      */
     @Test
     public void testAutoFlush() throws AnalyticsException {
-        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
-                PinpointProperties.builder()
-                        .add("DemoProperty1", "DemoValue1")
-                        .add("DemoDoubleProperty2", 2.0)
-                        .build());
+        AnalyticsEvent event1 = AnalyticsEvent.builder()
+                .name("Amplify-event" + UUID.randomUUID().toString())
+                .addProperty("DemoProperty1", "DemoValue1")
+                .addProperty("DemoDoubleProperty2", 2.0)
+                .build();
 
-        Amplify.Analytics.recordEvent(event);
+        Amplify.Analytics.recordEvent(event1);
 
         assertEquals(1, analyticsClient.getAllEvents().size());
 
@@ -125,11 +144,11 @@ public class AnalyticsPinpointInstrumentedTest {
 
         assertEquals(0, analyticsClient.getAllEvents().size());
 
-        BasicAnalyticsEvent event2 = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
-                PinpointProperties.builder()
-                        .add("DemoProperty1", "DemoValue1")
-                        .add("DemoProperty2", 2.0)
-                        .build());
+        AnalyticsEvent event2 = AnalyticsEvent.builder()
+                .name("Amplify-event" + UUID.randomUUID().toString())
+                .addProperty("DemoProperty1", "DemoValue1")
+                .addProperty("DemoProperty2", 2.0)
+                .build();
 
         Amplify.Analytics.recordEvent(event2);
 
@@ -145,55 +164,68 @@ public class AnalyticsPinpointInstrumentedTest {
 
     /**
      * Registers a global property and ensures that all recorded events have the global property.
-     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
+     *
      * @throws JSONException Caused by unexpected event structure.
      */
     @Test
-    public void testRegisterGlobalProperties() throws AnalyticsException, JSONException {
-        // Register a global property
-        registerGobalProperty();
+    public void registerGlobalPropertiesAddsGivenPropertiesToRecordedEvents() throws JSONException {
+        // Arrange: Register global properties and create an event
+        Amplify.Analytics.registerGlobalProperties(
+                AnalyticsProperties.builder()
+                        .add("GlobalProperty", "GlobalValue")
+                        .build()
+        );
+        AnalyticsEvent event = AnalyticsEvent.builder()
+                .name("Amplify-event" + UUID.randomUUID().toString())
+                .addProperty("LocalProperty", "LocalValue")
+                .build();
 
-        BasicAnalyticsEvent event = new BasicAnalyticsEvent("Amplify-event" + UUID.randomUUID().toString(),
-                PinpointProperties.builder()
-                        .add("Property", "PropertyValue")
-                        .build());
+        // Act: Record two events: the one created above and another just with a key
         Amplify.Analytics.recordEvent(event);
         Amplify.Analytics.recordEvent("amplify-test-event");
 
-        JSONObject eventAttributes =
-                new JSONObject(analyticsClient.getAllEvents().get(0).get("attributes").toString());
-        JSONObject event2Attributes =
-                new JSONObject(analyticsClient.getAllEvents().get(1).get("attributes").toString());
+        // Assert: Verify two event were recorded and global attributes are present on both
+        List<JSONObject> events = analyticsClient.getAllEvents();
+        assertEquals(2, events.size());
+        JSONObject event1Attributes = events.get(0).getJSONObject("attributes");
+        JSONObject event2Attributes = events.get(1).getJSONObject("attributes");
 
-        assertEquals(2, analyticsClient.getAllEvents().size());
-        assertTrue(eventAttributes.has("Property"));
-        assertTrue(eventAttributes.has("GlobalProperty"));
-        assertFalse(event2Attributes.has("Property"));
-        assertTrue(event2Attributes.has("GlobalProperty"));
+        // Global properties are attached to all events
+        assertEquals("GlobalValue", event1Attributes.getString("GlobalProperty"));
+        assertEquals("GlobalValue", event2Attributes.getString("GlobalProperty"));
+
+        // Local properties are only attached is passed explicitly as in event
+        assertEquals("LocalValue", event1Attributes.getString("LocalProperty"));
+        assertFalse(event2Attributes.has("LocalProperty"));
     }
 
     /**
      * Registers a global property and then Unregisters the global property
      * and ensures that it is respected in events recorded thereafter.
-     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
+     *
+     * @throws JSONException Caused by unexpected event structure.
      */
     @Test
-    public void testUnregisterGlobalProperties() throws AnalyticsException {
-        // Register a global property
-        registerGobalProperty();
+    public void unregisterGlobalPropertiesRemovesGivenProperties() throws JSONException {
+        // Arrange: Register a global property
+        Amplify.Analytics.registerGlobalProperties(
+                AnalyticsProperties.builder()
+                        .add("GlobalProperty", "globalVal")
+                        .build()
+        );
 
-        // Unregister global property
-        Set<String> globalPropertyKeys = new HashSet<>();
-        globalPropertyKeys.add("GlobalProperty");
-        Amplify.Analytics.unregisterGlobalProperties(globalPropertyKeys);
-
+        // Act: Record an event, unregister the global property, and record another event
+        Amplify.Analytics.recordEvent("amplify-test-event-with-property");
+        Amplify.Analytics.unregisterGlobalProperties("GlobalProperty");
         Amplify.Analytics.recordEvent("amplify-test-event-without-property");
 
-        assertEquals(1, analyticsClient.getAllEvents().size());
-        assertFalse(analyticsClient.getAllEvents().get(0).has("attributes"));
+        // Assert: Ensure there are two events, the first has attributes, and the second doesn't
+        List<JSONObject> events = analyticsClient.getAllEvents();
+        assertEquals(2, events.size());
+        assertTrue(analyticsClient.getAllEvents().get(0).has("attributes"));
+        assertFalse(analyticsClient.getAllEvents().get(1).has("attributes"));
     }
 
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void testIdentifyUser() {
         UserProfile.Location location = UserProfile.Location.builder()
@@ -204,7 +236,7 @@ public class AnalyticsPinpointInstrumentedTest {
                 .region("WA")
                 .country("USA")
                 .build();
-        PinpointProperties pinpointProperties = PinpointProperties.builder()
+        AnalyticsProperties properties = AnalyticsProperties.builder()
                 .add("TestStringProperty", "TestStringValue")
                 .add("TestDoubleProperty", 1.0)
                 .build();
@@ -213,7 +245,7 @@ public class AnalyticsPinpointInstrumentedTest {
                 .email("user@test.com")
                 .plan("test-plan")
                 .location(location)
-                .customProperties(pinpointProperties)
+                .customProperties(properties)
                 .build();
 
         Amplify.Analytics.identifyUser("userId", userProfile);
@@ -231,13 +263,6 @@ public class AnalyticsPinpointInstrumentedTest {
         assertEquals("USA", endpointProfileLocation.getCountry());
         assertEquals("TestStringValue", endpointProfile.getAttribute("TestStringProperty").get(0));
         assertEquals((Double) 1.0, endpointProfile.getMetric("TestDoubleProperty"));
-    }
-
-    private void registerGobalProperty() throws AnalyticsException {
-        // Register a global property
-        Amplify.Analytics.registerGlobalProperties(PinpointProperties.builder()
-                .add("GlobalProperty", "globalVal")
-                .build());
     }
 
     private void waitForAutoFlush(AnalyticsClient analyticsClient) {

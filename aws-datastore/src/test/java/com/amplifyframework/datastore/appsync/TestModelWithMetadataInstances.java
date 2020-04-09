@@ -27,7 +27,7 @@ import java.util.Set;
 /**
  * A bucket for some test data that is cumbersome/verbose to write out.
  */
-@SuppressWarnings({"checkstyle:MagicNumber", "checkstyle:JavadocVariable"})
+@SuppressWarnings("checkstyle:JavadocVariable")
 public final class TestModelWithMetadataInstances {
     public static final ModelWithMetadata<BlogOwner> BLOGGER_JAMESON =
         new ModelWithMetadata<>(

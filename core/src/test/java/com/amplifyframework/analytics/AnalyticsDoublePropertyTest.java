@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -15,11 +15,18 @@
 
 package com.amplifyframework.analytics;
 
-import com.amplifyframework.core.async.Result;
+import org.junit.Test;
 
-/**
- * Result object returned when the analytics events are
- * successfully submitted.
- */
-public class AnalyticsResult implements Result {
+import static org.junit.Assert.assertEquals;
+
+public class AnalyticsDoublePropertyTest {
+
+    @Test
+    public void fromReturnsDoublePropertyWithPassedValue() {
+        // Arrange: Create the property
+        AnalyticsDoubleProperty property = AnalyticsDoubleProperty.from(8675.309);
+
+        // Assert: Check that the wrapped value is what was passed in the static factory method
+        assertEquals(new Double(8675.309), property.getValue());
+    }
 }

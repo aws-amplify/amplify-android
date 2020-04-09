@@ -23,7 +23,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests operator evaluation.
  */
-@SuppressWarnings("MagicNumber")
 public final class OperatorTest {
 
     /**

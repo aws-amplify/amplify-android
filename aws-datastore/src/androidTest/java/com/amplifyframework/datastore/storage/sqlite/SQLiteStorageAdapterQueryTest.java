@@ -134,7 +134,6 @@ public final class SQLiteStorageAdapterQueryTest {
      * predicate conditions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
-    @SuppressWarnings("checkstyle:MagicNumber") // For predicates, arbitrarily decide some business rules
     @Test
     public void querySavedDataWithNumericalPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();
@@ -171,7 +170,6 @@ public final class SQLiteStorageAdapterQueryTest {
      * predicate conditions.
      * @throws DataStoreException On unexpected failure manipulating items in/out of DataStore
      */
-    @SuppressWarnings("checkstyle:MagicNumber") // For predicates, arbitrarily decide some business rules
     @Test
     public void querySavedDataWithStringPredicates() throws DataStoreException {
         final List<Post> savedModels = new ArrayList<>();

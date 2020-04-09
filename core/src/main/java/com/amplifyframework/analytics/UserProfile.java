@@ -29,7 +29,7 @@ public final class UserProfile {
     private final String email;
     private final String plan;
     private final Location location;
-    private final Properties customProperties;
+    private final AnalyticsProperties customProperties;
 
     private UserProfile(@NonNull Builder builder) {
         this.name = builder.name;
@@ -60,7 +60,7 @@ public final class UserProfile {
     }
 
     @Nullable
-    public Properties getCustomProperties() {
+    public AnalyticsProperties getCustomProperties() {
         return customProperties;
     }
 
@@ -122,7 +122,7 @@ public final class UserProfile {
         private String email;
         private String plan;
         private Location location;
-        private Properties customProperties;
+        private AnalyticsProperties customProperties;
 
         @NonNull
         public Builder name(@NonNull final String name) {
@@ -153,7 +153,7 @@ public final class UserProfile {
         }
 
         @NonNull
-        public Builder customProperties(@NonNull final Properties properties) {
+        public Builder customProperties(@NonNull final AnalyticsProperties properties) {
             Objects.requireNonNull(properties);
             this.customProperties = properties;
             return this;

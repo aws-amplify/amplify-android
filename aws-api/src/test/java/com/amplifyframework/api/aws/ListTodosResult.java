@@ -115,7 +115,6 @@ final class ListTodosResult {
             return ObjectsCompat.equals(description, todo.description);
         }
 
-        @SuppressWarnings("checkstyle:MagicNumber")
         @Override
         public int hashCode() {
             int result = id != null ? id.hashCode() : 0;
