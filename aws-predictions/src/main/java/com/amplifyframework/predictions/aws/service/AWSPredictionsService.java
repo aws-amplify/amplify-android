@@ -16,7 +16,6 @@
 package com.amplifyframework.predictions.aws.service;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
@@ -72,8 +71,8 @@ public final class AWSPredictionsService {
      */
     public void translate(
             @NonNull String text,
-            @Nullable LanguageType sourceLanguage,
-            @Nullable LanguageType targetLanguage,
+            @NonNull LanguageType sourceLanguage,
+            @NonNull LanguageType targetLanguage,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {

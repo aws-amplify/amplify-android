@@ -16,7 +16,6 @@
 package com.amplifyframework.predictions.aws.request;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.predictions.models.LanguageType;
 
@@ -31,15 +30,6 @@ public final class AWSTranslateRequest {
     private final LanguageType targetLanguage;
 
     /**
-     * Constructs an instance of {@link AWSTranslateRequest}
-     * without specifying source and target language overrides.
-     * @param text the text to translate
-     */
-    public AWSTranslateRequest(@NonNull String text) {
-        this(text, null, null);
-    }
-
-    /**
      * Constructs an instance of {@link AWSTranslateRequest}.
      * @param text the text to translate
      * @param sourceLanguage the language to translate from
@@ -47,12 +37,12 @@ public final class AWSTranslateRequest {
      */
     public AWSTranslateRequest(
             @NonNull String text,
-            @Nullable LanguageType sourceLanguage,
-            @Nullable LanguageType targetLanguage
+            @NonNull LanguageType sourceLanguage,
+            @NonNull LanguageType targetLanguage
     ) {
         this.text = Objects.requireNonNull(text);
-        this.sourceLanguage = sourceLanguage;
-        this.targetLanguage = targetLanguage;
+        this.sourceLanguage = Objects.requireNonNull(sourceLanguage);
+        this.targetLanguage = Objects.requireNonNull(targetLanguage);
     }
 
     /**
@@ -69,7 +59,7 @@ public final class AWSTranslateRequest {
      * Null if relying on the configuration default.
      * @return the source language
      */
-    @Nullable
+    @NonNull
     public LanguageType getSourceLanguage() {
         return sourceLanguage;
     }

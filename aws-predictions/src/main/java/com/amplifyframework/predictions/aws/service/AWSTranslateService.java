@@ -16,7 +16,6 @@
 package com.amplifyframework.predictions.aws.service;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
@@ -53,8 +52,8 @@ public final class AWSTranslateService {
 
     void translate(
             @NonNull String text,
-            @Nullable LanguageType sourceLanguage,
-            @Nullable LanguageType targetLanguage,
+            @NonNull LanguageType sourceLanguage,
+            @NonNull LanguageType targetLanguage,
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -71,9 +70,9 @@ public final class AWSTranslateService {
             LanguageType targetLanguage
     ) throws PredictionsException {
         // Throw if default language is not configured
-        LanguageType source = sourceLanguage != null ? sourceLanguage
+        LanguageType source = !LanguageType.UNKNOWN.equals(sourceLanguage) ? sourceLanguage
                 : pluginConfiguration.getTranslateTextConfiguration().getSourceLanguage();
-        LanguageType target = targetLanguage != null ? targetLanguage
+        LanguageType target = !LanguageType.UNKNOWN.equals(targetLanguage) ? targetLanguage
                 : pluginConfiguration.getTranslateTextConfiguration().getTargetLanguage();
 
         TranslateTextRequest request = new TranslateTextRequest()

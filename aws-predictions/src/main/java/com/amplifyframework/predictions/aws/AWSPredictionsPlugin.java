@@ -85,8 +85,8 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final TranslateTextOptions options = TranslateTextOptions.defaults();
-        return translateText(text, options, onSuccess, onError);
+        return translateText(text, TranslateTextOptions.defaults(),
+                onSuccess, onError);
     }
 
     @NonNull
@@ -97,20 +97,8 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        // Create translate request for AWS Translate
-        AWSTranslateRequest request = new AWSTranslateRequest(text);
-
-        AWSTranslateTextOperation operation = new AWSTranslateTextOperation(
-                predictionsService,
-                executorService,
-                request,
-                onSuccess,
-                onError
-        );
-
-        // Start operation and return
-        operation.start();
-        return operation;
+        return translateText(text, LanguageType.UNKNOWN,
+                LanguageType.UNKNOWN, options, onSuccess, onError);
     }
 
     @NonNull
@@ -122,8 +110,8 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final TranslateTextOptions options = TranslateTextOptions.defaults();
-        return translateText(text, fromLanguage, toLanguage, options, onSuccess, onError);
+        return translateText(text, fromLanguage, toLanguage,
+                TranslateTextOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
@@ -159,8 +147,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final InterpretOptions options = InterpretOptions.defaults();
-        return interpret(text, options, onSuccess, onError);
+        return interpret(text, InterpretOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
