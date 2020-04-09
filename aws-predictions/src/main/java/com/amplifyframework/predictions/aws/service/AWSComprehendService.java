@@ -20,10 +20,11 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.aws.adapter.EntityTypeAdapter;
 import com.amplifyframework.predictions.aws.adapter.SentimentTypeAdapter;
 import com.amplifyframework.predictions.aws.adapter.SpeechTypeAdapter;
-import com.amplifyframework.predictions.aws.configuration.AWSInterpretConfiguration;
+import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
 import com.amplifyframework.predictions.models.Entity;
 import com.amplifyframework.predictions.models.EntityType;
 import com.amplifyframework.predictions.models.KeyPhrase;
@@ -66,11 +67,11 @@ final class AWSComprehendService {
     private static final int PERCENT = 100;
 
     private final AmazonComprehendClient comprehend;
-    private final AWSInterpretConfiguration configuration;
+    private final AWSPredictionsPluginConfiguration pluginConfiguration;
 
-    AWSComprehendService(@Nullable AWSInterpretConfiguration configuration) {
+    AWSComprehendService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration) {
         this.comprehend = createComprehendClient();
-        this.configuration = configuration;
+        this.pluginConfiguration = pluginConfiguration;
     }
 
     private AmazonComprehendClient createComprehendClient() {
@@ -111,6 +112,7 @@ final class AWSComprehendService {
     private Language fetchPredominantLanguage(String text) throws PredictionsException {
         // Language is a required field for other detections.
         // Always fetch language regardless of what configuration says.
+        isResourceConfigured(InterpretTextConfiguration.InterpretType.LANGUAGE);
 
         DetectDominantLanguageRequest request = new DetectDominantLanguageRequest()
                 .withText(text);
@@ -156,8 +158,7 @@ final class AWSComprehendService {
 
     private Sentiment fetchSentiment(String text, LanguageType language) throws PredictionsException {
         // Skip if configuration specifies NOT sentiment
-        if (!AWSInterpretConfiguration.InterpretType.ALL.equals(configuration.getType())
-                && !AWSInterpretConfiguration.InterpretType.SENTIMENT.equals(configuration.getType())) {
+        if (!isResourceConfigured(InterpretTextConfiguration.InterpretType.SENTIMENT)) {
             return null;
         }
 
@@ -207,8 +208,7 @@ final class AWSComprehendService {
 
     private List<KeyPhrase> fetchKeyPhrases(String text, LanguageType language) throws PredictionsException {
         // Skip if configuration specifies NOT key phrase
-        if (!AWSInterpretConfiguration.InterpretType.ALL.equals(configuration.getType())
-                && !AWSInterpretConfiguration.InterpretType.KEY_PHRASES.equals(configuration.getType())) {
+        if (!isResourceConfigured(InterpretTextConfiguration.InterpretType.KEY_PHRASES)) {
             return null;
         }
 
@@ -248,8 +248,7 @@ final class AWSComprehendService {
 
     private List<Entity> fetchEntities(String text, LanguageType language) throws PredictionsException {
         // Skip if configuration specifies NOT entities
-        if (!AWSInterpretConfiguration.InterpretType.ALL.equals(configuration.getType())
-                && !AWSInterpretConfiguration.InterpretType.ENTITIES.equals(configuration.getType())) {
+        if (!isResourceConfigured(InterpretTextConfiguration.InterpretType.ENTITIES)) {
             return null;
         }
 
@@ -290,8 +289,7 @@ final class AWSComprehendService {
 
     private List<Syntax> fetchSyntax(String text, LanguageType language) throws PredictionsException {
         // Skip if configuration specifies NOT syntax
-        if (!AWSInterpretConfiguration.InterpretType.ALL.equals(configuration.getType())
-                && !AWSInterpretConfiguration.InterpretType.SYNTAX.equals(configuration.getType())) {
+        if (!isResourceConfigured(InterpretTextConfiguration.InterpretType.SYNTAX)) {
             return null;
         }
 
@@ -330,6 +328,20 @@ final class AWSComprehendService {
         }
 
         return syntaxTokens;
+    }
+
+    private boolean isResourceConfigured(InterpretTextConfiguration.InterpretType type) throws PredictionsException {
+        // Check if text interpretation is configured
+        InterpretTextConfiguration.InterpretType configuredType =
+                pluginConfiguration.getInterpretTextConfiguration().getType();
+
+        if (InterpretTextConfiguration.InterpretType.ALL.equals(configuredType)) {
+            // ALL catches every type
+            return true;
+        } else {
+            // Otherwise check to see if they are equal
+            return configuredType.equals(type);
+        }
     }
 
     @NonNull

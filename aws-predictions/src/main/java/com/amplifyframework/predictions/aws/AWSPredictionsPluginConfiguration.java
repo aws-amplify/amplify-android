@@ -16,11 +16,14 @@
 package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.aws.configuration.AWSInterpretConfiguration;
+import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
 
 import com.amazonaws.regions.Region;
+import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -32,15 +35,18 @@ import org.json.JSONObject;
 public final class AWSPredictionsPluginConfiguration {
     private final Region defaultRegion;
     private final NetworkPolicy defaultNetworkPolicy;
-    private final AWSInterpretConfiguration interpretConfiguration;
+    private final TranslateTextConfiguration translateTextConfiguration;
+    private final InterpretTextConfiguration interpretTextConfiguration;
 
     private AWSPredictionsPluginConfiguration(
             Region defaultRegion,
-            AWSInterpretConfiguration interpretConfiguration
+            TranslateTextConfiguration translateTextConfiguration,
+            InterpretTextConfiguration interpretTextConfiguration
     ) {
         this.defaultRegion = defaultRegion;
         this.defaultNetworkPolicy = NetworkPolicy.AUTO;
-        this.interpretConfiguration = interpretConfiguration;
+        this.translateTextConfiguration = translateTextConfiguration;
+        this.interpretTextConfiguration = interpretTextConfiguration;
     }
 
     /**
@@ -51,28 +57,38 @@ public final class AWSPredictionsPluginConfiguration {
      * @throws PredictionsException if configuration is missing or malformed
      */
     @NonNull
-    public static AWSPredictionsPluginConfiguration fromJson(JSONObject configurationJson) throws PredictionsException {
+    static AWSPredictionsPluginConfiguration fromJson(JSONObject configurationJson) throws PredictionsException {
         if (configurationJson == null) {
             throw new PredictionsException(
-                    "Could not locate predictions configuration for AWS Predictions Plugin.",
-                    "Verify that amplifyconfiguration.json contains a section for \"awsPredictionsPlugin\"."
+                "Could not locate predictions configuration for AWS Predictions Plugin.",
+                "Verify that amplifyconfiguration.json contains a section for \"awsPredictionsPlugin\"."
             );
         }
 
         final Region defaultRegion;
-        final AWSInterpretConfiguration interpretConfiguration;
+        final InterpretTextConfiguration interpretConfiguration;
+        final TranslateTextConfiguration translateTextConfiguration;
+
+        // Required sections
         try {
             // Get default region
-            String regionString = configurationJson.getString("defaultRegion");
+            String regionString = configurationJson.getString(ConfigKey.DEFAULT_REGION.key());
             defaultRegion = Region.getRegion(regionString);
 
-            // Get interpret configuration
-            interpretConfiguration = AWSInterpretConfiguration.fromJson(configurationJson);
+            if (configurationJson.has(ConfigKey.CONVERT.key())) {
+                JSONObject convertJson = configurationJson.getJSONObject(ConfigKey.CONVERT.key());
+                translateTextConfiguration = TranslateTextConfiguration.fromJson(convertJson);
+            } else {
+                translateTextConfiguration = null;
+            }
 
-            return new AWSPredictionsPluginConfiguration(
-                    defaultRegion,
-                    interpretConfiguration
-            );
+            if (configurationJson.has(ConfigKey.INTERPRET.key())) {
+                JSONObject interpretJson = configurationJson.getJSONObject(ConfigKey.INTERPRET.key());
+                interpretConfiguration = InterpretTextConfiguration.fromJson(interpretJson);
+            } else {
+                interpretConfiguration = null;
+            }
+
         } catch (JSONException | IllegalArgumentException exception) {
             throw new PredictionsException(
                     "Issue encountered while parsing configuration JSON",
@@ -80,6 +96,12 @@ public final class AWSPredictionsPluginConfiguration {
                     "Check the attached exception for more details."
             );
         }
+
+        return new AWSPredictionsPluginConfiguration(
+                defaultRegion,
+                translateTextConfiguration,
+                interpretConfiguration
+        );
     }
 
     /**
@@ -101,12 +123,54 @@ public final class AWSPredictionsPluginConfiguration {
     }
 
     /**
+     * Gets the configuration for text translation.
+     * Null if not configured.
+     * @return the configuration for text translation
+     */
+    @NonNull
+    public TranslateTextConfiguration getTranslateTextConfiguration() throws PredictionsException {
+        if (translateTextConfiguration == null) {
+            throw new PredictionsException(
+                    "Text translation is not configured.",
+                    "Verify that translateText is configured under " + ConfigKey.CONVERT.key()
+            );
+        }
+        return translateTextConfiguration;
+    }
+
+    /**
      * Gets the configuration for text interpretation.
      * Null if not configured.
      * @return the configuration for text interpretation
      */
     @NonNull
-    public AWSInterpretConfiguration getInterpretConfiguration() {
-        return interpretConfiguration;
+    public InterpretTextConfiguration getInterpretTextConfiguration() throws PredictionsException {
+        if (interpretTextConfiguration == null) {
+            throw new PredictionsException(
+                    "Text interpretation is not configured.",
+                    "Verify that interpretText is configured under " + ConfigKey.INTERPRET.key()
+            );
+        }
+        return interpretTextConfiguration;
+    }
+
+    /**
+     * An enumeration of the various keys that we expect to see in
+     * AWS Predictions configuration json.
+     */
+    enum ConfigKey {
+        DEFAULT_REGION("defaultRegion"),
+        CONVERT("convert"),
+        INTERPRET("interpret");
+
+        private final String key;
+
+        ConfigKey(String key) {
+            this.key = key;
+        }
+
+        String key() {
+            return key;
+        }
     }
 }

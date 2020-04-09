@@ -13,32 +13,24 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.aws.request;
+package com.amplifyframework.predictions.options;
 
-import androidx.annotation.NonNull;
-
-import java.util.Objects;
+import com.amplifyframework.core.async.Options;
 
 /**
- * Simple request instance for text interpretation operation.
+ * Options for text language translation operation.
  */
-public final class AWSComprehendRequest {
-    private final String text;
+public final class TranslateTextOptions implements Options {
 
-    /**
-     * Constructs an instance of {@link AWSComprehendRequest}.
-     * @param text the text to interpret
-     */
-    public AWSComprehendRequest(@NonNull String text) {
-        this.text = Objects.requireNonNull(text);
+    private TranslateTextOptions() {
+        // TODO: Add options
     }
 
     /**
-     * Gets the text to translate.
-     * @return the input text
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
      */
-    @NonNull
-    public String getText() {
-        return text;
+    public static TranslateTextOptions defaults() {
+        return new TranslateTextOptions();
     }
 }

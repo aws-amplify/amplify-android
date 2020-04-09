@@ -1,0 +1,11 @@
+{
+  "defaultRegion": "us-west-1",
+  "convert": {
+    "translateText": {
+      "targetLang": "ko",
+      "sourceLang": "en",
+      "region": "us-west-2",
+      "defaultNetworkPolicy": "auto"
+    }
+  }
+}

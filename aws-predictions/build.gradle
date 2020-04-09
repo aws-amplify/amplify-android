@@ -22,6 +22,7 @@ dependencies {
     implementation dependency.androidx.appcompat
     implementation dependency.aws.comprehend
     implementation dependency.aws.mobileclient
+    implementation dependency.aws.translate
 
     testImplementation project(path: ':testutils')
     testImplementation dependency.junit

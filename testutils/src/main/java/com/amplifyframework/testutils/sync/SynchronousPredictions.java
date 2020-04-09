@@ -20,8 +20,11 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsCategoryBehavior;
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.testutils.Await;
 
 import java.util.concurrent.TimeUnit;
@@ -53,12 +56,66 @@ public final class SynchronousPredictions {
     }
 
     /**
+     * Translate given text synchronously and return the result of operation.
+     * @param text the input text to translate
+     * @param options interpret options
+     * @return the result of interpretation containing translated text and
+     *          the language of the translated text
+     * @throws PredictionsException if translation fails or times out
+     */
+    @NonNull
+    public TranslateTextResult translateText(
+            @NonNull String text,
+            @NonNull TranslateTextOptions options
+    ) throws PredictionsException {
+        return Await.<TranslateTextResult, PredictionsException>result(
+                PREDICTIONS_OPERATION_TIMEOUT_MS,
+                (onResult, onError) -> asyncDelegate.translateText(
+                        text,
+                        options,
+                        onResult,
+                        onError
+                )
+        );
+    }
+
+    /**
+     * Translate given text synchronously and return the result of operation.
+     * @param text the input text to translate
+     * @param fromLanguage the language to translate from
+     * @param toLanguage the language to translate to
+     * @param options interpret options
+     * @return the result of interpretation containing translated text and
+     *          the language of the translated text
+     * @throws PredictionsException if translation fails or times out
+     */
+    @NonNull
+    public TranslateTextResult translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull TranslateTextOptions options
+    ) throws PredictionsException {
+        return Await.<TranslateTextResult, PredictionsException>result(
+                PREDICTIONS_OPERATION_TIMEOUT_MS,
+                (onResult, onError) -> asyncDelegate.translateText(
+                        text,
+                        fromLanguage,
+                        toLanguage,
+                        options,
+                        onResult,
+                        onError
+                )
+        );
+    }
+
+    /**
      * Interpret given text synchronously and return the result of operation.
      * @param text the input text to analyze
      * @param options interpret options
      * @return the result of interpretation containing detected language,
      *          sentiment, key phrases, entities, syntax, and other features
-     * @throws PredictionsException if interpret fail or times out
+     * @throws PredictionsException if interpret fails or times out
      */
     @NonNull
     public InterpretResult interpret(
@@ -66,13 +123,13 @@ public final class SynchronousPredictions {
             @NonNull InterpretOptions options
     ) throws PredictionsException {
         return Await.<InterpretResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
-            (onResult, onError) -> asyncDelegate.interpret(
-                    text,
-                    options,
-                    onResult,
-                    onError
-            )
+                PREDICTIONS_OPERATION_TIMEOUT_MS,
+                (onResult, onError) -> asyncDelegate.interpret(
+                        text,
+                        options,
+                        onResult,
+                        onError
+                )
         );
     }
 }

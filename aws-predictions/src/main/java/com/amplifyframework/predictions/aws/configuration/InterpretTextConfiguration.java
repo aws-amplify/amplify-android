@@ -16,9 +16,8 @@
 package com.amplifyframework.predictions.aws.configuration;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.predictions.aws.NetworkPolicy;
 
 import org.json.JSONException;
@@ -27,16 +26,11 @@ import org.json.JSONObject;
 /**
  * Configures the behavior for text interpretation.
  */
-public final class AWSInterpretConfiguration {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-predictions");
-
-    private static final InterpretType DEFAULT_INTERPRET_TYPE = InterpretType.ALL;
-    private static final NetworkPolicy DEFAULT_NETWORK_POLICY = NetworkPolicy.AUTO;
-
+public final class InterpretTextConfiguration {
     private final InterpretType type;
     private final NetworkPolicy networkPolicy;
 
-    private AWSInterpretConfiguration(
+    private InterpretTextConfiguration(
             InterpretType type,
             NetworkPolicy networkPolicy
     ) {
@@ -45,32 +39,26 @@ public final class AWSInterpretConfiguration {
     }
 
     /**
-     * Construct an instance of {@link AWSInterpretConfiguration} from
+     * Construct an instance of {@link InterpretTextConfiguration} from
      * plugin configuration JSON object.
      * @param configurationJson the plugin configuration
-     * @return the interpret configuration
+     * @return the configuration for text interpretation
      * @throws JSONException if interpret configuration is malformed
      */
-    @NonNull
-    public static AWSInterpretConfiguration fromJson(@NonNull JSONObject configurationJson) throws JSONException {
-        // Use default values if the section is missing
-        if (!configurationJson.has("interpret")) {
-            LOG.info("Interpret configuration not found. Using defaults...");
-            return new AWSInterpretConfiguration(
-                    DEFAULT_INTERPRET_TYPE,
-                    DEFAULT_NETWORK_POLICY
-            );
+    @Nullable
+    public static InterpretTextConfiguration fromJson(@NonNull JSONObject configurationJson) throws JSONException {
+        if (!configurationJson.has("interpretText")) {
+            return null;
         }
 
-        JSONObject interpretJson = configurationJson.getJSONObject("interpret");
-        JSONObject interpretTextJson = interpretJson.getJSONObject("interpretText");
+        JSONObject interpretTextJson = configurationJson.getJSONObject("interpretText");
         String typeString = interpretTextJson.getString("type");
         String networkPolicyString = interpretTextJson.getString("defaultNetworkPolicy");
 
         final InterpretType type = InterpretType.valueOf(typeString);
         final NetworkPolicy networkPolicy = NetworkPolicy.fromKey(networkPolicyString);
 
-        return new AWSInterpretConfiguration(type, networkPolicy);
+        return new InterpretTextConfiguration(type, networkPolicy);
     }
 
     /**
