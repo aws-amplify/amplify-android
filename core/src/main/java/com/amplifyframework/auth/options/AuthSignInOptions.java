@@ -65,12 +65,9 @@ public final class AuthSignInOptions {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthSignInOptions { ")
-                .append("validationData: ")
-                .append(getValidationData())
-                .append(" }")
-                .toString();
+        return "AuthSignInOptions{" +
+                "validationData=" + validationData +
+                '}';
     }
 
     @NonNull

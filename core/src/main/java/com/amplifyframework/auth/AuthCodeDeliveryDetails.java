@@ -93,16 +93,11 @@ public final class AuthCodeDeliveryDetails {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthCodeDeliveryDetails { ")
-                .append("destination: ")
-                .append(getDestination())
-                .append(", deliveryMedium: ")
-                .append(getDeliveryMedium())
-                .append(", attributeName: ")
-                .append(getAttributeName())
-                .append(" }")
-                .toString();
+        return "AuthCodeDeliveryDetails{" +
+                "destination='" + destination + '\'' +
+                ", deliveryMedium=" + deliveryMedium +
+                ", attributeName='" + attributeName + '\'' +
+                '}';
     }
 
     public enum DeliveryMedium {

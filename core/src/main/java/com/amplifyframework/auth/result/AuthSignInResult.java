@@ -74,13 +74,9 @@ public final class AuthSignInResult {
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthSignInResult { ")
-                .append("signedInStatus: ")
-                .append(getSignInState())
-                .append(", codeDeliveryDetails: ")
-                .append(getCodeDeliveryDetails())
-                .append(" }")
-                .toString();
+        return "AuthSignInResult{" +
+                "signInState=" + signInState +
+                ", codeDeliveryDetails=" + codeDeliveryDetails +
+                '}';
     }
 }

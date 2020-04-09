@@ -231,7 +231,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         : null;
 
                 onSuccess.accept(
-                        new AuthSignInResult(AuthSignInState.getEnum(result.getSignInState().toString()), newDetails)
+                        new AuthSignInResult(AuthSignInState.fromString(result.getSignInState().toString()), newDetails)
                 );
             }
 

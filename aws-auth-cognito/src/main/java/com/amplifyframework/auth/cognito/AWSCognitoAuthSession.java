@@ -118,24 +118,15 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
 
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AWSCognitoAuthState { ")
-                .append("isSignedIn: ")
-                .append(isSignedIn())
-                .append(", awsCredentials: ")
-                .append(getAWSCredentials())
-                .append(", userSub: ")
-                .append(getUserSub())
-                .append(", identityId: ")
-                .append(getIdentityId())
-                .append(", accessToken: ")
-                .append(getAccessToken())
-                .append(", idToken: ")
-                .append(getIdToken())
-                .append(", refreshToken: ")
-                .append(getRefreshToken())
-                .append(" }")
-                .toString();
+        return "AWSCognitoAuthSession{" +
+                "isSignedIn=" + isSignedIn() +
+                ", awsCredentials=" + awsCredentials +
+                ", userSub='" + userSub + '\'' +
+                ", identityId='" + identityId + '\'' +
+                ", accessToken='" + accessToken + '\'' +
+                ", idToken='" + idToken + '\'' +
+                ", refreshToken='" + refreshToken + '\'' +
+                '}';
     }
 
     @Override

@@ -72,11 +72,8 @@ public class AuthSession {
      */
     @Override
     public String toString() {
-        return new StringBuilder()
-                .append("AuthState { ")
-                .append("signedInStatus: ")
-                .append(isSignedIn())
-                .append(" }")
-                .toString();
+        return "AuthSession{" +
+                "isSignedIn=" + isSignedIn +
+                '}';
     }
 }
