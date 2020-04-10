@@ -74,7 +74,7 @@ final class SubscriptionEndpoint {
         this.connectionResponse = new CountDownLatch(1);
     }
 
-    synchronized <T> String requestSubscription(
+    synchronized <T> void requestSubscription(
             @NonNull GraphQLRequest<T> request,
             @NonNull Consumer<String> onSubscriptionStarted,
             @NonNull Consumer<GraphQLResponse<T>> onNextItem,
@@ -96,7 +96,7 @@ final class SubscriptionEndpoint {
                         exception,
                         AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
-                return null;
+                return;
             }
 
             try {
@@ -110,12 +110,12 @@ final class SubscriptionEndpoint {
                     "Subscription timed out waiting for acknowledgement",
                     AmplifyException.TODO_RECOVERY_SUGGESTION
                 ));
-                return null;
+                return;
             } else if (connectionFailure != null) {
                 onSubscriptionError.accept(new ApiException(
                     connectionFailure, "Check if you are authorized to make this subscription"
                 ));
-                return null;
+                return;
             }
         }
 
@@ -146,8 +146,6 @@ final class SubscriptionEndpoint {
         if (subscription.awaitSubscriptionReady()) {
             onSubscriptionStarted.accept(subscriptionId);
         }
-
-        return subscriptionId;
     }
 
     @SuppressLint("SyntheticAccessor")

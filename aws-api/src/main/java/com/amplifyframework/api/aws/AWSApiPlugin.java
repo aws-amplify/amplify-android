@@ -488,17 +488,15 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         }
 
         SubscriptionOperation<T> operation = SubscriptionOperation.<T>builder()
-                .subscriptionManager(clientDetails.webSocketEndpoint())
-                .endpoint(clientDetails.apiConfiguration().getEndpoint())
-                .client(clientDetails.okHttpClient())
-                .graphQLRequest(graphQLRequest)
-                .responseFactory(gqlResponseFactory)
-                .executorService(executorService)
-                .onSubscriptionStarted(onSubscriptionEstablished)
-                .onNextItem(onNextResponse)
-                .onSubscriptionError(onSubscriptionFailure)
-                .onSubscriptionComplete(onSubscriptionComplete)
-                .build();
+            .subscriptionEndpoint(clientDetails.webSocketEndpoint())
+            .graphQLRequest(graphQLRequest)
+            .responseFactory(gqlResponseFactory)
+            .executorService(executorService)
+            .onSubscriptionStarted(onSubscriptionEstablished)
+            .onNextItem(onNextResponse)
+            .onSubscriptionError(onSubscriptionFailure)
+            .onSubscriptionComplete(onSubscriptionComplete)
+            .build();
         operation.start();
         return operation;
     }
