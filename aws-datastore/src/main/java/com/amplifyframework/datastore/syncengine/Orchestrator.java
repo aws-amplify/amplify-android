@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
@@ -46,15 +47,14 @@ public final class Orchestrator {
      *                       durably store offline changes until
      *                       then can be written to the network
      * @param appSync An AppSync Endpoint
-     * @param baseSyncIntervalProvider Provider the interval in which at most
-     *                                 one base sync may occur
+     * @param configuration Configuration that was provided to the plugin when the plugin was instantiated
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
-            @NonNull final SyncProcessor.BaseSyncIntervalProvider baseSyncIntervalProvider) {
+            @NonNull final DataStoreConfiguration configuration) {
         Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
@@ -73,7 +73,7 @@ public final class Orchestrator {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .baseSyncIntervalProvider(baseSyncIntervalProvider)
+            .syncIntervalMs(configuration.getSyncIntervalMs())
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);

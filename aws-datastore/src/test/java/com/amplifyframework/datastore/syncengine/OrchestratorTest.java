@@ -23,7 +23,7 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.AWSDataStorePluginConfiguration;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
@@ -97,7 +97,7 @@ public final class OrchestratorTest {
 
         Orchestrator orchestrator =
             new Orchestrator(modelProvider, modelSchemaRegistry, localStorageAdapter, appSync,
-                () -> AWSDataStorePluginConfiguration.DEFAULT_BASE_SYNC_INTERVAL_MS
+                DataStoreConfiguration.defaults()
             );
 
         // Arrange: storage engine is running

@@ -33,6 +33,7 @@ import com.amplifyframework.testutils.random.RandomString;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -66,6 +67,7 @@ public final class AWSDataStorePluginTest {
      * @throws JSONException Not expected; on failure to arrange configuration object
      * @throws DataStoreException Not expected; on failure to configure of initialize plugin
      */
+    @Ignore("TODO: need a mechanism to re-enable this scenario........")
     @Test
     public void configureAndInitializeInLocalMode() throws DataStoreException, JSONException {
         JSONObject pluginJson = new JSONObject().put("syncMode", "none");

@@ -56,7 +56,7 @@ final class SyncProcessor {
     private final SyncTimeRegistry syncTimeRegistry;
     private final AppSync appSync;
     private final Merger merger;
-    private final BaseSyncIntervalProvider syncIntervalProvider;
+    private final long syncIntervalMs;
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -64,13 +64,13 @@ final class SyncProcessor {
             SyncTimeRegistry syncTimeRegistry,
             AppSync appSync,
             Merger merger,
-            BaseSyncIntervalProvider baseSyncIntervalProvider) {
+            long syncIntervalMs) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.syncTimeRegistry = Objects.requireNonNull(syncTimeRegistry);
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
-        this.syncIntervalProvider = Objects.requireNonNull(baseSyncIntervalProvider);
+        this.syncIntervalMs = syncIntervalMs;
     }
 
     /**
@@ -121,14 +121,13 @@ final class SyncProcessor {
      * @param lastSyncTime The time of a last successful sync.
      * @return The input, or {@link SyncTime#never()}, if the last sync time is "too old."
      */
-    private SyncTime filterOutOldSyncTimes(SyncTime lastSyncTime) throws DataStoreException {
+    private SyncTime filterOutOldSyncTimes(SyncTime lastSyncTime) {
         if (!lastSyncTime.exists()) {
             return SyncTime.never();
         }
 
         // "If (now - last sync time) is within the base sync interval"
-        long baseSyncIntervalSeconds = syncIntervalProvider.getBaseSyncIntervalMs();
-        if (Time.now() - lastSyncTime.toLong() <= baseSyncIntervalSeconds) {
+        if (Time.now() - lastSyncTime.toLong() <= syncIntervalMs) {
             // Pass through the last sync time, so that it can be used to compute delta sync.
             return lastSyncTime;
         }
@@ -215,13 +214,13 @@ final class SyncProcessor {
      * Builds instances of {@link SyncProcessor}s.
      */
     public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
-            SyncTimeRegistryStep, AppSyncStep, MergerStep, BaseSyncIntervalProviderStep, BuildStep {
+            SyncTimeRegistryStep, AppSyncStep, MergerStep, SyncIntervalStep, BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
-        private BaseSyncIntervalProvider baseSyncIntervalProvider;
+        private long syncIntervalMs;
 
         @NonNull
         @Override
@@ -253,15 +252,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BaseSyncIntervalProviderStep merger(@NonNull Merger merger) {
+        public SyncIntervalStep merger(@NonNull Merger merger) {
             this.merger = Objects.requireNonNull(merger);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuildStep baseSyncIntervalProvider(@NonNull BaseSyncIntervalProvider baseSyncIntervalProvider) {
-            this.baseSyncIntervalProvider = Objects.requireNonNull(baseSyncIntervalProvider);
+        public BuildStep syncIntervalMs(long syncIntervalMs) {
+            this.syncIntervalMs = syncIntervalMs;
             return Builder.this;
         }
 
@@ -275,7 +274,7 @@ final class SyncProcessor {
                 syncTimeRegistry,
                 appSync,
                 merger,
-                baseSyncIntervalProvider
+                syncIntervalMs
             );
         }
     }
@@ -302,32 +301,19 @@ final class SyncProcessor {
 
     interface MergerStep {
         @NonNull
-        BaseSyncIntervalProviderStep merger(@NonNull Merger merger);
+        SyncIntervalStep merger(@NonNull Merger merger);
     }
 
-    interface BaseSyncIntervalProviderStep {
+    interface SyncIntervalStep {
         @NonNull
-        BuildStep baseSyncIntervalProvider(@NonNull BaseSyncIntervalProvider baseSyncIntervalProvider);
+        BuildStep syncIntervalMs(long syncIntervalMs);
     }
 
     interface BuildStep {
         @NonNull
         SyncProcessor build();
     }
-
-    /**
-     * Provides the base sync interval.
-     * At most one base sync will take place during this window of time.
-     */
-    public interface BaseSyncIntervalProvider {
-        /**
-         * Gets the base sync interval, expressed in milliseconds.
-         * @return Amount of time in milliseconds.
-         * @throws DataStoreException If the interval is not available
-         */
-        long getBaseSyncIntervalMs() throws DataStoreException;
-    }
-
+    
     /**
      * Compares to {@link ModelWithMetadata}, according to the topological order
      * of the {@link Model} within each. Topological order is determined by the

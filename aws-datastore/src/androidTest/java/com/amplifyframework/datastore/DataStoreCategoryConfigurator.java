@@ -26,6 +26,7 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.HubAccumulator;
 
