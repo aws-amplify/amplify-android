@@ -26,6 +26,7 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.HubAccumulator;
 
@@ -100,7 +101,12 @@ final class DataStoreCategoryConfigurator {
             AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.DATASTORE);
 
-        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.create(modelProvider, api);
+        AWSDataStorePlugin awsDataStorePlugin = AWSDataStorePlugin.builder()
+            .modelProvider(modelProvider)
+            .modelSchemaRegistry(ModelSchemaRegistry.instance())
+            .graphQlBehavior(api)
+            .configuration(DataStoreConfiguration.defaults())
+            .build();
         DataStoreCategory dataStoreCategory = new DataStoreCategory();
         dataStoreCategory.addPlugin(awsDataStorePlugin);
         dataStoreCategory.configure(dataStoreConfiguration, context);

@@ -107,7 +107,7 @@ public final class SyncProcessorTest {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .baseSyncIntervalProvider(() -> BASE_SYNC_INTERVAL_MS)
+            .syncIntervalMs(BASE_SYNC_INTERVAL_MS)
             .build();
     }
 
