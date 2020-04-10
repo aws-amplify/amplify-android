@@ -27,7 +27,6 @@ import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
 
 import org.junit.Before;
-import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
@@ -43,20 +42,15 @@ public final class AWSPredictionsTranslateTest {
     private SynchronousPredictions predictions;
 
     /**
-     * Initialize mobile client singleton.
+     * Configure Predictions category before each test.
      * @throws Exception if mobile client initialization fails
      */
-    @BeforeClass
-    public static void setUpOnce() throws Exception {
-        SynchronousMobileClient.instance().initialize();
-    }
-
-    /**
-     * Configure Predictions category before each test.
-     */
     @Before
-    public void setUp() {
+    public void setUp() throws Exception {
         Context context = getApplicationContext();
+
+        // Set up Auth
+        SynchronousMobileClient.instance().initialize();
 
         // Delegate to Predictions category
         PredictionsCategory asyncDelegate =
@@ -71,7 +65,7 @@ public final class AWSPredictionsTranslateTest {
      * @throws Exception if prediction fails
      */
     @Test(expected = PredictionsException.class)
-    public void testTranslateFailsForNullInput() throws Exception {
+    public void testTranslateFailsForBlankInput() throws Exception {
         predictions.translateText("", TranslateTextOptions.defaults());
     }
 
