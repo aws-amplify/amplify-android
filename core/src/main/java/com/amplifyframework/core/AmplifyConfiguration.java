@@ -16,6 +16,7 @@
 package com.amplifyframework.core;
 
 import android.content.Context;
+import android.content.res.Resources;
 import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
@@ -139,8 +140,17 @@ public final class AmplifyConfiguration {
     }
 
     private static JSONObject readInputJson(Context context, int resourceId) throws AmplifyException {
-        final InputStream inputStream =
-            context.getResources().openRawResource(resourceId);
+        InputStream inputStream;
+
+        try {
+            inputStream = context.getResources().openRawResource(resourceId);
+        } catch (Resources.NotFoundException exception) {
+            throw new AmplifyException(
+                    "Failed to find " + DEFAULT_IDENTIFIER + ".",
+                    exception, "Please check that it has been created."
+            );
+        }
+
         final Scanner in = new Scanner(inputStream);
         final StringBuilder sb = new StringBuilder();
         while (in.hasNextLine()) {
