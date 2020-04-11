@@ -93,7 +93,7 @@ final class DataStoreCategoryConfigurator {
 
     private DataStoreCategory buildCategory() throws AmplifyException {
         HubAccumulator initializationObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED)
+            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED, 1)
                 .start();
 
         CategoryConfiguration dataStoreConfiguration =
@@ -106,7 +106,7 @@ final class DataStoreCategoryConfigurator {
         dataStoreCategory.configure(dataStoreConfiguration, context);
         dataStoreCategory.initialize(context);
 
-        initializationObserver.takeOne();
+        initializationObserver.takeAll();
         initializationObserver.stop().clear();
 
         return dataStoreCategory;

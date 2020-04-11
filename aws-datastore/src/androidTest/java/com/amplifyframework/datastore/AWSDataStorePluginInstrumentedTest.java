@@ -100,7 +100,7 @@ public final class AWSDataStorePluginInstrumentedTest {
     public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() throws DataStoreException, ApiException {
         // Start listening for model publication events on the Hub.
         HubAccumulator outboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, 1);
         outboundModelEventAccumulator.clear().start();
 
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
@@ -110,7 +110,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         dataStore.save(localCharley);
 
         // Wait for a Hub event telling us that our Charley model got published to the cloud.
-        outboundModelEventAccumulator.takeOne();
+        outboundModelEventAccumulator.takeAll();
         outboundModelEventAccumulator.stop().clear();
 
         // Try to get Charley from the backend.
@@ -149,7 +149,7 @@ public final class AWSDataStorePluginInstrumentedTest {
                     return false;
                 }
                 return modelWithMetadata.getSyncMetadata().getId().equals(expectedId);
-            });
+            }, 1);
         inboundModelEventAccumulator.clear().start();
 
         // Act: externally in the Cloud, someone creates a record for a blog owner,
@@ -165,7 +165,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // A hub event tells us that a model was created in the cloud;
         // this model was synced into our local store.
-        inboundModelEventAccumulator.takeOne();
+        inboundModelEventAccumulator.takeAll();
         inboundModelEventAccumulator.stop().clear().start();
 
         // Act: externally, the record in the Cloud is updated, to correct the entry's last name
@@ -181,7 +181,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Another HubEvent tells us that an update occurred in the Cloud;
         // the update was applied locally, to an existing record.
-        inboundModelEventAccumulator.take(1);
+        inboundModelEventAccumulator.takeAll();
         inboundModelEventAccumulator.stop().clear();
 
         // Jameson should be in the local DataStore, and last name should be updated.

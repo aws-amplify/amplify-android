@@ -33,7 +33,6 @@ import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.Time;
 
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -56,7 +55,6 @@ public final class MutationProcessorTest {
     private AppSync appSync;
     private SynchronousStorageAdapter storageAdapter;
     private MutationProcessor mutationProcessor;
-    private HubAccumulator publicationEventAccumulator;
 
     @Before
     public void setup() {
@@ -69,18 +67,6 @@ public final class MutationProcessorTest {
         Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
-
-        this.publicationEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
-        this.publicationEventAccumulator.clear().start();
-    }
-
-    /**
-     * Stop accumulating events, after the test completes.
-     */
-    @After
-    public void stopAccumulator() {
-        this.publicationEventAccumulator.stop().clear();
     }
 
     /**
@@ -90,6 +76,18 @@ public final class MutationProcessorTest {
      */
     @Test
     public void canDrainMutationOutbox() throws DataStoreException {
+        // These models should be processed, by the end of the test.
+        // This is declared up top, so we can get the quantity for our accumulator to await
+        final List<StorageItemChange.Record> changesWeExpectToProcessSuccessfully = Arrays.asList(
+            Models.Tony.DELETION_RECORD,
+            Models.Joe.CREATION_RECORD,
+            Models.JoeBlog.CREATION_RECORD
+        );
+        int quantity = changesWeExpectToProcessSuccessfully.size();
+        HubAccumulator publicationEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD, quantity);
+        publicationEventAccumulator.start();
+
         // Arrange some local state, in the LocalStorageAdapter.
         // The "outbox" has three changes pending: 1 deletions, 2 creations.
         storageAdapter.save(
@@ -127,17 +125,13 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Validate that we got "success" notifications out on Hub.
-        final List<StorageItemChange.Record> changesWeExpectToProcessSuccessfully = Arrays.asList(
-            Models.Tony.DELETION_RECORD,
-            Models.Joe.CREATION_RECORD,
-            Models.JoeBlog.CREATION_RECORD
-        );
         assertEquals(
             // Expected change records
             changesWeExpectToProcessSuccessfully,
             // Look at the records we saw on the hub. Did we get all of them?
-            takeRecordsFromAccumulator(changesWeExpectToProcessSuccessfully.size())
+            takeRecordsFromAccumulator(publicationEventAccumulator)
         );
+        publicationEventAccumulator.stop().clear();
 
         // Finally, we expect the mutation outbox to be empty, now, that the mutation
         // processor has drained it.
@@ -145,9 +139,9 @@ public final class MutationProcessorTest {
     }
 
     @SuppressWarnings("SameParameterValue")
-    private List<StorageItemChange.Record> takeRecordsFromAccumulator(int quantity) {
+    private List<StorageItemChange.Record> takeRecordsFromAccumulator(HubAccumulator accumulator) {
         final List<StorageItemChange.Record> changeRecords = new ArrayList<>();
-        for (HubEvent<?> hubEvent : publicationEventAccumulator.take(quantity)) {
+        for (HubEvent<?> hubEvent : accumulator.takeAll()) {
             StorageItemChange<? extends Model> change = (StorageItemChange<? extends Model>) hubEvent.getData();
             if (change == null) {
                 throw new IllegalStateException("Found null data in publication event: " + hubEvent);
