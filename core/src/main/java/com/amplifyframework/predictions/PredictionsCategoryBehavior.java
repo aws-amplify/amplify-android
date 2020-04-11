@@ -18,15 +18,91 @@ package com.amplifyframework.predictions;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TranslateTextResult;
 
 /**
  * The Predictions category includes functionality to convert and translate text,
  * perform text analysis, and detect features in an image, using Machine Learning.
  */
 public interface PredictionsCategoryBehavior {
+    /**
+     * Translate the text from and to the languages specified in the configuration.
+     * @param text The text to translate
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Translate the text from and to the languages specified in the configuration.
+     * @param text The text to translate
+     * @param options Parameters to specific plugin behavior
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Translate the text to the languages specified.
+     * @param text The text to translate
+     * @param fromLanguage The language of the given text
+     * @param toLanguage The language to which the text should be translated
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Translate the text to the languages specified.
+     * @param text The text to translate
+     * @param fromLanguage The language of the given text
+     * @param toLanguage The language to which the text should be translated
+     * @param options Parameters to specific plugin behavior
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
     /**
      * Interpret the text to detect and analyze associated sentiments, entities,
      * language, syntax, and key phrases.

@@ -49,7 +49,7 @@ final class TestPredictionsCategory {
             CategoryConfiguration predictionsConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
                     .forCategoryType(CategoryType.PREDICTIONS);
             predictionsCategory.configure(predictionsConfiguration, context);
-            // predictionsCategory.initialize(context); Doesn't do anything yet
+            predictionsCategory.initialize(context);
         } catch (AmplifyException initializationFailure) {
             throw new RuntimeException(initializationFailure);
         }

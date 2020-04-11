@@ -65,7 +65,8 @@ ext {
             comprehend: "com.amazonaws:aws-android-sdk-comprehend:$awsSdkVersion",
             authcore: "com.amazonaws:aws-android-sdk-auth-core:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
-            mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion"
+            mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
+            translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion"
         ],
         okhttp: 'com.squareup.okhttp3:okhttp:4.4.0',
         gson: 'com.google.code.gson:gson:2.8.6',
