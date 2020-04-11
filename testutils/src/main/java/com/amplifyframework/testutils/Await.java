@@ -134,28 +134,37 @@ public final class Await {
             @NonNull ResultErrorEmitter<R, E> resultErrorEmitter,
             @NonNull AtomicReference<R> resultContainer,
             @NonNull AtomicReference<E> errorContainer) {
-
-        CountDownLatch latch = new CountDownLatch(1);
-
-        resultErrorEmitter.emitTo(
-            result -> {
-                resultContainer.set(result);
-                latch.countDown();
-            }, error -> {
-                errorContainer.set(error);
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Throwable> unexpectedErrorContainer = new AtomicReference<>();
+        final Thread thread = new Thread(() -> {
+            try {
+                resultErrorEmitter.emitTo(
+                    result -> {
+                        resultContainer.set(result);
+                        latch.countDown();
+                    }, error -> {
+                        errorContainer.set(error);
+                        latch.countDown();
+                    }
+                );
+            } catch (Throwable unexpectedFailure) {
+                unexpectedErrorContainer.set(unexpectedFailure);
                 latch.countDown();
             }
-        );
+        });
+        thread.setDaemon(true);
+        thread.start();
+
+        Latch.await(latch, timeMs);
 
         try {
-            latch.await(timeMs, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException interruptedException) {
-            // Will check the latch count regardless, and branch appropriately.
+            thread.join();
+        } catch (InterruptedException threadJoinFailure) {
+            throw new RuntimeException("Failed to join thread.", threadJoinFailure);
         }
-        if (latch.getCount() != 0) {
-            throw new RuntimeException(
-                "Neither result nor error consumers accepted a value within " + timeMs + "ms."
-            );
+
+        if (unexpectedErrorContainer.get() != null) {
+            throw new RuntimeException("Unhandled error: " + unexpectedErrorContainer.get());
         }
     }
 

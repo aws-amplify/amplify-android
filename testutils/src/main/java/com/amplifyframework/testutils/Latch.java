@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit;
  * This is done frequently enough in the test code that its best
  * to centralize a single pattern for it.
  */
-@SuppressWarnings({"SameParameterValue", "WeakerAccess"})
+@SuppressWarnings("SameParameterValue")
 final class Latch {
     private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
 
@@ -38,13 +38,14 @@ final class Latch {
      * @throws RuntimeException If the latch doesn't count down in the allotted timeout
      */
     static void await(@NonNull CountDownLatch latch, long waitTimeMs) {
+        final boolean didCountDown;
         try {
-            latch.await(waitTimeMs, TimeUnit.MILLISECONDS);
+            didCountDown = latch.await(waitTimeMs, TimeUnit.MILLISECONDS);
         } catch (InterruptedException interruptedException) {
-            // Will check regardless in a moment ...
+            throw new RuntimeException("Thread interrupted while wait for latch count down.", interruptedException);
         }
-        if (latch.getCount() != 0) {
-            throw new RuntimeException("Failed to count down latch.");
+        if (!didCountDown || latch.getCount() != 0) {
+            throw new RuntimeException("Failed to count down latch within " + waitTimeMs + "ms.");
         }
     }
 
