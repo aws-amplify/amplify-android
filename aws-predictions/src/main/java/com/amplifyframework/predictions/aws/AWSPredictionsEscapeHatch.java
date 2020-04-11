@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.aws;
 import androidx.annotation.NonNull;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
+import com.amazonaws.services.translate.AmazonTranslateClient;
 
 import java.util.Objects;
 
@@ -27,12 +28,25 @@ import java.util.Objects;
  * that are not exposed by Amplify, directly.
  */
 public final class AWSPredictionsEscapeHatch {
+    private final AmazonTranslateClient translate;
     private final AmazonComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
+            @NonNull AmazonTranslateClient translate,
             @NonNull AmazonComprehendClient comprehend
     ) {
+        this.translate = Objects.requireNonNull(translate);
         this.comprehend = Objects.requireNonNull(comprehend);
+    }
+
+    /**
+     * Return configured Amazon Translate client to access
+     * low-level methods for text translation.
+     * @return the configured Amazon Translate client
+     */
+    @NonNull
+    public AmazonTranslateClient getTranslateClient() {
+        return translate;
     }
 
     /**

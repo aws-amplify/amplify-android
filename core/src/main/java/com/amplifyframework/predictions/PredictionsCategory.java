@@ -20,9 +20,13 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TranslateTextResult;
 
 /**
  * Defines the API that a consuming application uses to perform predictions.
@@ -33,6 +37,54 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.PREDICTIONS;
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().translateText(text, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().translateText(text, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().translateText(text, fromLanguage,
+                toLanguage, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().translateText(text, fromLanguage,
+                toLanguage, options, onSuccess, onError);
     }
 
     @NonNull

@@ -16,7 +16,9 @@
 package com.amplifyframework.predictions.aws;
 
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.aws.configuration.AWSInterpretConfiguration;
+import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
+import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.testutils.Resources;
 
 import com.amazonaws.regions.Region;
@@ -53,12 +55,28 @@ public final class AWSPredictionsPluginConfigurationTest {
     }
 
     /**
-     * Test that configuration without "interpret" section creates
-     * default interpret configuration instance.
+     * Test that configuration without any resources section
+     * creates plugin-level configuration instance.
      * @throws Exception if configuration fails
      */
     @Test
-    public void testConfigurationPassesWithoutInterpret() throws Exception {
+    public void testConfigurationPassesInitially() throws Exception {
+        JSONObject json = Resources.readAsJson("configuration-with-region.json");
+        AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
+
+        // Default plugin configuration
+        assertEquals(Region.getRegion("us-west-2"), pluginConfig.getDefaultRegion());
+        assertEquals(NetworkPolicy.AUTO, pluginConfig.getDefaultNetworkPolicy());
+    }
+
+    /**
+     * Test that configuration without any resources section
+     * creates plugin-level configuration instance without
+     * complaining UNTIL a missing configuration is called.
+     * @throws Exception if configuration fails
+     */
+    @Test(expected = PredictionsException.class)
+    public void testConfigurationThrowsRetroactivelyForMissingConfiguration() throws Exception {
         JSONObject json = Resources.readAsJson("configuration-with-region.json");
         AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
 
@@ -66,31 +84,42 @@ public final class AWSPredictionsPluginConfigurationTest {
         assertEquals(Region.getRegion("us-west-2"), pluginConfig.getDefaultRegion());
         assertEquals(NetworkPolicy.AUTO, pluginConfig.getDefaultNetworkPolicy());
 
-        // Default interpret configuration
-        AWSInterpretConfiguration interpretConfig = pluginConfig.getInterpretConfiguration();
-        assertNotNull(interpretConfig);
-        assertEquals(AWSInterpretConfiguration.InterpretType.ALL, interpretConfig.getType());
-        assertEquals(NetworkPolicy.AUTO, interpretConfig.getNetworkPolicy());
+        // Trying to obtain missing configuration throws
+        pluginConfig.getTranslateTextConfiguration();
     }
 
     /**
-     * Test that configuration with explicit "interpret" section creates
+     * Test that configuration with explicit "translateText" section creates
+     * customized translate configuration instance.
+     * @throws Exception if configuration fails
+     */
+    @Test
+    public void testTranslateTextConfiguration() throws Exception {
+        JSONObject json = Resources.readAsJson("configuration-with-translate.json");
+        AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
+
+        // Custom translate configuration
+        TranslateTextConfiguration translateConfig = pluginConfig.getTranslateTextConfiguration();
+        assertNotNull(translateConfig);
+        assertEquals(LanguageType.ENGLISH, translateConfig.getSourceLanguage());
+        assertEquals(LanguageType.KOREAN, translateConfig.getTargetLanguage());
+        assertEquals(NetworkPolicy.AUTO, translateConfig.getNetworkPolicy());
+    }
+
+    /**
+     * Test that configuration with explicit "interpretText" section creates
      * customized interpret configuration instance.
      * @throws Exception if configuration fails
      */
     @Test
-    public void testInterpretConfiguration() throws Exception {
+    public void testInterpretTextConfiguration() throws Exception {
         JSONObject json = Resources.readAsJson("configuration-with-interpret.json");
         AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
 
-        // Custom plugin configuration
-        assertEquals(Region.getRegion("us-east-1"), pluginConfig.getDefaultRegion());
-        assertEquals(NetworkPolicy.AUTO, pluginConfig.getDefaultNetworkPolicy());
-
         // Custom interpret configuration
-        AWSInterpretConfiguration interpretConfig = pluginConfig.getInterpretConfiguration();
+        InterpretTextConfiguration interpretConfig = pluginConfig.getInterpretTextConfiguration();
         assertNotNull(interpretConfig);
-        assertEquals(AWSInterpretConfiguration.InterpretType.SENTIMENT, interpretConfig.getType());
+        assertEquals(InterpretTextConfiguration.InterpretType.SENTIMENT, interpretConfig.getType());
         assertEquals(NetworkPolicy.OFFLINE, interpretConfig.getNetworkPolicy());
     }
 }
