@@ -24,9 +24,6 @@ To use Amplify, specify which modules you want to use inside of your app's `buil
 
 ```gradle
 dependencies {
-    // Core SDK is required for configuring Amplify
-    implementation 'com.amplifyframework:core:0.10.0'
-    
     // Specify only the modules that the app will use
     implementation 'com.amplifyframework:aws-datastore:0.10.0'
     implementation 'com.amplifyframework:aws-api:0.10.0'
@@ -81,9 +78,9 @@ android {
 
 ### Using AWS Mobile Client
 
-Amplify relies on the AWS Mobile Client for authentication with AWS services. Please refer to the [this documentation](https://aws-amplify.github.io/docs/android/authentication) for details.
+Amplify relies on the AWS Mobile Client for authentication with AWS services. Please refer to the [this documentation](https://docs.amplify.aws/lib/auth/getting-started?platform=android) for details.
 
-You need to ensure `AWSMobileClient` is [initialized](https://aws-amplify.github.io/docs/android/authentication#initialization) before you initalize and configure `Amplify`. Please note that AWSMobileClient initialization is not required when using API or Datastore category with _API Key_ as the authorization mode.
+You need to ensure `AWSMobileClient` is [initialized](https://docs.amplify.aws/lib/auth/getting-started?platform=android#initialization) before you initalize and configure `Amplify`. Please note that AWSMobileClient initialization is not required when using API or DataStore category with _API Key_ as the authorization mode.
 
 ## License
 
