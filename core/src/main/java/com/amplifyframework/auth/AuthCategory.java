@@ -94,6 +94,15 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().confirmSignIn(confirmationCode, onSuccess, onError);
+    }
+
+    @Override
     public void signInWithUI(
             @NonNull Activity callingActivity,
             @NonNull Consumer<String> onSuccess,

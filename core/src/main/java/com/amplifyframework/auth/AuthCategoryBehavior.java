@@ -102,6 +102,17 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
+     * Submit the confirmation code received as part of multi-factor Authentication during sign in.
+     * @param confirmationCode The code received as part of the multi-factor authentication process
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
      * Launch a pre-built sign in UI flow. You should also put the {@link #handleSignInWithUIResponse(Intent)} method in
      * your activity's onResume method to capture the response which comes back from the UI flow.
      * @param callingActivity The activity in your app you are calling this from

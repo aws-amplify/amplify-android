@@ -218,21 +218,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
-                AuthSignInState state;
-                UserCodeDeliveryDetails oldDetails = result.getCodeDetails();
-                // Take information from Cognito specific object and wrap it in the new Amplify object
-                AuthCodeDeliveryDetails newDetails =
-                    oldDetails != null
-                        ? new AuthCodeDeliveryDetails(
-                            oldDetails.getDestination(),
-                            AuthCodeDeliveryDetails.DeliveryMedium.fromString(oldDetails.getDeliveryMedium()),
-                            oldDetails.getAttributeName()
-                        )
-                        : null;
-
-                onSuccess.accept(
-                        new AuthSignInResult(AuthSignInState.fromString(result.getSignInState().toString()), newDetails)
-                );
+                onSuccess.accept(convertSignInResult(result));
             }
 
             @Override
@@ -252,6 +238,27 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull final Consumer<AuthException> onException
     ) {
         signIn(username, password, null, onSuccess, onException);
+    }
+
+    @Override
+    public void confirmSignIn(
+            @NonNull String confirmationCode,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        AWSMobileClient.getInstance().confirmSignIn(confirmationCode, new Callback<SignInResult>() {
+            @Override
+            public void onResult(SignInResult result) {
+                onSuccess.accept(convertSignInResult(result));
+            }
+
+            @Override
+            public void onError(Exception error) {
+                onException.accept(
+                        new AuthException("Confirm sign in failed", error, "See attached exception for more details")
+                );
+            }
+        });
     }
 
     @Override
@@ -380,6 +387,23 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public AWSMobileClient getEscapeHatch() {
         return AWSMobileClient.getInstance();
+    }
+
+    // Take information from the Cognito specific object and wrap it in the new Amplify object
+    private AuthSignInResult convertSignInResult(SignInResult result) {
+        AuthSignInState state;
+        UserCodeDeliveryDetails oldDetails = result.getCodeDetails();
+
+        AuthCodeDeliveryDetails newDetails =
+                oldDetails != null
+                        ? new AuthCodeDeliveryDetails(
+                                oldDetails.getDestination(),
+                                AuthCodeDeliveryDetails.DeliveryMedium.fromString(oldDetails.getDeliveryMedium()),
+                                oldDetails.getAttributeName()
+                            )
+                        : null;
+
+        return new AuthSignInResult(AuthSignInState.fromString(result.getSignInState().toString()), newDetails);
     }
 
     private AWSCognitoAuthSession buildCognitoAuthSession(UserState state) throws AuthException {
