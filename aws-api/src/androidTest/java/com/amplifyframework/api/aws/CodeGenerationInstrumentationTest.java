@@ -78,7 +78,6 @@ public final class CodeGenerationInstrumentationTest {
      * @throws ApiException On failure to obtain valid response from endpoint
      * @throws ParseException If we specify the wrong value for the date String in the test object
      */
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void queryMatchesMutationResult() throws ApiException, ParseException {
         // Create a Person
@@ -121,7 +120,6 @@ public final class CodeGenerationInstrumentationTest {
      * Tests the code generation for LIST query without a predicate.
      * @throws ApiException On failure to obtain valid response from endpoint
      */
-    @SuppressWarnings("checkstyle:MagicNumber") // test table configured to have at least 3 items
     @Test
     public void queryListWithoutPredicate() throws ApiException {
         final List<Person> queryResults = api.list(PERSON_API_NAME, Person.class);
@@ -185,7 +183,6 @@ public final class CodeGenerationInstrumentationTest {
      * ensure mutation condition filtering works. Then it sends a correct condition to delete which should succeed.
      * @throws ApiException On failure to obtain valid response from endpoint
      */
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void mutationFailsInvalidConditionAndPassesCorrectCondition() throws ApiException {
         Person person = Person.builder()
@@ -292,7 +289,6 @@ public final class CodeGenerationInstrumentationTest {
      * Tests the code generation for HAS_ONE relationship.
      * @throws ApiException On failure to obtain valid response from endpoint
      */
-    @SuppressWarnings("checkstyle:MagicNumber")
     @Test
     public void hasOneRelationship() throws ApiException {
         // Create a blog

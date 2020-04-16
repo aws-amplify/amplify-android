@@ -21,8 +21,6 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
-import java.util.Set;
-
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Analytics CategoryType
@@ -46,6 +44,7 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
 
     /**
      * Retrieve the Analytics category type enum.
+     *
      * @return enum that represents Analytics category
      */
     @NonNull
@@ -81,25 +80,20 @@ public final class AnalyticsCategory extends Category<AnalyticsPlugin<?>>
     }
 
     @Override
-    public void recordEvent(@NonNull final AnalyticsEvent analyticsEvent)
-            throws AnalyticsException {
+    public void recordEvent(@NonNull final AnalyticsEventBehavior analyticsEvent) {
         if (enabled) {
             getSelectedPlugin().recordEvent(analyticsEvent);
         }
     }
 
     @Override
-    public void registerGlobalProperties(@NonNull Properties properties) throws AnalyticsException {
-        if (enabled) {
-            getSelectedPlugin().registerGlobalProperties(properties);
-        }
+    public void registerGlobalProperties(@NonNull AnalyticsProperties properties) {
+        getSelectedPlugin().registerGlobalProperties(properties);
     }
 
     @Override
-    public void unregisterGlobalProperties(@NonNull Set<String> keys) {
-        if (enabled) {
-            getSelectedPlugin().unregisterGlobalProperties(keys);
-        }
+    public void unregisterGlobalProperties(@NonNull String... propertyNames) {
+        getSelectedPlugin().unregisterGlobalProperties(propertyNames);
     }
 
     @Override

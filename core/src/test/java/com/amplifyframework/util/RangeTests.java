@@ -21,7 +21,6 @@ import org.junit.Test;
 /**
  * Tests the range {@link Range} class.
  */
-@SuppressWarnings("checkstyle:MagicNumber")
 public class RangeTests {
 
     /**

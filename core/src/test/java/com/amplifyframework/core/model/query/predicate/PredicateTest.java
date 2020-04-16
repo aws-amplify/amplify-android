@@ -29,7 +29,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests predicate creation.
  */
-@SuppressWarnings("MagicNumber")
 public final class PredicateTest {
     /**
      * Tests the creation of a simple single operation predicate.

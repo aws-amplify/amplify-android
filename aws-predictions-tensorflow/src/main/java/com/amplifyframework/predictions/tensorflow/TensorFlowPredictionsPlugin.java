@@ -17,17 +17,21 @@ package com.amplifyframework.predictions.tensorflow;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
+import com.amplifyframework.predictions.tensorflow.operation.TensorFlowTranslateTextOperation;
 import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
@@ -76,10 +80,56 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
         this.predictionsService.loadAssets();
     }
 
-    @Nullable
+    @NonNull
     @Override
     public TensorFlowPredictionsEscapeHatch getEscapeHatch() {
         return new TensorFlowPredictionsEscapeHatch(predictionsService.getInterpreters());
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return new TensorFlowTranslateTextOperation(onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return new TensorFlowTranslateTextOperation(onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return new TensorFlowTranslateTextOperation(onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return new TensorFlowTranslateTextOperation(onError);
     }
 
     @NonNull

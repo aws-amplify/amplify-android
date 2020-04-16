@@ -309,7 +309,7 @@ public final class StorageItemChange<T extends Model> {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     @ModelConfig(pluralName = "Records")
-    @Index(fields = {"itemClass"}, name = "itemClassBasedIndex")
+    @Index(fields = "itemClass", name = "itemClassBasedIndex")
     public static final class Record implements Model {
         @ModelField(targetType = "ID", isRequired = true)
         private final String id;

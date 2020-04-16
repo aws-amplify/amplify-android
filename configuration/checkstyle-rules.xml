@@ -116,8 +116,9 @@
         -->
         <module name="MethodLength" />
 
-        <!-- "Standard" rules regarding annotation positioning. -->
+        <!-- "Standard" rules regarding annotation positioning and syntax. -->
         <module name="AnnotationLocation" />
+        <module name="AnnotationUseStyle" />
 
         <!-- Always use @Override with method inheritance. -->
         <module name="MissingOverride" />

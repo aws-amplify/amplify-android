@@ -16,14 +16,20 @@
 package com.amplifyframework.analytics;
 
 /**
- * Encapsulates a value of type T.
- * @param <T> property type
+ * Defines the interface for analytics events.
  */
-public interface Property<T> {
+public interface AnalyticsEventBehavior {
+    /**
+     * Returns the name of the event.
+     *
+     * @return event name
+     */
+    String getName();
 
     /**
-     * Value of type T that is encapsulated by the class.
-     * @return property type
+     * Returns the properties of the event.
+     *
+     * @return event properties
      */
-    T getValue();
+    AnalyticsProperties getProperties();
 }

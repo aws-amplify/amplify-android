@@ -16,30 +16,16 @@
 package com.amplifyframework.analytics;
 
 /**
- * Represents event in its most general form and can have different properties.
+ * Encapsulates a value of type T.
+ *
+ * @param <T> property type
  */
-public final class BasicAnalyticsEvent implements AnalyticsEvent {
-    private final String name;
-    private final Properties properties;
+public interface AnalyticsPropertyBehavior<T> {
 
     /**
-     * Construct a general analytics event.
+     * Value of type T that is encapsulated by the class.
      *
-     * @param name name for the event.
-     * @param properties event properties.
+     * @return property
      */
-    public BasicAnalyticsEvent(String name, Properties properties) {
-        this.name = name;
-        this.properties = properties;
-    }
-
-    @Override
-    public String getName() {
-        return name;
-    }
-
-    @Override
-    public Properties getProperties() {
-        return properties;
-    }
+    T getValue();
 }

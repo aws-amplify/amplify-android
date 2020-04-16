@@ -17,17 +17,22 @@ package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
+import com.amplifyframework.predictions.aws.operation.AWSTranslateTextOperation;
 import com.amplifyframework.predictions.aws.request.AWSComprehendRequest;
+import com.amplifyframework.predictions.aws.request.AWSTranslateRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
+import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import org.json.JSONObject;
 
@@ -64,10 +69,75 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
         this.predictionsService = new AWSPredictionsService(configuration);
     }
 
-    @Nullable
+    @NonNull
     @Override
     public AWSPredictionsEscapeHatch getEscapeHatch() {
-        return new AWSPredictionsEscapeHatch(predictionsService.getComprehendClient());
+        return new AWSPredictionsEscapeHatch(
+                predictionsService.getTranslateClient(),
+                predictionsService.getComprehendClient()
+        );
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return translateText(text, TranslateTextOptions.defaults(),
+                onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return translateText(text, LanguageType.UNKNOWN,
+                LanguageType.UNKNOWN, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return translateText(text, fromLanguage, toLanguage,
+                TranslateTextOptions.defaults(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TranslateTextOperation<?> translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage,
+            @NonNull TranslateTextOptions options,
+            @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        // Create translate request for AWS Translate
+        AWSTranslateRequest request = new AWSTranslateRequest(text, fromLanguage, toLanguage);
+
+        AWSTranslateTextOperation operation = new AWSTranslateTextOperation(
+                predictionsService,
+                executorService,
+                request,
+                onSuccess,
+                onError
+        );
+
+        // Start operation and return
+        operation.start();
+        return operation;
     }
 
     @NonNull
@@ -77,8 +147,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final InterpretOptions options = InterpretOptions.defaults();
-        return interpret(text, options, onSuccess, onError);
+        return interpret(text, InterpretOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull

@@ -65,7 +65,7 @@ import static org.mockito.Mockito.verify;
 /**
  * Tests the {@link SyncProcessor}.
  */
-@SuppressWarnings({"unchecked", "checkstyle:MagicNumber"})
+@SuppressWarnings("unchecked")
 @RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
