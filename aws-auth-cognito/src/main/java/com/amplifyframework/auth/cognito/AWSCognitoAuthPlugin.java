@@ -31,6 +31,7 @@ import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
 import com.amazonaws.auth.AWSCredentials;
@@ -41,6 +42,8 @@ import com.amazonaws.mobile.client.IdentityProvider;
 import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobile.client.results.ForgotPasswordResult;
+import com.amazonaws.mobile.client.results.ForgotPasswordState;
 import com.amazonaws.mobile.client.results.SignInResult;
 import com.amazonaws.mobile.client.results.SignUpResult;
 import com.amazonaws.mobile.client.results.Tokens;
@@ -333,7 +336,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public void fetchAuthSession(
             @NonNull Consumer<AuthSession> onSuccess,
-            @NonNull Consumer<AuthException> onError
+            @NonNull Consumer<AuthException> onException
     ) {
         try {
             AWSMobileClient.getInstance().currentUserState(new Callback<UserStateDetails>() {
@@ -354,11 +357,11 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             try {
                                 onSuccess.accept(buildCognitoAuthSession(state));
                             } catch (AuthException exception) {
-                                onError.accept(exception);
+                                onException.accept(exception);
                             }
                             break;
                         default:
-                            onError.accept(new AuthException(
+                            onException.accept(new AuthException(
                                     "User is in an unknown authorization state",
                                     "This is a bug. Please report it to the AWS team for resolution"
                             ));
@@ -367,7 +370,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
                 @Override
                 public void onError(Exception exception) {
-                    onError.accept(new AuthException(
+                    onException.accept(new AuthException(
                             "An error occurred while attempting to retrieve your user details",
                             exception,
                             "See attached exception for more details"
@@ -375,12 +378,78 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 }
             });
         } catch (Throwable exception) {
-            onError.accept(new AuthException(
+            onException.accept(new AuthException(
                     "An error occurred fetching authorization details for the current user",
                     exception,
                     "See attached exception for more details"
             ));
         }
+    }
+
+    @Override
+    public void forgotPassword(
+            @NonNull String username,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        AWSMobileClient.getInstance().forgotPassword(username, new Callback<ForgotPasswordResult>() {
+            @Override
+            public void onResult(ForgotPasswordResult result) {
+                if (result.getState().equals(ForgotPasswordState.CONFIRMATION_CODE)) {
+                    onSuccess.accept(convertCodeDeliveryDetails(result.getParameters()));
+                } else {
+                    onException.accept(new AuthException(
+                            "Received an unsupported response after triggering password recovery: " + result.getState(),
+                            "This is almost certainly a bug. Please report it as an issue in our GitHub repo."
+                    ));
+                }
+            }
+
+            @Override
+            public void onError(Exception exception) {
+                onException.accept(new AuthException(
+                        "An error occurred triggering password recovery",
+                        exception,
+                        "See attached exception for more details"
+                ));
+            }
+        });
+    }
+
+    @Override
+    public void confirmForgotPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        AWSMobileClient.getInstance().confirmForgotPassword(
+            newPassword,
+            confirmationCode,
+            new Callback<ForgotPasswordResult>() {
+                @Override
+                public void onResult(ForgotPasswordResult result) {
+                    if (result.getState().equals(ForgotPasswordState.DONE)) {
+                        onSuccess.call();
+                    } else {
+                        onException.accept(new AuthException(
+                                "Received an unsupported response while confirming password recovery code: "
+                                        + result.getState(),
+                                "This is almost certainly a bug. Please report it as an issue in our GitHub repo."
+                        ));
+                    }
+                }
+
+                @Override
+                public void onError(Exception exception) {
+                    onException.accept(new AuthException(
+                            "An error occurred confirming password recovery code",
+                            exception,
+                            "See attached exception for more details"
+                    ));
+                }
+            }
+        );
     }
 
     @NonNull
@@ -391,19 +460,19 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
     // Take information from the Cognito specific object and wrap it in the new Amplify object
     private AuthSignInResult convertSignInResult(SignInResult result) {
-        AuthSignInState state;
-        UserCodeDeliveryDetails oldDetails = result.getCodeDetails();
+        return new AuthSignInResult(
+            AuthSignInState.fromString(result.getSignInState().toString()),
+            convertCodeDeliveryDetails(result.getCodeDetails())
+        );
+    }
 
-        AuthCodeDeliveryDetails newDetails =
-                oldDetails != null
-                        ? new AuthCodeDeliveryDetails(
-                                oldDetails.getDestination(),
-                                AuthCodeDeliveryDetails.DeliveryMedium.fromString(oldDetails.getDeliveryMedium()),
-                                oldDetails.getAttributeName()
-                            )
-                        : null;
-
-        return new AuthSignInResult(AuthSignInState.fromString(result.getSignInState().toString()), newDetails);
+    private AuthCodeDeliveryDetails convertCodeDeliveryDetails(UserCodeDeliveryDetails details) {
+        return details != null
+            ? new AuthCodeDeliveryDetails(
+                    details.getDestination(),
+                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
+                    details.getAttributeName())
+            : null;
     }
 
     private AWSCognitoAuthSession buildCognitoAuthSession(UserState state) throws AuthException {
