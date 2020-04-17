@@ -25,6 +25,7 @@ import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
 public interface AuthCategoryBehavior {
@@ -33,7 +34,7 @@ public interface AuthCategoryBehavior {
      * Creates a new user account with the specified username and password.
      * Can also pass in user attributes to associate with the user through
      * the options object.
-     * @param username This can be a typical username, email, phone number, etc.
+     * @param username This can be a typical username, email, phone number, etc. depending on the configuration
      * @param password The user's password
      * @param options Advanced options such as additional attributes of the user or validation data
      * @param onSuccess Success callback
@@ -153,5 +154,29 @@ public interface AuthCategoryBehavior {
      */
     void fetchAuthSession(
             @NonNull Consumer<AuthSession> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Trigger password recovery for the given username.
+     * @param username This can be a typical username, email, phone number, etc. depending on the configuration
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void forgotPassword(
+            @NonNull String username,
+            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Complete password recovery process by inputting user's desired new password and confirmation code.
+     * @param newPassword The user's desired new password
+     * @param confirmationCode The confirmation code the user received after starting the forgotPassword process
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void confirmForgotPassword(
+            @NonNull String newPassword,
+            @NonNull String confirmationCode,
+            @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
 }
