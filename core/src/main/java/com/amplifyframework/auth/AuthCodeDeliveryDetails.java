@@ -16,6 +16,7 @@
 package com.amplifyframework.auth;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
@@ -26,19 +27,31 @@ public final class AuthCodeDeliveryDetails {
     private String attributeName;
 
     /**
-     * Stores information about how the auth code is delivered.
+     * Stores information about how a confirmation code is delivered.
      * @param destination The address the code was sent to
      * @param deliveryMedium What method was used to send the code
-     * @param attributeName What attribute was being verified
+     */
+    public AuthCodeDeliveryDetails(
+            @NonNull String destination,
+            @NonNull DeliveryMedium deliveryMedium
+    ) {
+        this(destination, deliveryMedium, null);
+    }
+
+    /**
+     * Stores information about how a confirmation code is delivered.
+     * @param destination The address the code was sent to
+     * @param deliveryMedium What method was used to send the code
+     * @param attributeName What attribute was being verified, if any
      */
     public AuthCodeDeliveryDetails(
             @NonNull String destination,
             @NonNull DeliveryMedium deliveryMedium,
-            @NonNull String attributeName
+            @Nullable String attributeName
     ) {
         this.destination = Objects.requireNonNull(destination);
         this.deliveryMedium = Objects.requireNonNull(deliveryMedium);
-        this.attributeName = Objects.requireNonNull(attributeName);
+        this.attributeName = attributeName;
     }
 
     /**
@@ -60,10 +73,10 @@ public final class AuthCodeDeliveryDetails {
     }
 
     /**
-     * Get the attribute being verified.
-     * @return The attribute being verified
+     * Get the attribute being verified, if any.
+     * @return The attribute being verified, if any
      */
-    @NonNull
+    @Nullable
     public String getAttributeName() {
         return attributeName;
     }
