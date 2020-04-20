@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.error.AppSyncExtensions;
 import com.amplifyframework.testutils.Resources;
 
 import org.json.JSONException;
@@ -122,15 +123,59 @@ public final class GsonGraphQLResponseFactoryTest {
         // Assert that we parsed the errors successfully.
         assertNotNull(response.getErrors());
 
-        final List<GraphQLResponse.Error> expectedErrors = Arrays.asList(
-            new GraphQLResponse.Error("failed"),
-            new GraphQLResponse.Error("failed"),
-            new GraphQLResponse.Error("failed")
-        );
+        for (GraphQLResponse.Error error : response.getErrors()) {
+            assertEquals(error.getMessage(), "failed");
+        }
+    }
 
-        final List<GraphQLResponse.Error> actualErrors = response.getErrors();
+    /**
+     * This tests the GsonErrorDeserializer.  The test JSON response has 4 errors, which are all in
+     * different formats, but are expected to be parsed into the same resulting object:
+     * 1. Error contains errorType, errorInfo, data (AppSync specific fields) at root level
+     * 2. Error contains errorType, errorInfo, data inside extensions object
+     * 3. Error contains errorType, errorInfo, data at root AND inside extensions (fields inside
+     * extensions take precedence)
+     * 4. Error contains errorType at root, and errorInfo, data inside extensions (all should be
+     * merged into extensions)
+     *
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void errorResponseDeserializesExtensionsMap() throws ApiException {
+        // Arrange some JSON string from a "server"
+        final String partialResponseJson =
+                Resources.readAsString("error-extensions-gql-response.json");
 
-        assertEquals(expectedErrors, actualErrors);
+        // Act! Parse it into a model.
+        final GraphQLResponse<ListTodosResult> response =
+                responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
+
+        // Assert that the response contained things...
+        assertNotNull(response);
+        assertNotNull(response.getErrors());
+        assertEquals(response.getErrors().size(), 4);
+
+        // Assert that each error is has been parsed to the same output object
+        for (GraphQLResponse.Error error : response.getErrors()) {
+            assertEquals(error.getMessage(), "Conflict resolver rejects mutation.");
+            assertEquals(error.getPath().get(0).getAsString(), "listTodos");
+            assertEquals(error.getPath().get(1).getAsString(), "items");
+            assertEquals(error.getPath().get(2).getAsInt(), 0);
+            assertEquals(error.getPath().get(3).getAsString(), "name");
+            assertEquals(error.getLocations().size(), 1);
+            assertEquals(error.getLocations().get(0).getLine(), 11);
+            assertEquals(error.getLocations().get(0).getColumn(), 3);
+
+            AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
+            assertEquals(extensions.getErrorType(), "ConflictUnhandled");
+            assertEquals(extensions.getErrorInfo(), null);
+            assertNotNull(extensions.getData());
+            assertEquals(extensions.getData().get("id"), "EF48518C-92EB-4F7A-A64E-D1B9325205CF");
+            assertEquals(extensions.getData().get("title"), "new3");
+            assertEquals(extensions.getData().get("content"), "Original content from " +
+                    "DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000");
+            assertEquals(((Number) extensions.getData().get("_version")).intValue(), 2);
+        }
     }
 
     /**

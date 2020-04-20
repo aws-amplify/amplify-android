@@ -1,0 +1,117 @@
+{
+  "data": {
+    "listTodos": null
+  },
+  "errors": [
+    {
+      "path": [
+        "listTodos",
+        "items",
+        0,
+        "name"
+      ],
+      "data": {
+        "id": "EF48518C-92EB-4F7A-A64E-D1B9325205CF",
+        "title": "new3",
+        "content": "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000",
+        "_version": 2
+      },
+      "errorType": "ConflictUnhandled",
+      "errorInfo": null,
+      "locations": [
+        {
+          "line": 11,
+          "column": 3,
+          "sourceName": null
+        }
+      ],
+      "message": "Conflict resolver rejects mutation."
+    },
+    {
+      "path": [
+        "listTodos",
+        "items",
+        0,
+        "name"
+      ],
+      "locations": [
+        {
+          "line": 11,
+          "column": 3,
+          "sourceName": null
+        }
+      ],
+      "message": "Conflict resolver rejects mutation.",
+      "extensions" : {
+        "data": {
+          "id": "EF48518C-92EB-4F7A-A64E-D1B9325205CF",
+          "title": "new3",
+          "content": "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000",
+          "_version": 2
+        },
+        "errorType": "ConflictUnhandled",
+        "errorInfo": null
+      }
+    },
+    {
+      "path": [
+        "listTodos",
+        "items",
+        0,
+        "name"
+      ],
+      "data": {
+        "id": "EF48518C-92EB-4F7A-A64E-D1B9325205CF",
+        "title": "new3",
+        "content": "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000",
+        "_version": 2
+      },
+      "errorType": "This should be discarded since it exists inside of the extensions object",
+      "errorInfo": null,
+      "locations": [
+        {
+          "line": 11,
+          "column": 3,
+          "sourceName": null
+        }
+      ],
+      "message": "Conflict resolver rejects mutation.",
+      "extensions" : {
+        "data": {
+          "id": "EF48518C-92EB-4F7A-A64E-D1B9325205CF",
+          "title": "new3",
+          "content": "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000",
+          "_version": 2
+        },
+        "errorType": "ConflictUnhandled",
+        "errorInfo": null
+      }
+    },
+    {
+      "path": [
+        "listTodos",
+        "items",
+        0,
+        "name"
+      ],
+      "errorType": "ConflictUnhandled",
+      "locations": [
+        {
+          "line": 11,
+          "column": 3,
+          "sourceName": null
+        }
+      ],
+      "message": "Conflict resolver rejects mutation.",
+      "extensions" : {
+        "data": {
+          "id": "EF48518C-92EB-4F7A-A64E-D1B9325205CF",
+          "title": "new3",
+          "content": "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000",
+          "_version": 2
+        },
+        "errorInfo": null
+      }
+    }
+  ]
+}
