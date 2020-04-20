@@ -29,8 +29,8 @@ public final class Sentiment extends Feature<SentimentType> {
 
     @Override
     @NonNull
-    public String getType() {
-        return FeatureType.SENTIMENT.getFeatureName();
+    public String getTypeAlias() {
+        return FeatureType.SENTIMENT.getAlias();
     }
 
     /**

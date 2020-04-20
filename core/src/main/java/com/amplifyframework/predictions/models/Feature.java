@@ -39,10 +39,10 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
 
     /**
      * Gets the type name of feature.
-     * @return the feature type
+     * @return the feature's type alias
      */
     @NonNull
-    public abstract String getType();
+    public abstract String getTypeAlias();
 
     /**
      * Gets the unique ID assigned to this result.
@@ -85,7 +85,7 @@ public abstract class Feature<T> implements Comparable<Feature<T>> {
         if (other == null) {
             return -1;
         }
-        int typeDiff = this.getType().compareToIgnoreCase(other.getType());
+        int typeDiff = this.getTypeAlias().compareToIgnoreCase(other.getTypeAlias());
         if (typeDiff != 0) {
             return typeDiff;
         }

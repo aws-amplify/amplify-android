@@ -29,8 +29,8 @@ public final class Entity extends TextFeature<EntityType> {
 
     @Override
     @NonNull
-    public String getType() {
-        return FeatureType.ENTITY.getFeatureName();
+    public String getTypeAlias() {
+        return FeatureType.ENTITY.getAlias();
     }
 
     /**
