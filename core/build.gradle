@@ -20,6 +20,7 @@ apply from: rootProject.file("configuration/publishing.gradle")
 dependencies {
     implementation dependency.androidx.v4support
     implementation dependency.androidx.annotation
+    implementation dependency.threetenabp
 
     testImplementation project(path: ':testmodels')
     testImplementation(project(path: ':testutils')) {

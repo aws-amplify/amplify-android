@@ -25,6 +25,8 @@ dependencies {
     implementation dependency.gson
     implementation dependency.aws.authcore
     implementation dependency.aws.mobileclient
+    implementation dependency.threetenabp
+
 
     testImplementation project(path: ':testutils')
     testImplementation project(path: ':testmodels')

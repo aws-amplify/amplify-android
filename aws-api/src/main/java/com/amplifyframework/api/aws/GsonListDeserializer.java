@@ -70,6 +70,6 @@ public final class GsonListDeserializer implements JsonDeserializer<List<Object>
             }
         }
 
-        return new Gson().fromJson(json, typeOfT);
+        return GsonUtil.getGson().fromJson(json, typeOfT);
     }
 }

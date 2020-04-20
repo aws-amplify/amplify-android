@@ -18,6 +18,9 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.scalar.AWSDate;
+import com.amplifyframework.core.model.scalar.AWSDateTime;
+import com.amplifyframework.core.model.scalar.AWSTime;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,6 +34,7 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,6 +51,10 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                 new GsonBuilder()
                 .registerTypeAdapter(List.class, new GsonListDeserializer())
                 .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
+                .registerTypeAdapter(Date.class, new GsonUtil.DateAdapter())
+                .registerTypeAdapter(AWSDate.class, new GsonUtil.AWSDateAdapter())
+                .registerTypeAdapter(AWSDateTime.class, new GsonUtil.AWSDateTimeAdapter())
+                .registerTypeAdapter(AWSTime.class, new GsonUtil.AWSTimeAdapter())
                 .create()
         );
     }

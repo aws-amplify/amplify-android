@@ -15,19 +15,34 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.scalar.AWSDate;
+import com.amplifyframework.core.model.scalar.AWSDateTime;
+import com.amplifyframework.core.model.scalar.AWSTime;
 import com.amplifyframework.util.Immutable;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 final class GsonUtil {
+    private static Gson gson;
 
     private GsonUtil() {
         throw new UnsupportedOperationException("No instances allowed.");
@@ -74,5 +89,81 @@ final class GsonUtil {
             }
         }
         return null;
+    }
+
+    public static Gson getGson() {
+        if (gson == null) {
+            gson = new GsonBuilder()
+                    .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
+                    .registerTypeAdapter(Date.class, new DateAdapter())
+                    .registerTypeAdapter(AWSDate.class, new AWSDateAdapter())
+                    .registerTypeAdapter(AWSDateTime.class, new AWSDateTimeAdapter())
+                    .registerTypeAdapter(AWSTime.class, new AWSTimeAdapter())
+                    .create();
+        }
+        return gson;
+    }
+
+    static class AWSDateAdapter implements JsonDeserializer<AWSDate>, JsonSerializer<AWSDate> {
+        @Override
+        public AWSDate deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            return new AWSDate(json.getAsString());
+        }
+
+        @Override
+        public JsonElement serialize(AWSDate date, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(date.format());
+        }
+    }
+
+    static class AWSDateTimeAdapter implements JsonDeserializer<AWSDateTime>, JsonSerializer<AWSDateTime> {
+        @Override
+        public AWSDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            return new AWSDateTime(json.getAsString());
+        }
+
+        @Override
+        public JsonElement serialize(AWSDateTime dateTime, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(dateTime.format());
+        }
+    }
+
+    static class AWSTimeAdapter implements JsonDeserializer<AWSTime>, JsonSerializer<AWSTime> {
+        @Override
+        public AWSTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            return new AWSTime(json.getAsString());
+        }
+
+        @Override
+        public JsonElement serialize(AWSTime time, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(time.format());
+        }
+    }
+
+    /**
+     * Used for deserializing AWSTimestamp, an AppSync scalar type that represents the number of seconds elapsed since
+     * 1970-01-01T00:00Z. Timestamps are serialized and deserialized as numbers. Negative values are also accepted and
+     * these represent the number of seconds till 1970-01-01T00:00Z.
+     *
+     * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
+     */
+    static class DateAdapter implements JsonDeserializer<Date>, JsonSerializer<Date> {
+        @Override
+        public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+                throws JsonParseException {
+            long epochTimeInSeconds = json.getAsLong();
+            long epochTimeInMillis = TimeUnit.SECONDS.toMillis(epochTimeInSeconds);
+            return new Date(epochTimeInMillis);
+        }
+
+        @Override
+        public JsonElement serialize(Date date, Type typeOfSrc, JsonSerializationContext context) {
+            long timeInMillis = date.getTime();
+            long timeInSeconds = TimeUnit.MILLISECONDS.toSeconds(timeInMillis);
+            return new JsonPrimitive(timeInSeconds);
+        }
     }
 }
