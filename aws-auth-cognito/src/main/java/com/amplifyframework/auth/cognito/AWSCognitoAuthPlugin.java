@@ -25,6 +25,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthSignInState;
 import com.amplifyframework.auth.options.AuthSignInOptions;
@@ -38,7 +39,6 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.HostedUIOptions;
-import com.amazonaws.mobile.client.IdentityProvider;
 import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
@@ -298,13 +298,14 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
-    public void signInWithFacebook(
+    public void signInWithSocial(
+            @NonNull AuthProvider provider,
             @NonNull String token,
             @NonNull final Consumer<String> onSuccess,
             @NonNull final Consumer<AmplifyException> onException
     ) {
         AWSMobileClient.getInstance().federatedSignIn(
-            IdentityProvider.FACEBOOK.toString(),
+            provider.getProviderKey(),
             token,
             new Callback<UserStateDetails>() {
                 @Override
