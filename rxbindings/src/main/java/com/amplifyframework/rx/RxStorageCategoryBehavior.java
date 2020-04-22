@@ -27,6 +27,8 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
+import java.io.File;
+
 import io.reactivex.Single;
 
 /**
@@ -37,7 +39,7 @@ public interface RxStorageCategoryBehavior {
     /**
      * Download a file.
      * @param key Remote key of file
-     * @param local Local path to which to save
+     * @param local Local file to which to save
      * @return A single which emits a download result on success, or an error on failure.
      *         The download does not begin until subscription. You can cancel the download
      *         by disposing the single subscription.
@@ -45,13 +47,13 @@ public interface RxStorageCategoryBehavior {
     @NonNull
     Single<StorageDownloadFileResult> downloadFile(
             @NonNull String key,
-            @NonNull String local
+            @NonNull File local
     );
 
     /**
      * Download a file.
      * @param key Remote key of file
-     * @param local Local path to which to save
+     * @param local Local file to which to save
      * @param options Additional download options
      * @return A single which emits a download result on success, or an error on failure.
      *         The download does not begin until subscription. You can cancel the download
@@ -60,14 +62,14 @@ public interface RxStorageCategoryBehavior {
     @NonNull
     Single<StorageDownloadFileResult> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageDownloadFileOptions options
     );
 
     /**
      * Upload a file.
      * @param key Remote key of file
-     * @param local Local path from which to read contents
+     * @param local Local file from which to read contents
      * @return A single which emits an upload result on success, or an error on failure.
      *         The upload does not begin until subscription. You can cancel the upload
      *         by disposing the single subscription.
@@ -75,13 +77,13 @@ public interface RxStorageCategoryBehavior {
     @NonNull
     Single<StorageUploadFileResult> uploadFile(
             @NonNull String key,
-            @NonNull String local
+            @NonNull File local
     );
 
     /**
      * Upload a file.
      * @param key Remote key of file
-     * @param local Local path from which to read contents
+     * @param local Local file from which to read contents
      * @param options Additional upload options
      * @return A single which emits an upload result on success, or an error on failure.
      *         The upload does not begin until subscription. You can cancel the upload
@@ -90,7 +92,7 @@ public interface RxStorageCategoryBehavior {
     @NonNull
     Single<StorageUploadFileResult> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageUploadFileOptions options
     );
 

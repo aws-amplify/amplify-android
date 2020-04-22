@@ -41,6 +41,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Collections;
@@ -144,11 +145,12 @@ public final class StorageComponentTest {
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageDownloadFileResult} with correct file path.
      * @throws StorageException when an error is encountered while downloading
+     * @throws IOException when a temporary file cannot be created
      */
     @Test
-    public void testDownloadToFileGetsFile() throws StorageException {
+    public void testDownloadToFileGetsFile() throws StorageException, IOException {
         final String fromRemoteKey = RandomString.string();
-        final String toLocalPath = RandomString.string();
+        final File toLocalFile = File.createTempFile("download", "data");
 
         // Since we use a mock StorageService, it will return a null
         // result by default. We need a non-null transfer observer.
@@ -171,28 +173,29 @@ public final class StorageComponentTest {
                 Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) ->
                     storage.downloadFile(
                         fromRemoteKey,
-                        toLocalPath,
+                        toLocalFile,
                         onResult,
                         onError
                     )
                 );
 
-        assertEquals(toLocalPath, result.getFile().toString());
+        assertEquals(toLocalFile.getAbsolutePath(), result.getFile().toString());
     }
 
     /**
      * Test that calling download file method from Storage category fails
      * successfully when {@link TransferListener} emits an error.
+     * @throws IOException when a temporary file cannot be created
      */
     @Test
-    public void testDownloadError() {
+    public void testDownloadError() throws IOException {
         final StorageException testError = new StorageException(
             "Test error message",
             "Test recovery message"
         );
 
         final String fromRemoteKey = RandomString.string();
-        final String toLocalPath = RandomString.string();
+        final File toLocalFile = File.createTempFile("download", "data");
 
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.downloadToFile(anyString(), any(File.class)))
@@ -209,7 +212,7 @@ public final class StorageComponentTest {
                 Await.<StorageDownloadFileResult, StorageException>error((onResult, onError) ->
                     storage.downloadFile(
                         fromRemoteKey,
-                        toLocalPath,
+                        toLocalFile,
                         onResult,
                         onError
                     )
@@ -223,11 +226,12 @@ public final class StorageComponentTest {
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageUploadFileResult} with correct remote key.
      * @throws StorageException when an error is encountered while uploading
+     * @throws IOException when a temporary file cannot be created
      */
     @Test
-    public void testUploadFileGetsKey() throws StorageException {
+    public void testUploadFileGetsKey() throws StorageException, IOException {
         final String toRemoteKey = RandomString.string();
-        final String fromLocalPath = RandomString.string();
+        final File fromLocalFile = File.createTempFile("upload", "data");
 
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
@@ -244,7 +248,7 @@ public final class StorageComponentTest {
                 Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
                     storage.uploadFile(
                         toRemoteKey,
-                        fromLocalPath,
+                        fromLocalFile,
                         onResult,
                         onError
                     )
@@ -256,16 +260,17 @@ public final class StorageComponentTest {
     /**
      * Test that calling upload file method from Storage category fails
      * successfully when {@link TransferListener} emits an error.
+     * @throws IOException when a temporary file cannot be created
      */
     @Test
-    public void testUploadError() {
+    public void testUploadError() throws IOException {
         final StorageException testError = new StorageException(
                 "Test error message",
                 "Test recovery message"
         );
 
         final String toRemoteKey = RandomString.string();
-        final String fromLocalPath = RandomString.string();
+        final File fromLocalFile = File.createTempFile("upload", "data");
 
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
@@ -282,7 +287,7 @@ public final class StorageComponentTest {
                 Await.<StorageUploadFileResult, StorageException>error((onResult, onError) ->
                     storage.uploadFile(
                         toRemoteKey,
-                        fromLocalPath,
+                        fromLocalFile,
                         onResult,
                         onError
                     )

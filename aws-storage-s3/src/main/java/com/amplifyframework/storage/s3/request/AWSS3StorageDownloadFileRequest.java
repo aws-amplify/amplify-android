@@ -19,27 +19,29 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
+import java.io.File;
+
 /**
  * Parameters to provide to S3 that describe a request to download a
  * file.
  */
 public final class AWSS3StorageDownloadFileRequest {
     private final String key;
-    private final String local;
+    private final File local;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
     /**
      * Constructs a new AWSS3StorageDownloadFileRequest.
      * @param key key for item to download
-     * @param local Target path for the downloaded file to be saved to
+     * @param local Target file for the downloaded file to be saved to
      * @param accessLevel Storage access level
      * @param targetIdentityId The user id for the user this file should be downloaded for
      *                         (to override it from assuming the currently logged in user)
      */
     public AWSS3StorageDownloadFileRequest(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String targetIdentityId
     ) {
@@ -77,11 +79,11 @@ public final class AWSS3StorageDownloadFileRequest {
     }
 
     /**
-     * Gets the local file path where the object should be saved.
-     * @return local file path
+     * Gets the local file where the object will be saved.
+     * @return local file
      */
     @NonNull
-    public String getLocal() {
+    public File getLocal() {
         return local;
     }
 }

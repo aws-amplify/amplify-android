@@ -71,13 +71,13 @@ public final class AWSS3StorageDownloadTest {
     private static SynchronousStorage synchronousStorage;
 
     private File downloadFile;
-    private String downloadPath;
     private StorageDownloadFileOptions options;
     private Set<SubscriptionToken> subscriptions;
 
     /**
      * Initialize mobile client and configure the storage.
      * Upload the test files ahead of time.
+     *
      * @throws Exception if mobile client initialization fails
      */
     @BeforeClass
@@ -101,14 +101,12 @@ public final class AWSS3StorageDownloadTest {
         // Upload large test file
         largeFile = new RandomTempFile(LARGE_FILE_NAME, LARGE_FILE_SIZE);
         key = LARGE_FILE_NAME;
-        local = largeFile.getAbsolutePath();
-        synchronousStorage.uploadFile(key, local, uploadOptions, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.uploadFile(key, largeFile, uploadOptions, EXTENDED_TIMEOUT_MS);
 
         // Upload small test file
         smallFile = new RandomTempFile(SMALL_FILE_NAME, SMALL_FILE_SIZE);
         key = SMALL_FILE_NAME;
-        local = smallFile.getAbsolutePath();
-        synchronousStorage.uploadFile(key, local, uploadOptions);
+        synchronousStorage.uploadFile(key, smallFile, uploadOptions);
     }
 
     /**
@@ -128,7 +126,6 @@ public final class AWSS3StorageDownloadTest {
 
         // Create a file to download to
         downloadFile = new RandomTempFile();
-        downloadPath = downloadFile.getPath();
     }
 
     /**
@@ -149,7 +146,7 @@ public final class AWSS3StorageDownloadTest {
      */
     @Test
     public void testDownloadSmallFile() throws Exception {
-        synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadPath, options);
+        synchronousStorage.downloadFile(SMALL_FILE_NAME, downloadFile, options);
         FileAssert.assertEquals(smallFile, downloadFile);
     }
 
@@ -160,7 +157,7 @@ public final class AWSS3StorageDownloadTest {
      */
     @Test
     public void testDownloadLargeFile() throws Exception {
-        synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadPath, options, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.downloadFile(LARGE_FILE_NAME, downloadFile, options, EXTENDED_TIMEOUT_MS);
         FileAssert.assertEquals(largeFile, downloadFile);
     }
 
@@ -169,7 +166,7 @@ public final class AWSS3StorageDownloadTest {
      * transfer hasn't completed yet.
      *
      * @throws Exception if download is not canceled successfully
-     *         before timeout
+     *                   before timeout
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -205,7 +202,7 @@ public final class AWSS3StorageDownloadTest {
         // Begin downloading a large file
         StorageDownloadFileOperation<?> op = storageCategory.downloadFile(
             LARGE_FILE_NAME,
-            downloadPath,
+            downloadFile,
             options,
             onResult -> errorContainer.set(new RuntimeException("Download completed without canceling.")),
             errorContainer::set
@@ -222,7 +219,7 @@ public final class AWSS3StorageDownloadTest {
      * while the transfer hasn't completed yet.
      *
      * @throws Exception if download is not paused, resumed, and
-     *         completed successfully before timeout
+     *                   completed successfully before timeout
      */
     @Test
     @SuppressWarnings("unchecked")
@@ -262,7 +259,7 @@ public final class AWSS3StorageDownloadTest {
         // Begin downloading a large file
         StorageDownloadFileOperation<?> op = storageCategory.downloadFile(
             LARGE_FILE_NAME,
-            downloadPath,
+            downloadFile,
             options,
             onResult -> completed.countDown(),
             errorContainer::set
