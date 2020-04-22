@@ -15,6 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
+import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -30,12 +31,16 @@ import java.util.Objects;
  */
 public final class CelebrityDetails {
     private final Celebrity celebrity;
+    private final RectF box;
+    private final Polygon polygon;
     private final Pose pose;
     private final List<Landmark> landmarks;
     private final List<URL> urls;
 
     private CelebrityDetails(final Builder builder) {
         this.celebrity = builder.getCelebrity();
+        this.box = builder.getBox();
+        this.polygon = builder.getPolygon();
         this.pose = builder.getPose();
         this.landmarks = builder.getLandmarks();
         this.urls = builder.getUrls();
@@ -48,6 +53,24 @@ public final class CelebrityDetails {
     @NonNull
     public Celebrity getCelebrity() {
         return celebrity;
+    }
+
+    /**
+     * Gets the rectangular target boundary if available.
+     * @return the rectangular boundary
+     */
+    @Nullable
+    public RectF getBox() {
+        return box;
+    }
+
+    /**
+     * Gets a more finely defined target boundary if available.
+     * @return the polygonal boundary
+     */
+    @Nullable
+    public Polygon getPolygon() {
+        return polygon;
     }
 
     /**
@@ -93,6 +116,8 @@ public final class CelebrityDetails {
      */
     public static final class Builder {
         private Celebrity celebrity;
+        private RectF box;
+        private Polygon polygon;
         private Pose pose;
         private List<Landmark> landmarks;
         private List<URL> urls;
@@ -110,6 +135,28 @@ public final class CelebrityDetails {
         @NonNull
         public Builder celebrity(@NonNull Celebrity celebrity) {
             this.celebrity = Objects.requireNonNull(celebrity);
+            return this;
+        }
+
+        /**
+         * Sets the bounding box and return this builder.
+         * @param box the rectangular boundary
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder box(@Nullable RectF box) {
+            this.box = box;
+            return this;
+        }
+
+        /**
+         * Sets the bounding polygon and return this builder.
+         * @param polygon the polygonal boundary
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder polygon(@Nullable Polygon polygon) {
+            this.polygon = polygon;
             return this;
         }
 
@@ -159,6 +206,16 @@ public final class CelebrityDetails {
         @NonNull
         Celebrity getCelebrity() {
             return Objects.requireNonNull(celebrity);
+        }
+
+        @Nullable
+        RectF getBox() {
+            return box;
+        }
+
+        @Nullable
+        Polygon getPolygon() {
+            return polygon;
         }
 
         @Nullable

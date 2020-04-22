@@ -15,7 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Point;
+import android.graphics.PointF;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.util.Immutable;
@@ -30,9 +30,9 @@ import java.util.Objects;
 public final class Polygon {
     private static final int MINIMUM_POINTS_REQUIRED = 3;
 
-    private final List<Point> points;
+    private final List<PointF> points;
 
-    private Polygon(List<Point> points) {
+    private Polygon(List<PointF> points) {
         this.points = points;
     }
 
@@ -41,7 +41,7 @@ public final class Polygon {
      * @return the polygon vertices
      */
     @NonNull
-    public List<Point> getPoints() {
+    public List<PointF> getPoints() {
         return Immutable.of(points);
     }
 
@@ -53,7 +53,7 @@ public final class Polygon {
      * @return A polygon instance
      */
     @NonNull
-    public static Polygon fromPoints(@NonNull List<Point> points) {
+    public static Polygon fromPoints(@NonNull List<PointF> points) {
         Objects.requireNonNull(points);
         if (points.size() < MINIMUM_POINTS_REQUIRED) {
             throw new IllegalArgumentException("A polygon must " +

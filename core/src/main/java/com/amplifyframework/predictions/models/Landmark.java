@@ -15,50 +15,48 @@
 
 package com.amplifyframework.predictions.models;
 
+import android.graphics.PointF;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.util.Immutable;
+
+import java.util.List;
+import java.util.Objects;
+
 /**
- * Holds the image entity feature detection results
- * for the predictions category.
+ * Representation of specific entity landmark type and
+ * all of the points that represent it in the input image.
  */
-public final class Landmark extends ImageFeature<LandmarkType> {
+public final class Landmark {
+    private final LandmarkType type;
+    private final List<PointF> points;
+
     /**
-     * Feature type for {@link LandmarkType}.
+     * Constructs an instance of {@link Landmark}.
+     * @param type the landmark type
+     * @param points the list of all the points that match
      */
-    public static final String FEATURE_TYPE = LandmarkType.class.getSimpleName();
-
-    private Landmark(final Builder builder) {
-        super(builder);
-    }
-
-    @Override
-    @NonNull
-    public String getTypeAlias() {
-        return FEATURE_TYPE;
+    public Landmark(@NonNull LandmarkType type, @NonNull List<PointF> points) {
+        this.type = Objects.requireNonNull(type);
+        this.points = Objects.requireNonNull(points);
     }
 
     /**
-     * Gets a builder to help easily construct a
-     * entity landmark detection result object.
-     * @return an unassigned builder instance
+     * Gets the type of landmark represented by this object.
+     * @return the landmark type enum
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public LandmarkType getType() {
+        return type;
     }
 
     /**
-     * Builder for {@link Landmark}.
+     * Gets the list of all the points that represents this
+     * landmark type.
+     * @return the points that fall into this landmark type
      */
-    public static final class Builder extends ImageFeature.Builder<Builder, Landmark, LandmarkType> {
-        /**
-         * Construct a new instance of {@link Landmark} from
-         * the values assigned to this builder instance.
-         * @return An instance of {@link Landmark}
-         */
-        @NonNull
-        public Landmark build() {
-            return new Landmark(this);
-        }
+    @NonNull
+    public List<PointF> getPoints() {
+        return Immutable.of(points);
     }
 }

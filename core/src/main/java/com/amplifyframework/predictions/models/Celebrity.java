@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
  * Holds the celebrity detection results
  * for the predictions category.
  */
-public final class Celebrity extends ImageFeature<String> {
+public final class Celebrity extends Feature<String> {
 
     private Celebrity(final Builder builder) {
         super(builder);
@@ -56,7 +56,7 @@ public final class Celebrity extends ImageFeature<String> {
     /**
      * Builder for {@link Celebrity}.
      */
-    public static final class Builder extends ImageFeature.Builder<Builder, Celebrity, String> {
+    public static final class Builder extends Feature.Builder<Builder, Celebrity, String> {
         /**
          * Sets the name of celebrity. This is the same as
          * setting the feature value for this builder.

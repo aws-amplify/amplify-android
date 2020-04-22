@@ -15,14 +15,21 @@
 
 package com.amplifyframework.testutils.sync;
 
+import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsCategoryBehavior;
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.models.IdentifyActionType;
+import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
+import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
+import com.amplifyframework.predictions.result.IdentifyLabelsResult;
+import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.testutils.Await;
@@ -102,6 +109,56 @@ public final class SynchronousPredictions {
                     text,
                     fromLanguage,
                     toLanguage,
+                    options,
+                    onResult,
+                    onError
+            )
+        );
+    }
+
+    /**
+     * Detect celebrities in given image synchronously and return the result of operation.
+     * @param image the input image to detect celebrities from
+     * @param options identify options
+     * @return the result of celebrities detection
+     * @throws PredictionsException if identify fails or times out
+     */
+    @NonNull
+    public IdentifyCelebritiesResult identifyCelebrities(
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options
+    ) throws PredictionsException {
+        return (IdentifyCelebritiesResult) Await.<IdentifyResult, PredictionsException>result(
+            PREDICTIONS_OPERATION_TIMEOUT_MS,
+            (onResult, onError) -> asyncDelegate.identify(
+                    IdentifyActionType.DETECT_CELEBRITIES,
+                    image,
+                    options,
+                    onResult,
+                    onError
+            )
+        );
+    }
+
+    /**
+     * Detect labels in given image synchronously and return the result of operation.
+     * @param type the type of label to detect
+     * @param image the input image to detect labels from
+     * @param options identify options
+     * @return the result of labels detection
+     * @throws PredictionsException if identify fails or times out
+     */
+    @NonNull
+    public IdentifyLabelsResult identifyLabels(
+            @NonNull LabelType type,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options
+    ) throws PredictionsException {
+        return (IdentifyLabelsResult) Await.<IdentifyResult, PredictionsException>result(
+            PREDICTIONS_OPERATION_TIMEOUT_MS,
+            (onResult, onError) -> asyncDelegate.identify(
+                    type,
+                    image,
                     options,
                     onResult,
                     onError

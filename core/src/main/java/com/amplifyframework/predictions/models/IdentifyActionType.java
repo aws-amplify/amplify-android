@@ -23,9 +23,9 @@ import androidx.annotation.NonNull;
  */
 public enum IdentifyActionType implements IdentifyAction {
     /**
-     * Identify a famous celebrity from an image.
+     * Identify famous celebrities from an image.
      */
-    DETECT_CELEBRITY,
+    DETECT_CELEBRITIES,
 
     /**
      * Identify specific labels from an image.

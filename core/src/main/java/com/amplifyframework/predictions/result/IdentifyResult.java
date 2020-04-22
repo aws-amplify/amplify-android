@@ -13,25 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.models;
+package com.amplifyframework.predictions.result;
 
 /**
- * Types of detectable entity landmarks.
+ * Interface to group different types of results from
+ * identify operation in Predictions category.
  */
-@SuppressWarnings("JavadocVariable")
-public enum LandmarkType {
-    ALL_POINTS,
-    LEFT_EYE,
-    RIGHT_EYE,
-    LEFT_EYEBROW,
-    RIGHT_EYEBROW,
-    NOSE,
-    NOSE_CREST,
-    MEDIAN_LINE,
-    OUTER_LIPS,
-    INNER_LIPS,
-    LEFT_PUPIL,
-    RIGHT_PUPIL,
-    FACE_CONTOUR,
-    UNKNOWN
+public interface IdentifyResult {
 }

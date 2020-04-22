@@ -15,8 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
-
+import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -31,7 +30,7 @@ import java.util.Objects;
  * for the predictions category.
  */
 public final class EntityDetails {
-    private final Rect box;
+    private final RectF box;
     private final Polygon polygon;
     private final AgeRange ageRange;
     private final PoseFeature pose;
@@ -56,7 +55,7 @@ public final class EntityDetails {
      * @return the rectangular boundary
      */
     @Nullable
-    public Rect getBox() {
+    public RectF getBox() {
         return box;
     }
 
@@ -136,7 +135,7 @@ public final class EntityDetails {
      * Builder for {@link EntityDetails}.
      */
     public static final class Builder {
-        private Rect box;
+        private RectF box;
         private Polygon polygon;
         private AgeRange ageRange;
         private PoseFeature pose;
@@ -157,7 +156,7 @@ public final class EntityDetails {
          * @return this builder instance
          */
         @NonNull
-        public Builder box(@Nullable Rect box) {
+        public Builder box(@Nullable RectF box) {
             this.box = box;
             return this;
         }
@@ -250,7 +249,7 @@ public final class EntityDetails {
         }
 
         @Nullable
-        Rect getBox() {
+        RectF getBox() {
             return box;
         }
 

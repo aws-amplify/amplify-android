@@ -13,25 +13,24 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.models;
+package com.amplifyframework.predictions.options;
+
+import com.amplifyframework.core.async.Options;
 
 /**
- * Types of detectable entity landmarks.
+ * Options for image identification operation.
  */
-@SuppressWarnings("JavadocVariable")
-public enum LandmarkType {
-    ALL_POINTS,
-    LEFT_EYE,
-    RIGHT_EYE,
-    LEFT_EYEBROW,
-    RIGHT_EYEBROW,
-    NOSE,
-    NOSE_CREST,
-    MEDIAN_LINE,
-    OUTER_LIPS,
-    INNER_LIPS,
-    LEFT_PUPIL,
-    RIGHT_PUPIL,
-    FACE_CONTOUR,
-    UNKNOWN
+public final class IdentifyOptions implements Options {
+
+    private IdentifyOptions() {
+        // TODO: Add options
+    }
+
+    /**
+     * Creates an instance of options with default values assigned.
+     * @return Default instance of options
+     */
+    public static IdentifyOptions defaults() {
+        return new IdentifyOptions();
+    }
 }

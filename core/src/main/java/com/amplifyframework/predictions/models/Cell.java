@@ -15,8 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
-
+import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -27,7 +26,7 @@ import java.util.Objects;
  */
 public final class Cell {
     private final String text;
-    private final Rect box;
+    private final RectF box;
     private final Polygon polygon;
     private final boolean selected;
     private final int row;
@@ -56,7 +55,7 @@ public final class Cell {
      * @return the rectangular boundary
      */
     @Nullable
-    public Rect getBox() {
+    public RectF getBox() {
         return box;
     }
 
@@ -108,7 +107,7 @@ public final class Cell {
      */
     public static final class Builder {
         private String text;
-        private Rect box;
+        private RectF box;
         private Polygon polygon;
         private boolean selected;
         private int row;
@@ -131,7 +130,7 @@ public final class Cell {
          * @return this builder instance
          */
         @NonNull
-        public Builder box(@Nullable Rect box) {
+        public Builder box(@Nullable RectF box) {
             this.box = box;
             return this;
         }
@@ -196,7 +195,7 @@ public final class Cell {
         }
 
         @Nullable
-        Rect getBox() {
+        RectF getBox() {
             return box;
         }
 

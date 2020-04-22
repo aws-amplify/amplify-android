@@ -15,8 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
-
+import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -27,12 +26,12 @@ import androidx.annotation.Nullable;
  * Contains geometric information to help locate the
  * target item inside an image. {@link Polygon} helps
  * define a more fine boundary that cannot be sufficiently
- * described by a {@link Rect} instance.
+ * described by a {@link RectF} instance.
  * @param <T> the feature type
  */
 @SuppressWarnings("unchecked")
 public abstract class ImageFeature<T> extends Feature<T> {
-    private final Rect box;
+    private final RectF box;
     private final Polygon polygon;
 
     ImageFeature(Builder<?, ? extends ImageFeature<T>, T> builder) {
@@ -46,7 +45,7 @@ public abstract class ImageFeature<T> extends Feature<T> {
      * @return the rectangular boundary
      */
     @Nullable
-    public Rect getBox() {
+    public RectF getBox() {
         return box;
     }
 
@@ -67,7 +66,7 @@ public abstract class ImageFeature<T> extends Feature<T> {
      */
     abstract static class Builder<B extends Builder<B, R, T>, R extends ImageFeature<T>, T>
             extends Feature.Builder<B, R, T> {
-        private Rect box;
+        private RectF box;
         private Polygon polygon;
 
         /**
@@ -76,7 +75,7 @@ public abstract class ImageFeature<T> extends Feature<T> {
          * @return this builder instance
          */
         @NonNull
-        public B box(@Nullable Rect box) {
+        public B box(@Nullable RectF box) {
             this.box = box;
             return (B) this;
         }
@@ -93,7 +92,7 @@ public abstract class ImageFeature<T> extends Feature<T> {
         }
 
         @Nullable
-        Rect getBox() {
+        RectF getBox() {
             return box;
         }
 

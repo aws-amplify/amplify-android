@@ -15,7 +15,7 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.Rect;
+import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -29,12 +29,12 @@ import java.util.Objects;
  * Defaults to deselected state until explicitly selected.
  */
 public final class Selection {
-    private final Rect box;
+    private final RectF box;
     private final Polygon polygon;
 
     private boolean selected;
 
-    private Selection(Rect box, Polygon polygon) {
+    private Selection(RectF box, Polygon polygon) {
         this.box = box;
         this.polygon = polygon;
     }
@@ -43,8 +43,9 @@ public final class Selection {
      * Constructs an instance of {@link Selection} using
      * rectangular boundary.
      * @param box the bounding box
+     * @return {@link Selection} instance containing a box
      */
-    public static Selection fromBox(@NonNull Rect box) {
+    public static Selection fromBox(@NonNull RectF box) {
         return new Selection(Objects.requireNonNull(box), null);
     }
 
@@ -52,6 +53,7 @@ public final class Selection {
      * Constructs an instance of {@link Selection} using
      * polygonal boundary.
      * @param polygon the bounding polygon
+     * @return {@link Selection} instance containing a polygon
      */
     public static Selection fromPolygon(@NonNull Polygon polygon) {
         return new Selection(null, Objects.requireNonNull(polygon));
@@ -63,7 +65,7 @@ public final class Selection {
      * @return the bounding box
      */
     @Nullable
-    public Rect getBox() {
+    public RectF getBox() {
         return box;
     }
 
