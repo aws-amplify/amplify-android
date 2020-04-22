@@ -79,8 +79,8 @@ final class MutationProcessor {
                 .flatMapSingle(this::processOutboxItem)
                 .subscribe(
                     processedChange -> {
-                        LOG.info("Change processed successfully! " + processedChange);
-                        announceSuccessToHub(processedChange);
+                        LOG.info("Local DataStore change was published up to Cloud: " + processedChange);
+                        announceSuccessfulPublication(processedChange);
                     },
                     error -> LOG.warn("Error ended observation of mutation outbox: ", error),
                     () -> LOG.warn("Observation of mutation outbox was completed.")
@@ -108,7 +108,7 @@ final class MutationProcessor {
      * @param processedChange A change that has been successfully processed and removed from outbox
      * @param <T> Type of model
      */
-    private <T extends Model> void announceSuccessToHub(StorageItemChange<T> processedChange) {
+    private <T extends Model> void announceSuccessfulPublication(StorageItemChange<T> processedChange) {
         HubEvent<StorageItemChange<? extends Model>> publishedToCloudEvent =
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedChange);
         Amplify.Hub.publish(HubChannel.DATASTORE, publishedToCloudEvent);
