@@ -93,7 +93,6 @@ public final class AWSS3StorageDownloadTest {
 
         // Upload to PUBLIC for consistency
         String key;
-        String local;
         StorageUploadFileOptions uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(TESTING_ACCESS_LEVEL)
                 .build();

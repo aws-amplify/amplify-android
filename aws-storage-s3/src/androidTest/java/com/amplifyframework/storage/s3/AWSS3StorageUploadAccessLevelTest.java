@@ -52,7 +52,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
     private static Credential userTwo;
 
     private File uploadFile;
-    private String fileName;
+    private String remoteKey;
     private StorageUploadFileOptions uploadOptions;
 
     /**
@@ -89,7 +89,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
 
         // Create a new file to upload
         uploadFile = new RandomTempFile(UPLOAD_SIZE);
-        fileName = uploadFile.getName();
+        remoteKey = uploadFile.getName();
 
         // Override this per test-case
         uploadOptions = StorageUploadFileOptions.defaultInstance();
@@ -105,7 +105,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
         uploadOptions = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 
     /**
@@ -123,7 +123,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 
     /**
@@ -141,7 +141,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 
     /**
@@ -156,7 +156,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 
     /**
@@ -171,7 +171,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 
     /**
@@ -190,7 +190,7 @@ public final class AWSS3StorageUploadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userTwo.getIdentityId())
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 
     /**
@@ -209,6 +209,6 @@ public final class AWSS3StorageUploadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userTwo.getIdentityId())
                 .build();
-        storage.uploadFile(fileName, uploadFile, uploadOptions);
+        storage.uploadFile(remoteKey, uploadFile, uploadOptions);
     }
 }

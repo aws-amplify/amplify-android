@@ -28,6 +28,7 @@ import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.testutils.random.RandomTempFile;
 
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferListener;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
@@ -62,6 +63,7 @@ import static org.mockito.Mockito.when;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class StorageComponentTest {
+    private static final long FILE_SIZE = 100L;
 
     private StorageCategory storage;
     private StorageService storageService;
@@ -69,8 +71,9 @@ public final class StorageComponentTest {
     /**
      * Sets up Storage category by registering a mock AWSS3StoragePlugin
      * instance to Amplify and configuring.
+     *
      * @throws AmplifyException if Amplify fails to configure with mock
-     *         Storage category configuration.
+     *                          Storage category configuration.
      */
     @Before
     public void setup() throws AmplifyException {
@@ -87,10 +90,10 @@ public final class StorageComponentTest {
         StorageCategoryConfiguration configuration = new StorageCategoryConfiguration();
         try {
             configuration.populateFromJSON(
-                new JSONObject().put("plugins", new JSONObject()
-                    .put("awsS3StoragePlugin", new JSONObject()
-                        .put("region", "us-east-1")
-                        .put("bucket", "hamburger-bucket")))
+                    new JSONObject().put("plugins", new JSONObject()
+                            .put("awsS3StoragePlugin", new JSONObject()
+                                    .put("region", "us-east-1")
+                                    .put("bucket", "hamburger-bucket")))
             );
         } catch (JSONException jsonException) {
             throw new RuntimeException(jsonException);
@@ -102,8 +105,9 @@ public final class StorageComponentTest {
      * Test that calling get URL method from Storage category correctly invokes
      * the registered AWSS3StoragePlugin instance and returns a {@link URL}
      * instance for that download.
+     *
      * @throws StorageException when an error is encountered while generating
-     *         URL from storage service
+     *                          URL from storage service
      */
     @Test
     public void testGenerateUrlGetsPresignedUrl() throws StorageException {
@@ -131,10 +135,10 @@ public final class StorageComponentTest {
         // Let Storage category invoke getUrl on mock Storage Service.
         StorageGetUrlResult result = Await.<StorageGetUrlResult, StorageException>result(
             (onResult, onError) -> storage.getUrl(
-                fromRemoteKey,
-                onResult,
-                onError
-            )
+                 fromRemoteKey,
+                 onResult,
+                 onError
+             )
         );
 
         assertEquals(urlFromRemoteKey, result.getUrl());
@@ -144,13 +148,13 @@ public final class StorageComponentTest {
      * Test that calling download file method from Storage category correctly
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageDownloadFileResult} with correct file path.
-     * @throws StorageException when an error is encountered while downloading
-     * @throws IOException when a temporary file cannot be created
+     *
+     * @throws Exception when an error is encountered while downloading
      */
     @Test
-    public void testDownloadToFileGetsFile() throws StorageException, IOException {
+    public void testDownloadToFileGetsFile() throws Exception {
         final String fromRemoteKey = RandomString.string();
-        final File toLocalFile = File.createTempFile("download", "data");
+        final File toLocalFile = new RandomTempFile();
 
         // Since we use a mock StorageService, it will return a null
         // result by default. We need a non-null transfer observer.
@@ -171,12 +175,12 @@ public final class StorageComponentTest {
 
         StorageDownloadFileResult result =
                 Await.<StorageDownloadFileResult, StorageException>result((onResult, onError) ->
-                    storage.downloadFile(
-                        fromRemoteKey,
-                        toLocalFile,
-                        onResult,
-                        onError
-                    )
+                        storage.downloadFile(
+                                fromRemoteKey,
+                                toLocalFile,
+                                onResult,
+                                onError
+                        )
                 );
 
         assertEquals(toLocalFile.getAbsolutePath(), result.getFile().toString());
@@ -185,17 +189,18 @@ public final class StorageComponentTest {
     /**
      * Test that calling download file method from Storage category fails
      * successfully when {@link TransferListener} emits an error.
-     * @throws IOException when a temporary file cannot be created
+     *
+     * @throws IOException when the temporary file cannot be created
      */
     @Test
     public void testDownloadError() throws IOException {
         final StorageException testError = new StorageException(
-            "Test error message",
-            "Test recovery message"
+                "Test error message",
+                "Test recovery message"
         );
 
         final String fromRemoteKey = RandomString.string();
-        final File toLocalFile = File.createTempFile("download", "data");
+        final File toLocalFile = new RandomTempFile();
 
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.downloadToFile(anyString(), any(File.class)))
@@ -210,12 +215,12 @@ public final class StorageComponentTest {
 
         StorageException error =
                 Await.<StorageDownloadFileResult, StorageException>error((onResult, onError) ->
-                    storage.downloadFile(
-                        fromRemoteKey,
-                        toLocalFile,
-                        onResult,
-                        onError
-                    )
+                        storage.downloadFile(
+                                fromRemoteKey,
+                                toLocalFile,
+                                onResult,
+                                onError
+                        )
                 );
 
         assertEquals(testError, error.getCause());
@@ -225,13 +230,13 @@ public final class StorageComponentTest {
      * Test that calling upload file method from Storage category correctly
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageUploadFileResult} with correct remote key.
-     * @throws StorageException when an error is encountered while uploading
-     * @throws IOException when a temporary file cannot be created
+     *
+     * @throws Exception when an error is encountered while uploading
      */
     @Test
-    public void testUploadFileGetsKey() throws StorageException, IOException {
+    public void testUploadFileGetsKey() throws Exception {
         final String toRemoteKey = RandomString.string();
-        final File fromLocalFile = File.createTempFile("upload", "data");
+        final File fromLocalFile = new RandomTempFile(FILE_SIZE);
 
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
@@ -246,12 +251,12 @@ public final class StorageComponentTest {
 
         StorageUploadFileResult result =
                 Await.<StorageUploadFileResult, StorageException>result((onResult, onError) ->
-                    storage.uploadFile(
-                        toRemoteKey,
-                        fromLocalFile,
-                        onResult,
-                        onError
-                    )
+                        storage.uploadFile(
+                                toRemoteKey,
+                                fromLocalFile,
+                                onResult,
+                                onError
+                        )
                 );
 
         assertEquals(toRemoteKey, result.getKey());
@@ -260,7 +265,8 @@ public final class StorageComponentTest {
     /**
      * Test that calling upload file method from Storage category fails
      * successfully when {@link TransferListener} emits an error.
-     * @throws IOException when a temporary file cannot be created
+     *
+     * @throws IOException when the upload file cannot be created
      */
     @Test
     public void testUploadError() throws IOException {
@@ -270,7 +276,7 @@ public final class StorageComponentTest {
         );
 
         final String toRemoteKey = RandomString.string();
-        final File fromLocalFile = File.createTempFile("upload", "data");
+        final File fromLocalFile = new RandomTempFile(FILE_SIZE);
 
         TransferObserver observer = mock(TransferObserver.class);
         when(storageService.uploadFile(anyString(), any(File.class), any(ObjectMetadata.class)))
@@ -285,12 +291,12 @@ public final class StorageComponentTest {
 
         StorageException error =
                 Await.<StorageUploadFileResult, StorageException>error((onResult, onError) ->
-                    storage.uploadFile(
-                        toRemoteKey,
-                        fromLocalFile,
-                        onResult,
-                        onError
-                    )
+                        storage.uploadFile(
+                                toRemoteKey,
+                                fromLocalFile,
+                                onResult,
+                                onError
+                        )
                 );
 
         assertEquals(testError, error.getCause());
@@ -300,8 +306,9 @@ public final class StorageComponentTest {
      * Test that calling list method from Storage category correctly
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageListResult} with list of stored items.
+     *
      * @throws StorageException when an error is encountered while listing
-     *         files inside storage
+     *                          files inside storage
      */
     @Test
     public void testListObject() throws StorageException {
@@ -319,11 +326,11 @@ public final class StorageComponentTest {
 
         StorageListResult result =
                 Await.<StorageListResult, StorageException>result((onResult, onError) ->
-                    storage.list(
-                        path,
-                        onResult,
-                        onError
-                    )
+                        storage.list(
+                                path,
+                                onResult,
+                                onError
+                        )
                 );
 
         assertEquals(item, result.getItems().get(0));
@@ -333,8 +340,9 @@ public final class StorageComponentTest {
      * Test that calling remove method from Storage category correctly
      * invokes the registered AWSS3StoragePlugin instance and returns a
      * {@link StorageRemoveResult} with key of removed item.
+     *
      * @throws StorageException when an error is encountered while deleting
-     *         file from storage
+     *                          file from storage
      */
     @Test
     public void testRemoveObjectGetsKey() throws StorageException {
@@ -342,11 +350,11 @@ public final class StorageComponentTest {
 
         StorageRemoveResult result =
                 Await.<StorageRemoveResult, StorageException>result((onResult, onError) ->
-                    storage.remove(
-                        remoteKey,
-                        onResult,
-                        onError
-                    )
+                        storage.remove(
+                                remoteKey,
+                                onResult,
+                                onError
+                        )
                 );
 
         assertEquals(remoteKey, result.getKey());
