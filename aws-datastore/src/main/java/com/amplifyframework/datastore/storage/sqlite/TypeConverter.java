@@ -13,13 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.types.internal;
+package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.model.types.AWSAppSyncScalarType;
 import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.core.model.types.SqliteDataType;
+import com.amplifyframework.datastore.appsync.AWSAppSyncScalarType;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +29,6 @@ import java.util.Objects;
  * GraphQL, Java and SQL data types.
  */
 public final class TypeConverter {
-
     private static final Map<AWSAppSyncScalarType, JavaFieldType> AWS_GRAPH_QL_TO_JAVA = new HashMap<>();
     private static final Map<JavaFieldType, SqliteDataType> JAVA_TO_SQL = new HashMap<>();
 

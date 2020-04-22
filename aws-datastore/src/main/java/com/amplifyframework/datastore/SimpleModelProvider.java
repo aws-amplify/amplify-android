@@ -21,10 +21,9 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.util.Immutable;
 
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -35,9 +34,9 @@ import java.util.UUID;
  */
 public final class SimpleModelProvider implements ModelProvider {
     private final String version;
-    private final Set<Class<? extends Model>> modelClasses;
+    private final LinkedHashSet<Class<? extends Model>> modelClasses;
 
-    private SimpleModelProvider(String version, Set<Class<? extends Model>> modelClasses) {
+    private SimpleModelProvider(String version, LinkedHashSet<Class<? extends Model>> modelClasses) {
         this.version = version;
         this.modelClasses = modelClasses;
     }
@@ -55,7 +54,9 @@ public final class SimpleModelProvider implements ModelProvider {
     public static SimpleModelProvider instance(@NonNull String version, @NonNull Class<? extends Model>... classes) {
         Objects.requireNonNull(version);
         Objects.requireNonNull(classes);
-        return new SimpleModelProvider(version, Immutable.of(new HashSet<>(Arrays.asList(classes))));
+        LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
+        Collections.addAll(modelClasses, classes);
+        return new SimpleModelProvider(version, modelClasses);
     }
 
     /**
@@ -69,7 +70,7 @@ public final class SimpleModelProvider implements ModelProvider {
     public static SimpleModelProvider instance(@NonNull String version, @NonNull Set<Class<? extends Model>> classes) {
         Objects.requireNonNull(version);
         Objects.requireNonNull(classes);
-        return new SimpleModelProvider(version, classes);
+        return new SimpleModelProvider(version, new LinkedHashSet<>(classes));
     }
 
     /**
@@ -92,7 +93,7 @@ public final class SimpleModelProvider implements ModelProvider {
     @NonNull
     @Override
     public Set<Class<? extends Model>> models() {
-        return modelClasses;
+        return Collections.unmodifiableSet(modelClasses);
     }
 
     @NonNull
@@ -146,11 +147,11 @@ public final class SimpleModelProvider implements ModelProvider {
      * Configures and builds instances of SimpleModelProvider.
      */
     static final class Builder {
-        private final Set<Class<? extends Model>> modelClasses;
+        private final LinkedHashSet<Class<? extends Model>> modelClasses;
         private String version;
 
         Builder() {
-            this.modelClasses = new HashSet<>();
+            this.modelClasses = new LinkedHashSet<>();
         }
 
         <T extends Model> Builder addModel(@NonNull Class<T> modelClass) {

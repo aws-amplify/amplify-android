@@ -56,7 +56,6 @@ public final class AWSS3StorageDownloadAccessLevelTest {
     private static Credential userTwo;
 
     private File downloadFile;
-    private String downloadPath;
     private StorageDownloadFileOptions downloadOptions;
 
     /**
@@ -94,7 +93,6 @@ public final class AWSS3StorageDownloadAccessLevelTest {
 
         // Create a new download destination
         downloadFile = new RandomTempFile();
-        downloadPath = downloadFile.getPath();
 
         // Override this per test-case
         downloadOptions = StorageDownloadFileOptions.defaultInstance();
@@ -110,7 +108,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
         downloadOptions = StorageDownloadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -128,7 +126,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -147,7 +145,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -163,7 +161,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -179,7 +177,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userOne.getIdentityId())
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -199,7 +197,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .targetIdentityId(userTwo.getIdentityId())
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -219,7 +217,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .targetIdentityId(userTwo.getIdentityId())
                 .build();
-        storage.downloadFile(UPLOAD_NAME, downloadPath, downloadOptions);
+        storage.downloadFile(UPLOAD_NAME, downloadFile, downloadOptions);
         FileAssert.assertEquals(uploadFile, downloadFile);
     }
 
@@ -227,7 +225,6 @@ public final class AWSS3StorageDownloadAccessLevelTest {
         // Create a temporary file to upload
         uploadFile = new RandomTempFile(UPLOAD_NAME, UPLOAD_SIZE);
         final String key = UPLOAD_NAME;
-        final String local = uploadFile.getAbsolutePath();
 
         StorageUploadFileOptions options;
 
@@ -236,7 +233,7 @@ public final class AWSS3StorageDownloadAccessLevelTest {
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
                 .build();
-        storage.uploadFile(key, local, options);
+        storage.uploadFile(key, uploadFile, options);
 
         // Upload as user one
         mobileClient.signOut();
@@ -244,11 +241,11 @@ public final class AWSS3StorageDownloadAccessLevelTest {
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
-        storage.uploadFile(key, local, options);
+        storage.uploadFile(key, uploadFile, options);
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .build();
-        storage.uploadFile(key, local, options);
+        storage.uploadFile(key, uploadFile, options);
 
         // Upload as user two
         mobileClient.signOut();
@@ -256,10 +253,10 @@ public final class AWSS3StorageDownloadAccessLevelTest {
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
-        storage.uploadFile(key, local, options);
+        storage.uploadFile(key, uploadFile, options);
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .build();
-        storage.uploadFile(key, local, options);
+        storage.uploadFile(key, uploadFile, options);
     }
 }

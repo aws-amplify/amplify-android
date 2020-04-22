@@ -86,7 +86,7 @@ public final class SyncProcessorTest {
     public void setup() throws AmplifyException {
         this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
         this.modelProvider =
-            CompoundModelProvider.of(AmplifyModelProvider.getInstance(), SystemModelsProviderFactory.create());
+            CompoundModelProvider.of(SystemModelsProviderFactory.create(), AmplifyModelProvider.getInstance());
 
         ModelSchemaRegistry modelSchemaRegistry = ModelSchemaRegistry.instance();
         modelSchemaRegistry.clear();

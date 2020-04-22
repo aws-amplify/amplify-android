@@ -36,6 +36,8 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
+import java.io.File;
+
 /**
  * Defines the Client API consumed by the application.
  * Internally routes the calls to the Storage Category
@@ -72,7 +74,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -83,7 +85,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -95,7 +97,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -106,7 +108,7 @@ public final class StorageCategory extends Category<StoragePlugin<?>> implements
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageUploadFileOptions options,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
