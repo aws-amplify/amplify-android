@@ -104,10 +104,11 @@ public class MainActivity extends AppCompatActivity {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
-                Amplify.Auth.signInWithFacebook(
+                Amplify.Auth.signInWithSocial(
+                        AuthProvider.facebook(),
                         loginResult.getAccessToken().getToken(),
                         result -> Log.i(TAG, result),
-                        error -> Log.e(TAG, error.toString())
+                        error -> Log.e(TAG, error.getCause().getCause().toString())
                 );
             }
 

@@ -107,7 +107,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
         // Assert if version is stored correctly
         String expectedVersion =
-            CompoundModelProvider.of(modelProvider, SystemModelsProviderFactory.create())
+            CompoundModelProvider.of(SystemModelsProviderFactory.create(), modelProvider)
                 .version();
         PersistentModelVersion persistentModelVersion =
                 PersistentModelVersion
@@ -136,7 +136,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
 
         // Check if the new version is stored in local storage.
         expectedVersion =
-            CompoundModelProvider.of(modelProviderThatUpgradesVersion, SystemModelsProviderFactory.create())
+            CompoundModelProvider.of(SystemModelsProviderFactory.create(), modelProviderThatUpgradesVersion)
                 .version();
         persistentModelVersion = PersistentModelVersion
                 .fromLocalStorage(sqliteStorageAdapter)
