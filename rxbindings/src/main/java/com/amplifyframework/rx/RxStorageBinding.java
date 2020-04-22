@@ -32,6 +32,8 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
+import java.io.File;
+
 import io.reactivex.Single;
 
 final class RxStorageBinding implements RxStorageCategoryBehavior {
@@ -48,27 +50,27 @@ final class RxStorageBinding implements RxStorageCategoryBehavior {
 
     @NonNull
     @Override
-    public Single<StorageDownloadFileResult> downloadFile(@NonNull String key, @NonNull String local) {
+    public Single<StorageDownloadFileResult> downloadFile(@NonNull String key, @NonNull File local) {
         return toSingle((onResult, onError) -> storage.downloadFile(key, local, onResult, onError));
     }
 
     @NonNull
     @Override
     public Single<StorageDownloadFileResult> downloadFile(
-            @NonNull String key, @NonNull String local, @NonNull StorageDownloadFileOptions options) {
+            @NonNull String key, @NonNull File local, @NonNull StorageDownloadFileOptions options) {
         return toSingle((onResult, onError) -> storage.downloadFile(key, local, options, onResult, onError));
     }
 
     @NonNull
     @Override
-    public Single<StorageUploadFileResult> uploadFile(@NonNull String key, @NonNull String local) {
+    public Single<StorageUploadFileResult> uploadFile(@NonNull String key, @NonNull File local) {
         return toSingle((onResult, onError) -> storage.uploadFile(key, local, onResult, onError));
     }
 
     @NonNull
     @Override
     public Single<StorageUploadFileResult> uploadFile(
-            @NonNull String key, @NonNull String local, @NonNull StorageUploadFileOptions options) {
+            @NonNull String key, @NonNull File local, @NonNull StorageUploadFileOptions options) {
         return toSingle((onResult, onError) -> storage.uploadFile(key, local, options, onResult, onError));
     }
 

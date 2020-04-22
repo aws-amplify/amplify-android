@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -29,7 +30,7 @@ import java.util.Map;
  */
 public final class AWSS3StorageUploadFileRequest {
     private final String key;
-    private final String local;
+    private final File local;
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
     private final String contentType;
@@ -38,7 +39,7 @@ public final class AWSS3StorageUploadFileRequest {
     /**
      * Constructs a new AWSS3StorageUploadFileRequest.
      * @param key key for item to upload
-     * @param local Target path of file to upload
+     * @param local File to upload
      * @param accessLevel Storage access level
      * @param targetIdentityId The user id for the user this file should be uploaded for
      *                         (to override it from assuming the currently logged in user)
@@ -47,7 +48,7 @@ public final class AWSS3StorageUploadFileRequest {
      */
     public AWSS3StorageUploadFileRequest(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String targetIdentityId,
             @Nullable String contentType,
@@ -74,11 +75,11 @@ public final class AWSS3StorageUploadFileRequest {
     }
 
     /**
-     * Gets the local file path of the file to upload.
+     * Gets the file to upload.
      * @return local file path
      */
     @NonNull
-    public String getLocal() {
+    public File getLocal() {
         return local;
     }
 

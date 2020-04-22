@@ -116,8 +116,7 @@ public final class AWSS3StorageUploadTest {
     public void testUploadSmallFile() throws Exception {
         File uploadFile = new RandomTempFile(SMALL_FILE_SIZE);
         String fileName = uploadFile.getName();
-        String filePath = uploadFile.getPath();
-        synchronousStorage.uploadFile(fileName, filePath, options);
+        synchronousStorage.uploadFile(fileName, uploadFile, options);
     }
 
     /**
@@ -129,8 +128,7 @@ public final class AWSS3StorageUploadTest {
     public void testUploadLargeFile() throws Exception {
         File uploadFile = new RandomTempFile(LARGE_FILE_SIZE);
         String fileName = uploadFile.getName();
-        String filePath = uploadFile.getPath();
-        synchronousStorage.uploadFile(fileName, filePath, options, EXTENDED_TIMEOUT_MS);
+        synchronousStorage.uploadFile(fileName, uploadFile, options, EXTENDED_TIMEOUT_MS);
     }
 
     /**
@@ -177,7 +175,7 @@ public final class AWSS3StorageUploadTest {
         // Begin uploading a large file
         StorageUploadFileOperation<?> op = storageCategory.uploadFile(
             uploadFile.getName(),
-            uploadFile.getAbsolutePath(),
+            uploadFile,
             options,
             onResult -> errorContainer.set(new RuntimeException("Upload completed without canceling.")),
             errorContainer::set
@@ -237,7 +235,7 @@ public final class AWSS3StorageUploadTest {
         // Begin uploading a large file
         StorageUploadFileOperation<?> op = storageCategory.uploadFile(
             uploadFile.getName(),
-            uploadFile.getAbsolutePath(),
+            uploadFile,
             options,
             onResult -> completed.countDown(),
             errorContainer::set

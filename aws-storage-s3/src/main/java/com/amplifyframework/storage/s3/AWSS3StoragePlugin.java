@@ -57,6 +57,7 @@ import com.amazonaws.services.s3.AmazonS3Client;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -210,7 +211,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -221,7 +222,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -248,7 +249,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
@@ -259,7 +260,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     @Override
     public StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageUploadFileOptions options,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
