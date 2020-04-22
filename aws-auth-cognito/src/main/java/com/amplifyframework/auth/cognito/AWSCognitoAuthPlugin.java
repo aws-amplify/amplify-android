@@ -28,12 +28,15 @@ import com.amplifyframework.auth.AuthPlugin;
 import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthSignInState;
+import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthSocialSignInResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.util.AsyncResult;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -49,6 +52,8 @@ import com.amazonaws.mobile.client.results.SignUpResult;
 import com.amazonaws.mobile.client.results.Tokens;
 import com.amazonaws.mobile.client.results.UserCodeDeliveryDetails;
 import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTParser;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.Map;
@@ -58,6 +63,8 @@ import java.util.concurrent.TimeUnit;
 public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final String AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final long SECONDS_BEFORE_TIMEOUT = 10;
+    private static final String COGNITO_USER_ID_ATTRIBUTE = "sub";
+    private String userId;
 
     @NonNull
     @Override
@@ -69,8 +76,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     public void configure(
             @NonNull JSONObject pluginConfiguration,
             @NonNull Context context
-    ) throws AmplifyException {
+    ) throws AuthException {
         final CountDownLatch latch = new CountDownLatch(1);
+        final AsyncResult<Exception> asyncException = new AsyncResult<>();
 
         AWSMobileClient.getInstance().initialize(
             context,
@@ -78,26 +86,54 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails result) {
-                    latch.countDown();
+                    if (result.getUserState().equals(UserState.SIGNED_IN)) {
+                        fetchAndSetUserId(() -> latch.countDown());
+                    } else {
+                        userId = null;
+                        latch.countDown();
+                    }
+
+                    AWSMobileClient.getInstance().addUserStateListener(userStateDetails -> {
+                        switch (userStateDetails.getUserState()) {
+                            case SIGNED_IN:
+                                fetchAndSetUserId(() -> { /* No response needed */ });
+                                break;
+                            default:
+                                userId = null;
+                        }
+                    });
                 }
 
                 @Override
                 public void onError(Exception error) {
-                    throw new IllegalStateException("Failed to instantiate AWSMobileClient", error);
+                    asyncException.set(error);
+                    latch.countDown();
                 }
             }
         );
 
         try {
             if (latch.await(SECONDS_BEFORE_TIMEOUT, TimeUnit.SECONDS)) {
+                if (asyncException.isSet()) {
+                    throw new AuthException(
+                        "Failed to instantiate AWSMobileClient",
+                        asyncException.get(),
+                        "See attached exception for more details"
+                    );
+                }
                 return;
             } else {
-                throw new IllegalStateException(
-                    "Failed to instantiate AWSMobileClient within " + SECONDS_BEFORE_TIMEOUT + " seconds"
+                throw new AuthException(
+                    "Failed to instantiate AWSMobileClient within " + SECONDS_BEFORE_TIMEOUT + " seconds",
+                    "Check network connectivity"
                 );
             }
         } catch (InterruptedException error) {
-            throw new IllegalStateException(error);
+            throw new AuthException(
+                    "Failed to instantiate AWSMobileClient",
+                    error,
+                    "See attached exception for more details"
+            );
         }
     }
 
@@ -221,7 +257,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
-                onSuccess.accept(convertSignInResult(result));
+                fetchAndSetUserId(() -> {
+                    onSuccess.accept(convertSignInResult(result));
+                });
             }
 
             @Override
@@ -252,7 +290,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().confirmSignIn(confirmationCode, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
-                onSuccess.accept(convertSignInResult(result));
+                fetchAndSetUserId(() -> onSuccess.accept(convertSignInResult(result)));
             }
 
             @Override
@@ -280,7 +318,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().showSignIn(callingActivity, signInUIOptions, new Callback<UserStateDetails>() {
             @Override
             public void onResult(UserStateDetails details) {
-                onSuccess.accept(details.getUserState().toString());
+                fetchAndSetUserId(() -> onSuccess.accept(details.getUserState().toString()));
             }
 
             @Override
@@ -301,7 +339,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     public void signInWithSocial(
             @NonNull AuthProvider provider,
             @NonNull String token,
-            @NonNull final Consumer<String> onSuccess,
+            @NonNull final Consumer<AuthSocialSignInResult> onSuccess,
             @NonNull final Consumer<AmplifyException> onException
     ) {
         AWSMobileClient.getInstance().federatedSignIn(
@@ -310,7 +348,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails result) {
-                    onSuccess.accept(result.getUserState().toString());
+                    onSuccess.accept(new AuthSocialSignInResult(result.getUserState().equals(UserState.SIGNED_IN)));
                 }
 
                 @Override
@@ -453,10 +491,48 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         );
     }
 
+    @Override
+    public AuthUser getCurrentUser() {
+        if (userId != null) {
+            return new AWSCognitoAuthUser(
+                    userId,
+                    AWSMobileClient.getInstance().getUsername(),
+                    AWSMobileClient.getInstance()
+            );
+        } else {
+            return null;
+        }
+    }
+
     @NonNull
     @Override
     public AWSMobileClient getEscapeHatch() {
         return AWSMobileClient.getInstance();
+    }
+
+    private void fetchAndSetUserId(Action onComplete) {
+        AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
+            @Override
+            public void onResult(Tokens result) {
+                try {
+                    userId = CognitoJWTParser
+                            .getPayload(result.getAccessToken().getTokenString())
+                            .getString(COGNITO_USER_ID_ATTRIBUTE);
+                    onComplete.call();
+                } catch (JSONException error) {
+                    userId = null;
+                    onComplete.call();
+                }
+            }
+
+            @Override
+            public void onError(Exception error) {
+                // If AWSMobileClient currently does not have the access token locally cached and/or otherwise
+                // available we want our userId cache to match that state.
+                userId = null;
+                onComplete.call();
+            }
+        });
     }
 
     // Take information from the Cognito specific object and wrap it in the new Amplify object
@@ -487,6 +563,14 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
             @Override
             public void onResult(Tokens result) {
+                try {
+                    userId = CognitoJWTParser
+                            .getPayload(result.getAccessToken().getTokenString())
+                            .getString(COGNITO_USER_ID_ATTRIBUTE);
+                } catch (JSONException error) {
+                    userId = null;
+                }
+
                 sessionBuilder.accessToken(result.getAccessToken().getTokenString());
                 sessionBuilder.idToken(result.getIdToken().getTokenString());
                 sessionBuilder.refreshToken(result.getRefreshToken().getTokenString());
@@ -495,6 +579,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception exception) {
+                userId = null;
                 latch.countDown();
             }
         });

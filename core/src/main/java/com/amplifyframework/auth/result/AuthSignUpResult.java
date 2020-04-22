@@ -19,7 +19,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 
-public final class AuthSignUpResult {
+public class AuthSignUpResult {
     private final boolean userConfirmed;
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 
@@ -49,6 +49,10 @@ public final class AuthSignUpResult {
         return codeDeliveryDetails;
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the hash.
+     * @return Hash code of this object
+     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
@@ -57,6 +61,10 @@ public final class AuthSignUpResult {
         );
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the comparison.
+     * @return True if the two objects are equal, false otherwise
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -70,6 +78,10 @@ public final class AuthSignUpResult {
         }
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the output string.
+     * @return A string representation of the object
+     */
     @Override
     public String toString() {
         return "AuthSignUpResult{" +
