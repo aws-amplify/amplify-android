@@ -15,9 +15,13 @@
 
 package com.amplifyframework.api.graphql.error;
 
+import androidx.annotation.Nullable;
+
+import com.amplifyframework.util.Immutable;
+
 import java.util.Map;
 
-public class AppSyncExtensions {
+public final class AppSyncExtensions {
     private static final String ERROR_TYPE_KEY = "errorType";
     private static final String ERROR_INFO_KEY = "errorInfo";
     private static final String DATA_KEY = "data";
@@ -40,6 +44,7 @@ public class AppSyncExtensions {
      *
      * @return errorType
      */
+    @Nullable
     public String getErrorType() {
         return errorType;
     }
@@ -49,6 +54,7 @@ public class AppSyncExtensions {
      *
      * @return errorInfo
      */
+    @Nullable
     public String getErrorInfo() {
         return errorInfo;
     }
@@ -59,7 +65,8 @@ public class AppSyncExtensions {
      *
      * @return data
      */
+    @Nullable
     public Map<String, Object> getData() {
-        return data;
+        return Immutable.of(data);
     }
 }

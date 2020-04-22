@@ -15,14 +15,16 @@
 
 package com.amplifyframework.api.graphql.error;
 
-public class GraphQLPathSegment {
+import androidx.annotation.NonNull;
+
+public final class GraphQLPathSegment {
     private final Object value;
 
     public GraphQLPathSegment(int value) {
         this.value = Integer.valueOf(value);
     }
 
-    public GraphQLPathSegment(String value) {
+    public GraphQLPathSegment(@NonNull String value) {
         this.value = value;
     }
 
@@ -48,25 +50,26 @@ public class GraphQLPathSegment {
      * Convenience method to get this element as a String.
      *
      * @return get this element as a String
-     * @throws IllegalStateException if the value contained is not a String.
+     * @throws ClassCastException if the value contained is not a String.
      */
+    @NonNull
     public String getAsString() {
         if (isString()) {
             return (String) value;
         }
-        throw new IllegalStateException("Not a String: " + value.getClass().getSimpleName());
+        throw new ClassCastException("Not a String: " + value.getClass().getSimpleName());
     }
 
     /**
      * Convenience method to get this element as an int.
      *
      * @return get this element as an int
-     * @throws IllegalStateException if the value contained is not an Integer.
+     * @throws ClassCastException if the value contained is not an Integer.
      */
     public int getAsInt() {
         if (isInteger()) {
             return ((Integer) value).intValue();
         }
-        throw new IllegalStateException("Not an int: " + value.getClass().getSimpleName());
+        throw new ClassCastException("Not an int: " + value.getClass().getSimpleName());
     }
 }

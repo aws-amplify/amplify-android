@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.error.GraphQLLocation;
 import com.amplifyframework.api.graphql.error.GraphQLPathSegment;
+import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -132,8 +133,10 @@ public final class GraphQLResponse<T> {
          * @param path The key path of the response field with error.
          * @param extensions additional error map, reserved for implementors.
          */
-        public Error(@NonNull String message, List<GraphQLLocation> locations, List<GraphQLPathSegment> path,
-                     Map<String, Object> extensions) {
+        public Error(@NonNull String message,
+                     @Nullable List<GraphQLLocation> locations,
+                     @Nullable List<GraphQLPathSegment> path,
+                     @Nullable Map<String, Object> extensions) {
             this.message = Objects.requireNonNull(message);
             this.locations = locations;
             this.path = path;
@@ -145,6 +148,7 @@ public final class GraphQLResponse<T> {
          *
          * @return error message
          */
+        @NonNull
         public String getMessage() {
             return message;
         }
@@ -155,8 +159,9 @@ public final class GraphQLResponse<T> {
          *
          * @return locations
          */
+        @Nullable
         public List<GraphQLLocation> getLocations() {
-            return locations;
+            return Immutable.of(locations);
         }
 
         /**
@@ -166,8 +171,9 @@ public final class GraphQLResponse<T> {
          *
          * @return path
          */
+        @Nullable
         public List<GraphQLPathSegment> getPath() {
-            return path;
+            return Immutable.of(path);
         }
 
         /**
@@ -176,8 +182,9 @@ public final class GraphQLResponse<T> {
          *
          * @return extensions
          */
+        @Nullable
         public Map<String, Object> getExtensions() {
-            return extensions;
+            return Immutable.of(extensions);
         }
 
         @Override

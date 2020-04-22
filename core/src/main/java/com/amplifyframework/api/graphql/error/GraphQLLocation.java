@@ -18,9 +18,14 @@ package com.amplifyframework.api.graphql.error;
 /**
  * Location mapping to a particular line and column in the request.
  */
-public class GraphQLLocation {
+public final class GraphQLLocation {
     private int line;
     private int column;
+
+    public GraphQLLocation(int line, int column) {
+        this.line = line;
+        this.column = column;
+    }
 
     /**
      * Returns line number corresponding to position in the request where an error occurred.
