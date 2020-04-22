@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -112,10 +113,15 @@ public final class CompoundModelProviderTest {
     }
 
     /**
-     * A compound provider of A, B, should be the same as a compound provider of B, A.
+     * A compound provider of A, B, should NOT be the same as a compound provider of B, A.
+     * This is because the provided models have a dependency ordering that is important.
+     * For user models, this is the topological ordering of the models. And beyond that,
+     * system models must be present before user models. These are business details that
+     * are outside the humble scope of a compound model provider's implementation, except
+     * for that this component must maintain order, to maintain the external ordering rules.
      */
     @Test
-    public void parameterOrderDoesNotMatter() {
+    public void parameterOrderIsSignificant() {
         // Arrange two providers that have inputs provided out-of-order
         SimpleModelProvider one = SimpleModelProvider.withRandomVersion(Blog.class);
         SimpleModelProvider two = SimpleModelProvider.withRandomVersion(BlogOwner.class);
@@ -123,14 +129,12 @@ public final class CompoundModelProviderTest {
         CompoundModelProvider twoAndOne = CompoundModelProvider.of(two, one);
 
         // They should be equivalent.
-        assertEquals(oneAndTwo, twoAndOne);
+        assertNotEquals(oneAndTwo, twoAndOne);
 
-        // And hashCode() should also work, duh.
+        // And hashCode() should produce a distinct result for each.
         Set<CompoundModelProvider> providers = new HashSet<>();
         providers.add(oneAndTwo);
         providers.add(twoAndOne);
-        assertEquals(1, providers.size());
-        assertEquals(oneAndTwo, providers.iterator().next());
-        assertEquals(twoAndOne, providers.iterator().next());
+        assertEquals(2, providers.size());
     }
 }

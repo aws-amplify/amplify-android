@@ -20,11 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.UUID;
 
@@ -58,14 +54,9 @@ public final class CompoundModelProvider implements ModelProvider {
      */
     @NonNull
     public static CompoundModelProvider of(@NonNull ModelProvider... modelProviders) {
-        // We want to always add the versions to the string builder in the same order
-        // This helps to guarantee that of(A,B) == of(B,A).
-        final List<ModelProvider> sortedProviders = new ArrayList<>(Arrays.asList(modelProviders));
-        Collections.sort(sortedProviders, (one, two) -> one.version().compareTo(two.version()));
-
-        Set<Class<? extends Model>> modelClasses = new HashSet<>();
+        final LinkedHashSet<Class<? extends Model>> modelClasses = new LinkedHashSet<>();
         StringBuilder componentVersionBuffer = new StringBuilder();
-        for (ModelProvider componentProvider : sortedProviders) {
+        for (ModelProvider componentProvider : modelProviders) {
             componentVersionBuffer.append(componentProvider.version());
             modelClasses.addAll(componentProvider.models());
         }
