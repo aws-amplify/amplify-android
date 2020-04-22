@@ -118,12 +118,13 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void signInWithFacebook(
+    public void signInWithSocial(
+            @NonNull AuthProvider provider,
             @NonNull String token,
             @NonNull Consumer<String> onSuccess,
             @NonNull Consumer<AmplifyException> onError
     ) {
-        getSelectedPlugin().signInWithFacebook(token, onSuccess, onError);
+        getSelectedPlugin().signInWithSocial(provider, token, onSuccess, onError);
     }
 
     @Override

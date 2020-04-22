@@ -34,7 +34,7 @@ public interface AuthCategoryBehavior {
      * Creates a new user account with the specified username and password.
      * Can also pass in user attributes to associate with the user through
      * the options object.
-     * @param username This can be a typical username, email, phone number, etc. depending on the configuration
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param password The user's password
      * @param options Advanced options such as additional attributes of the user or validation data
      * @param onSuccess Success callback
@@ -50,7 +50,7 @@ public interface AuthCategoryBehavior {
     /**
      * If you have attribute confirmation enabled, this will allow the user
      * to enter the confirmation code they received to activate their account.
-     * @param username The username of the account to confirm
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param confirmationCode The confirmation code the user received
      * @param onSuccess Success callback
      * @param onError Error callback
@@ -64,7 +64,7 @@ public interface AuthCategoryBehavior {
     /**
      * If the user's code expires or they just missed it, this method can
      * be used to send them a new one.
-     * @param username The username of the account to resend the code to
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param onSuccess Success callback
      * @param onError Error callback
      */
@@ -76,7 +76,7 @@ public interface AuthCategoryBehavior {
     /**
      * Basic authentication to the app with a username and password or, if custom auth is setup,
      * you can send null for those and the necessary authentication details in the options object.
-     * @param username This can be a normal username, email/phone if that's setup, or null if custom auth is enabled
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param password User's password for normal signup, null if custom auth or passwordless configurations are setup
      * @param options Advanced options such as a map of auth information for custom auth
      * @param onSuccess Success callback
@@ -91,7 +91,7 @@ public interface AuthCategoryBehavior {
 
     /**
      * Basic authentication to the app with a username and password.
-     * @param username This can be a normal username or email/phone if that's setup
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param password User's password
      * @param onSuccess Success callback
      * @param onError Error callback
@@ -132,13 +132,14 @@ public interface AuthCategoryBehavior {
     void handleSignInWithUIResponse(Intent intent);
 
     /**
-     * TODO: Replace this with a generic sign in with social method (or whatever naming lands on)
-     *       which takes the provider as an enum.
+     * Allows a user to sign in to your app using their credentials from another provider (e.g. Facebook, Google, etc).
+     * @param provider The provider you are signing in with (e.g. Facebook, Google, etc.)
      * @param token Token retrieved from the social provider's authentication code.
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void signInWithFacebook(
+    void signInWithSocial(
+            @NonNull AuthProvider provider,
             @NonNull String token,
             @NonNull Consumer<String> onSuccess,
             @NonNull Consumer<AmplifyException> onError);
@@ -158,7 +159,7 @@ public interface AuthCategoryBehavior {
 
     /**
      * Trigger password recovery for the given username.
-     * @param username This can be a typical username, email, phone number, etc. depending on the configuration
+     * @param username A login identifier e.g. `superdog22`; or an email/phone number, depending on configuration
      * @param onSuccess Success callback
      * @param onError Error callback
      */
