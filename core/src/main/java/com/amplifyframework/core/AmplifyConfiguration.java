@@ -179,13 +179,14 @@ public final class AmplifyConfiguration {
     public CategoryConfiguration forCategoryType(@NonNull CategoryType categoryType) throws AmplifyException {
         final CategoryConfiguration categoryConfiguration =
             categoryConfigurations.get(categoryType.getConfigurationKey());
-        if (categoryConfiguration == null) {
-            throw new AmplifyException(
-                "Unknown/bad category type: " + categoryType,
-                "Be sure to use one of the supported Categories in your current version of Amplify"
-            );
-        }
-        return categoryConfiguration;
+        return categoryConfiguration != null ? categoryConfiguration :
+            new CategoryConfiguration() {
+                @NonNull
+                @Override
+                public CategoryType getCategoryType() {
+                    return categoryType;
+                }
+            };
     }
 }
 

@@ -54,6 +54,10 @@ import io.reactivex.Completable;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
+    /**
+     * Configuration key name of the plugin in the amplify config file.
+     */
+    public static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -147,7 +151,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @NonNull
     @Override
     public String getPluginKey() {
-        return "awsDataStorePlugin";
+        return PLUGIN_CONFIG_KEY;
     }
 
     /**
