@@ -13,14 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.graphql.error;
+package com.amplifyframework.datastore.appsync;
 
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.util.Immutable;
 
 import java.util.Map;
 
+/**
+ * Model representing a AppSync specific extensions map.  This data may be included on a
+ * GraphQLResponse.Error object, and is represented as a Map&lt;String, Object&gt;.  This class can be
+ * used to create a strongly typed model by passing the Map&lt;String, Object&gt; to the constructor.
+ */
 public final class AppSyncExtensions {
     private static final String ERROR_TYPE_KEY = "errorType";
     private static final String ERROR_INFO_KEY = "errorInfo";
@@ -28,7 +34,6 @@ public final class AppSyncExtensions {
 
     private final String errorType;
     private final String errorInfo;
-
     private final Map<String, Object> data;
 
     @SuppressWarnings("unchecked")
@@ -36,6 +41,12 @@ public final class AppSyncExtensions {
         this.errorType = (String) extensions.get(ERROR_TYPE_KEY);
         this.errorInfo = (String) extensions.get(ERROR_INFO_KEY);
         this.data = (Map<String, Object>) extensions.get(DATA_KEY);
+    }
+
+    public AppSyncExtensions(String errorType, String errorInfo, Map<String, Object> data) {
+        this.errorType = errorType;
+        this.errorInfo = errorInfo;
+        this.data = data;
     }
 
     /**
@@ -60,13 +71,36 @@ public final class AppSyncExtensions {
     }
 
     /**
-     * For conflict unhandled errors, this returns a map containing a version number, and the model
-     * fields corresponding to the current server state.
+     * For conflict unhandled errors, returns a map containing the same fields as the model type.
      *
      * @return data
      */
     @Nullable
     public Map<String, Object> getData() {
         return Immutable.of(data);
+    }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        AppSyncExtensions extensions = (AppSyncExtensions) thatObject;
+
+        return ObjectsCompat.equals(errorType, extensions.errorType) &&
+                ObjectsCompat.equals(errorInfo, extensions.errorInfo) &&
+                ObjectsCompat.equals(data, extensions.data);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = errorType.hashCode();
+        result = 31 * result + (errorInfo != null ? errorInfo.hashCode() : 0);
+        result = 31 * result + (data != null ? data.hashCode() : 0);
+        return result;
     }
 }

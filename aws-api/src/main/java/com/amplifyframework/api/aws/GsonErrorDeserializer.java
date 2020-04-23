@@ -32,7 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Error> {
+final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Error> {
     private static final String MESSAGE_KEY = "message";
     private static final String LOCATIONS_KEY = "locations";
     private static final String PATH_KEY = "path";
@@ -57,11 +57,11 @@ public final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResp
 
         for (String key : error.keySet()) {
             JsonElement value = error.get(key);
-            if (value != null && !value.isJsonNull()) {
+            if (value != null) {
                 if (key.equals(MESSAGE_KEY)) {
                     message = context.deserialize(value, String.class);
                 } else if (key.equals(LOCATIONS_KEY)) {
-                    Type locationsType = new TypeToken<List<GraphQLLocation>>() { }.getType();
+                    Type locationsType = new TypeToken<List<GraphQLLocation>>() {}.getType();
                     locations = context.deserialize(value, locationsType);
                 } else if (key.equals(PATH_KEY)) {
                     path = getPath(value);
@@ -82,8 +82,7 @@ public final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResp
 
         // Deserialize the extensions JSON to a Map
         if (extensionsJson.size() > 0) {
-            Type extensionType = new TypeToken<Map<String, Object>>() {
-            }.getType();
+            Type extensionType = new TypeToken<Map<String, Object>>() {}.getType();
             extensions = context.deserialize(extensionsJson, extensionType);
         }
 

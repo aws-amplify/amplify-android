@@ -177,8 +177,9 @@ public final class GraphQLResponse<T> {
         }
 
         /**
-         * Returns additional error information of type E.  Reserved for GraphQL implementors to
-         * add details however they see fit.  No additional restrictions on its contents.
+         * Returns additional error information of type Map&lt;String, Object&gt;.  Reserved for GraphQL
+         * implementors to add details however they see fit.  No additional restrictions on its
+         * contents.
          *
          * @return extensions
          */

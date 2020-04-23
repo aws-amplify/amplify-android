@@ -17,9 +17,11 @@ package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.error.AppSyncExtensions;
+import com.amplifyframework.api.graphql.error.GraphQLLocation;
+import com.amplifyframework.api.graphql.error.GraphQLPathSegment;
 import com.amplifyframework.testutils.Resources;
 
+import com.google.gson.internal.LinkedTreeMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -30,6 +32,7 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -123,9 +126,25 @@ public final class GsonGraphQLResponseFactoryTest {
         // Assert that we parsed the errors successfully.
         assertNotNull(response.getErrors());
 
-        for (GraphQLResponse.Error error : response.getErrors()) {
-            assertEquals(error.getMessage(), "failed");
+        final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            String message = "failed";
+            List<GraphQLLocation> locations = Arrays.asList(
+                    new GraphQLLocation(5, 7));
+            List<GraphQLPathSegment> path = Arrays.asList(
+                    new GraphQLPathSegment("listTodos"),
+                    new GraphQLPathSegment("items"),
+                    new GraphQLPathSegment(i),
+                    new GraphQLPathSegment("name")
+            );
+            Map<String, Object> extensions = new LinkedTreeMap<>();
+            extensions.put("errorType", null);
+            extensions.put("errorInfo", null);
+            extensions.put("data", null);
+            expectedErrors.add(new GraphQLResponse.Error(message, locations, path, extensions));
         }
+
+        assertEquals(expectedErrors, response.getErrors());
     }
 
     /**
@@ -151,31 +170,50 @@ public final class GsonGraphQLResponseFactoryTest {
                 responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
 
         // Assert that the response contained things...
+        String message = "Conflict resolver rejects mutation.";
+        List<GraphQLLocation> locations = Arrays.asList(
+                new GraphQLLocation(11, 3));
+        List<GraphQLPathSegment> path = Arrays.asList(
+                new GraphQLPathSegment("listTodos"),
+                new GraphQLPathSegment("items"),
+                new GraphQLPathSegment(0),
+                new GraphQLPathSegment("name")
+        );
+
+        Map<String, Object> data = new LinkedTreeMap<>();
+        data.put("id", "EF48518C-92EB-4F7A-A64E-D1B9325205CF");
+        data.put("title", "new3");
+        data.put("content", "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 " +
+                "+0000");
+        data.put("_version", 2.0);
+
+        Map<String, Object> extensions = new LinkedTreeMap<>();
+        extensions.put("errorType", "ConflictUnhandled");
+        extensions.put("errorInfo", null);
+        extensions.put("data", data);
+
+        GraphQLResponse.Error expectedError = new GraphQLResponse.Error(message, locations, path, extensions);
+        GraphQLResponse<ListTodosResult> expectedResponse = new GraphQLResponse<>(null,
+                Arrays.asList(expectedError, expectedError, expectedError, expectedError));
+
         assertNotNull(response);
         assertNotNull(response.getErrors());
-        assertEquals(response.getErrors().size(), 4);
+        assertEquals(expectedResponse.getErrors().size(), response.getErrors().size());
 
-        // Assert that each error is has been parsed to the same output object
-        for (GraphQLResponse.Error error : response.getErrors()) {
-            assertEquals(error.getMessage(), "Conflict resolver rejects mutation.");
-            assertEquals(error.getPath().get(0).getAsString(), "listTodos");
-            assertEquals(error.getPath().get(1).getAsString(), "items");
-            assertEquals(error.getPath().get(2).getAsInt(), 0);
-            assertEquals(error.getPath().get(3).getAsString(), "name");
-            assertEquals(error.getLocations().size(), 1);
-            assertEquals(error.getLocations().get(0).getLine(), 11);
-            assertEquals(error.getLocations().get(0).getColumn(), 3);
-
-            AppSyncExtensions extensions = new AppSyncExtensions(error.getExtensions());
-            assertEquals(extensions.getErrorType(), "ConflictUnhandled");
-            assertEquals(extensions.getErrorInfo(), null);
-            assertNotNull(extensions.getData());
-            assertEquals(extensions.getData().get("id"), "EF48518C-92EB-4F7A-A64E-D1B9325205CF");
-            assertEquals(extensions.getData().get("title"), "new3");
-            assertEquals(extensions.getData().get("content"), "Original content from " +
-                    "DataStoreEndToEndTests at 2020-03-26 21:55:47 +0000");
-            assertEquals(((Number) extensions.getData().get("_version")).intValue(), 2);
+        // Assert that each error has been parsed to the same output object.
+        for (int i = 0; i < response.getErrors().size(); i++) {
+            GraphQLResponse.Error actual = response.getErrors().get(i);
+            GraphQLResponse.Error expected = expectedResponse.getErrors().get(i);
+            assertEquals("Unexpected message on error[" + i + "]", expected.getMessage(), actual.getMessage());
+            assertEquals("Unexpected extensions on error[" + i + "]", expected.getExtensions(), actual.getExtensions());
+            assertEquals("Unexpected path on error[" + i + "]", expected.getPath(), actual.getPath());
+            assertEquals("Unexpected locations on error[" + i + "]", expected.getLocations(), actual.getLocations());
+            assertEquals("Unexpected error[" + i + "]", expected, actual);
         }
+
+        // This test could be shortened to only include the single assert below, but by checking the
+        // individual properties of the error objects above, debugging test failures is much easier.
+        assertEquals(expectedResponse, response);
     }
 
     /**

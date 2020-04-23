@@ -44,4 +44,25 @@ public final class GraphQLLocation {
     public int getColumn() {
         return column;
     }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        GraphQLLocation location = (GraphQLLocation) thatObject;
+
+        return line == location.line && column == location.column;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = line;
+        result = 31 * result + column;
+        return result;
+    }
 }

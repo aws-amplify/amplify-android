@@ -16,7 +16,17 @@
 package com.amplifyframework.api.graphql.error;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
+/**
+ * If a GraphQLResponse contains an error that can be associated with a particular field in the
+ * requested GraphQL document, it will contain an entry with the key, path.  This entry should be a
+ * list of GraphQLPathSegments starting at the root of the response and ending with the field
+ * associated with the error.  This allows clients to determine whether a null result is intentional
+ * or caused by a runtime error.  Path segments that represent fields should be strings, and path
+ * segments that represent list indices should be 0‐indexed integers.
+ * https://spec.graphql.org/June2018/#sec-Errors
+ */
 public final class GraphQLPathSegment {
     private final Object value;
 
@@ -71,5 +81,30 @@ public final class GraphQLPathSegment {
             return ((Integer) value).intValue();
         }
         throw new ClassCastException("Not an int: " + value.getClass().getSimpleName());
+    }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        GraphQLPathSegment segment = (GraphQLPathSegment) thatObject;
+
+        if (isString() && segment.isString()) {
+            return ObjectsCompat.equals(getAsString(), segment.getAsString());
+        }
+        if (isInteger() && segment.isInteger()) {
+            return ObjectsCompat.equals(getAsInt(), segment.getAsInt());
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return value.hashCode();
     }
 }
