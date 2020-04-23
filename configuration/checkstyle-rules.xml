@@ -234,6 +234,12 @@
             <property name="validateThrows" value="true" />
         </module>
         <!--
+            Checks for missing Javadoc comments on public and protected class/interface definitions.
+        -->
+        <module name="MissingJavadocType">
+            <property name="scope" value="protected" />
+        </module>
+        <!--
             public and protected class/interface definitions should
             include a high-level descriptive doc.
         -->
