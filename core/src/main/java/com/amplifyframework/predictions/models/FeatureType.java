@@ -79,12 +79,6 @@ public enum FeatureType {
     LANGUAGE(LanguageType.class.getSimpleName()),
 
     /**
-     * Pose is an entity's rotational orientation
-     * as detected from the input image.
-     */
-    POSE(Pose.class.getSimpleName()),
-
-    /**
      * Sentiment is one's opinion or attitude detected
      * from the input text.
      * This feature is an output of text interpret.

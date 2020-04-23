@@ -33,7 +33,7 @@ public final class EntityDetails {
     private final RectF box;
     private final Polygon polygon;
     private final AgeRange ageRange;
-    private final PoseFeature pose;
+    private final Pose pose;
     private final Gender gender;
     private final List<Landmark> landmarks;
     private final List<Emotion> emotions;
@@ -78,11 +78,11 @@ public final class EntityDetails {
     }
 
     /**
-     * Gets the detected pose feature.
+     * Gets the detected pose.
      * @return the pose feature
      */
     @Nullable
-    public PoseFeature getPose() {
+    public Pose getPose() {
         return pose;
     }
 
@@ -138,7 +138,7 @@ public final class EntityDetails {
         private RectF box;
         private Polygon polygon;
         private AgeRange ageRange;
-        private PoseFeature pose;
+        private Pose pose;
         private Gender gender;
         private List<Landmark> landmarks;
         private List<Emotion> emotions;
@@ -184,12 +184,12 @@ public final class EntityDetails {
         }
 
         /**
-         * Sets the pose feature and return this builder.
+         * Sets the pose and return this builder.
          * @param pose the pose
          * @return this builder instance
          */
         @NonNull
-        public Builder pose(@Nullable PoseFeature pose) {
+        public Builder pose(@Nullable Pose pose) {
             this.pose = pose;
             return this;
         }
@@ -264,7 +264,7 @@ public final class EntityDetails {
         }
 
         @Nullable
-        PoseFeature getPose() {
+        Pose getPose() {
             return pose;
         }
 
