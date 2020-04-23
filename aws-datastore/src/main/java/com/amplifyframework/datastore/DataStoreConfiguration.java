@@ -16,14 +16,15 @@
 package com.amplifyframework.datastore;
 
 import android.content.Context;
-import android.util.Log;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -37,7 +38,7 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings("unused")
 public final class DataStoreConfiguration {
-    private static final String TAG = DataStoreConfiguration.class.getSimpleName();
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private static final long DEFAULT_SYNC_INTERVAL_MS = TimeUnit.DAYS.toMillis(1);
     private static final int DEFAULT_SYNC_MAX_RECORDS = 1_000;
     private static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
@@ -71,11 +72,13 @@ public final class DataStoreConfiguration {
     }
 
     /**
-     *
+     * Begin building a new instance of {@link DataStoreConfiguration} by reading dataStore
+     * settings from the config file.
      * @param context application context which will be used to retrieve amplicationconfiguration.json
      * @param pluginConfigKey the desired dataStore plugin config key (i.e. awsDataStorePlugin)
      * @return A new builder instance
-     * @throws DataStoreException
+     * @throws DataStoreException exception thrown if there's an unexpected configuration key or
+     * an invalid configuration value
      */
     @NonNull
     public static Builder builder(@NonNull Context context, @NonNull String pluginConfigKey) throws DataStoreException {
@@ -87,7 +90,7 @@ public final class DataStoreConfiguration {
                 .forCategoryType(CategoryType.DATASTORE))
                 .getPluginConfig(pluginConfigKey);
         } catch (AmplifyException | NullPointerException exception) {
-            Log.w(TAG, "Unable to read DataStore configuration from file.", exception);
+            LOG.warn("Unable to read DataStore configuration from file.", exception);
         }
         return pluginConfig != null ? builder(pluginConfig) : builder();
     }
@@ -295,7 +298,14 @@ public final class DataStoreConfiguration {
          * The interval is expressed in milliseconds.
          */
         SYNC_INTERVAL("syncInterval"),
+        /**
+         * Number of items requested per page in sync operation.
+         */
         SYNC_PAGE_SIZE("syncPageSize"),
+        /**
+         * Number of records that the client wants to process, while it is requesting
+         * a base/delta sync operation from AppSync.
+         */
         SYNC_MAX_RECORDS("syncMaxRecords");
 
         private final String key;

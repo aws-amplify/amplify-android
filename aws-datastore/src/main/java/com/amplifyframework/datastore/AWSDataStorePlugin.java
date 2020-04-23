@@ -54,7 +54,7 @@ import io.reactivex.Completable;
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
-     * Configuration key name of the plugin in the amplify config file.
+     * Configuration key name of the plugin in the Amplify config file.
      */
     public static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     // Reference to an implementation of the Local Storage Adapter that
@@ -102,7 +102,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * the supplied {@link ModelProvider}. If remote synchronization is enabled, it will be
      * performed through {@link Amplify#API}.
      * @param modelProvider Provider of models to be usable by plugin
-     * @param dataStoreConfiguration Instance of the data store configuration object
+     * @param dataStoreConfiguration Instance of the DataStore configuration object
      * @return An {@link AWSDataStorePlugin} which warehouses the provided models
      */
     @NonNull
