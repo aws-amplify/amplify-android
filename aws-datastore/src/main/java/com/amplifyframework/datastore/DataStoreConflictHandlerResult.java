@@ -22,19 +22,19 @@ package com.amplifyframework.datastore;
 public enum DataStoreConflictHandlerResult {
 
     /**
-     * Conflict is handled by discarding the local (client-side) changes, preferring whatever
+     * Conflict handled by discarding the local (client-side) changes, preferring whatever
      * was on the server.
      */
     APPLY_REMOTE,
 
     /**
-     * Conflict is handled by keeping the local (client-side) changes, discarding whatever
-     * was on the server.
+     * The conflict handled by retrying the local change which attempts to persist
+     * it again on the backend.
      */
     RETRY_LOCAL,
 
     /**
-     * Conflict is handled by return a new `Model` instance that should be used
+     * Conflict handled by returning a new `Model` instance that should be used
      * instead of the local and remote changes.
      */
     RETRY

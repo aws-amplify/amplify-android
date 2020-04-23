@@ -55,7 +55,7 @@ import io.reactivex.Completable;
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
-     * Configuration key name of the plugin in the amplify config file.
+     * Configuration key name of the plugin in the Amplify config file.
      */
     public static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     // Reference to an implementation of the Local Storage Adapter that
