@@ -27,23 +27,23 @@ import java.util.Objects;
  * A default implementation of the {@link DataStoreConflictHandler},
  * which discards the local data, in favor of whatever was on the server.
  */
-public final class DiscardingConflictHandler implements DataStoreConflictHandler {
+public final class ApplyRemoteConflictHandler implements DataStoreConflictHandler {
     private final DataStoreErrorHandler dataStoreErrorHandler;
 
-    private DiscardingConflictHandler(DataStoreErrorHandler dataStoreErrorHandler) {
+    private ApplyRemoteConflictHandler(DataStoreErrorHandler dataStoreErrorHandler) {
         this.dataStoreErrorHandler = dataStoreErrorHandler;
     }
 
     /**
-     * Creates a new instance of the {@link DiscardingConflictHandler}.
+     * Creates a new instance of the {@link ApplyRemoteConflictHandler}.
      * This handler discards local data in preference of remote data.
      * @param dataStoreErrorHandler Handler of unrecoverable errors
-     * @return A {@link DiscardingConflictHandler}
+     * @return A {@link ApplyRemoteConflictHandler}
      */
     @NonNull
-    public static DiscardingConflictHandler instance(@NonNull DataStoreErrorHandler dataStoreErrorHandler) {
+    public static ApplyRemoteConflictHandler instance(@NonNull DataStoreErrorHandler dataStoreErrorHandler) {
         Objects.requireNonNull(dataStoreErrorHandler);
-        return new DiscardingConflictHandler(dataStoreErrorHandler);
+        return new ApplyRemoteConflictHandler(dataStoreErrorHandler);
     }
 
     @Override
@@ -54,7 +54,7 @@ public final class DiscardingConflictHandler implements DataStoreConflictHandler
         final T remote = conflictData.getRemote();
         Amplify.DataStore.delete(local,
             deleted -> Amplify.DataStore.save(remote,
-                saved -> onConflictResolved.accept(DataStoreConflictHandlerResult.DISCARD),
+                saved -> onConflictResolved.accept(DataStoreConflictHandlerResult.APPLY_REMOTE),
                 dataStoreErrorHandler
             ),
             dataStoreErrorHandler

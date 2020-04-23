@@ -15,9 +15,20 @@
 
 package com.amplifyframework.datastore;
 
+import android.content.Context;
+import android.util.Log;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
+import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.AmplifyConfiguration;
+import com.amplifyframework.core.category.CategoryType;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -26,6 +37,7 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings("unused")
 public final class DataStoreConfiguration {
+    private static final String TAG = DataStoreConfiguration.class.getSimpleName();
     private static final long DEFAULT_SYNC_INTERVAL_MS = TimeUnit.DAYS.toMillis(1);
     private static final int DEFAULT_SYNC_MAX_RECORDS = 1_000;
     private static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
@@ -56,6 +68,76 @@ public final class DataStoreConfiguration {
     @NonNull
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     *
+     * @param context application context which will be used to retrieve amplicationconfiguration.json
+     * @param pluginConfigKey the desired dataStore plugin config key (i.e. awsDataStorePlugin)
+     * @return A new builder instance
+     * @throws DataStoreException
+     */
+    @NonNull
+    public static Builder builder(@NonNull Context context, @NonNull String pluginConfigKey) throws DataStoreException {
+        Objects.requireNonNull(context);
+        Objects.requireNonNull(pluginConfigKey);
+        JSONObject pluginConfig = null;
+        try {
+            pluginConfig = Objects.requireNonNull(AmplifyConfiguration.fromConfigFile(context)
+                .forCategoryType(CategoryType.DATASTORE))
+                .getPluginConfig(pluginConfigKey);
+        } catch (AmplifyException | NullPointerException exception) {
+            Log.w(TAG, "Unable to read DataStore configuration from file.", exception);
+        }
+        return pluginConfig != null ? builder(pluginConfig) : builder();
+    }
+
+    /**
+     * Begin building a new instance of {@link DataStoreConfiguration}.
+     * @param pluginJson The dataStore configuration as a JSONObject
+     * @return A new builder instance
+     * @throws DataStoreException exception thrown if there's an unexpected configuration key or
+     * an invalid configuration value
+     */
+    @NonNull
+    public static Builder builder(@NonNull JSONObject pluginJson) throws DataStoreException {
+        final Iterator<String> jsonKeys = pluginJson.keys();
+        Builder builder = new Builder();
+        while (jsonKeys.hasNext()) {
+            final String keyString = jsonKeys.next();
+            final ConfigKey configKey;
+            try {
+                configKey = ConfigKey.fromString(keyString);
+            } catch (IllegalArgumentException noSuchConfigKey) {
+                throw new DataStoreException(
+                        "Saw unexpected config key: " + keyString,
+                        "Make sure your amplifyconfiguration.json is valid."
+                );
+            }
+
+            try {
+                switch (configKey) {
+                    case SYNC_INTERVAL:
+                        builder.syncIntervalMs(pluginJson.getLong(ConfigKey.SYNC_INTERVAL.toString()));
+                        break;
+                    case SYNC_MAX_RECORDS:
+                        builder.syncMaxRecords(pluginJson.getInt(ConfigKey.SYNC_MAX_RECORDS.toString()));
+                        break;
+                    case SYNC_PAGE_SIZE:
+                        builder.syncPageSize(pluginJson.getInt(ConfigKey.SYNC_PAGE_SIZE.toString()));
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unsupported config key = " + configKey.toString());
+                }
+            } catch (JSONException jsonException) {
+                throw new DataStoreException(
+                        "Issue encountered while parsing configuration JSON",
+                        jsonException, "Ensure your amplifyconfiguration.json is valid."
+                );
+            }
+        }
+
+        return builder;
     }
 
     /**
@@ -128,7 +210,7 @@ public final class DataStoreConfiguration {
 
         private Builder() {
             this.dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
-            this.dataStoreConflictHandler = DiscardingConflictHandler.instance(dataStoreErrorHandler);
+            this.dataStoreConflictHandler = ApplyRemoteConflictHandler.instance(dataStoreErrorHandler);
             this.syncIntervalMs = DEFAULT_SYNC_INTERVAL_MS;
             this.syncMaxRecords = DEFAULT_SYNC_MAX_RECORDS;
             this.syncPageSize = DEFAULT_SYNC_PAGE_SIZE;
@@ -204,6 +286,43 @@ public final class DataStoreConfiguration {
                 syncMaxRecords,
                 syncPageSize
             );
+        }
+    }
+
+    enum ConfigKey {
+        /**
+         * At most one base sync will be performed within this interval of time.
+         * The interval is expressed in milliseconds.
+         */
+        SYNC_INTERVAL("syncInterval"),
+        SYNC_PAGE_SIZE("syncPageSize"),
+        SYNC_MAX_RECORDS("syncMaxRecords");
+
+        private final String key;
+
+        ConfigKey(String key) {
+            this.key = key;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return key;
+        }
+
+        /**
+         * Lookup a config key by its string value.
+         * @param anything Any string found in the key position of the plugin config JSON
+         * @return An enumerate config key
+         */
+        @SuppressWarnings("unused")
+        static ConfigKey fromString(@Nullable String anything) {
+            for (ConfigKey possibleMatch : values()) {
+                if (possibleMatch.toString().equals(anything)) {
+                    return possibleMatch;
+                }
+            }
+            throw new IllegalArgumentException(anything + " is not a config key.");
         }
     }
 }

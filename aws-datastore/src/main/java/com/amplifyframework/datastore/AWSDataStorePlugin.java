@@ -53,6 +53,10 @@ import io.reactivex.Completable;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
+    /**
+     * Configuration key name of the plugin in the amplify config file.
+     */
+    public static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -98,18 +102,35 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * the supplied {@link ModelProvider}. If remote synchronization is enabled, it will be
      * performed through {@link Amplify#API}.
      * @param modelProvider Provider of models to be usable by plugin
+     * @param dataStoreConfiguration Instance of the data store configuration object
+     * @return An {@link AWSDataStorePlugin} which warehouses the provided models
+     */
+    @NonNull
+    @SuppressWarnings("WeakerAccess")
+    public static AWSDataStorePlugin forModels(
+        @NonNull ModelProvider modelProvider,
+        @NonNull DataStoreConfiguration dataStoreConfiguration) {
+        Objects.requireNonNull(modelProvider);
+        Objects.requireNonNull(dataStoreConfiguration);
+        return AWSDataStorePlugin.builder()
+            .modelProvider(modelProvider)
+            .modelSchemaRegistry(ModelSchemaRegistry.instance())
+            .graphQlBehavior(Amplify.API)
+            .configuration(dataStoreConfiguration)
+            .build();
+    }
+
+    /**
+     * Creates an {@link AWSDataStorePlugin} which can warehouse the model types provided by
+     * the supplied {@link ModelProvider}. If remote synchronization is enabled, it will be
+     * performed through {@link Amplify#API}.
+     * @param modelProvider Provider of models to be usable by plugin
      * @return An {@link AWSDataStorePlugin} which warehouses the provided models
      */
     @NonNull
     @SuppressWarnings("WeakerAccess")
     public static AWSDataStorePlugin forModels(@NonNull ModelProvider modelProvider) {
-        Objects.requireNonNull(modelProvider);
-        return AWSDataStorePlugin.builder()
-            .modelProvider(modelProvider)
-            .modelSchemaRegistry(ModelSchemaRegistry.instance())
-            .graphQlBehavior(Amplify.API)
-            .configuration(DataStoreConfiguration.defaults())
-            .build();
+        return forModels(modelProvider, DataStoreConfiguration.defaults());
     }
 
     /**
@@ -118,7 +139,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @NonNull
     @Override
     public String getPluginKey() {
-        return "awsDataStorePlugin";
+        return PLUGIN_CONFIG_KEY;
     }
 
     /**

@@ -25,17 +25,17 @@ public enum DataStoreConflictHandlerResult {
      * Conflict is handled by discarding the local (client-side) changes, preferring whatever
      * was on the server.
      */
-    DISCARD,
+    APPLY_REMOTE,
 
     /**
      * Conflict is handled by keeping the local (client-side) changes, discarding whatever
      * was on the server.
      */
-    KEEP,
+    RETRY_LOCAL,
 
     /**
-     * Conflict is handled by return a new `Model` instance that should used
+     * Conflict is handled by return a new `Model` instance that should be used
      * instead of the local and remote changes.
      */
-    NEW_MODEL
+    RETRY
 }
