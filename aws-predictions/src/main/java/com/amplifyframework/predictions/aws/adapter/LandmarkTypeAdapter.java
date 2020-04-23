@@ -19,8 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.LandmarkType;
 
-import java.util.Locale;
-
 /**
  * Utility to convert Amazon Rekognition's entity landmark type
  * into Amplify-compatible data structure (i.e. {@link LandmarkType}).
