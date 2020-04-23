@@ -36,7 +36,7 @@ public final class LandmarkTypeAdapter {
      */
     @NonNull
     public static LandmarkType fromRekognition(@NonNull String landmark) {
-        switch (landmark.toLowerCase(Locale.US)) {
+        switch (landmark) {
             case "eyeLeft":
             case "leftEyeLeft":
             case "leftEyeRight":
