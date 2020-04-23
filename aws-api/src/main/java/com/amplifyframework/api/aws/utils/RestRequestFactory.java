@@ -83,8 +83,7 @@ public final class RestRequestFactory {
             @NonNull HttpMethod type) {
         Objects.requireNonNull(url);
         Objects.requireNonNull(type);
-        Request.Builder requestBuilder = new Request.Builder()
-                .url(url);
+        Request.Builder requestBuilder = new Request.Builder().url(url);
         switch (type) {
             case GET:
                 requestBuilder.get();
@@ -92,13 +91,13 @@ public final class RestRequestFactory {
             case PUT:
                 populateBody(
                         requestBuilder,
-                        requestData, (builder, data) -> builder.put(RequestBody.create(data))
+                        requestData, (builder, data) -> builder.put(RequestBody.create(null, data))
                 );
                 break;
             case POST:
                 populateBody(
                         requestBuilder,
-                        requestData, (builder, data) -> builder.post(RequestBody.create(data))
+                        requestData, (builder, data) -> builder.post(RequestBody.create(null, data))
                 );
                 break;
             case HEAD:
@@ -107,7 +106,7 @@ public final class RestRequestFactory {
             case PATCH:
                 populateBody(
                         requestBuilder,
-                        requestData, (builder, data) -> builder.patch(RequestBody.create(data))
+                        requestData, (builder, data) -> builder.patch(RequestBody.create(null, data))
                 );
                 break;
             case DELETE:

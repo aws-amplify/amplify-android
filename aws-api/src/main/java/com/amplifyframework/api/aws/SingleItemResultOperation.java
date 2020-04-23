@@ -92,7 +92,7 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
                     .url(endpoint)
                     .addHeader("accept", CONTENT_TYPE)
                     .addHeader("content-type", CONTENT_TYPE)
-                    .post(RequestBody.create(getRequest().getContent(), MediaType.parse(CONTENT_TYPE)))
+                    .post(RequestBody.create(MediaType.parse(CONTENT_TYPE), getRequest().getContent()))
                     .build());
             ongoingCall.enqueue(new OkHttpCallback());
         } catch (Exception error) {

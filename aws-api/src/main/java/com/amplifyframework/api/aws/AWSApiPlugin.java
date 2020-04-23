@@ -101,16 +101,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     }
 
     @Override
-    public void configure(
-            JSONObject pluginConfiguration,
-            @NonNull Context context
-    ) throws ApiException {
-        // Null-check for configuration is done inside readFrom method
-        AWSApiPluginConfiguration pluginConfig =
-                AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
-
-        final InterceptorFactory interceptorFactory =
-                new AppSyncSigV4SignerInterceptorFactory(authProvider);
+    public void configure(JSONObject pluginConfiguration, @NonNull Context context) throws ApiException {
+        AWSApiPluginConfiguration pluginConfig = AWSApiPluginConfigurationReader.readFrom(pluginConfiguration);
+        InterceptorFactory interceptorFactory = new AppSyncSigV4SignerInterceptorFactory(authProvider);
+        LegacyTls12Hacks legacyTls12Hacks = LegacyTls12Hacks.instance(context);
 
         for (Map.Entry<String, ApiConfiguration> entry : pluginConfig.getApis().entrySet()) {
             final String apiName = entry.getKey();
@@ -121,6 +115,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             if (apiConfiguration.getAuthorizationType() != AuthorizationType.NONE) {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
             }
+            legacyTls12Hacks.applyIfNeeded(builder);
             final OkHttpClient okHttpClient = builder.build();
             final SubscriptionEndpoint subscriptionEndpoint =
                     new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);

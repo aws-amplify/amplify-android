@@ -43,9 +43,6 @@ import okio.Buffer;
  * See https://github.com/awslabs/aws-mobile-appsync-sdk-android
  */
 public final class AppSyncSigV4SignerInterceptor implements Interceptor {
-
-    private static final String TAG = AppSyncSigV4SignerInterceptor.class.getSimpleName();
-
     private static final String CONTENT_TYPE = "application/json";
     private static final MediaType JSON_MEDIA_TYPE = MediaType.parse(CONTENT_TYPE);
     private static final String SERVICE_NAME = "appsync";
@@ -219,7 +216,7 @@ public final class AppSyncSigV4SignerInterceptor implements Interceptor {
         //Set the URL and Method
         okReqBuilder.url(req.url());
         final RequestBody requestBody = body != null ?
-                RequestBody.create(body.readByteArray(), JSON_MEDIA_TYPE) : null;
+                RequestBody.create(JSON_MEDIA_TYPE, body.readByteArray()) : null;
         okReqBuilder.method(req.method(), requestBody);
 
         //continue with chain.

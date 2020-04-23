@@ -21,6 +21,8 @@ dependencies {
     api project(':core')
 
     implementation dependency.androidx.appcompat
+    implementation dependency.google.playservices.base
+    implementation dependency.google.findbugs // For API 16, compat. https://stackoverflow.com/q/47477096/695787
     implementation dependency.okhttp
     implementation dependency.gson
     implementation dependency.aws.authcore
