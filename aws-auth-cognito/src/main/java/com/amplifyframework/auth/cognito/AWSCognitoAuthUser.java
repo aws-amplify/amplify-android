@@ -28,7 +28,7 @@ import com.amazonaws.mobile.client.Callback;
 import java.util.Objects;
 
 public final class AWSCognitoAuthUser extends AuthUser {
-    private AWSMobileClient client;
+    private final AWSMobileClient client;
 
     /**
      * Object to represent a logged in user with its associated attributes.

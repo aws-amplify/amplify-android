@@ -36,7 +36,6 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.AuthSocialSignInResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.util.AsyncResult;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
@@ -59,6 +58,7 @@ import org.json.JSONObject;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final String AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin";
@@ -78,7 +78,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull Context context
     ) throws AuthException {
         final CountDownLatch latch = new CountDownLatch(1);
-        final AsyncResult<Exception> asyncException = new AsyncResult<>();
+        final AtomicReference<Exception> asyncException = new AtomicReference<>();
 
         AWSMobileClient.getInstance().initialize(
             context,
@@ -86,7 +86,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails result) {
-                    if (result.getUserState().equals(UserState.SIGNED_IN)) {
+                    if (UserState.SIGNED_IN.equals(result.getUserState())) {
                         fetchAndSetUserId(() -> latch.countDown());
                     } else {
                         userId = null;
@@ -114,7 +114,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
         try {
             if (latch.await(SECONDS_BEFORE_TIMEOUT, TimeUnit.SECONDS)) {
-                if (asyncException.isSet()) {
+                if (asyncException.get() != null) {
                     throw new AuthException(
                         "Failed to instantiate AWSMobileClient",
                         asyncException.get(),

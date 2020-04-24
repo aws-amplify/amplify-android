@@ -22,15 +22,15 @@ public class AuthSocialSignInResult {
 
     /**
      * Wraps the result of a sign in operation.
-     * @param isSignedIn true if the user is now completely signed in, false otherwise
+     * @param isSignedIn true if the user is now authenticated, false otherwise
      */
     public AuthSocialSignInResult(boolean isSignedIn) {
         this.isSignedIn = isSignedIn;
     }
 
     /**
-     * True if the user is now completely signed in, false otherwise.
-     * @return true if the user is now completely signed in, false otherwise
+     * True if the user is now authenticated, false otherwise.
+     * @return true if the user is now signed in, false otherwise
      */
     public boolean isSignedIn() {
         return isSignedIn;
