@@ -41,7 +41,7 @@ public final class IdentifyEntityMatchesResult implements IdentifyResult {
      * @return The result instance containing the given list of entity matches
      */
     @NonNull
-    public static IdentifyEntityMatchesResult fromEntityMatchs(@NonNull List<EntityMatch> entityMatches) {
+    public static IdentifyEntityMatchesResult fromEntityMatches(@NonNull List<EntityMatch> entityMatches) {
         return new IdentifyEntityMatchesResult(Objects.requireNonNull(entityMatches));
     }
 
