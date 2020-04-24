@@ -105,6 +105,12 @@
                  EmptyConsumer.create(), etc., instead of value -> {}.
             -->
             <property name="allowEmptyLambdas" value="false" />
+
+            <!--
+                Allows empty class bodies.  Useful for creating an
+                anonymous inner class, such as when defining a TypeToken.
+            -->
+            <property name="allowEmptyTypes" value="true" />
         </module>
 
         <!-- Disallow methods from having too many parameters. -->
