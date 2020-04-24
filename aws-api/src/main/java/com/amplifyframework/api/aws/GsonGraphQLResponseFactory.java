@@ -46,6 +46,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         this(
                 new GsonBuilder()
                 .registerTypeAdapter(List.class, new GsonListDeserializer())
+                .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
                 .create()
         );
     }
