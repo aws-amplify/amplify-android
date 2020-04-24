@@ -29,8 +29,8 @@ public final class Language extends Feature<LanguageType> {
 
     @Override
     @NonNull
-    public String getType() {
-        return FeatureType.LANGUAGE.getFeatureName();
+    public String getTypeAlias() {
+        return FeatureType.LANGUAGE.getAlias();
     }
 
     /**

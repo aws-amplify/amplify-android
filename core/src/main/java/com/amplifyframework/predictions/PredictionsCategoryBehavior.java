@@ -15,14 +15,19 @@
 
 package com.amplifyframework.predictions;
 
+import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
+import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
+import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
@@ -43,6 +48,46 @@ public interface PredictionsCategoryBehavior {
     TranslateTextOperation<?> translateText(
             @NonNull String text,
             @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Identify specific features of an input image.
+     * Use {@link android.graphics.BitmapFactory} to obtain
+     * an instance of {@link Bitmap} from the input source.
+     * @param actionType the type of identification to perform
+     * @param image the Bitmap image
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Identify specific features of an input image.
+     * Use {@link android.graphics.BitmapFactory} to obtain
+     * an instance of {@link Bitmap} from the input source.
+     * @param actionType the type of identification to perform
+     * @param image the filepath to image
+     * @param options Parameters to specific plugin behavior
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options,
+            @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
 
