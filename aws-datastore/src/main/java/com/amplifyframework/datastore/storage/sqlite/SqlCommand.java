@@ -20,9 +20,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.util.ArrayUtils;
 import com.amplifyframework.util.Immutable;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -42,8 +44,11 @@ final class SqlCommand {
     // threads can operate on the same SQLiteStatement object.
     private final SQLiteStatement compiledSqlStatement;
 
-    // A list of arguments to be used as selection arguments
-    private final List<Object> selectionArgs;
+    // The list of columns used to create the statement
+    private final List<SQLiteColumn> columns;
+
+    // A list of arguments to be bound to the sqlStatement
+    private final List<Object> bindings;
 
     /**
      * Construct a SqlCommand object.
@@ -53,7 +58,7 @@ final class SqlCommand {
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement) {
-        this(tableName, sqlStatement, null, null);
+        this(tableName, sqlStatement, Collections.emptyList(), Collections.emptyList());
     }
 
     /**
@@ -61,45 +66,36 @@ final class SqlCommand {
      *
      * @param tableName name of the SQL table
      * @param sqlStatement create table command in string representation
+     * @param columns a list of columns used by the sqlStatement
+     * @param bindings a list of arguments to be bound to the sqlStatement
+     */
+    SqlCommand(@NonNull String tableName,
+               @NonNull String sqlStatement,
+               @NonNull List<SQLiteColumn> columns,
+               @NonNull List<Object> bindings) {
+        this(tableName, sqlStatement, columns, bindings, null);
+    }
+
+    /**
+     * Construct a SqlCommand object.
+     *
+     * @param tableName name of the SQL table
+     * @param sqlStatement create table command in string representation
+     * @param columns a list of columns used by the sqlStatement
+     * @param bindings a list of arguments to be bound to the sqlStatement
      * @param compiledSqlStatement a compiled Sql statement that can be bound with
      *                             inputs later and executed.
      */
     SqlCommand(@NonNull String tableName,
                @NonNull String sqlStatement,
+               @NonNull List<SQLiteColumn> columns,
+               @NonNull List<Object> bindings,
                @Nullable SQLiteStatement compiledSqlStatement) {
-        this(tableName, sqlStatement, compiledSqlStatement, null);
-    }
-
-    /**
-     * Construct a SqlCommand object.
-     *
-     * @param tableName name of the SQL table
-     * @param sqlStatement create table command in string representation
-     * @param selectionArgs a list of arguments for selection
-     */
-    SqlCommand(@NonNull String tableName,
-               @NonNull String sqlStatement,
-               @Nullable List<Object> selectionArgs) {
-        this(tableName, sqlStatement, null, selectionArgs);
-    }
-
-    /**
-     * Construct a SqlCommand object.
-     *
-     * @param tableName name of the SQL table
-     * @param sqlStatement create table command in string representation
-     * @param compiledSqlStatement a compiled Sql statement that can be bound with
-     *                             inputs later and executed.
-     * @param selectionArgs a list of arguments for selection
-     */
-    SqlCommand(@NonNull String tableName,
-               @NonNull String sqlStatement,
-               @Nullable SQLiteStatement compiledSqlStatement,
-               @Nullable List<Object> selectionArgs) {
         this.tableName = Objects.requireNonNull(tableName);
         this.sqlStatement = Objects.requireNonNull(sqlStatement);
+        this.columns = Objects.requireNonNull(columns);
+        this.bindings = Objects.requireNonNull(bindings);
         this.compiledSqlStatement = compiledSqlStatement;
-        this.selectionArgs = selectionArgs;
     }
 
     /**
@@ -129,21 +125,29 @@ final class SqlCommand {
     }
 
     /**
-     * Return the list of arguments for selection.
-     * @return the list of arguments for selection
+     * Return the list of arguments to be bound to the sqlStatement.
+     * @return the list of arguments to be bound to the sqlStatement
      */
-    List<Object> getSelectionArgs() {
-        return Immutable.of(selectionArgs);
+    List<Object> getBindings() {
+        return Immutable.of(bindings);
     }
 
     /**
-     * Return the list of arguments for selection
+     * Return the list of columns used to create the statement.
+     * @return the list of columns used to create the statement
+     */
+    List<SQLiteColumn> getColumns() {
+        return Immutable.of(columns);
+    }
+
+    /**
+     * Return the list of arguments to be bound to the sqlStatement
      * as an array of strings.
-     * @return the list of arguments for selection
+     * @return the list of arguments to be bound to the sqlStatement
      *         as an array of strings.
      */
-    String[] getSelectionArgsAsArray() {
-        if (!hasSelectionArgs()) {
+    String[] getBindingsAsArray() {
+        if (!hasBindings()) {
             return null;
         }
         /*
@@ -153,10 +157,10 @@ final class SqlCommand {
          Doing `Arrays.copyOf(selectionArgs.toArray(), selectionArgs.size(), String[].class);`
          does NOT work because not every object (e.g. Integer) can be cast to string.
          */
-        final int length = selectionArgs.size();
+        final int length = bindings.size();
         final String[] array = new String[length];
         for (int index = 0; index < length; index++) {
-            array[index] = selectionArgs.get(index).toString();
+            array[index] = bindings.get(index).toString();
         }
         return ArrayUtils.copyOf(array);
     }
@@ -175,8 +179,8 @@ final class SqlCommand {
      * Return true if selectionArgs is not null and not empty.
      * @return true if selectionArgs is not null and not empty.
      */
-    boolean hasSelectionArgs() {
-        return selectionArgs != null && !selectionArgs.isEmpty();
+    boolean hasBindings() {
+        return bindings != null && !bindings.isEmpty();
     }
 
     @Override
@@ -199,7 +203,10 @@ final class SqlCommand {
         if (!ObjectsCompat.equals(compiledSqlStatement, that.compiledSqlStatement)) {
             return false;
         }
-        return ObjectsCompat.equals(selectionArgs, that.selectionArgs);
+        if (!ObjectsCompat.equals(columns, that.columns)) {
+            return false;
+        }
+        return ObjectsCompat.equals(bindings, that.bindings);
     }
 
     @Override
@@ -207,7 +214,8 @@ final class SqlCommand {
         int result = tableName != null ? tableName.hashCode() : 0;
         result = 31 * result + (sqlStatement != null ? sqlStatement.hashCode() : 0);
         result = 31 * result + (compiledSqlStatement != null ? compiledSqlStatement.hashCode() : 0);
-        result = 31 * result + (selectionArgs != null ? selectionArgs.hashCode() : 0);
+        result = 31 * result + (bindings != null ? bindings.hashCode() : 0);
+        result = 31 * result + (columns != null ? columns.hashCode() : 0);
         return result;
     }
 
@@ -216,8 +224,9 @@ final class SqlCommand {
         return "SqlCommand{" +
                 "tableName='" + tableName + '\'' +
                 ", sqlStatement='" + sqlStatement + '\'' +
+                ", columns=" + columns +
+                ", bindings=" + columns +
                 ", compiledSqlStatement=" + compiledSqlStatement +
-                ", selectionArgs=" + selectionArgs +
                 '}';
     }
 }

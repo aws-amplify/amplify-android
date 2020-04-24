@@ -67,7 +67,12 @@ public enum JavaFieldType {
     /**
      * Represents the Model type.
      */
-    MODEL(Model.class.getSimpleName());
+    MODEL(Model.class.getSimpleName()),
+
+    /**
+     * Represents any custom type (objects that are not models).
+     */
+    CUSTOM_TYPE(Object.class.getSimpleName());
 
     private final String javaFieldType;
 
