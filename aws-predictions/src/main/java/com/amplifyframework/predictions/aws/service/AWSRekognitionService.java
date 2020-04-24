@@ -21,14 +21,26 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
+import com.amplifyframework.predictions.aws.adapter.EmotionTypeAdapter;
+import com.amplifyframework.predictions.aws.adapter.GenderBinaryTypeAdapter;
 import com.amplifyframework.predictions.aws.adapter.IdentifyResultTransformers;
+import com.amplifyframework.predictions.aws.configuration.IdentifyEntitiesConfiguration;
+import com.amplifyframework.predictions.models.AgeRange;
+import com.amplifyframework.predictions.models.BinaryFeature;
 import com.amplifyframework.predictions.models.Celebrity;
 import com.amplifyframework.predictions.models.CelebrityDetails;
+import com.amplifyframework.predictions.models.Emotion;
+import com.amplifyframework.predictions.models.EmotionType;
+import com.amplifyframework.predictions.models.EntityDetails;
+import com.amplifyframework.predictions.models.EntityMatch;
+import com.amplifyframework.predictions.models.Gender;
 import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.Landmark;
 import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
+import com.amplifyframework.predictions.result.IdentifyEntitiesResult;
+import com.amplifyframework.predictions.result.IdentifyEntityMatchesResult;
 import com.amplifyframework.predictions.result.IdentifyLabelsResult;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.util.UserAgent;
@@ -39,15 +51,22 @@ import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.rekognition.model.ComparedFace;
+import com.amazonaws.services.rekognition.model.DetectFacesRequest;
+import com.amazonaws.services.rekognition.model.DetectFacesResult;
 import com.amazonaws.services.rekognition.model.DetectLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectLabelsResult;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsResult;
+import com.amazonaws.services.rekognition.model.Face;
+import com.amazonaws.services.rekognition.model.FaceDetail;
+import com.amazonaws.services.rekognition.model.FaceMatch;
 import com.amazonaws.services.rekognition.model.Image;
 import com.amazonaws.services.rekognition.model.ModerationLabel;
 import com.amazonaws.services.rekognition.model.Parent;
 import com.amazonaws.services.rekognition.model.RecognizeCelebritiesRequest;
 import com.amazonaws.services.rekognition.model.RecognizeCelebritiesResult;
+import com.amazonaws.services.rekognition.model.SearchFacesByImageRequest;
+import com.amazonaws.services.rekognition.model.SearchFacesByImageResult;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -112,6 +131,27 @@ final class AWSRekognitionService {
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }
+    }
+
+    void detectEntities(
+            @NonNull Image image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        final IdentifyEntitiesConfiguration config;
+        try {
+            config = pluginConfiguration.getIdentifyEntitiesConfiguration();
+            if (config.isGeneralEntityDetection()) {
+                List<EntityDetails> entities = detectEntities(image);
+                onSuccess.accept(IdentifyEntitiesResult.fromEntityDetails(entities));
+            } else {
+                List<EntityMatch> matches = detectEntityMatches(image, config.getCollectionId());
+                onSuccess.accept(IdentifyEntityMatchesResult.fromEntityMatches(matches));
+            }
+        } catch (PredictionsException exception) {
+            onError.accept(exception);
+        }
+
     }
 
     private List<Label> detectLabels(Image image) throws PredictionsException {
@@ -224,6 +264,93 @@ final class AWSRekognitionService {
         }
 
         return celebrities;
+    }
+
+    private List<EntityDetails> detectEntities(Image image) throws PredictionsException {
+        DetectFacesRequest request = new DetectFacesRequest()
+                .withImage(image)
+                .withAttributes(Collections.singletonList("ALL"));
+
+        // Detect entities in the given image via Amazon Rekognition
+        final DetectFacesResult result;
+        try {
+            result = rekognition.detectFaces(request);
+        } catch (AmazonClientException serviceException) {
+            throw new PredictionsException(
+                    "Amazon Rekognition encountered an error while detecting faces.",
+                    serviceException, "See attached service exception for more details."
+            );
+        }
+
+        List<EntityDetails> entities = new ArrayList<>();
+        for (FaceDetail face : result.getFaceDetails()) {
+            // Extract details from face detection
+            RectF box = IdentifyResultTransformers.fromBoundingBox(face.getBoundingBox());
+            AgeRange ageRange = IdentifyResultTransformers.fromRekognitionAgeRange(face.getAgeRange());
+            Pose pose = IdentifyResultTransformers.fromRekognitionPose(face.getPose());
+            List<Landmark> landmarks = IdentifyResultTransformers.fromLandmarks(face.getLandmarks());
+            List<BinaryFeature> features = IdentifyResultTransformers.fromFaceDetail(face);
+
+            // Gender detection
+            com.amazonaws.services.rekognition.model.Gender rekognitionGender = face.getGender();
+            Gender amplifyGender = Gender.builder()
+                    .value(GenderBinaryTypeAdapter.fromRekognition(rekognitionGender.getValue()))
+                    .confidence(rekognitionGender.getConfidence())
+                    .build();
+
+            // Emotion detection
+            List<Emotion> emotions = new ArrayList<>();
+            for (com.amazonaws.services.rekognition.model.Emotion rekognitionEmotion : face.getEmotions()) {
+                EmotionType emotion = EmotionTypeAdapter.fromRekognition(rekognitionEmotion.getType());
+                Emotion amplifyEmotion = Emotion.builder()
+                        .value(emotion)
+                        .confidence(rekognitionEmotion.getConfidence())
+                        .build();
+                emotions.add(amplifyEmotion);
+            }
+
+            EntityDetails entity = EntityDetails.builder()
+                    .box(box)
+                    .ageRange(ageRange)
+                    .pose(pose)
+                    .gender(amplifyGender)
+                    .landmarks(landmarks)
+                    .emotions(emotions)
+                    .features(features)
+                    .build();
+            entities.add(entity);
+        }
+        return entities;
+    }
+
+    private List<EntityMatch> detectEntityMatches(Image image, String collectionId) throws PredictionsException {
+        SearchFacesByImageRequest request = new SearchFacesByImageRequest()
+                .withImage(image)
+                .withCollectionId(collectionId);
+
+        // Detect entities in the given image by matching against a collection of images
+        final SearchFacesByImageResult result;
+        try {
+            result = rekognition.searchFacesByImage(request);
+        } catch (AmazonClientException serviceException) {
+            throw new PredictionsException(
+                    "Amazon Rekognition encountered an error while searching for known faces.",
+                    serviceException, "See attached service exception for more details."
+            );
+        }
+
+        List<EntityMatch> matches = new ArrayList<>();
+        for (FaceMatch rekognitionMatch : result.getFaceMatches()) {
+            Face face = rekognitionMatch.getFace();
+            RectF box = IdentifyResultTransformers.fromBoundingBox(face.getBoundingBox());
+            EntityMatch amplifyMatch = EntityMatch.builder()
+                    .externalImageId(face.getExternalImageId())
+                    .confidence(rekognitionMatch.getSimilarity())
+                    .box(box)
+                    .build();
+            matches.add(amplifyMatch);
+        }
+        return matches;
     }
 
     @NonNull

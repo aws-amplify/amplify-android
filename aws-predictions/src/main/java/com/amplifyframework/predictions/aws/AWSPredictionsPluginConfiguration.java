@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.aws;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.aws.configuration.IdentifyEntitiesConfiguration;
 import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
 import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
 
@@ -34,16 +35,19 @@ public final class AWSPredictionsPluginConfiguration {
     private final Region defaultRegion;
     private final NetworkPolicy defaultNetworkPolicy;
     private final TranslateTextConfiguration translateTextConfiguration;
+    private final IdentifyEntitiesConfiguration identifyEntitiesConfiguration;
     private final InterpretTextConfiguration interpretTextConfiguration;
 
     private AWSPredictionsPluginConfiguration(
             Region defaultRegion,
             TranslateTextConfiguration translateTextConfiguration,
+            IdentifyEntitiesConfiguration identifyEntitiesConfiguration,
             InterpretTextConfiguration interpretTextConfiguration
     ) {
         this.defaultRegion = defaultRegion;
         this.defaultNetworkPolicy = NetworkPolicy.AUTO;
         this.translateTextConfiguration = translateTextConfiguration;
+        this.identifyEntitiesConfiguration = identifyEntitiesConfiguration;
         this.interpretTextConfiguration = interpretTextConfiguration;
     }
 
@@ -65,6 +69,7 @@ public final class AWSPredictionsPluginConfiguration {
 
         final Region defaultRegion;
         final InterpretTextConfiguration interpretConfiguration;
+        final IdentifyEntitiesConfiguration identifyEntitiesConfiguration;
         final TranslateTextConfiguration translateTextConfiguration;
 
         // Required sections
@@ -78,6 +83,13 @@ public final class AWSPredictionsPluginConfiguration {
                 translateTextConfiguration = TranslateTextConfiguration.fromJson(convertJson);
             } else {
                 translateTextConfiguration = null;
+            }
+
+            if (configurationJson.has(ConfigKey.IDENTIFY.key())) {
+                JSONObject identifyJson = configurationJson.getJSONObject(ConfigKey.CONVERT.key());
+                identifyEntitiesConfiguration = IdentifyEntitiesConfiguration.fromJson(identifyJson);
+            } else {
+                identifyEntitiesConfiguration = null;
             }
 
             if (configurationJson.has(ConfigKey.INTERPRET.key())) {
@@ -98,6 +110,7 @@ public final class AWSPredictionsPluginConfiguration {
         return new AWSPredictionsPluginConfiguration(
                 defaultRegion,
                 translateTextConfiguration,
+                identifyEntitiesConfiguration,
                 interpretConfiguration
         );
     }
@@ -138,6 +151,23 @@ public final class AWSPredictionsPluginConfiguration {
     }
 
     /**
+     * Gets the configuration for entities detection.
+     * Null if not configured.
+     * @return the configuration for entities detection
+     * @throws PredictionsException if not configured
+     */
+    @NonNull
+    public IdentifyEntitiesConfiguration getIdentifyEntitiesConfiguration() throws PredictionsException {
+        if (identifyEntitiesConfiguration == null) {
+            throw new PredictionsException(
+                    "Entities detection is not configured.",
+                    "Verify that identifyEntities is configured under " + ConfigKey.CONVERT.key()
+            );
+        }
+        return identifyEntitiesConfiguration;
+    }
+
+    /**
      * Gets the configuration for text interpretation.
      * Null if not configured.
      * @return the configuration for text interpretation
@@ -161,6 +191,7 @@ public final class AWSPredictionsPluginConfiguration {
     enum ConfigKey {
         DEFAULT_REGION("defaultRegion"),
         CONVERT("convert"),
+        IDENTIFY("identify"),
         INTERPRET("interpret");
 
         private final String key;
