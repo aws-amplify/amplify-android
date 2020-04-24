@@ -24,10 +24,47 @@ import androidx.annotation.Nullable;
  */
 public enum FeatureType {
     /**
+     * Bounded key value is a key-value pair in the
+     * format of a question and answer from the input
+     * image document.
+     */
+    BOUNDED_KEY_VALUE("BoundedKeyValue"),
+
+    /**
+     * Celebrity is a famous person that is detected
+     * from the input image.
+     */
+    CELEBRITY("Celebrity"),
+
+    /**
+     * Emotion is the inferred mood or state of the
+     * entity's mind detected from the input image.
+     */
+    EMOTION(EmotionType.class.getSimpleName()),
+
+    /**
      * Entity is categorization of a specific phrase
      * detected from the input text.
      */
     ENTITY(EntityType.class.getSimpleName()),
+
+    /**
+     * Entity match is an identification of a known
+     * entity from the input image.
+     */
+    ENTITY_MATCH("EntityMatch"),
+
+    /**
+     * Gender is an entity's sexual identity detected
+     * from the input image.
+     */
+    GENDER(GenderBinaryType.class.getSimpleName()),
+
+    /**
+     * Identified text is graphical text that is
+     * detected from the input image.
+     */
+    IDENTIFIED_TEXT("IdentifiedText"),
 
     /**
      * Key phrase is a compound noun phrase detected
@@ -54,10 +91,10 @@ public enum FeatureType {
      */
     SYNTAX(SpeechType.class.getSimpleName());
 
-    private final String featureName;
+    private final String typeAlias;
 
-    FeatureType(String featureName) {
-        this.featureName = featureName;
+    FeatureType(String typeAlias) {
+        this.typeAlias = typeAlias;
     }
 
     /**
@@ -65,23 +102,24 @@ public enum FeatureType {
      * by a given feature.
      * @return the name of the feature type
      */
-    public String getFeatureName() {
-        return featureName;
+    public String getAlias() {
+        return typeAlias;
     }
 
     /**
      * Gets a feature type enum that represents a feature
      * with the provided name.
-     * @param featureName the name of the feature
+     * @param typeAlias the alias of the feature type
      * @return Enum representing a feature,
      *          null if no match is found.
      */
     @Nullable
-    public static FeatureType fromName(String featureName) {
+    public static FeatureType fromAlias(String typeAlias) {
         try {
-            return FeatureType.valueOf(featureName);
+            return FeatureType.valueOf(typeAlias);
         } catch (IllegalArgumentException noMatchError) {
             return null;
         }
     }
 }
+

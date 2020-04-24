@@ -36,8 +36,8 @@ public final class KeyPhrase extends TextFeature<String> {
 
     @Override
     @NonNull
-    public String getType() {
-        return FeatureType.KEY_PHRASE.getFeatureName();
+    public String getTypeAlias() {
+        return FeatureType.KEY_PHRASE.getAlias();
     }
 
     /**

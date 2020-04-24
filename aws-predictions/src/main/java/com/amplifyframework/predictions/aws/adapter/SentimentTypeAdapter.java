@@ -19,8 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.SentimentType;
 
-import java.util.Locale;
-
 /**
  * Utility to convert AWS Comprehend's sentiment type
  * into Amplify-compatible data structure
@@ -37,14 +35,16 @@ public final class SentimentTypeAdapter {
      */
     @NonNull
     public static SentimentType fromComprehend(@NonNull String sentiment) {
-        switch (sentiment.toLowerCase(Locale.US)) {
-            case "positive":
+        com.amazonaws.services.comprehend.model.SentimentType type =
+                com.amazonaws.services.comprehend.model.SentimentType.fromValue(sentiment);
+        switch (type) {
+            case POSITIVE:
                 return SentimentType.POSITIVE;
-            case "negative":
+            case NEGATIVE:
                 return SentimentType.NEGATIVE;
-            case "neutral":
+            case NEUTRAL:
                 return SentimentType.NEUTRAL;
-            case "mixed":
+            case MIXED:
                 return SentimentType.MIXED;
             default:
                 return SentimentType.UNKNOWN;
