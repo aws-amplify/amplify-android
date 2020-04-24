@@ -57,7 +57,7 @@ public final class AWSDataStorePluginTest {
             .version(RandomString.string())
             .addModel(Person.class)
             .build();
-        this.awsDataStorePlugin = AWSDataStorePlugin.forModels(modelProvider);
+        this.awsDataStorePlugin = new AWSDataStorePlugin(modelProvider);
     }
 
     /**
