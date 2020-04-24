@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.EmotionType;
 
-import java.util.Locale;
+import com.amazonaws.services.rekognition.model.EmotionName;
 
 /**
  * Utility to convert AWS Rekognition's emotion type
@@ -37,22 +37,23 @@ public final class EmotionTypeAdapter {
      */
     @NonNull
     public static EmotionType fromRekognition(@NonNull String emotion) {
-        switch (emotion.toLowerCase(Locale.US)) {
-            case "happy":
+        EmotionName type = EmotionName.fromValue(emotion);
+        switch (type) {
+            case HAPPY:
                 return EmotionType.HAPPY;
-            case "sad":
+            case SAD:
                 return EmotionType.SAD;
-            case "angry":
+            case ANGRY:
                 return EmotionType.ANGRY;
-            case "confused":
+            case CONFUSED:
                 return EmotionType.CONFUSED;
-            case "disgusted":
+            case DISGUSTED:
                 return EmotionType.DISGUSTED;
-            case "surprised":
+            case SURPRISED:
                 return EmotionType.SURPRISED;
-            case "calm":
+            case CALM:
                 return EmotionType.CALM;
-            case "fear":
+            case FEAR:
                 return EmotionType.FEAR;
             default:
                 return EmotionType.UNKNOWN;

@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.GenderBinaryType;
 
-import java.util.Locale;
+import com.amazonaws.services.rekognition.model.GenderType;
 
 /**
  * Utility to convert AWS Rekognition's gender type
@@ -37,10 +37,11 @@ public final class GenderBinaryTypeAdapter {
      */
     @NonNull
     public static GenderBinaryType fromRekognition(@NonNull String gender) {
-        switch (gender.toLowerCase(Locale.US)) {
-            case "male":
+        GenderType type = GenderType.fromValue(gender);
+        switch (type) {
+            case Male:
                 return GenderBinaryType.MALE;
-            case "female":
+            case Female:
                 return GenderBinaryType.FEMALE;
             default:
                 return GenderBinaryType.UNKNOWN;
