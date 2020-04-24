@@ -99,7 +99,7 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        return translateText(text, TranslateTextOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
@@ -110,7 +110,10 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        TensorFlowTranslateTextOperation operation =
+                new TensorFlowTranslateTextOperation(onError);
+        operation.start();
+        return operation;
     }
 
     @NonNull
@@ -122,7 +125,8 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        return translateText(text, fromLanguage, toLanguage,
+                TranslateTextOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
@@ -135,7 +139,10 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        TensorFlowTranslateTextOperation operation =
+                new TensorFlowTranslateTextOperation(onError);
+        operation.start();
+        return operation;
     }
 
     @NonNull
@@ -146,7 +153,7 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowIdentifyOperation(actionType, onError);
+        return identify(actionType, image, IdentifyOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
@@ -158,7 +165,10 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowIdentifyOperation(actionType, onError);
+        TensorFlowIdentifyOperation operation =
+                new TensorFlowIdentifyOperation(actionType, onError);
+        operation.start();
+        return operation;
     }
 
     @NonNull

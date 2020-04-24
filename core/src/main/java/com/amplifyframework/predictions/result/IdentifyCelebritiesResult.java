@@ -34,15 +34,6 @@ public final class IdentifyCelebritiesResult implements IdentifyResult {
     }
 
     /**
-     * Gets the list of detected celebrities.
-     * @return the list of celebrities
-     */
-    @NonNull
-    public List<CelebrityDetails> getCelebrities() {
-        return Immutable.of(celebrities);
-    }
-
-    /**
      * Constructs a new instance of {@link IdentifyCelebritiesResult} from
      * the given list of celebrities.
      * @param celebrities A list of celebrities
@@ -51,5 +42,14 @@ public final class IdentifyCelebritiesResult implements IdentifyResult {
     @NonNull
     public static IdentifyCelebritiesResult fromCelebrities(@NonNull List<CelebrityDetails> celebrities) {
         return new IdentifyCelebritiesResult(Objects.requireNonNull(celebrities));
+    }
+
+    /**
+     * Gets the list of detected celebrities.
+     * @return the list of celebrities
+     */
+    @NonNull
+    public List<CelebrityDetails> getCelebrities() {
+        return Immutable.of(celebrities);
     }
 }

@@ -21,14 +21,11 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsCategoryBehavior;
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.models.IdentifyActionType;
-import com.amplifyframework.predictions.models.LabelType;
+import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
-import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
-import com.amplifyframework.predictions.result.IdentifyLabelsResult;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
@@ -63,6 +60,21 @@ public final class SynchronousPredictions {
     }
 
     /**
+     * Translate given text synchronously using default options
+     * and return the result of operation.
+     * @param text the input text to translate
+     * @return the result of interpretation containing translated text and
+     *          the language of the translated text
+     * @throws PredictionsException if translation fails or times out
+     */
+    @NonNull
+    public TranslateTextResult translateText(
+            @NonNull String text
+    ) throws PredictionsException {
+        return translateText(text, TranslateTextOptions.defaults());
+    }
+
+    /**
      * Translate given text synchronously and return the result of operation.
      * @param text the input text to translate
      * @param options interpret options
@@ -84,6 +96,25 @@ public final class SynchronousPredictions {
                     onError
             )
         );
+    }
+
+    /**
+     * Translate given text synchronously using default options
+     * and return the result of operation.
+     * @param text the input text to translate
+     * @param fromLanguage the language to translate from
+     * @param toLanguage the language to translate to
+     * @return the result of interpretation containing translated text and
+     *          the language of the translated text
+     * @throws PredictionsException if translation fails or times out
+     */
+    @NonNull
+    public TranslateTextResult translateText(
+            @NonNull String text,
+            @NonNull LanguageType fromLanguage,
+            @NonNull LanguageType toLanguage
+    ) throws PredictionsException {
+        return translateText(text, fromLanguage, toLanguage, TranslateTextOptions.defaults());
     }
 
     /**
@@ -117,21 +148,39 @@ public final class SynchronousPredictions {
     }
 
     /**
-     * Detect celebrities in given image synchronously and return the result of operation.
-     * @param image the input image to detect celebrities from
-     * @param options identify options
-     * @return the result of celebrities detection
+     * Analyze given image synchronously with default options and
+     * return the result of operation.
+     * @param actionType identification category type
+     * @param image the input image to analyze
+     * @return the result of image analysis
      * @throws PredictionsException if identify fails or times out
      */
     @NonNull
-    public IdentifyCelebritiesResult identifyCelebrities(
+    public IdentifyResult identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image
+    ) throws PredictionsException {
+        return identify(actionType, image, IdentifyOptions.defaults());
+    }
+
+    /**
+     * Analyze given image synchronously and return the result of operation.
+     * @param actionType identification category type
+     * @param image the input image to detect analyze
+     * @param options identify options
+     * @return the result of image analysis
+     * @throws PredictionsException if identify fails or times out
+     */
+    @NonNull
+    public IdentifyResult identify(
+            @NonNull IdentifyAction actionType,
             @NonNull Bitmap image,
             @NonNull IdentifyOptions options
     ) throws PredictionsException {
-        return (IdentifyCelebritiesResult) Await.<IdentifyResult, PredictionsException>result(
+        return Await.<IdentifyResult, PredictionsException>result(
             PREDICTIONS_OPERATION_TIMEOUT_MS,
             (onResult, onError) -> asyncDelegate.identify(
-                    IdentifyActionType.DETECT_CELEBRITIES,
+                    actionType,
                     image,
                     options,
                     onResult,
@@ -141,29 +190,18 @@ public final class SynchronousPredictions {
     }
 
     /**
-     * Detect labels in given image synchronously and return the result of operation.
-     * @param type the type of label to detect
-     * @param image the input image to detect labels from
-     * @param options identify options
-     * @return the result of labels detection
-     * @throws PredictionsException if identify fails or times out
+     * Interpret given text synchronously using default options
+     * and return the result of operation.
+     * @param text the input text to analyze
+     * @return the result of interpretation containing detected language,
+     *          sentiment, key phrases, entities, syntax, and other features
+     * @throws PredictionsException if interpret fails or times out
      */
     @NonNull
-    public IdentifyLabelsResult identifyLabels(
-            @NonNull LabelType type,
-            @NonNull Bitmap image,
-            @NonNull IdentifyOptions options
+    public InterpretResult interpret(
+            @NonNull String text
     ) throws PredictionsException {
-        return (IdentifyLabelsResult) Await.<IdentifyResult, PredictionsException>result(
-            PREDICTIONS_OPERATION_TIMEOUT_MS,
-            (onResult, onError) -> asyncDelegate.identify(
-                    type,
-                    image,
-                    options,
-                    onResult,
-                    onError
-            )
-        );
+        return interpret(text, InterpretOptions.defaults());
     }
 
     /**

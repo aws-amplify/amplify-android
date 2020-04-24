@@ -17,22 +17,21 @@ package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
-import com.amplifyframework.predictions.models.CelebrityDetails;
-import com.amplifyframework.predictions.options.IdentifyOptions;
+import com.amplifyframework.predictions.models.IdentifyActionType;
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
+import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
+import com.amplifyframework.util.CollectionUtils;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.InputStream;
-import java.util.List;
+import io.reactivex.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertFalse;
@@ -45,7 +44,8 @@ import static org.junit.Assert.assertTrue;
  */
 public final class AWSPredictionsIdentifyCelebritiesTest {
 
-    private static final int MINIMUM_IMAGE_SIZE = 80;
+    private static final IdentifyActionType TYPE = IdentifyActionType.DETECT_CELEBRITIES;
+    private static final int MINIMUM_IMAGE_PIXELS = 80;
 
     private SynchronousPredictions predictions;
 
@@ -74,27 +74,9 @@ public final class AWSPredictionsIdentifyCelebritiesTest {
      */
     @Test(expected = PredictionsException.class)
     public void testIdentifyFailsForSmallImage() throws Exception {
-        Bitmap image = Bitmap.createBitmap(MINIMUM_IMAGE_SIZE - 1,
-                MINIMUM_IMAGE_SIZE - 1, Bitmap.Config.ARGB_8888);
-        predictions.identifyCelebrities(image, IdentifyOptions.defaults());
-    }
-
-    /**
-     * Assert that identify "passes" for blank image.
-     * @throws Exception if prediction fails
-     */
-    @Test
-    public void testIdentifyPassesForBlankImage() throws Exception {
-        Bitmap image = Bitmap.createBitmap(MINIMUM_IMAGE_SIZE,
-                MINIMUM_IMAGE_SIZE, Bitmap.Config.ARGB_8888);
-
-        // Identify the celebrity inside given image and assert non-null result.
-        IdentifyCelebritiesResult result = predictions.identifyCelebrities(image, IdentifyOptions.defaults());
-        assertNotNull(result);
-
-        // Assert nobody is detected
-        List<CelebrityDetails> celebs = result.getCelebrities();
-        assertTrue(celebs.isEmpty());
+        Bitmap image = Bitmap.createBitmap(MINIMUM_IMAGE_PIXELS - 1,
+                MINIMUM_IMAGE_PIXELS - 1, Bitmap.Config.ARGB_8888);
+        predictions.identify(TYPE, image);
     }
 
     /**
@@ -103,18 +85,18 @@ public final class AWSPredictionsIdentifyCelebritiesTest {
      */
     @Test
     public void testIdentifyCelebrities() throws Exception {
-        InputStream bezosJpeg = getApplicationContext()
-                .getAssets().open("jeff_bezos.jpg");
-        final Bitmap image = BitmapFactory.decodeStream(bezosJpeg);
+        final Bitmap image = Assets.readAsBitmap("jeff_bezos.jpg");
 
         // Identify the celebrity inside given image and assert non-null result.
-        IdentifyCelebritiesResult result = predictions.identifyCelebrities(image, IdentifyOptions.defaults());
+        IdentifyCelebritiesResult result = (IdentifyCelebritiesResult) predictions.identify(TYPE, image);
         assertNotNull(result);
 
         // Assert that Jeff Bezos is detected
-        List<CelebrityDetails> celebs = result.getCelebrities();
-        assertNotNull(celebs);
-        assertFalse(celebs.isEmpty());
-        assertTrue(celebs.stream().anyMatch(celeb -> "Jeff Bezos".equals(celeb.getCelebrity().getName())));
+        assertFalse(CollectionUtils.isNullOrEmpty(result.getCelebrities()));
+        assertTrue(Observable.fromIterable(result.getCelebrities())
+                .map(celeb -> celeb.getCelebrity().getName())
+                .toList()
+                .blockingGet()
+                .contains("Jeff Bezos"));
     }
 }

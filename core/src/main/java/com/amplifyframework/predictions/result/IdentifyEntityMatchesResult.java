@@ -35,22 +35,22 @@ public final class IdentifyEntityMatchesResult implements IdentifyResult {
     }
 
     /**
-     * Gets the list of detected entity matches.
-     * @return the list of entity matches
-     */
-    @NonNull
-    public List<EntityMatch> getEntityMatches() {
-        return Immutable.of(entityMatches);
-    }
-
-    /**
      * Constructs a new instance of {@link IdentifyEntityMatchesResult} from
      * the given list of entity matches.
      * @param entityMatches A list of entity matches
      * @return The result instance containing the given list of entity matches
      */
     @NonNull
-    public static IdentifyEntityMatchesResult fromEntities(@NonNull List<EntityMatch> entityMatches) {
+    public static IdentifyEntityMatchesResult fromEntityMatchs(@NonNull List<EntityMatch> entityMatches) {
         return new IdentifyEntityMatchesResult(Objects.requireNonNull(entityMatches));
+    }
+
+    /**
+     * Gets the list of detected entity matches.
+     * @return the list of entity matches
+     */
+    @NonNull
+    public List<EntityMatch> getEntityMatches() {
+        return Immutable.of(entityMatches);
     }
 }

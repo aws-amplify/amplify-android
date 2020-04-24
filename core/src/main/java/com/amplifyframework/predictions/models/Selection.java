@@ -25,38 +25,38 @@ import java.util.Objects;
  * Represents a selection from an image. It contains
  * the bounding geometry of a selection and an
  * indicator to regard its selection state.
- *
- * Defaults to deselected state until explicitly selected.
  */
 public final class Selection {
     private final RectF box;
     private final Polygon polygon;
+    private final boolean selected;
 
-    private boolean selected;
-
-    private Selection(RectF box, Polygon polygon) {
+    private Selection(RectF box, Polygon polygon, boolean selected) {
         this.box = box;
         this.polygon = polygon;
+        this.selected = selected;
     }
 
     /**
      * Constructs an instance of {@link Selection} using
      * rectangular boundary.
      * @param box the bounding box
+     * @param selected true if this selection is selected
      * @return {@link Selection} instance containing a box
      */
-    public static Selection fromBox(@NonNull RectF box) {
-        return new Selection(Objects.requireNonNull(box), null);
+    public static Selection fromBox(@NonNull RectF box, boolean selected) {
+        return new Selection(Objects.requireNonNull(box), null, selected);
     }
 
     /**
      * Constructs an instance of {@link Selection} using
      * polygonal boundary.
      * @param polygon the bounding polygon
+     * @param selected true if this selection is selected
      * @return {@link Selection} instance containing a polygon
      */
-    public static Selection fromPolygon(@NonNull Polygon polygon) {
-        return new Selection(null, Objects.requireNonNull(polygon));
+    public static Selection fromPolygon(@NonNull Polygon polygon, boolean selected) {
+        return new Selection(null, Objects.requireNonNull(polygon), selected);
     }
 
     /**
@@ -85,19 +85,5 @@ public final class Selection {
      */
     public boolean isSelected() {
         return selected;
-    }
-
-    /**
-     * Activates the selection flag.
-     */
-    public void select() {
-        this.selected = true;
-    }
-
-    /**
-     * Deactivates the selection flag.
-     */
-    public void deselect() {
-        this.selected = false;
     }
 }

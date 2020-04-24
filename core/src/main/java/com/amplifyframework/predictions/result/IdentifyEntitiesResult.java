@@ -34,22 +34,22 @@ public final class IdentifyEntitiesResult implements IdentifyResult {
     }
 
     /**
-     * Gets the list of detected entities and other details.
-     * @return the list of entities
-     */
-    @NonNull
-    public List<EntityDetails> getEntities() {
-        return Immutable.of(entities);
-    }
-
-    /**
      * Constructs a new instance of {@link IdentifyEntitiesResult} from
      * the given list of entities.
      * @param entities A list of detected entities
      * @return The result instance containing the given list of detected entities
      */
     @NonNull
-    public static IdentifyEntitiesResult fromFaces(@NonNull List<EntityDetails> entities) {
+    public static IdentifyEntitiesResult fromEntityDetails(@NonNull List<EntityDetails> entities) {
         return new IdentifyEntitiesResult(Objects.requireNonNull(entities));
+    }
+
+    /**
+     * Gets the list of detected entities and other details.
+     * @return the list of entities
+     */
+    @NonNull
+    public List<EntityDetails> getEntities() {
+        return Immutable.of(entities);
     }
 }

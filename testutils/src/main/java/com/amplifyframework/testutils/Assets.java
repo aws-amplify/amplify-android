@@ -16,6 +16,8 @@
 package com.amplifyframework.testutils;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import androidx.test.core.app.ApplicationProvider;
 
 import java.io.BufferedReader;
@@ -54,6 +56,22 @@ public final class Assets {
             }
 
             return stringBuilder.toString();
+        } catch (final IOException ioException) {
+            throw new RuntimeException("Failed to load asset " + name, ioException);
+        }
+    }
+
+    /**
+     * Reads a test asset as a bitmap.
+     * @param name Name of asset in the assets dir
+     * @return The bitmap image of the named asset
+     * @throws RuntimeException If test asset contents cannot be read
+     */
+    public static Bitmap readAsBitmap(final String name) throws RuntimeException {
+        try {
+            final Context context = ApplicationProvider.getApplicationContext();
+            final InputStream inputStream = context.getAssets().open(name);
+            return BitmapFactory.decodeStream(inputStream);
         } catch (final IOException ioException) {
             throw new RuntimeException("Failed to load asset " + name, ioException);
         }

@@ -34,46 +34,48 @@ public final class LandmarkTypeAdapter {
      */
     @NonNull
     public static LandmarkType fromRekognition(@NonNull String landmark) {
-        switch (landmark) {
-            case "eyeLeft":
-            case "leftEyeLeft":
-            case "leftEyeRight":
-            case "leftEyeUp":
-            case "leftEyeDown":
+        com.amazonaws.services.rekognition.model.LandmarkType type =
+                com.amazonaws.services.rekognition.model.LandmarkType.fromValue(landmark);
+        switch (type) {
+            case EyeLeft:
+            case LeftEyeLeft:
+            case LeftEyeRight:
+            case LeftEyeUp:
+            case LeftEyeDown:
                 return LandmarkType.LEFT_EYE;
-            case "eyeRight":
-            case "rightEyeLeft":
-            case "rightEyeRight":
-            case "rightEyeUp":
-            case "rightEyeDown":
+            case EyeRight:
+            case RightEyeLeft:
+            case RightEyeRight:
+            case RightEyeUp:
+            case RightEyeDown:
                 return LandmarkType.RIGHT_EYE;
-            case "leftEyeBrowLeft":
-            case "leftEyeBrowRight":
-            case "leftEyeBrowUp":
+            case LeftEyeBrowLeft:
+            case LeftEyeBrowRight:
+            case LeftEyeBrowUp:
                 return LandmarkType.LEFT_EYEBROW;
-            case "rightEyeBrowLeft":
-            case "rightEyeBrowRight":
-            case "rightEyeBrowUp":
+            case RightEyeBrowLeft:
+            case RightEyeBrowRight:
+            case RightEyeBrowUp:
                 return LandmarkType.RIGHT_EYEBROW;
-            case "nose":
+            case Nose:
                 return LandmarkType.NOSE;
-            case "noseLeft":
-            case "noseRight":
+            case NoseLeft:
+            case NoseRight:
                 return LandmarkType.NOSE_CREST;
-            case "mouthLeft":
-            case "mouthRight":
-            case "mouthUp":
-            case "mouthDown":
+            case MouthLeft:
+            case MouthRight:
+            case MouthUp:
+            case MouthDown:
                 return LandmarkType.OUTER_LIPS;
-            case "leftPupil":
+            case LeftPupil:
                 return LandmarkType.LEFT_PUPIL;
-            case "rightPupil":
+            case RightPupil:
                 return LandmarkType.RIGHT_PUPIL;
-            case "upperJawlineLeft":
-            case "midJawlineLeft":
-            case "chinBottom":
-            case "midJawlineRight":
-            case "upperJawlineRight":
+            case UpperJawlineLeft:
+            case MidJawlineLeft:
+            case ChinBottom:
+            case MidJawlineRight:
+            case UpperJawlineRight:
                 return LandmarkType.FACE_CONTOUR;
             default:
                 return LandmarkType.UNKNOWN;

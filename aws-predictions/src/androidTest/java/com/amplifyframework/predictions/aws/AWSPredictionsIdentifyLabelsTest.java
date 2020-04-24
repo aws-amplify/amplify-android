@@ -17,22 +17,23 @@ package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 
 import com.amplifyframework.predictions.PredictionsCategory;
+import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
+import com.amplifyframework.predictions.models.IdentifyActionType;
 import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.predictions.models.LabelType;
-import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.result.IdentifyLabelsResult;
+import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
+import com.amplifyframework.util.CollectionUtils;
 
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.InputStream;
-import java.util.List;
+import io.reactivex.Observable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertFalse;
@@ -65,17 +66,16 @@ public final class AWSPredictionsIdentifyLabelsTest {
     }
 
     /**
-     * Assert that identify "passes" for blank image.
+     * If {@link IdentifyActionType#DETECT_LABELS} is supplied instead of
+     * {@link LabelType} as the action type for identify, then the operation
+     * triggers error callback.
      * @throws Exception if prediction fails
      */
-    @Test
-    public void testIdentifyPassesForBlankImage() throws Exception {
-        Bitmap image = Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888);
-
-        // Identify the labels inside given image and assert non-null result.
-        IdentifyLabelsResult result = predictions.identifyLabels(LabelType.ALL,
-                image, IdentifyOptions.defaults());
-        assertNotNull(result);
+    @Test(expected = PredictionsException.class)
+    public void testUnspecificLabelDetectionTypeFails() throws Exception {
+        IdentifyActionType type = IdentifyActionType.DETECT_LABELS;
+        final Bitmap image = Assets.readAsBitmap("jeff_bezos.jpg");
+        predictions.identify(type, image);
     }
 
     /**
@@ -84,22 +84,21 @@ public final class AWSPredictionsIdentifyLabelsTest {
      */
     @Test
     public void testIdentifyLabels() throws Exception {
-        InputStream bezosJpeg = getApplicationContext()
-                .getAssets().open("jeff_bezos.jpg");
-        final Bitmap image = BitmapFactory.decodeStream(bezosJpeg);
+        final Bitmap image = Assets.readAsBitmap("jeff_bezos.jpg");
 
         // Identify the labels inside given image and assert non-null result.
-        IdentifyLabelsResult result = predictions.identifyLabels(LabelType.ALL,
-                image, IdentifyOptions.defaults());
+        IdentifyLabelsResult result = (IdentifyLabelsResult) predictions.identify(LabelType.ALL, image);
         assertNotNull(result);
 
         // Assert that Jeff's portrait doesn't flag moderation :)
         assertFalse(result.isUnsafeContent());
 
         // Assert at least one label is detected as "Person"
-        List<Label> labels = result.getLabels();
-        assertNotNull(labels);
-        assertFalse(labels.isEmpty());
-        assertTrue(labels.stream().anyMatch(label -> "Person".equals(label.getName())));
+        assertFalse(CollectionUtils.isNullOrEmpty(result.getLabels()));
+        assertTrue(Observable.fromIterable(result.getLabels())
+                .map(Label::getName)
+                .toList()
+                .blockingGet()
+                .contains("Person"));
     }
 }

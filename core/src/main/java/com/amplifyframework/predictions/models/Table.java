@@ -27,13 +27,13 @@ import java.util.Objects;
  * and be organized into this data type.
  */
 public final class Table {
-    private final int rows;
-    private final int columns;
+    private final int rowSize;
+    private final int columnSize;
     private final List<Cell> cells;
 
     private Table(final Builder builder) {
-        this.rows = builder.getRows();
-        this.columns = builder.getColumns();
+        this.rowSize = builder.getRowSize();
+        this.columnSize = builder.getColumnSize();
         this.cells = builder.getCells();
     }
 
@@ -41,16 +41,16 @@ public final class Table {
      * Gets the row count.
      * @return the row count
      * */
-    public int getRows() {
-        return rows;
+    public int getRowSize() {
+        return rowSize;
     }
 
     /**
      * Gets the column count.
      * @return the column count
      */
-    public int getColumns() {
-        return columns;
+    public int getColumnSize() {
+        return columnSize;
     }
 
     /**
@@ -76,8 +76,8 @@ public final class Table {
      * Builder for {@link Table}.
      */
     public static final class Builder {
-        private int rows;
-        private int columns;
+        private int rowSize;
+        private int columnSize;
         private List<Cell> cells;
 
         private Builder() {
@@ -90,8 +90,8 @@ public final class Table {
          * @return this builder instance
          */
         @NonNull
-        public Builder rows(int rows) {
-            this.rows = rows;
+        public Builder rowSize(int rows) {
+            this.rowSize = rows;
             return this;
         }
 
@@ -101,8 +101,8 @@ public final class Table {
          * @return this builder instance
          */
         @NonNull
-        public Builder columns(int columns) {
-            this.columns = columns;
+        public Builder columnSize(int columns) {
+            this.columnSize = columns;
             return this;
         }
 
@@ -127,12 +127,12 @@ public final class Table {
             return new Table(this);
         }
 
-        int getRows() {
-            return rows;
+        int getRowSize() {
+            return rowSize;
         }
 
-        int getColumns() {
-            return columns;
+        int getColumnSize() {
+            return columnSize;
         }
 
         @NonNull
