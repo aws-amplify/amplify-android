@@ -145,7 +145,9 @@ final class AWSRekognitionService {
                 List<EntityDetails> entities = detectEntities(image);
                 onSuccess.accept(IdentifyEntitiesResult.fromEntityDetails(entities));
             } else {
-                List<EntityMatch> matches = detectEntityMatches(image, config.getCollectionId());
+                int maxEntities = config.getMaxEntities();
+                String collectionId = config.getCollectionId();
+                List<EntityMatch> matches = detectEntityMatches(image, maxEntities, collectionId);
                 onSuccess.accept(IdentifyEntityMatchesResult.fromEntityMatches(matches));
             }
         } catch (PredictionsException exception) {
@@ -269,7 +271,7 @@ final class AWSRekognitionService {
     private List<EntityDetails> detectEntities(Image image) throws PredictionsException {
         DetectFacesRequest request = new DetectFacesRequest()
                 .withImage(image)
-                .withAttributes(Collections.singletonList("ALL"));
+                .withAttributes("ALL");
 
         // Detect entities in the given image via Amazon Rekognition
         final DetectFacesResult result;
@@ -308,6 +310,7 @@ final class AWSRekognitionService {
                         .build();
                 emotions.add(amplifyEmotion);
             }
+            Collections.sort(emotions, Collections.reverseOrder());
 
             EntityDetails entity = EntityDetails.builder()
                     .box(box)
@@ -323,9 +326,14 @@ final class AWSRekognitionService {
         return entities;
     }
 
-    private List<EntityMatch> detectEntityMatches(Image image, String collectionId) throws PredictionsException {
+    private List<EntityMatch> detectEntityMatches(
+            Image image,
+            int maxEntities,
+            String collectionId
+    ) throws PredictionsException {
         SearchFacesByImageRequest request = new SearchFacesByImageRequest()
                 .withImage(image)
+                .withMaxFaces(maxEntities)
                 .withCollectionId(collectionId);
 
         // Detect entities in the given image by matching against a collection of images

@@ -82,8 +82,14 @@ public final class AWSIdentifyOperation
                     predictionsService.detectLabels(labelType, getRequest().getImage(), onSuccess, onError);
                     return;
                 case DETECT_ENTITIES:
+                    predictionsService.detectEntities(getRequest().getImage(), onSuccess, onError);
+                    return;
                 case DETECT_TEXT:
                 default:
+                    onError.accept(new PredictionsException(
+                            "Unexpected error: invalid or unsupported identify action type.",
+                            "Please verify that a valid implementation of IdentifyAction was used."
+                    ));
             }
         });
     }

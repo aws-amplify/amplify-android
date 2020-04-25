@@ -86,7 +86,7 @@ public final class AWSPredictionsPluginConfiguration {
             }
 
             if (configurationJson.has(ConfigKey.IDENTIFY.key())) {
-                JSONObject identifyJson = configurationJson.getJSONObject(ConfigKey.CONVERT.key());
+                JSONObject identifyJson = configurationJson.getJSONObject(ConfigKey.IDENTIFY.key());
                 identifyEntitiesConfiguration = IdentifyEntitiesConfiguration.fromJson(identifyJson);
             } else {
                 identifyEntitiesConfiguration = null;
@@ -161,7 +161,7 @@ public final class AWSPredictionsPluginConfiguration {
         if (identifyEntitiesConfiguration == null) {
             throw new PredictionsException(
                     "Entities detection is not configured.",
-                    "Verify that identifyEntities is configured under " + ConfigKey.CONVERT.key()
+                    "Verify that identifyEntities is configured under " + ConfigKey.IDENTIFY.key()
             );
         }
         return identifyEntitiesConfiguration;

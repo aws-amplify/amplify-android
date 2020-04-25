@@ -27,6 +27,9 @@ import org.json.JSONObject;
  * Configures the behavior for text interpretation.
  */
 public final class IdentifyEntitiesConfiguration {
+
+    private static final int MAX_VALID_ENTITIES = 50;
+
     private final int maxEntities;
     private final String collectionId;
     private final boolean generalEntityDetection;
@@ -77,7 +80,7 @@ public final class IdentifyEntitiesConfiguration {
             maxEntitiesString = identifyEntitiesJson.getString("maxEntities");
             collectionId = identifyEntitiesJson.getString("collectionId");
             maxEntities = Integer.parseInt(maxEntitiesString);
-            generalEntity = false;
+            generalEntity = maxEntities < 1 || maxEntities > MAX_VALID_ENTITIES;
         } catch (JSONException | IllegalArgumentException exception) {
             maxEntities = 0;
             collectionId = "";
