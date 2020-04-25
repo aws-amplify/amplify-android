@@ -316,7 +316,7 @@ final class SyncProcessor {
         @NonNull
         SyncProcessor build();
     }
-    
+
     /**
      * Compares to {@link ModelWithMetadata}, according to the topological order
      * of the {@link Model} within each. Topological order is determined by the
