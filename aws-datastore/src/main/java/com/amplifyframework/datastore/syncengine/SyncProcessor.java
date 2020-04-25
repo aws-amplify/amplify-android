@@ -33,6 +33,7 @@ import com.amplifyframework.util.Time;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Completable;
@@ -57,6 +58,7 @@ final class SyncProcessor {
     private final AppSync appSync;
     private final Merger merger;
     private final long syncIntervalMs;
+    private final long syncIntervalInMinutes;
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -64,13 +66,14 @@ final class SyncProcessor {
             SyncTimeRegistry syncTimeRegistry,
             AppSync appSync,
             Merger merger,
-            long syncIntervalMs) {
+            long syncIntervalInMinutes) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.syncTimeRegistry = Objects.requireNonNull(syncTimeRegistry);
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
-        this.syncIntervalMs = syncIntervalMs;
+        this.syncIntervalInMinutes = syncIntervalInMinutes;
+        this.syncIntervalMs = TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
     }
 
     /**
@@ -220,7 +223,7 @@ final class SyncProcessor {
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
-        private long syncIntervalMs;
+        private long syncIntervalInMinutes;
 
         @NonNull
         @Override
@@ -259,8 +262,8 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep syncIntervalMs(long syncIntervalMs) {
-            this.syncIntervalMs = syncIntervalMs;
+        public BuildStep syncIntervalInMinutes(long syncIntervalInMinutes) {
+            this.syncIntervalInMinutes = syncIntervalInMinutes;
             return Builder.this;
         }
 
@@ -274,7 +277,7 @@ final class SyncProcessor {
                 syncTimeRegistry,
                 appSync,
                 merger,
-                syncIntervalMs
+                syncIntervalInMinutes
             );
         }
     }
@@ -306,7 +309,7 @@ final class SyncProcessor {
 
     interface SyncIntervalStep {
         @NonNull
-        BuildStep syncIntervalMs(long syncIntervalMs);
+        BuildStep syncIntervalInMinutes(long syncIntervalInMinutes);
     }
 
     interface BuildStep {

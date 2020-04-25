@@ -28,14 +28,13 @@ public enum DataStoreConflictHandlerResult {
     APPLY_REMOTE,
 
     /**
-     * The conflict handled by retrying the local change which attempts to persist
-     * it again on the backend.
+     * The conflict was handled by retrying to update the remote store with the local model.
      */
     RETRY_LOCAL,
 
     /**
-     * Conflict handled by returning a new `Model` instance that should be used
-     * instead of the local and remote changes.
+     * Conflict was handled by passing in a new version of the model to the
+     * remote store which will eventually sync with the local store.
      */
     RETRY
 }

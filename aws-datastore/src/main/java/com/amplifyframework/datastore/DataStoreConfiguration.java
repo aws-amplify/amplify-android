@@ -15,15 +15,11 @@
 
 package com.amplifyframework.datastore;
 
-import android.content.Context;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.AmplifyConfiguration;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import org.json.JSONException;
@@ -38,26 +34,28 @@ import java.util.concurrent.TimeUnit;
  */
 @SuppressWarnings("unused")
 public final class DataStoreConfiguration {
+    static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
+    static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
+    static final int DEFAULT_SYNC_MAX_RECORDS = 1_000;
+    static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
+
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-    private static final long DEFAULT_SYNC_INTERVAL_MS = TimeUnit.DAYS.toMillis(1);
-    private static final int DEFAULT_SYNC_MAX_RECORDS = 1_000;
-    private static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
 
     private final DataStoreErrorHandler dataStoreErrorHandler;
     private final DataStoreConflictHandler dataStoreConflictHandler;
-    private final long syncIntervalMs;
+    private final long syncIntervalInMinutes;
     private final int syncMaxRecords;
     private final int syncPageSize;
 
     private DataStoreConfiguration(
             DataStoreErrorHandler dataStoreErrorHandler,
             DataStoreConflictHandler dataStoreConflictHandler,
-            long syncIntervalMs,
+            long syncIntervalInMinutes,
             int syncMaxRecords,
             int syncPageSize) {
         this.dataStoreErrorHandler = dataStoreErrorHandler;
         this.dataStoreConflictHandler = dataStoreConflictHandler;
-        this.syncIntervalMs = syncIntervalMs;
+        this.syncIntervalInMinutes = syncIntervalInMinutes;
         this.syncMaxRecords = syncMaxRecords;
         this.syncPageSize = syncPageSize;
     }
@@ -72,27 +70,24 @@ public final class DataStoreConfiguration {
     }
 
     /**
-     * Begin building a new instance of {@link DataStoreConfiguration} by reading dataStore
+     * Begin building a new instance of {@link DataStoreConfiguration} by reading DataStore
      * settings from the config file.
-     * @param context application context which will be used to retrieve amplicationconfiguration.json
-     * @param pluginConfigKey the desired dataStore plugin config key (i.e. awsDataStorePlugin)
+     * @param pluginJson DataStore plugin configuration from amplicationconfiguration.json
+     * @param userProvidedConfiguration An instance of {@DataStoreConfiguration} with settings specified by the user
+     *                                  which will be used as overrides.
      * @return A new builder instance
      * @throws DataStoreException exception thrown if there's an unexpected configuration key or
      * an invalid configuration value
      */
     @NonNull
-    public static Builder builder(@NonNull Context context, @NonNull String pluginConfigKey) throws DataStoreException {
-        Objects.requireNonNull(context);
-        Objects.requireNonNull(pluginConfigKey);
-        JSONObject pluginConfig = null;
-        try {
-            pluginConfig = Objects.requireNonNull(AmplifyConfiguration.fromConfigFile(context)
-                .forCategoryType(CategoryType.DATASTORE))
-                .getPluginConfig(pluginConfigKey);
-        } catch (AmplifyException | NullPointerException exception) {
-            LOG.warn("Unable to read DataStore configuration from file.", exception);
-        }
-        return pluginConfig != null ? builder(pluginConfig) : builder();
+    public static Builder builder(@NonNull JSONObject pluginJson,
+                                  @NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
+        return builder(pluginJson)
+            .syncPageSize(userProvidedConfiguration.getSyncPageSize())
+            .syncMaxRecords(userProvidedConfiguration.getSyncMaxRecords())
+            .syncIntervalMs(userProvidedConfiguration.getSyncIntervalInMinutes())
+            .dataStoreErrorHandler(userProvidedConfiguration.getDataStoreErrorHandler())
+            .dataStoreConflictHandler(userProvidedConfiguration.getDataStoreConflictHandler());
     }
 
     /**
@@ -117,7 +112,6 @@ public final class DataStoreConfiguration {
                         "Make sure your amplifyconfiguration.json is valid."
                 );
             }
-
             try {
                 switch (configKey) {
                     case SYNC_INTERVAL:
@@ -176,8 +170,8 @@ public final class DataStoreConfiguration {
      * @return The sync interval
      */
     @IntRange(from = 0)
-    public long getSyncIntervalMs() {
-        return this.syncIntervalMs;
+    public long getSyncIntervalInMinutes() {
+        return this.syncIntervalInMinutes;
     }
 
     /**
@@ -207,14 +201,14 @@ public final class DataStoreConfiguration {
     public static final class Builder {
         private DataStoreErrorHandler dataStoreErrorHandler;
         private DataStoreConflictHandler dataStoreConflictHandler;
-        private long syncIntervalMs;
-        private int syncMaxRecords;
-        private int syncPageSize;
+        private Long syncIntervalMs;
+        private Integer syncMaxRecords;
+        private Integer syncPageSize;
 
         private Builder() {
             this.dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
             this.dataStoreConflictHandler = ApplyRemoteConflictHandler.instance(dataStoreErrorHandler);
-            this.syncIntervalMs = DEFAULT_SYNC_INTERVAL_MS;
+            this.syncIntervalMs = DEFAULT_SYNC_INTERVAL_MINUTES;
             this.syncMaxRecords = DEFAULT_SYNC_MAX_RECORDS;
             this.syncPageSize = DEFAULT_SYNC_PAGE_SIZE;
         }
@@ -250,7 +244,10 @@ public final class DataStoreConfiguration {
          */
         @NonNull
         public Builder syncIntervalMs(@IntRange(from = 0) long syncIntervalMs) {
-            this.syncIntervalMs = syncIntervalMs;
+            //Only set this value if the incoming value is not equal to the default
+            if (syncIntervalMs != DEFAULT_SYNC_INTERVAL_MINUTES) {
+                this.syncIntervalMs = syncIntervalMs;
+            }
             return Builder.this;
         }
 
@@ -261,7 +258,10 @@ public final class DataStoreConfiguration {
          */
         @NonNull
         public Builder syncMaxRecords(@IntRange(from = 0) int syncMaxRecords) {
-            this.syncMaxRecords = syncMaxRecords;
+            //Only set this value if the incoming value is not equal to the default
+            if (syncMaxRecords != DEFAULT_SYNC_MAX_RECORDS) {
+                this.syncMaxRecords = syncMaxRecords;
+            }
             return Builder.this;
         }
 
@@ -272,7 +272,10 @@ public final class DataStoreConfiguration {
          */
         @NonNull
         public Builder syncPageSize(@IntRange(from = 0) int syncPageSize) {
-            this.syncPageSize = syncPageSize;
+            //Only set this value if the incoming value is not equal to the default
+            if (syncPageSize != DEFAULT_SYNC_PAGE_SIZE) {
+                this.syncPageSize = syncPageSize;
+            }
             return Builder.this;
         }
 
@@ -297,7 +300,7 @@ public final class DataStoreConfiguration {
          * At most one base sync will be performed within this interval of time.
          * The interval is expressed in milliseconds.
          */
-        SYNC_INTERVAL("syncInterval"),
+        SYNC_INTERVAL("syncIntervalInMinutes"),
         /**
          * Number of items requested per page in sync operation.
          */
@@ -325,7 +328,6 @@ public final class DataStoreConfiguration {
          * @param anything Any string found in the key position of the plugin config JSON
          * @return An enumerate config key
          */
-        @SuppressWarnings("unused")
         static ConfigKey fromString(@Nullable String anything) {
             for (ConfigKey possibleMatch : values()) {
                 if (possibleMatch.toString().equals(anything)) {

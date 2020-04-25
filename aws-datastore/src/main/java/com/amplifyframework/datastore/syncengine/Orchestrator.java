@@ -73,7 +73,7 @@ public final class Orchestrator {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .syncIntervalMs(configuration.getSyncIntervalMs())
+            .syncIntervalInMinutes(configuration.getSyncIntervalInMinutes())
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);

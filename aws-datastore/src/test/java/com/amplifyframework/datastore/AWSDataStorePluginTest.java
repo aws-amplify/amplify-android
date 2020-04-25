@@ -90,8 +90,7 @@ public final class AWSDataStorePluginTest {
         Amplify.configure(configuration, context);
 
         JSONObject pluginJson = new JSONObject()
-            .put("syncMode", "api")
-            .put("baseSyncIntervalMs", 1_000);
+            .put("syncIntervalInMinutes", 60);
         awsDataStorePlugin.configure(pluginJson, context);
         awsDataStorePlugin.initialize(context);
     }

@@ -31,7 +31,6 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
@@ -41,6 +40,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -49,15 +49,13 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 import io.reactivex.Completable;
+import io.reactivex.subjects.AsyncSubject;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
-    /**
-     * Configuration key name of the plugin in the Amplify config file.
-     */
-    public static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -67,35 +65,39 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
-    private final Orchestrator orchestrator;
+    private Orchestrator orchestrator;
 
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
+    // Configuration for the plugin.
+    private final DataStoreConfiguration userProvidedConfiguration;
+    private final AsyncSubject<DataStoreConfiguration> dataStoreConfigurationProvider;
+
+    @SuppressLint("CheckResult")
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull GraphQlBehavior api,
-            @NonNull DataStoreConfiguration userProvidedConfiguration) {
+            @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.categoryInitializationsPending = new CountDownLatch(1);
-        this.orchestrator = new Orchestrator(
-            modelProvider,
-            modelSchemaRegistry,
-            sqliteStorageAdapter,
-            AppSyncClient.via(api),
-            userProvidedConfiguration
-        );
-    }
+        dataStoreConfigurationProvider = AsyncSubject.create();
 
-    /**
-     * Begin building a new {@link AWSDataStorePlugin} instance, by means of a new
-     * {@link Builder} instance.
-     * @return The first step in a sequence of builder actions.
-     */
-    public static BuilderSteps.ModelProviderStep builder() {
-        return new Builder();
+        dataStoreConfigurationProvider.subscribe(initializedConfiguration -> {
+            orchestrator = new Orchestrator(
+                modelProvider,
+                modelSchemaRegistry,
+                sqliteStorageAdapter,
+                AppSyncClient.via(api),
+                initializedConfiguration
+            );
+        }, exception -> {
+                LOG.error("An exception occurred while waiting for the DataStore plugin to initialize.", exception);
+            }
+        );
+        this.userProvidedConfiguration = userProvidedConfiguration;
     }
 
     /**
@@ -139,9 +141,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @VisibleForTesting
     AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull GraphQlBehavior api) {
         this(
-            ModelSchemaRegistry.instance(),
             Objects.requireNonNull(modelProvider),
-            Objects.requireNonNull(api)
+            ModelSchemaRegistry.instance(),
+            Objects.requireNonNull(api),
+            null
         );
     }
 
@@ -151,7 +154,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @NonNull
     @Override
     public String getPluginKey() {
-        return PLUGIN_CONFIG_KEY;
+        return DataStoreConfiguration.PLUGIN_CONFIG_KEY;
     }
 
     /**
@@ -160,12 +163,31 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressLint("CheckResult")
     @Override
     public void configure(
-            @Nullable JSONObject pluginConfiguration,
+            @NonNull JSONObject pluginConfiguration,
             @NonNull Context context
-    ) {
-        // AWSDataStorePlugin does not consider any values from amplifyconfiguration.json.
-        // To effect the behavior of the plugin, provide an {@link DataStoreConfiguration}
-        // object to the plugin, from Java, when you instantiate the plugin.
+    ) throws DataStoreException {
+        try {
+            DataStoreConfiguration dataStoreConfiguration;
+            if (userProvidedConfiguration == null) {
+                dataStoreConfiguration = DataStoreConfiguration
+                    .builder(pluginConfiguration)
+                    .build();
+            } else {
+                dataStoreConfiguration = DataStoreConfiguration
+                    .builder(pluginConfiguration, userProvidedConfiguration)
+                    .build();
+            }
+            dataStoreConfigurationProvider.onNext(dataStoreConfiguration);
+            dataStoreConfigurationProvider.onComplete();
+        } catch (DataStoreException badConfigException) {
+            dataStoreConfigurationProvider.onError(badConfigException);
+            throw new DataStoreException(
+                "There was an issue configuring the plugin from the amplifyconfiguration.json",
+                badConfigException,
+                "Check the attached exception for more details and " +
+                    "be sure you are only calling Amplify.configure once"
+            );
+        }
 
         HubChannel hubChannel = HubChannel.forCategoryType(getCategoryType());
         Amplify.Hub.subscribe(hubChannel,
@@ -455,128 +477,5 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             .type(dataStoreItemChangeType)
             .uuid(storageItemChange.changeId().toString())
             .build();
-    }
-
-    /**
-     * Builds an {@link AWSDataStorePlugin}.
-     */
-    public static final class Builder implements
-            BuilderSteps.ModelProviderStep, BuilderSteps.ModelSchemaRegistryStep,
-            BuilderSteps.GraphQlBehaviorStep, BuilderSteps.ConfigurationStep,
-            BuilderSteps.BuildStep {
-        private ModelProvider modelProvider;
-        private ModelSchemaRegistry modelSchemaRegistry;
-        private GraphQlBehavior graphQlBehavior;
-        private DataStoreConfiguration configuration;
-
-        private Builder() {}
-
-        @NonNull
-        @Override
-        public BuilderSteps.ModelSchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider) {
-            Builder.this.modelProvider = Objects.requireNonNull(modelProvider);
-            return Builder.this;
-        }
-
-        @NonNull
-        @Override
-        public BuilderSteps.GraphQlBehaviorStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry) {
-            Builder.this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
-            return Builder.this;
-        }
-
-        @NonNull
-        @Override
-        public BuilderSteps.ConfigurationStep graphQlBehavior(@NonNull GraphQlBehavior graphQlBehavior) {
-            Builder.this.graphQlBehavior = Objects.requireNonNull(graphQlBehavior);
-            return Builder.this;
-        }
-
-        @NonNull
-        @Override
-        public BuilderSteps.BuildStep configuration(@NonNull DataStoreConfiguration configuration) {
-            Builder.this.configuration = configuration;
-            return Builder.this;
-        }
-
-        @Override
-        public AWSDataStorePlugin build() {
-            return new AWSDataStorePlugin(
-                modelProvider,
-                modelSchemaRegistry,
-                graphQlBehavior,
-                configuration
-            );
-        }
-    }
-
-    /**
-     * This is just a namespace/bucket to keep the various Builder steps compartmentalized into one logical unit.
-     */
-    @SuppressWarnings("WeakerAccess") // Needs to be available to consumers in other packages.
-    public static final class BuilderSteps {
-        /**
-         * The step where an {@link ModelProvider} is specified, and the building continues
-         * on to request an {@link ModelSchemaRegistry}.
-         */
-        interface ModelProviderStep {
-            /**
-             * Configures the {@link ModelProvider} that will be used in the built {@link AWSDataStorePlugin}.
-             * @param modelProvider Provider of models for the plugin under construction
-             * @return The step of the builder which requires a GraphQlBehavior to be specified
-             */
-            ModelSchemaRegistryStep modelProvider(@NonNull ModelProvider modelProvider);
-        }
-
-        /**
-         * The step where an {@link ModelSchemaRegistry} is specified, and the building
-         * continues on to request an {@link GraphQlBehavior}.
-         */
-        interface ModelSchemaRegistryStep {
-            /**
-             * Configures the {@link ModelSchemaRegistry} into which schema will be kept at runtime.
-             * @param modelSchemaRegistry The registry into which {@link ModelSchema} will be stored
-             * @return The next step in the build process
-             */
-            GraphQlBehaviorStep modelSchemaRegistry(@NonNull ModelSchemaRegistry modelSchemaRegistry);
-        }
-
-        /**
-         * The step where an {@link GraphQlBehavior} is specified. After this, all components are
-         * specified, and the building precedes to offer the {@link BuildStep#build()} as a final
-         * action.
-         */
-        interface GraphQlBehaviorStep {
-            /**
-             * Configures the {@link GraphQlBehavior} that is used to talk to the AppSync endpoint.
-             * This component will only be used if remote model synchronization is enabled in the plugin.
-             * @param graphQlBehavior A GraphQL client which can be used to talk to AppSync.
-             * @return The step of the Builder where an AWSDataStorePlugin finally gets constructed
-             */
-            ConfigurationStep graphQlBehavior(@NonNull GraphQlBehavior graphQlBehavior);
-        }
-
-        /**
-         * The step of the building process where the user provides a configuration for the DataStore.
-         */
-        interface ConfigurationStep {
-            /**
-             * Configures the {@link DataStoreConfiguration} that will be used by the built {@link AWSDataStorePlugin}.
-             * @param configuration Configuration to use
-             * @return The final step of the building, where the {@link AWSDataStorePlugin} is  built.
-             */
-            BuildStep configuration(@NonNull DataStoreConfiguration configuration);
-        }
-
-        /**
-         * The step where an {@link AWSDataStorePlugin} is built and returned.
-         */
-        interface BuildStep {
-            /**
-             * Builds an {@link AWSDataStorePlugin} using the options provided to the {@link Builder}.
-             * @return A new {@link AWSDataStorePlugin} instance
-             */
-            AWSDataStorePlugin build();
-        }
     }
 }
