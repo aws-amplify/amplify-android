@@ -69,7 +69,7 @@ import static org.mockito.Mockito.verify;
 @RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
-    private static final long BASE_SYNC_INTERVAL_MS = TimeUnit.DAYS.toMillis(1);
+    private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
 
     private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
     private AppSync appSync;
@@ -107,7 +107,7 @@ public final class SyncProcessorTest {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .baseSyncIntervalProvider(() -> BASE_SYNC_INTERVAL_MS)
+            .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
             .build();
     }
 
@@ -312,7 +312,7 @@ public final class SyncProcessorTest {
     public void baseSyncRequestedIfLastSyncBeyondInterval() {
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval.
-        long longAgoTimeMs = Time.now() - (BASE_SYNC_INTERVAL_MS * 2);
+        long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
         Observable.fromIterable(modelProvider.models())
             .map(modelClass -> LastSyncMetadata.lastSyncedAt(modelClass, longAgoTimeMs))
             .blockingForEach(storageAdapter::save);

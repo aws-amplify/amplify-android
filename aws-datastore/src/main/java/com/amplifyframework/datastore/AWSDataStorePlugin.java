@@ -40,6 +40,7 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -48,11 +49,13 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 import io.reactivex.Completable;
+import io.reactivex.subjects.AsyncSubject;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -62,28 +65,39 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
-    private final Orchestrator orchestrator;
+    private Orchestrator orchestrator;
 
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
     // Configuration for the plugin.
-    private AWSDataStorePluginConfiguration pluginConfiguration;
+    private final DataStoreConfiguration userProvidedConfiguration;
+    private final AsyncSubject<DataStoreConfiguration> dataStoreConfigurationProvider;
 
+    @SuppressLint("CheckResult")
     private AWSDataStorePlugin(
-            @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull ModelProvider modelProvider,
-            @NonNull GraphQlBehavior api) {
+            @NonNull ModelSchemaRegistry modelSchemaRegistry,
+            @NonNull GraphQlBehavior api,
+            @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.categoryInitializationsPending = new CountDownLatch(1);
-        this.orchestrator = new Orchestrator(
-            modelProvider,
-            modelSchemaRegistry,
-            sqliteStorageAdapter,
-            AppSyncClient.via(api),
-            () -> pluginConfiguration.getBaseSyncIntervalMs()
+        dataStoreConfigurationProvider = AsyncSubject.create();
+
+        dataStoreConfigurationProvider.subscribe(initializedConfiguration -> {
+            orchestrator = new Orchestrator(
+                modelProvider,
+                modelSchemaRegistry,
+                sqliteStorageAdapter,
+                AppSyncClient.via(api),
+                initializedConfiguration
+            );
+        }, exception -> {
+                LOG.error("An exception occurred while waiting for the DataStore plugin to initialize.", exception);
+            }
         );
+        this.userProvidedConfiguration = userProvidedConfiguration;
     }
 
     /**
@@ -127,9 +141,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @VisibleForTesting
     AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull GraphQlBehavior api) {
         this(
-            ModelSchemaRegistry.instance(),
             Objects.requireNonNull(modelProvider),
-            Objects.requireNonNull(api)
+            ModelSchemaRegistry.instance(),
+            Objects.requireNonNull(api),
+            null
         );
     }
 
@@ -139,7 +154,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @NonNull
     @Override
     public String getPluginKey() {
-        return "awsDataStorePlugin";
+        return DataStoreConfiguration.PLUGIN_CONFIG_KEY;
     }
 
     /**
@@ -148,13 +163,24 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @SuppressLint("CheckResult")
     @Override
     public void configure(
-            @Nullable JSONObject pluginConfiguration,
+            @NonNull JSONObject pluginConfiguration,
             @NonNull Context context
     ) throws DataStoreException {
         try {
-            this.pluginConfiguration =
-                AWSDataStorePluginConfiguration.fromJson(pluginConfiguration);
+            DataStoreConfiguration dataStoreConfiguration;
+            if (userProvidedConfiguration == null) {
+                dataStoreConfiguration = DataStoreConfiguration
+                    .builder(pluginConfiguration)
+                    .build();
+            } else {
+                dataStoreConfiguration = DataStoreConfiguration
+                    .builder(pluginConfiguration, userProvidedConfiguration)
+                    .build();
+            }
+            dataStoreConfigurationProvider.onNext(dataStoreConfiguration);
+            dataStoreConfigurationProvider.onComplete();
         } catch (DataStoreException badConfigException) {
+            dataStoreConfigurationProvider.onError(badConfigException);
             throw new DataStoreException(
                 "There was an issue configuring the plugin from the amplifyconfiguration.json",
                 badConfigException,
@@ -174,16 +200,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void initialize(@NonNull Context context) {
         initializeStorageAdapter(context)
-            .andThen(startModelSynchronization(pluginConfiguration.getSyncMode()))
+            .andThen(orchestrator.start())
             .blockingAwait();
-    }
-
-    private Completable startModelSynchronization(AWSDataStorePluginConfiguration.SyncMode syncMode) {
-        if (!AWSDataStorePluginConfiguration.SyncMode.SYNC_WITH_API.equals(syncMode)) {
-            return Completable.complete();
-        } else {
-            return orchestrator.start();
-        }
     }
 
     /**

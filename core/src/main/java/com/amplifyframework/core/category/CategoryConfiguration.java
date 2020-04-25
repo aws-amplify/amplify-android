@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.category;
 
+import androidx.annotation.NonNull;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -64,6 +66,29 @@ public abstract class CategoryConfiguration implements CategoryTypeable {
                 String key = keys.next();
                 pluginConfigs.put(key, plugins.getJSONObject(key));
             }
+        }
+    }
+
+    /**
+     * Convenience class to allow AmplifyConfiguration to return a
+     * shell configuration for categories not present in the Amplify
+     * config file.
+     */
+    public static final class EmptyCategoryConfiguration extends CategoryConfiguration {
+        private final CategoryType categoryType;
+
+        private EmptyCategoryConfiguration(CategoryType categoryType) {
+            this.categoryType = categoryType;
+        }
+
+        public static EmptyCategoryConfiguration forCategoryType(CategoryType categoryType) {
+            return new EmptyCategoryConfiguration(categoryType);
+        }
+
+        @NonNull
+        @Override
+        public CategoryType getCategoryType() {
+            return categoryType;
         }
     }
 }
