@@ -121,7 +121,7 @@ public final class IdentifyEntitiesConfiguration {
      * Returns true if configured to allow celebrity detection.
      * @return true if configured to allow celebrity detection
      */
-    public boolean celebrityDetectionEnabled() {
+    public boolean isCelebrityDetectionEnabled() {
         return celebrityDetectionEnabled;
     }
 

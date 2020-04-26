@@ -29,6 +29,7 @@ import com.amazonaws.services.rekognition.model.BoundingBox;
 import com.amazonaws.services.rekognition.model.FaceDetail;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -131,42 +132,42 @@ public final class IdentifyResultTransformers {
      * @return the list of Amplify {@link BinaryFeature}
      */
     public static List<BinaryFeature> fromFaceDetail(FaceDetail face) {
-        List<BinaryFeature> features = new ArrayList<>();
-        features.add(BinaryFeature.builder()
-                .type("Beard")
-                .value(face.getBeard().getValue())
-                .confidence(face.getBeard().getConfidence())
-                .build());
-        features.add(BinaryFeature.builder()
-                .type("Sunglasses")
-                .value(face.getSunglasses().getValue())
-                .confidence(face.getSunglasses().getConfidence())
-                .build());
-        features.add(BinaryFeature.builder()
-                .type("Smile")
-                .value(face.getSmile().getValue())
-                .confidence(face.getSmile().getConfidence())
-                .build());
-        features.add(BinaryFeature.builder()
-                .type("EyeGlasses")
-                .value(face.getEyeglasses().getValue())
-                .confidence(face.getEyeglasses().getConfidence())
-                .build());
-        features.add(BinaryFeature.builder()
-                .type("Mustache")
-                .value(face.getMustache().getValue())
-                .confidence(face.getMustache().getConfidence())
-                .build());
-        features.add(BinaryFeature.builder()
-                .type("MouthOpen")
-                .value(face.getMouthOpen().getValue())
-                .confidence(face.getMouthOpen().getConfidence())
-                .build());
-        features.add(BinaryFeature.builder()
-                .type("EyesOpen")
-                .value(face.getEyesOpen().getValue())
-                .confidence(face.getEyesOpen().getConfidence())
-                .build());
-        return features;
+        return Arrays.asList(
+                BinaryFeature.builder()
+                        .type("Beard")
+                        .value(face.getBeard().getValue())
+                        .confidence(face.getBeard().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("Sunglasses")
+                        .value(face.getSunglasses().getValue())
+                        .confidence(face.getSunglasses().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("Smile")
+                        .value(face.getSmile().getValue())
+                        .confidence(face.getSmile().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("EyeGlasses")
+                        .value(face.getEyeglasses().getValue())
+                        .confidence(face.getEyeglasses().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("Mustache")
+                        .value(face.getMustache().getValue())
+                        .confidence(face.getMustache().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("MouthOpen")
+                        .value(face.getMouthOpen().getValue())
+                        .confidence(face.getMouthOpen().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("EyesOpen")
+                        .value(face.getEyesOpen().getValue())
+                        .confidence(face.getEyesOpen().getConfidence())
+                        .build()
+        );
     }
 }

@@ -153,7 +153,6 @@ final class AWSRekognitionService {
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }
-
     }
 
     private List<Label> detectLabels(Image image) throws PredictionsException {
