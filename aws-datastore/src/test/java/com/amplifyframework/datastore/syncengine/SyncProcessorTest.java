@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.CompoundModelProvider;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -101,13 +102,18 @@ public final class SyncProcessorTest {
         final MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
 
+        DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
+            .builder()
+            .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
+            .build();
+
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
             .modelSchemaRegistry(modelSchemaRegistry)
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
+            .dataStoreConfiguration(dataStoreConfiguration)
             .build();
     }
 

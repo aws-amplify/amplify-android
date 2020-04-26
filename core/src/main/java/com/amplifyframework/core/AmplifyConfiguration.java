@@ -25,6 +25,7 @@ import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.category.EmptyCategoryConfiguration;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
@@ -181,7 +182,7 @@ public final class AmplifyConfiguration {
             categoryConfigurations.get(categoryType.getConfigurationKey());
 
         if (categoryConfiguration == null) {
-            return CategoryConfiguration.EmptyCategoryConfiguration.forCategoryType(categoryType);
+            return EmptyCategoryConfiguration.forCategoryType(categoryType);
         } else {
             return categoryConfiguration;
         }

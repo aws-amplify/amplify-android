@@ -22,28 +22,23 @@ import com.amplifyframework.core.model.Model;
 
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
-public class DataStoreConfigurationTest {
-//    private Context context;
-
-    @Before
-    public void setup() {
-//        this.context = getApplicationContext();
-    }
+public final class DataStoreConfigurationTest {
 
     @Test
     public void testDefaultConfiguration() {
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.defaults();
-        assertEquals(DataStoreConfiguration.DEFAULT_SYNC_INTERVAL_MINUTES,
-            dataStoreConfiguration.getSyncIntervalInMinutes());
+        assertEquals(TimeUnit.MINUTES.toMillis(DataStoreConfiguration.DEFAULT_SYNC_INTERVAL_MINUTES),
+            dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_MAX_RECORDS,
             dataStoreConfiguration.getSyncMaxRecords());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
@@ -55,13 +50,14 @@ public class DataStoreConfigurationTest {
 
     @Test
     public void testDefaultOverridenFromConfiguration() throws JSONException, DataStoreException {
-        long expectedSyncInterval = 6;
+        long expectedSyncIntervalMinutes = 6;
+        long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         int expectedSyncMaxRecords = 3;
         JSONObject jsonConfigFromFile = new JSONObject()
-            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL.toString(), expectedSyncInterval)
+            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes)
             .put(DataStoreConfiguration.ConfigKey.SYNC_MAX_RECORDS.toString(), expectedSyncMaxRecords);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder(jsonConfigFromFile).build();
-        assertEquals(expectedSyncInterval, dataStoreConfiguration.getSyncIntervalInMinutes());
+        assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE, dataStoreConfiguration.getSyncPageSize());
 
@@ -71,27 +67,31 @@ public class DataStoreConfigurationTest {
 
     @Test
     public void testDefaultOverridenFromConfigurationAndObject() throws DataStoreException, JSONException {
-        long expectedSyncInterval = 6;
+        long expectedSyncIntervalMinutes = 6;
+        long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         int expectedSyncMaxRecords = 3;
+        DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
+        DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
         DataStoreConfiguration configObject = DataStoreConfiguration
             .builder()
             .syncMaxRecords(expectedSyncMaxRecords)
-            .dataStoreConflictHandler(new DummyConflictHandler())
+            .dataStoreConflictHandler(dummyConflictHandler)
+            .dataStoreErrorHandler(errorHandler)
             .build();
 
         JSONObject jsonConfigFromFile = new JSONObject()
-            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL.toString(), expectedSyncInterval);
+            .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
             .builder(jsonConfigFromFile, configObject)
             .build();
 
-        assertEquals(expectedSyncInterval, dataStoreConfiguration.getSyncIntervalInMinutes());
+        assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE, dataStoreConfiguration.getSyncPageSize());
 
-        assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof DummyConflictHandler);
-        assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
+        assertEquals(dummyConflictHandler, dataStoreConfiguration.getDataStoreConflictHandler());
+        assertEquals(errorHandler, dataStoreConfiguration.getDataStoreErrorHandler());
     }
 
     @Test(expected = DataStoreException.class)

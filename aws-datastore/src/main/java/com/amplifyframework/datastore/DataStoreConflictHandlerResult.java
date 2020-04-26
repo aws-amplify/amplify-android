@@ -16,8 +16,10 @@
 package com.amplifyframework.datastore;
 
 /**
- * The possible results from a conflict resolution. Either the local data was discarded, kept, or
- * some new model instance is used which neither purely local or remote in origin.
+ * The possible results from a conflict resolution. Either we tried to apply the remote changes
+ * to the local store, OR retried to update the remote store using the local version of the model
+ * OR retried updating the remote store using a version of the object different than both local
+ * and remote.
  */
 public enum DataStoreConflictHandlerResult {
 

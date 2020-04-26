@@ -49,7 +49,6 @@ import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 import io.reactivex.Completable;
-import io.reactivex.subjects.AsyncSubject;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
@@ -70,9 +69,12 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
-    // Configuration for the plugin.
+    // User-provided configuration for the plugin.
     private final DataStoreConfiguration userProvidedConfiguration;
-    private final AsyncSubject<DataStoreConfiguration> dataStoreConfigurationProvider;
+
+    // Configuration for the plugin that contains settings from the JSON file plus any
+    // overrides provided via the userProvidedConfiguration
+    private DataStoreConfiguration pluginConfiguration;
 
     @SuppressLint("CheckResult")
     private AWSDataStorePlugin(
@@ -83,19 +85,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.categoryInitializationsPending = new CountDownLatch(1);
-        dataStoreConfigurationProvider = AsyncSubject.create();
 
-        dataStoreConfigurationProvider.subscribe(initializedConfiguration -> {
-            orchestrator = new Orchestrator(
-                modelProvider,
-                modelSchemaRegistry,
-                sqliteStorageAdapter,
-                AppSyncClient.via(api),
-                initializedConfiguration
-            );
-        }, exception -> {
-                LOG.error("An exception occurred while waiting for the DataStore plugin to initialize.", exception);
-            }
+        orchestrator = new Orchestrator(
+            modelProvider,
+            modelSchemaRegistry,
+            sqliteStorageAdapter,
+            AppSyncClient.via(api),
+            pluginConfiguration
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -167,20 +163,10 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Context context
     ) throws DataStoreException {
         try {
-            DataStoreConfiguration dataStoreConfiguration;
-            if (userProvidedConfiguration == null) {
-                dataStoreConfiguration = DataStoreConfiguration
-                    .builder(pluginConfiguration)
-                    .build();
-            } else {
-                dataStoreConfiguration = DataStoreConfiguration
-                    .builder(pluginConfiguration, userProvidedConfiguration)
-                    .build();
-            }
-            dataStoreConfigurationProvider.onNext(dataStoreConfiguration);
-            dataStoreConfigurationProvider.onComplete();
+            this.pluginConfiguration = DataStoreConfiguration
+                .builder(pluginConfiguration, userProvidedConfiguration)
+                .build();
         } catch (DataStoreException badConfigException) {
-            dataStoreConfigurationProvider.onError(badConfigException);
             throw new DataStoreException(
                 "There was an issue configuring the plugin from the amplifyconfiguration.json",
                 badConfigException,

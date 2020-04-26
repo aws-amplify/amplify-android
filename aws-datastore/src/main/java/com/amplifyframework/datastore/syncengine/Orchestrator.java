@@ -47,14 +47,14 @@ public final class Orchestrator {
      *                       durably store offline changes until
      *                       then can be written to the network
      * @param appSync An AppSync Endpoint
-     * @param configuration Configuration that was provided to the plugin when the plugin was instantiated
+     * @param dataStoreConfiguration Configuration that was provided to the plugin when the plugin was instantiated
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
-            @NonNull final DataStoreConfiguration configuration) {
+            @NonNull final DataStoreConfiguration dataStoreConfiguration) {
         Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
@@ -73,7 +73,7 @@ public final class Orchestrator {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .syncIntervalInMinutes(configuration.getSyncIntervalInMinutes())
+            .dataStoreConfiguration(dataStoreConfiguration)
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);

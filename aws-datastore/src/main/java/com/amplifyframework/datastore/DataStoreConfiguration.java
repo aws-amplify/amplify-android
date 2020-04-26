@@ -32,11 +32,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * A user-provided configuration for the DataStore.
  */
-@SuppressWarnings("unused")
 public final class DataStoreConfiguration {
     static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
-    static final int DEFAULT_SYNC_MAX_RECORDS = 1_000;
+    static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
 
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
@@ -44,6 +43,7 @@ public final class DataStoreConfiguration {
     private final DataStoreErrorHandler dataStoreErrorHandler;
     private final DataStoreConflictHandler dataStoreConflictHandler;
     private final long syncIntervalInMinutes;
+    private final long syncIntervalMs;
     private final int syncMaxRecords;
     private final int syncPageSize;
 
@@ -58,6 +58,7 @@ public final class DataStoreConfiguration {
         this.syncIntervalInMinutes = syncIntervalInMinutes;
         this.syncMaxRecords = syncMaxRecords;
         this.syncPageSize = syncPageSize;
+        this.syncIntervalMs = TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
     }
 
     /**
@@ -81,13 +82,18 @@ public final class DataStoreConfiguration {
      */
     @NonNull
     public static Builder builder(@NonNull JSONObject pluginJson,
-                                  @NonNull DataStoreConfiguration userProvidedConfiguration) throws DataStoreException {
-        return builder(pluginJson)
-            .syncPageSize(userProvidedConfiguration.getSyncPageSize())
-            .syncMaxRecords(userProvidedConfiguration.getSyncMaxRecords())
-            .syncIntervalMs(userProvidedConfiguration.getSyncIntervalInMinutes())
-            .dataStoreErrorHandler(userProvidedConfiguration.getDataStoreErrorHandler())
-            .dataStoreConflictHandler(userProvidedConfiguration.getDataStoreConflictHandler());
+                                  @Nullable DataStoreConfiguration userProvidedConfiguration)
+        throws DataStoreException {
+        Builder builder = builder(pluginJson);
+        if (userProvidedConfiguration != null) {
+            builder.syncPageSize(userProvidedConfiguration.getSyncPageSize())
+                .syncMaxRecords(userProvidedConfiguration.getSyncMaxRecords())
+                .syncIntervalInMinutes(
+                    TimeUnit.MILLISECONDS.toMinutes(userProvidedConfiguration.getSyncIntervalMs()))
+                .dataStoreErrorHandler(userProvidedConfiguration.getDataStoreErrorHandler())
+                .dataStoreConflictHandler(userProvidedConfiguration.getDataStoreConflictHandler());
+        }
+        return builder;
     }
 
     /**
@@ -114,8 +120,9 @@ public final class DataStoreConfiguration {
             }
             try {
                 switch (configKey) {
-                    case SYNC_INTERVAL:
-                        builder.syncIntervalMs(pluginJson.getLong(ConfigKey.SYNC_INTERVAL.toString()));
+                    case SYNC_INTERVAL_IN_MINUTES:
+                        builder.syncIntervalInMinutes(pluginJson
+                            .getLong(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString()));
                         break;
                     case SYNC_MAX_RECORDS:
                         builder.syncMaxRecords(pluginJson.getInt(ConfigKey.SYNC_MAX_RECORDS.toString()));
@@ -170,8 +177,8 @@ public final class DataStoreConfiguration {
      * @return The sync interval
      */
     @IntRange(from = 0)
-    public long getSyncIntervalInMinutes() {
-        return this.syncIntervalInMinutes;
+    public long getSyncIntervalMs() {
+        return this.syncIntervalMs;
     }
 
     /**
@@ -201,14 +208,14 @@ public final class DataStoreConfiguration {
     public static final class Builder {
         private DataStoreErrorHandler dataStoreErrorHandler;
         private DataStoreConflictHandler dataStoreConflictHandler;
-        private Long syncIntervalMs;
-        private Integer syncMaxRecords;
-        private Integer syncPageSize;
+        private long syncIntervalInMinutes;
+        private int syncMaxRecords;
+        private int syncPageSize;
 
         private Builder() {
             this.dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
             this.dataStoreConflictHandler = ApplyRemoteConflictHandler.instance(dataStoreErrorHandler);
-            this.syncIntervalMs = DEFAULT_SYNC_INTERVAL_MINUTES;
+            this.syncIntervalInMinutes = DEFAULT_SYNC_INTERVAL_MINUTES;
             this.syncMaxRecords = DEFAULT_SYNC_MAX_RECORDS;
             this.syncPageSize = DEFAULT_SYNC_PAGE_SIZE;
         }
@@ -239,14 +246,14 @@ public final class DataStoreConfiguration {
 
         /**
          * Sets the duration of time after which delta syncs will not be preferred over base syncs.
-         * @param syncIntervalMs The amount of time that must elapse for delta syncs to not be considered
+         * @param syncIntervalInMinutes The amount of time that must elapse for delta syncs to not be considered
          * @return Current builder instance
          */
         @NonNull
-        public Builder syncIntervalMs(@IntRange(from = 0) long syncIntervalMs) {
+        public Builder syncIntervalInMinutes(@IntRange(from = 0) long syncIntervalInMinutes) {
             //Only set this value if the incoming value is not equal to the default
-            if (syncIntervalMs != DEFAULT_SYNC_INTERVAL_MINUTES) {
-                this.syncIntervalMs = syncIntervalMs;
+            if (syncIntervalInMinutes != DEFAULT_SYNC_INTERVAL_MINUTES) {
+                this.syncIntervalInMinutes = syncIntervalInMinutes;
             }
             return Builder.this;
         }
@@ -288,7 +295,7 @@ public final class DataStoreConfiguration {
             return new DataStoreConfiguration(
                 dataStoreErrorHandler,
                 dataStoreConflictHandler,
-                syncIntervalMs,
+                syncIntervalInMinutes,
                 syncMaxRecords,
                 syncPageSize
             );
@@ -300,7 +307,7 @@ public final class DataStoreConfiguration {
          * At most one base sync will be performed within this interval of time.
          * The interval is expressed in milliseconds.
          */
-        SYNC_INTERVAL("syncIntervalInMinutes"),
+        SYNC_INTERVAL_IN_MINUTES("syncIntervalInMinutes"),
         /**
          * Number of items requested per page in sync operation.
          */
