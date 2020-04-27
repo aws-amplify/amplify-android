@@ -16,12 +16,11 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.GraphQLLocation;
+import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.error.GraphQLLocation;
-import com.amplifyframework.api.graphql.error.GraphQLPathSegment;
 import com.amplifyframework.testutils.Resources;
 
-import com.google.gson.internal.LinkedTreeMap;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -31,6 +30,7 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -137,7 +137,7 @@ public final class GsonGraphQLResponseFactoryTest {
                     new GraphQLPathSegment(i),
                     new GraphQLPathSegment("name")
             );
-            Map<String, Object> extensions = new LinkedTreeMap<>();
+            Map<String, Object> extensions = new HashMap<>();
             extensions.put("errorType", null);
             extensions.put("errorInfo", null);
             extensions.put("data", null);
@@ -169,7 +169,7 @@ public final class GsonGraphQLResponseFactoryTest {
         final GraphQLResponse<ListTodosResult> response =
                 responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
 
-        // Assert that the response contained things...
+        // Build the expected response.
         String message = "Conflict resolver rejects mutation.";
         List<GraphQLLocation> locations = Arrays.asList(
                 new GraphQLLocation(11, 3));
@@ -180,14 +180,14 @@ public final class GsonGraphQLResponseFactoryTest {
                 new GraphQLPathSegment("name")
         );
 
-        Map<String, Object> data = new LinkedTreeMap<>();
+        Map<String, Object> data = new HashMap<>();
         data.put("id", "EF48518C-92EB-4F7A-A64E-D1B9325205CF");
         data.put("title", "new3");
         data.put("content", "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 " +
                 "+0000");
-        data.put("_version", 2.0);
+        data.put("_version", 2);
 
-        Map<String, Object> extensions = new LinkedTreeMap<>();
+        Map<String, Object> extensions = new HashMap<>();
         extensions.put("errorType", "ConflictUnhandled");
         extensions.put("errorInfo", null);
         extensions.put("data", data);
@@ -196,23 +196,7 @@ public final class GsonGraphQLResponseFactoryTest {
         GraphQLResponse<ListTodosResult> expectedResponse = new GraphQLResponse<>(null,
                 Arrays.asList(expectedError, expectedError, expectedError, expectedError));
 
-        assertNotNull(response);
-        assertNotNull(response.getErrors());
-        assertEquals(expectedResponse.getErrors().size(), response.getErrors().size());
-
-        // Assert that each error has been parsed to the same output object.
-        for (int i = 0; i < response.getErrors().size(); i++) {
-            GraphQLResponse.Error actual = response.getErrors().get(i);
-            GraphQLResponse.Error expected = expectedResponse.getErrors().get(i);
-            assertEquals("Unexpected message on error[" + i + "]", expected.getMessage(), actual.getMessage());
-            assertEquals("Unexpected extensions on error[" + i + "]", expected.getExtensions(), actual.getExtensions());
-            assertEquals("Unexpected path on error[" + i + "]", expected.getPath(), actual.getPath());
-            assertEquals("Unexpected locations on error[" + i + "]", expected.getLocations(), actual.getLocations());
-            assertEquals("Unexpected error[" + i + "]", expected, actual);
-        }
-
-        // This test could be shortened to only include the single assert below, but by checking the
-        // individual properties of the error objects above, debugging test failures is much easier.
+        // Assert that the response is expected
         assertEquals(expectedResponse, response);
     }
 
