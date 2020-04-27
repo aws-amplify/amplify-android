@@ -31,7 +31,7 @@ import java.util.concurrent.ExecutorService;
 
 /**
  *
- * Operation that identifies objects within an image via AWS Translate, AWS Rekognition, or AWS Comprehend.
+ * Operation that identifies objects within an image via Amazon Translate, Amazon Rekognition, or Amazon Comprehend.
  */
 public final class AWSIdentifyOperation
         extends IdentifyOperation<AWSRekognitionRequest> {
