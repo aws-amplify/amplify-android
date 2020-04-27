@@ -38,11 +38,11 @@ public final class DataStoreConfigurationTest {
     public void testDefaultConfiguration() {
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.defaults();
         assertEquals(TimeUnit.MINUTES.toMillis(DataStoreConfiguration.DEFAULT_SYNC_INTERVAL_MINUTES),
-            dataStoreConfiguration.getSyncIntervalMs());
+            dataStoreConfiguration.getSyncIntervalMs().longValue());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_MAX_RECORDS,
-            dataStoreConfiguration.getSyncMaxRecords());
+            dataStoreConfiguration.getSyncMaxRecords().intValue());
         assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
-            dataStoreConfiguration.getSyncPageSize());
+            dataStoreConfiguration.getSyncPageSize().intValue());
 
         assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof ApplyRemoteConflictHandler);
         assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
@@ -50,16 +50,17 @@ public final class DataStoreConfigurationTest {
 
     @Test
     public void testDefaultOverridenFromConfiguration() throws JSONException, DataStoreException {
-        long expectedSyncIntervalMinutes = 6;
-        long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
-        int expectedSyncMaxRecords = 3;
+        Long expectedSyncIntervalMinutes = 6L;
+        Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
+        Integer expectedSyncMaxRecords = 3;
         JSONObject jsonConfigFromFile = new JSONObject()
             .put(DataStoreConfiguration.ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString(), expectedSyncIntervalMinutes)
             .put(DataStoreConfiguration.ConfigKey.SYNC_MAX_RECORDS.toString(), expectedSyncMaxRecords);
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.builder(jsonConfigFromFile).build();
         assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
-        assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE, dataStoreConfiguration.getSyncPageSize());
+        assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
+            dataStoreConfiguration.getSyncPageSize().longValue());
 
         assertTrue(dataStoreConfiguration.getDataStoreConflictHandler() instanceof ApplyRemoteConflictHandler);
         assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
@@ -67,9 +68,9 @@ public final class DataStoreConfigurationTest {
 
     @Test
     public void testDefaultOverridenFromConfigurationAndObject() throws DataStoreException, JSONException {
-        long expectedSyncIntervalMinutes = 6;
-        long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
-        int expectedSyncMaxRecords = 3;
+        Long expectedSyncIntervalMinutes = 6L;
+        Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
+        Integer expectedSyncMaxRecords = 3;
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
         DataStoreErrorHandler errorHandler = DefaultDataStoreErrorHandler.instance();
 
@@ -88,7 +89,8 @@ public final class DataStoreConfigurationTest {
 
         assertEquals(expectedSyncIntervalMs, dataStoreConfiguration.getSyncIntervalMs());
         assertEquals(expectedSyncMaxRecords, dataStoreConfiguration.getSyncMaxRecords());
-        assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE, dataStoreConfiguration.getSyncPageSize());
+        assertEquals(DataStoreConfiguration.DEFAULT_SYNC_PAGE_SIZE,
+            dataStoreConfiguration.getSyncPageSize().longValue());
 
         assertEquals(dummyConflictHandler, dataStoreConfiguration.getDataStoreConflictHandler());
         assertEquals(errorHandler, dataStoreConfiguration.getDataStoreErrorHandler());

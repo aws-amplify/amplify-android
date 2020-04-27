@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 public final class DataStoreConfiguration {
     static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
+    static final long DEFAULT_SYNC_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DEFAULT_SYNC_INTERVAL_MINUTES);
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
 
@@ -42,23 +43,23 @@ public final class DataStoreConfiguration {
 
     private final DataStoreErrorHandler dataStoreErrorHandler;
     private final DataStoreConflictHandler dataStoreConflictHandler;
-    private final long syncIntervalInMinutes;
-    private final long syncIntervalMs;
-    private final int syncMaxRecords;
-    private final int syncPageSize;
+    private final Integer syncMaxRecords;
+    private final Integer syncPageSize;
+    private Long syncIntervalMs;
 
     private DataStoreConfiguration(
             DataStoreErrorHandler dataStoreErrorHandler,
             DataStoreConflictHandler dataStoreConflictHandler,
-            long syncIntervalInMinutes,
-            int syncMaxRecords,
-            int syncPageSize) {
+            Long syncIntervalInMinutes,
+            Integer syncMaxRecords,
+            Integer syncPageSize) {
         this.dataStoreErrorHandler = dataStoreErrorHandler;
         this.dataStoreConflictHandler = dataStoreConflictHandler;
-        this.syncIntervalInMinutes = syncIntervalInMinutes;
         this.syncMaxRecords = syncMaxRecords;
         this.syncPageSize = syncPageSize;
-        this.syncIntervalMs = TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
+        if (syncIntervalInMinutes != null) {
+            this.syncIntervalMs = TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
+        }
     }
 
     /**
@@ -150,7 +151,11 @@ public final class DataStoreConfiguration {
      */
     @NonNull
     public static DataStoreConfiguration defaults() {
-        return builder().build();
+        return builder()
+            .syncIntervalInMinutes(DEFAULT_SYNC_INTERVAL_MINUTES)
+            .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
+            .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
+            .build();
     }
 
     /**
@@ -177,8 +182,8 @@ public final class DataStoreConfiguration {
      * @return The sync interval
      */
     @IntRange(from = 0)
-    public long getSyncIntervalMs() {
-        return this.syncIntervalMs;
+    public Long getSyncIntervalMs() {
+        return this.syncIntervalMs == null ? DEFAULT_SYNC_INTERVAL_MS : this.syncIntervalMs;
     }
 
     /**
@@ -187,8 +192,8 @@ public final class DataStoreConfiguration {
      * @return The max number of records to process from AppSync.
      */
     @IntRange(from = 0)
-    public int getSyncMaxRecords() {
-        return this.syncMaxRecords;
+    public Integer getSyncMaxRecords() {
+        return this.syncMaxRecords == null ? DEFAULT_SYNC_MAX_RECORDS : this.syncMaxRecords;
     }
 
     /**
@@ -197,8 +202,8 @@ public final class DataStoreConfiguration {
      * @return Desired size of a page of results from an AppSync sync response
      */
     @IntRange(from = 0)
-    public int getSyncPageSize() {
-        return this.syncPageSize;
+    public Integer getSyncPageSize() {
+        return this.syncPageSize == null ? DEFAULT_SYNC_PAGE_SIZE : this.syncPageSize;
     }
 
     /**
@@ -208,16 +213,13 @@ public final class DataStoreConfiguration {
     public static final class Builder {
         private DataStoreErrorHandler dataStoreErrorHandler;
         private DataStoreConflictHandler dataStoreConflictHandler;
-        private long syncIntervalInMinutes;
-        private int syncMaxRecords;
-        private int syncPageSize;
+        private Long syncIntervalInMinutes;
+        private Integer syncMaxRecords;
+        private Integer syncPageSize;
 
         private Builder() {
             this.dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
             this.dataStoreConflictHandler = ApplyRemoteConflictHandler.instance(dataStoreErrorHandler);
-            this.syncIntervalInMinutes = DEFAULT_SYNC_INTERVAL_MINUTES;
-            this.syncMaxRecords = DEFAULT_SYNC_MAX_RECORDS;
-            this.syncPageSize = DEFAULT_SYNC_PAGE_SIZE;
         }
 
         /**
@@ -250,9 +252,9 @@ public final class DataStoreConfiguration {
          * @return Current builder instance
          */
         @NonNull
-        public Builder syncIntervalInMinutes(@IntRange(from = 0) long syncIntervalInMinutes) {
-            //Only set this value if the incoming value is not equal to the default
-            if (syncIntervalInMinutes != DEFAULT_SYNC_INTERVAL_MINUTES) {
+        public Builder syncIntervalInMinutes(@IntRange(from = 0) Long syncIntervalInMinutes) {
+            //Only set this value if the incoming value is null
+            if (this.syncIntervalInMinutes == null) {
                 this.syncIntervalInMinutes = syncIntervalInMinutes;
             }
             return Builder.this;
@@ -264,9 +266,9 @@ public final class DataStoreConfiguration {
          * @return Current builder instance
          */
         @NonNull
-        public Builder syncMaxRecords(@IntRange(from = 0) int syncMaxRecords) {
-            //Only set this value if the incoming value is not equal to the default
-            if (syncMaxRecords != DEFAULT_SYNC_MAX_RECORDS) {
+        public Builder syncMaxRecords(@IntRange(from = 0) Integer syncMaxRecords) {
+            //Only set this value if the incoming value is null
+            if (this.syncMaxRecords == null) {
                 this.syncMaxRecords = syncMaxRecords;
             }
             return Builder.this;
@@ -278,9 +280,9 @@ public final class DataStoreConfiguration {
          * @return Current builder
          */
         @NonNull
-        public Builder syncPageSize(@IntRange(from = 0) int syncPageSize) {
-            //Only set this value if the incoming value is not equal to the default
-            if (syncPageSize != DEFAULT_SYNC_PAGE_SIZE) {
+        public Builder syncPageSize(@IntRange(from = 0) Integer syncPageSize) {
+            //Only set this value if the incoming value is null
+            if (this.syncPageSize == null) {
                 this.syncPageSize = syncPageSize;
             }
             return Builder.this;
