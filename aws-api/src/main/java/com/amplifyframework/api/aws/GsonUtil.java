@@ -15,6 +15,8 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.util.Immutable;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -23,6 +25,7 @@ import com.google.gson.JsonPrimitive;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 final class GsonUtil {
 
@@ -30,13 +33,13 @@ final class GsonUtil {
         throw new UnsupportedOperationException("No instances allowed.");
     }
 
-    static HashMap<String, Object> toMap(JsonObject object) {
-        HashMap<String, Object> map = new HashMap<>();
+    static Map<String, Object> toMap(JsonObject object) {
+        Map<String, Object> map = new HashMap<>();
         for (String key : object.keySet()) {
             JsonElement element = object.get(key);
             map.put(key, toObject(element));
         }
-        return map;
+        return Immutable.of(map);
     }
 
     static List<Object> toList(JsonArray array) {
@@ -45,7 +48,7 @@ final class GsonUtil {
             JsonElement element = array.get(i);
             list.add(toObject(element));
         }
-        return list;
+        return Immutable.of(list);
     }
 
     private static Object toObject(JsonElement element) {

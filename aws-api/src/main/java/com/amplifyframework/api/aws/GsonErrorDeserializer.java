@@ -29,8 +29,8 @@ import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @SuppressWarnings("unchecked")
 final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Error> {
@@ -50,7 +50,7 @@ final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Er
         String message = null;
         List<GraphQLLocation> locations = null;
         List<GraphQLPathSegment> path = null;
-        HashMap<String, Object> extensions = null;
+        Map<String, Object> extensions = null;
         JsonObject extensionsJson = new JsonObject();
         JsonObject nonSpecifiedData = new JsonObject();
 
