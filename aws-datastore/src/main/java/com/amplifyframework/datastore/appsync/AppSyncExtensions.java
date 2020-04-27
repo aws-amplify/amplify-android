@@ -103,4 +103,13 @@ public final class AppSyncExtensions {
         result = 31 * result + (data != null ? data.hashCode() : 0);
         return result;
     }
+
+    @Override
+    public String toString() {
+        return "AppSyncExtensions{" +
+                "errorType=\'" + errorType + "\'" +
+                ", errorInfo=\'" + errorInfo + "\'" +
+                ", data=\'" + data + "\'" +
+                '}';
+    }
 }
