@@ -77,29 +77,29 @@ public final class SQLiteStorageAdapterModelConverterTest {
         assertNotNull(queriedTodo);
 
         // Test common scalar types
-        assertEquals(queriedTodo.getTitle(), todo.getTitle());
-        assertEquals(queriedTodo.getContent(), todo.getContent());
-        assertEquals(queriedTodo.getDuplicate(), todo.getDuplicate());
-        assertEquals(queriedTodo.getPriority(), todo.getPriority());
-        assertEquals(queriedTodo.getHoursSpent(), todo.getHoursSpent());
+        assertEquals(todo.getTitle(), queriedTodo.getTitle());
+        assertEquals(todo.getContent(), queriedTodo.getContent());
+        assertEquals(todo.getDuplicate(), queriedTodo.getDuplicate());
+        assertEquals(todo.getPriority(), queriedTodo.getPriority());
+        assertEquals(todo.getHoursSpent(), queriedTodo.getHoursSpent());
 
         // Test date scalars
         // TODO fix tests once new Date/Time handling is done
-        // assertEquals(queriedTodo.getCreatedAt(), todo.getCreatedAt());
-        // assertEquals(queriedTodo.getDueDate(), todo.getDueDate());
-        assertEquals(todo.getLastUpdated(), todo.getLastUpdated());
+        // assertEquals(todo.getCreatedAt(), queriedTodo.getCreatedAt());
+        // assertEquals(todo.getDueDate(), queriedTodo.getDueDate());
+        assertEquals(todo.getLastUpdated(), queriedTodo.getLastUpdated());
 
         // Test status enum
-        assertEquals(queriedTodo.getStatus(), todo.getStatus());
+        assertEquals(todo.getStatus(), queriedTodo.getStatus());
 
         // Test embedded TodoOwner
         assertNotNull(queriedTodo.getOwner());
-        assertEquals(queriedTodo.getOwner().getName(), todo.getOwner().getName());
-        assertEquals(queriedTodo.getOwner().getEmail(), todo.getOwner().getEmail());
+        assertEquals(todo.getOwner().getName(), queriedTodo.getOwner().getName());
+        assertEquals(todo.getOwner().getEmail(), queriedTodo.getOwner().getEmail());
 
         // Test embedded tags (String[])
         assertNotNull(queriedTodo.getTags());
-        assertEquals(queriedTodo.getTags().size(), todo.getTags().size());
+        assertEquals(todo.getTags().size(), queriedTodo.getTags().size());
     }
 
     private Todo createTestTodoModel() {
