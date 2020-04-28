@@ -19,8 +19,6 @@ import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.util.Objects;
-
 /**
  * Represents a selection from an image. It contains
  * the bounding geometry of a selection and an
@@ -35,28 +33,6 @@ public final class Selection {
         this.box = box;
         this.polygon = polygon;
         this.selected = selected;
-    }
-
-    /**
-     * Constructs an instance of {@link Selection} using
-     * rectangular boundary.
-     * @param box the bounding box
-     * @param selected true if this selection is selected
-     * @return {@link Selection} instance containing a box
-     */
-    public static Selection fromBox(@NonNull RectF box, boolean selected) {
-        return new Selection(Objects.requireNonNull(box), null, selected);
-    }
-
-    /**
-     * Constructs an instance of {@link Selection} using
-     * polygonal boundary.
-     * @param polygon the bounding polygon
-     * @param selected true if this selection is selected
-     * @return {@link Selection} instance containing a polygon
-     */
-    public static Selection fromPolygon(@NonNull Polygon polygon, boolean selected) {
-        return new Selection(null, Objects.requireNonNull(polygon), selected);
     }
 
     /**
@@ -85,5 +61,66 @@ public final class Selection {
      */
     public boolean isSelected() {
         return selected;
+    }
+
+    public static Builder builder() {
+        return new Builder();
+    }
+
+    public static final class Builder {
+        private RectF box;
+        private Polygon polygon;
+        private boolean selected;
+
+        /**
+         * Sets the bounding box and return this builder.
+         * @param box the rectangular boundary
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder box(@Nullable RectF box) {
+            this.box = box;
+            return this;
+        }
+
+        /**
+         * Sets the bounding polygon and return this builder.
+         * @param polygon the polygonal boundary
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder polygon(@Nullable Polygon polygon) {
+            this.polygon = polygon;
+            return this;
+        }
+
+        /**
+         * Sets the selection status and return this builder.
+         * @param selected the selection status to set to
+         * @return this builder instance
+         */
+        @NonNull
+        public Builder selected(boolean selected) {
+            this.selected = selected;
+            return this;
+        }
+
+        public Selection build() {
+            return new Selection(box, polygon, selected);
+        }
+
+        @Nullable
+        RectF getBox() {
+            return box;
+        }
+
+        @Nullable
+        Polygon getPolygon() {
+            return polygon;
+        }
+
+        boolean isSelected() {
+            return selected;
+        }
     }
 }

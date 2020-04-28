@@ -20,39 +20,39 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.aws.adapter.BitmapAdapter;
 
-import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.textract.model.Document;
 
 import java.nio.ByteBuffer;
 
 /**
  * Simple request instance for image identification operation.
  */
-public final class AWSRekognitionRequest {
+public final class AWSTextractRequest {
 
-    private final Image image;
+    private final Document document;
 
-    private AWSRekognitionRequest(Image image) {
-        this.image = image;
+    private AWSTextractRequest(Document document) {
+        this.document = document;
     }
 
     /**
-     * Constructs an instance of {@link AWSRekognitionRequest}.
-     * @param image the input image to analyze
-     * @return a request for Amazon Rekognition service
+     * Constructs an instance of {@link AWSTextractRequest}.
+     * @param image the input image to extract text from
+     * @return a request for Amazon Textract service
      */
     @NonNull
-    public static AWSRekognitionRequest fromBitmap(@NonNull Bitmap image) {
+    public static AWSTextractRequest fromBitmap(@NonNull Bitmap image) {
         ByteBuffer buffer = BitmapAdapter.fromBitmap(image);
-        Image inputImage = new Image().withBytes(buffer);
-        return new AWSRekognitionRequest(inputImage);
+        Document document = new Document().withBytes(buffer);
+        return new AWSTextractRequest(document);
     }
 
     /**
-     * Gets the Rekognition input image.
-     * @return the Rekognition image
+     * Gets the Textract input document.
+     * @return the Textract document
      */
     @NonNull
-    public Image getImage() {
-        return image;
+    public Document getDocument() {
+        return document;
     }
 }

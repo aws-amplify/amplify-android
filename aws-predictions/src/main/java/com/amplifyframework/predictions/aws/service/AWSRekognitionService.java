@@ -21,16 +21,19 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
-import com.amplifyframework.predictions.aws.adapter.IdentifyResultTransformers;
+import com.amplifyframework.predictions.aws.adapter.IdentifyEntitiesResultTransformers;
 import com.amplifyframework.predictions.models.Celebrity;
 import com.amplifyframework.predictions.models.CelebrityDetails;
+import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.Landmark;
+import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
 import com.amplifyframework.predictions.result.IdentifyLabelsResult;
 import com.amplifyframework.predictions.result.IdentifyResult;
+import com.amplifyframework.predictions.result.IdentifyTextResult;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.AmazonClientException;
@@ -43,11 +46,16 @@ import com.amazonaws.services.rekognition.model.DetectLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectLabelsResult;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsResult;
+import com.amazonaws.services.rekognition.model.DetectTextRequest;
+import com.amazonaws.services.rekognition.model.DetectTextResult;
+import com.amazonaws.services.rekognition.model.Geometry;
 import com.amazonaws.services.rekognition.model.Image;
 import com.amazonaws.services.rekognition.model.ModerationLabel;
 import com.amazonaws.services.rekognition.model.Parent;
 import com.amazonaws.services.rekognition.model.RecognizeCelebritiesRequest;
 import com.amazonaws.services.rekognition.model.RecognizeCelebritiesResult;
+import com.amazonaws.services.rekognition.model.TextDetection;
+import com.amazonaws.services.rekognition.model.TextTypes;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -109,6 +117,18 @@ final class AWSRekognitionService {
         try {
             List<CelebrityDetails> celebrities = detectCelebrities(image);
             onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
+        } catch (PredictionsException exception) {
+            onError.accept(exception);
+        }
+    }
+
+    void detectPlainText(
+            @NonNull Image image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        try {
+            onSuccess.accept(detectPlainText(image));
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }
@@ -199,9 +219,9 @@ final class AWSRekognitionService {
 
             // Get face-specific celebrity details from the result
             ComparedFace face = rekognitionCelebrity.getFace();
-            RectF box = IdentifyResultTransformers.fromBoundingBox(face.getBoundingBox());
-            Pose pose = IdentifyResultTransformers.fromRekognitionPose(face.getPose());
-            List<Landmark> landmarks = IdentifyResultTransformers.fromLandmarks(face.getLandmarks());
+            RectF box = IdentifyEntitiesResultTransformers.fromBoundingBox(face.getBoundingBox());
+            Pose pose = IdentifyEntitiesResultTransformers.fromRekognitionPose(face.getPose());
+            List<Landmark> landmarks = IdentifyEntitiesResultTransformers.fromLandmarks(face.getLandmarks());
 
             // Get URL links that are relevant to celebrities
             List<URL> urls = new ArrayList<>();
@@ -224,6 +244,60 @@ final class AWSRekognitionService {
         }
 
         return celebrities;
+    }
+
+    private IdentifyTextResult detectPlainText(Image image) throws PredictionsException {
+        DetectTextRequest request = new DetectTextRequest()
+                .withImage(image);
+
+        // Read text in the given image via Amazon Rekognition
+        final DetectTextResult result;
+        try {
+            result = rekognition.detectText(request);
+        } catch (AmazonClientException serviceException) {
+            throw new PredictionsException(
+                    "Amazon Rekognition encountered an error while detecting text.",
+                    serviceException, "See attached service exception for more details."
+            );
+        }
+
+        StringBuilder fullTextBuilder = new StringBuilder();
+        List<String> rawLineText = new ArrayList<>();
+        List<IdentifiedText> words = new ArrayList<>();
+        List<IdentifiedText> lines = new ArrayList<>();
+        for (TextDetection detection : result.getTextDetections()) {
+            String detectedText = detection.getDetectedText();
+            Geometry geometry = detection.getGeometry();
+            RectF box = IdentifyEntitiesResultTransformers.fromBoundingBox(geometry.getBoundingBox());
+            Polygon polygon = IdentifyEntitiesResultTransformers.fromPoints(geometry.getPolygon());
+
+            IdentifiedText text = IdentifiedText.builder()
+                    .text(detectedText)
+                    .confidence(detection.getConfidence())
+                    .box(box)
+                    .polygon(polygon)
+                    .build();
+
+            TextTypes type = TextTypes.fromValue(detection.getType());
+            switch (type) {
+                case LINE:
+                    rawLineText.add(detectedText);
+                    lines.add(text);
+                    continue;
+                case WORD:
+                    fullTextBuilder.append(detectedText).append(" ");
+                    words.add(text);
+                    continue;
+                default:
+            }
+        }
+
+        return IdentifyTextResult.builder()
+                .fullText(fullTextBuilder.toString())
+                .rawLineText(rawLineText)
+                .lines(lines)
+                .words(words)
+                .build();
     }
 
     @NonNull

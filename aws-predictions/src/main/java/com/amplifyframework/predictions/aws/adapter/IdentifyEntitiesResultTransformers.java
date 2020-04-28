@@ -18,36 +18,41 @@ package com.amplifyframework.predictions.aws.adapter;
 import android.graphics.PointF;
 import android.graphics.RectF;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.predictions.models.Landmark;
 import com.amplifyframework.predictions.models.LandmarkType;
+import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
+import com.amplifyframework.util.CollectionUtils;
 
 import com.amazonaws.services.rekognition.model.BoundingBox;
+import com.amazonaws.services.rekognition.model.Point;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * Utility class to transform Amazon service-specific
  * models to be compatible with AWS Amplify.
  */
-public final class IdentifyResultTransformers {
-    private IdentifyResultTransformers() {}
+public final class IdentifyEntitiesResultTransformers {
+    private IdentifyEntitiesResultTransformers() {}
 
     /**
-     * Converts {@link BoundingBox} from Amazon Rekognition into
+     * Converts bounding box geometry from Amazon Rekognition into
      * Android's graphic {@link RectF} object for Amplify
      * compatibility.
      * @param box the bounding box provided by Amazon Rekognition
      * @return the RectF object representing the same dimensions
      */
-    @NonNull
-    public static RectF fromBoundingBox(@NonNull BoundingBox box) {
-        Objects.requireNonNull(box);
+    @Nullable
+    public static RectF fromBoundingBox(@Nullable BoundingBox box) {
+        if (box == null) {
+            return null;
+        }
         return new RectF(
                 box.getLeft(),
                 box.getTop(),
@@ -57,14 +62,39 @@ public final class IdentifyResultTransformers {
     }
 
     /**
+     * Converts geometric polygon from Amazon Rekognition into
+     * Amplify-compatible polygon object.
+     * @param polygon the polygon object by Amazon Rekognition
+     * @return the polygon object representing vertices
+     */
+    @Nullable
+    public static Polygon fromPoints(@Nullable List<Point> polygon) {
+        if (CollectionUtils.isNullOrEmpty(polygon)) {
+            return null;
+        }
+        List<PointF> points = new ArrayList<>();
+        for (Point point : polygon) {
+            PointF androidPoint = new PointF(
+                    point.getX(),
+                    point.getY()
+            );
+            points.add(androidPoint);
+        }
+        return Polygon.fromPoints(points);
+    }
+
+
+    /**
      * Converts {@link com.amazonaws.services.rekognition.model.Pose}
      * from Amazon Rekognition into Amplify-compatible pose data.
      * @param pose the pose provided by Amazon Rekognition
      * @return the Amplify pose with same orientation
      */
-    @NonNull
-    public static Pose fromRekognitionPose(@NonNull com.amazonaws.services.rekognition.model.Pose pose) {
-        Objects.requireNonNull(pose);
+    @Nullable
+    public static Pose fromRekognitionPose(@Nullable com.amazonaws.services.rekognition.model.Pose pose) {
+        if (pose == null) {
+            return null;
+        }
         return new Pose(pose.getPitch(), pose.getRoll(), pose.getYaw());
     }
 
@@ -77,11 +107,13 @@ public final class IdentifyResultTransformers {
      */
     @NonNull
     public static List<Landmark> fromLandmarks(
-            @NonNull List<com.amazonaws.services.rekognition.model.Landmark> landmarks
+            @Nullable List<com.amazonaws.services.rekognition.model.Landmark> landmarks
     ) {
-        Objects.requireNonNull(landmarks);
-
         List<Landmark> amplifyLandmarks = new ArrayList<>();
+        if (CollectionUtils.isNullOrEmpty(landmarks)) {
+            return amplifyLandmarks;
+        }
+
         List<PointF> allPoints = new ArrayList<>();
         Map<LandmarkType, List<PointF>> landmarkMap = new HashMap<>();
 

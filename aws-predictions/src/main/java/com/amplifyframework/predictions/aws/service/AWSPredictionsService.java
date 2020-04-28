@@ -29,6 +29,8 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.textract.AmazonTextractClient;
+import com.amazonaws.services.textract.model.Document;
 import com.amazonaws.services.translate.AmazonTranslateClient;
 
 /**
@@ -38,6 +40,7 @@ public final class AWSPredictionsService {
 
     private final AWSTranslateService translateService;
     private final AWSRekognitionService rekognitionService;
+    private final AWSTextractService textractService;
     private final AWSComprehendService comprehendService;
 
     /**
@@ -47,6 +50,7 @@ public final class AWSPredictionsService {
     public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
         this.translateService = new AWSTranslateService(configuration);
         this.rekognitionService = new AWSRekognitionService(configuration);
+        this.textractService = new AWSTextractService(configuration);
         this.comprehendService = new AWSComprehendService(configuration);
     }
 
@@ -101,6 +105,34 @@ public final class AWSPredictionsService {
     }
 
     /**
+     * Delegate to {@link AWSRekognitionService} to detect plain text.
+     * @param image the Rekognition input image
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectPlainText(
+            @NonNull Image image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.detectPlainText(image, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSTextractService} to detect document text.
+     * @param document the Textract input document
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectDocumentText(
+            @NonNull Document document,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        textractService.detectDocumentText(document, onSuccess, onError);
+    }
+
+    /**
      * Delegate to {@link AWSComprehendService} to make text interpretation.
      * @param text the input text to interpret
      * @param onSuccess triggered upon successful result
@@ -132,6 +164,16 @@ public final class AWSPredictionsService {
     @NonNull
     public AmazonRekognitionClient getRekognitionClient() {
         return rekognitionService.getClient();
+    }
+
+    /**
+     * Return configured Amazon Textract client for
+     * direct access to AWS endpoint.
+     * @return the configured Amazon Textract client
+     */
+    @NonNull
+    public AmazonTextractClient getTextractClient() {
+        return textractService.getClient();
     }
 
     /**

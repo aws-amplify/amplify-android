@@ -23,6 +23,7 @@ import com.amplifyframework.predictions.aws.request.AWSRekognitionRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LabelType;
+import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.result.IdentifyResult;
 
@@ -62,27 +63,86 @@ public final class AWSIdentifyOperation
 
     @Override
     public void start() {
+        switch (getIdentifyAction().getType()) {
+            case DETECT_CELEBRITIES:
+                startCelebritiesDetection();
+                return;
+            case DETECT_LABELS:
+                startLabelsDetection();
+                return;
+            case DETECT_ENTITIES:
+                startEntitiesDetection();
+                return;
+            case DETECT_TEXT:
+                startTextDetection();
+                return;
+            default:
+        }
+    }
+
+    private void startCelebritiesDetection() {
+        executorService.execute(() ->
+            predictionsService.recognizeCelebrities(
+                    getRequest().getImage(),
+                    onSuccess,
+                    onError
+            )
+        );
+    }
+
+    private void startLabelsDetection() {
         executorService.execute(() -> {
-            switch (getIdentifyAction().getType()) {
-                case DETECT_CELEBRITIES:
-                    predictionsService.recognizeCelebrities(getRequest().getImage(), onSuccess, onError);
+            final LabelType labelType;
+            try {
+                labelType = (LabelType) getIdentifyAction();
+            } catch (ClassCastException notLabelType) {
+                onError.accept(new PredictionsException(
+                        "The identify action type does not specify a label type.",
+                        "When passing in action type for label detection, use " +
+                                "LabelType instead of IdentifyActionType."
+                ));
+                return;
+            }
+            predictionsService.detectLabels(
+                    labelType,
+                    getRequest().getImage(),
+                    onSuccess,
+                    onError
+            );
+        });
+    }
+
+    private void startEntitiesDetection() {
+        executorService.execute(() -> {
+            // not implemented yet
+        });
+    }
+
+    private void startTextDetection() {
+        executorService.execute(() -> {
+            final TextFormatType textFormatType;
+            try {
+                textFormatType = (TextFormatType) getIdentifyAction();
+            } catch (ClassCastException notLabelType) {
+                onError.accept(new PredictionsException(
+                        "The identify action type does not specify a text format type.",
+                        "When passing in action type for text detection, use " +
+                                "TextFormatType instead of IdentifyActionType."
+                ));
+                return;
+            }
+
+            switch (textFormatType) {
+                case PLAIN:
+                    predictionsService.detectPlainText(
+                            getRequest().getImage(),
+                            onSuccess,
+                            onError
+                    );
                     return;
-                case DETECT_LABELS:
-                    final LabelType labelType;
-                    try {
-                        labelType = (LabelType) getIdentifyAction();
-                    } catch (ClassCastException notLabelType) {
-                        onError.accept(new PredictionsException(
-                                "The identify action type does not specify a label type.",
-                                "When passing in action type for label detection, use " +
-                                        "LabelType instead of IdentifyActionType."
-                        ));
-                        return;
-                    }
-                    predictionsService.detectLabels(labelType, getRequest().getImage(), onSuccess, onError);
-                    return;
-                case DETECT_ENTITIES:
-                case DETECT_TEXT:
+                case FORM:
+                case TABLE:
+                case ALL:
                 default:
             }
         });

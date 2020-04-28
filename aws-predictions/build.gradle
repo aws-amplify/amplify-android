@@ -23,6 +23,7 @@ dependencies {
     implementation dependency.aws.comprehend
     implementation dependency.aws.mobileclient
     implementation dependency.aws.rekognition
+    implementation dependency.aws.textract
     implementation dependency.aws.translate
 
     testImplementation project(path: ':testutils')
