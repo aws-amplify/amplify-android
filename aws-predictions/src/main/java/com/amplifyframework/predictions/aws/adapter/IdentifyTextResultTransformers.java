@@ -184,7 +184,8 @@ public final class IdentifyTextResultTransformers {
         }
 
         return BoundedKeyValue.builder()
-                .keyValuePair(keyBuilder.toString(), valueBuilder.toString())
+                .keyValuePair(keyBuilder.toString().trim(),
+                        valueBuilder.toString().trim())
                 .confidence(block.getConfidence())
                 .box(box)
                 .polygon(polygon)
@@ -209,7 +210,7 @@ public final class IdentifyTextResultTransformers {
         }
 
         return Cell.builder()
-                .text(wordsBuilder.toString())
+                .text(wordsBuilder.toString().trim())
                 .confidence(block.getConfidence())
                 .box(box)
                 .polygon(polygon)

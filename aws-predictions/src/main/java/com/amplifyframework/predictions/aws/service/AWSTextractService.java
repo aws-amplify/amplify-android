@@ -145,30 +145,40 @@ final class AWSTextractService {
         List<Block> keyValueBlocks = new ArrayList<>();
         Map<String, Block> blockMap = new HashMap<>();
         for (Block block : blocks) {
+            // This is the map that will be used for traversing the graph.
+            // Each block can contain "relationships", which point to other blocks by ID.
             String id = block.getId();
+            blockMap.put(id, block);
+
             String detectedText = block.getText();
             Geometry geometry = block.getGeometry();
             RectF box = IdentifyTextResultTransformers.fromBoundingBox(geometry.getBoundingBox());
             Polygon polygon = IdentifyTextResultTransformers.fromPoints(geometry.getPolygon());
             int page = block.getPage() != null ? block.getPage() : 0;
 
-            IdentifiedText text = IdentifiedText.builder()
-                    .text(detectedText)
-                    .confidence(block.getConfidence())
-                    .box(box)
-                    .polygon(polygon)
-                    .page(page)
-                    .build();
-
             BlockType type = BlockType.fromValue(block.getBlockType());
             switch (type) {
                 case LINE:
+                    IdentifiedText line = IdentifiedText.builder()
+                        .text(detectedText)
+                        .confidence(block.getConfidence())
+                        .box(box)
+                        .polygon(polygon)
+                        .page(page)
+                        .build();
                     rawLineText.add(detectedText);
-                    lines.add(text);
+                    lines.add(line);
                     continue;
                 case WORD:
+                    IdentifiedText word = IdentifiedText.builder()
+                            .text(detectedText)
+                            .confidence(block.getConfidence())
+                            .box(box)
+                            .polygon(polygon)
+                            .page(page)
+                            .build();
                     fullTextBuilder.append(detectedText).append(" ");
-                    words.add(text);
+                    words.add(word);
                     continue;
                 case SELECTION_ELEMENT:
                     SelectionStatus status = SelectionStatus.fromValue(block.getSelectionStatus());
@@ -188,9 +198,6 @@ final class AWSTextractService {
                     continue;
                 default:
             }
-            // This is the map that will be used for traversing the graph.
-            // Each block can contain "relationships", which point to other blocks by ID.
-            blockMap.put(id, block);
         }
 
         for (Block tableBlock : tableBlocks) {
@@ -208,7 +215,7 @@ final class AWSTextractService {
         }
 
         return IdentifyDocumentTextResult.builder()
-                .fullText(fullTextBuilder.toString())
+                .fullText(fullTextBuilder.toString().trim())
                 .rawLineText(rawLineText)
                 .lines(lines)
                 .words(words)
