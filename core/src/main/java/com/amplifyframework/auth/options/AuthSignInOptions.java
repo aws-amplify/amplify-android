@@ -24,14 +24,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public final class AuthSignInOptions {
+public class AuthSignInOptions {
     private final Map<String, String> validationData;
 
     /**
      * Advanced options for signing in.
      * @param validationData A map of custom key/values to be sent as part of the sign in process
      */
-    private AuthSignInOptions(Map<String, String> validationData) {
+    protected AuthSignInOptions(Map<String, String> validationData) {
         this.validationData = validationData;
     }
 
@@ -44,6 +44,10 @@ public final class AuthSignInOptions {
         return validationData;
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the hash.
+     * @return Hash code of this object
+     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
@@ -51,6 +55,10 @@ public final class AuthSignInOptions {
         );
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the comparison.
+     * @return True if the two objects are equal, false otherwise
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -63,6 +71,10 @@ public final class AuthSignInOptions {
         }
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the output string.
+     * @return A string representation of the object
+     */
     @Override
     public String toString() {
         return "AuthSignInOptions{" +

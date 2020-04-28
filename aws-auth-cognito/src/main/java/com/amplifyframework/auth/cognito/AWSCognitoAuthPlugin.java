@@ -29,6 +29,8 @@ import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthSignInState;
 import com.amplifyframework.auth.AuthUser;
+import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -55,6 +57,7 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTPar
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -145,11 +148,24 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull final Consumer<AuthSignUpResult> onSuccess,
             @NonNull final Consumer<AuthException> onException
     ) {
+        Map<String, String> userAttributes = new HashMap<>();
+        Map<String, String> validationData = new HashMap<>();
+
+        if (options.getUserAttributes() != null) {
+            for (AuthUserAttribute attribute : options.getUserAttributes()) {
+                userAttributes.put(attribute.getKey().getKeyString(), attribute.getValue());
+            }
+        }
+
+        if (options instanceof AWSCognitoAuthSignUpOptions) {
+            validationData = ((AWSCognitoAuthSignUpOptions) options).getValidationData();
+        }
+
         AWSMobileClient.getInstance().signUp(
             username,
             password,
-            options.getUserAttributes(),
-            options.getValidationData(),
+            userAttributes,
+            validationData,
             new Callback<SignUpResult>() {
                 @Override
                 public void onResult(SignUpResult result) {

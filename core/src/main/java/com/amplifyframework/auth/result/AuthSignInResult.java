@@ -20,7 +20,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthSignInState;
 
-public class AuthSignInResult {
+public final class AuthSignInResult {
     private final AuthSignInState signInState;
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 

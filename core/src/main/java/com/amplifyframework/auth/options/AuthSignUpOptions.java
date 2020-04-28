@@ -18,27 +18,27 @@ package com.amplifyframework.auth.options;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.util.Immutable;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
-public final class AuthSignUpOptions {
-    private final Map<String, String> userAttributes;
-    private final Map<String, String> validationData;
+public class AuthSignUpOptions {
+    private final List<AuthUserAttribute> userAttributes;
 
     /**
      * Advanced options for signing in.
      * @param userAttributes Additional user attributes which should be associated with this user on registration
-     * @param validationData A map of custom key/values to be sent as part of the sign up process
      */
-    private AuthSignUpOptions(
-            Map<String, String> userAttributes,
-            Map<String, String> validationData
+    protected AuthSignUpOptions(
+            List<AuthUserAttribute> userAttributes
     ) {
         this.userAttributes = userAttributes;
-        this.validationData = validationData;
     }
 
     /**
@@ -46,17 +46,8 @@ public final class AuthSignUpOptions {
      * @return additional user attributes which should be associated with this user on registration
      */
     @NonNull
-    public Map<String, String> getUserAttributes() {
+    public List<AuthUserAttribute> getUserAttributes() {
         return userAttributes;
-    }
-
-    /**
-     * Get a map of custom key/values to be sent as part of the sign up process.
-     * @return a map of custom key/values to be sent as part of the sign up process
-     */
-    @NonNull
-    public Map<String, String> getValidationData() {
-        return validationData;
     }
 
     @NonNull
@@ -64,14 +55,21 @@ public final class AuthSignUpOptions {
         return new Builder();
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the hash.
+     * @return Hash code of this object
+     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getUserAttributes(),
-                getValidationData()
+                getUserAttributes()
         );
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the comparison.
+     * @return True if the two objects are equal, false otherwise
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -80,47 +78,39 @@ public final class AuthSignUpOptions {
             return false;
         } else {
             AuthSignUpOptions authSignUpOptions = (AuthSignUpOptions) obj;
-            return ObjectsCompat.equals(getValidationData(), authSignUpOptions.getValidationData()) &&
-                    ObjectsCompat.equals(getUserAttributes(), authSignUpOptions.getUserAttributes());
+            return ObjectsCompat.equals(getUserAttributes(), authSignUpOptions.getUserAttributes());
         }
     }
 
+    /**
+     * When overriding, be sure to include the parent properties in the output string.
+     * @return A string representation of the object
+     */
     @Override
     public String toString() {
         return "AuthSignUpOptions{" +
                 "userAttributes=" + userAttributes +
-                ", validationData=" + validationData +
                 '}';
     }
 
     public static final class Builder {
-        private Map<String, String> userAttributes;
-        private Map<String, String> validationData;
+        private List<AuthUserAttribute> userAttributes;
 
         public Builder() {
-            this.userAttributes = new HashMap<>();
-            this.validationData = new HashMap<>();
+            this.userAttributes = new ArrayList<>();
         }
 
         @NonNull
-        public Builder userAttributes(@NonNull Map<String, String> userAttributes) {
+        public Builder userAttributes(@NonNull List<AuthUserAttribute> userAttributes) {
             Objects.requireNonNull(userAttributes);
             this.userAttributes.clear();
-            this.userAttributes.putAll(userAttributes);
-            return this;
-        }
-
-        @NonNull
-        public Builder validationData(@NonNull Map<String, String> validationData) {
-            Objects.requireNonNull(validationData);
-            this.validationData.clear();
-            this.validationData.putAll(validationData);
+            this.userAttributes.addAll(userAttributes);
             return this;
         }
 
         @NonNull
         public AuthSignUpOptions build() {
-            return new AuthSignUpOptions(Immutable.of(userAttributes), Immutable.of(validationData));
+            return new AuthSignUpOptions(Immutable.of(userAttributes));
         }
     }
 }
