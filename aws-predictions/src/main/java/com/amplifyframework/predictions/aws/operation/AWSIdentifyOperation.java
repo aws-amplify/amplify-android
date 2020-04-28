@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.aws.request.AWSRekognitionRequest;
+import com.amplifyframework.predictions.aws.request.AWSImageIdentifyRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LabelType;
@@ -27,11 +27,14 @@ import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.result.IdentifyResult;
 
+import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.textract.model.Document;
+
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 public final class AWSIdentifyOperation
-        extends IdentifyOperation<AWSRekognitionRequest> {
+        extends IdentifyOperation<AWSImageIdentifyRequest> {
     private final AWSPredictionsService predictionsService;
     private final ExecutorService executorService;
     private final Consumer<IdentifyResult> onSuccess;
@@ -50,7 +53,7 @@ public final class AWSIdentifyOperation
             @NonNull AWSPredictionsService predictionsService,
             @NonNull ExecutorService executorService,
             @NonNull IdentifyAction actionType,
-            @NonNull AWSRekognitionRequest request,
+            @NonNull AWSImageIdentifyRequest request,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -81,17 +84,21 @@ public final class AWSIdentifyOperation
     }
 
     private void startCelebritiesDetection() {
-        executorService.execute(() ->
+        executorService.execute(() -> {
+            Image image = new Image()
+                    .withBytes(getRequest().getBuffer());
             predictionsService.recognizeCelebrities(
-                    getRequest().getImage(),
+                    image,
                     onSuccess,
                     onError
-            )
-        );
+            );
+        });
     }
 
     private void startLabelsDetection() {
         executorService.execute(() -> {
+            Image image = new Image()
+                    .withBytes(getRequest().getBuffer());
             final LabelType labelType;
             try {
                 labelType = (LabelType) getIdentifyAction();
@@ -105,7 +112,7 @@ public final class AWSIdentifyOperation
             }
             predictionsService.detectLabels(
                     labelType,
-                    getRequest().getImage(),
+                    image,
                     onSuccess,
                     onError
             );
@@ -134,8 +141,10 @@ public final class AWSIdentifyOperation
 
             switch (textFormatType) {
                 case PLAIN:
+                    Image image = new Image()
+                            .withBytes(getRequest().getBuffer());
                     predictionsService.detectPlainText(
-                            getRequest().getImage(),
+                            image,
                             onSuccess,
                             onError
                     );
@@ -143,6 +152,14 @@ public final class AWSIdentifyOperation
                 case FORM:
                 case TABLE:
                 case ALL:
+                    Document document = new Document()
+                            .withBytes(getRequest().getBuffer());
+                    predictionsService.detectDocumentText(
+                            textFormatType,
+                            document,
+                            onSuccess,
+                            onError);
+                    return;
                 default:
             }
         });

@@ -26,7 +26,7 @@ import com.amplifyframework.predictions.aws.operation.AWSIdentifyOperation;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
 import com.amplifyframework.predictions.aws.operation.AWSTranslateTextOperation;
 import com.amplifyframework.predictions.aws.request.AWSComprehendRequest;
-import com.amplifyframework.predictions.aws.request.AWSRekognitionRequest;
+import com.amplifyframework.predictions.aws.request.AWSImageIdentifyRequest;
 import com.amplifyframework.predictions.aws.request.AWSTranslateRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.models.IdentifyAction;
@@ -169,8 +169,8 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        // Create identify request for AWS Rekognition
-        AWSRekognitionRequest request = AWSRekognitionRequest.fromBitmap(image);
+        // Create identify request for AWS Rekognition/Textract
+        AWSImageIdentifyRequest request = AWSImageIdentifyRequest.fromBitmap(image);
 
         AWSIdentifyOperation operation = new AWSIdentifyOperation(
                 predictionsService,

@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.aws.adapter;
+package com.amplifyframework.predictions.aws.request;
 
 import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
@@ -23,25 +23,38 @@ import java.nio.ByteBuffer;
 import java.util.Objects;
 
 /**
- * Utility class to extract Android's {@link Bitmap} data
- * to be sent to AWS services as input.
+ * Simple request instance for image identification operation.
  */
-public final class BitmapAdapter {
+public final class AWSImageIdentifyRequest {
 
     private static final int COMPRESS_QUALITY_PERCENT = 100;
 
-    private BitmapAdapter() {}
+    private final ByteBuffer buffer;
+
+    private AWSImageIdentifyRequest(ByteBuffer buffer) {
+        this.buffer = buffer;
+    }
 
     /**
-     * Compresses given image bitmap to JPEG format and then
-     * writes the byte content to a {@link ByteBuffer}.
-     * @param image the input image bitmap
-     * @return the image byte content
+     * Constructs an instance of {@link AWSImageIdentifyRequest}.
+     * @param image the input image to analyze
+     * @return a request for Amazon Rekognition and Amazon Textract services
      */
-    public static ByteBuffer fromBitmap(@NonNull Bitmap image) {
+    @NonNull
+    public static AWSImageIdentifyRequest fromBitmap(@NonNull Bitmap image) {
         Objects.requireNonNull(image);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, COMPRESS_QUALITY_PERCENT, stream);
-        return ByteBuffer.wrap(stream.toByteArray());
+        ByteBuffer buffer = ByteBuffer.wrap(stream.toByteArray());
+        return new AWSImageIdentifyRequest(buffer);
+    }
+
+    /**
+     * Gets the byte data of input image.
+     * @return the byte buffer of image
+     */
+    @NonNull
+    public ByteBuffer getBuffer() {
+        return buffer;
     }
 }

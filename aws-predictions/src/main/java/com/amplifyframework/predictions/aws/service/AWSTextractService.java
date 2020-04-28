@@ -27,6 +27,7 @@ import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
+import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.result.IdentifyDocumentTextResult;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.util.UserAgent;
@@ -43,6 +44,7 @@ import com.amazonaws.services.textract.model.BlockType;
 import com.amazonaws.services.textract.model.DetectDocumentTextRequest;
 import com.amazonaws.services.textract.model.DetectDocumentTextResult;
 import com.amazonaws.services.textract.model.Document;
+import com.amazonaws.services.textract.model.FeatureType;
 import com.amazonaws.services.textract.model.Geometry;
 import com.amazonaws.services.textract.model.SelectionStatus;
 
@@ -71,12 +73,21 @@ final class AWSTextractService {
     }
 
     void detectDocumentText(
+            @NonNull TextFormatType type,
             @NonNull Document document,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
+        List<String> features = new ArrayList<>();
+        if (TextFormatType.FORM.equals(type) || TextFormatType.ALL.equals(type)) {
+            features.add(FeatureType.FORMS.toString());
+        }
+        if (TextFormatType.TABLE.equals(type) || TextFormatType.ALL.equals(type)) {
+            features.add(FeatureType.TABLES.toString());
+        }
+
         try {
-            onSuccess.accept(detectDocumentText(document));
+            onSuccess.accept(analyzeDocument(document, features));
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }

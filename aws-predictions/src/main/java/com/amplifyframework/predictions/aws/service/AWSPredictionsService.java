@@ -22,6 +22,7 @@ import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
@@ -120,16 +121,18 @@ public final class AWSPredictionsService {
 
     /**
      * Delegate to {@link AWSTextractService} to detect document text.
+     * @param type the type of text format to detect
      * @param document the Textract input document
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectDocumentText(
+            @NonNull TextFormatType type,
             @NonNull Document document,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        textractService.detectDocumentText(document, onSuccess, onError);
+        textractService.detectDocumentText(type, document, onSuccess, onError);
     }
 
     /**
