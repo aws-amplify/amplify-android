@@ -66,7 +66,6 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final String COGNITO_USER_ID_ATTRIBUTE = "sub";
     private static final String MOBILE_CLIENT_TOKEN_KEY = "token";
     private String userId;
-    private boolean categoryInitialized = false;
 
     @NonNull
     @Override
