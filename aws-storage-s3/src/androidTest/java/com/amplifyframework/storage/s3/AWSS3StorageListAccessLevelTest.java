@@ -242,7 +242,7 @@ public final class AWSS3StorageListAccessLevelTest {
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PUBLIC)
                 .build();
-        storage.uploadFile(uploadKey, uploadPath, options);
+        storage.uploadFile(uploadKey, uploadFile, options);
 
         // Upload as user one
         mobileClient.signOut();
@@ -250,11 +250,11 @@ public final class AWSS3StorageListAccessLevelTest {
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
-        storage.uploadFile(uploadKey, uploadPath, options);
+        storage.uploadFile(uploadKey, uploadFile, options);
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .build();
-        storage.uploadFile(uploadKey, uploadPath, options);
+        storage.uploadFile(uploadKey, uploadFile, options);
 
         // Upload as user two
         mobileClient.signOut();
@@ -262,10 +262,10 @@ public final class AWSS3StorageListAccessLevelTest {
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PROTECTED)
                 .build();
-        storage.uploadFile(uploadKey, uploadPath, options);
+        storage.uploadFile(uploadKey, uploadFile, options);
         options = StorageUploadFileOptions.builder()
                 .accessLevel(StorageAccessLevel.PRIVATE)
                 .build();
-        storage.uploadFile(uploadKey, uploadPath, options);
+        storage.uploadFile(uploadKey, uploadFile, options);
     }
 }

@@ -30,8 +30,8 @@ public final class Syntax extends TextFeature<SpeechType> {
 
     @Override
     @NonNull
-    public String getType() {
-        return FeatureType.SYNTAX.getFeatureName();
+    public String getTypeAlias() {
+        return FeatureType.SYNTAX.getAlias();
     }
 
     /**

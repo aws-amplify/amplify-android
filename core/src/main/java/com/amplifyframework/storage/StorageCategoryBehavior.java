@@ -34,6 +34,8 @@ import com.amplifyframework.storage.result.StorageListResult;
 import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 
+import java.io.File;
+
 /**
  * Defines the behavior of the Storage category that clients will use.
  */
@@ -87,7 +89,7 @@ public interface StorageCategoryBehavior {
     @NonNull
     StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
 
@@ -108,7 +110,7 @@ public interface StorageCategoryBehavior {
     @NonNull
     StorageDownloadFileOperation<?> downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
@@ -117,7 +119,7 @@ public interface StorageCategoryBehavior {
      * Upload local file on given path to storage.
      * Register consumers to obtain the results of the upload.
      * @param key the unique identifier of the object in storage
-     * @param local the path to a local file
+     * @param local the local file
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
      * @return an operation object that provides notifications and
@@ -126,7 +128,7 @@ public interface StorageCategoryBehavior {
     @NonNull
     StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError);
 
@@ -135,7 +137,7 @@ public interface StorageCategoryBehavior {
      * Specify options such as the access level the file should have.
      * Register consumers to observe results of upload request.
      * @param key the unique identifier of the object in storage
-     * @param local the path to a local file
+     * @param local the local file
      * @param options parameters specific to plugin behavior
      * @param onSuccess Called if operation completed successfully and furnishes a result
      * @param onError Called if an error occurs during operation
@@ -145,7 +147,7 @@ public interface StorageCategoryBehavior {
     @NonNull
     StorageUploadFileOperation<?> uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageUploadFileOptions options,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError);

@@ -133,7 +133,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelProvider userModelsProvider,
             ModelProvider systemModelsProvider) {
         this.modelSchemaRegistry = modelSchemaRegistry;
-        this.modelsProvider = CompoundModelProvider.of(userModelsProvider, systemModelsProvider);
+        this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();

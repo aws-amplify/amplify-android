@@ -31,6 +31,7 @@ import com.amplifyframework.storage.result.StorageRemoveResult;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
 import com.amplifyframework.testutils.Await;
 
+import java.io.File;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -51,6 +52,7 @@ public final class SynchronousStorage {
     /**
      * Creates a synchronous storage wrapper which delegates calls to the provided storage
      * category behavior.
+     *
      * @param asyncDelegate Performs the actual storage operations
      * @return A synchronous storage wrapper
      */
@@ -62,6 +64,7 @@ public final class SynchronousStorage {
 
     /**
      * Creates a synchronous storage wrapper which delegates to the {@link Amplify#Storage} facade.
+     *
      * @return A synchronous storage wrapper
      */
     @NonNull
@@ -71,8 +74,9 @@ public final class SynchronousStorage {
 
     /**
      * Download a file synchronously and return the result of operation.
-     * @param key Key to uniquely identify the file
-     * @param local Path to save downloaded file to
+     *
+     * @param key     Key to uniquely identify the file
+     * @param local   File to save downloaded object to
      * @param options Download options
      * @return Download operation result containing downloaded file
      * @throws StorageException if download fails or times out
@@ -80,7 +84,7 @@ public final class SynchronousStorage {
     @NonNull
     public StorageDownloadFileResult downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageDownloadFileOptions options
     ) throws StorageException {
         return downloadFile(key, local, options, STORAGE_OPERATION_TIMEOUT_MS);
@@ -88,9 +92,10 @@ public final class SynchronousStorage {
 
     /**
      * Download a file synchronously and return the result of operation.
-     * @param key Key to uniquely identify the file
-     * @param local Path to save downloaded file to
-     * @param options Download options
+     *
+     * @param key       Key to uniquely identify the file
+     * @param local     File to save downloaded object to
+     * @param options   Download options
      * @param timeoutMs Custom time-out duration in milliseconds
      * @return Download operation result containing downloaded file
      * @throws StorageException if download fails or times out
@@ -98,7 +103,7 @@ public final class SynchronousStorage {
     @NonNull
     public StorageDownloadFileResult downloadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageDownloadFileOptions options,
             long timeoutMs
     ) throws StorageException {
@@ -109,8 +114,9 @@ public final class SynchronousStorage {
 
     /**
      * Upload a file synchronously and return the result of operation.
-     * @param key Key to uniquely identify the file
-     * @param local Path of the file being uploaded
+     *
+     * @param key     Key to uniquely identify the file
+     * @param local   File to upload
      * @param options Upload options
      * @return Upload operation result
      * @throws StorageException if upload fails or times out
@@ -118,7 +124,7 @@ public final class SynchronousStorage {
     @NonNull
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageUploadFileOptions options
     ) throws StorageException {
         return uploadFile(key, local, options, STORAGE_OPERATION_TIMEOUT_MS);
@@ -126,9 +132,10 @@ public final class SynchronousStorage {
 
     /**
      * Upload a file synchronously and return the result of operation.
-     * @param key Key to uniquely identify the file
-     * @param local Path of the file being uploaded
-     * @param options Upload options
+     *
+     * @param key       Key to uniquely identify the file
+     * @param local     File to upload
+     * @param options   Upload options
      * @param timeoutMs Custom time-out duration in milliseconds
      * @return Upload operation result
      * @throws StorageException if upload fails or times out
@@ -136,7 +143,7 @@ public final class SynchronousStorage {
     @NonNull
     public StorageUploadFileResult uploadFile(
             @NonNull String key,
-            @NonNull String local,
+            @NonNull File local,
             @NonNull StorageUploadFileOptions options,
             long timeoutMs
     ) throws StorageException {
@@ -147,7 +154,8 @@ public final class SynchronousStorage {
 
     /**
      * Remove a file from S3 bucket synchronously.
-     * @param key Key to uniquely identify the file
+     *
+     * @param key     Key to uniquely identify the file
      * @param options Remove options
      * @return Remove operation result containing name of the removed file
      * @throws StorageException if removal fails or times out
@@ -162,8 +170,9 @@ public final class SynchronousStorage {
 
     /**
      * Remove a file from S3 bucket synchronously.
-     * @param key Key to uniquely identify the file
-     * @param options Remove options
+     *
+     * @param key       Key to uniquely identify the file
+     * @param options   Remove options
      * @param timeoutMs Custom time-out duration in milliseconds
      * @return Remove operation result containing name of the removed file
      * @throws StorageException if removal fails or times out
@@ -181,7 +190,8 @@ public final class SynchronousStorage {
 
     /**
      * List the files in S3 bucket synchronously.
-     * @param path Path inside S3 bucket to list files from
+     *
+     * @param path    Path inside S3 bucket to list files from
      * @param options List options
      * @return List operation result containing list of stored objects
      * @throws StorageException if list fails or times out
@@ -196,8 +206,9 @@ public final class SynchronousStorage {
 
     /**
      * List the files in S3 bucket synchronously.
-     * @param path Path inside S3 bucket to list files from
-     * @param options List options
+     *
+     * @param path      Path inside S3 bucket to list files from
+     * @param options   List options
      * @param timeoutMs Custom time-out duration in milliseconds
      * @return List operation result containing list of stored objects
      * @throws StorageException if list fails or times out

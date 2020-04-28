@@ -15,16 +15,21 @@
 
 package com.amplifyframework.predictions;
 
+import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
+import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
+import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
@@ -37,6 +42,29 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.PREDICTIONS;
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().identify(actionType, image, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().identify(actionType, image, options, onSuccess, onError);
     }
 
     @NonNull

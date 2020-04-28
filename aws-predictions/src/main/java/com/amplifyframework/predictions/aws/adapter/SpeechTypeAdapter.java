@@ -19,7 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.SpeechType;
 
-import java.util.Locale;
+import com.amazonaws.services.comprehend.model.PartOfSpeechTagType;
 
 /**
  * Utility to convert AWS Comprehend's part of speech type
@@ -37,40 +37,41 @@ public final class SpeechTypeAdapter {
      */
     @NonNull
     public static SpeechType fromComprehend(@NonNull String tag) {
-        switch (tag.toLowerCase(Locale.US)) {
-            case "adj":
+        PartOfSpeechTagType type = PartOfSpeechTagType.fromValue(tag);
+        switch (type) {
+            case ADJ:
                 return SpeechType.ADJECTIVE;
-            case "adp":
+            case ADP:
                 return SpeechType.ADPOSITION;
-            case "adv":
+            case ADV:
                 return SpeechType.ADVERB;
-            case "aux":
+            case AUX:
                 return SpeechType.AUXILIARY;
-            case "cconj":
+            case CCONJ:
                 return SpeechType.COORDINATING_CONJUNCTION;
-            case "det":
+            case DET:
                 return SpeechType.DETERMINER;
-            case "intj":
+            case INTJ:
                 return SpeechType.INTERJECTION;
-            case "noun":
+            case NOUN:
                 return SpeechType.NOUN;
-            case "num":
+            case NUM:
                 return SpeechType.NUMERAL;
-            case "part":
+            case PART:
                 return SpeechType.PARTICLE;
-            case "pron":
+            case PRON:
                 return SpeechType.PRONOUN;
-            case "propn":
+            case PROPN:
                 return SpeechType.PROPER_NOUN;
-            case "punct":
+            case PUNCT:
                 return SpeechType.PUNCTUATION;
-            case "sconj":
+            case SCONJ:
                 return SpeechType.SUBORDINATING_CONJUNCTION;
-            case "sym":
+            case SYM:
                 return SpeechType.SYMBOL;
-            case "verb":
+            case VERB:
                 return SpeechType.VERB;
-            case "o":
+            case O:
             default:
                 return SpeechType.UNKNOWN;
         }

@@ -27,6 +27,8 @@ import com.amplifyframework.util.Time;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -43,6 +45,7 @@ import static org.junit.Assert.assertTrue;
  * At the moment, Merger just applies changes into the local store, without
  * any consideration to the {@link MutationOutbox}. TODO: fix this.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class MergerTest {
     private static final long REASONABLE_WAIT_TIME = TimeUnit.SECONDS.toMillis(2);
 

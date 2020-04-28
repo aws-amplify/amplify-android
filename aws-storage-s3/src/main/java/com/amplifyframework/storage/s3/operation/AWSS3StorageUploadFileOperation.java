@@ -83,7 +83,7 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
         );
 
         // Grab the file to upload...
-        File file = new File(getRequest().getLocal());
+        File file = getRequest().getLocal();
 
         // Set up the metadata
         ObjectMetadata objectMetadata = new ObjectMetadata();

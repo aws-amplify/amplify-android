@@ -29,7 +29,6 @@ import com.amplifyframework.predictions.models.Sentiment;
 import com.amplifyframework.predictions.models.SentimentType;
 import com.amplifyframework.predictions.models.SpeechType;
 import com.amplifyframework.predictions.models.Syntax;
-import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.FeatureAssert;
@@ -78,7 +77,7 @@ public final class AWSPredictionsInterpretTest {
      */
     @Test(expected = PredictionsException.class)
     public void testInterpretFailsForBlankInput() throws Exception {
-        predictions.interpret("", InterpretOptions.defaults());
+        predictions.interpret("");
     }
 
     /**
@@ -88,10 +87,8 @@ public final class AWSPredictionsInterpretTest {
     @Test
     public void testEnglishLanguageDetection() throws Exception {
         // Interpret english text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                Assets.readAsString("sample-text-en.txt"),
-                InterpretOptions.defaults()
-        );
+        final String englishText = Assets.readAsString("sample-text-en.txt");
+        InterpretResult result = predictions.interpret(englishText);
         assertNotNull(result);
 
         // Assert detected language is English
@@ -106,10 +103,8 @@ public final class AWSPredictionsInterpretTest {
     @Test
     public void testFrenchLanguageDetection() throws Exception {
         // Interpret french text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                Assets.readAsString("sample-text-fr.txt"),
-                InterpretOptions.defaults()
-        );
+        final String frenchText = Assets.readAsString("sample-text-fr.txt");
+        InterpretResult result = predictions.interpret(frenchText);
         assertNotNull(result);
 
         // Assert detected language is French
@@ -124,10 +119,8 @@ public final class AWSPredictionsInterpretTest {
     @Test
     public void testPositiveSentimentDetection() throws Exception {
         // Interpret positive text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                Assets.readAsString("positive-review.txt"),
-                InterpretOptions.defaults()
-        );
+        final String positiveReview = Assets.readAsString("positive-review.txt");
+        InterpretResult result = predictions.interpret(positiveReview);
         assertNotNull(result);
 
         // Assert detected sentiment is positive
@@ -142,10 +135,8 @@ public final class AWSPredictionsInterpretTest {
     @Test
     public void testNegativeSentimentDetection() throws Exception {
         // Interpret negative text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                Assets.readAsString("negative-review.txt"),
-                InterpretOptions.defaults()
-        );
+        final String negativeReview = Assets.readAsString("negative-review.txt");
+        InterpretResult result = predictions.interpret(negativeReview);
         assertNotNull(result);
 
         // Assert detected sentiment is negative
@@ -162,10 +153,7 @@ public final class AWSPredictionsInterpretTest {
         final String sampleText = "My mama always said life was like a box of chocolates.";
 
         // Interpret sample text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                sampleText,
-                InterpretOptions.defaults()
-        );
+        InterpretResult result = predictions.interpret(sampleText);
         assertNotNull(result);
 
         // Assert key phrase detection
@@ -188,10 +176,7 @@ public final class AWSPredictionsInterpretTest {
         final String sampleText = "Toto, I've a feeling we're not in Kansas anymore.";
 
         // Interpret sample text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                sampleText,
-                InterpretOptions.defaults()
-        );
+        InterpretResult result = predictions.interpret(sampleText);
         assertNotNull(result);
 
         // Assert entities detection
@@ -212,10 +197,7 @@ public final class AWSPredictionsInterpretTest {
         final String sampleText = "I am inevitable.";
 
         // Interpret sample text and assert non-null result
-        InterpretResult result = predictions.interpret(
-                sampleText,
-                InterpretOptions.defaults()
-        );
+        InterpretResult result = predictions.interpret(sampleText);
         assertNotNull(result);
 
         // Assert syntax detection

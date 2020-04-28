@@ -28,6 +28,7 @@ import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
+import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
@@ -41,6 +42,7 @@ import io.reactivex.Completable;
  */
 @SuppressWarnings("CodeBlock2Expr")
 final class Merger {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final MutationOutbox mutationOutbox;
     private final LocalStorageAdapter localStorageAdapter;
 
@@ -75,7 +77,7 @@ final class Merger {
             // Update the metadata for it
             .andThen(save(metadata))
             // Let the world know that we've done a good thing.
-            .andThen(announceMergeOverHub(modelWithMetadata));
+            .andThen(announceSuccessfulMerge(modelWithMetadata));
     }
 
     /**
@@ -84,12 +86,13 @@ final class Merger {
      * @param <T> Type of model
      * @return A completable operation for the publication.
      */
-    private <T extends Model> Completable announceMergeOverHub(ModelWithMetadata<T> modelWithMetadata) {
-        return Completable.fromAction(() ->
+    private <T extends Model> Completable announceSuccessfulMerge(ModelWithMetadata<T> modelWithMetadata) {
+        return Completable.fromAction(() -> {
             Amplify.Hub.publish(HubChannel.DATASTORE,
                 HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, modelWithMetadata)
-            )
-        );
+            );
+            LOG.info("Remote model update was sync'd down into local storage: " + modelWithMetadata);
+        });
     }
 
     // Delete a model.

@@ -38,6 +38,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.Collections;
 
 import io.reactivex.Single;
@@ -54,7 +55,7 @@ import static org.mockito.Mockito.when;
 public final class RxStorageBindingTest {
     private RxStorageCategoryBehavior rxStorage;
     private StoragePlugin<?> delegate;
-    private String localPath;
+    private File localFile;
     private String remoteKey;
 
     /**
@@ -78,17 +79,18 @@ public final class RxStorageBindingTest {
     /**
      * Creates stable/expected values for a local path and remote key, to be matched
      * against in behavior mocks/verifications.
+     * @throws IOException when a temporary file cannot be created
      */
     @Before
-    public void createRandomRequestParams() {
-        localPath = RandomString.string();
+    public void createRandomRequestParams() throws IOException {
+        localFile = File.createTempFile("random", "data");
         remoteKey = RandomString.string();
     }
 
     /**
-     * When {@link StorageCategoryBehavior#downloadFile(String, String, Consumer, Consumer)}
+     * When {@link StorageCategoryBehavior#downloadFile(String, File, Consumer, Consumer)}
      * invokes its success callback, the {@link StorageDownloadFileResult} should propagate
-     * via the {@link Single} returned by {@link RxStorageCategoryBehavior#downloadFile(String, String)}.
+     * via the {@link Single} returned by {@link RxStorageCategoryBehavior#downloadFile(String, File)}.
      */
     @Test
     public void downloadFileReturnsResult() {
@@ -100,17 +102,17 @@ public final class RxStorageBindingTest {
             return mock(StorageDownloadFileOperation.class);
         })
         .when(delegate)
-            .downloadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
+            .downloadFile(eq(remoteKey), eq(localFile), anyConsumer(), anyConsumer());
 
-        rxStorage.downloadFile(remoteKey, localPath)
+        rxStorage.downloadFile(remoteKey, localFile)
             .test()
             .assertValues(result);
     }
 
     /**
-     * When {@link StorageCategoryBehavior#downloadFile(String, String, Consumer, Consumer)} invokes
+     * When {@link StorageCategoryBehavior#downloadFile(String, File, Consumer, Consumer)} invokes
      * its error callback, the {@link StorageException} is communicated via the {@link Single}
-     * returned by {@link RxStorageCategoryBehavior#downloadFile(String, String)}.
+     * returned by {@link RxStorageCategoryBehavior#downloadFile(String, File)}.
      */
     @Test
     public void downloadFileReturnsError() {
@@ -122,17 +124,17 @@ public final class RxStorageBindingTest {
             return mock(StorageDownloadFileOperation.class);
         })
         .when(delegate)
-            .downloadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
+            .downloadFile(eq(remoteKey), eq(localFile), anyConsumer(), anyConsumer());
 
-        rxStorage.downloadFile(remoteKey, localPath)
+        rxStorage.downloadFile(remoteKey, localFile)
             .test()
             .assertError(downloadError);
     }
 
     /**
-     * When {@link StorageCategoryBehavior#uploadFile(String, String, Consumer, Consumer)} returns
+     * When {@link StorageCategoryBehavior#uploadFile(String, File, Consumer, Consumer)} returns
      * a {@link StorageUploadFileResult}, then the {@link Single} returned by
-     * {@link RxStorageCategoryBehavior#uploadFile(String, String)} should emit that result.
+     * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit that result.
      */
     @Test
     public void uploadFileReturnsResult() {
@@ -144,18 +146,18 @@ public final class RxStorageBindingTest {
             return mock(StorageUploadFileOperation.class);
         })
         .when(delegate)
-            .uploadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
+            .uploadFile(eq(remoteKey), eq(localFile), anyConsumer(), anyConsumer());
 
         rxStorage
-            .uploadFile(remoteKey, localPath)
+            .uploadFile(remoteKey, localFile)
             .test()
             .assertValues(result);
     }
 
     /**
-     * When {@link StorageCategoryBehavior#uploadFile(String, String, Consumer, Consumer)} returns
+     * When {@link StorageCategoryBehavior#uploadFile(String, File, Consumer, Consumer)} returns
      * an {@link StorageException}, then the {@link Single} returned by
-     * {@link RxStorageCategoryBehavior#uploadFile(String, String)} should emit a {@link StorageException}.
+     * {@link RxStorageCategoryBehavior#uploadFile(String, File)} should emit a {@link StorageException}.
      */
     @Test
     public void uploadFileReturnsError() {
@@ -167,10 +169,10 @@ public final class RxStorageBindingTest {
             return mock(StorageUploadFileOperation.class);
         })
         .when(delegate)
-            .uploadFile(eq(remoteKey), eq(localPath), anyConsumer(), anyConsumer());
+            .uploadFile(eq(remoteKey), eq(localFile), anyConsumer(), anyConsumer());
 
         rxStorage
-            .uploadFile(remoteKey, localPath)
+            .uploadFile(remoteKey, localFile)
             .test()
             .assertError(error);
     }
@@ -190,10 +192,10 @@ public final class RxStorageBindingTest {
             return mock(StorageListOperation.class);
         })
         .when(delegate)
-            .list(eq(localPath), anyConsumer(), anyConsumer());
+            .list(eq(remoteKey), anyConsumer(), anyConsumer());
 
         rxStorage
-            .list(localPath)
+            .list(remoteKey)
             .test()
             .assertValues(result);
     }
@@ -213,10 +215,10 @@ public final class RxStorageBindingTest {
             return mock(StorageListOperation.class);
         })
         .when(delegate)
-            .list(eq(localPath), anyConsumer(), anyConsumer());
+            .list(eq(remoteKey), anyConsumer(), anyConsumer());
 
         rxStorage
-            .list(localPath)
+            .list(remoteKey)
             .test()
             .assertError(error);
     }

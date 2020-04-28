@@ -82,7 +82,7 @@ public final class AWSS3StorageDownloadFileOperation
                 getRequest().getKey()
         );
       
-        this.file = new File(getRequest().getLocal());
+        this.file = getRequest().getLocal();
       
         try {
             transferObserver = storageService.downloadToFile(serviceKey, file);
