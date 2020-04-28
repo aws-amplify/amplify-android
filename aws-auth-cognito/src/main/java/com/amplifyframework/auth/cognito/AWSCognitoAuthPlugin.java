@@ -64,7 +64,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final String AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final long SECONDS_BEFORE_TIMEOUT = 10;
     private static final String COGNITO_USER_ID_ATTRIBUTE = "sub";
+    private static final String MOBILE_CLIENT_TOKEN_KEY = "token";
     private String userId;
+    private boolean categoryInitialized = false;
 
     @NonNull
     @Override
@@ -87,12 +89,12 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 @Override
                 public void onResult(UserStateDetails result) {
                     if (UserState.SIGNED_IN.equals(result.getUserState())) {
-                        fetchAndSetUserId(() -> latch.countDown());
+                        userId = getUserIdFromToken(result.getDetails().get(MOBILE_CLIENT_TOKEN_KEY));
                     } else {
                         userId = null;
-                        latch.countDown();
                     }
 
+                    // Set up a listener to asynchronously update the user id if the user state changes in the future
                     AWSMobileClient.getInstance().addUserStateListener(userStateDetails -> {
                         switch (userStateDetails.getUserState()) {
                             case SIGNED_IN:
@@ -102,6 +104,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 userId = null;
                         }
                     });
+
+                    latch.countDown();
                 }
 
                 @Override
@@ -514,15 +518,8 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
             @Override
             public void onResult(Tokens result) {
-                try {
-                    userId = CognitoJWTParser
-                            .getPayload(result.getAccessToken().getTokenString())
-                            .getString(COGNITO_USER_ID_ATTRIBUTE);
-                    onComplete.call();
-                } catch (JSONException error) {
-                    userId = null;
-                    onComplete.call();
-                }
+                userId = getUserIdFromToken(result.getAccessToken().getTokenString());
+                onComplete.call();
             }
 
             @Override
@@ -533,6 +530,16 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                 onComplete.call();
             }
         });
+    }
+
+    private String getUserIdFromToken(String token) {
+        try {
+            return CognitoJWTParser
+                    .getPayload(token)
+                    .getString(COGNITO_USER_ID_ATTRIBUTE);
+        } catch (JSONException error) {
+            return null;
+        }
     }
 
     // Take information from the Cognito specific object and wrap it in the new Amplify object

@@ -19,7 +19,7 @@ import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 
-public class AuthSignUpResult {
+public final class AuthSignUpResult {
     private final boolean userConfirmed;
     private final AuthCodeDeliveryDetails codeDeliveryDetails;
 
