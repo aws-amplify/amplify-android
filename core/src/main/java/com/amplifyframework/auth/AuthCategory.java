@@ -25,6 +25,7 @@ import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
+import com.amplifyframework.auth.result.AuthSocialSignInResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
@@ -121,7 +122,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void signInWithSocial(
             @NonNull AuthProvider provider,
             @NonNull String token,
-            @NonNull Consumer<String> onSuccess,
+            @NonNull Consumer<AuthSocialSignInResult> onSuccess,
             @NonNull Consumer<AmplifyException> onError
     ) {
         getSelectedPlugin().signInWithSocial(provider, token, onSuccess, onError);
@@ -152,6 +153,11 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().confirmForgotPassword(newPassword, confirmationCode, onSuccess, onError);
+    }
+
+    @Override
+    public AuthUser getCurrentUser() {
+        return getSelectedPlugin().getCurrentUser();
     }
 }
 

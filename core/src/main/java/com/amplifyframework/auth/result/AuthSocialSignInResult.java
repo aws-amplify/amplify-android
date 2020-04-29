@@ -17,38 +17,23 @@ package com.amplifyframework.auth.result;
 
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.auth.AuthCodeDeliveryDetails;
-import com.amplifyframework.auth.AuthSignInState;
-
-public final class AuthSignInResult {
-    private final AuthSignInState signInState;
-    private final AuthCodeDeliveryDetails codeDeliveryDetails;
+public class AuthSocialSignInResult {
+    private final boolean isSignedIn;
 
     /**
      * Wraps the result of a sign in operation.
-     * @param signInState The current state of the sign in process
-     * @param codeDeliveryDetails Details about how/whether an MFA code was sent
+     * @param isSignedIn true if the user is now authenticated, false otherwise
      */
-    public AuthSignInResult(AuthSignInState signInState, AuthCodeDeliveryDetails codeDeliveryDetails) {
-        this.signInState = signInState;
-        this.codeDeliveryDetails = codeDeliveryDetails;
+    public AuthSocialSignInResult(boolean isSignedIn) {
+        this.isSignedIn = isSignedIn;
     }
 
     /**
-     * The current state of the sign in process specifying if it is done or what, if any,
-     * additional challenge must be completed in order to finish the sign in operation.
-     * @return the current state of the sign in process
+     * True if the user is now authenticated, false otherwise.
+     * @return true if the user is now signed in, false otherwise
      */
-    public AuthSignInState getSignInState() {
-        return signInState;
-    }
-
-    /**
-     * Details about how/whether an MFA code was sent.
-     * @return Details about how/whether an MFA code was sent
-     */
-    public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
-        return codeDeliveryDetails;
+    public boolean isSignedIn() {
+        return isSignedIn;
     }
 
     /**
@@ -58,8 +43,7 @@ public final class AuthSignInResult {
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getSignInState(),
-                getCodeDeliveryDetails()
+                isSignedIn()
         );
     }
 
@@ -74,9 +58,8 @@ public final class AuthSignInResult {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            AuthSignInResult authSignInResult = (AuthSignInResult) obj;
-            return ObjectsCompat.equals(getSignInState(), authSignInResult.getSignInState()) &&
-                    ObjectsCompat.equals(getCodeDeliveryDetails(), authSignInResult.getCodeDeliveryDetails());
+            AuthSocialSignInResult authSocialSignInResult = (AuthSocialSignInResult) obj;
+            return ObjectsCompat.equals(isSignedIn(), authSocialSignInResult.isSignedIn());
         }
     }
 
@@ -87,8 +70,7 @@ public final class AuthSignInResult {
     @Override
     public String toString() {
         return "AuthSignInResult{" +
-                "signInState=" + signInState +
-                ", codeDeliveryDetails=" + codeDeliveryDetails +
+                "isSignedIn=" + isSignedIn +
                 '}';
     }
 }
