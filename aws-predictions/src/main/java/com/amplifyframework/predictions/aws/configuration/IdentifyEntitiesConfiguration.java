@@ -73,22 +73,21 @@ public final class IdentifyEntitiesConfiguration {
 
         // Optional fields
         int maxEntities;
-        boolean generalEntity;
+        boolean isGeneralEntityDetection;
         String collectionId;
-        String maxEntitiesString;
         try {
-            maxEntitiesString = identifyEntitiesJson.getString("maxEntities");
+            String maxEntitiesString = identifyEntitiesJson.getString("maxEntities");
             collectionId = identifyEntitiesJson.getString("collectionId");
             maxEntities = Integer.parseInt(maxEntitiesString);
-            generalEntity = maxEntities < 1 || maxEntities > MAX_VALID_ENTITIES;
+            isGeneralEntityDetection = maxEntities < 1 || maxEntities > MAX_VALID_ENTITIES;
         } catch (JSONException | IllegalArgumentException exception) {
-            maxEntities = 0;
             collectionId = "";
-            generalEntity = true;
+            maxEntities = 0;
+            isGeneralEntityDetection = true;
         }
 
         return new IdentifyEntitiesConfiguration(maxEntities, collectionId,
-                generalEntity, celebEnabled, networkPolicy);
+                isGeneralEntityDetection, celebEnabled, networkPolicy);
     }
 
     /**
