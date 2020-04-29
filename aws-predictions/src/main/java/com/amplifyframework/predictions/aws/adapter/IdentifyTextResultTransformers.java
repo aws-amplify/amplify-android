@@ -115,17 +115,11 @@ public final class IdentifyTextResultTransformers {
         Set<Integer> rows = new HashSet<>();
         Set<Integer> cols = new HashSet<>();
         // Each TABLE block contains CELL blocks
-        for (Relationship relationship : block.getRelationships()) {
-            for (String cellId : relationship.getIds()) {
-                Block cellBlock = blockMap.get(cellId);
-                if (cellBlock == null) {
-                    continue;
-                }
-                rows.add(cellBlock.getRowIndex() - 1);
-                cols.add(cellBlock.getColumnIndex() - 1);
-                cells.add(processTableCell(cellBlock, blockMap));
-            }
-        }
+        doForEachRelatedBlock(block, blockMap, cellBlock -> {
+            rows.add(cellBlock.getRowIndex() - 1);
+            cols.add(cellBlock.getColumnIndex() - 1);
+            cells.add(processTableCell(cellBlock, blockMap));
+        });
 
         return Table.builder()
                 .cells(cells)
