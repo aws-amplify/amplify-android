@@ -160,12 +160,12 @@ final class AWSTextractService {
             switch (type) {
                 case LINE:
                     IdentifiedText line = IdentifiedText.builder()
-                        .text(detectedText)
-                        .confidence(block.getConfidence())
-                        .box(box)
-                        .polygon(polygon)
-                        .page(page)
-                        .build();
+                            .text(detectedText)
+                            .confidence(block.getConfidence())
+                            .box(box)
+                            .polygon(polygon)
+                            .page(page)
+                            .build();
                     rawLineText.add(detectedText);
                     lines.add(line);
                     continue;

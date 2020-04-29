@@ -20,6 +20,7 @@ import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.models.BoundedKeyValue;
 import com.amplifyframework.predictions.models.Cell;
 import com.amplifyframework.predictions.models.Polygon;
@@ -32,7 +33,7 @@ import com.amazonaws.services.textract.model.BoundingBox;
 import com.amazonaws.services.textract.model.EntityType;
 import com.amazonaws.services.textract.model.Point;
 import com.amazonaws.services.textract.model.Relationship;
-import com.amazonaws.services.textract.model.RelationshipType;
+import com.amazonaws.services.textract.model.SelectionStatus;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Utility class to transform Amazon service-specific
@@ -161,27 +163,17 @@ public final class IdentifyTextResultTransformers {
         Polygon polygon = fromPoints(block.getGeometry().getPolygon());
         StringBuilder keyBuilder = new StringBuilder();
         StringBuilder valueBuilder = new StringBuilder();
-        for (Relationship relationship : block.getRelationships()) {
-            RelationshipType type = RelationshipType.fromValue(relationship.getType());
-            for (String id : relationship.getIds()) {
-                Block relatedBlock = blockMap.get(id);
-                if (relatedBlock == null) {
-                    continue;
-                }
-                String text = relatedBlock.getText();
-                switch (type) {
-                    case CHILD:
-                        // This is the text content of the actual key
-                        keyBuilder.append(text).append(" ");
-                        break;
-                    case VALUE:
-                        // Points to the blocks containing value content
-                        valueBuilder.append(text).append(" ");
-                        break;
-                    default:
-                }
+        doForEachRelatedBlock(block, blockMap, relatedBlock -> {
+            // For key block
+            if (relatedBlock.getText() != null) {
+                keyBuilder.append(relatedBlock.getText()).append(" ");
             }
-        }
+
+            // For value block
+            doForEachRelatedBlock(relatedBlock, blockMap, valueBlock -> {
+                valueBuilder.append(valueBlock.getText()).append(" ");
+            });
+        });
 
         return BoundedKeyValue.builder()
                 .keyValuePair(keyBuilder.toString().trim(),
@@ -196,26 +188,51 @@ public final class IdentifyTextResultTransformers {
         RectF box = fromBoundingBox(block.getGeometry().getBoundingBox());
         Polygon polygon = fromPoints(block.getGeometry().getPolygon());
         StringBuilder wordsBuilder = new StringBuilder();
+        AtomicBoolean isSelected = new AtomicBoolean(false);
 
-        // Each CELL block consists of WORD blocks
-        for (Relationship relationship : block.getRelationships()) {
-            for (String wordId : relationship.getIds()) {
-                Block wordBlock = blockMap.get(wordId);
-                if (wordBlock == null) {
-                    continue;
-                }
-                String text = wordBlock.getText();
+        // Each CELL block consists of WORD and/or SELECTION_ELEMENT blocks
+        doForEachRelatedBlock(block, blockMap, relatedBlock -> {
+            // For WORD block
+            String text = relatedBlock.getText();
+            if (text != null) {
                 wordsBuilder.append(text).append(" ");
             }
-        }
+
+            // For SELECTION_ELEMENT block
+            String selectionStatus = relatedBlock.getSelectionStatus();
+            if (selectionStatus != null) {
+                isSelected.set(SelectionStatus.SELECTED.toString().equals(selectionStatus));
+            }
+        });
 
         return Cell.builder()
                 .text(wordsBuilder.toString().trim())
                 .confidence(block.getConfidence())
                 .box(box)
                 .polygon(polygon)
+                .selected(isSelected.get())
                 .row(block.getRowIndex() - 1)
                 .column(block.getColumnIndex() - 1)
                 .build();
+    }
+
+    private static void doForEachRelatedBlock(
+            Block block,
+            Map<String, Block> blockMap,
+            Consumer<Block> forEach
+    ) {
+        if (block == null || block.getRelationships() == null) {
+            return;
+        }
+
+        for (Relationship relationship : block.getRelationships()) {
+            for (String id : relationship.getIds()) {
+                Block relatedBlock = blockMap.get(id);
+                if (relatedBlock == null) {
+                    continue;
+                }
+                forEach.accept(relatedBlock);
+            }
+        }
     }
 }
