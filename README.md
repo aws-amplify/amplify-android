@@ -44,7 +44,7 @@ Store and retrieve files in the Cloud. We use S3 by default.
 
 ## Platform Support
 
-The Amplify Framework supports Android API level 16 (android 4.1) and above.
+The Amplify Framework supports Android API level 16 (Android 4.1) and above.
 
 ## Using Amplify from Your App
 
