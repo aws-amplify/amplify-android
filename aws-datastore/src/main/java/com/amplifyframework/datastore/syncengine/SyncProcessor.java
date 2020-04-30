@@ -25,7 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -57,7 +57,7 @@ final class SyncProcessor {
     private final SyncTimeRegistry syncTimeRegistry;
     private final AppSync appSync;
     private final Merger merger;
-    private final DataStoreConfiguration dataStoreConfiguration;
+    private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -65,13 +65,13 @@ final class SyncProcessor {
             SyncTimeRegistry syncTimeRegistry,
             AppSync appSync,
             Merger merger,
-            DataStoreConfiguration dataStoreConfiguration) {
+            DataStoreConfigurationProvider dataStoreConfigurationProvider) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.syncTimeRegistry = Objects.requireNonNull(syncTimeRegistry);
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
-        this.dataStoreConfiguration = dataStoreConfiguration;
+        this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
     }
 
     /**
@@ -122,13 +122,14 @@ final class SyncProcessor {
      * @param lastSyncTime The time of a last successful sync.
      * @return The input, or {@link SyncTime#never()}, if the last sync time is "too old."
      */
-    private SyncTime filterOutOldSyncTimes(SyncTime lastSyncTime) {
-        if (!lastSyncTime.exists() || dataStoreConfiguration == null) {
+    private SyncTime filterOutOldSyncTimes(SyncTime lastSyncTime) throws DataStoreException {
+        if (!lastSyncTime.exists()) {
             return SyncTime.never();
         }
 
         // "If (now - last sync time) is within the base sync interval"
-        if (Time.now() - lastSyncTime.toLong() <= dataStoreConfiguration.getSyncIntervalMs()) {
+        if (Time.now() - lastSyncTime.toLong() <=
+            dataStoreConfigurationProvider.getConfiguration().getSyncIntervalMs()) {
             // Pass through the last sync time, so that it can be used to compute delta sync.
             return lastSyncTime;
         }
@@ -215,13 +216,13 @@ final class SyncProcessor {
      * Builds instances of {@link SyncProcessor}s.
      */
     public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
-            SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationStep, BuildStep {
+            SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep, BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
-        private DataStoreConfiguration dataStoreConfiguration;
+        private DataStoreConfigurationProvider dataStoreConfigurationProvider;
 
         @NonNull
         @Override
@@ -253,15 +254,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public DataStoreConfigurationStep merger(@NonNull Merger merger) {
+        public DataStoreConfigurationProviderStep merger(@NonNull Merger merger) {
             this.merger = Objects.requireNonNull(merger);
             return Builder.this;
         }
 
         @NonNull
         @Override
-        public BuildStep dataStoreConfiguration(DataStoreConfiguration dataStoreConfiguration) {
-            this.dataStoreConfiguration = dataStoreConfiguration;
+        public BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+            this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
         }
 
@@ -275,7 +276,7 @@ final class SyncProcessor {
                 syncTimeRegistry,
                 appSync,
                 merger,
-                dataStoreConfiguration
+                dataStoreConfigurationProvider
             );
         }
     }
@@ -302,12 +303,12 @@ final class SyncProcessor {
 
     interface MergerStep {
         @NonNull
-        DataStoreConfigurationStep merger(@NonNull Merger merger);
+        DataStoreConfigurationProviderStep merger(@NonNull Merger merger);
     }
 
-    interface DataStoreConfigurationStep {
+    interface DataStoreConfigurationProviderStep {
         @NonNull
-        BuildStep dataStoreConfiguration(DataStoreConfiguration dataStoreConfiguration);
+        BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
     }
 
     interface BuildStep {

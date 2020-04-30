@@ -35,7 +35,7 @@ import static org.junit.Assert.assertTrue;
 public final class DataStoreConfigurationTest {
 
     @Test
-    public void testDefaultConfiguration() {
+    public void testDefaultConfiguration() throws DataStoreException {
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.defaults();
         assertEquals(TimeUnit.MINUTES.toMillis(DataStoreConfiguration.DEFAULT_SYNC_INTERVAL_MINUTES),
             dataStoreConfiguration.getSyncIntervalMs().longValue());

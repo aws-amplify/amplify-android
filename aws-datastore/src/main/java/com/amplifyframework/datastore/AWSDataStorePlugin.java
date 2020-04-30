@@ -91,7 +91,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             modelSchemaRegistry,
             sqliteStorageAdapter,
             AppSyncClient.via(api),
-            pluginConfiguration
+            () -> pluginConfiguration
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }

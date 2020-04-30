@@ -30,7 +30,7 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
- * A user-provided configuration for the DataStore.
+ * Configuration options for {@link AWSDataStorePlugin}.
  */
 public final class DataStoreConfiguration {
     static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
@@ -45,6 +45,7 @@ public final class DataStoreConfiguration {
     private final DataStoreConflictHandler dataStoreConflictHandler;
     private final Integer syncMaxRecords;
     private final Integer syncPageSize;
+    private Long syncIntervalInMinutes;
     private Long syncIntervalMs;
 
     private DataStoreConfiguration(
@@ -58,6 +59,7 @@ public final class DataStoreConfiguration {
         this.syncMaxRecords = syncMaxRecords;
         this.syncPageSize = syncPageSize;
         if (syncIntervalInMinutes != null) {
+            this.syncIntervalInMinutes = syncIntervalInMinutes;
             this.syncIntervalMs = TimeUnit.MINUTES.toMillis(syncIntervalInMinutes);
         }
     }
@@ -73,7 +75,7 @@ public final class DataStoreConfiguration {
 
     /**
      * Begin building a new instance of {@link DataStoreConfiguration} by reading DataStore
-     * settings from the config file.
+     * settings from the config file and an optional set of user-provided overrides.
      * @param pluginJson DataStore plugin configuration from amplicationconfiguration.json
      * @param userProvidedConfiguration An instance of {@DataStoreConfiguration} with settings specified by the user
      *                                  which will be used as overrides.
@@ -82,19 +84,9 @@ public final class DataStoreConfiguration {
      * an invalid configuration value
      */
     @NonNull
-    public static Builder builder(@NonNull JSONObject pluginJson,
-                                  @Nullable DataStoreConfiguration userProvidedConfiguration)
-        throws DataStoreException {
-        Builder builder = builder(pluginJson);
-        if (userProvidedConfiguration != null) {
-            builder.syncPageSize(userProvidedConfiguration.getSyncPageSize())
-                .syncMaxRecords(userProvidedConfiguration.getSyncMaxRecords())
-                .syncIntervalInMinutes(
-                    TimeUnit.MILLISECONDS.toMinutes(userProvidedConfiguration.getSyncIntervalMs()))
-                .dataStoreErrorHandler(userProvidedConfiguration.getDataStoreErrorHandler())
-                .dataStoreConflictHandler(userProvidedConfiguration.getDataStoreConflictHandler());
-        }
-        return builder;
+    static Builder builder(@NonNull JSONObject pluginJson,
+                           @Nullable DataStoreConfiguration userProvidedConfiguration) {
+        return new Builder(pluginJson, userProvidedConfiguration);
     }
 
     /**
@@ -105,52 +97,18 @@ public final class DataStoreConfiguration {
      * an invalid configuration value
      */
     @NonNull
-    public static Builder builder(@NonNull JSONObject pluginJson) throws DataStoreException {
-        final Iterator<String> jsonKeys = pluginJson.keys();
-        Builder builder = new Builder();
-        while (jsonKeys.hasNext()) {
-            final String keyString = jsonKeys.next();
-            final ConfigKey configKey;
-            try {
-                configKey = ConfigKey.fromString(keyString);
-            } catch (IllegalArgumentException noSuchConfigKey) {
-                throw new DataStoreException(
-                        "Saw unexpected config key: " + keyString,
-                        "Make sure your amplifyconfiguration.json is valid."
-                );
-            }
-            try {
-                switch (configKey) {
-                    case SYNC_INTERVAL_IN_MINUTES:
-                        builder.syncIntervalInMinutes(pluginJson
-                            .getLong(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString()));
-                        break;
-                    case SYNC_MAX_RECORDS:
-                        builder.syncMaxRecords(pluginJson.getInt(ConfigKey.SYNC_MAX_RECORDS.toString()));
-                        break;
-                    case SYNC_PAGE_SIZE:
-                        builder.syncPageSize(pluginJson.getInt(ConfigKey.SYNC_PAGE_SIZE.toString()));
-                        break;
-                    default:
-                        throw new IllegalArgumentException("Unsupported config key = " + configKey.toString());
-                }
-            } catch (JSONException jsonException) {
-                throw new DataStoreException(
-                        "Issue encountered while parsing configuration JSON",
-                        jsonException, "Ensure your amplifyconfiguration.json is valid."
-                );
-            }
-        }
-
-        return builder;
+    static Builder builder(@NonNull JSONObject pluginJson) {
+        return builder(pluginJson, null);
     }
 
     /**
      * Creates an {@link DataStoreConfiguration} which uses all default values.
      * @return A default {@link DataStoreConfiguration}
+     * @throws DataStoreException exception thrown if there's an unexpected configuration key or
+     * an invalid configuration value
      */
     @NonNull
-    public static DataStoreConfiguration defaults() {
+    public static DataStoreConfiguration defaults() throws DataStoreException {
         return builder()
             .syncIntervalInMinutes(DEFAULT_SYNC_INTERVAL_MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
@@ -183,7 +141,12 @@ public final class DataStoreConfiguration {
      */
     @IntRange(from = 0)
     public Long getSyncIntervalMs() {
-        return this.syncIntervalMs == null ? DEFAULT_SYNC_INTERVAL_MS : this.syncIntervalMs;
+        return this.syncIntervalMs;
+    }
+
+    @IntRange(from = 0)
+    public Long getSyncIntervalInMinutes() {
+        return this.syncIntervalInMinutes;
     }
 
     /**
@@ -193,7 +156,7 @@ public final class DataStoreConfiguration {
      */
     @IntRange(from = 0)
     public Integer getSyncMaxRecords() {
-        return this.syncMaxRecords == null ? DEFAULT_SYNC_MAX_RECORDS : this.syncMaxRecords;
+        return this.syncMaxRecords;
     }
 
     /**
@@ -203,7 +166,7 @@ public final class DataStoreConfiguration {
      */
     @IntRange(from = 0)
     public Integer getSyncPageSize() {
-        return this.syncPageSize == null ? DEFAULT_SYNC_PAGE_SIZE : this.syncPageSize;
+        return this.syncPageSize;
     }
 
     /**
@@ -216,10 +179,21 @@ public final class DataStoreConfiguration {
         private Long syncIntervalInMinutes;
         private Integer syncMaxRecords;
         private Integer syncPageSize;
+        private boolean ensureDefaults;
+        private JSONObject pluginJson;
+        private DataStoreConfiguration userProvidedConfiguration;
 
         private Builder() {
             this.dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
             this.dataStoreConflictHandler = ApplyRemoteConflictHandler.instance(dataStoreErrorHandler);
+            this.ensureDefaults = false;
+        }
+
+        private Builder(JSONObject pluginJson, DataStoreConfiguration userProvidedConfiguration) {
+            this();
+            this.pluginJson = pluginJson;
+            this.userProvidedConfiguration = userProvidedConfiguration;
+            this.ensureDefaults = true;
         }
 
         /**
@@ -253,10 +227,7 @@ public final class DataStoreConfiguration {
          */
         @NonNull
         public Builder syncIntervalInMinutes(@IntRange(from = 0) Long syncIntervalInMinutes) {
-            //Only set this value if the incoming value is null
-            if (this.syncIntervalInMinutes == null) {
-                this.syncIntervalInMinutes = syncIntervalInMinutes;
-            }
+            this.syncIntervalInMinutes = syncIntervalInMinutes;
             return Builder.this;
         }
 
@@ -267,10 +238,7 @@ public final class DataStoreConfiguration {
          */
         @NonNull
         public Builder syncMaxRecords(@IntRange(from = 0) Integer syncMaxRecords) {
-            //Only set this value if the incoming value is null
-            if (this.syncMaxRecords == null) {
-                this.syncMaxRecords = syncMaxRecords;
-            }
+            this.syncMaxRecords = syncMaxRecords;
             return Builder.this;
         }
 
@@ -281,19 +249,89 @@ public final class DataStoreConfiguration {
          */
         @NonNull
         public Builder syncPageSize(@IntRange(from = 0) Integer syncPageSize) {
-            //Only set this value if the incoming value is null
-            if (this.syncPageSize == null) {
-                this.syncPageSize = syncPageSize;
-            }
+            this.syncPageSize = syncPageSize;
             return Builder.this;
+        }
+
+        private void populateSettingsFromJson() throws DataStoreException {
+            if (pluginJson == null) {
+                return;
+            }
+            final Iterator<String> jsonKeys = pluginJson.keys();
+            while (jsonKeys.hasNext()) {
+                final String keyString = jsonKeys.next();
+                final ConfigKey configKey;
+                try {
+                    configKey = ConfigKey.fromString(keyString);
+                } catch (IllegalArgumentException noSuchConfigKey) {
+                    throw new DataStoreException(
+                        "Saw unexpected config key: " + keyString,
+                        "Make sure your amplifyconfiguration.json is valid."
+                    );
+                }
+                try {
+                    switch (configKey) {
+                        case SYNC_INTERVAL_IN_MINUTES:
+                            this.syncIntervalInMinutes(pluginJson
+                                .getLong(ConfigKey.SYNC_INTERVAL_IN_MINUTES.toString()));
+                            break;
+                        case SYNC_MAX_RECORDS:
+                            this.syncMaxRecords(pluginJson.getInt(ConfigKey.SYNC_MAX_RECORDS.toString()));
+                            break;
+                        case SYNC_PAGE_SIZE:
+                            this.syncPageSize(pluginJson.getInt(ConfigKey.SYNC_PAGE_SIZE.toString()));
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unsupported config key = " + configKey.toString());
+                    }
+                } catch (JSONException jsonException) {
+                    throw new DataStoreException(
+                        "Issue encountered while parsing configuration JSON",
+                        jsonException, "Ensure your amplifyconfiguration.json is valid."
+                    );
+                }
+            }
+        }
+
+        private void applyUserProvidedConfiguration() {
+            if (userProvidedConfiguration == null) {
+                return;
+            }
+            dataStoreErrorHandler = userProvidedConfiguration.getDataStoreErrorHandler();
+            dataStoreConflictHandler = userProvidedConfiguration.getDataStoreConflictHandler();
+            syncIntervalInMinutes = getValueOrDefault(
+                userProvidedConfiguration.getSyncIntervalInMinutes(),
+                syncIntervalInMinutes);
+            syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
+            syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
+
+        }
+
+        private static <T> T getValueOrDefault(T value, T defaultValue) {
+            return value == null ? defaultValue : value;
         }
 
         /**
          * Builds a {@link DataStoreConfiguration} from the provided options.
          * @return A new {@link DataStoreConfiguration}.
+         * @throws DataStoreException thrown if it's unable to parse the provided JSON or
+         * an invalid value if provided.
          */
         @NonNull
-        public DataStoreConfiguration build() {
+        public DataStoreConfiguration build() throws DataStoreException {
+            populateSettingsFromJson();
+            applyUserProvidedConfiguration();
+            if (ensureDefaults) {
+                dataStoreErrorHandler = getValueOrDefault(
+                    dataStoreErrorHandler,
+                    DefaultDataStoreErrorHandler.instance());
+                dataStoreConflictHandler = getValueOrDefault(
+                    dataStoreConflictHandler,
+                    ApplyRemoteConflictHandler.instance(dataStoreErrorHandler));
+                syncIntervalInMinutes = getValueOrDefault(syncIntervalInMinutes, DEFAULT_SYNC_INTERVAL_MINUTES);
+                syncMaxRecords = getValueOrDefault(syncMaxRecords, DEFAULT_SYNC_MAX_RECORDS);
+                syncPageSize = getValueOrDefault(syncPageSize, DEFAULT_SYNC_PAGE_SIZE);
+            }
             return new DataStoreConfiguration(
                 dataStoreErrorHandler,
                 dataStoreConflictHandler,

@@ -15,13 +15,16 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.DataStoreConfiguration;
+import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+
+import org.json.JSONObject;
 
 import java.util.Objects;
 
@@ -47,14 +50,22 @@ public final class Orchestrator {
      *                       durably store offline changes until
      *                       then can be written to the network
      * @param appSync An AppSync Endpoint
-     * @param dataStoreConfiguration Configuration that was provided to the plugin when the plugin was instantiated
+     * @param dataStoreConfigurationProvider An instance that implements {@link DataStoreConfigurationProvider}
+     *                       Note that the provider-style interface is needed because
+     *                       at the time this constructor is called from the
+     *                       {@link com.amplifyframework.datastore.AWSDataStorePlugin}'s constructor,
+     *                       the plugin is not fully configured yet. The reference to the
+     *                       variable returned by the provider only get set after the plugin's
+     *                       #{@link com.amplifyframework.datastore.AWSDataStorePlugin#configure(JSONObject, Context)}
+     *                       is invoked by Amplify.
+     *
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
-            @NonNull final DataStoreConfiguration dataStoreConfiguration) {
+            @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider) {
         Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(modelProvider);
         Objects.requireNonNull(appSync);
@@ -73,7 +84,7 @@ public final class Orchestrator {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .dataStoreConfiguration(dataStoreConfiguration)
+            .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);

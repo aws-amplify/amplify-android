@@ -96,8 +96,11 @@ public final class OrchestratorTest {
         modelSchemaRegistry.load(modelProvider.models());
 
         Orchestrator orchestrator =
-            new Orchestrator(modelProvider, modelSchemaRegistry, localStorageAdapter, appSync,
-                DataStoreConfiguration.defaults()
+            new Orchestrator(modelProvider,
+                modelSchemaRegistry,
+                localStorageAdapter,
+                appSync,
+                DataStoreConfiguration::defaults
             );
 
         // Arrange: storage engine is running

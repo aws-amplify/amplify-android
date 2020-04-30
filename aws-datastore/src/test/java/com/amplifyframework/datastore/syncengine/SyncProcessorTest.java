@@ -113,7 +113,7 @@ public final class SyncProcessorTest {
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .dataStoreConfiguration(dataStoreConfiguration)
+            .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
             .build();
     }
 
