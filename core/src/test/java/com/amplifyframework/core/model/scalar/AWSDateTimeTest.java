@@ -15,12 +15,15 @@
 
 package com.amplifyframework.core.model.scalar;
 
+import com.amplifyframework.core.model.AWSDateTime;
+
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.List;
 import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
@@ -28,12 +31,13 @@ import static org.junit.Assert.assertEquals;
 public class AWSDateTimeTest {
     @Test
     public void parsesExpectedFormats() {
-        for (String value : Arrays.asList(
+        List<String> values = Arrays.asList(
                 "2001-02-03T01:30:15Z",
                 "2001-02-03T01:30:15.444Z",
                 "2001-02-03T01:30:15.444+05:30",
                 "2001-02-03T01:30:15.444+05:30:15"
-        )) {
+        );
+        for (String value : values) {
             assertEquals(value, new AWSDateTime(value).format());
         }
 

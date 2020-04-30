@@ -20,17 +20,19 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.model.scalar.AWSDate;
-import com.amplifyframework.core.model.scalar.AWSDateTime;
-import com.amplifyframework.core.model.scalar.AWSTime;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.Resources;
 
+import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Date;
 
@@ -133,9 +135,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
     /**
      * Validates date serialization when creating GraphQLRequest.
      * @throws ApiException from buildMutation potential failure
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
      */
     @Test
-    public void validateDateSerializer() throws ApiException {
+    public void validateDateSerializer() throws ApiException, JSONException {
         // Create expectation
         final Meeting meeting1 = Meeting.builder()
                 .name("meeting1")
@@ -147,10 +150,11 @@ public final class AppSyncGraphQLRequestFactoryTest {
                 .build();
 
         // Act: build a mutation to create a Meeting
-        GraphQLRequest<Meeting> requestToCreateMeeting1 = AppSyncGraphQLRequestFactory.buildMutation(meeting1,
-                null, MutationType.CREATE);
+        GraphQLRequest<Meeting> requestToCreateMeeting1 =
+                AppSyncGraphQLRequestFactory.buildMutation(meeting1, null, MutationType.CREATE);
 
         // Assert: expected is actual
-        assertEquals(Resources.readAsString("create-meeting1.txt"), requestToCreateMeeting1.getContent());
+        JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),
+                requestToCreateMeeting1.getContent(), true);
     }
 }

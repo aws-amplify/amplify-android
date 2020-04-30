@@ -63,5 +63,12 @@ final class ListMeetingsResult {
     public int hashCode() {
         return items != null ? items.hashCode() : 0;
     }
+
+    @Override
+    public String toString() {
+        return "ListMeetingsResult{" +
+                "items=\'" + items + "\'" +
+                '}';
+    }
 }
 

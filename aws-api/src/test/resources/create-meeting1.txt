@@ -1,1 +1,13 @@
-{"query":"mutation CreateMeeting($input: CreateMeetingInput!){ createMeeting(input: $input) { date dateTime id name time timestamp }}","variables":{"input":{"date":"2001-02-03","dateTime":"2001-02-03T01:30:15Z","name":"meeting1","id":"45a5f600-8aa8-41ac-a529-aed75036f5be","time":"01:22:33","timestamp":1234567890}}}
+{
+  "query": "mutation CreateMeeting($input: CreateMeetingInput!){ createMeeting(input: $input) { date dateTime id name time timestamp }}",
+  "variables": {
+    "input": {
+      "date": "2001-02-03",
+      "dateTime": "2001-02-03T01:30:15Z",
+      "name": "meeting1",
+      "id": "45a5f600-8aa8-41ac-a529-aed75036f5be",
+      "time": "01:22:33",
+      "timestamp": 1234567890
+    }
+  }
+}

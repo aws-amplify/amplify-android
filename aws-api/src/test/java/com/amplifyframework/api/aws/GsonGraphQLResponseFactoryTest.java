@@ -19,9 +19,9 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.model.scalar.AWSDate;
-import com.amplifyframework.core.model.scalar.AWSDateTime;
-import com.amplifyframework.core.model.scalar.AWSTime;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
 

@@ -6,9 +6,9 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.scalar.AWSDate;
-import com.amplifyframework.core.model.scalar.AWSDateTime;
-import com.amplifyframework.core.model.scalar.AWSTime;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
 
 import java.util.Date;
 import java.util.Objects;

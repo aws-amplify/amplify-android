@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.scalar;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
@@ -23,81 +23,73 @@ import org.threeten.bp.Instant;
 import org.threeten.bp.LocalDate;
 import org.threeten.bp.LocalTime;
 import org.threeten.bp.OffsetDateTime;
+import org.threeten.bp.OffsetTime;
 import org.threeten.bp.ZoneOffset;
 import org.threeten.bp.format.DateTimeFormatter;
-import org.threeten.bp.format.DateTimeFormatterBuilder;
 import org.threeten.bp.format.DateTimeParseException;
-import org.threeten.bp.temporal.ChronoField;
 
 import java.util.Date;
 
 /**
- * Represents a valid extended ISO-8601 Date string, with an optional timezone offset.
+ * Represents a valid extended ISO-8601 Time string, with an optional timezone offset.
  * <p>
- * YYYY-MM-DD±hh:mm:ss  (ISO_OFFSET_DATE)
- * or
- * YYYY-MM-DD (ISO_LOCAL_DATE)
+ * hh:mm:ss.sss±hh:mm:ss
+ * OR
+ * hh:mm:ss.sss
  * <p>
  * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html#appsync-defined-scalars
  */
-public final class AWSDate {
-    private final LocalDate localDate;
+public final class AWSTime {
+    private final LocalTime localTime;
     private final ZoneOffset zoneOffset;
 
-    public AWSDate(@NonNull Date date) {
+    public AWSTime(@NonNull Date date) {
         this.zoneOffset = null;
-        this.localDate = Instant.ofEpochMilli(date.getTime()).atOffset(ZoneOffset.UTC).toLocalDate();
+        this.localTime = Instant.ofEpochMilli(date.getTime()).atOffset(ZoneOffset.UTC).toLocalTime();
     }
 
-    public AWSDate(@NonNull Date date, int offsetInSeconds) {
+    public AWSTime(@NonNull Date date, int offsetInSeconds) {
         this.zoneOffset = ZoneOffset.ofTotalSeconds(offsetInSeconds);
-        this.localDate = Instant.ofEpochMilli(date.getTime()).atOffset(this.zoneOffset).toLocalDate();
+        this.localTime = Instant.ofEpochMilli(date.getTime()).atOffset(this.zoneOffset).toLocalTime();
     }
 
-    public AWSDate(@NonNull String text) {
-        LocalDate ld;
-        ZoneOffset zo;
+    public AWSTime(@NonNull String text) {
+        LocalTime localTime;
+        ZoneOffset zoneOffset;
         try {
-            OffsetDateTime odt = OffsetDateTime.parse(text, getOffsetDateTimeFormatter());
-            ld = LocalDate.from(odt);
-            zo = ZoneOffset.from(odt);
+            OffsetTime offsetTime = OffsetTime.parse(text, DateTimeFormatter.ISO_OFFSET_TIME);
+            localTime = LocalTime.from(offsetTime);
+            zoneOffset = ZoneOffset.from(offsetTime);
         } catch (DateTimeParseException exception) {
             // Optional timezone offset not present
-            ld = LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
-            zo = null;
+            localTime = LocalTime.parse(text, DateTimeFormatter.ISO_LOCAL_TIME);
+            zoneOffset = null;
         }
-        this.localDate = ld;
-        this.zoneOffset = zo;
+        this.localTime = localTime;
+        this.zoneOffset = zoneOffset;
     }
 
     public String format() {
         if (zoneOffset != null) {
-            OffsetDateTime odt = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, zoneOffset);
-            return getOffsetDateTimeFormatter().format(odt);
+            OffsetTime offsetTime = OffsetTime.of(localTime, zoneOffset);
+            return DateTimeFormatter.ISO_OFFSET_TIME.format(offsetTime);
         } else {
-            return DateTimeFormatter.ISO_LOCAL_DATE.format(this.localDate);
+            return DateTimeFormatter.ISO_LOCAL_TIME.format(this.localTime);
         }
     }
 
-    private DateTimeFormatter getOffsetDateTimeFormatter() {
-        return new DateTimeFormatterBuilder()
-                .append(DateTimeFormatter.ISO_OFFSET_DATE)
-                .parseDefaulting(ChronoField.HOUR_OF_DAY, 0)
-                .parseDefaulting(ChronoField.MINUTE_OF_HOUR, 0)
-                .toFormatter();
-    }
-
     /**
-     * Converts AWSDate to java.util.Date.
+     * Converts AWSTime to java.util.Date.
      * <p>
-     * Time is set as start of day (midnight), since this is not represented by AWSDate.
-     * Timezone offset is set to UTC if not set, since it is optionally represented by AWSDate.
+     * Date is set as January 1, 1970.
+     * Timezone offset is set to UTC if not set.
      *
      * @return representation as a java.util.Date.
      */
+    @NonNull
     public Date toDate() {
-        ZoneOffset zoneOffset = this.zoneOffset != null ? this.zoneOffset : ZoneOffset.UTC;
-        OffsetDateTime oft = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, zoneOffset);
+        ZoneOffset zo = zoneOffset != null ? zoneOffset : ZoneOffset.UTC;
+        OffsetDateTime oft = OffsetDateTime.of(LocalDate.ofEpochDay(0), localTime, zo);
         return DateTimeUtils.toDate(oft.toInstant());
     }
 
@@ -111,7 +103,7 @@ public final class AWSDate {
         if (zoneOffset != null) {
             return zoneOffset.getTotalSeconds();
         }
-        throw new IllegalStateException("AWSDate instance does not have a timezone offset.");
+        throw new IllegalStateException("AWSTime instance does not have a timezone offset.");
     }
 
     @Override
@@ -123,23 +115,23 @@ public final class AWSDate {
             return false;
         }
 
-        AWSDate date = (AWSDate) thatObject;
+        AWSTime time = (AWSTime) thatObject;
 
-        return ObjectsCompat.equals(localDate, date.localDate) &&
-                ObjectsCompat.equals(zoneOffset, date.zoneOffset);
+        return ObjectsCompat.equals(localTime, time.localTime) &&
+                ObjectsCompat.equals(zoneOffset, time.zoneOffset);
     }
 
     @Override
     public int hashCode() {
-        int result = localDate.hashCode();
+        int result = localTime.hashCode();
         result = 31 * result + (zoneOffset != null ? zoneOffset.hashCode() : 0);
         return result;
     }
 
     @Override
     public String toString() {
-        return "AWSDate{" +
-                "localDate=\'" + localDate + "\'" +
+        return "AWSTime{" +
+                "localTime=\'" + localTime + "\'" +
                 ", zoneOffset=\'" + zoneOffset + "\'" +
                 '}';
     }

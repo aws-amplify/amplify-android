@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.scalar;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
