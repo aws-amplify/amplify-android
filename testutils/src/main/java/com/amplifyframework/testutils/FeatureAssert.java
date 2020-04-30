@@ -74,6 +74,6 @@ public final class FeatureAssert {
                 return;
             }
         }
-        Assert.fail("Collection does not contain expected feature element.");
+        Assert.fail("Expected value " + expectedValue + " was not found among any features: " + actual);
     }
 }

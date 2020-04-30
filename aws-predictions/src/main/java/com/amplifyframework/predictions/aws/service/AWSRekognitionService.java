@@ -21,14 +21,13 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
-import com.amplifyframework.predictions.aws.adapter.IdentifyEntitiesResultTransformers;
+import com.amplifyframework.predictions.aws.adapter.RekognitionResultTransformers;
 import com.amplifyframework.predictions.models.Celebrity;
 import com.amplifyframework.predictions.models.CelebrityDetails;
 import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.Landmark;
-import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
 import com.amplifyframework.predictions.result.IdentifyLabelsResult;
@@ -48,7 +47,6 @@ import com.amazonaws.services.rekognition.model.DetectModerationLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsResult;
 import com.amazonaws.services.rekognition.model.DetectTextRequest;
 import com.amazonaws.services.rekognition.model.DetectTextResult;
-import com.amazonaws.services.rekognition.model.Geometry;
 import com.amazonaws.services.rekognition.model.Image;
 import com.amazonaws.services.rekognition.model.ModerationLabel;
 import com.amazonaws.services.rekognition.model.Parent;
@@ -219,9 +217,9 @@ final class AWSRekognitionService {
 
             // Get face-specific celebrity details from the result
             ComparedFace face = rekognitionCelebrity.getFace();
-            RectF box = IdentifyEntitiesResultTransformers.fromBoundingBox(face.getBoundingBox());
-            Pose pose = IdentifyEntitiesResultTransformers.fromRekognitionPose(face.getPose());
-            List<Landmark> landmarks = IdentifyEntitiesResultTransformers.fromLandmarks(face.getLandmarks());
+            RectF box = RekognitionResultTransformers.fromBoundingBox(face.getBoundingBox());
+            Pose pose = RekognitionResultTransformers.fromRekognitionPose(face.getPose());
+            List<Landmark> landmarks = RekognitionResultTransformers.fromLandmarks(face.getLandmarks());
 
             // Get URL links that are relevant to celebrities
             List<URL> urls = new ArrayList<>();
@@ -265,28 +263,17 @@ final class AWSRekognitionService {
         List<String> rawLineText = new ArrayList<>();
         List<IdentifiedText> words = new ArrayList<>();
         List<IdentifiedText> lines = new ArrayList<>();
+
         for (TextDetection detection : result.getTextDetections()) {
-            String detectedText = detection.getDetectedText();
-            Geometry geometry = detection.getGeometry();
-            RectF box = IdentifyEntitiesResultTransformers.fromBoundingBox(geometry.getBoundingBox());
-            Polygon polygon = IdentifyEntitiesResultTransformers.fromPoints(geometry.getPolygon());
-
-            IdentifiedText text = IdentifiedText.builder()
-                    .text(detectedText)
-                    .confidence(detection.getConfidence())
-                    .box(box)
-                    .polygon(polygon)
-                    .build();
-
             TextTypes type = TextTypes.fromValue(detection.getType());
             switch (type) {
                 case LINE:
-                    rawLineText.add(detectedText);
-                    lines.add(text);
+                    rawLineText.add(detection.getDetectedText());
+                    lines.add(RekognitionResultTransformers.fromTextDetection(detection));
                     continue;
                 case WORD:
-                    fullTextBuilder.append(detectedText).append(" ");
-                    words.add(text);
+                    fullTextBuilder.append(detection.getDetectedText()).append(" ");
+                    words.add(RekognitionResultTransformers.fromTextDetection(detection));
                     continue;
                 default:
             }

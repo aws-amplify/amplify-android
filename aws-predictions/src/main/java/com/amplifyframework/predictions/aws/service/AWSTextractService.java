@@ -15,16 +15,14 @@
 
 package com.amplifyframework.predictions.aws.service;
 
-import android.graphics.RectF;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
-import com.amplifyframework.predictions.aws.adapter.IdentifyTextResultTransformers;
+import com.amplifyframework.predictions.aws.adapter.TextractResultTransformers;
 import com.amplifyframework.predictions.models.BoundedKeyValue;
 import com.amplifyframework.predictions.models.IdentifiedText;
-import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
 import com.amplifyframework.predictions.models.TextFormatType;
@@ -45,8 +43,6 @@ import com.amazonaws.services.textract.model.DetectDocumentTextRequest;
 import com.amazonaws.services.textract.model.DetectDocumentTextResult;
 import com.amazonaws.services.textract.model.Document;
 import com.amazonaws.services.textract.model.FeatureType;
-import com.amazonaws.services.textract.model.Geometry;
-import com.amazonaws.services.textract.model.SelectionStatus;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -144,51 +140,25 @@ final class AWSTextractService {
         List<Block> tableBlocks = new ArrayList<>();
         List<Block> keyValueBlocks = new ArrayList<>();
         Map<String, Block> blockMap = new HashMap<>();
+
         for (Block block : blocks) {
             // This is the map that will be used for traversing the graph.
             // Each block can contain "relationships", which point to other blocks by ID.
             String id = block.getId();
             blockMap.put(id, block);
 
-            String detectedText = block.getText();
-            Geometry geometry = block.getGeometry();
-            RectF box = IdentifyTextResultTransformers.fromBoundingBox(geometry.getBoundingBox());
-            Polygon polygon = IdentifyTextResultTransformers.fromPoints(geometry.getPolygon());
-            int page = block.getPage() != null ? block.getPage() : 0;
-
             BlockType type = BlockType.fromValue(block.getBlockType());
             switch (type) {
                 case LINE:
-                    IdentifiedText line = IdentifiedText.builder()
-                            .text(detectedText)
-                            .confidence(block.getConfidence())
-                            .box(box)
-                            .polygon(polygon)
-                            .page(page)
-                            .build();
-                    rawLineText.add(detectedText);
-                    lines.add(line);
+                    rawLineText.add(block.getText());
+                    lines.add(TextractResultTransformers.fetchIdentifiedText(block));
                     continue;
                 case WORD:
-                    IdentifiedText word = IdentifiedText.builder()
-                            .text(detectedText)
-                            .confidence(block.getConfidence())
-                            .box(box)
-                            .polygon(polygon)
-                            .page(page)
-                            .build();
-                    fullTextBuilder.append(detectedText).append(" ");
-                    words.add(word);
+                    fullTextBuilder.append(block.getText()).append(" ");
+                    words.add(TextractResultTransformers.fetchIdentifiedText(block));
                     continue;
                 case SELECTION_ELEMENT:
-                    SelectionStatus status = SelectionStatus.fromValue(block.getSelectionStatus());
-                    boolean isSelected = SelectionStatus.SELECTED.equals(status);
-                    Selection selection = Selection.builder()
-                            .box(box)
-                            .polygon(polygon)
-                            .selected(isSelected)
-                            .build();
-                    selections.add(selection);
+                    selections.add(TextractResultTransformers.fetchSelection(block));
                     continue;
                 case TABLE:
                     tableBlocks.add(block);
@@ -201,14 +171,14 @@ final class AWSTextractService {
         }
 
         for (Block tableBlock : tableBlocks) {
-            Table table = IdentifyTextResultTransformers.processTable(tableBlock, blockMap);
+            Table table = TextractResultTransformers.fetchTable(tableBlock, blockMap);
             if (table != null) {
                 tables.add(table);
             }
         }
 
         for (Block keyValueBlock : keyValueBlocks) {
-            BoundedKeyValue keyValue = IdentifyTextResultTransformers.processKeyValue(keyValueBlock, blockMap);
+            BoundedKeyValue keyValue = TextractResultTransformers.fetchKeyValue(keyValueBlock, blockMap);
             if (keyValue != null) {
                 keyValues.add(keyValue);
             }

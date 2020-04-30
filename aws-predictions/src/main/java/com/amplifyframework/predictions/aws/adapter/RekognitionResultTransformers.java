@@ -20,6 +20,7 @@ import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Landmark;
 import com.amplifyframework.predictions.models.LandmarkType;
 import com.amplifyframework.predictions.models.Polygon;
@@ -28,6 +29,7 @@ import com.amplifyframework.util.CollectionUtils;
 
 import com.amazonaws.services.rekognition.model.BoundingBox;
 import com.amazonaws.services.rekognition.model.Point;
+import com.amazonaws.services.rekognition.model.TextDetection;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,11 +37,11 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Utility class to transform Amazon service-specific
+ * Utility class to transform Amazon Rekognition service-specific
  * models to be compatible with AWS Amplify.
  */
-public final class IdentifyEntitiesResultTransformers {
-    private IdentifyEntitiesResultTransformers() {}
+public final class RekognitionResultTransformers {
+    private RekognitionResultTransformers() {}
 
     /**
      * Converts bounding box geometry from Amazon Rekognition into
@@ -96,6 +98,25 @@ public final class IdentifyEntitiesResultTransformers {
             return null;
         }
         return new Pose(pose.getPitch(), pose.getRoll(), pose.getYaw());
+    }
+
+    /**
+     * Converts {@link TextDetection} from Amazon Rekognition into Amplify-
+     * compatible text identification data.
+     * @param text the detected text data
+     * @return the Amplify feature with detected text
+     */
+    @Nullable
+    public static IdentifiedText fromTextDetection(@Nullable TextDetection text) {
+        if (text == null) {
+            return null;
+        }
+        return IdentifiedText.builder()
+                .text(text.getDetectedText())
+                .confidence(text.getConfidence())
+                .box(fromBoundingBox(text.getGeometry().getBoundingBox()))
+                .polygon(fromPoints(text.getGeometry().getPolygon()))
+                .build();
     }
 
     /**

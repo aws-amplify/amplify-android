@@ -23,7 +23,9 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.models.BoundedKeyValue;
 import com.amplifyframework.predictions.models.Cell;
+import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Polygon;
+import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
 import com.amplifyframework.util.CollectionUtils;
 
@@ -44,11 +46,11 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * Utility class to transform Amazon service-specific
+ * Utility class to transform Amazon Textract service-specific
  * models to be compatible with AWS Amplify.
  */
-public final class IdentifyTextResultTransformers {
-    private IdentifyTextResultTransformers() {}
+public final class TextractResultTransformers {
+    private TextractResultTransformers() {}
 
     /**
      * Converts bounding box geometry from Amazon Rekognition into
@@ -69,7 +71,6 @@ public final class IdentifyTextResultTransformers {
                 box.getTop() + box.getHeight()
         );
     }
-
 
     /**
      * Converts geometric polygon from Amazon Textract into
@@ -94,6 +95,44 @@ public final class IdentifyTextResultTransformers {
     }
 
     /**
+     * Converts a given Amazon Textract block into Amplify's
+     * image text feature. Returns null if not a valid text.
+     * @param block Textract text block
+     * @return Amplify text feature instance
+     */
+    @Nullable
+    public static IdentifiedText fetchIdentifiedText(@Nullable Block block) {
+        if (block == null || block.getText() == null) {
+            return null;
+        }
+        return IdentifiedText.builder()
+                .text(block.getText())
+                .confidence(block.getConfidence())
+                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
+                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .page(block.getPage() != null ? block.getPage() : 0)
+                .build();
+    }
+
+    /**
+     * Converts a given Amazon Textract block into Amplify's
+     * Selection feature. Returns null if not a valid selection.
+     * @param block Textract selection block
+     * @return Amplify text feature instance
+     */
+    @Nullable
+    public static Selection fetchSelection(@Nullable Block block) {
+        if (block == null || block.getSelectionStatus() == null) {
+            return null;
+        }
+        return Selection.builder()
+                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
+                .polygon(fromPoints(block.getGeometry().getPolygon()))
+                .selected(SelectionStatus.SELECTED.toString().equals(block.getSelectionStatus()))
+                .build();
+    }
+
+    /**
      * Converts a given Amazon Textract block into Amplify-compatible
      * table object. Returns null if not a valid table.
      * @param block Textract text block
@@ -101,31 +140,27 @@ public final class IdentifyTextResultTransformers {
      * @return Amplify Table instance
      */
     @Nullable
-    public static Table processTable(@NonNull Block block, @NonNull Map<String, Block> blockMap) {
-        Objects.requireNonNull(block);
+    public static Table fetchTable(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-
-        if (!BlockType.TABLE.toString().equals(block.getBlockType())) {
+        if (block == null || !BlockType.TABLE.toString().equals(block.getBlockType())) {
             return null;
         }
-
-        RectF box = fromBoundingBox(block.getGeometry().getBoundingBox());
-        Polygon polygon = fromPoints(block.getGeometry().getPolygon());
         List<Cell> cells = new ArrayList<>();
         Set<Integer> rows = new HashSet<>();
         Set<Integer> cols = new HashSet<>();
+
         // Each TABLE block contains CELL blocks
         doForEachRelatedBlock(block, blockMap, cellBlock -> {
             rows.add(cellBlock.getRowIndex() - 1);
             cols.add(cellBlock.getColumnIndex() - 1);
-            cells.add(processTableCell(cellBlock, blockMap));
+            cells.add(fetchTableCell(cellBlock, blockMap));
         });
 
         return Table.builder()
                 .cells(cells)
                 .confidence(block.getConfidence())
-                .box(box)
-                .polygon(polygon)
+                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
+                .polygon(fromPoints(block.getGeometry().getPolygon()))
                 .rowSize(rows.size())
                 .columnSize(cols.size())
                 .build();
@@ -139,48 +174,42 @@ public final class IdentifyTextResultTransformers {
      * @return Amplify Table instance
      */
     @Nullable
-    public static BoundedKeyValue processKeyValue(@NonNull Block block, @NonNull Map<String, Block> blockMap) {
-        Objects.requireNonNull(block);
+    public static BoundedKeyValue fetchKeyValue(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
-
-        if (!BlockType.KEY_VALUE_SET.toString().equals(block.getBlockType())) {
+        if (block == null || !BlockType.KEY_VALUE_SET.toString().equals(block.getBlockType())) {
             return null;
         }
-
         // Must be of entity type "KEY"
         List<String> entityTypes = block.getEntityTypes();
         if (entityTypes == null || !entityTypes.contains(EntityType.KEY.toString())) {
             return null;
         }
-
-        RectF box = fromBoundingBox(block.getGeometry().getBoundingBox());
-        Polygon polygon = fromPoints(block.getGeometry().getPolygon());
         StringBuilder keyBuilder = new StringBuilder();
         StringBuilder valueBuilder = new StringBuilder();
+
+        // KEY_VALUE_SET block contains either KEY or VALUE entity type blocks
         doForEachRelatedBlock(block, blockMap, relatedBlock -> {
-            // For key block
+            // For KEY entity block
             if (relatedBlock.getText() != null) {
                 keyBuilder.append(relatedBlock.getText()).append(" ");
             }
-
-            // For value block
+            // For VALUE entity block
             doForEachRelatedBlock(relatedBlock, blockMap, valueBlock -> {
                 valueBuilder.append(valueBlock.getText()).append(" ");
             });
         });
 
+        String key = keyBuilder.toString().trim();
+        String value = valueBuilder.toString().trim();
         return BoundedKeyValue.builder()
-                .keyValuePair(keyBuilder.toString().trim(),
-                        valueBuilder.toString().trim())
+                .keyValuePair(key, value)
                 .confidence(block.getConfidence())
-                .box(box)
-                .polygon(polygon)
+                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
+                .polygon(fromPoints(block.getGeometry().getPolygon()))
                 .build();
     }
 
-    private static Cell processTableCell(Block block, Map<String, Block> blockMap) {
-        RectF box = fromBoundingBox(block.getGeometry().getBoundingBox());
-        Polygon polygon = fromPoints(block.getGeometry().getPolygon());
+    private static Cell fetchTableCell(Block block, Map<String, Block> blockMap) {
         StringBuilder wordsBuilder = new StringBuilder();
         AtomicBoolean isSelected = new AtomicBoolean(false);
 
@@ -191,7 +220,6 @@ public final class IdentifyTextResultTransformers {
             if (text != null) {
                 wordsBuilder.append(text).append(" ");
             }
-
             // For SELECTION_ELEMENT block
             String selectionStatus = relatedBlock.getSelectionStatus();
             if (selectionStatus != null) {
@@ -202,8 +230,8 @@ public final class IdentifyTextResultTransformers {
         return Cell.builder()
                 .text(wordsBuilder.toString().trim())
                 .confidence(block.getConfidence())
-                .box(box)
-                .polygon(polygon)
+                .box(fromBoundingBox(block.getGeometry().getBoundingBox()))
+                .polygon(fromPoints(block.getGeometry().getPolygon()))
                 .selected(isSelected.get())
                 .row(block.getRowIndex() - 1)
                 .column(block.getColumnIndex() - 1)

@@ -74,10 +74,11 @@ public final class AWSPredictionsIdentifyTextTest {
      * If {@link IdentifyActionType#DETECT_TEXT} is supplied instead of
      * {@link TextFormatType} as the action type for identify, then the operation
      * triggers error callback.
-     * @throws Exception if prediction fails
+     * @throws PredictionsException if prediction fails.
+     *          this test will throw due to invalid identify action type.
      */
     @Test(expected = PredictionsException.class)
-    public void testUnspecificTextFormatDetectionTypeFails() throws Exception {
+    public void testUnspecificTextFormatDetectionTypeFails() throws PredictionsException {
         IdentifyActionType type = IdentifyActionType.DETECT_TEXT;
         final Bitmap image = Assets.readAsBitmap("sample-table.png");
         predictions.identify(type, image);
@@ -85,10 +86,10 @@ public final class AWSPredictionsIdentifyTextTest {
 
     /**
      * Assert plain text detection works.
-     * @throws Exception if prediction fails
+     * @throws PredictionsException if prediction fails
      */
     @Test
-    public void testIdentifyPlainText() throws Exception {
+    public void testIdentifyPlainText() throws PredictionsException {
         final Bitmap image = Assets.readAsBitmap("sample-table.png");
 
         // Identify the text inside given image and assert non-null result.
@@ -100,10 +101,10 @@ public final class AWSPredictionsIdentifyTextTest {
 
     /**
      * Assert table detection works.
-     * @throws Exception if prediction fails
+     * @throws PredictionsException if prediction fails
      */
     @Test
-    public void testIdentifyTables() throws Exception {
+    public void testIdentifyTables() throws PredictionsException {
         final Bitmap image = Assets.readAsBitmap("sample-table.png");
 
         // Identify the text inside given image and assert non-null result.
@@ -132,10 +133,10 @@ public final class AWSPredictionsIdentifyTextTest {
 
     /**
      * Assert form detection works.
-     * @throws Exception if prediction fails
+     * @throws PredictionsException if prediction fails
      */
     @Test
-    public void testIdentifyForms() throws Exception {
+    public void testIdentifyForms() throws PredictionsException {
         final Bitmap image = Assets.readAsBitmap("sample-form.png");
 
         // Identify the text inside given image and assert non-null result.
@@ -148,9 +149,9 @@ public final class AWSPredictionsIdentifyTextTest {
         assertEquals(4, keyValues.size());
 
         // Assert that key-value pairs have correct values.
-        FeatureAssert.assertContains(new Pair<>("Name:", "Jane Doe"), keyValues);
-        FeatureAssert.assertContains(new Pair<>("Address:", "123 Any Street, Anytown, USA"), keyValues);
-        FeatureAssert.assertContains(new Pair<>("Birth date:", "12-26-1980"), keyValues);
-        // FeatureAssert.assertContains(new Pair<>("Male:", "true"), keyValues); // Selection not supported by key-value
+        FeatureAssert.assertContains(Pair.create("Name:", "Jane Doe"), keyValues);
+        FeatureAssert.assertContains(Pair.create("Address:", "123 Any Street, Anytown, USA"), keyValues);
+        FeatureAssert.assertContains(Pair.create("Birth date:", "12-26-1980"), keyValues);
+        // FeatureAssert.assertContains(Pair.create("Male:", "true"), keyValues); // Selection not supported
     }
 }

@@ -49,8 +49,9 @@ public final class IdentifiedText extends ImageFeature<String> {
     }
 
     /**
-     * Gets the page of the document in which this text was
-     * detected.
+     * In the case that multiple pages of documents are
+     * detected from a given image, this returns the page
+     * value in which this text was identified.
      * Defaults to 0.
      * @return the page of the document
      */
