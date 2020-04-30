@@ -471,10 +471,13 @@ happening on the device, in `device-logs-during-test.log`.
 ## Related Repositories
 
 This project is part of the Amplify Framework, which runs on Android,
-iOS, and numerous JavaScript-based web platforms.
+iOS, and numerous JavaScript-based web platforms. The Amplify CLI
+provides an entry point to configure backend resources for all of these
+platforms.
 
-1. [AWS Amplify for iOS](https://github.com/aws-amplify/amplify-ios)
-2. [AWS Amplify for JavaScript](https://github.com/aws-amplify/amplify-js)
+1. [AWS Amplify CLI](https://github.com/aws-amplify/amplify-cli)
+2. [AWS Amplify for iOS](https://github.com/aws-amplify/amplify-ios)
+3. [AWS Amplify for JavaScript](https://github.com/aws-amplify/amplify-js)
 
 AWS Amplify plugins are built on top of the AWS SDKs. AWS SDKs are a
 toolkit for interacting with AWS backend resources.
