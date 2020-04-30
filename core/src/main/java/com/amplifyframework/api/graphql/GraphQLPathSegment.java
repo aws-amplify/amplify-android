@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.graphql.error;
+package com.amplifyframework.api.graphql;
 
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
@@ -106,5 +106,12 @@ public final class GraphQLPathSegment {
     @Override
     public int hashCode() {
         return value.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return "GraphQLPathSegment{" +
+                "value=\'" + value + "\'" +
+                '}';
     }
 }

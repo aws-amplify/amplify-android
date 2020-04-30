@@ -15,9 +15,9 @@
 
 package com.amplifyframework.api.aws;
 
+import com.amplifyframework.api.graphql.GraphQLLocation;
+import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.error.GraphQLLocation;
-import com.amplifyframework.api.graphql.error.GraphQLPathSegment;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -32,6 +32,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+@SuppressWarnings("unchecked")
 final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Error> {
     private static final String MESSAGE_KEY = "message";
     private static final String LOCATIONS_KEY = "locations";
@@ -82,8 +83,7 @@ final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Er
 
         // Deserialize the extensions JSON to a Map
         if (extensionsJson.size() > 0) {
-            Type extensionType = new TypeToken<Map<String, Object>>() {}.getType();
-            extensions = context.deserialize(extensionsJson, extensionType);
+            extensions = GsonUtil.toMap(extensionsJson);
         }
 
         return new GraphQLResponse.Error(message, locations, path, extensions);

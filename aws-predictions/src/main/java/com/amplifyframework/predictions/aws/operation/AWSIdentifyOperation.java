@@ -33,6 +33,10 @@ import com.amazonaws.services.textract.model.Document;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
+/**
+ *
+ * Operation that identifies objects within an image via Amazon Translate, Amazon Rekognition, or Amazon Comprehend.
+ */
 public final class AWSIdentifyOperation
         extends IdentifyOperation<AWSImageIdentifyRequest> {
     private final AWSPredictionsService predictionsService;

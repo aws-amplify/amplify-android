@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api.graphql.error;
+package com.amplifyframework.api.graphql;
 
 /**
  * Location mapping to a particular line and column in the request.
@@ -64,5 +64,13 @@ public final class GraphQLLocation {
         int result = line;
         result = 31 * result + column;
         return result;
+    }
+
+    @Override
+    public String toString() {
+        return "GraphQLLocation{" +
+                "line=\'" + line + "\'" +
+                ", column=\'" + column + "\'" +
+                '}';
     }
 }

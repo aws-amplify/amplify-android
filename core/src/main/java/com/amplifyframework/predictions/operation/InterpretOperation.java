@@ -20,6 +20,11 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.core.async.AmplifyOperation;
 import com.amplifyframework.core.category.CategoryType;
 
+/**
+ *  Abstract representation of a operation that interprets text from any source, online or offline.
+ *
+ * @param <R> type of the request object
+ */
 public abstract class InterpretOperation<R> extends AmplifyOperation<R> {
     /**
      * Constructs a new {@link InterpretOperation}.
