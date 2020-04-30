@@ -15,7 +15,7 @@ contribution.
     + [Consuming Development Versions of the Framework](#consuming-development-versions-of-the-framework)
   * [Tools](#tools)
   * [Workflows](#workflows)
-    + [Adding code to support a new feature](#adding-code-to-support-a-new-feature)
+    + [Adding Code to Support a New Feature](#adding-code-to-support-a-new-feature)
     + [Build and Validate Your Work](#build-and-validate-your-work)
     + [Run Instrumentation Tests](#run-instrumentation-tests)
   * [Reporting Bugs/Feature Requests](#reporting-bugs-feature-requests)
@@ -25,9 +25,9 @@ contribution.
     + [Problems with the Build](#problems-with-the-build)
     + [Failing Instrumentation Tests](#failing-instrumentation-tests)
   * [Related Repositories](#related-repositories)
-  * [Finding contributions to work on](#finding-contributions-to-work-on)
+  * [Finding Contributions to Make](#finding-contributions-to-make)
   * [Code of Conduct](#code-of-conduct)
-  * [Security issue notifications](#security-issue-notifications)
+  * [Security Issue Notifications](#security-issue-notifications)
   * [Licensing](#licensing)
 
 ## Getting Started
@@ -123,7 +123,7 @@ AndroidX test core, runner, and a jUnit extension. See Android's notes on
 
 ## Workflows
 
-### Adding code to support a new feature
+### Adding Code to Support a New Feature
 
 Be aware of the Getting Started and Pull Request guides. This portion deals
 actually with changing some code.
@@ -491,7 +491,7 @@ DataStore and API plugins.
 2. [iOS AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-ios)
 3. [JavaScript AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-js)
 
-## Finding contributions to work on
+## Finding Contributions to Make
 Looking at [the existing issues](https://github.com/aws-amplify/amplify-android/issues) is a
 great way to find something to work on.
 
@@ -500,7 +500,7 @@ This project has adopted the [Amazon Open Source Code of Conduct](https://aws.gi
 For more information see the [Code of Conduct FAQ](https://aws.github.io/code-of-conduct-faq) or contact
 opensource-codeofconduct@amazon.com with any additional questions or comments.
 
-## Security issue notifications
+## Security Issue Notifications
 If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our
 [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please
 do **not** create a public GitHub issue.
