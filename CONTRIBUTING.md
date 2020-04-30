@@ -12,11 +12,23 @@ contribution.
 
 - [Contributing Guidelines](#contributing-guidelines)
   * [Getting Started](#getting-started)
+    + [Consuming Development Versions of the Framework](#consuming-development-versions-of-the-framework)
   * [Tools](#tools)
   * [Workflows](#workflows)
     + [Adding code to support a new feature](#adding-code-to-support-a-new-feature)
+    + [Build and Validate Your Work](#build-and-validate-your-work)
+    + [Run Instrumentation Tests](#run-instrumentation-tests)
   * [Reporting Bugs/Feature Requests](#reporting-bugs-feature-requests)
   * [Contributing via Pull Requests](#contributing-via-pull-requests)
+  * [Troubleshooting](#troubleshooting)
+    + [Environment Debugging](#environment-debugging)
+    + [Problems with the Build](#problems-with-the-build)
+    + [Failing Instrumentation Tests](#failing-instrumentation-tests)
+  * [Related Repositories](#related-repositories)
+  * [Finding contributions to work on](#finding-contributions-to-work-on)
+  * [Code of Conduct](#code-of-conduct)
+  * [Security issue notifications](#security-issue-notifications)
+  * [Licensing](#licensing)
 
 ## Getting Started
 
@@ -43,11 +55,48 @@ Load this project into Android Studio by selecting File > Open, and choosing
 the root directory of the project (`amplify-android`). Alternately, cd into this
 top-level directory.
 
-In Android Studio, build the project by clicking the Hammer icon, "Make Project
-⌘F9". If working on the command line, you can do the same thing via:
+In Android Studio, build the project by clicking the Hammer icon, "Make
+Project ⌘F9". If working on the command line, you can do the same thing
+via:
 
 ```
 ./gradlew build
+```
+
+### Consuming Development Versions of the Framework
+
+Once you've built the framework, you can manually install the Framework
+by publishing its artifacts to your local Maven repository.
+
+The local Maven repository is usually found in your home directory at
+`~/.m2/repository`.
+
+To publish the outputs of the build, execute the following command from
+the root of the `amplify-android` project:
+
+```
+./gradlew publishToMavenLocal
+```
+
+After this, you can use the published development artifacts from an app.
+To do so, specify `mavenlocal()` inside the app's top-level
+`build.gradle` file:
+
+```gradle
+buildscript {
+    repositories {
+        mavenlocal() // this should ideally appear before other repositories
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.6.3'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenlocal() // this should ideally appear before other repositories
+    }
+}
 ```
 
 ## Tools
