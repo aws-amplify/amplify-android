@@ -94,7 +94,7 @@ buildscript {
 
 allprojects {
     repositories {
-        mavenlocal() // this should ideally appear before other repositories
+        mavenLocal() // this should ideally appear before other repositories
     }
 }
 ```
@@ -515,4 +515,3 @@ contribution.
 We may ask you to sign a
 [Contributor License Agreement (CLA)](http://en.wikipedia.org/wiki/Contributor_License_Agreement) for
 larger changes.
-
