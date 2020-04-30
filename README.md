@@ -116,7 +116,7 @@ This library is licensed under the [Apache 2.0 License](./LICENSE).
 
 ## Report a Bug
 
-We apprecaite your feedback -- comments, questions, and bug reports. Please
+We appreciate your feedback -- comments, questions, and bug reports. Please
 [submit a GitHub issue](https://github.com/aws-amplify/amplify-android/issues),
 and we'll get back to you.
 
@@ -127,4 +127,3 @@ Please see the [Contributor's Guide](./CONTRIBUTING.md).
 --------------------------------
 
 [amplify.aws](https://amplify.aws)
-
