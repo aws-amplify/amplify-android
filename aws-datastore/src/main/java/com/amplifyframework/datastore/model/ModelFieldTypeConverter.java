@@ -13,9 +13,10 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.datastore.model;
 
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.datastore.DataStoreException;
 
 /**
  * Establishes how `Model` fields should be converted to and from different targets (e.g. SQL and GraphQL).

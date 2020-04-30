@@ -20,13 +20,15 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.ModelFieldTypeConverter;
+import com.amplifyframework.datastore.model.ModelFieldTypeConverter;
+import com.amplifyframework.datastore.model.ModelHelper;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
@@ -51,14 +53,11 @@ import java.util.Objects;
  */
 final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
 
-    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore:sqliteConverter");
+    private static final Logger LOGGER = Amplify.Logging.forCategory(CategoryType.DATASTORE);
 
     private final Class<? extends Model> modelType;
-
     private final ModelSchemaRegistry modelSchemaRegistry;
-
     private final Gson gson;
-
     private final Map<String, SQLiteColumn> columns;
 
     SQLiteModelFieldTypeConverter(
@@ -86,7 +85,7 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
             // Skip if there is no equivalent column for field in object
             final SQLiteColumn column = columns.get(field.getName());
             if (column == null) {
-                LOGGER.warn("Column with name " + field.getName() + " does not exist");
+                LOGGER.warn(String.format("Column with name %s does not exist", field.getName()));
                 return null;
             }
 
@@ -96,6 +95,12 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
             if (cursor.isNull(columnIndex)) {
                 return null;
             }
+
+            final String valueAsString = cursor.getString(columnIndex);
+            LOGGER.debug(String.format(
+                    "Attempt to convert value \"%s\" from field %s of type %s from model %s",
+                    valueAsString, field.getName(), field.getType(), modelType.getSimpleName()
+            ));
 
             switch (javaFieldType) {
                 case STRING:
@@ -119,14 +124,14 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
                     final long timeInLongFormat = cursor.getLong(columnIndex);
                     return new Time(timeInLongFormat);
                 default:
-                    LOGGER.warn("Field of type " + javaFieldType + " is not supported. Fallback to null.");
+                    LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", javaFieldType));
                     return null;
             }
         } catch (Exception exception) {
             throw new DataStoreException(
-                    "Error converting field " + field.getName() + " from " + modelType.getName(),
+                    String.format("Error converting field \"%s\" from model \"%s\"", field.getName(), modelType.getName()),
                     exception,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                    AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );
         }
     }
@@ -155,7 +160,10 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
         try {
             return gson.getAdapter(nestedModelType).fromJson(modelInJsonFormat);
         } catch (IOException exception) {
-            LOGGER.warn("", exception);
+            LOGGER.warn(
+                    String.format("Error converting from JSON value to %s", nestedModelType.getSimpleName()),
+                    exception
+            );
             return null;
         }
     }
@@ -178,9 +186,7 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
 
     @Override
     public Object convertValueFromTarget(Model model, ModelField field) throws DataStoreException {
-        final String fieldName = field.getName();
-
-        final Object fieldValue = getModelValue(model, fieldName);
+        final Object fieldValue = ModelHelper.getValue(model, field);
         if (fieldValue == null) {
             return null;
         }
@@ -210,32 +216,8 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
             case TIME:
                 return ((Time) fieldValue).getTime();
             default:
-                LOGGER.warn("Field of type " + javaFieldType + " is not supported. Fallback to null.");
+                LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", javaFieldType));
                 return null;
-        }
-    }
-
-    private Object getModelValue(Model model, String fieldName) throws DataStoreException {
-        Class<? extends Model> modelClass = model.getClass();
-        final String getterName = "get" + Character.toUpperCase(fieldName.charAt(0)) + fieldName.substring(1);
-        try {
-            final Method fieldGetter = modelClass.getMethod(getterName);
-            return fieldGetter.invoke(model);
-        } catch (Exception exception) {
-            LOGGER.debug("Could not find " + getterName + "() on " + modelClass.getName()
-                    + ". Fallback to direct field access.");
-            // fallback to direct field access
-            try {
-                final Field fieldReference = modelClass.getDeclaredField(fieldName);
-                fieldReference.setAccessible(true);
-                return fieldReference.get(model);
-            } catch (Exception fallbackException) {
-                throw new DataStoreException(
-                        "Error when reading the property " + fieldName + " from class " + modelClass.getName(),
-                        fallbackException,
-                        AmplifyException.TODO_RECOVERY_SUGGESTION
-                );
-            }
         }
     }
 

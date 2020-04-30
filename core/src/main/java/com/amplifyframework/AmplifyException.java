@@ -28,6 +28,12 @@ public class AmplifyException extends Exception {
      * defined but should ultimately be replaced.
      */
     public static final String TODO_RECOVERY_SUGGESTION = "Sorry, we don't have a suggested fix for this error yet.";
+
+    public static final String REPORT_BUG_TO_AWS_SUGGESTION =
+            "There is a possibility that there is a bug if this error persists. Please take a look at \n" +
+            "https://github.com/aws-amplify/amplify-android/issues to see if there are any existing issues that \n" +
+            "match your scenario, and file an issue with the details of the bug if there isn't.";
+
     private static final long serialVersionUID = 1L;
 
     private final String recoverySuggestion;

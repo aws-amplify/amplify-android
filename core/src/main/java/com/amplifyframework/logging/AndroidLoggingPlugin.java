@@ -17,6 +17,9 @@ package com.amplifyframework.logging;
 
 import android.content.Context;
 import android.util.Log;
+
+import com.amplifyframework.core.category.CategoryType;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -56,6 +59,12 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @Override
     public Logger forNamespace(@Nullable String namespace) {
         return forNamespaceAndThreshold(namespace, null);
+    }
+
+    @NonNull
+    @Override
+    public Logger forCategory(@NonNull CategoryType categoryType) {
+        return forNamespace("amplify:" + categoryType.getConfigurationKey());
     }
 
     @NonNull
