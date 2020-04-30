@@ -1,0 +1,94 @@
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+package com.amplifyframework.predictions.aws;
+
+import android.content.Context;
+import android.graphics.Bitmap;
+
+import com.amplifyframework.predictions.PredictionsCategory;
+import com.amplifyframework.predictions.aws.test.R;
+import com.amplifyframework.predictions.models.EmotionType;
+import com.amplifyframework.predictions.models.EntityDetails;
+import com.amplifyframework.predictions.models.GenderBinaryType;
+import com.amplifyframework.predictions.models.IdentifyActionType;
+import com.amplifyframework.predictions.result.IdentifyEntitiesResult;
+import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.FeatureAssert;
+import com.amplifyframework.testutils.sync.SynchronousMobileClient;
+import com.amplifyframework.testutils.sync.SynchronousPredictions;
+import com.amplifyframework.util.CollectionUtils;
+
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.Collections;
+
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
+/**
+ * Tests that Predictions identify delivers a non-null
+ * entity detection result for valid input.
+ */
+public final class AWSPredictionsIdentifyEntitiesTest {
+
+    private static final IdentifyActionType TYPE = IdentifyActionType.DETECT_ENTITIES;
+
+    private SynchronousPredictions predictions;
+
+    /**
+     * Configure Predictions category before each test.
+     * @throws Exception if mobile client initialization fails
+     */
+    @Before
+    public void setUp() throws Exception {
+        Context context = getApplicationContext();
+
+        // Set up Auth
+        SynchronousMobileClient.instance().initialize();
+
+        // Delegate to Predictions category
+        PredictionsCategory asyncDelegate =
+                TestPredictionsCategory.create(context, R.raw.amplifyconfiguration);
+        predictions = SynchronousPredictions.delegatingTo(asyncDelegate);
+    }
+
+    /**
+     * Assert general entity detection works.
+     * @throws Exception if prediction fails
+     */
+    @Test
+    @SuppressWarnings("MagicNumber") // Jeff Bezos' current age
+    public void testIdentifyEntities() throws Exception {
+        final Bitmap image = Assets.readAsBitmap("jeff_bezos.jpg");
+
+        // Identify the entity inside given image and assert non-null result.
+        IdentifyEntitiesResult result = (IdentifyEntitiesResult) predictions.identify(TYPE, image);
+        assertNotNull(result);
+
+        // Assert that at least one entity is detected
+        assertFalse(CollectionUtils.isNullOrEmpty(result.getEntities()));
+        EntityDetails entity = result.getEntities().get(0);
+
+        // Assert features from detected entity
+        FeatureAssert.assertMatches(GenderBinaryType.MALE, entity.getGender());
+        FeatureAssert.assertMatches(EmotionType.HAPPY, Collections.max(entity.getEmotions()));
+        assertNotNull(entity.getAgeRange());
+        assertTrue(entity.getAgeRange().contains(56));
+    }
+}
