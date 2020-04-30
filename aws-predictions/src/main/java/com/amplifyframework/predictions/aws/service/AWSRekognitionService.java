@@ -50,6 +50,7 @@ import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
+import com.amazonaws.services.rekognition.model.Attribute;
 import com.amazonaws.services.rekognition.model.ComparedFace;
 import com.amazonaws.services.rekognition.model.DetectFacesRequest;
 import com.amazonaws.services.rekognition.model.DetectFacesResult;
@@ -270,7 +271,7 @@ final class AWSRekognitionService {
     private List<EntityDetails> detectEntities(Image image) throws PredictionsException {
         DetectFacesRequest request = new DetectFacesRequest()
                 .withImage(image)
-                .withAttributes("ALL");
+                .withAttributes(Attribute.ALL.toString());
 
         // Detect entities in the given image via Amazon Rekognition
         final DetectFacesResult result;
