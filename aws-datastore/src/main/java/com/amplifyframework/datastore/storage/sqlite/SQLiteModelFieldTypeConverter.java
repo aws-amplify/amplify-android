@@ -36,8 +36,6 @@ import com.amplifyframework.logging.Logger;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.sql.Time;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -129,7 +127,8 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
             }
         } catch (Exception exception) {
             throw new DataStoreException(
-                    String.format("Error converting field \"%s\" from model \"%s\"", field.getName(), modelType.getName()),
+                    String.format("Error converting field \"%s\" from model \"%s\"",
+                            field.getName(), modelType.getName()),
                     exception,
                     AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
             );

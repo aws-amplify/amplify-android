@@ -17,11 +17,10 @@ package com.amplifyframework.logging;
 
 import android.content.Context;
 import android.util.Log;
-
-import com.amplifyframework.core.category.CategoryType;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.amplifyframework.core.category.CategoryType;
 
 import org.json.JSONObject;
 

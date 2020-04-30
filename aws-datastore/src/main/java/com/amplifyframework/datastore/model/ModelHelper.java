@@ -26,6 +26,9 @@ import com.amplifyframework.logging.Logger;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 
+/**
+ * Helpers class that contains {@link Model} related utilities.
+ */
 public final class ModelHelper {
 
     private static final Logger LOGGER = Amplify.Logging.forCategory(CategoryType.DATASTORE);

@@ -15,10 +15,10 @@
 
 package com.amplifyframework.logging;
 
-import com.amplifyframework.core.category.CategoryType;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.amplifyframework.core.category.CategoryType;
 
 /**
  * Defines the client behavior (client API) consumed
