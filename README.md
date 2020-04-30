@@ -8,8 +8,7 @@ _plugin_. You specify which plugins to use during setup.
 
 The default plugins that we provide are designed to facilitate
 interaction with Amazon Web Services (AWS). But, the Amplify framework
-is designed to be extensible to any other backend or service -- even a
-competing cloud provider!
+is designed to be extensible to any other backend or service.
 
 If you're new to the project, checkout the
 [Getting Started Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
