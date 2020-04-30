@@ -85,7 +85,7 @@ To do so, specify `mavenlocal()` inside the app's top-level
 ```gradle
 buildscript {
     repositories {
-        mavenlocal() // this should ideally appear before other repositories
+        mavenLocal() // this should ideally appear before other repositories
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.3'
