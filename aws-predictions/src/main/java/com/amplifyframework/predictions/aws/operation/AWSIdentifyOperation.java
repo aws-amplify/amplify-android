@@ -125,7 +125,9 @@ public final class AWSIdentifyOperation
 
     private void startEntitiesDetection() {
         executorService.execute(() -> {
-            // not implemented yet
+            Image image = new Image()
+                    .withBytes(getRequest().getBuffer());
+            predictionsService.detectEntities(image, onSuccess, onError);
         });
     }
 
@@ -165,6 +167,10 @@ public final class AWSIdentifyOperation
                             onError);
                     return;
                 default:
+                    onError.accept(new PredictionsException(
+                            "Unexpected error: invalid or unsupported identify action type.",
+                            "Please verify that a valid implementation of IdentifyAction was used."
+                    ));
             }
         });
     }

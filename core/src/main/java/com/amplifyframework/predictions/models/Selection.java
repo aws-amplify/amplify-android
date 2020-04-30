@@ -67,6 +67,9 @@ public final class Selection {
         return new Builder();
     }
 
+    /**
+     * Builder for {@link Selection}.
+     */
     public static final class Builder {
         private RectF box;
         private Polygon polygon;

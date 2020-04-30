@@ -8,8 +8,7 @@ _plugin_. You specify which plugins to use during setup.
 
 The default plugins that we provide are designed to facilitate
 interaction with Amazon Web Services (AWS). But, the Amplify framework
-is designed to be extensible to any other backend or service -- even a
-competing cloud provider!
+is designed to be extensible to any other backend or service.
 
 If you're new to the project, checkout the
 [Getting Started Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
@@ -20,8 +19,8 @@ If you're new to the project, checkout the
 
 Model your app's data. Save, query, and observe changes to your data
 from a local repository. Let DataStore synchronize your local data with
-the Cloud. Our default implemenation syncs local data to/from a DynamoDB
-database, via an AppSync front-end.
+the Cloud. Our default implemenation syncs local data to/from an Amazon
+DynamoDB database, via an Amazon AppSync front-end.
 
 ### [REST APIs](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android):
 
@@ -31,7 +30,7 @@ default plugin works great with Amazon API Gateway.
 ### [GraphQL APIs](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)
 
 Data modeling and simple auth against GraphQL endpoints. Our default
-plugin targets Amazon AppSync.
+plugin targets AppSync.
 
 ### [Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android):
 
@@ -40,7 +39,8 @@ communicates with Amazon Pinpoint.
 
 ### [Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android):
 
-Store and retrieve files in the Cloud. We use S3 by default.
+Store and retrieve files in the Cloud. We use Amazon Simple Storage
+Service (S3) by default.
 
 ## Platform Support
 
@@ -124,6 +124,3 @@ and we'll get back to you.
 
 Please see the [Contributor's Guide](./CONTRIBUTING.md).
 
---------------------------------
-
-[amplify.aws](https://amplify.aws)

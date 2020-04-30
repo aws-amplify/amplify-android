@@ -20,6 +20,8 @@ import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.predictions.models.AgeRange;
+import com.amplifyframework.predictions.models.BinaryFeature;
 import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Landmark;
 import com.amplifyframework.predictions.models.LandmarkType;
@@ -28,10 +30,12 @@ import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.util.CollectionUtils;
 
 import com.amazonaws.services.rekognition.model.BoundingBox;
+import com.amazonaws.services.rekognition.model.FaceDetail;
 import com.amazonaws.services.rekognition.model.Point;
 import com.amazonaws.services.rekognition.model.TextDetection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -101,6 +105,20 @@ public final class RekognitionResultTransformers {
     }
 
     /**
+     * Converts {@link com.amazonaws.services.rekognition.model.AgeRange}
+     * from Amazon Rekognition into Amplify-compatible age range data.
+     * @param range the age range provided by Amazon Rekognition
+     * @return the Amplify age range with same low and high
+     */
+    @Nullable
+    public static AgeRange fromRekognitionAgeRange(@Nullable com.amazonaws.services.rekognition.model.AgeRange range) {
+        if (range == null) {
+            return null;
+        }
+        return new AgeRange(range.getLow(), range.getHigh());
+    }
+
+    /**
      * Converts {@link TextDetection} from Amazon Rekognition into Amplify-
      * compatible text identification data.
      * @param text the detected text data
@@ -160,5 +178,51 @@ public final class RekognitionResultTransformers {
         amplifyLandmarks.add(allPointsLandmark);
 
         return amplifyLandmarks;
+    }
+
+    /**
+     * Gets all the binary features from AWS Rekognition's face
+     * details and compiles them into a single list.
+     * @param face the Rekognition face detail object
+     * @return the list of Amplify {@link BinaryFeature}
+     */
+    public static List<BinaryFeature> fromFaceDetail(FaceDetail face) {
+        return Arrays.asList(
+                BinaryFeature.builder()
+                        .type("Beard")
+                        .value(face.getBeard().getValue())
+                        .confidence(face.getBeard().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("Sunglasses")
+                        .value(face.getSunglasses().getValue())
+                        .confidence(face.getSunglasses().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("Smile")
+                        .value(face.getSmile().getValue())
+                        .confidence(face.getSmile().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("EyeGlasses")
+                        .value(face.getEyeglasses().getValue())
+                        .confidence(face.getEyeglasses().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("Mustache")
+                        .value(face.getMustache().getValue())
+                        .confidence(face.getMustache().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("MouthOpen")
+                        .value(face.getMouthOpen().getValue())
+                        .confidence(face.getMouthOpen().getConfidence())
+                        .build(),
+                BinaryFeature.builder()
+                        .type("EyesOpen")
+                        .value(face.getEyesOpen().getValue())
+                        .confidence(face.getEyesOpen().getConfidence())
+                        .build()
+        );
     }
 }
