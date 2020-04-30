@@ -208,4 +208,14 @@ public interface DataStoreCategoryBehavior {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted
     );
+
+    /**
+     * Every class that implements this behavior will have its own
+     * interpretation of what clear means. At a high level, the intent is to destroy
+     * any artifacts created by the implementation from local disk and/or memory.
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if an exception occurs.
+     */
+    void clear(@NonNull Action onComplete,
+               @NonNull Consumer<DataStoreException> onError);
 }

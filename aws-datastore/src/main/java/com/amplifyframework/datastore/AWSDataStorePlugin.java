@@ -390,6 +390,22 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         onObservationFailure.accept(new DataStoreException("Not implemented yet, buster!", "Check back later!"));
     }
 
+    /**
+     * Stops all synchronization processes and deletes the
+     * SQLite database from device's local storage.
+     * @param onComplete Invoked if the call is successful.
+     * @param onError Invoked if an exception occurs.
+     */
+    @Override
+    public void clear(@NonNull Action onComplete,
+                      @NonNull Consumer<DataStoreException> onError) {
+
+        afterInitialization(() -> {
+            orchestrator.stop();
+            sqliteStorageAdapter.clear(onComplete, onError);
+        });
+    }
+
     private void afterInitialization(@NonNull final Runnable runnable) {
         Completable.fromAction(categoryInitializationsPending::await)
             .andThen(Completable.fromRunnable(runnable))

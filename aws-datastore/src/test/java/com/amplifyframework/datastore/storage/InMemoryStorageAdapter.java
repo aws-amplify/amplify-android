@@ -215,6 +215,13 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         changeRecordStream.onComplete();
     }
 
+    @Override
+    public void clear(@NonNull Action onComplete,
+                      @NonNull Consumer<DataStoreException> onError) {
+        terminate();
+        onComplete.call();
+    }
+
     private int indexOf(Model item) {
         int index = 0;
         for (Model savedItem : items) {

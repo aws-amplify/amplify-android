@@ -579,6 +579,25 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         }
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void clear(@NonNull Action onComplete,
+                      @NonNull Consumer<DataStoreException> onError) {
+        try {
+            terminate();
+            sqliteStorageHelper.deleteDatabaseFromDisk();
+            onComplete.call();
+        } catch (Exception exception) {
+            DataStoreException dataStoreException = new DataStoreException(
+                "Error while trying to delete database from local storage.",
+                exception,
+                "See attached exception for details.");
+            onError.accept(dataStoreException);
+        }
+    }
+
     private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {
         final Set<SqlCommand> createTableCommands = new HashSet<>();
         final Set<SqlCommand> createIndexCommands = new HashSet<>();
