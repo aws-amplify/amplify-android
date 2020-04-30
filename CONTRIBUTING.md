@@ -79,7 +79,7 @@ the root of the `amplify-android` project:
 ```
 
 After this, you can use the published development artifacts from an app.
-To do so, specify `mavenlocal()` inside the app's top-level
+To do so, specify `mavenLocal()` inside the app's top-level
 `build.gradle` file:
 
 ```gradle
