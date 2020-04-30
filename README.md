@@ -124,6 +124,3 @@ and we'll get back to you.
 
 Please see the [Contributor's Guide](./CONTRIBUTING.md).
 
---------------------------------
-
-[amplify.aws](https://amplify.aws)
