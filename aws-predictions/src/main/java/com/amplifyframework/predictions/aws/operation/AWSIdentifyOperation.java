@@ -29,6 +29,10 @@ import com.amplifyframework.predictions.result.IdentifyResult;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
+/**
+ *
+ * Operation that identifies objects within an image via Amazon Translate, Amazon Rekognition, or Amazon Comprehend.
+ */
 public final class AWSIdentifyOperation
         extends IdentifyOperation<AWSRekognitionRequest> {
     private final AWSPredictionsService predictionsService;

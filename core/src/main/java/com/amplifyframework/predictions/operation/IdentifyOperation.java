@@ -24,6 +24,11 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 
 import java.util.Objects;
 
+/**
+ * Abstract representation of an operation that identifies elements within an image.
+ *
+ * @param <R> type of the request object
+ */
 public abstract class IdentifyOperation<R> extends AmplifyOperation<R> {
     private final IdentifyAction identifyAction;
 

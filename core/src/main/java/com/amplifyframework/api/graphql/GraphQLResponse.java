@@ -20,8 +20,6 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.graphql.error.GraphQLLocation;
-import com.amplifyframework.api.graphql.error.GraphQLPathSegment;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
@@ -109,21 +107,22 @@ public final class GraphQLResponse<T> {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "GraphQLResponse{" +
+                "data=\'" + data + "\'" +
+                ", errors=\'" + errors + "\'" +
+                '}';
+    }
+
     /**
      * Error object that models GraphQL error.
      * See https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
      */
     public static final class Error {
-        // Description of the error
         private final String message;
-
-        // list of locations describing the syntax element
         private final List<GraphQLLocation> locations;
-
-        // Details the key path of the response field with error.
         private final List<GraphQLPathSegment> path;
-
-        // Additional error map, reserved for implementors to use however they see fit.
         private final Map<String, Object> extensions;
 
         /**
@@ -200,23 +199,29 @@ public final class GraphQLResponse<T> {
             Error error = (Error) thatObject;
 
             return ObjectsCompat.equals(message, error.message) &&
+                   ObjectsCompat.equals(locations, error.locations) &&
                    ObjectsCompat.equals(path, error.path) &&
-                   ObjectsCompat.equals(extensions, error.extensions) &&
-                   ObjectsCompat.equals(locations, error.locations);
+                   ObjectsCompat.equals(extensions, error.extensions);
+
         }
 
         @Override
         public int hashCode() {
             int result = message.hashCode();
+            result = 31 * result + (locations != null ? locations.hashCode() : 0);
             result = 31 * result + (path != null ? path.hashCode() : 0);
             result = 31 * result + (extensions != null ? extensions.hashCode() : 0);
-            result = 31 * result + (locations != null ? locations.hashCode() : 0);
             return result;
         }
 
         @Override
         public String toString() {
-            return String.valueOf(message);
+            return "GraphQLResponse.Error{" +
+                    "message=\'" + message + "\'" +
+                    ", locations=\'" + locations + "\'" +
+                    ", path=\'" + path + "\'" +
+                    ", extensions=\'" + extensions + "\'" +
+                    '}';
         }
     }
 
