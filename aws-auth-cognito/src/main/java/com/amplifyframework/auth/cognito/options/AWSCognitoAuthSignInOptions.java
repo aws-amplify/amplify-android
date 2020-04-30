@@ -82,6 +82,7 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
         private Map<String, String> metadata;
 
         public CognitoBuilder() {
+            super();
             this.metadata = new HashMap<>();
         }
 
