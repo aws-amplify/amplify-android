@@ -101,6 +101,20 @@ public final class AWSPredictionsService {
     }
 
     /**
+     * Delegate to {@link AWSRekognitionService} to detect entities.
+     * @param image the Rekognition input image
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectEntities(
+            @NonNull Image image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.detectEntities(image, onSuccess, onError);
+    }
+
+    /**
      * Delegate to {@link AWSComprehendService} to make text interpretation.
      * @param text the input text to interpret
      * @param onSuccess triggered upon successful result
