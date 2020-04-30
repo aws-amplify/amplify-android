@@ -21,11 +21,8 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.util.Immutable;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 public class AuthSignUpOptions {
@@ -51,8 +48,8 @@ public class AuthSignUpOptions {
     }
 
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static Builder<?> builder() {
+        return new CoreBuilder();
     }
 
     /**
@@ -93,24 +90,58 @@ public class AuthSignUpOptions {
                 '}';
     }
 
-    public static final class Builder {
+    public abstract static class Builder<T extends Builder<T>> {
         private List<AuthUserAttribute> userAttributes;
 
+        /**
+         * Initialize the builder object with an empty array list for userAttributes.
+         */
         public Builder() {
             this.userAttributes = new ArrayList<>();
         }
 
+        /**
+         * Return the type of builder this is so that chaining can work correctly without implicit casting.
+         * @return the type of builder this is
+         */
+        public abstract T getThis();
+
+        /**
+         * Returns the list of user attributes so extending classes can include this value in their constructor.
+         * @return the list of user attributes
+         */
+        protected List<AuthUserAttribute> getUserAttributes() {
+            return userAttributes;
+        }
+
+        /**
+         * List of user attribute keys and values to populate on sign up.
+         * @param userAttributes List of objects containing user attribute keys and values
+         * @return The type of Builder object being used.
+         */
         @NonNull
-        public Builder userAttributes(@NonNull List<AuthUserAttribute> userAttributes) {
+        public T userAttributes(@NonNull List<AuthUserAttribute> userAttributes) {
             Objects.requireNonNull(userAttributes);
             this.userAttributes.clear();
             this.userAttributes.addAll(userAttributes);
-            return this;
+            return getThis();
         }
 
+        /**
+         * Build an instance of AuthSignUpOptions (or one of its subclasses).
+         * @return an instance of AuthSignUpOptions (or one of its subclasses)
+         */
         @NonNull
         public AuthSignUpOptions build() {
             return new AuthSignUpOptions(Immutable.of(userAttributes));
+        }
+    }
+
+    public static final class CoreBuilder extends Builder<CoreBuilder> {
+
+        @Override
+        public CoreBuilder getThis() {
+            return this;
         }
     }
 }

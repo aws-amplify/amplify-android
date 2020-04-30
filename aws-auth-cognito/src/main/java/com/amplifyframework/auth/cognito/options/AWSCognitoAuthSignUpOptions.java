@@ -28,32 +28,19 @@ import java.util.Map;
 import java.util.Objects;
 
 public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
-    private final Map<String, String> metadata;
     private final Map<String, String> validationData;
 
     /**
      * Advanced options for signing in.
      * @param userAttributes Additional user attributes which should be associated with this user on registration
-     * @param metadata Additional custom attributes to be sent to the service such as information about the client
      * @param validationData A map of custom key/values to be sent as part of the sign up process
      */
     protected AWSCognitoAuthSignUpOptions(
             List<AuthUserAttribute> userAttributes,
-            Map<String, String> metadata,
             Map<String, String> validationData
     ) {
         super(userAttributes);
-        this.metadata = metadata;
         this.validationData = validationData;
-    }
-
-    /**
-     * Get custom attributes to be sent to the service such as information about the client.
-     * @return custom attributes to be sent to the service such as information about the client
-     */
-    @NonNull
-    public Map<String, String> getMetadata() {
-        return metadata;
     }
 
     /**
@@ -66,14 +53,14 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
     }
 
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public static CognitoBuilder builder() {
+        return new CognitoBuilder();
     }
 
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getMetadata(),
+                getUserAttributes(),
                 getValidationData()
         );
     }
@@ -86,50 +73,44 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
             return false;
         } else {
             AWSCognitoAuthSignUpOptions authSignUpOptions = (AWSCognitoAuthSignUpOptions) obj;
-            return ObjectsCompat.equals(getValidationData(), authSignUpOptions.getValidationData()) &&
-                    ObjectsCompat.equals(getMetadata(), authSignUpOptions.getMetadata());
+            return ObjectsCompat.equals(getUserAttributes(), authSignUpOptions.getUserAttributes()) &&
+                    ObjectsCompat.equals(getValidationData(), authSignUpOptions.getValidationData());
         }
     }
 
     @Override
     public String toString() {
         return "AWSCognitoAuthSignUpOptions{" +
-                "metadata=" + metadata +
-                ", validationData=" + validationData +
+                "userAttributes=" + getUserAttributes() +
+                ", validationData=" + getValidationData() +
                 '}';
     }
 
-    public static final class Builder extends AuthSignUpOptions.Builder<Builder> {
-        private Map<String, String> metadata;
+    public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> validationData;
 
-        public Builder() {
+        public CognitoBuilder() {
             super();
-            this.metadata = new HashMap<>();
             this.validationData = new HashMap<>();
         }
 
-        @NonNull
-        public Builder metadata(@NonNull Map<String, String> metadata) {
-            Objects.requireNonNull(metadata);
-            this.metadata.clear();
-            this.metadata.putAll(metadata);
+        @Override
+        public CognitoBuilder getThis() {
             return this;
         }
 
         @NonNull
-        public Builder validationData(@NonNull Map<String, String> validationData) {
+        public CognitoBuilder validationData(@NonNull Map<String, String> validationData) {
             Objects.requireNonNull(validationData);
             this.validationData.clear();
             this.validationData.putAll(validationData);
-            return this;
+            return getThis();
         }
 
         @NonNull
         public AWSCognitoAuthSignUpOptions build() {
             return new AWSCognitoAuthSignUpOptions(
-                    Immutable.of(super.userAttributes),
-                    Immutable.of(metadata),
+                    Immutable.of(super.getUserAttributes()),
                     Immutable.of(validationData));
         }
     }

@@ -30,6 +30,7 @@ import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthSignInState;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
@@ -266,11 +267,17 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     public void signIn(
         @Nullable String username,
         @Nullable String password,
-        @NonNull AuthSignInOptions options,
+        @Nullable AuthSignInOptions options,
         @NonNull final Consumer<AuthSignInResult> onSuccess,
         @NonNull final Consumer<AuthException> onException
     ) {
-        AWSMobileClient.getInstance().signIn(username, password, null, new Callback<SignInResult>() {
+        Map<String, String> metadata = null;
+
+        if (options != null && options instanceof AWSCognitoAuthSignInOptions) {
+            metadata = ((AWSCognitoAuthSignInOptions) options).getMetadata();
+        }
+
+        AWSMobileClient.getInstance().signIn(username, password, metadata, new Callback<SignInResult>() {
             @Override
             public void onResult(SignInResult result) {
                 fetchAndSetUserId(() -> {
