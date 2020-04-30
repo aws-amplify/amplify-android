@@ -1,7 +1,21 @@
+/*
+ * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.content.Context;
-
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.datastore.DataStoreException;
@@ -16,7 +30,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.File;
 import java.util.List;
 
 import io.reactivex.observers.TestObserver;
@@ -54,7 +67,7 @@ public class SQLiteStorageAdapterClearTest {
      * Happy path test: saves a record to the database
      * then calls clear and verifies that the database
      * file has been deleted.
-     * @throws DataStoreException
+     * @throws DataStoreException bubbles up exceptions thrown from the adapter
      */
     @Test
     public void clearDeletesDatabaseFromDisk() throws DataStoreException {
@@ -80,7 +93,7 @@ public class SQLiteStorageAdapterClearTest {
      * Assert that the database was created. Then call clear and
      * assert the file was deleted; attempt to call clear again
      * and ensure there are no exceptions thrown.
-     *
+     * @throws DataStoreException bubbles up exceptions thrown from the adapter
      */
     @Test
     public void clearHandlesMissingFile() throws DataStoreException {

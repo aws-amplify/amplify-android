@@ -291,7 +291,7 @@ public final class SynchronousStorageAdapter {
      * Invokes the clear method of the underlying adapter and
      * either completes or throws an exception.
      */
-    public void clear() throws DataStoreException {
+    public void clear() {
         Completable.fromObservable(emitter -> {
             asyncDelegate.clear(emitter::onComplete, emitter::onError);
         }).blockingAwait();
