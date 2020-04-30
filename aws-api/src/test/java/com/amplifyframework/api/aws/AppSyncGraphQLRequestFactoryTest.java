@@ -36,8 +36,6 @@ import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Date;
 
-import static org.junit.Assert.assertEquals;
-
 /**
  * Tests the {@link AppSyncGraphQLRequestFactory}.
  */
@@ -47,9 +45,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
     /**
      * Validate construction of a GraphQL query from a class and an object ID.
      * @throws ApiException from possible query builder failure
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildQueryFromClassAndId() throws ApiException {
+    public void buildQueryFromClassAndId() throws ApiException, JSONException {
         // Arrange a hard-coded ID as found int the expected data file.
         final String uuidForExpectedQuery = "9a1bee5c-248f-4746-a7da-58f703ec572d";
 
@@ -58,18 +57,20 @@ public final class AppSyncGraphQLRequestFactoryTest {
             AppSyncGraphQLRequestFactory.buildQuery(Person.class, uuidForExpectedQuery);
 
         // Assert: content is expected content
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("query-for-person-by-id.txt"),
-            request.getContent()
+            request.getContent(),
+            true
         );
     }
 
     /**
      * Validate construction of a GraphQL query from a class and a predicate.
      * @throws AmplifyException from buildQuery().
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildQueryFromClassAndPredicate() throws AmplifyException {
+    public void buildQueryFromClassAndPredicate() throws AmplifyException, JSONException {
         // Arrange - ID for predicate, hard-coded version of what's in the expected txt
         final String expectedId = "aca4a318-181e-445a-beb9-7656f5005c7b";
 
@@ -78,9 +79,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
             AppSyncGraphQLRequestFactory.buildQuery(Person.class, Person.ID.eq(expectedId));
 
         // Validate request is expected request
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("query-person-by-predicate.txt"),
-            request.getContent()
+            request.getContent(),
+            true
         );
     }
 
@@ -88,10 +90,11 @@ public final class AppSyncGraphQLRequestFactoryTest {
      * Validates construction of a mutation query from a Person instance, a predicate,
      * and an {@link MutationType}.
      * @throws AmplifyException From buildMutation().
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void buildMutationFromPredicateAndMutationType() throws AmplifyException {
+    public void buildMutationFromPredicateAndMutationType() throws AmplifyException, JSONException {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
@@ -109,9 +112,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
         );
 
         // Assert: expected is actual
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("mutate-person-with-predicate.txt"),
-            requestToDeleteTony.getContent()
+            requestToDeleteTony.getContent(),
+            true
         );
     }
 
@@ -119,16 +123,18 @@ public final class AppSyncGraphQLRequestFactoryTest {
      * Validates construction of a subscription request using a class and an
      * {@link SubscriptionType}.
      * @throws ApiException from subscription builder potential failure
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildSubscriptionFromClassAndSubscriptionType() throws ApiException {
+    public void buildSubscriptionFromClassAndSubscriptionType() throws ApiException, JSONException {
         GraphQLRequest<Person> subscriptionRequest = AppSyncGraphQLRequestFactory.buildSubscription(
             Person.class, SubscriptionType.ON_CREATE
         );
 
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("subscription-request-for-on-create.txt"),
-            subscriptionRequest.getContent()
+            subscriptionRequest.getContent(),
+            true
         );
     }
 
