@@ -15,6 +15,7 @@
 
 apply plugin: 'com.android.library'
 apply from: rootProject.file("configuration/checkstyle.gradle")
+apply from: rootProject.file("configuration/coverage.gradle")
 apply from: rootProject.file("configuration/publishing.gradle")
 
 dependencies {
