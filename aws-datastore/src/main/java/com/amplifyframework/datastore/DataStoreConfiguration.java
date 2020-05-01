@@ -18,6 +18,7 @@ package com.amplifyframework.datastore;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
