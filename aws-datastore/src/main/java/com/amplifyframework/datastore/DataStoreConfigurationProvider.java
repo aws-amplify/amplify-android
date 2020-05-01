@@ -16,7 +16,7 @@
 package com.amplifyframework.datastore;
 
 /**
- * Implementations of this interface should provide access to a <code>DataStoreConfiguration</code>
+ * Implementations of this interface should provide access to a {@link DataStoreConfiguration}
  * that represents the configuration used across all DataStore underlying components.
  *
  * Plugin-specific implementations are expected to document specific behaviors and/or side-effects.
