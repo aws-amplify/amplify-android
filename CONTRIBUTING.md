@@ -12,11 +12,23 @@ contribution.
 
 - [Contributing Guidelines](#contributing-guidelines)
   * [Getting Started](#getting-started)
+    + [Consuming Development Versions of the Framework](#consuming-development-versions-of-the-framework)
   * [Tools](#tools)
   * [Workflows](#workflows)
-    + [Adding code to support a new feature](#adding-code-to-support-a-new-feature)
+    + [Adding Code to Support a New Feature](#adding-code-to-support-a-new-feature)
+    + [Build and Validate Your Work](#build-and-validate-your-work)
+    + [Run Instrumentation Tests](#run-instrumentation-tests)
   * [Reporting Bugs/Feature Requests](#reporting-bugs-feature-requests)
   * [Contributing via Pull Requests](#contributing-via-pull-requests)
+  * [Troubleshooting](#troubleshooting)
+    + [Environment Debugging](#environment-debugging)
+    + [Problems with the Build](#problems-with-the-build)
+    + [Failing Instrumentation Tests](#failing-instrumentation-tests)
+  * [Related Repositories](#related-repositories)
+  * [Finding Contributions to Make](#finding-contributions-to-make)
+  * [Code of Conduct](#code-of-conduct)
+  * [Security Issue Notifications](#security-issue-notifications)
+  * [Licensing](#licensing)
 
 ## Getting Started
 
@@ -43,11 +55,48 @@ Load this project into Android Studio by selecting File > Open, and choosing
 the root directory of the project (`amplify-android`). Alternately, cd into this
 top-level directory.
 
-In Android Studio, build the project by clicking the Hammer icon, "Make Project
-⌘F9". If working on the command line, you can do the same thing via:
+In Android Studio, build the project by clicking the Hammer icon, "Make
+Project ⌘F9". If working on the command line, you can do the same thing
+via:
 
 ```
 ./gradlew build
+```
+
+### Consuming Development Versions of the Framework
+
+Once you've built the framework, you can manually install the Framework
+by publishing its artifacts to your local Maven repository.
+
+The local Maven repository is usually found in your home directory at
+`~/.m2/repository`.
+
+To publish the outputs of the build, execute the following command from
+the root of the `amplify-android` project:
+
+```
+./gradlew publishToMavenLocal
+```
+
+After this, you can use the published development artifacts from an app.
+To do so, specify `mavenLocal()` inside the app's top-level
+`build.gradle` file:
+
+```gradle
+buildscript {
+    repositories {
+        mavenLocal() // this should ideally appear before other repositories
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:3.6.3'
+    }
+}
+
+allprojects {
+    repositories {
+        mavenLocal() // this should ideally appear before other repositories
+    }
+}
 ```
 
 ## Tools
@@ -74,7 +123,7 @@ AndroidX test core, runner, and a jUnit extension. See Android's notes on
 
 ## Workflows
 
-### Adding code to support a new feature
+### Adding Code to Support a New Feature
 
 Be aware of the Getting Started and Pull Request guides. This portion deals
 actually with changing some code.
@@ -422,10 +471,13 @@ happening on the device, in `device-logs-during-test.log`.
 ## Related Repositories
 
 This project is part of the Amplify Framework, which runs on Android,
-iOS, and numerous JavaScript-based web platforms.
+iOS, and numerous JavaScript-based web platforms. The Amplify CLI
+provides an entry point to configure backend resources for all of these
+platforms.
 
-1. [AWS Amplify for iOS](https://github.com/aws-amplify/amplify-ios)
-2. [AWS Amplify for JavaScript](https://github.com/aws-amplify/amplify-js)
+1. [AWS Amplify CLI](https://github.com/aws-amplify/amplify-cli)
+2. [AWS Amplify for iOS](https://github.com/aws-amplify/amplify-ios)
+3. [AWS Amplify for JavaScript](https://github.com/aws-amplify/amplify-js)
 
 AWS Amplify plugins are built on top of the AWS SDKs. AWS SDKs are a
 toolkit for interacting with AWS backend resources.
@@ -442,7 +494,7 @@ DataStore and API plugins.
 2. [iOS AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-ios)
 3. [JavaScript AppSync Client](https://github.com/awslabs/aws-mobile-appsync-sdk-js)
 
-## Finding contributions to work on
+## Finding Contributions to Make
 Looking at [the existing issues](https://github.com/aws-amplify/amplify-android/issues) is a
 great way to find something to work on.
 
@@ -451,7 +503,7 @@ This project has adopted the [Amazon Open Source Code of Conduct](https://aws.gi
 For more information see the [Code of Conduct FAQ](https://aws.github.io/code-of-conduct-faq) or contact
 opensource-codeofconduct@amazon.com with any additional questions or comments.
 
-## Security issue notifications
+## Security Issue Notifications
 If you discover a potential security issue in this project we ask that you notify AWS/Amazon Security via our
 [vulnerability reporting page](http://aws.amazon.com/security/vulnerability-reporting/). Please
 do **not** create a public GitHub issue.
@@ -466,4 +518,3 @@ contribution.
 We may ask you to sign a
 [Contributor License Agreement (CLA)](http://en.wikipedia.org/wiki/Contributor_License_Agreement) for
 larger changes.
-
