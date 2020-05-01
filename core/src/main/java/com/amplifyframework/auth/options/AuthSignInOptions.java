@@ -16,83 +16,21 @@
 package com.amplifyframework.auth.options;
 
 import androidx.annotation.NonNull;
-import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.util.Immutable;
+// Note: This is currently empty but exists here to support common sign in options in the future.
+public abstract class AuthSignInOptions {
+    public abstract static class Builder<T extends Builder<T>> {
+        /**
+         * Return the type of builder this is so that chaining can work correctly without implicit casting.
+         * @return the type of builder this is
+         */
+        public abstract T getThis();
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
-
-public final class AuthSignInOptions {
-    private final Map<String, String> validationData;
-
-    /**
-     * Advanced options for signing in.
-     * @param validationData A map of custom key/values to be sent as part of the sign in process
-     */
-    private AuthSignInOptions(Map<String, String> validationData) {
-        this.validationData = validationData;
-    }
-
-    /**
-     * Get a map of custom key/values to be sent as part of the sign in process.
-     * @return a map of custom key/values to be sent as part of the sign in process
-     */
-    @NonNull
-    public Map<String, String> getValidationData() {
-        return validationData;
-    }
-
-    @Override
-    public int hashCode() {
-        return ObjectsCompat.hash(
-                getValidationData()
-        );
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) {
-            return true;
-        } else if (obj == null || getClass() != obj.getClass()) {
-            return false;
-        } else {
-            AuthSignInOptions authSignInOptions = (AuthSignInOptions) obj;
-            return ObjectsCompat.equals(getValidationData(), authSignInOptions.getValidationData());
-        }
-    }
-
-    @Override
-    public String toString() {
-        return "AuthSignInOptions{" +
-                "validationData=" + validationData +
-                '}';
-    }
-
-    @NonNull
-    public static Builder builder() {
-        return new Builder();
-    }
-
-    public static final class Builder {
-        private Map<String, String> validationData;
-
-        public Builder() {
-            this.validationData = new HashMap<>();
-        }
-
+        /**
+         * Build an instance of AuthSignInOptions (or one of its subclasses).
+         * @return an instance of AuthSignInOptions (or one of its subclasses)
+         */
         @NonNull
-        public Builder validationData(@NonNull Map<String, String> validationData) {
-            Objects.requireNonNull(validationData);
-            this.validationData.clear();
-            this.validationData.putAll(validationData);
-            return this;
-        }
-
-        @NonNull
-        public AuthSignInOptions build() {
-            return new AuthSignInOptions(Immutable.of(validationData));
-        }
+        public abstract AuthSignInOptions build();
     }
 }

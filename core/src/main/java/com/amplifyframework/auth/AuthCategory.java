@@ -78,7 +78,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public void signIn(
             @Nullable String username,
             @Nullable String password,
-            @Nullable AuthSignInOptions options,
+            @NonNull AuthSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
