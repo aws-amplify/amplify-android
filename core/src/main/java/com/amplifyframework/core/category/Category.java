@@ -83,7 +83,7 @@ public abstract class Category<P extends Plugin<?>> implements CategoryTypeable 
                 for (P plugin : getPlugins()) {
                     String pluginKey = plugin.getPluginKey();
                     JSONObject pluginConfig = configuration.getPluginConfig(pluginKey);
-                    plugin.configure(pluginConfig, context);
+                    plugin.configure(pluginConfig != null ? pluginConfig : new JSONObject(), context);
                 }
                 state.set(State.CONFIGURED);
             } catch (Throwable anyError) {
