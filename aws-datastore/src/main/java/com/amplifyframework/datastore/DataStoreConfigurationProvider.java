@@ -15,6 +15,18 @@
 
 package com.amplifyframework.datastore;
 
+/**
+ * Implementations of this interface should provide access to a {@link DataStoreConfiguration}
+ * that represents the configuration used across all DataStore underlying components.
+ *
+ * Plugin-specific implementations are expected to document specific behaviors and/or side-effects.
+ */
 public interface DataStoreConfigurationProvider {
+
+    /**
+     * Returns the configuration object.
+     * @return the configuration object.
+     * @throws DataStoreException if errors happen during configuration building/parsing.
+     */
     DataStoreConfiguration getConfiguration() throws DataStoreException;
 }
