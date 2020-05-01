@@ -163,6 +163,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Context context
     ) throws DataStoreException {
         try {
+            // Applies user-provided configs on-top-of any values from the file.
             this.pluginConfiguration = DataStoreConfiguration
                 .builder(pluginConfiguration, userProvidedConfiguration)
                 .build();
