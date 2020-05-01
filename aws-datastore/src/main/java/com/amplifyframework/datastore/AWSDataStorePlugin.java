@@ -86,7 +86,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.categoryInitializationsPending = new CountDownLatch(1);
 
-        orchestrator = new Orchestrator(
+        this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
