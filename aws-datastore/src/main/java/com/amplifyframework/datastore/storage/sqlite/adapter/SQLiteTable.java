@@ -23,8 +23,7 @@ import com.amplifyframework.core.model.ModelAssociation;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.PrimaryKey;
-import com.amplifyframework.core.model.types.JavaFieldType;
-import com.amplifyframework.datastore.storage.sqlite.SqliteDataType;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
 import com.amplifyframework.util.Immutable;
 
@@ -93,6 +92,7 @@ public final class SQLiteTable {
                     .name(isAssociated
                             ? association.getTargetName()
                             : modelField.getName())
+                    .fieldName(modelField.getName())
                     .tableName(modelSchema.getName())
                     .ownerOf(isAssociated
                             ? association.getAssociatedType()
@@ -109,14 +109,8 @@ public final class SQLiteTable {
                 .build();
     }
 
-    private static SqliteDataType sqlTypeFromModelField(ModelField modelField) {
-        if (modelField.isModel()) {
-            return TypeConverter.getSqlTypeForJavaType(JavaFieldType.MODEL.stringValue());
-        }
-        if (modelField.isEnum()) {
-            return TypeConverter.getSqlTypeForJavaType(JavaFieldType.ENUM.stringValue());
-        }
-        return TypeConverter.getSqlTypeForGraphQLType(modelField.getTargetType());
+    private static SQLiteDataType sqlTypeFromModelField(ModelField modelField) {
+        return TypeConverter.getSQLiteDataType(modelField);
     }
 
     /**

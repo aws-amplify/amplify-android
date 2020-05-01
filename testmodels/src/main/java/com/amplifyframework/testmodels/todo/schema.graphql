@@ -1,0 +1,25 @@
+type TodoOwner {
+    name: String!
+    email: AWSEmail
+}
+
+enum TodoStatus {
+    Pending
+    InProgress
+    Done
+}
+
+type Todo @model {
+    id: ID!
+    title: String!
+    content: String!
+    status: TodoStatus!
+    createdAt: AWSDateTime!
+    lastUpdated: AWSTimestamp
+    dueDate: AWSDate
+    priority: Int
+    hoursSpent: Float
+    duplicate: Boolean!
+    owner: TodoOwner!
+    tags: [String]
+}

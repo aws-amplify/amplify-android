@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 /**
  * Enumerate the types of data supported by SQLite.
  */
-public enum SqliteDataType {
+public enum SQLiteDataType {
     /**
      * The value is a NULL value.
      */
@@ -51,7 +51,7 @@ public enum SqliteDataType {
 
     private final String sqliteDataType;
 
-    SqliteDataType(@NonNull String sqliteDataType) {
+    SQLiteDataType(@NonNull String sqliteDataType) {
         this.sqliteDataType = sqliteDataType;
     }
 
@@ -69,8 +69,8 @@ public enum SqliteDataType {
      * @param sqliteDataType the string representation of the field type.
      * @return the enumeration constant.
      */
-    public static SqliteDataType from(@NonNull String sqliteDataType) {
-        for (final SqliteDataType type : SqliteDataType.values()) {
+    public static SQLiteDataType from(@NonNull String sqliteDataType) {
+        for (final SQLiteDataType type : SQLiteDataType.values()) {
             if (sqliteDataType.equals(type.getSqliteDataType())) {
                 return type;
             }
