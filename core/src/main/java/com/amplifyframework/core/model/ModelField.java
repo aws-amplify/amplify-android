@@ -29,7 +29,7 @@ public final class ModelField {
 
     // Type of the field is the data type of the instance variables
     // of the Model class.
-    private final String type;
+    private final Class<?> type;
 
     // The type of the field in the target. For example: type of the
     // field in the GraphQL target.
@@ -81,7 +81,7 @@ public final class ModelField {
      * Returns the data type of the instance variable of the Model class.
      * @return Data type of the instance variable of the Model class.
      */
-    public String getType() {
+    public Class<?> getType() {
         return type;
     }
 
@@ -205,7 +205,7 @@ public final class ModelField {
 
         // Type of the field is the data type of the instance variables
         // of the Model class.
-        private String type;
+        private Class<?> type;
 
         // The data targetType of the field.
         private String targetType;
@@ -238,7 +238,7 @@ public final class ModelField {
          * @param type Type of the field is the type of the instance variable of the Model class.
          * @return the builder object
          */
-        public ModelFieldBuilder type(String type) {
+        public ModelFieldBuilder type(Class<?> type) {
             this.type = type;
             return this;
         }

@@ -47,19 +47,19 @@ public class StorageItemChangeRecordTest {
             .name("id")
             .targetType("ID")
             .isRequired(true)
-            .type("String")
+            .type(String.class)
             .build());
         expectedFields.put("entry", ModelField.builder()
             .name("entry")
             .targetType("String")
             .isRequired(true)
-            .type("String")
+            .type(String.class)
             .build());
         expectedFields.put("itemClass", ModelField.builder()
             .name("itemClass")
             .targetType("String")
             .isRequired(true)
-            .type("String")
+            .type(String.class)
             .build());
 
         final ModelIndex index = ModelIndex.builder()

@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.CompoundModelProvider;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -69,7 +70,7 @@ import static org.mockito.Mockito.verify;
 @RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
-    private static final long BASE_SYNC_INTERVAL_MS = TimeUnit.DAYS.toMillis(1);
+    private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
 
     private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
     private AppSync appSync;
@@ -101,13 +102,18 @@ public final class SyncProcessorTest {
         final MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
 
+        DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
+            .builder()
+            .syncIntervalInMinutes(BASE_SYNC_INTERVAL_MINUTES)
+            .build();
+
         this.syncProcessor = SyncProcessor.builder()
             .modelProvider(modelProvider)
             .modelSchemaRegistry(modelSchemaRegistry)
             .syncTimeRegistry(syncTimeRegistry)
             .appSync(appSync)
             .merger(merger)
-            .baseSyncIntervalProvider(() -> BASE_SYNC_INTERVAL_MS)
+            .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
             .build();
     }
 
@@ -312,7 +318,7 @@ public final class SyncProcessorTest {
     public void baseSyncRequestedIfLastSyncBeyondInterval() {
         // Arrange: add LastSyncMetadata for the types, indicating that they
         // were sync'd too long ago. That is, longer ago than the base sync interval.
-        long longAgoTimeMs = Time.now() - (BASE_SYNC_INTERVAL_MS * 2);
+        long longAgoTimeMs = Time.now() - (TimeUnit.MINUTES.toMillis(BASE_SYNC_INTERVAL_MINUTES) * 2);
         Observable.fromIterable(modelProvider.models())
             .map(modelClass -> LastSyncMetadata.lastSyncedAt(modelClass, longAgoTimeMs))
             .blockingForEach(storageAdapter::save);

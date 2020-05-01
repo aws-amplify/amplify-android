@@ -149,20 +149,24 @@ public class SqlCommandTest {
                 .name("id")
                 .isRequired(true)
                 .targetType("String")
+                .type(String.class)
                 .build());
         fields.put("firstName", ModelField.builder()
                 .name("firstName")
                 .isRequired(true)
                 .targetType("String")
+                .type(String.class)
                 .build());
         fields.put("lastName", ModelField.builder()
                 .name("lastName")
                 .isRequired(true)
                 .targetType("String")
+                .type(String.class)
                 .build());
         fields.put("age", ModelField.builder()
                 .name("age")
                 .targetType("Int")
+                .type(Integer.class)
                 .build());
         return fields;
     }
