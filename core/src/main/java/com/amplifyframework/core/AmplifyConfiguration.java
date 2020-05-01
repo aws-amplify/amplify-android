@@ -25,6 +25,7 @@ import com.amplifyframework.analytics.AnalyticsCategoryConfiguration;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.category.EmptyCategoryConfiguration;
 import com.amplifyframework.datastore.DataStoreCategoryConfiguration;
 import com.amplifyframework.hub.HubCategoryConfiguration;
 import com.amplifyframework.logging.LoggingCategoryConfiguration;
@@ -171,21 +172,20 @@ public final class AmplifyConfiguration {
     /**
      * Gets the configuration for the specified category type.
      * @param categoryType The category type to return the configuration object for
-     * @return Requested category configuration object
-     * @throws AmplifyException If there is a problem in the config file
+     * @return Requested category configuration object or an empty CategoryConfiguration
+     * object for the given {@link CategoryType}
      */
     @SuppressWarnings("WeakerAccess")
     @NonNull
-    public CategoryConfiguration forCategoryType(@NonNull CategoryType categoryType) throws AmplifyException {
+    public CategoryConfiguration forCategoryType(@NonNull CategoryType categoryType) {
         final CategoryConfiguration categoryConfiguration =
             categoryConfigurations.get(categoryType.getConfigurationKey());
+
         if (categoryConfiguration == null) {
-            throw new AmplifyException(
-                "Unknown/bad category type: " + categoryType,
-                "Be sure to use one of the supported Categories in your current version of Amplify"
-            );
+            return EmptyCategoryConfiguration.forCategoryType(categoryType);
+        } else {
+            return categoryConfiguration;
         }
-        return categoryConfiguration;
     }
 }
 
