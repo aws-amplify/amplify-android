@@ -91,6 +91,9 @@ final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Er
 
     private List<GraphQLPathSegment> getPath(JsonElement pathElement) {
         List<GraphQLPathSegment> path = new ArrayList<>();
+        if (pathElement.isJsonNull()) {
+            return null;
+        }
         if (!pathElement.isJsonArray()) {
             throw new JsonParseException("Expected a JsonArray but found a " +
                     pathElement.getClass().getName() + " while deserializing path");
