@@ -54,7 +54,7 @@ import java.util.List;
  *
  */
 public final class SQLPredicate {
-    private final List<Object> selectionArgs;
+    private final List<Object> bindings;
     private final String queryString;
 
     /**
@@ -64,7 +64,7 @@ public final class SQLPredicate {
      * @throws DataStoreException If unable to parse the predicate
      */
     public SQLPredicate(QueryPredicate predicate) throws DataStoreException {
-        this.selectionArgs = new LinkedList<>();
+        this.bindings = new LinkedList<>();
         this.queryString = parsePredicate(predicate).toString();
     }
 
@@ -74,7 +74,7 @@ public final class SQLPredicate {
      *
      * This is a prepared statement, where "?" represent values
      * to be replaced with variables, which can be obtained
-     * by {@link SQLPredicate#getSelectionArgs()} method. The
+     * by {@link SQLPredicate#getBindings()} method. The
      * method will return a list of strings to replace "?"s with
      * in the same order that they appear in the query string.
      *
@@ -89,8 +89,8 @@ public final class SQLPredicate {
      * Returns the selection arguments for the converted query string.
      * @return the selection arguments for the converted query string.
      */
-    public List<Object> getSelectionArgs() {
-        return Immutable.of(selectionArgs);
+    public List<Object> getBindings() {
+        return Immutable.of(bindings);
     }
 
     // Utility method to recursively parse a given predicate.
@@ -118,8 +118,8 @@ public final class SQLPredicate {
         switch (op.type()) {
             case BETWEEN:
                 BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) op;
-                selectionArgs.add(betweenOp.start());
-                selectionArgs.add(betweenOp.end());
+                bindings.add(betweenOp.start());
+                bindings.add(betweenOp.end());
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.BETWEEN)
@@ -131,7 +131,7 @@ public final class SQLPredicate {
                         .append("?");
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
-                selectionArgs.add(containsOp.value());
+                bindings.add(containsOp.value());
                 return builder.append("?")
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.IN)
@@ -139,7 +139,7 @@ public final class SQLPredicate {
                         .append(field);
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
-                selectionArgs.add(beginsWithOp.value() + "%");
+                bindings.add(beginsWithOp.value() + "%");
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.LIKE)
@@ -151,7 +151,7 @@ public final class SQLPredicate {
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
-                selectionArgs.add(getOperatorValue(op));
+                bindings.add(getOperatorValue(op));
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))
