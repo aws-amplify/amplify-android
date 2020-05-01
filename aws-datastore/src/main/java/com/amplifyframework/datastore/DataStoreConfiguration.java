@@ -308,7 +308,6 @@ public final class DataStoreConfiguration {
                 syncIntervalInMinutes);
             syncMaxRecords = getValueOrDefault(userProvidedConfiguration.getSyncMaxRecords(), syncMaxRecords);
             syncPageSize = getValueOrDefault(userProvidedConfiguration.getSyncPageSize(), syncPageSize);
-
         }
 
         private static <T> T getValueOrDefault(T value, T defaultValue) {
