@@ -36,7 +36,7 @@ final class SubscriptionProcessor {
     private final RemoteModelMutations remoteModelMutations;
     private final Merger merger;
     private final CompositeDisposable disposable;
-    private final ReplaySubject<Mutation<? extends Model>> buffer;
+    private final ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
      * Constructs a new SubscriptionProcessor.
