@@ -114,7 +114,10 @@ public final class DataStoreConfiguration {
      */
     @NonNull
     public static DataStoreConfiguration defaults() throws DataStoreException {
+        DataStoreErrorHandler dataStoreErrorHandler = DefaultDataStoreErrorHandler.instance();
         return builder()
+            .dataStoreErrorHandler(dataStoreErrorHandler)
+            .dataStoreConflictHandler(ApplyRemoteConflictHandler.instance(dataStoreErrorHandler))
             .syncIntervalInMinutes(DEFAULT_SYNC_INTERVAL_MINUTES)
             .syncPageSize(DEFAULT_SYNC_PAGE_SIZE)
             .syncMaxRecords(DEFAULT_SYNC_MAX_RECORDS)
