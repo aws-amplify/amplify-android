@@ -64,7 +64,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
-    private Orchestrator orchestrator;
+    private final Orchestrator orchestrator;
 
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
