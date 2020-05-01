@@ -270,7 +270,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     public void signIn(
         @Nullable String username,
         @Nullable String password,
-        @Nullable AuthSignInOptions options,
+        @NonNull AuthSignInOptions options,
         @NonNull final Consumer<AuthSignInResult> onSuccess,
         @NonNull final Consumer<AuthException> onException
     ) {
@@ -304,7 +304,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull final Consumer<AuthSignInResult> onSuccess,
             @NonNull final Consumer<AuthException> onException
     ) {
-        signIn(username, password, null, onSuccess, onException);
+        signIn(username, password, AWSCognitoAuthSignInOptions.builder().build(), onSuccess, onException);
     }
 
     @Override

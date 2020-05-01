@@ -53,7 +53,7 @@ public class AuthSignUpOptions {
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the hash.
+     * When overriding, be sure to include userAttributes in the hash.
      * @return Hash code of this object
      */
     @Override
@@ -64,7 +64,7 @@ public class AuthSignUpOptions {
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the comparison.
+     * When overriding, be sure to include userAttributes in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
     @Override
@@ -80,7 +80,7 @@ public class AuthSignUpOptions {
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the output string.
+     * When overriding, be sure to include userAttributes in the output string.
      * @return A string representation of the object
      */
     @Override
@@ -91,7 +91,7 @@ public class AuthSignUpOptions {
     }
 
     public abstract static class Builder<T extends Builder<T>> {
-        private List<AuthUserAttribute> userAttributes;
+        private final List<AuthUserAttribute> userAttributes;
 
         /**
          * Initialize the builder object with an empty array list for userAttributes.

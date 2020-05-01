@@ -86,7 +86,7 @@ public interface AuthCategoryBehavior {
     void signIn(
             @Nullable String username,
             @Nullable String password,
-            @Nullable AuthSignInOptions options,
+            @NonNull AuthSignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
