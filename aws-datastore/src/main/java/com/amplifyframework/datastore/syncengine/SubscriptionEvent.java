@@ -24,22 +24,16 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import java.util.Objects;
 
 /**
- * NOTE: this class is named in a way that makes it sounds broad, but it is NOT.
- * A {@link Mutation} is a depiction of a GraphQL mutation _as received on a subscription_.
- * Subscriptions notify the client of mutations that have occurred on the backend.
- * Other GraphQL mutation data may be represented in additional/other data structures.
- *
- * TODO0: is this even needed? Can we just use {@link ModelWithMetadata} directly?
- * TODO1: is this well named? Can it be called a SubscriptionEvent, instead?
- *
- * @param <T> Type of data that has been mutated
+ * A {@link SubscriptionEvent} notify the client of mutations that have
+ * occurred on the backend.
+ * @param <T> Type of data that has been mutated on the backend
  */
-final class Mutation<T extends Model> {
+final class SubscriptionEvent<T extends Model> {
     private final ModelWithMetadata<T> modelWithMetadata;
     private final Class<T> modelClass;
     private final Type type;
 
-    private Mutation(ModelWithMetadata<T> modelWithMetadata, Class<T> modelClass, Type type) {
+    private SubscriptionEvent(ModelWithMetadata<T> modelWithMetadata, Class<T> modelClass, Type type) {
         this.modelWithMetadata = modelWithMetadata;
         this.modelClass = modelClass;
         this.type = type;
@@ -92,8 +86,8 @@ final class Mutation<T extends Model> {
 
         @SuppressLint("SyntheticAccessor")
         @NonNull
-        Mutation<T> build() {
-            return new Mutation<>(modelWithMetadata, modelClass, type);
+        SubscriptionEvent<T> build() {
+            return new SubscriptionEvent<>(modelWithMetadata, modelClass, type);
         }
     }
 

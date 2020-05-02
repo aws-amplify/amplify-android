@@ -17,12 +17,12 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.appsync.AWSAppSyncScalarType;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * A utility that provides functions to convert between
@@ -30,7 +30,7 @@ import java.util.Objects;
  */
 public final class TypeConverter {
     private static final Map<AWSAppSyncScalarType, JavaFieldType> AWS_GRAPH_QL_TO_JAVA = new HashMap<>();
-    private static final Map<JavaFieldType, SqliteDataType> JAVA_TO_SQL = new HashMap<>();
+    private static final Map<JavaFieldType, SQLiteDataType> JAVA_TO_SQL = new HashMap<>();
 
     /**
      * Dis-allows instantiation of the static utility.
@@ -54,59 +54,42 @@ public final class TypeConverter {
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_PHONE, JavaFieldType.STRING);
         AWS_GRAPH_QL_TO_JAVA.put(AWSAppSyncScalarType.AWS_IP_ADDRESS, JavaFieldType.STRING);
 
-        JAVA_TO_SQL.put(JavaFieldType.BOOLEAN, SqliteDataType.INTEGER);
-        JAVA_TO_SQL.put(JavaFieldType.LONG, SqliteDataType.INTEGER);
-        JAVA_TO_SQL.put(JavaFieldType.INTEGER, SqliteDataType.INTEGER);
-        JAVA_TO_SQL.put(JavaFieldType.FLOAT, SqliteDataType.REAL);
-        JAVA_TO_SQL.put(JavaFieldType.STRING, SqliteDataType.TEXT);
-        JAVA_TO_SQL.put(JavaFieldType.ENUM, SqliteDataType.TEXT);
-        JAVA_TO_SQL.put(JavaFieldType.DATE, SqliteDataType.TEXT);
-        JAVA_TO_SQL.put(JavaFieldType.TIME, SqliteDataType.TEXT);
-        JAVA_TO_SQL.put(JavaFieldType.MODEL, SqliteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.BOOLEAN, SQLiteDataType.INTEGER);
+        JAVA_TO_SQL.put(JavaFieldType.LONG, SQLiteDataType.INTEGER);
+        JAVA_TO_SQL.put(JavaFieldType.INTEGER, SQLiteDataType.INTEGER);
+        JAVA_TO_SQL.put(JavaFieldType.FLOAT, SQLiteDataType.REAL);
+        JAVA_TO_SQL.put(JavaFieldType.STRING, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.ENUM, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.MODEL, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.CUSTOM_TYPE, SQLiteDataType.TEXT);
     }
 
-    /**
-     * Retrieve the Java type for the GraphQL type.
-     * @param graphQlTypeString the graphQL type
-     * @return the Java type
-     */
-    public static JavaFieldType getJavaTypeForGraphQLType(@NonNull String graphQlTypeString) {
-        final AWSAppSyncScalarType awsAppSyncScalarType =
-            AWSAppSyncScalarType.fromString(Objects.requireNonNull(graphQlTypeString));
-        final JavaFieldType javaFieldType = AWS_GRAPH_QL_TO_JAVA.get(awsAppSyncScalarType);
-        if (null == javaFieldType) {
-            throw new IllegalArgumentException(
-                "No Java type mapping defined for GraphQL type = " + awsAppSyncScalarType
-            );
+    static JavaFieldType getJavaFieldType(@NonNull ModelField field) {
+        if (field.isModel()) {
+            return JavaFieldType.MODEL;
         }
-        return javaFieldType;
-    }
-
-    /**
-     * Retrieve the Sql type for the Java type.
-     * @param javaTypeString the Java type
-     * @return the Sql type
-     */
-    public static SqliteDataType getSqlTypeForJavaType(@NonNull String javaTypeString) {
-        final JavaFieldType javaFieldType = JavaFieldType.from(Objects.requireNonNull(javaTypeString));
-        final SqliteDataType sqliteDataType = JAVA_TO_SQL.get(javaFieldType);
-        if (null == sqliteDataType) {
-            throw new IllegalArgumentException(
-                "No SQL type mapping defined for Java type = " + javaFieldType
-            );
+        if (field.isEnum()) {
+            return JavaFieldType.ENUM;
         }
-        return sqliteDataType;
+        try {
+            return JavaFieldType.from(field.getType().getSimpleName());
+        } catch (IllegalArgumentException exception) {
+            // fallback to custom type, which will result in the field being converted to a JSON string
+            return JavaFieldType.CUSTOM_TYPE;
+        }
     }
 
     /**
      * Retrieve the Sql type for the GraphQL type.
-     * @param graphQlTypeString the graphQL type
-     * @return the Sql type
+     *
+     * @param field the Model field
+     * @return the SQL type enum value
      */
-    public static SqliteDataType getSqlTypeForGraphQLType(@NonNull String graphQlTypeString) {
-        final AWSAppSyncScalarType awsAppSyncScalarType =
-            AWSAppSyncScalarType.fromString(Objects.requireNonNull(graphQlTypeString));
-        final JavaFieldType javaFieldType = getJavaTypeForGraphQLType(awsAppSyncScalarType.stringValue());
-        return getSqlTypeForJavaType(javaFieldType.stringValue());
+    public static SQLiteDataType getSQLiteDataType(@NonNull ModelField field) {
+        final JavaFieldType javaFieldType = getJavaFieldType(field);
+        return JAVA_TO_SQL.get(javaFieldType);
     }
+
 }

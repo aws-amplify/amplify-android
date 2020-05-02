@@ -74,7 +74,7 @@ final class RemoteModelMutations {
     }
 
     @WorkerThread
-    Observable<Mutation<? extends Model>> observe() {
+    Observable<SubscriptionEvent<? extends Model>> observe() {
         return Observable.defer(() -> Observable.create(emitter -> {
             emitter.setCancellable(() -> {
                 synchronized (subscriptions) {
@@ -124,7 +124,7 @@ final class RemoteModelMutations {
             private AppSync appSync;
             private Class<T> modelClass;
             private SubscriptionType subscriptionType;
-            private Emitter<Mutation<? extends Model>> commonEmitter;
+            private Emitter<SubscriptionEvent<? extends Model>> commonEmitter;
 
             Request<T> appSync(AppSync appSync) {
                 this.appSync = appSync;
@@ -142,7 +142,7 @@ final class RemoteModelMutations {
                 return this;
             }
 
-            Request<T> commonEmitter(Emitter<Mutation<? extends Model>> commonEmitter) {
+            Request<T> commonEmitter(Emitter<SubscriptionEvent<? extends Model>> commonEmitter) {
                 this.commonEmitter = commonEmitter;
                 return this;
             }
@@ -180,21 +180,21 @@ final class RemoteModelMutations {
                 return new Subscription(cancelable);
             }
 
-            private static Mutation.Type fromSubscriptionType(SubscriptionType subscriptionType) {
+            private static SubscriptionEvent.Type fromSubscriptionType(SubscriptionType subscriptionType) {
                 switch (subscriptionType) {
                     case ON_CREATE:
-                        return Mutation.Type.CREATE;
+                        return SubscriptionEvent.Type.CREATE;
                     case ON_DELETE:
-                        return Mutation.Type.DELETE;
+                        return SubscriptionEvent.Type.DELETE;
                     case ON_UPDATE:
-                        return Mutation.Type.UPDATE;
+                        return SubscriptionEvent.Type.UPDATE;
                     default:
                         throw new IllegalArgumentException("Unknown subscription type: " + subscriptionType);
                 }
             }
 
             private static <T extends Model> Consumer<GraphQLResponse<ModelWithMetadata<T>>> itemConsumer(
-                Emitter<Mutation<? extends Model>> commonEmitter,
+                Emitter<SubscriptionEvent<? extends Model>> commonEmitter,
                 Class<T> modelClazz,
                 SubscriptionType subscriptionType) {
                 return response -> {
@@ -215,7 +215,7 @@ final class RemoteModelMutations {
                             AmplifyException.TODO_RECOVERY_SUGGESTION
                         ));
                     } else {
-                        commonEmitter.onNext(Mutation.<T>builder()
+                        commonEmitter.onNext(SubscriptionEvent.<T>builder()
                             .modelWithMetadata(response.getData())
                             .modelClass(modelClazz)
                             .type(fromSubscriptionType(subscriptionType))

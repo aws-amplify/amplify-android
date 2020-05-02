@@ -19,6 +19,8 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.category.CategoryType;
+
 import org.json.JSONObject;
 
 /**
@@ -99,6 +101,12 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
         } else {
             return FakeLogger.instance(namespace);
         }
+    }
+
+    @NonNull
+    @Override
+    public Logger forCategory(@NonNull CategoryType categoryType) {
+        return forNamespace("amplify:" + categoryType.getConfigurationKey());
     }
 
     JSONObject getPluginConfiguration() {

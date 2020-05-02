@@ -163,12 +163,12 @@ public final class ModelSchema {
                 field.getAnnotation(com.amplifyframework.core.model.annotations.ModelField.class);
         if (annotation != null) {
             final String fieldName = field.getName();
-            final String fieldType = field.getType().getSimpleName();
+            final Class<?> fieldType = field.getType();
             final String targetType = annotation.targetType();
             return ModelField.builder()
                     .name(fieldName)
                     .type(fieldType)
-                    .targetType(targetType.isEmpty() ? fieldType : targetType)
+                    .targetType(targetType.isEmpty() ? fieldType.getSimpleName() : targetType)
                     .isRequired(annotation.isRequired())
                     .isArray(Collection.class.isAssignableFrom(field.getType()))
                     .isEnum(Enum.class.isAssignableFrom(field.getType()))

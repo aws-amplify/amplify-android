@@ -37,7 +37,6 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
-import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.CompoundModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
@@ -47,19 +46,14 @@ import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
-import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
 import com.amplifyframework.util.StringUtils;
 
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.sql.Time;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -481,7 +475,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 synchronized (sqlCommand.getCompiledSqlStatement()) {
                     final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
                     compiledSqlStatement.clearBindings();
-                    bindPreCompiledStatementWithFieldValues(compiledSqlStatement, sqlCommand.getSelectionArgs());
+                    bindStatementToValues(sqlCommand, null);
                     // executeUpdateDelete returns the number of rows affected.
                     final int rowsDeleted = compiledSqlStatement.executeUpdateDelete();
                     if (rowsDeleted != 1) {
@@ -512,7 +506,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             } catch (Exception someOtherTypeOfException) {
                 DataStoreException dataStoreException = new DataStoreException(
                     "Error in deleting the model.", someOtherTypeOfException,
-                    "See attched exception for details."
+                    "See attached exception for details."
                 );
                 itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
@@ -606,220 +600,75 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         return Immutable.of(modifiableMap);
     }
 
-    private <T> List<Object> extractFieldValuesFromModel(@NonNull final T model)
-            throws IllegalAccessException, DataStoreException {
-        final String tableName = model.getClass().getSimpleName();
-        final Iterator<Field> fieldIterator = FieldFinder.findFieldsIn(model.getClass()).iterator();
-        try (Cursor cursor = getQueryAllCursor(tableName)) {
-            if (cursor == null) {
-                throw new IllegalAccessException("Error in getting a cursor to table: " +
-                        tableName);
-            }
-            cursor.moveToFirst();
-
-            final ModelSchema modelSchema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
-            final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-            final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
-            final List<Object> fieldValues = new ArrayList<>();
-            while (fieldValues.size() < columns.size()) {
-                fieldValues.add(null); // Pre-populate with null values
-            }
-
-            while (fieldIterator.hasNext()) {
-                final Field field = fieldIterator.next();
-
-                field.setAccessible(true);
-                final String fieldName = field.getName();
-                final Object fieldValue = field.get(model);
-
-                // Skip if there is no equivalent column for field in object
-                final SQLiteColumn column = columns.get(fieldName);
-                if (column == null) {
-                    continue;
-                }
-
-                final String columnName = column.getAliasedName();
-                final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
-                fieldValues.set(columnIndex, fieldValue);
-            }
-
-            return Immutable.of(fieldValues);
-        }
-    }
-
     // Binds each value inside list onto compiled statement in order
-    private void bindPreCompiledStatementWithFieldValues(
-            @NonNull SQLiteStatement preCompiledStatement,
-            @NonNull List<Object> fieldValues
+    private void bindStatementToValues(
+            @NonNull SqlCommand sqlCommand,
+            @Nullable Model model
     ) throws DataStoreException {
+        final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
         // 1-based index for columns
         int columnIndex = 1;
-        for (Object fieldValue : fieldValues) {
-            bindPreCompiledStatementWithFieldValue(
-                    preCompiledStatement,
-                    fieldValue,
-                    columnIndex++
-            );
+
+        // bind model field values to sql columns
+        if (model != null) {
+            final Class<? extends Model> modelClass = model.getClass();
+            final SQLiteModelFieldTypeConverter converter =
+                    new SQLiteModelFieldTypeConverter(modelClass, modelSchemaRegistry, gson);
+            final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelInstance(model);
+            final Map<String, ModelField> modelFields = schema.getFields();
+
+            final List<SQLiteColumn> columns = sqlCommand.getColumns();
+
+            for (SQLiteColumn column : columns) {
+                final ModelField modelField = Objects.requireNonNull(modelFields.get(column.getFieldName()));
+                final Object fieldValue = converter.convertValueFromTarget(model, modelField);
+                bindValueToStatement(compiledSqlStatement, columnIndex, fieldValue);
+                columnIndex++;
+            }
+        }
+
+        // apply stored bindings after columns were bound
+        for (Object binding : sqlCommand.getBindings()) {
+            bindValueToStatement(compiledSqlStatement, columnIndex, binding);
+            columnIndex++;
         }
     }
 
-    // Helper method to bind individual value based on type
-    private void bindPreCompiledStatementWithFieldValue(
-            @NonNull SQLiteStatement preCompiledStatement,
-            @Nullable Object fieldValue,
-            int columnIndex)
-            throws DataStoreException {
-
-        if (fieldValue == null) {
-            preCompiledStatement.bindNull(columnIndex);
-            return;
-        }
-
-        // Find out the type of value being bound and
-        // convert into appropriate enum for processing
-        final Class<?> fieldType = fieldValue.getClass();
-        final JavaFieldType javaFieldType;
-        if (Model.class.isAssignableFrom(fieldType)) {
-            javaFieldType = JavaFieldType.MODEL;
-        } else if (Enum.class.isAssignableFrom(fieldType)) {
-            javaFieldType = JavaFieldType.ENUM;
+    private void bindValueToStatement(
+            @NonNull SQLiteStatement statement,
+            int columnIndex,
+            @Nullable Object value
+    ) throws DataStoreException {
+        System.out.println("SQLiteStorageAdapter.bindValueToStatement");
+        System.out.println("value = " + value);
+        if (value == null) {
+            statement.bindNull(columnIndex);
+        } else if (value instanceof String) {
+            statement.bindString(columnIndex, (String) value);
+        } else if (value instanceof Long) {
+            statement.bindLong(columnIndex, (Long) value);
+        } else if (value instanceof Integer) {
+            statement.bindLong(columnIndex, (Integer) value);
+        } else if (value instanceof Float) {
+            statement.bindDouble(columnIndex, (Float) value);
         } else {
-            javaFieldType = JavaFieldType.from(fieldType.getSimpleName());
-        }
-
-        switch (javaFieldType) {
-            case BOOLEAN:
-                boolean booleanValue = (boolean) fieldValue;
-                preCompiledStatement.bindLong(columnIndex, booleanValue ? 1 : 0);
-                break;
-            case INTEGER:
-                preCompiledStatement.bindLong(columnIndex, (Integer) fieldValue);
-                break;
-            case LONG:
-                preCompiledStatement.bindLong(columnIndex, (Long) fieldValue);
-                break;
-            case FLOAT:
-                preCompiledStatement.bindDouble(columnIndex, (Float) fieldValue);
-                break;
-            case STRING:
-                preCompiledStatement.bindString(columnIndex, (String) fieldValue);
-                break;
-            case MODEL:
-                preCompiledStatement.bindString(columnIndex, ((Model) fieldValue).getId());
-                break;
-            case ENUM:
-                preCompiledStatement.bindString(columnIndex, gson.toJson(fieldValue));
-                break;
-            case DATE:
-                final Date dateValue = (Date) fieldValue;
-                final String dateString = SimpleDateFormat
-                        .getDateInstance()
-                        .format(dateValue);
-                preCompiledStatement.bindString(columnIndex, dateString);
-                break;
-            case TIME:
-                Time timeValue = (Time) fieldValue;
-                preCompiledStatement.bindLong(columnIndex, timeValue.getTime());
-                break;
-            default:
-                throw new DataStoreException(javaFieldType + " is not supported.",
-                        AmplifyException.TODO_RECOVERY_SUGGESTION);
+            throw new DataStoreException("", "");
         }
     }
 
     private <T extends Model> Map<String, Object> buildMapForModel(
             @NonNull Class<T> modelClass,
             @NonNull ModelSchema modelSchema,
-            @NonNull Cursor cursor) {
+            @NonNull Cursor cursor) throws DataStoreException {
         final Map<String, Object> mapForModel = new HashMap<>();
-        final SQLiteTable sqliteTable = SQLiteTable.fromSchema(modelSchema);
-        final Map<String, SQLiteColumn> columns = sqliteTable.getColumns();
+
+        final SQLiteModelFieldTypeConverter modelFieldTypeConverter =
+                new SQLiteModelFieldTypeConverter(modelClass, modelSchemaRegistry, gson);
 
         for (Map.Entry<String, ModelField> entry : modelSchema.getFields().entrySet()) {
             final String fieldName = entry.getKey();
-            try {
-                // Skip if there is no equivalent column for field in object
-                final SQLiteColumn column = columns.get(fieldName);
-                if (column == null) {
-                    continue;
-                }
-                final String columnName = column.getAliasedName();
-                final ModelField modelField = entry.getValue();
-                final String fieldGraphQlType = entry.getValue().getTargetType();
-                final JavaFieldType fieldJavaType;
-                if (modelField.isModel()) {
-                    fieldJavaType = JavaFieldType.MODEL;
-                } else if (modelField.isEnum()) {
-                    fieldJavaType = JavaFieldType.ENUM;
-                } else {
-                    fieldJavaType = TypeConverter.getJavaTypeForGraphQLType(fieldGraphQlType);
-                }
-
-                final int columnIndex = cursor.getColumnIndexOrThrow(columnName);
-                // This check is necessary, because primitive values will return 0 even when null
-                if (cursor.isNull(columnIndex)) {
-                    mapForModel.put(fieldName, null);
-                    continue;
-                }
-
-                final String stringValueFromCursor;
-                switch (fieldJavaType) {
-                    case STRING:
-                        mapForModel.put(fieldName, cursor.getString(columnIndex));
-                        break;
-                    case MODEL:
-                        // Eager load model if the necessary columns are present inside the cursor.
-                        // At the time of implementation, cursor should have been joined with these
-                        // columns IF AND ONLY IF the model is a foreign key to the inner model.
-                        @SuppressWarnings("unchecked") // value has Class<?>, but we want Class<? extends Model>
-                        Class<? extends Model> innerModelType =
-                            (Class<? extends Model>) modelClass.getDeclaredField(fieldName).getType();
-                        String className = innerModelType.getSimpleName();
-                        ModelSchema innerModelSchema = modelSchemaRegistry.getModelSchemaForModelClass(className);
-                        Map<String, Object> mapForInnerModel = buildMapForModel(
-                                innerModelType,
-                                innerModelSchema,
-                                cursor);
-                        mapForModel.put(fieldName, deserializeModelFromRawMap(mapForInnerModel, innerModelType));
-                        break;
-                    case ENUM:
-                        stringValueFromCursor = cursor.getString(columnIndex);
-                        Class<?> enumType = modelClass.getDeclaredField(fieldName).getType();
-                        Object enumValue = gson.getAdapter(enumType).fromJson(stringValueFromCursor);
-                        mapForModel.put(fieldName, enumValue);
-                        break;
-                    case INTEGER:
-                        mapForModel.put(fieldName, cursor.getInt(columnIndex));
-                        break;
-                    case BOOLEAN:
-                        mapForModel.put(fieldName, cursor.getInt(columnIndex) != 0);
-                        break;
-                    case FLOAT:
-                        mapForModel.put(fieldName, cursor.getFloat(columnIndex));
-                        break;
-                    case LONG:
-                        mapForModel.put(fieldName, cursor.getLong(columnIndex));
-                        break;
-                    case DATE:
-                        final String dateInStringFormat = cursor.getString(columnIndex);
-                        if (dateInStringFormat != null) {
-                            final Date dateInDateFormat = SimpleDateFormat
-                                    .getDateInstance()
-                                    .parse(dateInStringFormat);
-                            mapForModel.put(fieldName, dateInDateFormat);
-                        }
-                        break;
-                    case TIME:
-                        final long timeInLongFormat = cursor.getLong(columnIndex);
-                        mapForModel.put(fieldName, new Time(timeInLongFormat));
-                        break;
-                    default:
-                        throw new DataStoreException(fieldJavaType + " is not supported.",
-                                AmplifyException.TODO_RECOVERY_SUGGESTION);
-                }
-            } catch (Exception exception) {
-                mapForModel.put(fieldName, null);
-            }
+            final Object value = modelFieldTypeConverter.convertValueFromSource(cursor, entry.getValue());
+            mapForModel.put(fieldName, value);
         }
         return mapForModel;
     }
@@ -845,14 +694,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             final SQLiteStatement compiledSqlStatement = sqlCommand.getCompiledSqlStatement();
             compiledSqlStatement.clearBindings();
 
-            // fieldValues is a list of field values that are
-            // applicable when binding to insert statement.
-            final List<Object> fieldValues = new ArrayList<>(extractFieldValuesFromModel(model));
-            if (sqlCommand.hasSelectionArgs()) {
-                // These are additional values to bind in the case of updating SQLite table.
-                fieldValues.addAll(sqlCommand.getSelectionArgs());
-            }
-            bindPreCompiledStatementWithFieldValues(compiledSqlStatement, fieldValues);
+            bindStatementToValues(sqlCommand, model);
 
             DataStoreException problem = null;
             switch (modelConflictStrategy) {
@@ -960,7 +802,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, predicate);
         final String rawQuery = sqlCommand.sqlStatement();
-        final String[] selectionArgs = sqlCommand.getSelectionArgsAsArray();
-        return this.databaseConnectionHandle.rawQuery(rawQuery, selectionArgs);
+        final String[] bindings = sqlCommand.getBindingsAsArray();
+        return this.databaseConnectionHandle.rawQuery(rawQuery, bindings);
     }
 }

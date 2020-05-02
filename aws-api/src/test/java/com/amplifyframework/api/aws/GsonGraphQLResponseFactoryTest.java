@@ -200,6 +200,29 @@ public final class GsonGraphQLResponseFactoryTest {
         assertEquals(expectedResponse, response);
     }
 
+    @Test
+    public void errorWithNullFieldsCanBeParsed() throws ApiException {
+        // Arrange some JSON string from a "server"
+        final String responseJson = Resources.readAsString("error-null-properties.json");
+
+        // Act! Parse it into a model.
+        final GraphQLResponse<ListTodosResult> response =
+                responseFactory.buildSingleItemResponse(responseJson, ListTodosResult.class);
+
+        // Build the expected response.
+        Map<String, Object> extensions = new HashMap<>();
+        extensions.put("errorType", null);
+        extensions.put("errorInfo", null);
+        extensions.put("data", null);
+
+        GraphQLResponse.Error expectedError = new GraphQLResponse.Error("the message", null, null, extensions);
+        GraphQLResponse<ListTodosResult> expectedResponse = new GraphQLResponse<>(null, Arrays.asList(expectedError));
+
+        // Assert that the response is expected
+        assertEquals(expectedResponse, response);
+    }
+
+
     /**
      * It is possible to cast the response data as a string, instead of as the strongly
      * modeled type, if you choose to do so.

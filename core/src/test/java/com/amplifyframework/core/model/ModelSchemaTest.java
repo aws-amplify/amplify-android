@@ -16,13 +16,14 @@
 package com.amplifyframework.core.model;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.model.types.JavaFieldType;
+import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -47,34 +48,34 @@ public final class ModelSchemaTest {
         expectedFields.put("id", ModelField.builder()
             .targetType("ID")
             .name("id")
-            .type(JavaFieldType.STRING.stringValue())
+            .type(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("first_name", ModelField.builder()
             .targetType("String")
             .name("first_name")
-            .type(JavaFieldType.STRING.stringValue())
+            .type(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("last_name", ModelField.builder()
             .targetType("String")
             .name("last_name")
-            .type(JavaFieldType.STRING.stringValue())
+            .type(String.class)
             .isRequired(true)
             .build());
         expectedFields.put("dob", ModelField.builder()
             .targetType("AWSDate")
             .name("dob")
-            .type(JavaFieldType.DATE.stringValue())
+            .type(Date.class)
             .build());
         expectedFields.put("age", ModelField.builder()
             .targetType("Int")
             .name("age")
-            .type(JavaFieldType.INTEGER.stringValue())
+            .type(Integer.class)
             .build());
         expectedFields.put("relationship", ModelField.builder()
             .name("relationship")
-            .type("MaritalStatus")
+            .type(MaritalStatus.class)
             .targetType("MaritalStatus")
             .isEnum(true)
             .build());

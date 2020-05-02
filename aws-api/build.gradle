@@ -21,15 +21,18 @@ dependencies {
     api project(':core')
 
     implementation dependency.androidx.appcompat
-    implementation dependency.okhttp
+    implementation dependency.okhttp.okhttp
     implementation dependency.gson
     implementation dependency.aws.authcore
     implementation dependency.aws.mobileclient
 
     testImplementation project(path: ':testutils')
     testImplementation project(path: ':testmodels')
+    testImplementation dependency.androidx.test.core
+    testImplementation dependency.okhttp.mockwebserver
     testImplementation dependency.junit
     testImplementation dependency.mockito
+    testImplementation dependency.rxjava
     testImplementation (dependency.robolectric) {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'

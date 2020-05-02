@@ -1,0 +1,20 @@
+{
+  "data": {
+    "listBlogOwners": {
+      "items": [
+        {
+          "id": "5347fffb-c6a4-40b8-b582-02e7f4d0d165",
+          "name": "Curly"
+        },
+        {
+          "id": "77410d39-53fd-4ba9-bed0-412e1b210458",
+          "name": "Moe"
+        },
+        {
+          "id": "1b12a1f0-b772-47ba-a9fc-69ba35f449ff5",
+          "name": "Larry"
+        }
+      ]
+    }
+  }
+}
