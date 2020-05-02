@@ -29,10 +29,10 @@ public final class AWSImageIdentifyRequest {
 
     private static final int COMPRESS_QUALITY_PERCENT = 100;
 
-    private final ByteBuffer buffer;
+    private final ByteBuffer imageData;
 
-    private AWSImageIdentifyRequest(ByteBuffer buffer) {
-        this.buffer = buffer;
+    private AWSImageIdentifyRequest(ByteBuffer imageData) {
+        this.imageData = imageData;
     }
 
     /**
@@ -45,8 +45,8 @@ public final class AWSImageIdentifyRequest {
         Objects.requireNonNull(image);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, COMPRESS_QUALITY_PERCENT, stream);
-        ByteBuffer buffer = ByteBuffer.wrap(stream.toByteArray());
-        return new AWSImageIdentifyRequest(buffer);
+        ByteBuffer imageData = ByteBuffer.wrap(stream.toByteArray());
+        return new AWSImageIdentifyRequest(imageData);
     }
 
     /**
@@ -54,7 +54,7 @@ public final class AWSImageIdentifyRequest {
      * @return the byte buffer of image
      */
     @NonNull
-    public ByteBuffer getBuffer() {
-        return buffer;
+    public ByteBuffer getImageData() {
+        return imageData;
     }
 }

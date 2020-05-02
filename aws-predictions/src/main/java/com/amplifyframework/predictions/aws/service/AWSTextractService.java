@@ -44,6 +44,7 @@ import com.amazonaws.services.textract.model.DetectDocumentTextResult;
 import com.amazonaws.services.textract.model.Document;
 import com.amazonaws.services.textract.model.FeatureType;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -70,7 +71,7 @@ final class AWSTextractService {
 
     void detectDocumentText(
             @NonNull TextFormatType type,
-            @NonNull Document document,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -83,15 +84,15 @@ final class AWSTextractService {
         }
 
         try {
-            onSuccess.accept(analyzeDocument(document, features));
+            onSuccess.accept(analyzeDocument(imageData, features));
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }
     }
 
-    private IdentifyDocumentTextResult detectDocumentText(Document document) throws PredictionsException {
+    private IdentifyDocumentTextResult detectDocumentText(ByteBuffer imageData) throws PredictionsException {
         DetectDocumentTextRequest request = new DetectDocumentTextRequest()
-                .withDocument(document);
+                .withDocument(new Document().withBytes(imageData));
 
         // Extract text from given image via Amazon Textract
         final DetectDocumentTextResult result;
@@ -108,11 +109,11 @@ final class AWSTextractService {
     }
 
     private IdentifyDocumentTextResult analyzeDocument(
-            Document document,
+            ByteBuffer imageData,
             List<String> features
     ) throws PredictionsException {
         AnalyzeDocumentRequest request = new AnalyzeDocumentRequest()
-                .withDocument(document)
+                .withDocument(new Document().withBytes(imageData))
                 .withFeatureTypes(features);
 
         // Analyze document from given image via Amazon Textract

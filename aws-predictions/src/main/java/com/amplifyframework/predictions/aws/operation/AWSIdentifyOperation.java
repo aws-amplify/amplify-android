@@ -27,9 +27,6 @@ import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.result.IdentifyResult;
 
-import com.amazonaws.services.rekognition.model.Image;
-import com.amazonaws.services.textract.model.Document;
-
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -88,21 +85,17 @@ public final class AWSIdentifyOperation
     }
 
     private void startCelebritiesDetection() {
-        executorService.execute(() -> {
-            Image image = new Image()
-                    .withBytes(getRequest().getBuffer());
+        executorService.execute(() ->
             predictionsService.recognizeCelebrities(
-                    image,
+                    getRequest().getImageData(),
                     onSuccess,
                     onError
-            );
-        });
+            )
+        );
     }
 
     private void startLabelsDetection() {
         executorService.execute(() -> {
-            Image image = new Image()
-                    .withBytes(getRequest().getBuffer());
             final LabelType labelType;
             try {
                 labelType = (LabelType) getIdentifyAction();
@@ -116,7 +109,7 @@ public final class AWSIdentifyOperation
             }
             predictionsService.detectLabels(
                     labelType,
-                    image,
+                    getRequest().getImageData(),
                     onSuccess,
                     onError
             );
@@ -124,11 +117,12 @@ public final class AWSIdentifyOperation
     }
 
     private void startEntitiesDetection() {
-        executorService.execute(() -> {
-            Image image = new Image()
-                    .withBytes(getRequest().getBuffer());
-            predictionsService.detectEntities(image, onSuccess, onError);
-        });
+        executorService.execute(() ->
+            predictionsService.detectEntities(getRequest().getImageData(),
+                    onSuccess,
+                    onError
+            )
+        );
     }
 
     private void startTextDetection() {
@@ -147,10 +141,8 @@ public final class AWSIdentifyOperation
 
             switch (textFormatType) {
                 case PLAIN:
-                    Image image = new Image()
-                            .withBytes(getRequest().getBuffer());
                     predictionsService.detectPlainText(
-                            image,
+                            getRequest().getImageData(),
                             onSuccess,
                             onError
                     );
@@ -158,11 +150,9 @@ public final class AWSIdentifyOperation
                 case FORM:
                 case TABLE:
                 case ALL:
-                    Document document = new Document()
-                            .withBytes(getRequest().getBuffer());
                     predictionsService.detectDocumentText(
                             textFormatType,
-                            document,
+                            getRequest().getImageData(),
                             onSuccess,
                             onError);
                     return;

@@ -29,10 +29,10 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.rekognition.model.Image;
 import com.amazonaws.services.textract.AmazonTextractClient;
-import com.amazonaws.services.textract.model.Document;
 import com.amazonaws.services.translate.AmazonTranslateClient;
+
+import java.nio.ByteBuffer;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.
@@ -78,75 +78,75 @@ public final class AWSPredictionsService {
     /**
      * Delegate to {@link AWSRekognitionService} to detect labels.
      * @param type the type of labels to detect
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectLabels(
             @NonNull LabelType type,
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.detectLabels(type, image, onSuccess, onError);
+        rekognitionService.detectLabels(type, imageData, onSuccess, onError);
     }
 
     /**
      * Delegate to {@link AWSRekognitionService} to recognize celebrities.
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void recognizeCelebrities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.recognizeCelebrities(image, onSuccess, onError);
+        rekognitionService.recognizeCelebrities(imageData, onSuccess, onError);
     }
 
     /**
      * Delegate to {@link AWSRekognitionService} to detect entities.
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectEntities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.detectEntities(image, onSuccess, onError);
+        rekognitionService.detectEntities(imageData, onSuccess, onError);
     }
 
     /**
      * Delegate to {@link AWSRekognitionService} to detect plain text.
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectPlainText(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.detectPlainText(image, onSuccess, onError);
+        rekognitionService.detectPlainText(imageData, onSuccess, onError);
     }
 
     /**
      * Delegate to {@link AWSTextractService} to detect document text.
      * @param type the type of text format to detect
-     * @param document the Textract input document
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectDocumentText(
             @NonNull TextFormatType type,
-            @NonNull Document document,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        textractService.detectDocumentText(type, document, onSuccess, onError);
+        textractService.detectDocumentText(type, imageData, onSuccess, onError);
     }
 
     /**

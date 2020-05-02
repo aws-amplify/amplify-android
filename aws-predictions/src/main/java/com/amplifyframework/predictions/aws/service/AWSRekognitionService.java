@@ -77,6 +77,7 @@ import com.amazonaws.services.rekognition.model.TextTypes;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -102,7 +103,7 @@ final class AWSRekognitionService {
 
     void detectLabels(
             @NonNull LabelType type,
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -111,12 +112,12 @@ final class AWSRekognitionService {
             boolean unsafeContent = false;
             // Moderation labels detection
             if (LabelType.ALL.equals(type) || LabelType.MODERATION_LABELS.equals(type)) {
-                labels.addAll(detectModerationLabels(image));
+                labels.addAll(detectModerationLabels(imageData));
                 unsafeContent = !labels.isEmpty();
             }
             // Regular labels detection
             if (LabelType.ALL.equals(type) || LabelType.LABELS.equals(type)) {
-                labels.addAll(detectLabels(image));
+                labels.addAll(detectLabels(imageData));
             }
             onSuccess.accept(IdentifyLabelsResult.builder()
                     .labels(labels)
@@ -128,12 +129,12 @@ final class AWSRekognitionService {
     }
 
     void recognizeCelebrities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
         try {
-            List<CelebrityDetails> celebrities = detectCelebrities(image);
+            List<CelebrityDetails> celebrities = detectCelebrities(imageData);
             onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
         } catch (PredictionsException exception) {
             onError.accept(exception);
@@ -141,7 +142,7 @@ final class AWSRekognitionService {
     }
 
     void detectEntities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -149,12 +150,12 @@ final class AWSRekognitionService {
         try {
             config = pluginConfiguration.getIdentifyEntitiesConfiguration();
             if (config.isGeneralEntityDetection()) {
-                List<EntityDetails> entities = detectEntities(image);
+                List<EntityDetails> entities = detectEntities(imageData);
                 onSuccess.accept(IdentifyEntitiesResult.fromEntityDetails(entities));
             } else {
                 int maxEntities = config.getMaxEntities();
                 String collectionId = config.getCollectionId();
-                List<EntityMatch> matches = detectEntityMatches(image, maxEntities, collectionId);
+                List<EntityMatch> matches = detectEntityMatches(imageData, maxEntities, collectionId);
                 onSuccess.accept(IdentifyEntityMatchesResult.fromEntityMatches(matches));
             }
         } catch (PredictionsException exception) {
@@ -163,20 +164,20 @@ final class AWSRekognitionService {
     }
 
     void detectPlainText(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
         try {
-            onSuccess.accept(detectPlainText(image));
+            onSuccess.accept(detectPlainText(imageData));
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }
     }
 
-    private List<Label> detectLabels(Image image) throws PredictionsException {
+    private List<Label> detectLabels(ByteBuffer imageData) throws PredictionsException {
         DetectLabelsRequest request = new DetectLabelsRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Detect labels in the given image via Amazon Rekognition
         final DetectLabelsResult result;
@@ -206,9 +207,9 @@ final class AWSRekognitionService {
         return labels;
     }
 
-    private List<Label> detectModerationLabels(Image image) throws PredictionsException {
+    private List<Label> detectModerationLabels(ByteBuffer imageData) throws PredictionsException {
         DetectModerationLabelsRequest request = new DetectModerationLabelsRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Detect moderation labels in the given image via Amazon Rekognition
         final DetectModerationLabelsResult result;
@@ -234,9 +235,9 @@ final class AWSRekognitionService {
         return labels;
     }
 
-    private List<CelebrityDetails> detectCelebrities(Image image) throws PredictionsException {
+    private List<CelebrityDetails> detectCelebrities(ByteBuffer imageData) throws PredictionsException {
         RecognizeCelebritiesRequest request = new RecognizeCelebritiesRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Recognize celebrities in the given image via Amazon Rekognition
         final RecognizeCelebritiesResult result;
@@ -286,9 +287,9 @@ final class AWSRekognitionService {
         return celebrities;
     }
 
-    private List<EntityDetails> detectEntities(Image image) throws PredictionsException {
+    private List<EntityDetails> detectEntities(ByteBuffer imageData) throws PredictionsException {
         DetectFacesRequest request = new DetectFacesRequest()
-                .withImage(image)
+                .withImage(new Image().withBytes(imageData))
                 .withAttributes(Attribute.ALL.toString());
 
         // Detect entities in the given image via Amazon Rekognition
@@ -345,12 +346,12 @@ final class AWSRekognitionService {
     }
 
     private List<EntityMatch> detectEntityMatches(
-            Image image,
+            ByteBuffer imageData,
             int maxEntities,
             String collectionId
     ) throws PredictionsException {
         SearchFacesByImageRequest request = new SearchFacesByImageRequest()
-                .withImage(image)
+                .withImage(new Image().withBytes(imageData))
                 .withMaxFaces(maxEntities)
                 .withCollectionId(collectionId);
 
@@ -379,9 +380,9 @@ final class AWSRekognitionService {
         return matches;
     }
 
-    private IdentifyTextResult detectPlainText(Image image) throws PredictionsException {
+    private IdentifyTextResult detectPlainText(ByteBuffer imageData) throws PredictionsException {
         DetectTextRequest request = new DetectTextRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Read text in the given image via Amazon Rekognition
         final DetectTextResult result;
