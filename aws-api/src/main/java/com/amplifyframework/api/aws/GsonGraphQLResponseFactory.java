@@ -87,7 +87,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         if (jsonData == null || jsonData.isJsonNull()) {
             return new GraphQLResponse<>(null, errors);
-        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || classToCast.equals(JsonElement.class)) {
+        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || JsonElement.class.equals(classToCast)) {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(data, errors);
         } else {
@@ -131,7 +131,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         ) {
             Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get("items"), classToCast);
             return new GraphQLResponse<>(data, errors);
-        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || classToCast.equals(JsonElement.class)) {
+        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || JsonElement.class.equals(classToCast)) {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(Collections.singletonList(data), errors);
         } else {
