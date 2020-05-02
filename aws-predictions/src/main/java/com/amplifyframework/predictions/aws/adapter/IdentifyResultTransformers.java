@@ -19,6 +19,7 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.predictions.aws.models.BinaryFeatureType;
 import com.amplifyframework.predictions.models.AgeRange;
 import com.amplifyframework.predictions.models.BinaryFeature;
 import com.amplifyframework.predictions.models.Landmark;
@@ -134,37 +135,37 @@ public final class IdentifyResultTransformers {
     public static List<BinaryFeature> fromFaceDetail(FaceDetail face) {
         return Arrays.asList(
                 BinaryFeature.builder()
-                        .type("Beard")
+                        .type(BinaryFeatureType.BEARD.getAlias())
                         .value(face.getBeard().getValue())
                         .confidence(face.getBeard().getConfidence())
                         .build(),
                 BinaryFeature.builder()
-                        .type("Sunglasses")
+                        .type(BinaryFeatureType.SUNGLASSES.getAlias())
                         .value(face.getSunglasses().getValue())
                         .confidence(face.getSunglasses().getConfidence())
                         .build(),
                 BinaryFeature.builder()
-                        .type("Smile")
+                        .type(BinaryFeatureType.SMILE.getAlias())
                         .value(face.getSmile().getValue())
                         .confidence(face.getSmile().getConfidence())
                         .build(),
                 BinaryFeature.builder()
-                        .type("EyeGlasses")
+                        .type(BinaryFeatureType.EYE_GLASSES.getAlias())
                         .value(face.getEyeglasses().getValue())
                         .confidence(face.getEyeglasses().getConfidence())
                         .build(),
                 BinaryFeature.builder()
-                        .type("Mustache")
+                        .type(BinaryFeatureType.MUSTACHE.getAlias())
                         .value(face.getMustache().getValue())
                         .confidence(face.getMustache().getConfidence())
                         .build(),
                 BinaryFeature.builder()
-                        .type("MouthOpen")
+                        .type(BinaryFeatureType.MOUTH_OPEN.getAlias())
                         .value(face.getMouthOpen().getValue())
                         .confidence(face.getMouthOpen().getConfidence())
                         .build(),
                 BinaryFeature.builder()
-                        .type("EyesOpen")
+                        .type(BinaryFeatureType.EYES_OPEN.getAlias())
                         .value(face.getEyesOpen().getValue())
                         .confidence(face.getEyesOpen().getConfidence())
                         .build()
