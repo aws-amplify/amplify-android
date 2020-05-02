@@ -27,7 +27,7 @@ import org.json.JSONObject;
  * Configures the behavior for text interpretation.
  */
 public final class IdentifyEntitiesConfiguration {
-
+    private static final String CONFIG_NAME = "identifyEntities";
     private static final int MAX_VALID_ENTITIES = 50;
 
     private final int maxEntities;
@@ -59,12 +59,12 @@ public final class IdentifyEntitiesConfiguration {
      */
     @Nullable
     public static IdentifyEntitiesConfiguration fromJson(@NonNull JSONObject configurationJson) throws JSONException {
-        if (!configurationJson.has("identifyEntities")) {
+        if (!configurationJson.has(CONFIG_NAME)) {
             return null;
         }
 
         // Required fields
-        JSONObject identifyEntitiesJson = configurationJson.getJSONObject("identifyEntities");
+        JSONObject identifyEntitiesJson = configurationJson.getJSONObject(CONFIG_NAME);
         String celebEnabledString = identifyEntitiesJson.getString("celebrityDetectionEnabled");
         String networkPolicyString = identifyEntitiesJson.getString("defaultNetworkPolicy");
 
