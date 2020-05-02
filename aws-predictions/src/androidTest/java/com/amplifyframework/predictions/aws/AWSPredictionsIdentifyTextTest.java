@@ -96,7 +96,11 @@ public final class AWSPredictionsIdentifyTextTest {
         IdentifyTextResult result =
                 (IdentifyTextResult) predictions.identify(TextFormatType.PLAIN, image);
         assertNotNull(result);
-        assertNotNull(result.getFullText());
+
+        // Assert matching text
+        final String expectedText = Assets.readAsString("sample-table-expected-text.txt");
+        final String actualText = result.getFullText();
+        assertEquals(expectedText, actualText);
     }
 
     /**

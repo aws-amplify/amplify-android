@@ -51,8 +51,11 @@ public final class Assets {
 
             String line = bufferedReader.readLine();
             while (line != null) {
-                stringBuilder.append(line).append("\n");
+                stringBuilder.append(line);
                 line = bufferedReader.readLine();
+                if (line != null) {
+                    stringBuilder.append("/n");
+                }
             }
 
             return stringBuilder.toString();

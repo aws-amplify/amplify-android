@@ -416,7 +416,7 @@ final class AWSRekognitionService {
         }
 
         return IdentifyTextResult.builder()
-                .fullText(fullTextBuilder.toString())
+                .fullText(fullTextBuilder.toString().trim())
                 .rawLineText(rawLineText)
                 .lines(lines)
                 .words(words)
