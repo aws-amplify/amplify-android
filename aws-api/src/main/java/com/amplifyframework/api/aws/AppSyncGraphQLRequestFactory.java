@@ -186,7 +186,7 @@ final class AppSyncGraphQLRequestFactory {
 
             Map<String, Object> variables = new HashMap<>();
 
-            if (type.equals(MutationType.DELETE)) {
+            if (MutationType.DELETE.equals(type)) {
                 variables.put("input", Collections.singletonMap("id", model.getId()));
             } else {
                 try {
@@ -314,7 +314,7 @@ final class AppSyncGraphQLRequestFactory {
         } else if (queryPredicate instanceof QueryPredicateGroup) {
             QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
 
-            if (qpg.type().equals(QueryPredicateGroup.Type.NOT)) {
+            if (QueryPredicateGroup.Type.NOT.equals(qpg.type())) {
                 try {
                     return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
                 } catch (IndexOutOfBoundsException exception) {
