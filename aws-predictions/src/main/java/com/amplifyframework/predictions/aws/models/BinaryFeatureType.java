@@ -72,6 +72,7 @@ public enum BinaryFeatureType {
 
     /**
      * Gets the name of the given feature type.
+     * @return the label for a given binary feature type
      */
     @NonNull
     public String getAlias() {
