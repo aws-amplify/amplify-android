@@ -28,8 +28,8 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /**
- * Operation that interprets text with cloud resources via
- * AWS Comprehend.
+ * Operation that translates text with cloud resources via
+ * Amazon Translate.
  */
 public final class AWSTranslateTextOperation
         extends TranslateTextOperation<AWSTranslateRequest> {

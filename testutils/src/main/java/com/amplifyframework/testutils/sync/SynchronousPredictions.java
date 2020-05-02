@@ -63,7 +63,7 @@ public final class SynchronousPredictions {
      * Translate given text synchronously using default options
      * and return the result of operation.
      * @param text the input text to translate
-     * @return the result of interpretation containing translated text and
+     * @return the result of translation containing translated text and
      *          the language of the translated text
      * @throws PredictionsException if translation fails or times out
      */
@@ -78,7 +78,7 @@ public final class SynchronousPredictions {
      * Translate given text synchronously and return the result of operation.
      * @param text the input text to translate
      * @param options interpret options
-     * @return the result of interpretation containing translated text and
+     * @return the result of translation containing translated text and
      *          the language of the translated text
      * @throws PredictionsException if translation fails or times out
      */
@@ -104,7 +104,7 @@ public final class SynchronousPredictions {
      * @param text the input text to translate
      * @param fromLanguage the language to translate from
      * @param toLanguage the language to translate to
-     * @return the result of interpretation containing translated text and
+     * @return the result of translation containing translated text and
      *          the language of the translated text
      * @throws PredictionsException if translation fails or times out
      */
@@ -123,7 +123,7 @@ public final class SynchronousPredictions {
      * @param fromLanguage the language to translate from
      * @param toLanguage the language to translate to
      * @param options interpret options
-     * @return the result of interpretation containing translated text and
+     * @return the result of translation containing translated text and
      *          the language of the translated text
      * @throws PredictionsException if translation fails or times out
      */
