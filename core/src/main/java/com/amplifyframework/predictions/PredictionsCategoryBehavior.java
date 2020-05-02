@@ -52,46 +52,6 @@ public interface PredictionsCategoryBehavior {
     );
 
     /**
-     * Identify specific features of an input image.
-     * Use {@link android.graphics.BitmapFactory} to obtain
-     * an instance of {@link Bitmap} from the input source.
-     * @param actionType the type of identification to perform
-     * @param image the Bitmap image
-     * @param onSuccess Triggered upon successful translation
-     * @param onError Triggered upon encountering error
-     * @return The predictions operation object that can be used to directly access
-     *          the ongoing translation operation
-     */
-    @NonNull
-    IdentifyOperation<?> identify(
-            @NonNull IdentifyAction actionType,
-            @NonNull Bitmap image,
-            @NonNull Consumer<IdentifyResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    );
-
-    /**
-     * Identify specific features of an input image.
-     * Use {@link android.graphics.BitmapFactory} to obtain
-     * an instance of {@link Bitmap} from the input source.
-     * @param actionType the type of identification to perform
-     * @param image the filepath to image
-     * @param options Parameters to specific plugin behavior
-     * @param onSuccess Triggered upon successful translation
-     * @param onError Triggered upon encountering error
-     * @return The predictions operation object that can be used to directly access
-     *          the ongoing translation operation
-     */
-    @NonNull
-    IdentifyOperation<?> identify(
-            @NonNull IdentifyAction actionType,
-            @NonNull Bitmap image,
-            @NonNull IdentifyOptions options,
-            @NonNull Consumer<IdentifyResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    );
-
-    /**
      * Translate the text from and to the languages specified in the configuration.
      * @param text The text to translate
      * @param options Parameters to specific plugin behavior
@@ -145,6 +105,46 @@ public interface PredictionsCategoryBehavior {
             @NonNull LanguageType toLanguage,
             @NonNull TranslateTextOptions options,
             @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Identify specific features of an input image.
+     * Use {@link android.graphics.BitmapFactory} to obtain
+     * an instance of {@link Bitmap} from the input source.
+     * @param actionType the type of identification to perform
+     * @param image the Bitmap image
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Identify specific features of an input image.
+     * Use {@link android.graphics.BitmapFactory} to obtain
+     * an instance of {@link Bitmap} from the input source.
+     * @param actionType the type of identification to perform
+     * @param image the filepath to image
+     * @param options Parameters to specific plugin behavior
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options,
+            @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
 
