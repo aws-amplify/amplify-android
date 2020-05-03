@@ -29,7 +29,7 @@ import java.util.concurrent.ExecutorService;
 
 /**
  * Operation that interprets text with cloud resources via
- * AWS Comprehend.
+ * Amazon Comprehend.
  */
 public final class AWSInterpretOperation
         extends InterpretOperation<AWSComprehendRequest> {
