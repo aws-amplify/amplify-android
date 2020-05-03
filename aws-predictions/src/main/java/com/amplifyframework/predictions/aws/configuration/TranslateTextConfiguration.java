@@ -28,6 +28,7 @@ import org.json.JSONObject;
  * Configures the behavior for text interpretation.
  */
 public final class TranslateTextConfiguration {
+    private static final String CONFIG_NAME = "translateText";
     private final LanguageType sourceLanguage;
     private final LanguageType targetLanguage;
     private final NetworkPolicy networkPolicy;
@@ -51,11 +52,11 @@ public final class TranslateTextConfiguration {
      */
     @Nullable
     public static TranslateTextConfiguration fromJson(@NonNull JSONObject configurationJson) throws JSONException {
-        if (!configurationJson.has("translateText")) {
+        if (!configurationJson.has(CONFIG_NAME)) {
             return null;
         }
 
-        JSONObject translateTextJson = configurationJson.getJSONObject("translateText");
+        JSONObject translateTextJson = configurationJson.getJSONObject(CONFIG_NAME);
         String sourceLangCode = translateTextJson.getString("sourceLang");
         String targetLangCode = translateTextJson.getString("targetLang");
         String networkPolicyString = translateTextJson.getString("defaultNetworkPolicy");
