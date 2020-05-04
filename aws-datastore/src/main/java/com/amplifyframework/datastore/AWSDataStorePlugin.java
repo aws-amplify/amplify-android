@@ -400,15 +400,17 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * the clear method of the underlying storage
      * adapter. Then restarts the orchestrator.
      * @param onComplete Invoked if the call is successful.
-     * @param onError Invoked if an exception occurs.
+     * @param onError Invoked if not successful
      */
     @Override
     public void clear(@NonNull Action onComplete,
                       @NonNull Consumer<DataStoreException> onError) {
         afterInitialization(() -> {
             orchestrator.stop();
-            sqliteStorageAdapter.clear(onComplete, onError);
-            orchestrator.start();
+            sqliteStorageAdapter.clear(() -> {
+                orchestrator.start();
+                onComplete.call();
+            }, onError);
         });
     }
 

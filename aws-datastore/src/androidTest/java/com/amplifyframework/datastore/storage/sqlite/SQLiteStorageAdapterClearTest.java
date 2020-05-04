@@ -39,7 +39,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.TestObserver;
 
-import static com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter.DATABASE_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
@@ -47,6 +46,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public final class SQLiteStorageAdapterClearTest {
+    private static final String DATABASE_NAME = "AmplifyDatastore.db";
+
     private SynchronousStorageAdapter adapter;
     private Context context;
     private TestObserver<StorageItemChange.Record> observer;
