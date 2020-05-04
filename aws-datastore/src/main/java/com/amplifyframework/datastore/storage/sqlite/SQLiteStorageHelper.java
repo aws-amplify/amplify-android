@@ -44,8 +44,6 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
     // Contains all create table and create index commands.
     private final CreateSqlCommands createSqlCommands;
 
-    private final Context context;
-
     private SQLiteStorageHelper(@NonNull Context context,
                                 @NonNull String databaseName,
                                 int databaseVersion,
@@ -53,7 +51,6 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
         // Passing null to CursorFactory which is used to create cursor objects
         // as there is no need for a CursorFactory so far.
         super(context, databaseName, null, databaseVersion);
-        this.context = context;
         this.createSqlCommands = createSqlCommands;
     }
 

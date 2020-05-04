@@ -189,8 +189,9 @@ public interface LocalStorageAdapter {
 
     /**
      * Each implementation of this adapter interface will have its own
-     * interpretation of what clear means. At a high level, the intent is to destroy
-     * any DataStore-related artifacts from disk and/or memory.
+     * interpretation of what clear means. The intent is to destroy
+     * any DataStore-related artifacts and reset the adapter such that
+     * it is usable by the DataStore plugin.
      * @param onComplete Invoked if the call is successful.
      * @param onError Invoked if an exception occurs.
      */

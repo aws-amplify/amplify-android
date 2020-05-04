@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class SQLiteStorageAdapterClearTest {
+public final class SQLiteStorageAdapterClearTest {
     private SynchronousStorageAdapter adapter;
     private Context context;
     private TestObserver<StorageItemChange.Record> observer;
@@ -60,7 +60,7 @@ public class SQLiteStorageAdapterClearTest {
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
-        context = (ApplicationProvider.getApplicationContext());
+        context = ApplicationProvider.getApplicationContext();
         adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
         observer = TestObserver.create();
         //Set subscriberDisposableRef = <value received from RxJava>.

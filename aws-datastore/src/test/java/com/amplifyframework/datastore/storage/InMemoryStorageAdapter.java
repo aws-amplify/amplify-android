@@ -218,7 +218,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     @Override
     public void clear(@NonNull Action onComplete,
                       @NonNull Consumer<DataStoreException> onError) {
-        terminate();
+        items.clear();
         onComplete.call();
     }
 
