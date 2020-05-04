@@ -128,6 +128,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
 
+    // Need to keep a reference to the app context so we can
+    // re-initialize the adapter after deleting the file in the clear() method
+    private Context context;
+
     /**
      * Construct the SQLiteStorageAdapter object.
      * @param modelSchemaRegistry A registry of schema for all models used by the system
@@ -176,7 +180,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-
+        this.context = context;
         threadPool.submit(() -> {
             try {
                 /*
@@ -583,12 +587,13 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * {@inheritDoc}
      */
     @Override
-    public void clear(@NonNull Action onComplete,
-                      @NonNull Consumer<DataStoreException> onError) {
+    public synchronized void clear(@NonNull Action onComplete,
+                                   @NonNull Consumer<DataStoreException> onError) {
+        sqliteStorageHelper.close();
+        databaseConnectionHandle.close();
+
         try {
-            terminate();
-            sqliteStorageHelper.deleteDatabaseFromDisk();
-            onComplete.call();
+            context.deleteDatabase(DATABASE_NAME);
         } catch (Exception exception) {
             DataStoreException dataStoreException = new DataStoreException(
                 "Error while trying to delete database from local storage.",
@@ -596,6 +601,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 "See attached exception for details.");
             onError.accept(dataStoreException);
         }
+
+        //Re-initialize the adapter.
+        initialize(context, schemaList -> {
+            onComplete.call();
+        }, exception -> {
+                onError.accept(new DataStoreException("Error occurred whilte trying to re-initialize " +
+                    "the storage adapter", exception.getMessage()));
+            }
+        );
     }
 
     private CreateSqlCommands getCreateCommands(@NonNull Set<Class<? extends Model>> models) {

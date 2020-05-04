@@ -396,18 +396,19 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     /**
-     * Stops all synchronization processes and deletes the
-     * SQLite database from device's local storage.
+     * Stops all synchronization processes and invokes
+     * the clear method of the underlying storage
+     * adapter. Then restarts the orchestrator.
      * @param onComplete Invoked if the call is successful.
      * @param onError Invoked if an exception occurs.
      */
     @Override
     public void clear(@NonNull Action onComplete,
                       @NonNull Consumer<DataStoreException> onError) {
-
         afterInitialization(() -> {
             orchestrator.stop();
             sqliteStorageAdapter.clear(onComplete, onError);
+            orchestrator.start();
         });
     }
 

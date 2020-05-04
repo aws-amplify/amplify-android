@@ -30,19 +30,27 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.attribute.FileTime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.TestObserver;
 
 import static com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter.DATABASE_NAME;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class SQLiteStorageAdapterClearTest {
     private SynchronousStorageAdapter adapter;
     private Context context;
     private TestObserver<StorageItemChange.Record> observer;
+    private AtomicReference<Disposable> subscriberDisposableRef = new AtomicReference<>();
 
     @BeforeClass
     public static void enableStrictMode() {
@@ -55,7 +63,12 @@ public class SQLiteStorageAdapterClearTest {
         context = (ApplicationProvider.getApplicationContext());
         adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
         observer = TestObserver.create();
-        adapter.observe().subscribe(observer);
+        //Set subscriberDisposableRef = <value received from RxJava>.
+        //Needed so we can make assertions on the state of the subscriber later.
+        adapter.observe()
+            .doOnSubscribe(subscriberDisposableRef::set)
+            .subscribe(observer);
+
     }
 
     @After
@@ -64,48 +77,86 @@ public class SQLiteStorageAdapterClearTest {
     }
 
     /**
-     * Happy path test: saves a record to the database
-     * then calls clear and verifies that the database
-     * file has been deleted.
+     * Save a record to the database and verify it was saved.
+     * Then call clear and verify that the database file is re-created
+     * and is writable.
      * @throws DataStoreException bubbles up exceptions thrown from the adapter
+     * @throws IOException if it can't ready file creation time
+     * @throws InterruptedException if something happens when sleeping for 1 second
      */
     @Test
-    public void clearDeletesDatabaseFromDisk() throws DataStoreException {
-        final BlogOwner dummy = BlogOwner.builder()
-            .name("Dummy Blogger")
-            .build();
-
-        adapter.save(dummy);
-        List<BlogOwner> query = adapter.query(BlogOwner.class);
-        assertEquals(1, query.size());
-        //Check that exactly one event was received by the observer.
-        observer.assertValueCount(1);
+    public void clearDeletesAndRecreatesDatabase() throws DataStoreException, IOException, InterruptedException {
+        BlogOwner blogger1 = createBlogger("Dummy Blogger Sr.");
+        BlogOwner blogger2 = createBlogger("Dummy Blogger Jr.");
+        //Save a record and check if it's there
+        adapter.save(blogger1);
+        assertRecordIsInDb(blogger1.getName());
+        FileTime dbFileCreationTime1 = getDbFileCreationTime();
+        //Verify observer is still alive
+        assertFalse(subscriberDisposableRef.get().isDisposed());
+        assertObserverReceivedRecord(blogger1);
+        //The ensures files are created at least 1 second apart
+        Thread.sleep(1000);
 
         adapter.clear();
-        assertFalse(context.getDatabasePath(DATABASE_NAME).exists());
-        //check that it's not subscribed anymore.
-        observer.assertNotSubscribed();
-        //Assert the observer was terminated during the file removal.
-        observer.assertTerminated();
+        //Make sure file was re-created
+        assertDbFileExists();
+        //Verify observer is still alive
+        assertFalse(subscriberDisposableRef.get().isDisposed());
+        FileTime dbFileCreationTime2 = getDbFileCreationTime();
+        //Make sure a new file was actually created by comparing
+        //the creation timestamps
+        assertNotEquals(dbFileCreationTime1, dbFileCreationTime2);
+
+        //Make sure the new file is writable
+        adapter.save(blogger2);
+        //Check the new record is in the database
+        //and the old record is not.
+        assertRecordIsInDb(blogger2.getName());
+        assertRecordIsNotInDb(blogger1.getName());
+        assertObserverReceivedRecord(blogger2);
+        //Terminate the adapter
+        adapter.terminate();
+        //Verify observer was disposed.
+        assertTrue(subscriberDisposableRef.get().isDisposed());
+
     }
 
-    /**
-     * Assert that the database was created. Then call clear and
-     * assert the file was deleted; attempt to call clear again
-     * and ensure there are no exceptions thrown.
-     * @throws DataStoreException bubbles up exceptions thrown from the adapter
-     */
-    @Test
-    public void clearHandlesMissingFile() throws DataStoreException {
+    private BlogOwner createBlogger(String name) throws DataStoreException {
+        return BlogOwner.builder()
+            .name(name)
+            .build();
+    }
+
+    private void assertObserverReceivedRecord(BlogOwner blogger) {
+        long count = observer
+            .values()
+            .stream()
+            .filter(record -> {
+                return record.getEntry().contains(blogger.getName());
+            })
+            .count();
+        assertEquals(1, count);
+    }
+
+    private void assertRecordIsInDb(String name) throws DataStoreException {
+        List<BlogOwner> blogOwners = adapter.query(BlogOwner.class, BlogOwner.NAME.eq(name));
+        assertNotNull(blogOwners);
+        assertEquals(1, blogOwners.size());
+    }
+
+    private void assertRecordIsNotInDb(String name) throws DataStoreException {
+        List<BlogOwner> blogOwners = adapter.query(BlogOwner.class, BlogOwner.NAME.eq(name));
+        assertNotNull(blogOwners);
+        assertEquals(0, blogOwners.size());
+    }
+
+    private FileTime getDbFileCreationTime() throws IOException {
+        return (FileTime) Files.getAttribute(
+            context.getDatabasePath(DATABASE_NAME).toPath(), "creationTime");
+    }
+
+    private void assertDbFileExists() {
         assertTrue(context.getDatabasePath(DATABASE_NAME).exists());
-        //check that it's subscribed
-        observer.assertSubscribed();
-
-        adapter.clear();
-        //check that it's not subscribed anymore.
-        observer.assertNotSubscribed();
-        assertFalse(context.getDatabasePath(DATABASE_NAME).exists());
-
-        adapter.clear();
     }
 }

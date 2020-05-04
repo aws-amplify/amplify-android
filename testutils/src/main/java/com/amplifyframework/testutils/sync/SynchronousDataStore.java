@@ -27,6 +27,8 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
+import io.reactivex.Completable;
+
 /**
  * A utility to facilitate synchronous calls to the Amplify DataStore category.
  * This is not appropriate for production use, but is valuable in test code.
@@ -84,6 +86,17 @@ public final class SynchronousDataStore {
         }
 
         throw new NoSuchElementException("No item in DataStore with class = " + clazz + " and id = " + itemId);
+    }
+
+    /**
+     * Call the clar method of the underlying DataStore implementation.
+     */
+    public void clear() {
+        Completable.fromSingle(single -> {
+            asyncDelegate.clear(() -> {
+                single.onSuccess(true);
+            }, single::onError);
+        }).blockingAwait();
     }
 
     // Syntax fluff to get rid of type bounds at location of call

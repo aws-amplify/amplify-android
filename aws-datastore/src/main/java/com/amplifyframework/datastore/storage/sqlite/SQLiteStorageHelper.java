@@ -175,13 +175,6 @@ final class SQLiteStorageHelper extends SQLiteOpenHelper implements ModelUpdateS
         }
     }
 
-    /**
-     * Deletes the SQLite database file from the device's local storage.
-     */
-    public void deleteDatabaseFromDisk() {
-        context.deleteDatabase(getDatabaseName());
-    }
-
     private void createTablesAndIndexes(SQLiteDatabase sqliteDatabase) {
         Objects.requireNonNull(sqliteDatabase);
 
