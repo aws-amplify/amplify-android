@@ -21,17 +21,19 @@ dependencies {
     api project(':core')
 
     implementation dependency.androidx.appcompat
-    implementation dependency.okhttp.okhttp
-    implementation dependency.gson
     implementation dependency.aws.authcore
     implementation dependency.aws.mobileclient
+    implementation dependency.gson
+    implementation dependency.okhttp.okhttp
+    implementation dependency.threetenabp
 
     testImplementation project(path: ':testutils')
     testImplementation project(path: ':testmodels')
     testImplementation dependency.androidx.test.core
-    testImplementation dependency.okhttp.mockwebserver
+    testImplementation dependency.jsonassert
     testImplementation dependency.junit
     testImplementation dependency.mockito
+    testImplementation dependency.okhttp.mockwebserver
     testImplementation dependency.rxjava
     testImplementation (dependency.robolectric) {
         // https://github.com/robolectric/robolectric/issues/5245

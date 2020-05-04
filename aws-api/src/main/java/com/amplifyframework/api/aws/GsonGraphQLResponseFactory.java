@@ -18,6 +18,9 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -31,24 +34,30 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 
 /**
  * Converts JSON strings into models of a given type, using Gson.
  */
 final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
+    private static final String DATA_KEY = "data";
+    private static final String ERRORS_KEY = "errors";
+    private static final String ITEMS_KEY = "items";
+
     private final Gson gson;
 
     /**
      * Default constructor using default Gson object.
      */
     GsonGraphQLResponseFactory() {
-        this(
-                new GsonBuilder()
-                .registerTypeAdapter(List.class, new GsonListDeserializer())
+        this(new GsonBuilder()
                 .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
-                .create()
-        );
+                .registerTypeAdapter(Date.class, new TemporalDeserializers.DateDeserializer())
+                .registerTypeAdapter(AWSDate.class, new TemporalDeserializers.AWSDateDeserializer())
+                .registerTypeAdapter(AWSDateTime.class, new TemporalDeserializers.AWSDateTimeDeserializer())
+                .registerTypeAdapter(AWSTime.class, new TemporalDeserializers.AWSTimeDeserializer())
+                .create());
     }
 
     /**
@@ -69,11 +78,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
-            if (toJson.has("data")) {
-                jsonData = skipQueryLevel(toJson.get("data"));
+            if (toJson.has(DATA_KEY)) {
+                jsonData = skipQueryLevel(toJson.get(DATA_KEY));
             }
-            if (toJson.has("errors")) {
-                jsonErrors = toJson.get("errors");
+            if (toJson.has(ERRORS_KEY)) {
+                jsonErrors = toJson.get(ERRORS_KEY);
             }
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
@@ -107,11 +116,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
-            if (toJson.has("data")) {
-                jsonData = skipQueryLevel(toJson.get("data"));
+            if (toJson.has(DATA_KEY)) {
+                jsonData = skipQueryLevel(toJson.get(DATA_KEY));
             }
-            if (toJson.has("errors")) {
-                jsonErrors = toJson.get("errors");
+            if (toJson.has(ERRORS_KEY)) {
+                jsonErrors = toJson.get(ERRORS_KEY);
             }
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
@@ -127,9 +136,9 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             return new GraphQLResponse<>(null, errors);
         } else if (
                 jsonData.isJsonObject() &&
-                jsonData.getAsJsonObject().has("items")
+                jsonData.getAsJsonObject().has(ITEMS_KEY)
         ) {
-            Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get("items"), classToCast);
+            Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get(ITEMS_KEY), classToCast);
             return new GraphQLResponse<>(data, errors);
         } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || JsonElement.class.equals(classToCast)) {
             T data = parseData(jsonData, classToCast);
