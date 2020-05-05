@@ -20,12 +20,9 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.request.AWSPollyRequest;
-import com.amplifyframework.predictions.aws.request.AWSTranslateRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.operation.TextToSpeechOperation;
-import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
-import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;

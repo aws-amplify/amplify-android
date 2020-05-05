@@ -16,12 +16,6 @@
 package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
-import android.media.MediaDataSource;
-import android.media.MediaPlayer;
-import android.os.Build;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 
 import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
@@ -34,7 +28,6 @@ import com.amplifyframework.testutils.sync.SynchronousPredictions;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.io.InputStream;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
@@ -65,6 +58,10 @@ public final class AWSPredictionsTextToSpeechTest {
         predictions = SynchronousPredictions.delegatingTo(asyncDelegate);
     }
 
+    /**
+     * This is a placeholder test case for text-to-speech conversion.
+     * @throws PredictionsException if prediction fails
+     */
     @Test
     public void testTextToSpeechReturnsNonNullResult() throws PredictionsException {
         // Interpret english text and assert non-null result
@@ -74,33 +71,5 @@ public final class AWSPredictionsTextToSpeechTest {
         // Assert non-null audio data
         InputStream audioData = result.getAudioData();
         assertNotNull(audioData);
-
-        // MediaPlayer mp = new MediaPlayer();
-        // mp.setDataSource(new InputStreamMediaDataSource(audioData));
-        // mp.start();
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.M)
-    public static final class InputStreamMediaDataSource extends MediaDataSource {
-        private InputStream stream;
-
-        private InputStreamMediaDataSource(InputStream stream) {
-            this.stream = stream;
-        }
-
-        @Override
-        public synchronized void close() throws IOException {
-            stream.close();
-        }
-
-        @Override
-        public synchronized int readAt(long position, byte[] buffer, int offset, int size) throws IOException {
-            return stream.read(buffer, offset, size);
-        }
-
-        @Override
-        public synchronized long getSize() throws IOException {
-            return stream.available();
-        }
     }
 }

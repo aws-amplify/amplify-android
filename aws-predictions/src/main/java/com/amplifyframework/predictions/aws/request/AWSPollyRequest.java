@@ -18,8 +18,6 @@ package com.amplifyframework.predictions.aws.request;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.predictions.models.LanguageType;
-
 import java.util.Objects;
 
 /**
@@ -32,6 +30,7 @@ public final class AWSPollyRequest {
     /**
      * Constructs an instance of {@link AWSPollyRequest}.
      * @param text the text to synthesize into speech
+     * @param voiceType the voice type supported by AWS Polly
      */
     public AWSPollyRequest(
             @NonNull String text,
