@@ -54,7 +54,7 @@ import static org.junit.Assert.assertTrue;
  * as intended.
  */
 @RunWith(RobolectricTestRunner.class)
-public final class IdentifyResultTransformersTest {
+public final class RekognitionResultTransformersTest {
     private static final double DELTA = 1E-5; // Enough precision for each pixel per image
 
     private Random random;
@@ -76,7 +76,7 @@ public final class IdentifyResultTransformersTest {
                 .withTop(random.nextFloat())
                 .withWidth(random.nextFloat());
 
-        RectF rect = IdentifyResultTransformers.fromBoundingBox(box);
+        RectF rect = RekognitionResultTransformers.fromBoundingBox(box);
         assertEquals(box.getHeight(), rect.height(), DELTA);
         assertEquals(box.getWidth(), rect.width(), DELTA);
         assertEquals(box.getLeft(), rect.left, DELTA);
@@ -95,7 +95,7 @@ public final class IdentifyResultTransformersTest {
                 .withRoll(random.nextFloat())
                 .withYaw(random.nextFloat());
 
-        Pose amplifyPose = IdentifyResultTransformers.fromRekognitionPose(rekognitionPose);
+        Pose amplifyPose = RekognitionResultTransformers.fromRekognitionPose(rekognitionPose);
         assertEquals(rekognitionPose.getPitch(), amplifyPose.getPitch(), DELTA);
         assertEquals(rekognitionPose.getRoll(), amplifyPose.getRoll(), DELTA);
         assertEquals(rekognitionPose.getYaw(), amplifyPose.getYaw(), DELTA);
@@ -120,7 +120,7 @@ public final class IdentifyResultTransformersTest {
                 .withHigh(high)
                 .withLow(low);
 
-        AgeRange amplifyAgeRange = IdentifyResultTransformers.fromRekognitionAgeRange(rekognitionAgeRange);
+        AgeRange amplifyAgeRange = RekognitionResultTransformers.fromRekognitionAgeRange(rekognitionAgeRange);
         assertEquals(rekognitionAgeRange.getHigh().intValue(), amplifyAgeRange.getHigh());
         assertEquals(rekognitionAgeRange.getLow().intValue(), amplifyAgeRange.getLow());
     }
@@ -154,7 +154,7 @@ public final class IdentifyResultTransformersTest {
                 mouthDown
         );
 
-        List<Landmark> amplifyLandmarks = IdentifyResultTransformers.fromLandmarks(rekognitionLandmarks);
+        List<Landmark> amplifyLandmarks = RekognitionResultTransformers.fromLandmarks(rekognitionLandmarks);
         Map<LandmarkType, List<PointF>> map = new HashMap<>();
         for (Landmark landmark : amplifyLandmarks) {
             map.put(landmark.getType(), landmark.getPoints());
@@ -210,7 +210,7 @@ public final class IdentifyResultTransformersTest {
                         .withValue(random.nextBoolean())
                         .withConfidence(random.nextFloat()));
 
-        List<BinaryFeature> features = IdentifyResultTransformers.fromFaceDetail(faceDetail);
+        List<BinaryFeature> features = RekognitionResultTransformers.fromFaceDetail(faceDetail);
         FeatureAssert.assertMatches(
                 Arrays.asList(
                         faceDetail.getBeard().getValue(),

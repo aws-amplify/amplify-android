@@ -37,6 +37,12 @@ public enum FeatureType {
     CELEBRITY("Celebrity"),
 
     /**
+     * Cell is a unit component of table detected from
+     * the input image.
+     */
+    CELL("Cell"),
+
+    /**
      * Emotion is the inferred mood or state of the
      * entity's mind detected from the input image.
      */
@@ -89,7 +95,13 @@ public enum FeatureType {
      * Syntax is the part of speech that is detected
      * from the input text.
      */
-    SYNTAX(SpeechType.class.getSimpleName());
+    SYNTAX(SpeechType.class.getSimpleName()),
+
+    /**
+     * Table is a set of columns of data that is
+     * detected from the input image.
+     */
+    TABLE("Table");
 
     private final String typeAlias;
 

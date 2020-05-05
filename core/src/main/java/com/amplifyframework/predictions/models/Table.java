@@ -26,15 +26,20 @@ import java.util.Objects;
  * A table can be detected from an image of a document
  * and be organized into this data type.
  */
-public final class Table {
+public final class Table extends ImageFeature<List<Cell>> {
     private final int rowSize;
     private final int columnSize;
-    private final List<Cell> cells;
 
     private Table(final Builder builder) {
+        super(builder);
         this.rowSize = builder.getRowSize();
         this.columnSize = builder.getColumnSize();
-        this.cells = builder.getCells();
+    }
+
+    @NonNull
+    @Override
+    public String getTypeAlias() {
+        return FeatureType.TABLE.getAlias();
     }
 
     /**
@@ -59,7 +64,7 @@ public final class Table {
      */
     @NonNull
     public List<Cell> getCells() {
-        return cells;
+        return getValue();
     }
 
     /**
@@ -75,7 +80,8 @@ public final class Table {
     /**
      * Builder for {@link Table}.
      */
-    public static final class Builder {
+    public static final class Builder
+            extends ImageFeature.Builder<Builder, Table, List<Cell>> {
         private int rowSize;
         private int columnSize;
         private List<Cell> cells;
@@ -113,8 +119,7 @@ public final class Table {
          */
         @NonNull
         public Builder cells(@NonNull List<Cell> cells) {
-            this.cells = Objects.requireNonNull(cells);
-            return this;
+            return value(cells);
         }
 
         /**

@@ -23,7 +23,7 @@ import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.aws.adapter.EmotionTypeAdapter;
 import com.amplifyframework.predictions.aws.adapter.GenderBinaryTypeAdapter;
-import com.amplifyframework.predictions.aws.adapter.IdentifyResultTransformers;
+import com.amplifyframework.predictions.aws.adapter.RekognitionResultTransformers;
 import com.amplifyframework.predictions.aws.configuration.IdentifyEntitiesConfiguration;
 import com.amplifyframework.predictions.models.AgeRange;
 import com.amplifyframework.predictions.models.BinaryFeature;
@@ -34,6 +34,7 @@ import com.amplifyframework.predictions.models.EmotionType;
 import com.amplifyframework.predictions.models.EntityDetails;
 import com.amplifyframework.predictions.models.EntityMatch;
 import com.amplifyframework.predictions.models.Gender;
+import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Label;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.Landmark;
@@ -43,6 +44,7 @@ import com.amplifyframework.predictions.result.IdentifyEntitiesResult;
 import com.amplifyframework.predictions.result.IdentifyEntityMatchesResult;
 import com.amplifyframework.predictions.result.IdentifyLabelsResult;
 import com.amplifyframework.predictions.result.IdentifyResult;
+import com.amplifyframework.predictions.result.IdentifyTextResult;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.AmazonClientException;
@@ -58,6 +60,8 @@ import com.amazonaws.services.rekognition.model.DetectLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectLabelsResult;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsRequest;
 import com.amazonaws.services.rekognition.model.DetectModerationLabelsResult;
+import com.amazonaws.services.rekognition.model.DetectTextRequest;
+import com.amazonaws.services.rekognition.model.DetectTextResult;
 import com.amazonaws.services.rekognition.model.Face;
 import com.amazonaws.services.rekognition.model.FaceDetail;
 import com.amazonaws.services.rekognition.model.FaceMatch;
@@ -68,9 +72,12 @@ import com.amazonaws.services.rekognition.model.RecognizeCelebritiesRequest;
 import com.amazonaws.services.rekognition.model.RecognizeCelebritiesResult;
 import com.amazonaws.services.rekognition.model.SearchFacesByImageRequest;
 import com.amazonaws.services.rekognition.model.SearchFacesByImageResult;
+import com.amazonaws.services.rekognition.model.TextDetection;
+import com.amazonaws.services.rekognition.model.TextTypes;
 
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -96,7 +103,7 @@ final class AWSRekognitionService {
 
     void detectLabels(
             @NonNull LabelType type,
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -105,12 +112,12 @@ final class AWSRekognitionService {
             boolean unsafeContent = false;
             // Moderation labels detection
             if (LabelType.ALL.equals(type) || LabelType.MODERATION_LABELS.equals(type)) {
-                labels.addAll(detectModerationLabels(image));
+                labels.addAll(detectModerationLabels(imageData));
                 unsafeContent = !labels.isEmpty();
             }
             // Regular labels detection
             if (LabelType.ALL.equals(type) || LabelType.LABELS.equals(type)) {
-                labels.addAll(detectLabels(image));
+                labels.addAll(detectLabels(imageData));
             }
             onSuccess.accept(IdentifyLabelsResult.builder()
                     .labels(labels)
@@ -122,12 +129,12 @@ final class AWSRekognitionService {
     }
 
     void recognizeCelebrities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
         try {
-            List<CelebrityDetails> celebrities = detectCelebrities(image);
+            List<CelebrityDetails> celebrities = detectCelebrities(imageData);
             onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
         } catch (PredictionsException exception) {
             onError.accept(exception);
@@ -135,7 +142,7 @@ final class AWSRekognitionService {
     }
 
     void detectEntities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -143,12 +150,12 @@ final class AWSRekognitionService {
         try {
             config = pluginConfiguration.getIdentifyEntitiesConfiguration();
             if (config.isGeneralEntityDetection()) {
-                List<EntityDetails> entities = detectEntities(image);
+                List<EntityDetails> entities = detectEntities(imageData);
                 onSuccess.accept(IdentifyEntitiesResult.fromEntityDetails(entities));
             } else {
                 int maxEntities = config.getMaxEntities();
                 String collectionId = config.getCollectionId();
-                List<EntityMatch> matches = detectEntityMatches(image, maxEntities, collectionId);
+                List<EntityMatch> matches = detectEntityMatches(imageData, maxEntities, collectionId);
                 onSuccess.accept(IdentifyEntityMatchesResult.fromEntityMatches(matches));
             }
         } catch (PredictionsException exception) {
@@ -156,9 +163,21 @@ final class AWSRekognitionService {
         }
     }
 
-    private List<Label> detectLabels(Image image) throws PredictionsException {
+    void detectPlainText(
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        try {
+            onSuccess.accept(detectPlainText(imageData));
+        } catch (PredictionsException exception) {
+            onError.accept(exception);
+        }
+    }
+
+    private List<Label> detectLabels(ByteBuffer imageData) throws PredictionsException {
         DetectLabelsRequest request = new DetectLabelsRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Detect labels in the given image via Amazon Rekognition
         final DetectLabelsResult result;
@@ -188,9 +207,9 @@ final class AWSRekognitionService {
         return labels;
     }
 
-    private List<Label> detectModerationLabels(Image image) throws PredictionsException {
+    private List<Label> detectModerationLabels(ByteBuffer imageData) throws PredictionsException {
         DetectModerationLabelsRequest request = new DetectModerationLabelsRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Detect moderation labels in the given image via Amazon Rekognition
         final DetectModerationLabelsResult result;
@@ -216,9 +235,9 @@ final class AWSRekognitionService {
         return labels;
     }
 
-    private List<CelebrityDetails> detectCelebrities(Image image) throws PredictionsException {
+    private List<CelebrityDetails> detectCelebrities(ByteBuffer imageData) throws PredictionsException {
         RecognizeCelebritiesRequest request = new RecognizeCelebritiesRequest()
-                .withImage(image);
+                .withImage(new Image().withBytes(imageData));
 
         // Recognize celebrities in the given image via Amazon Rekognition
         final RecognizeCelebritiesResult result;
@@ -241,9 +260,9 @@ final class AWSRekognitionService {
 
             // Get face-specific celebrity details from the result
             ComparedFace face = rekognitionCelebrity.getFace();
-            RectF box = IdentifyResultTransformers.fromBoundingBox(face.getBoundingBox());
-            Pose pose = IdentifyResultTransformers.fromRekognitionPose(face.getPose());
-            List<Landmark> landmarks = IdentifyResultTransformers.fromLandmarks(face.getLandmarks());
+            RectF box = RekognitionResultTransformers.fromBoundingBox(face.getBoundingBox());
+            Pose pose = RekognitionResultTransformers.fromRekognitionPose(face.getPose());
+            List<Landmark> landmarks = RekognitionResultTransformers.fromLandmarks(face.getLandmarks());
 
             // Get URL links that are relevant to celebrities
             List<URL> urls = new ArrayList<>();
@@ -268,9 +287,9 @@ final class AWSRekognitionService {
         return celebrities;
     }
 
-    private List<EntityDetails> detectEntities(Image image) throws PredictionsException {
+    private List<EntityDetails> detectEntities(ByteBuffer imageData) throws PredictionsException {
         DetectFacesRequest request = new DetectFacesRequest()
-                .withImage(image)
+                .withImage(new Image().withBytes(imageData))
                 .withAttributes(Attribute.ALL.toString());
 
         // Detect entities in the given image via Amazon Rekognition
@@ -287,11 +306,11 @@ final class AWSRekognitionService {
         List<EntityDetails> entities = new ArrayList<>();
         for (FaceDetail face : result.getFaceDetails()) {
             // Extract details from face detection
-            RectF box = IdentifyResultTransformers.fromBoundingBox(face.getBoundingBox());
-            AgeRange ageRange = IdentifyResultTransformers.fromRekognitionAgeRange(face.getAgeRange());
-            Pose pose = IdentifyResultTransformers.fromRekognitionPose(face.getPose());
-            List<Landmark> landmarks = IdentifyResultTransformers.fromLandmarks(face.getLandmarks());
-            List<BinaryFeature> features = IdentifyResultTransformers.fromFaceDetail(face);
+            RectF box = RekognitionResultTransformers.fromBoundingBox(face.getBoundingBox());
+            AgeRange ageRange = RekognitionResultTransformers.fromRekognitionAgeRange(face.getAgeRange());
+            Pose pose = RekognitionResultTransformers.fromRekognitionPose(face.getPose());
+            List<Landmark> landmarks = RekognitionResultTransformers.fromLandmarks(face.getLandmarks());
+            List<BinaryFeature> features = RekognitionResultTransformers.fromFaceDetail(face);
 
             // Gender detection
             com.amazonaws.services.rekognition.model.Gender rekognitionGender = face.getGender();
@@ -327,12 +346,12 @@ final class AWSRekognitionService {
     }
 
     private List<EntityMatch> detectEntityMatches(
-            Image image,
+            ByteBuffer imageData,
             int maxEntities,
             String collectionId
     ) throws PredictionsException {
         SearchFacesByImageRequest request = new SearchFacesByImageRequest()
-                .withImage(image)
+                .withImage(new Image().withBytes(imageData))
                 .withMaxFaces(maxEntities)
                 .withCollectionId(collectionId);
 
@@ -350,7 +369,7 @@ final class AWSRekognitionService {
         List<EntityMatch> matches = new ArrayList<>();
         for (FaceMatch rekognitionMatch : result.getFaceMatches()) {
             Face face = rekognitionMatch.getFace();
-            RectF box = IdentifyResultTransformers.fromBoundingBox(face.getBoundingBox());
+            RectF box = RekognitionResultTransformers.fromBoundingBox(face.getBoundingBox());
             EntityMatch amplifyMatch = EntityMatch.builder()
                     .externalImageId(face.getExternalImageId())
                     .confidence(rekognitionMatch.getSimilarity())
@@ -359,6 +378,49 @@ final class AWSRekognitionService {
             matches.add(amplifyMatch);
         }
         return matches;
+    }
+
+    private IdentifyTextResult detectPlainText(ByteBuffer imageData) throws PredictionsException {
+        DetectTextRequest request = new DetectTextRequest()
+                .withImage(new Image().withBytes(imageData));
+
+        // Read text in the given image via Amazon Rekognition
+        final DetectTextResult result;
+        try {
+            result = rekognition.detectText(request);
+        } catch (AmazonClientException serviceException) {
+            throw new PredictionsException(
+                    "Amazon Rekognition encountered an error while detecting text.",
+                    serviceException, "See attached service exception for more details."
+            );
+        }
+
+        StringBuilder fullTextBuilder = new StringBuilder();
+        List<String> rawLineText = new ArrayList<>();
+        List<IdentifiedText> words = new ArrayList<>();
+        List<IdentifiedText> lines = new ArrayList<>();
+
+        for (TextDetection detection : result.getTextDetections()) {
+            TextTypes type = TextTypes.fromValue(detection.getType());
+            switch (type) {
+                case LINE:
+                    rawLineText.add(detection.getDetectedText());
+                    lines.add(RekognitionResultTransformers.fromTextDetection(detection));
+                    continue;
+                case WORD:
+                    fullTextBuilder.append(detection.getDetectedText()).append(" ");
+                    words.add(RekognitionResultTransformers.fromTextDetection(detection));
+                    continue;
+                default:
+            }
+        }
+
+        return IdentifyTextResult.builder()
+                .fullText(fullTextBuilder.toString().trim())
+                .rawLineText(rawLineText)
+                .lines(lines)
+                .words(words)
+                .build();
     }
 
     @NonNull

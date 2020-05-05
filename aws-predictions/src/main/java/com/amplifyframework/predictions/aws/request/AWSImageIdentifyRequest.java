@@ -18,8 +18,6 @@ package com.amplifyframework.predictions.aws.request;
 import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
-import com.amazonaws.services.rekognition.model.Image;
-
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Objects;
@@ -27,36 +25,36 @@ import java.util.Objects;
 /**
  * Simple request instance for image identification operation.
  */
-public final class AWSRekognitionRequest {
+public final class AWSImageIdentifyRequest {
 
     private static final int COMPRESS_QUALITY_PERCENT = 100;
 
-    private final Image image;
+    private final ByteBuffer imageData;
 
-    private AWSRekognitionRequest(Image image) {
-        this.image = image;
+    private AWSImageIdentifyRequest(ByteBuffer imageData) {
+        this.imageData = imageData;
     }
 
     /**
-     * Constructs an instance of {@link AWSRekognitionRequest}.
+     * Constructs an instance of {@link AWSImageIdentifyRequest}.
      * @param image the input image to analyze
-     * @return a request for Amazon Rekognition service
+     * @return a request for Amazon Rekognition and Amazon Textract services
      */
     @NonNull
-    public static AWSRekognitionRequest fromBitmap(@NonNull Bitmap image) {
+    public static AWSImageIdentifyRequest fromBitmap(@NonNull Bitmap image) {
         Objects.requireNonNull(image);
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         image.compress(Bitmap.CompressFormat.JPEG, COMPRESS_QUALITY_PERCENT, stream);
-        ByteBuffer buffer = ByteBuffer.wrap(stream.toByteArray());
-        return new AWSRekognitionRequest(new Image().withBytes(buffer));
+        ByteBuffer imageData = ByteBuffer.wrap(stream.toByteArray());
+        return new AWSImageIdentifyRequest(imageData);
     }
 
     /**
-     * Gets the Rekognition input image.
-     * @return the Rekognition image
+     * Gets the byte data of input image.
+     * @return the byte buffer of image
      */
     @NonNull
-    public Image getImage() {
-        return image;
+    public ByteBuffer getImageData() {
+        return imageData;
     }
 }

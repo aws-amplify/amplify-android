@@ -58,4 +58,22 @@ public final class FeatureAssert {
             assertMatches(expectedIterator.next(), actualIterator.next());
         }
     }
+
+    /**
+     * Assert at least one of the features contains the expected value.
+     * @param expectedValue the feature value expected to be found in the list
+     * @param actual the list of actual features
+     * @param <F> the data type of the feature
+     * @param <T> the data type of the value of the feature
+     */
+    public static <F extends Feature<T>, T> void assertContains(T expectedValue, Collection<F> actual) {
+        Assert.assertNotNull(expectedValue);
+        Assert.assertNotNull(actual);
+        for (F feature : actual) {
+            if (expectedValue.equals(feature.getValue())) {
+                return;
+            }
+        }
+        Assert.fail("Expected value " + expectedValue + " was not found among any features: " + actual);
+    }
 }

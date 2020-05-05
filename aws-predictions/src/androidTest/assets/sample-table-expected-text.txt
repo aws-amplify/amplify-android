@@ -1,0 +1,1 @@
+Amazon Textract can extract tables and the cells in a table. For example, when the following table is detected on a form, Amazon Textract detects a table with four cells. Name Address Ana Carolina 123 Any Town
