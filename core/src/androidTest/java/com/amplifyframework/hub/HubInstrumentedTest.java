@@ -141,7 +141,7 @@ public final class HubInstrumentedTest {
      * @throws InterruptedException when waiting for CountDownLatch to
      *                              meet the desired condition is interrupted.
      */
-    @Ignore("This test doest not pass reliably and warrants further investigration.")
+    @Ignore("This test does not pass reliably and warrants further investigration.")
     @Test
     public void multiplePublications() throws InterruptedException {
         final int numPublications = 10;
