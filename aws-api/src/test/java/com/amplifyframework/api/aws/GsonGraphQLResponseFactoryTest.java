@@ -22,9 +22,11 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
 
+import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -34,10 +36,11 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -48,7 +51,6 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class GsonGraphQLResponseFactoryTest {
-
     private GraphQLResponse.Factory responseFactory;
 
     /**
@@ -56,7 +58,8 @@ public final class GsonGraphQLResponseFactoryTest {
      */
     @Before
     public void setup() {
-        responseFactory = new GsonGraphQLResponseFactory();
+        Gson gson = GsonFactory.create();
+        responseFactory = new GsonGraphQLResponseFactory(gson);
     }
 
     /**
@@ -134,7 +137,7 @@ public final class GsonGraphQLResponseFactoryTest {
         final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
             String message = "failed";
-            List<GraphQLLocation> locations = Arrays.asList(
+            List<GraphQLLocation> locations = Collections.singletonList(
                     new GraphQLLocation(5, 7));
             List<GraphQLPathSegment> path = Arrays.asList(
                     new GraphQLPathSegment("listTodos"),
@@ -176,7 +179,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Build the expected response.
         String message = "Conflict resolver rejects mutation.";
-        List<GraphQLLocation> locations = Arrays.asList(
+        List<GraphQLLocation> locations = Collections.singletonList(
                 new GraphQLLocation(11, 3));
         List<GraphQLPathSegment> path = Arrays.asList(
                 new GraphQLPathSegment("listTodos"),
@@ -220,13 +223,14 @@ public final class GsonGraphQLResponseFactoryTest {
         extensions.put("errorInfo", null);
         extensions.put("data", null);
 
-        GraphQLResponse.Error expectedError = new GraphQLResponse.Error("the message", null, null, extensions);
-        GraphQLResponse<ListTodosResult> expectedResponse = new GraphQLResponse<>(null, Arrays.asList(expectedError));
+        GraphQLResponse.Error expectedError =
+            new GraphQLResponse.Error("the message", null, null, extensions);
+        GraphQLResponse<ListTodosResult> expectedResponse =
+            new GraphQLResponse<>(null, Collections.singletonList(expectedError));
 
         // Assert that the response is expected
         assertEquals(expectedResponse, response);
     }
-
 
     /**
      * It is possible to cast the response data as a string, instead of as the strongly
@@ -275,7 +279,7 @@ public final class GsonGraphQLResponseFactoryTest {
     }
 
     @Test
-    public void awsDateTypesCanBeDeserialized() throws JSONException, ApiException {
+    public void awsDateTypesCanBeDeserialized() throws ApiException {
         // Expect
         List<Meeting> expectedMeetings = Arrays.asList(
             Meeting.builder()
@@ -284,7 +288,7 @@ public final class GsonGraphQLResponseFactoryTest {
                 .date(new AWSDate("2001-02-03"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30Z"))
                 .time(new AWSTime("01:22"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting1")
@@ -292,7 +296,7 @@ public final class GsonGraphQLResponseFactoryTest {
                 .date(new AWSDate("2001-02-03"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30:15Z"))
                 .time(new AWSTime("01:22:33"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting2")
@@ -300,7 +304,7 @@ public final class GsonGraphQLResponseFactoryTest {
                 .date(new AWSDate("2001-02-03Z"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30:15.444Z"))
                 .time(new AWSTime("01:22:33.444"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting3")
@@ -308,7 +312,7 @@ public final class GsonGraphQLResponseFactoryTest {
                 .date(new AWSDate("2001-02-03+01:30"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30"))
                 .time(new AWSTime("01:22:33.444Z"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting4")
@@ -316,7 +320,7 @@ public final class GsonGraphQLResponseFactoryTest {
                 .date(new AWSDate("2001-02-03+01:30:15"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30:15"))
                 .time(new AWSTime("01:22:33.444+05:30"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting5")
@@ -324,7 +328,7 @@ public final class GsonGraphQLResponseFactoryTest {
                 .date(new AWSDate("2001-02-03+01:30:15"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30:15"))
                 .time(new AWSTime("01:22:33.444+05:30:15"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build()
         );
 
