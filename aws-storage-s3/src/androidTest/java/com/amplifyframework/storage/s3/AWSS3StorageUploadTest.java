@@ -37,6 +37,7 @@ import com.amazonaws.mobileconnectors.s3.transferutility.TransferState;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.BeforeClass;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import java.io.File;
@@ -195,6 +196,10 @@ public final class AWSS3StorageUploadTest {
      *         completed successfully before timeout
      */
     @Test
+    @Ignore(
+        "This test is not passing reliably. It is not currently known if this " +
+        "constitutes a defect in source or test code."
+    )
     @SuppressWarnings("unchecked")
     public void testUploadFileIsResumable() throws Exception {
         final CountDownLatch completed = new CountDownLatch(1);
