@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -25,7 +26,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 
 import java.lang.reflect.Type;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
 final class TemporalDeserializers {
@@ -75,13 +75,11 @@ final class TemporalDeserializers {
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class DateDeserializer implements JsonDeserializer<Date> {
+    static class AWSTimestampDeserializer implements JsonDeserializer<AWSTimestamp> {
         @Override
-        public Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        public AWSTimestamp deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            long epochTimeInSeconds = json.getAsLong();
-            long epochTimeInMillis = TimeUnit.SECONDS.toMillis(epochTimeInSeconds);
-            return new Date(epochTimeInMillis);
+            return new AWSTimestamp(json.getAsLong(), TimeUnit.SECONDS);
         }
     }
 }

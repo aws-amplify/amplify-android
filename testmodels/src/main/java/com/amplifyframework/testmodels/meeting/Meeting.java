@@ -2,15 +2,15 @@ package com.amplifyframework.testmodels.meeting;
 
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
 
-import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -31,7 +31,7 @@ public final class Meeting implements Model {
     private final @ModelField(targetType="AWSDate") AWSDate date;
     private final @ModelField(targetType="AWSDateTime") AWSDateTime dateTime;
     private final @ModelField(targetType="AWSTime") AWSTime time;
-    private final @ModelField(targetType="AWSTimestamp") Date timestamp;
+    private final @ModelField(targetType="AWSTimestamp") AWSTimestamp timestamp;
     public String getId() {
         return id;
     }
@@ -52,11 +52,11 @@ public final class Meeting implements Model {
         return time;
     }
 
-    public Date getTimestamp() {
+    public AWSTimestamp getTimestamp() {
         return timestamp;
     }
 
-    private Meeting(String id, String name, AWSDate date, AWSDateTime dateTime, AWSTime time, Date timestamp) {
+    private Meeting(String id, String name, AWSDate date, AWSDateTime dateTime, AWSTime time, AWSTimestamp timestamp) {
         this.id = id;
         this.name = name;
         this.date = date;
@@ -147,7 +147,7 @@ public final class Meeting implements Model {
         BuildStep date(AWSDate date);
         BuildStep dateTime(AWSDateTime dateTime);
         BuildStep time(AWSTime time);
-        BuildStep timestamp(Date timestamp);
+        BuildStep timestamp(AWSTimestamp timestamp);
     }
 
 
@@ -157,7 +157,7 @@ public final class Meeting implements Model {
         private AWSDate date;
         private AWSDateTime dateTime;
         private AWSTime time;
-        private Date timestamp;
+        private AWSTimestamp timestamp;
         @Override
         public Meeting build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -197,7 +197,7 @@ public final class Meeting implements Model {
         }
 
         @Override
-        public BuildStep timestamp(Date timestamp) {
+        public BuildStep timestamp(AWSTimestamp timestamp) {
             this.timestamp = timestamp;
             return this;
         }
@@ -224,7 +224,7 @@ public final class Meeting implements Model {
     }
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String name, AWSDate date, AWSDateTime dateTime, AWSTime time, Date timestamp) {
+        private CopyOfBuilder(String id, String name, AWSDate date, AWSDateTime dateTime, AWSTime time, AWSTimestamp timestamp) {
             super.id(id);
             super.name(name)
                     .date(date)
@@ -254,7 +254,7 @@ public final class Meeting implements Model {
         }
 
         @Override
-        public CopyOfBuilder timestamp(Date timestamp) {
+        public CopyOfBuilder timestamp(AWSTimestamp timestamp) {
             return (CopyOfBuilder) super.timestamp(timestamp);
         }
     }
