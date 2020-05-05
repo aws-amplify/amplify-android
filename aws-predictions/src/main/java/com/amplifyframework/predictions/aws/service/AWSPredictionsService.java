@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.aws.service;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
@@ -25,6 +26,7 @@ import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
@@ -39,6 +41,7 @@ import java.nio.ByteBuffer;
  */
 public final class AWSPredictionsService {
 
+    private final AWSPollyService pollyService;
     private final AWSTranslateService translateService;
     private final AWSRekognitionService rekognitionService;
     private final AWSTextractService textractService;
@@ -49,10 +52,27 @@ public final class AWSPredictionsService {
      * @param configuration the configuration for AWS Predictions Plugin
      */
     public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
+        this.pollyService = new AWSPollyService(configuration);
         this.translateService = new AWSTranslateService(configuration);
         this.rekognitionService = new AWSRekognitionService(configuration);
         this.textractService = new AWSTextractService(configuration);
         this.comprehendService = new AWSComprehendService(configuration);
+    }
+
+    /**
+     * Delegate to {@link AWSPollyService} to synthesize speech.
+     * @param text the input text to convert to speech
+     * @param voiceType the voice type to synthesize speech with
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void synthesizeSpeech(
+            @NonNull String text,
+            @Nullable String voiceType,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        pollyService.synthesizeSpeech(text, voiceType, onSuccess, onError);
     }
 
     /**
