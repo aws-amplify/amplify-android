@@ -50,7 +50,7 @@ public final class SQLiteStorageAdapterClearTest {
 
     private SynchronousStorageAdapter adapter;
     private Context context;
-    private TestObserver<StorageItemChange.Record> observer;
+    private TestObserver<? extends StorageItemChange.Record> observer;
     private AtomicReference<Disposable> subscriberDisposableRef = new AtomicReference<>();
 
     @BeforeClass
@@ -63,12 +63,12 @@ public final class SQLiteStorageAdapterClearTest {
         TestStorageAdapter.cleanup();
         context = ApplicationProvider.getApplicationContext();
         adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
-        observer = TestObserver.create();
         //Set subscriberDisposableRef = <value received from RxJava>.
         //Needed so we can make assertions on the state of the subscriber later.
-        adapter.observe()
+        observer = adapter
+            .observe()
             .doOnSubscribe(subscriberDisposableRef::set)
-            .subscribe(observer);
+            .test();
 
     }
 

@@ -398,7 +398,8 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * Stops all synchronization processes and invokes
      * the clear method of the underlying storage
-     * adapter. Then restarts the orchestrator.
+     * adapter. Any items pending synchronization in the outbound queue will
+     * be lost. Once/if clear completes successfully, the orchestrator is restarted.
      * @param onComplete Invoked if the call is successful.
      * @param onError Invoked if not successful
      */
