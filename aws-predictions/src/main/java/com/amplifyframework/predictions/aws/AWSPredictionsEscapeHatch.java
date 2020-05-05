@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
+import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
 
 import java.util.Objects;
@@ -31,15 +32,18 @@ import java.util.Objects;
 public final class AWSPredictionsEscapeHatch {
     private final AmazonTranslateClient translate;
     private final AmazonRekognitionClient rekognition;
+    private final AmazonTextractClient textract;
     private final AmazonComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
             @NonNull AmazonTranslateClient translate,
             @NonNull AmazonRekognitionClient rekognition,
+            @NonNull AmazonTextractClient textract,
             @NonNull AmazonComprehendClient comprehend
     ) {
         this.translate = Objects.requireNonNull(translate);
         this.rekognition = Objects.requireNonNull(rekognition);
+        this.textract = Objects.requireNonNull(textract);
         this.comprehend = Objects.requireNonNull(comprehend);
     }
 
@@ -61,6 +65,16 @@ public final class AWSPredictionsEscapeHatch {
     @NonNull
     public AmazonRekognitionClient getRekognitionClient() {
         return rekognition;
+    }
+
+    /**
+     * Return configured Amazon Textract client to access
+     * low-level methods for document analysis.
+     * @return the configured Amazon Textract client
+     */
+    @NonNull
+    public AmazonTextractClient getTextractClient() {
+        return textract;
     }
 
     /**

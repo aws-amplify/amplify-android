@@ -81,7 +81,7 @@ public final class BoundedKeyValue extends ImageFeature<Pair<String, String>> {
         public Builder keyValuePair(@NonNull String key, @NonNull String value) {
             Objects.requireNonNull(key);
             Objects.requireNonNull(value);
-            return value(new Pair<>(key, value));
+            return value(Pair.create(key, value));
         }
 
         /**

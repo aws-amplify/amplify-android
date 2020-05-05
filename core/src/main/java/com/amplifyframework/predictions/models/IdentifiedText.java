@@ -49,11 +49,22 @@ public final class IdentifiedText extends ImageFeature<String> {
     }
 
     /**
-     * Gets the page value.
-     * @return the page
+     * In the case that multiple pages of documents are
+     * detected from a given image, this returns the page
+     * value in which this text was identified.
+     * Defaults to 0.
+     * @return the page of the document
      */
     public int getPage() {
         return page;
+    }
+
+    /**
+     * Gets a builder to construct identified text feature.
+     * @return new builder instance
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
     /**

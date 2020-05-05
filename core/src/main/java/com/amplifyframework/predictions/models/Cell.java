@@ -15,30 +15,27 @@
 
 package com.amplifyframework.predictions.models;
 
-import android.graphics.RectF;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-
-import java.util.Objects;
 
 /**
  * A representation of {@link Table}'s individual cell.
  */
-public final class Cell {
-    private final String text;
-    private final RectF box;
-    private final Polygon polygon;
+public final class Cell extends ImageFeature<String> {
     private final boolean selected;
     private final int row;
     private final int column;
 
     private Cell(final Builder builder) {
-        this.text = builder.getText();
-        this.box = builder.getBox();
-        this.polygon = builder.getPolygon();
+        super(builder);
         this.selected = builder.getSelected();
         this.row = builder.getRow();
         this.column = builder.getColumn();
+    }
+
+    @NonNull
+    @Override
+    public String getTypeAlias() {
+        return FeatureType.CELL.getAlias();
     }
 
     /**
@@ -47,25 +44,7 @@ public final class Cell {
      */
     @NonNull
     public String getText() {
-        return text;
-    }
-
-    /**
-     * Gets the rectangular target boundary if available.
-     * @return the rectangular boundary
-     */
-    @Nullable
-    public RectF getBox() {
-        return box;
-    }
-
-    /**
-     * Gets a more finely defined target boundary if available.
-     * @return the polygonal boundary
-     */
-    @Nullable
-    public Polygon getPolygon() {
-        return polygon;
+        return getValue();
     }
 
     /**
@@ -105,10 +84,8 @@ public final class Cell {
     /**
      * Builder for {@link Cell}.
      */
-    public static final class Builder {
-        private String text;
-        private RectF box;
-        private Polygon polygon;
+    public static final class Builder
+            extends ImageFeature.Builder<Builder, Cell, String> {
         private boolean selected;
         private int row;
         private int column;
@@ -120,30 +97,7 @@ public final class Cell {
          */
         @NonNull
         public Builder text(@NonNull String text) {
-            this.text = Objects.requireNonNull(text);
-            return this;
-        }
-
-        /**
-         * Sets the bounding box and return this builder.
-         * @param box the rectangular boundary
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder box(@Nullable RectF box) {
-            this.box = box;
-            return this;
-        }
-
-        /**
-         * Sets the bounding polygon and return this builder.
-         * @param polygon the polygonal boundary
-         * @return this builder instance
-         */
-        @NonNull
-        public Builder polygon(@Nullable Polygon polygon) {
-            this.polygon = polygon;
-            return this;
+            return value(text);
         }
 
         /**
@@ -187,21 +141,6 @@ public final class Cell {
         @NonNull
         public Cell build() {
             return new Cell(this);
-        }
-
-        @NonNull
-        String getText() {
-            return Objects.requireNonNull(text);
-        }
-
-        @Nullable
-        RectF getBox() {
-            return box;
-        }
-
-        @Nullable
-        Polygon getPolygon() {
-            return polygon;
         }
 
         boolean getSelected() {
