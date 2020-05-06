@@ -557,10 +557,10 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         UserCodeDeliveryDetails details = result.getUserCodeDeliveryDetails();
         AuthCodeDeliveryDetails newDetails = details != null
                 ? new AuthCodeDeliveryDetails(
-                details.getDestination(),
-                AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
-                details.getAttributeName()
-        )
+                    details.getDestination(),
+                    AuthCodeDeliveryDetails.DeliveryMedium.fromString(details.getDeliveryMedium()),
+                    details.getAttributeName()
+                )
                 : null;
 
         return new AuthSignUpResult(
