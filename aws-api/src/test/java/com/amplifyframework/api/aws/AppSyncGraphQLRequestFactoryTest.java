@@ -23,6 +23,7 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -35,6 +36,7 @@ import org.robolectric.RobolectricTestRunner;
 import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Date;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests the {@link AppSyncGraphQLRequestFactory}.
@@ -152,7 +154,7 @@ public final class AppSyncGraphQLRequestFactoryTest {
                 .date(new AWSDate("2001-02-03"))
                 .dateTime(new AWSDateTime("2001-02-03T01:30:15Z"))
                 .time(new AWSTime("01:22:33"))
-                .timestamp(new Date(1234567890000L))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build();
 
         // Act: build a mutation to create a Meeting
