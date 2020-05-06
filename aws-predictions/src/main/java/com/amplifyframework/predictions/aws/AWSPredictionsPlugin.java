@@ -33,16 +33,20 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.SpeechToTextOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.SpeechToTextOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.SpeechToTextResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -147,6 +151,27 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
         // Start operation and return
         operation.start();
         return operation;
+    }
+
+    @NonNull
+    @Override
+    public SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return convertSpeechToText(speech, SpeechToTextOptions.defaults(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull SpeechToTextOptions options,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return null;
     }
 
     @NonNull

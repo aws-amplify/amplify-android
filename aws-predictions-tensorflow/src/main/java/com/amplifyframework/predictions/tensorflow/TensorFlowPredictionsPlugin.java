@@ -28,21 +28,26 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.SpeechToTextOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.SpeechToTextOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.SpeechToTextResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowIdentifyOperation;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
+import com.amplifyframework.predictions.tensorflow.operation.TensorFlowSpeechToTextOperation;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowTranslateTextOperation;
 import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
 
 import org.json.JSONObject;
 
+import java.io.InputStream;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -141,6 +146,31 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
     ) {
         TensorFlowTranslateTextOperation operation =
                 new TensorFlowTranslateTextOperation(onError);
+        operation.start();
+        return operation;
+    }
+
+    @NonNull
+    @Override
+    public SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return convertSpeechToText(speech, SpeechToTextOptions.defaults(),
+                onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull SpeechToTextOptions options,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        TensorFlowSpeechToTextOperation operation =
+                new TensorFlowSpeechToTextOperation(onError);
         operation.start();
         return operation;
     }

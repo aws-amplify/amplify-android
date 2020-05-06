@@ -23,13 +23,18 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.SpeechToTextOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.SpeechToTextOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.SpeechToTextResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
+
+import java.io.InputStream;
 
 /**
  * The Predictions category includes functionality to convert and translate text,
@@ -105,6 +110,38 @@ public interface PredictionsCategoryBehavior {
             @NonNull LanguageType toLanguage,
             @NonNull TranslateTextOptions options,
             @NonNull Consumer<TranslateTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Transcribe text from the audio input.
+     * @param speech The speech to transcribe
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing transcription operation
+     */
+    @NonNull
+    SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Transcribe text from the audio input.
+     * @param speech The speech to transcribe
+     * @param options Parameters to specific plugin behavior
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing transcription operation
+     */
+    @NonNull
+    SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull SpeechToTextOptions options,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     );
 

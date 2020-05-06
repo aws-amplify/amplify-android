@@ -25,13 +25,18 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.SpeechToTextOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.SpeechToTextOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.SpeechToTextResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
+
+import java.io.InputStream;
 
 /**
  * Defines the API that a consuming application uses to perform predictions.
@@ -90,6 +95,27 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
     ) {
         return getSelectedPlugin().translateText(text, fromLanguage,
                 toLanguage, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().convertSpeechToText(speech, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public SpeechToTextOperation<?> convertSpeechToText(
+            @NonNull InputStream speech,
+            @NonNull SpeechToTextOptions options,
+            @NonNull Consumer<SpeechToTextResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().convertSpeechToText(speech, options, onSuccess, onError);
     }
 
     @NonNull
