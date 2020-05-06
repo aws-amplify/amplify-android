@@ -186,9 +186,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) {
-        initializeStorageAdapter(context)
-            .andThen(orchestrator.start())
-            .blockingAwait();
+        Completable completable = initializeStorageAdapter(context);
+        if (Amplify.API.getPlugins().size() > 0) {
+            completable = completable.andThen(orchestrator.start());
+        }
+        completable.blockingAwait();
     }
 
     /**
