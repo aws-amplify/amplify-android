@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage;
+package com.amplifyframework.datastore.model;
 
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
@@ -32,7 +32,7 @@ import java.lang.reflect.Type;
 /**
  * Custom logic to serialize and deserialize an instance of {@link QueryPredicate}.
  */
-final class PredicateInterfaceAdapter implements
+public final class PredicateInterfaceAdapter implements
         JsonDeserializer<QueryPredicate>,
         JsonSerializer<QueryPredicate> {
 

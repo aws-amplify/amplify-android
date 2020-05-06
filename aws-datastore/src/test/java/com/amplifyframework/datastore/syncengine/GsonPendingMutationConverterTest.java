@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage;
+package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
@@ -27,43 +27,38 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
 /**
- * Tests the functionality of the {@link GsonStorageItemChangeConverter}.
+ * Tests the functionality of the {@link GsonPendingMutationConverter}.
  */
-public class GsonStorageItemChangeConverterTest {
+public class GsonPendingMutationConverterTest {
     /**
-     * Validate that the {@link GsonStorageItemChangeConverter} can be
-     * used to convert a sample {@link StorageItemChange} to a
-     * {@link StorageItemChangeRecord}, and vice-versa.
+     * Validate that the {@link GsonPendingMutationConverter} can be
+     * used to convert a sample {@link PendingMutation} to a
+     * {@link PendingMutation.PersistentRecord}, and vice-versa.
      * @throws DataStoreException from DataStore conversion
      */
     @Test
     public void convertStorageItemChangeToRecordAndBack() throws DataStoreException {
-        // Arrange a StorageItemChange<Blog> with an expected change ID
+        // Arrange a PendingMutation<Blog>
         String expectedChangeId = UUID.randomUUID().toString();
-        StorageItemChange<Blog> originalItemChange = StorageItemChange.<Blog>builder()
-            .changeId(expectedChangeId)
-            .itemClass(Blog.class)
-            .item(Blog.builder()
-                .name("A neat blog")
-                .owner(BlogOwner.builder()
-                    .name("Joe Swanson")
-                    .build())
+        Blog blog = Blog.builder()
+            .name("A neat blog")
+            .owner(BlogOwner.builder()
+                .name("Joe Swanson")
                 .build())
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-            .type(StorageItemChange.Type.CREATE)
+            .id(expectedChangeId)
             .build();
+        PendingMutation<Blog> originalItemChange = PendingMutation.creation(blog, Blog.class);
 
         // Instantiate the object under test
-        StorageItemChangeConverter converter = new GsonStorageItemChangeConverter();
+        PendingMutation.Converter converter = new GsonPendingMutationConverter();
 
         // Try to construct a record from the StorageItemChange instance.
-        StorageItemChangeRecord record = converter.toRecord(originalItemChange);
+        PendingMutation.PersistentRecord record = converter.toRecord(originalItemChange);
         assertNotNull(record);
         assertEquals(expectedChangeId, record.getId());
 
         // Now, try to convert it back...
-        StorageItemChange<Blog> reconstructedItemChange = converter.fromRecord(record);
-        assertEquals(expectedChangeId, reconstructedItemChange.changeId().toString());
+        PendingMutation<Blog> reconstructedItemChange = converter.fromRecord(record);
         assertEquals(originalItemChange, reconstructedItemChange);
     }
 }

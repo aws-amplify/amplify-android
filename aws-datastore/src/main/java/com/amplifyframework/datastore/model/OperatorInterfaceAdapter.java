@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage;
+package com.amplifyframework.datastore.model;
 
 import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
 import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
@@ -39,7 +39,7 @@ import java.lang.reflect.Type;
 /**
  * Custom logic to serialize and deserialize an instance of {@link QueryOperator}.
  */
-final class OperatorInterfaceAdapter implements
+public final class OperatorInterfaceAdapter implements
         JsonDeserializer<QueryOperator<?>>,
         JsonSerializer<QueryOperator<?>> {
 
