@@ -20,6 +20,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.datastore.syncengine.PendingMutation;
 
 import org.junit.Test;
 
@@ -32,13 +33,12 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the {@link StorageItemChangeRecord}, which is a {@link Model}
- * that can be used by the DataStore's LocalStorageAdapter, and by the
- * API category.
+ * Tests the {@link PendingMutation.PersistentRecord}, which is a {@link Model}
+ * that can be used by the DataStore's {@link LocalStorageAdapter}.
  */
-public class StorageItemChangeRecordTest {
+public class PendingMutationPersistentRecordTest {
     /**
-     * Generation of a ModelSchema for the {@link StorageItemChangeRecord}
+     * Generation of a {@link ModelSchema} for the {@link PendingMutation.PersistentRecord}
      * succeeds.
      * @throws AmplifyException from Amplify configuration
      */
@@ -52,13 +52,13 @@ public class StorageItemChangeRecordTest {
                 .type(String.class)
                 .build(),
             ModelField.builder()
-                .name("entry")
+                .name("encodedModelData")
                 .targetType("String")
                 .isRequired(true)
                 .type(String.class)
                 .build(),
             ModelField.builder()
-                .name("itemClass")
+                .name("decodedModelClassName")
                 .targetType("String")
                 .isRequired(true)
                 .type(String.class)
@@ -71,20 +71,20 @@ public class StorageItemChangeRecordTest {
         }
 
         final ModelIndex index = ModelIndex.builder()
-            .indexFieldNames(Collections.singletonList("itemClass"))
-            .indexName("itemClassBasedIndex")
+            .indexFieldNames(Collections.singletonList("decodedModelClassName"))
+            .indexName("decodedModelClassNameBasedIndex")
             .build();
 
         assertEquals(
             // Expected
             ModelSchema.builder()
-                .name("StorageItemChangeRecord")
-                .pluralName("StorageItemChangeRecords")
+                .name("PersistentRecord")
+                .pluralName("PersistentRecords")
                 .fields(expectedFieldsMap)
-                .indexes(Collections.singletonMap("itemClassBasedIndex", index))
+                .indexes(Collections.singletonMap("decodedModelClassNameBasedIndex", index))
                 .build(),
             // Actual
-            ModelSchema.fromModelClass(StorageItemChangeRecord.class)
+            ModelSchema.fromModelClass(PendingMutation.PersistentRecord.class)
         );
     }
 }
