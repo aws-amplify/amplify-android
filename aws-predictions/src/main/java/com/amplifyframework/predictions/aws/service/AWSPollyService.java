@@ -21,6 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.aws.configuration.SpeechGeneratorConfiguration;
+import com.amplifyframework.predictions.aws.models.VoiceType;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.util.UserAgent;
 
@@ -59,10 +60,10 @@ final class AWSPollyService {
     }
 
     void synthesizeSpeech(
-            String text,
-            String voiceType,
-            Consumer<TextToSpeechResult> onSuccess,
-            Consumer<PredictionsException> onError
+            @NonNull String text,
+            @NonNull VoiceType voiceType,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
     ) {
         try {
             InputStream data = synthesizeSpeech(text, voiceType);
@@ -72,15 +73,25 @@ final class AWSPollyService {
         }
     }
 
-    private InputStream synthesizeSpeech(String text, String voiceType) throws PredictionsException {
-        SpeechGeneratorConfiguration config = pluginConfiguration.getSpeechGeneratorConfiguration();
+    private InputStream synthesizeSpeech(String text, VoiceType voiceType) throws PredictionsException {
+        final String languageCode;
+        final String voiceId;
+        if (VoiceType.UNKNOWN.equals(voiceType)) {
+            // Obtain voice + language from plugin configuration by default
+            SpeechGeneratorConfiguration config = pluginConfiguration.getSpeechGeneratorConfiguration();
+            languageCode = config.getLanguage();
+            voiceId = config.getVoice();
+        } else {
+            // Override configuration defaults if explicitly specified in the options
+            languageCode = voiceType.getLanguageCode();
+            voiceId = voiceType.getName();
+        }
+
         SynthesizeSpeechRequest request = new SynthesizeSpeechRequest()
                  .withText(text)
                  .withTextType(TextType.Text)
-                 .withLanguageCode(config.getLanguage())
-                 .withVoiceId(voiceType != null
-                         ? voiceType
-                         : config.getVoice())
+                 .withLanguageCode(languageCode)
+                 .withVoiceId(voiceId)
                  .withOutputFormat(OutputFormat.Mp3)
                  .withSampleRate(Integer.toString(MP3_SAMPLE_RATE));
 

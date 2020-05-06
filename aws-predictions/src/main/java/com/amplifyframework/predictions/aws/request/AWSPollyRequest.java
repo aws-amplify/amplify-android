@@ -16,7 +16,8 @@
 package com.amplifyframework.predictions.aws.request;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+
+import com.amplifyframework.predictions.aws.models.VoiceType;
 
 import java.util.Objects;
 
@@ -25,7 +26,7 @@ import java.util.Objects;
  */
 public final class AWSPollyRequest {
     private final String text;
-    private final String voiceType;
+    private final VoiceType voiceType;
 
     /**
      * Constructs an instance of {@link AWSPollyRequest}.
@@ -34,10 +35,10 @@ public final class AWSPollyRequest {
      */
     public AWSPollyRequest(
             @NonNull String text,
-            @Nullable String voiceType
+            @NonNull VoiceType voiceType
     ) {
         this.text = Objects.requireNonNull(text);
-        this.voiceType = voiceType;
+        this.voiceType = Objects.requireNonNull(voiceType);
     }
 
     /**
@@ -53,8 +54,8 @@ public final class AWSPollyRequest {
      * Gets the custom voice type for speech.
      * @return the voice type
      */
-    @Nullable
-    public String getVoiceType() {
+    @NonNull
+    public VoiceType getVoiceType() {
         return voiceType;
     }
 }

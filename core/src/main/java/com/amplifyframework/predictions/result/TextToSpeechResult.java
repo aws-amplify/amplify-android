@@ -18,7 +18,6 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.async.Result;
-import com.amplifyframework.predictions.models.LanguageType;
 
 import java.io.InputStream;
 import java.util.Objects;
