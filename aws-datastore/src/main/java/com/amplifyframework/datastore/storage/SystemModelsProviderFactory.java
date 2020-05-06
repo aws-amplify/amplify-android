@@ -48,11 +48,10 @@ public final class SystemModelsProviderFactory {
 
             // ModelMetadata.class stores the version of particular instances of a model. Unlike
             // PersistentModelVersion, which details with the structure of data, ModelMetadata
-            // deals actually with individual records, and their states.
+            // deals actually with individual object instances, and their states.
             ModelMetadata.class,
 
-            // StorageItemChangeRecord.class is an internal system event
-            // it is used to stage local storage changes for upload to cloud
+            // Used for staging local storage changes, before they can be uploaded to the cloud
             StorageItemChangeRecord.class
         );
     }

@@ -46,20 +46,20 @@ public final class GsonStorageItemChangeConverter implements StorageItemChangeCo
      */
     public GsonStorageItemChangeConverter() {
         this.gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
-                .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
-                .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
-                .create();
+            .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
+            .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
+            .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
+            .create();
     }
 
     @NonNull
     @Override
-    public <T extends Model> StorageItemChangeRecord toRecord(@NonNull StorageItemChange<T> storageItemChange) {
+    public <T extends Model> StorageItemChangeRecord toRecord(@NonNull StorageItemChange<T> change) {
         return StorageItemChangeRecord.builder()
-                .id(storageItemChange.changeId().toString())
-                .entry(gson.toJson(storageItemChange))
-                .itemClass(storageItemChange.itemClass().getName())
-                .build();
+            .id(change.changeId().toString())
+            .entry(gson.toJson(change))
+            .itemClass(change.itemClass().getName())
+            .build();
     }
 
     @NonNull
