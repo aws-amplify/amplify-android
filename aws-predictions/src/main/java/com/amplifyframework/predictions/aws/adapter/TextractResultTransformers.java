@@ -19,7 +19,6 @@ import android.graphics.PointF;
 import android.graphics.RectF;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.models.BoundedKeyValue;
@@ -210,9 +209,8 @@ public final class TextractResultTransformers {
                 .build();
     }
 
-    @VisibleForTesting
     @Nullable
-    static Cell fetchTableCell(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
+    private static Cell fetchTableCell(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
         Objects.requireNonNull(blockMap);
         if (block == null || !BlockType.CELL.toString().equals(block.getBlockType())) {
             return null;

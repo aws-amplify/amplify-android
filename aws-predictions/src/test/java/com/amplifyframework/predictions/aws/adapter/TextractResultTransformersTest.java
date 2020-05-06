@@ -140,10 +140,10 @@ public final class TextractResultTransformersTest {
 
     /**
      * Tests that the graph of related blocks from Textract is properly
-     * converted to an Amplify cell item.
+     * converted to an Amplify table item.
      */
     @Test
-    public void testTableCellConversion() {
+    public void testTableConversion() {
         Block cellTextBlock = new Block()
                 .withId(RandomString.string())
                 .withText(RandomString.string());
@@ -159,40 +159,6 @@ public final class TextractResultTransformersTest {
                 .withColumnIndex(random.nextInt())
                 .withRelationships(new Relationship()
                         .withIds(cellTextBlock.getId(), cellSelectionBlock.getId()));
-
-        // Construct a map to act as a graph
-        Map<String, Block> blockMap = new HashMap<>();
-        blockMap.put(cellTextBlock.getId(), cellTextBlock);
-        blockMap.put(cellSelectionBlock.getId(), cellSelectionBlock);
-        blockMap.put(cellBlock.getId(), cellBlock);
-
-        // Test block conversion
-        Cell cell = TextractResultTransformers.fetchTableCell(cellBlock, blockMap);
-        assertEquals(cellTextBlock.getText(), cell.getText());
-        assertEquals(cellBlock.getConfidence(), cell.getConfidence(), DELTA);
-        assertTrue(cell.isSelected());
-        assertEquals(cellBlock.getRowIndex() - 1, cell.getRow());
-        assertEquals(cellBlock.getColumnIndex() - 1, cell.getColumn());
-    }
-
-    /**
-     * Tests that the graph of related blocks from Textract is properly
-     * converted to an Amplify table item.
-     */
-    @Test
-    public void testTableConversion() {
-        Block cellTextBlock = new Block()
-                .withId(RandomString.string())
-                .withText(RandomString.string());
-        Block cellBlock = new Block()
-                .withId(RandomString.string())
-                .withBlockType(BlockType.CELL)
-                .withConfidence(random.nextFloat())
-                .withGeometry(randomGeometry())
-                .withRowIndex(random.nextInt())
-                .withColumnIndex(random.nextInt())
-                .withRelationships(new Relationship()
-                        .withIds(cellTextBlock.getId()));
         Block tableBlock = new Block()
                 .withId(RandomString.string())
                 .withBlockType(BlockType.TABLE)
@@ -204,15 +170,24 @@ public final class TextractResultTransformersTest {
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
         blockMap.put(cellTextBlock.getId(), cellTextBlock);
+        blockMap.put(cellSelectionBlock.getId(), cellSelectionBlock);
         blockMap.put(cellBlock.getId(), cellBlock);
         blockMap.put(tableBlock.getId(), tableBlock);
 
-        // Test block conversion
+        // Test table block conversion
         Table table = TextractResultTransformers.fetchTable(tableBlock, blockMap);
         assertEquals(1, table.getCells().size());
         assertEquals(tableBlock.getConfidence(), table.getConfidence(), DELTA);
         assertEquals(1, table.getRowSize());
         assertEquals(1, table.getColumnSize());
+
+        // Test cell block conversion
+        Cell cell = table.getCells().iterator().next();
+        assertEquals(cellTextBlock.getText(), cell.getText());
+        assertEquals(cellBlock.getConfidence(), cell.getConfidence(), DELTA);
+        assertTrue(cell.isSelected());
+        assertEquals(cellBlock.getRowIndex() - 1, cell.getRow());
+        assertEquals(cellBlock.getColumnIndex() - 1, cell.getColumn());
     }
 
     /**
