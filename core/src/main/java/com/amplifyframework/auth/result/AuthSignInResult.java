@@ -15,9 +15,12 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
+
+import java.util.Objects;
 
 public final class AuthSignInResult {
     private final boolean isSignInComplete;
@@ -30,9 +33,9 @@ public final class AuthSignInResult {
      *                         be taken in the sign in flow.
      * @param nextStep Details about the next step in the sign in process (or whether the flow is now done).
      */
-    public AuthSignInResult(boolean isSignInComplete, AuthNextSignInStep nextStep) {
+    public AuthSignInResult(boolean isSignInComplete, @NonNull AuthNextSignInStep nextStep) {
         this.isSignInComplete = isSignInComplete;
-        this.nextStep = nextStep;
+        this.nextStep = Objects.requireNonNull(nextStep);
     }
 
     /**
@@ -49,6 +52,7 @@ public final class AuthSignInResult {
      * Returns details about the next step in the sign in process (or whether the flow is now done).
      * @return details about the next step in the sign in process (or whether the flow is now done)
      */
+    @NonNull
     public AuthNextSignInStep getNextStep() {
         return nextStep;
     }

@@ -15,9 +15,12 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
+
+import java.util.Objects;
 
 public final class AuthResetPasswordResult {
     private final boolean isPasswordReset;
@@ -29,9 +32,9 @@ public final class AuthResetPasswordResult {
      *                        Check {@link #getNextStep()} for details on additional steps that may be required.
      * @param nextStep Details about the next step in the reset password process (or whether the flow is now done).
      */
-    public AuthResetPasswordResult(boolean isPasswordReset, AuthNextResetPasswordStep nextStep) {
+    public AuthResetPasswordResult(boolean isPasswordReset, @NonNull AuthNextResetPasswordStep nextStep) {
         this.isPasswordReset = isPasswordReset;
-        this.nextStep = nextStep;
+        this.nextStep = Objects.requireNonNull(nextStep);
     }
 
     /**
@@ -47,6 +50,7 @@ public final class AuthResetPasswordResult {
      * Returns details about the next step in the reset password process (or whether the flow is now done).
      * @return details about the next step in the reset password process (or whether the flow is now done)
      */
+    @NonNull
     public AuthNextResetPasswordStep getNextStep() {
         return nextStep;
     }

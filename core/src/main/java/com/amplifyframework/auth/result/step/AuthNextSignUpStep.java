@@ -52,6 +52,7 @@ public final class AuthNextSignUpStep {
      * Returns the next step in the sign up flow (could be optional or required).
      * @return the next step in the sign up flow (could be optional or required)
      */
+    @NonNull
     public AuthSignUpStep getSignUpStep() {
         return signUpStep;
     }
@@ -60,6 +61,7 @@ public final class AuthNextSignUpStep {
      * Returns possible extra info to go with the next step (refer to plugin documentation).
      * @return possible extra info to go with the next step (refer to plugin documentation)
      */
+    @Nullable
     public Map<String, String> getAdditionalInfo() {
         return additionalInfo;
     }
@@ -68,6 +70,7 @@ public final class AuthNextSignUpStep {
      * Details about how a code was sent, if relevant to the current step.
      * @return Details about how a code was sent, if relevant to the current step - null otherwise
      */
+    @Nullable
     public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
         return codeDeliveryDetails;
     }

@@ -15,9 +15,12 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
+
+import java.util.Objects;
 
 public final class AuthSignUpResult {
     private final boolean isSignUpComplete;
@@ -30,9 +33,9 @@ public final class AuthSignUpResult {
      *                         such as user confirmation. Check {@link #getNextStep()} for this information.
      * @param nextStep Details about the next step in the sign up process (or whether the flow is now done).
      */
-    public AuthSignUpResult(boolean isSignUpComplete, AuthNextSignUpStep nextStep) {
+    public AuthSignUpResult(boolean isSignUpComplete, @NonNull AuthNextSignUpStep nextStep) {
         this.isSignUpComplete = isSignUpComplete;
-        this.nextStep = nextStep;
+        this.nextStep = Objects.requireNonNull(nextStep);
     }
 
     /**
@@ -49,6 +52,7 @@ public final class AuthSignUpResult {
      * Returns details about the next step in the sign up process (or whether the flow is now done).
      * @return details about the next step in the sign up process (or whether the flow is now done)
      */
+    @NonNull
     public AuthNextSignUpStep getNextStep() {
         return nextStep;
     }
