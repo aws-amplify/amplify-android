@@ -35,19 +35,30 @@ import java.util.Objects;
 public final class GraphQLResponse<T> {
     private final T data;
     private final List<Error> errors;
+    private final String nextToken;
 
     /**
      * Constructs a wrapper for GraphQL response.
      * @param data response data with user-defined cast type
-     * @param errors list of error responses as defined
-     *               by GraphQL doc
+     * @param errors list of error responses as defined by GraphQL doc
      */
     public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {
+        this(data, errors, null);
+    }
+
+    /**
+     * Constructs a wrapper for GraphQL response.
+     * @param data response data with user-defined cast type
+     * @param errors list of error responses as defined by GraphQL doc
+     * @param nextToken token for retrieving the next batch of results if there are any, otherwise null.
+     */
+    public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors, @Nullable String nextToken) {
         this.data = data;
         this.errors = new ArrayList<>();
         if (errors != null) {
             this.errors.addAll(errors);
         }
+        this.nextToken = nextToken;
     }
 
     /**
@@ -81,6 +92,23 @@ public final class GraphQLResponse<T> {
      */
     public boolean hasData() {
         return data != null;
+    }
+
+    /**
+     * Gets the token for fetching more results, if there are any.
+     * @return nextToken
+     */
+    @Nullable
+    public String getNextToken() {
+        return nextToken;
+    }
+
+    /**
+     * Checks if a nextToken exists, indicating more results can be fetched.
+     * @return true if nextToken is not null, false otherwise
+     */
+    public boolean hasNextToken() {
+        return nextToken != null;
     }
 
     @Override

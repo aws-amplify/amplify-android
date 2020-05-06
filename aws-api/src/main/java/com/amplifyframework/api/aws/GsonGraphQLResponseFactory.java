@@ -41,6 +41,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private static final String DATA_KEY = "data";
     private static final String ERRORS_KEY = "errors";
     private static final String ITEMS_KEY = "items";
+    private static final String NEXT_TOKEN_KEY = "nextToken";
 
     private final Gson gson;
 
@@ -124,7 +125,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
                 jsonData.getAsJsonObject().has(ITEMS_KEY)
         ) {
             Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get(ITEMS_KEY), classToCast);
-            return new GraphQLResponse<>(data, errors);
+            String nextToken = null;
+            if(jsonData.getAsJsonObject().has(NEXT_TOKEN_KEY) && jsonData.getAsJsonObject().get(NEXT_TOKEN_KEY).isJsonPrimitive()) {
+                nextToken = jsonData.getAsJsonObject().get(NEXT_TOKEN_KEY).getAsString();
+            }
+            return new GraphQLResponse<>(data, errors, nextToken);
         } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || JsonElement.class.equals(classToCast)) {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(Collections.singletonList(data), errors);
