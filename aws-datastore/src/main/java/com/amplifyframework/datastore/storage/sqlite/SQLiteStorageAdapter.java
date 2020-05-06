@@ -42,6 +42,8 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
@@ -98,7 +100,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final Gson gson;
 
     // Used to publish events to the observables subscribed.
-    private final PublishSubject<StorageItemChange.Record> itemChangeSubject;
+    private final PublishSubject<StorageItemChangeRecord> itemChangeSubject;
 
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
@@ -115,9 +117,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
 
-    // A utility to convert StorageItemChange to StorageItemChange.Record
+    // A utility to convert StorageItemChange to StorageItemChangeRecord
     // and vice-versa
-    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+    private final StorageItemChangeConverter storageItemChangeConverter;
 
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
@@ -255,7 +257,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
@@ -272,7 +274,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
@@ -328,15 +330,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 saveModel(item, modelSchema, sqlCommand, modelConflictStrategy);
                 @SuppressWarnings("unchecked")
                 // item.getClass() is Class<? extends Model>, builder wants Class<T>.
-                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                final StorageItemChange<T> change = StorageItemChange.<T>builder()
                     .changeId(item.getId())
                     .item(item)
                     .itemClass((Class<T>) item.getClass())
                     .type(type)
                     .predicate(predicate)
                     .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
+                    .build();
+                final StorageItemChangeRecord record = storageItemChangeConverter.toRecord(change);
                 itemChangeSubject.onNext(record);
                 onSuccess.accept(record);
             } catch (DataStoreException dataStoreException) {
@@ -423,7 +425,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
         delete(item, initiator, null, onSuccess, onError);
@@ -438,7 +440,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
         Objects.requireNonNull(item);
@@ -489,15 +491,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                         throw problem;
                     }
                 }
-                final StorageItemChange.Record record = StorageItemChange.<T>builder()
+                final StorageItemChange<T> change = StorageItemChange.<T>builder()
                     .changeId(item.getId())
                     .item(item)
                     .itemClass((Class<T>) item.getClass())
                     .type(StorageItemChange.Type.DELETE)
                     .predicate(predicate)
                     .initiator(initiator)
-                    .build()
-                    .toRecord(storageItemChangeConverter);
+                    .build();
+                final StorageItemChangeRecord record = storageItemChangeConverter.toRecord(change);
                 itemChangeSubject.onNext(record);
                 onSuccess.accept(record);
             } catch (DataStoreException dataStoreException) {
@@ -520,7 +522,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @NonNull
     @Override
     public Cancelable observe(
-            @NonNull Consumer<StorageItemChange.Record> onItemChanged,
+            @NonNull Consumer<StorageItemChangeRecord> onItemChanged,
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete) {
         Objects.requireNonNull(onItemChanged);

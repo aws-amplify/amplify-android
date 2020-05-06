@@ -77,7 +77,7 @@ public interface LocalStorageAdapter {
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -96,7 +96,7 @@ public interface LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -139,7 +139,7 @@ public interface LocalStorageAdapter {
     <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -158,7 +158,7 @@ public interface LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -175,7 +175,7 @@ public interface LocalStorageAdapter {
      */
     @NonNull
     Cancelable observe(
-            @NonNull Consumer<StorageItemChange.Record> onItemChange,
+            @NonNull Consumer<StorageItemChangeRecord> onItemChange,
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete
     );

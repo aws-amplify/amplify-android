@@ -30,11 +30,10 @@ import static org.junit.Assert.assertNotNull;
  * Tests the functionality of the {@link GsonStorageItemChangeConverter}.
  */
 public class GsonStorageItemChangeConverterTest {
-
     /**
      * Validate that the {@link GsonStorageItemChangeConverter} can be
      * used to convert a sample {@link StorageItemChange} to a
-     * {@link StorageItemChange.Record}, and vice-versa.
+     * {@link StorageItemChangeRecord}, and vice-versa.
      * @throws DataStoreException from DataStore conversion
      */
     @Test
@@ -55,10 +54,10 @@ public class GsonStorageItemChangeConverterTest {
             .build();
 
         // Instantiate the object under test
-        GsonStorageItemChangeConverter converter = new GsonStorageItemChangeConverter();
+        StorageItemChangeConverter converter = new GsonStorageItemChangeConverter();
 
         // Try to construct a record from the StorageItemChange instance.
-        StorageItemChange.Record record = converter.toRecord(originalItemChange);
+        StorageItemChangeRecord record = converter.toRecord(originalItemChange);
         assertNotNull(record);
         assertEquals(expectedChangeId, record.getId());
 

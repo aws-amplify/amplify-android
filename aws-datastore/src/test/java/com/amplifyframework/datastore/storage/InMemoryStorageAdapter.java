@@ -40,8 +40,8 @@ import io.reactivex.subjects.PublishSubject;
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     private final List<Model> items;
-    private final PublishSubject<StorageItemChange.Record> changeRecordStream;
-    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+    private final PublishSubject<StorageItemChangeRecord> changeRecordStream;
+    private final StorageItemChangeConverter storageItemChangeConverter;
 
     private InMemoryStorageAdapter() {
         this.items = new ArrayList<>();
@@ -69,7 +69,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
         save(item, initiator, null, onSuccess, onError);
@@ -81,7 +81,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
-            @NonNull final Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull final Consumer<DataStoreException> onError) {
         StorageItemChange.Type type = StorageItemChange.Type.CREATE;
         final int index = indexOf(item);
@@ -100,14 +100,14 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
         }
 
         items.add(item);
-        StorageItemChange.Record save = StorageItemChange.<T>builder()
+        StorageItemChange<T> change = StorageItemChange.<T>builder()
             .item(item)
             .itemClass((Class<T>) item.getClass())
             .type(type)
             .predicate(predicate)
             .initiator(initiator)
-            .build()
-            .toRecord(storageItemChangeConverter);
+            .build();
+        StorageItemChangeRecord save = storageItemChangeConverter.toRecord(change);
         changeRecordStream.onNext(save);
         onSuccess.accept(save);
     }
@@ -143,7 +143,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
         delete(item, initiator, null, onSuccess, onError);
@@ -155,7 +155,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
-            @NonNull final Consumer<StorageItemChange.Record> onSuccess,
+            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
         final int index = indexOf(item);
@@ -174,14 +174,14 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                     "Verify that there is a saved model that matches the provided predicate."));
             return;
         }
-        StorageItemChange.Record deletion = StorageItemChange.<T>builder()
-                .item((T) savedItem)
-                .itemClass((Class<T>) savedItem.getClass())
-                .type(StorageItemChange.Type.DELETE)
-                .predicate(predicate)
-                .initiator(initiator)
-                .build()
-                .toRecord(storageItemChangeConverter);
+        StorageItemChange<T> change = StorageItemChange.<T>builder()
+            .item((T) savedItem)
+            .itemClass((Class<T>) savedItem.getClass())
+            .type(StorageItemChange.Type.DELETE)
+            .predicate(predicate)
+            .initiator(initiator)
+            .build();
+        StorageItemChangeRecord deletion = storageItemChangeConverter.toRecord(change);
         changeRecordStream.onNext(deletion);
         onSuccess.accept(deletion);
     }
@@ -189,7 +189,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     @NonNull
     @Override
     public Cancelable observe(
-            @NonNull Consumer<StorageItemChange.Record> onNextItem,
+            @NonNull Consumer<StorageItemChangeRecord> onNextItem,
             @NonNull Consumer<DataStoreException> onSubscriptionError,
             @NonNull Action onSubscriptionComplete) {
         Disposable disposable = changeRecordStream.subscribe(
