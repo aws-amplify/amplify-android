@@ -39,11 +39,8 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.datastore.CompoundModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
-import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
@@ -100,7 +97,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final Gson gson;
 
     // Used to publish events to the observables subscribed.
-    private final PublishSubject<StorageItemChangeRecord> itemChangeSubject;
+    private final PublishSubject<StorageItemChange<? extends Model>> itemChangeSubject;
 
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
@@ -116,10 +113,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     // Factory that produces SQL commands.
     private SQLCommandFactory sqlCommandFactory;
-
-    // A utility to convert StorageItemChange to StorageItemChangeRecord
-    // and vice-versa
-    private final StorageItemChangeConverter storageItemChangeConverter;
 
     // Stores the reference to disposable objects for cleanup
     private final CompositeDisposable toBeDisposed;
@@ -140,7 +133,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.create();
-        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.toBeDisposed = new CompositeDisposable();
     }
 
@@ -257,7 +249,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
@@ -274,7 +266,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(item);
         Objects.requireNonNull(initiator);
@@ -338,9 +330,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     .predicate(predicate)
                     .initiator(initiator)
                     .build();
-                final StorageItemChangeRecord record = storageItemChangeConverter.toRecord(change);
-                itemChangeSubject.onNext(record);
-                onSuccess.accept(record);
+                itemChangeSubject.onNext(change);
+                onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
                 itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
@@ -425,7 +416,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
         delete(item, initiator, null, onSuccess, onError);
@@ -440,7 +431,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     ) {
         Objects.requireNonNull(item);
@@ -499,9 +490,8 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     .predicate(predicate)
                     .initiator(initiator)
                     .build();
-                final StorageItemChangeRecord record = storageItemChangeConverter.toRecord(change);
-                itemChangeSubject.onNext(record);
-                onSuccess.accept(record);
+                itemChangeSubject.onNext(change);
+                onSuccess.accept(change);
             } catch (DataStoreException dataStoreException) {
                 itemChangeSubject.onError(dataStoreException);
                 onError.accept(dataStoreException);
@@ -522,7 +512,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @NonNull
     @Override
     public Cancelable observe(
-            @NonNull Consumer<StorageItemChangeRecord> onItemChanged,
+            @NonNull Consumer<StorageItemChange<? extends Model>> onItemChanged,
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete) {
         Objects.requireNonNull(onItemChanged);
@@ -714,7 +704,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                     // executeInsert returns id if successful, -1 otherwise.
                     if (compiledSqlStatement.executeInsert() == -1) {
                         problem = new DataStoreException(
-                            "Failed to insert any record in to database.",
+                            "Failed to insert any item in to database.",
                             "This is likely a bug; please report to AWS."
                         );
                     }

@@ -39,8 +39,9 @@ public final class LastSyncMetadata implements Model {
     private final @ModelField(targetType = "String", isRequired = true) String modelClassName;
     private final @ModelField(targetType = "AWSTimestamp", isRequired = true) Long lastSyncTime;
 
-    private LastSyncMetadata(String recordId, String modelClassName, Long lastSyncTime) {
-        this.id = recordId;
+    @SuppressWarnings("checkstyle:ParameterName") // The field is named "id" in the model; keep it consistent
+    private LastSyncMetadata(String id, String modelClassName, Long lastSyncTime) {
+        this.id = id;
         this.modelClassName = modelClassName;
         this.lastSyncTime = lastSyncTime;
     }

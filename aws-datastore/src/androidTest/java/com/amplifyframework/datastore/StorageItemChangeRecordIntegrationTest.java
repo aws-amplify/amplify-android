@@ -28,7 +28,6 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
-import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
@@ -36,20 +35,19 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
 
 import io.reactivex.Observable;
 import io.reactivex.observers.TestObserver;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Tests that the {@link SQLiteStorageAdapter} is able to serve as as repository
- * for our {@link StorageItemChangeRecord}s.
+ * for {@link StorageItemChangeRecord}s.
  */
 public final class StorageItemChangeRecordIntegrationTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
@@ -58,10 +56,14 @@ public final class StorageItemChangeRecordIntegrationTest {
     private SynchronousStorageAdapter storageAdapter;
 
     /**
-     * Prepare an instance of {@link LocalStorageAdapter}, and ensure that it will
-     * return a ModelSchema for the {@link StorageItemChangeRecord} type.
-     * TODO: later, consider hiding this schema from the callback. This is sort
-     *       of leaking an implementation detail to the customer of the API.
+     * Prepare an instance of {@link LocalStorageAdapter}. Evaluate its
+     * emitted collection of ModelSchema, to ensure that
+     * {@link StorageItemChangeRecord} is among them.
+     *
+     * TODO: later, consider hiding system schema, such as the
+     * StorageItemChangeRecord, from the callback. This schema might be
+     * an implementation detail, that is working as a leaky abstraction.
+     *
      * @throws AmplifyException On failure to initialize the storage adapter,
      *                          or on failure to load model schema into registry
      */
@@ -80,23 +82,15 @@ public final class StorageItemChangeRecordIntegrationTest {
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(localStorageAdapter);
         List<ModelSchema> initializationResults = storageAdapter.initialize(getApplicationContext());
 
-        // Evaluate the returned set of ModelSchema. Make sure that there is one
-        // for the StorageItemChangeRecord system class, and one for
-        // the PersistentModelVersion.
-        final List<String> actualNames = new ArrayList<>();
-        for (ModelSchema modelSchema : initializationResults) {
-            actualNames.add(modelSchema.getName());
-        }
-        Collections.sort(actualNames);
-
-        final Set<Class<? extends Model>> systemModelClasses = SystemModelsProviderFactory.create().models();
-        final List<String> expectedNames = Observable.fromIterable(systemModelClasses)
-            .startWith(BlogOwner.class)
-            .map(Class::getSimpleName)
-            .toSortedList()
-            .blockingGet();
-
-        assertEquals(expectedNames, actualNames);
+        // Evaluate the returned set of ModelSchema. Ensure that there is one
+        // for the StorageItemChangeRecord system class.
+        assertTrue(
+            Observable.fromIterable(initializationResults)
+                .map(ModelSchema::getName)
+                .toList()
+                .blockingGet()
+                .contains(StorageItemChangeRecord.class.getSimpleName())
+        );
     }
 
     /**
@@ -151,16 +145,15 @@ public final class StorageItemChangeRecordIntegrationTest {
 
     /**
      * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)}
-     * is called for a {@link StorageItemChangeRecord}, we should see this event on the
-     * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)} method's `onNextItem` callback.
+     * is called to save a {@link StorageItemChangeRecord}, we should see an event emitted on the
+     * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)}'s item consumer.
      * @throws DataStoreException On failure to convert received value out of record format, or
      *                            on failure to manipulate data in/out of DataStore
      */
     @Test
     public void saveIsObservedForChangeRecord() throws DataStoreException {
         // Start watching observe() ...
-        TestObserver<StorageItemChangeRecord> saveObserver = TestObserver.create();
-        storageAdapter.observe().subscribe(saveObserver);
+        TestObserver<StorageItemChange<? extends Model>> saveObserver = storageAdapter.observe().test();
 
         // Save something ..
         StorageItemChange<BlogOwner> change = StorageItemChange.<BlogOwner>builder()
@@ -177,11 +170,14 @@ public final class StorageItemChangeRecordIntegrationTest {
         storageAdapter.save(thingWeSaved);
 
         // Assert that our observer got the item;
-        // The record we get back has the saved record inside of it, as the contained item field.
-        StorageItemChangeRecord firstChangeRecord = saveObserver.awaitCount(1).values().get(0);
+        // The observed change makes reference to an item. That item is of type StorageItemChangeRecord.
+        // It should be identical to the item that we saved.
         assertEquals(
             thingWeSaved,
-            storageItemChangeConverter.fromRecord(firstChangeRecord).item()
+            saveObserver.awaitCount(1)
+                .values()
+                .get(0)
+                .item()
         );
 
         saveObserver.dispose();
@@ -189,28 +185,27 @@ public final class StorageItemChangeRecordIntegrationTest {
 
     /**
      * When {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)}
-     * is called for a {@link StorageItemChangeRecord}, we should expect to observe a
-     * record /containing/ that record within it, in a callback to the first consumer passed into
+     * is called to save a {@link StorageItemChangeRecord}, we should expect to observe a change event
+     * /containing/ that record within it. It will be received by the value consumer of
      * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)}.
      *
      * Similarly, when we update the record that we had just saved, we should see an update
-     * record on the subscription consumer. The type will be StorageItemChangeRecord and inside of it
-     * will be a StorageItemChangeRecord which itself contains a BlogOwner.
-     * @throws DataStoreException from storage item change, or on failure to mainuplate I/O to DataStore
+     * notification on the subscription consumer. The type will be StorageItemChange, and inside of it
+     * will be a StorageItemChangeRecord.
+     * @throws DataStoreException from storage item change, or on failure to manipulate I/O to DataStore
      */
     @Test
     public void updatesAreObservedForChangeRecords() throws DataStoreException {
         // Establish a subscription to listen for storage change records
-        TestObserver<StorageItemChangeRecord> storageObserver = TestObserver.create();
-        storageAdapter.observe().subscribe(storageObserver);
+        TestObserver<StorageItemChange<? extends Model>> storageObserver = storageAdapter.observe().test();
 
         // Create a record for Joe, and a change to save him into storage
-        BlogOwner joeLastNameMispelled = BlogOwner.builder()
+        BlogOwner joeLastNameMisspelled = BlogOwner.builder()
             .name("Joe Sweeneyy")
             .build();
         StorageItemChange<BlogOwner> createJoeWrongLastName = StorageItemChange.<BlogOwner>builder()
             .type(StorageItemChange.Type.CREATE)
-            .item(joeLastNameMispelled)
+            .item(joeLastNameMisspelled)
             .itemClass(BlogOwner.class)
             .initiator(StorageItemChange.Initiator.SYNC_ENGINE)
             .build();
@@ -238,30 +233,26 @@ public final class StorageItemChangeRecordIntegrationTest {
         storageAdapter.save(createJoeCorrectLastNameAsRecord);
 
         // Our observer got the records to save Joe with wrong age, and also to save joe with right age
-        List<StorageItemChangeRecord> values = storageObserver.awaitCount(2).values();
         assertEquals(
-            createJoeWrongLastNameAsRecord,
-            storageItemChangeConverter.fromRecord(values.get(0)).item()
-        );
-        assertEquals(
-            createJoeCorrectLastNameAsRecord,
-            storageItemChangeConverter.fromRecord(values.get(1)).item()
+            Arrays.asList(createJoeWrongLastNameAsRecord, createJoeCorrectLastNameAsRecord),
+            Observable.fromIterable(storageObserver.awaitCount(2).values())
+                .map(StorageItemChange::item)
+                .toList()
+                .blockingGet()
         );
         storageObserver.dispose();
     }
 
     /**
-     * When an {@link StorageItemChangeRecord} is deleted from the DataStore,
-     * the first argument that was provided to
-     * {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)} will be called.
-     * @throws DataStoreException from storage item change, or on failure to mainuplate I/O to DataStore
+     * When an {@link StorageItemChangeRecord} is deleted from the DataStore, we will expect
+     * to see an event on item consumer of {@link LocalStorageAdapter#observe(Consumer, Consumer, Action)}.
+     * @throws DataStoreException from storage item change, or on failure to manipulate I/O to DataStore
      */
     @Test
     public void deletionIsObservedForChangeRecord() throws DataStoreException {
-        // What we are really observing are items of type StorageItemChangeRecord that contain
-        // StorageItemChangeRecord of BlogOwner
-        TestObserver<StorageItemChangeRecord> storageObserver = TestObserver.create();
-        storageAdapter.observe().subscribe(storageObserver);
+        // We are observing a stream of changes to models.
+        // In this test, the <? extends Model> type happens to be StorageItemChangeRecord (a model.)
+        TestObserver<StorageItemChange<? extends Model>> storageObserver = storageAdapter.observe().test();
 
         BlogOwner beatrice = BlogOwner.builder()
             .name("Beatrice Stone")
@@ -278,25 +269,28 @@ public final class StorageItemChangeRecordIntegrationTest {
         storageAdapter.save(createBeatriceRecord);
 
         // Assert that we do observe the record being saved ...
-        StorageItemChangeRecord firstObservedRecord =
-            storageObserver.awaitCount(1).values().get(0);
         assertEquals(
             createBeatriceRecord,
-            storageItemChangeConverter.fromRecord(firstObservedRecord).item()
+            storageObserver.awaitCount(1)
+                .values()
+                .get(0)
+                .item()
         );
         storageObserver.dispose();
 
-        TestObserver<StorageItemChangeRecord> deletionObserver = TestObserver.create();
-        storageAdapter.observe().subscribe(deletionObserver);
+        TestObserver<StorageItemChange<? extends Model>> deletionObserver = storageAdapter.observe().test();
 
-        // The mutation record doesn't change, but we want to delete it, itself.
+        // The creation record above won't change, but we want to delete Beatrice's record, itself.
         storageAdapter.delete(createBeatriceRecord);
 
-        // Should receive a notification of the deletion on the observer
-        StorageItemChangeRecord firstChangeRecord = deletionObserver.awaitCount(1).values().get(0);
+        // Should receive a notification of the deletion on the observer.
+        // The notification refers to the deleted item, in its contents.
         assertEquals(
             createBeatriceRecord,
-            storageItemChangeConverter.fromRecord(firstChangeRecord).item()
+            deletionObserver.awaitCount(1)
+                .values()
+                .get(0)
+                .item()
         );
 
         deletionObserver.dispose();

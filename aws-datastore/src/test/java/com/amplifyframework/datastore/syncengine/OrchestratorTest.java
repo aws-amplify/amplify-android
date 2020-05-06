@@ -29,7 +29,6 @@ import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 
@@ -109,7 +108,7 @@ public final class OrchestratorTest {
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         Await.result(
-            (Consumer<StorageItemChangeRecord> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChange<BlogOwner>> onResult, Consumer<DataStoreException> onError) ->
                 localStorageAdapter.save(
                     susan,
                     StorageItemChange.Initiator.DATA_STORE_API,
