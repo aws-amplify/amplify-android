@@ -87,6 +87,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     public AWSPredictionsEscapeHatch getEscapeHatch() {
         return new AWSPredictionsEscapeHatch(
                 predictionsService.getTranslateClient(),
+                predictionsService.getPollyClient(),
                 predictionsService.getRekognitionClient(),
                 predictionsService.getTextractClient(),
                 predictionsService.getComprehendClient()

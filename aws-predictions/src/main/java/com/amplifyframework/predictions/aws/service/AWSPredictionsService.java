@@ -30,6 +30,7 @@ import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
+import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
@@ -191,6 +192,16 @@ public final class AWSPredictionsService {
     @NonNull
     public AmazonTranslateClient getTranslateClient() {
         return translateService.getClient();
+    }
+
+    /**
+     * Return configured Amazon Polly client for
+     * direct access to AWS endpoint.
+     * @return the configured Amazon Polly client
+     */
+    @NonNull
+    public AmazonPollyClient getPollyClient() {
+        return pollyService.getClient();
     }
 
     /**
