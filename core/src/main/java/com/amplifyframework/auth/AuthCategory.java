@@ -23,9 +23,9 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
-import com.amplifyframework.auth.result.AuthSocialSignInResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.Category;
@@ -119,16 +119,6 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void signInWithSocial(
-            @NonNull AuthProvider provider,
-            @NonNull String token,
-            @NonNull Consumer<AuthSocialSignInResult> onSuccess,
-            @NonNull Consumer<AmplifyException> onError
-    ) {
-        getSelectedPlugin().signInWithSocial(provider, token, onSuccess, onError);
-    }
-
-    @Override
     public void fetchAuthSession(
             @NonNull Consumer<AuthSession> onSuccess,
             @NonNull Consumer<AuthException> onError
@@ -137,22 +127,32 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
-    public void forgotPassword(
+    public void resetPassword(
             @NonNull String username,
-            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().forgotPassword(username, onSuccess, onError);
+        getSelectedPlugin().resetPassword(username, onSuccess, onError);
     }
 
     @Override
-    public void confirmForgotPassword(
+    public void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError
     ) {
-        getSelectedPlugin().confirmForgotPassword(newPassword, confirmationCode, onSuccess, onError);
+        getSelectedPlugin().confirmResetPassword(newPassword, confirmationCode, onSuccess, onError);
+    }
+
+    @Override
+    public void updatePassword(
+            @NonNull String oldPassword,
+            @NonNull String newPassword,
+            @Nullable Action onSuccess,
+            @Nullable Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().updatePassword(oldPassword, newPassword, onSuccess, onError);
     }
 
     @Override

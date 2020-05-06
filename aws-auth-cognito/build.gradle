@@ -22,4 +22,18 @@ dependencies {
     implementation dependency.androidx.appcompat
     implementation dependency.aws.mobileclient
     implementation dependency.aws.cognitoauth
+
+    testImplementation project(path: ':testutils')
+    testImplementation dependency.junit
+    testImplementation dependency.mockito
+    testImplementation (dependency.robolectric) {
+        // https://github.com/robolectric/robolectric/issues/5245
+        exclude group: 'com.google.auto.service', module: 'auto-service'
+    }
+    testImplementation dependency.androidx.test.core
+
+    androidTestImplementation project(path: ':testutils')
+    androidTestImplementation dependency.androidx.annotation
+    androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.androidx.test.junit
 }

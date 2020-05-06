@@ -23,9 +23,9 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
-import com.amplifyframework.auth.result.AuthSocialSignInResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
@@ -133,19 +133,6 @@ public interface AuthCategoryBehavior {
     void handleSignInWithUIResponse(Intent intent);
 
     /**
-     * Allows a user to sign in to your app using their credentials from another provider (e.g. Facebook, Google, etc).
-     * @param provider The provider you are signing in with (e.g. Facebook, Google, etc.)
-     * @param token Token retrieved from the social provider's authentication code.
-     * @param onSuccess Success callback
-     * @param onError Error callback
-     */
-    void signInWithSocial(
-            @NonNull AuthProvider provider,
-            @NonNull String token,
-            @NonNull Consumer<AuthSocialSignInResult> onSuccess,
-            @NonNull Consumer<AmplifyException> onError);
-
-    /**
      * Retrieve the user's current session information - by default just whether they are signed out or in.
      * Depending on how a plugin implements this, the resulting AuthSession can also be cast to a type specific
      * to that plugin which contains the various security tokens and other identifying information if you want to
@@ -164,9 +151,9 @@ public interface AuthCategoryBehavior {
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void forgotPassword(
+    void resetPassword(
             @NonNull String username,
-            @NonNull Consumer<AuthCodeDeliveryDetails> onSuccess,
+            @NonNull Consumer<AuthResetPasswordResult> onSuccess,
             @NonNull Consumer<AuthException> onError);
 
     /**
@@ -176,11 +163,25 @@ public interface AuthCategoryBehavior {
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void confirmForgotPassword(
+    void confirmResetPassword(
             @NonNull String newPassword,
             @NonNull String confirmationCode,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Update the password of an existing user - must be signed in to perform this action.
+     * @param oldPassword The user's existing password
+     * @param newPassword The new password desired on the user account
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void updatePassword(
+            @NonNull String oldPassword,
+            @NonNull String newPassword,
+            @Nullable Action onSuccess,
+            @Nullable Consumer<AuthException> onError
+    );
 
     /**
      * Gets the currently logged in User.
