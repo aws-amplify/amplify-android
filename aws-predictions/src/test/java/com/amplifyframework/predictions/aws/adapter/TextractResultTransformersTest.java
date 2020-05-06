@@ -45,6 +45,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
+import io.reactivex.Observable;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
@@ -169,10 +171,8 @@ public final class TextractResultTransformersTest {
 
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
-        blockMap.put(cellTextBlock.getId(), cellTextBlock);
-        blockMap.put(cellSelectionBlock.getId(), cellSelectionBlock);
-        blockMap.put(cellBlock.getId(), cellBlock);
-        blockMap.put(tableBlock.getId(), tableBlock);
+        Observable.fromArray(cellTextBlock, cellSelectionBlock, cellBlock, tableBlock)
+                .blockingForEach(block -> blockMap.put(block.getId(), block));
 
         // Test table block conversion
         Table table = TextractResultTransformers.fetchTable(tableBlock, blockMap);
@@ -219,10 +219,8 @@ public final class TextractResultTransformersTest {
 
         // Construct a map to act as a graph
         Map<String, Block> blockMap = new HashMap<>();
-        blockMap.put(valueTextBlock.getId(), valueTextBlock);
-        blockMap.put(keyTextBlock.getId(), keyTextBlock);
-        blockMap.put(valueBlock.getId(), valueBlock);
-        blockMap.put(keyBlock.getId(), keyBlock);
+        Observable.fromArray(valueTextBlock, keyTextBlock, valueBlock, keyBlock)
+                .blockingForEach(block -> blockMap.put(block.getId(), block));
 
         // Test block conversion
         BoundedKeyValue keyValue = TextractResultTransformers.fetchKeyValue(keyBlock, blockMap);
