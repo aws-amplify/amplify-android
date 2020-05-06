@@ -130,7 +130,7 @@ public final class MutationOutboxTest {
         BlogOwner tony = BlogOwner.builder()
             .name("Tony Daniels")
             .build();
-        PendingMutation<BlogOwner> updateTony = PendingMutation.update(tony, BlogOwner.class);
+        PendingMutation<BlogOwner> updateTony = PendingMutation.update(tony, BlogOwner.class, BlogOwner.ID.eq("dummy"));
 
         BlogOwner sam = BlogOwner.builder()
             .name("Sam Watson")
@@ -140,7 +140,7 @@ public final class MutationOutboxTest {
         BlogOwner betty = BlogOwner.builder()
             .name("Betty Smith")
             .build();
-        PendingMutation<BlogOwner> deleteBetty = PendingMutation.deletion(betty, BlogOwner.class);
+        PendingMutation<BlogOwner> deleteBetty = PendingMutation.deletion(betty, BlogOwner.class, null);
 
         // Arrange: when no-one is observing, enqueue some changes.
         mutationOutbox.enqueue(updateTony).blockingAwait();
@@ -168,7 +168,7 @@ public final class MutationOutboxTest {
         BlogOwner bill = BlogOwner.builder()
             .name("Bill Gates")
             .build();
-        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class);
+        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class, null);
         storage.save(converter.toRecord(deleteBillGates));
 
         TestObserver<Void> testObserver = mutationOutbox.remove(deleteBillGates).test();

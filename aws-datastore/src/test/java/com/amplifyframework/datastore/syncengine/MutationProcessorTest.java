@@ -181,7 +181,7 @@ public final class MutationProcessorTest {
                 new ModelMetadata(Tony.MODEL.getId(), false, 1, Time.now());
 
             static final PendingMutation<BlogOwner> DELETION =
-                PendingMutation.deletion(Tony.MODEL, BlogOwner.class);
+                PendingMutation.deletion(Tony.MODEL, BlogOwner.class, null);
 
             static final PendingMutation.PersistentRecord DELETION_RECORD =
                  RECORD_CONVERTER.toRecord(DELETION);

@@ -24,6 +24,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
@@ -42,11 +43,13 @@ public final class PendingMutation<T extends Model> {
     private final T mutatedItem;
     private final Class<T> classOfMutatedItem;
     private final Type mutationType;
+    private QueryPredicate predicate;
 
-    private PendingMutation(T mutatedItem, Class<T> classOfMutatedItem, Type mutationType) {
+    private PendingMutation(T mutatedItem, Class<T> classOfMutatedItem, Type mutationType, QueryPredicate predicate) {
         this.mutatedItem = mutatedItem;
         this.classOfMutatedItem = classOfMutatedItem;
         this.mutationType = mutationType;
+        this.predicate = predicate;
     }
 
     /**
@@ -58,11 +61,12 @@ public final class PendingMutation<T extends Model> {
      * @return A {@link PendingMutation}
      */
     static <T extends Model> PendingMutation<T> instance(
-            @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType) {
+            @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType, @Nullable QueryPredicate predicate) {
         return new PendingMutation<T>(
             Objects.requireNonNull(mutatedItem),
             Objects.requireNonNull(classOfMutatedItem),
-            Objects.requireNonNull(mutationType)
+            Objects.requireNonNull(mutationType),
+            predicate
         );
     }
 
@@ -74,7 +78,7 @@ public final class PendingMutation<T extends Model> {
      * @return A PendingMutation representing the model creation
      */
     static <T extends Model> PendingMutation<T> creation(@NonNull T createdItem, @NonNull Class<T> classOfCreatedItem) {
-        return instance(createdItem, classOfCreatedItem, Type.CREATE);
+        return instance(createdItem, classOfCreatedItem, Type.CREATE, null);
     }
 
     /**
@@ -84,8 +88,8 @@ public final class PendingMutation<T extends Model> {
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
      */
-    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem, @NonNull Class<T> classOfUpdatedItem) {
-        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE);
+    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem, @NonNull Class<T> classOfUpdatedItem, @Nullable QueryPredicate predicate) {
+        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, predicate);
     }
 
     /**
@@ -95,8 +99,8 @@ public final class PendingMutation<T extends Model> {
      * @param <T> The type of model that was deleted
      * @return A PendingMutation representing the model deletion
      */
-    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem, @NonNull Class<T> classOfDeletedItem) {
-        return instance(deletedItem, classOfDeletedItem, Type.DELETE);
+    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem, @NonNull Class<T> classOfDeletedItem, @Nullable QueryPredicate predicate) {
+        return instance(deletedItem, classOfDeletedItem, Type.DELETE, predicate);
     }
 
     /**
@@ -126,6 +130,11 @@ public final class PendingMutation<T extends Model> {
         return mutationType;
     }
 
+    @Nullable
+    QueryPredicate getPredicate() {
+        return predicate;
+    }
+
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -141,6 +150,9 @@ public final class PendingMutation<T extends Model> {
             return false;
         }
         if (!ObjectsCompat.equals(classOfMutatedItem, that.classOfMutatedItem)) {
+            return false;
+        }
+        if (!ObjectsCompat.equals(predicate, that.predicate)) {
             return false;
         }
         return ObjectsCompat.equals(mutationType, that.mutationType);
