@@ -25,6 +25,8 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 
 import java.util.Objects;
 
@@ -52,7 +54,7 @@ import io.reactivex.subjects.PublishSubject;
 final class MutationOutbox {
     private final LocalStorageAdapter localStorageAdapter;
     private final PublishSubject<StorageItemChange<? extends Model>> pendingStorageItemChanges;
-    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+    private final StorageItemChangeConverter storageItemChangeConverter;
 
     MutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
@@ -70,7 +72,7 @@ final class MutationOutbox {
     Single<Boolean> hasPendingMutation(String modelId) {
         QueryPredicate hasMatchingId = QueryField.field("id").eq(modelId);
         return Single.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class, hasMatchingId,
+            localStorageAdapter.query(StorageItemChangeRecord.class, hasMatchingId,
                 results -> emitter.onSuccess(results.hasNext()),
                 emitter::onError
             );
@@ -80,9 +82,9 @@ final class MutationOutbox {
     /**
      * Write a new {@link StorageItemChange} into the outbox.
      * This involves:
-     *   1. Writing the {@link StorageItemChange.Record} into a persistent store
+     *   1. Writing the {@link StorageItemChangeRecord} into a persistent store
      *      (we use the storage adapter, again, for this). To make our lives easier,
-     *      we first convert the {@link StorageItemChange} to a {@link StorageItemChange.Record},
+     *      we first convert the {@link StorageItemChange} to a {@link StorageItemChangeRecord},
      *      which is something the storage adapter can handle.
      *   2. Notifying the observers of the outbox that there is a new
      *      {@link StorageItemChange} that needs to be processed.
@@ -101,7 +103,7 @@ final class MutationOutbox {
         // When they do, create() a single that wraps a save() call to LocalStorageAdapter.
         return Single.defer(() -> Single.create(subscriber -> {
             // Convert the storageItemChange (that we want to store) into a record
-            StorageItemChange.Record record = storageItemChange.toRecord(storageItemChangeConverter);
+            StorageItemChangeRecord record = storageItemChangeConverter.toRecord(storageItemChange);
             // Save it.
             localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
                 recordOfRecord -> {
@@ -155,7 +157,7 @@ final class MutationOutbox {
         // At that time, create() a Single that wraps a call to delete an item from the LocalStorageAdapter
         return Single.defer(() -> Single.create(subscriber -> {
             // Convert the storageItemChange into a record
-            StorageItemChange.Record record = storageItemChange.toRecord(storageItemChangeConverter);
+            StorageItemChangeRecord record = storageItemChangeConverter.toRecord(storageItemChange);
             // Delete it.
             localStorageAdapter.delete(
                 record,
@@ -180,14 +182,14 @@ final class MutationOutbox {
     private Observable<StorageItemChange<? extends Model>> previouslyUnprocessedChanges() {
         // defer() creation of this Observable until someone subscribe()s to previouslyUnprocessedChanges()
         // when they do, respond by create()ing an Observable which emits the results of a
-        // query to LocalStorageAdapter, for any existing StorageItemChange.Record.
+        // query to LocalStorageAdapter, for any existing StorageItemChangeRecord.
         return Observable.defer(() -> Observable.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class,
+            localStorageAdapter.query(StorageItemChangeRecord.class,
                 queryResultsIterator -> {
                     while (queryResultsIterator.hasNext()) {
                         try {
                             final StorageItemChange<? extends Model> storageItemChange =
-                                queryResultsIterator.next().toStorageItemChange(storageItemChangeConverter);
+                                storageItemChangeConverter.fromRecord(queryResultsIterator.next());
                             emitter.onNext(storageItemChange);
                         } catch (DataStoreException exception) {
                             emitter.onError(exception);

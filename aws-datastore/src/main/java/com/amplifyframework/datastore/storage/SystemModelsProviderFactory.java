@@ -51,9 +51,9 @@ public final class SystemModelsProviderFactory {
             // deals actually with individual records, and their states.
             ModelMetadata.class,
 
-            // StorageItemChange.Record.class is an internal system event
+            // StorageItemChangeRecord.class is an internal system event
             // it is used to stage local storage changes for upload to cloud
-            StorageItemChange.Record.class
+            StorageItemChangeRecord.class
         );
     }
 }

@@ -21,6 +21,8 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -37,7 +39,7 @@ final class StorageObserver {
 
     private final LocalStorageAdapter localStorageAdapter;
     private final MutationOutbox mutationOutbox;
-    private final StorageItemChange.StorageItemChangeFactory storageItemChangeConverter;
+    private final StorageItemChangeConverter storageItemChangeConverter;
     private final CompositeDisposable disposable;
 
     StorageObserver(
@@ -76,7 +78,7 @@ final class StorageObserver {
         disposable.clear();
     }
 
-    private Observable<StorageItemChange.Record> streamOfStorageChangeRecords() {
+    private Observable<StorageItemChangeRecord> streamOfStorageChangeRecords() {
         return Observable.create(emitter ->
             localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );

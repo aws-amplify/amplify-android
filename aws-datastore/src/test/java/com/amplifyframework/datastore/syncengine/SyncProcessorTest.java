@@ -30,6 +30,7 @@ import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
@@ -72,7 +73,7 @@ public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
 
-    private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
+    private StorageItemChangeConverter storageItemChangeConverter;
     private AppSync appSync;
     private ModelProvider modelProvider;
     private SynchronousStorageAdapter storageAdapter;
@@ -85,7 +86,7 @@ public final class SyncProcessorTest {
      */
     @Before
     public void setup() throws AmplifyException {
-        this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
+        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.modelProvider =
             CompoundModelProvider.of(SystemModelsProviderFactory.create(), AmplifyModelProvider.getInstance());
 
@@ -131,7 +132,7 @@ public final class SyncProcessorTest {
         // We expect to see content here as a result of the SyncProcessor applying updates.
         final TestObserver<StorageItemChange<? extends Model>> adapterObserver = TestObserver.create();
         storageAdapter.observe()
-            .map(record -> record.toStorageItemChange(storageRecordDeserializer))
+            .map(storageItemChangeConverter::fromRecord)
             .subscribe(adapterObserver);
 
         // Arrange: return some responses for the sync() call on the RemoteModelState

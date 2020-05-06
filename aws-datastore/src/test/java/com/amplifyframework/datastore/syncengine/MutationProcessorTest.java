@@ -24,6 +24,8 @@ import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -52,7 +54,7 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class MutationProcessorTest {
-    private static final GsonStorageItemChangeConverter RECORD_CONVERTER = new GsonStorageItemChangeConverter();
+    private static final StorageItemChangeConverter RECORD_CONVERTER = new GsonStorageItemChangeConverter();
 
     private AppSync appSync;
     private SynchronousStorageAdapter storageAdapter;
@@ -129,7 +131,7 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Validate that we got "success" notifications out on Hub.
-        final List<StorageItemChange.Record> changesWeExpectToProcessSuccessfully = Arrays.asList(
+        final List<StorageItemChangeRecord> changesWeExpectToProcessSuccessfully = Arrays.asList(
             Models.Tony.DELETION_RECORD,
             Models.Joe.CREATION_RECORD,
             Models.JoeBlog.CREATION_RECORD
@@ -143,18 +145,18 @@ public final class MutationProcessorTest {
 
         // Finally, we expect the mutation outbox to be empty, now, that the mutation
         // processor has drained it.
-        assertEquals(0, storageAdapter.query(StorageItemChange.Record.class).size());
+        assertEquals(0, storageAdapter.query(StorageItemChangeRecord.class).size());
     }
 
     @SuppressWarnings("SameParameterValue")
-    private List<StorageItemChange.Record> takeRecordsFromAccumulator(int quantity) {
-        final List<StorageItemChange.Record> changeRecords = new ArrayList<>();
+    private List<StorageItemChangeRecord> takeRecordsFromAccumulator(int quantity) {
+        final List<StorageItemChangeRecord> changeRecords = new ArrayList<>();
         for (HubEvent<?> hubEvent : publicationEventAccumulator.take(quantity)) {
             StorageItemChange<? extends Model> change = (StorageItemChange<? extends Model>) hubEvent.getData();
             if (change == null) {
                 throw new IllegalStateException("Found null data in publication event: " + hubEvent);
             }
-            StorageItemChange.Record record = change.toRecord(RECORD_CONVERTER);
+            StorageItemChangeRecord record = RECORD_CONVERTER.toRecord(change);
             changeRecords.add(record);
         }
         return changeRecords;
@@ -182,13 +184,15 @@ public final class MutationProcessorTest {
             static final ModelMetadata MODEL_METADATA =
                 new ModelMetadata(Tony.MODEL.getId(), false, 1, Time.now());
 
-            static final StorageItemChange.Record DELETION_RECORD = StorageItemChange.<BlogOwner>builder()
+            static final StorageItemChange<BlogOwner> DELETION = StorageItemChange.<BlogOwner>builder()
                 .itemClass(BlogOwner.class)
                 .item(Tony.MODEL)
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
                 .type(StorageItemChange.Type.DELETE)
-                .build()
-                .toRecord(RECORD_CONVERTER);
+                .build();
+
+            static final StorageItemChangeRecord DELETION_RECORD =
+                 RECORD_CONVERTER.toRecord(DELETION);
 
             private Tony() {}
         }
@@ -205,13 +209,15 @@ public final class MutationProcessorTest {
             static final ModelMetadata MODEL_METADATA =
                 new ModelMetadata(Joe.MODEL.getId(), false, 1, Time.now());
 
-            static final StorageItemChange.Record CREATION_RECORD = StorageItemChange.<BlogOwner>builder()
+            static final StorageItemChange<BlogOwner> CREATION = StorageItemChange.<BlogOwner>builder()
                 .itemClass(BlogOwner.class)
                 .item(Joe.MODEL)
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
                 .type(StorageItemChange.Type.CREATE)
-                .build()
-                .toRecord(RECORD_CONVERTER);
+                .build();
+
+            static final StorageItemChangeRecord CREATION_RECORD =
+                RECORD_CONVERTER.toRecord(CREATION);
 
             private Joe() {}
         }
@@ -230,13 +236,15 @@ public final class MutationProcessorTest {
             static final ModelMetadata MODEL_METADATA =
                 new ModelMetadata(JoeBlog.MODEL.getId(), false, 1, Time.now());
 
-            static final StorageItemChange.Record CREATION_RECORD = StorageItemChange.<Blog>builder()
+            static final StorageItemChange<Blog> CREATION = StorageItemChange.<Blog>builder()
                 .type(StorageItemChange.Type.CREATE)
                 .initiator(StorageItemChange.Initiator.DATA_STORE_API)
                 .itemClass(Blog.class)
                 .item(JoeBlog.MODEL)
-                .build()
-                .toRecord(RECORD_CONVERTER);
+                .build();
+
+            static final StorageItemChangeRecord CREATION_RECORD =
+                RECORD_CONVERTER.toRecord(CREATION);
 
             private JoeBlog() {}
         }

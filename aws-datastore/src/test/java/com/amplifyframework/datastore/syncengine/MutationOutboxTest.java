@@ -20,6 +20,8 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
@@ -39,7 +41,7 @@ import static org.junit.Assert.assertTrue;
  */
 public final class MutationOutboxTest {
     private MutationOutbox mutationOutbox;
-    private GsonStorageItemChangeConverter storageItemChangeConverter;
+    private StorageItemChangeConverter storageItemChangeConverter;
     private SynchronousStorageAdapter storageAdapter;
 
     /**
@@ -87,11 +89,11 @@ public final class MutationOutboxTest {
         queueObserver.dispose();
 
         // Assert that the storage contains the mutation
-        List<StorageItemChange.Record> recordsInStorage =
-            storageAdapter.query(StorageItemChange.Record.class);
+        List<StorageItemChangeRecord> recordsInStorage =
+            storageAdapter.query(StorageItemChangeRecord.class);
         assertEquals(1, recordsInStorage.size());
         assertEquals(
-            createJameson.toRecord(storageItemChangeConverter),
+            storageItemChangeConverter.toRecord(createJameson),
             recordsInStorage.get(0)
         );
     }
@@ -124,8 +126,8 @@ public final class MutationOutboxTest {
         testObserver.assertNotTerminated();
 
         // And nothing is in storage.
-        List<StorageItemChange.Record> recordsInStorage =
-            storageAdapter.query(StorageItemChange.Record.class);
+        List<StorageItemChangeRecord> recordsInStorage =
+            storageAdapter.query(StorageItemChangeRecord.class);
         assertTrue(recordsInStorage.isEmpty());
     }
 
@@ -192,15 +194,15 @@ public final class MutationOutboxTest {
                 .build())
             .initiator(StorageItemChange.Initiator.DATA_STORE_API)
             .build();
-        storageAdapter.save(deleteBillGates.toRecord(storageItemChangeConverter));
+        storageAdapter.save(storageItemChangeConverter.toRecord(deleteBillGates));
 
         TestObserver<StorageItemChange<BlogOwner>> testObserver = TestObserver.create();
         mutationOutbox.remove(deleteBillGates).subscribe(testObserver);
 
         testObserver.assertValue(deleteBillGates);
 
-        List<StorageItemChange.Record> recordsInStorage =
-            storageAdapter.query(StorageItemChange.Record.class);
+        List<StorageItemChangeRecord> recordsInStorage =
+            storageAdapter.query(StorageItemChangeRecord.class);
         assertEquals(0, recordsInStorage.size());
     }
 }

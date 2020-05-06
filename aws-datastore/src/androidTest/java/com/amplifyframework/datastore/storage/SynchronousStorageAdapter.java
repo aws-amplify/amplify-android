@@ -124,7 +124,7 @@ public final class SynchronousStorageAdapter {
             throws DataStoreException {
         Await.result(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChangeRecord> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.save(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -158,7 +158,7 @@ public final class SynchronousStorageAdapter {
             @NonNull T model, @NonNull QueryPredicate predicate) {
         return Await.error(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChangeRecord> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.save(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -226,7 +226,7 @@ public final class SynchronousStorageAdapter {
             throws DataStoreException {
         Await.result(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChangeRecord> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -265,7 +265,7 @@ public final class SynchronousStorageAdapter {
             @NonNull T model, @NonNull QueryPredicate predicate) {
         return Await.error(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChangeRecord> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -280,7 +280,7 @@ public final class SynchronousStorageAdapter {
      * Observe changes to the local storage.
      * @return An observable stream of changes to the local storage.
      */
-    public Observable<? extends StorageItemChange.Record> observe() {
+    public Observable<? extends StorageItemChangeRecord> observe() {
         return Observable.create(emitter ->
             asyncDelegate.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );
