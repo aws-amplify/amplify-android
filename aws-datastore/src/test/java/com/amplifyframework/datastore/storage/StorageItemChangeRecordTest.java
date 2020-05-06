@@ -30,13 +30,13 @@ import java.util.Map;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the {@link StorageItemChange.Record}, which is a {@link Model}
+ * Tests the {@link StorageItemChangeRecord}, which is a {@link Model}
  * that can be used by the DataStore's LocalStorageAdapter, and by the
  * API category.
  */
 public class StorageItemChangeRecordTest {
     /**
-     * Generation of a ModelSchema for the {@link StorageItemChange.Record}
+     * Generation of a ModelSchema for the {@link StorageItemChangeRecord}
      * succeeds.
      * @throws AmplifyException from Amplify configuration
      */
@@ -70,13 +70,13 @@ public class StorageItemChangeRecordTest {
         assertEquals(
             // Expected
             ModelSchema.builder()
-                .name("Record")
-                .pluralName("Records")
+                .name("StorageItemChangeRecord")
+                .pluralName("StorageItemChangeRecords")
                 .fields(expectedFields)
                 .indexes(Collections.singletonMap("itemClassBasedIndex", index))
                 .build(),
             // Actual
-            ModelSchema.fromModelClass(StorageItemChange.Record.class)
+            ModelSchema.fromModelClass(StorageItemChangeRecord.class)
         );
     }
 }

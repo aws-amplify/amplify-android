@@ -22,7 +22,7 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -123,20 +123,20 @@ public class SqlCommandTest {
 
     /**
      * Tests that a CREATE index command is correctly constructs for the
-     * {@link StorageItemChange.Record}.
+     * {@link StorageItemChangeRecord}.
      * @throws AmplifyException from Amplify config
      */
     @Test
     public void createIndexForStorageItemChangeRecord() throws AmplifyException {
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
-                .createIndexesFor(ModelSchema.fromModelClass(StorageItemChange.Record.class))
+                .createIndexesFor(ModelSchema.fromModelClass(StorageItemChangeRecord.class))
                 .iterator();
         assertTrue(sqlCommandIterator.hasNext());
         assertEquals(
             // expected
             new SqlCommand(
-                "Record",
-                "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON Record (itemClass);"
+                "StorageItemChangeRecord",
+                "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON StorageItemChangeRecord (itemClass);"
             ),
             // actual
             sqlCommandIterator.next()

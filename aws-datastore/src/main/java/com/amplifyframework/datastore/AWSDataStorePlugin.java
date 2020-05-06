@@ -37,10 +37,11 @@ import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
+import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -54,13 +55,12 @@ import io.reactivex.Completable;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
 
-    // A utility to convert between StorageItemChange.Record and StorageItemChange
-    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+    // A utility to convert between StorageItemChangeRecord and StorageItemChange
+    private final StorageItemChangeConverter storageItemChangeConverter;
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
@@ -402,7 +402,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     }
 
     /**
-     * Converts an {@link StorageItemChange.Record}, as recevied by the {@link LocalStorageAdapter}'s
+     * Converts an {@link StorageItemChangeRecord}, as recevied by the {@link LocalStorageAdapter}'s
      * {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)} and
      * {@link LocalStorageAdapter#delete(Model, StorageItemChange.Initiator, Consumer, Consumer)} methods'
      * callbacks, into an {@link DataStoreItemChange}, which can be returned via the public DataStore API.
@@ -410,9 +410,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @param <T> Type of data that was changed
      * @return A {@link DataStoreItemChange} representing the storage change record
      */
-    private <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(final StorageItemChange.Record record)
+    private <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(final StorageItemChangeRecord record)
         throws DataStoreException {
-        return toDataStoreItemChange(record.toStorageItemChange(storageItemChangeConverter));
+        return toDataStoreItemChange(storageItemChangeConverter.fromRecord(record));
     }
 
     /**

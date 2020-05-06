@@ -36,10 +36,9 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 
 /**
- * A utility to convert between {@link StorageItemChange} and {@link StorageItemChange.Record}.
+ * A utility to convert between {@link StorageItemChange} and {@link StorageItemChangeRecord}.
  */
-public final class GsonStorageItemChangeConverter implements
-        StorageItemChange.RecordFactory, StorageItemChange.StorageItemChangeFactory {
+public final class GsonStorageItemChangeConverter implements StorageItemChangeConverter {
     private final Gson gson;
 
     /**
@@ -55,8 +54,8 @@ public final class GsonStorageItemChangeConverter implements
 
     @NonNull
     @Override
-    public <T extends Model> StorageItemChange.Record toRecord(@NonNull StorageItemChange<T> storageItemChange) {
-        return StorageItemChange.Record.builder()
+    public <T extends Model> StorageItemChangeRecord toRecord(@NonNull StorageItemChange<T> storageItemChange) {
+        return StorageItemChangeRecord.builder()
                 .id(storageItemChange.changeId().toString())
                 .entry(gson.toJson(storageItemChange))
                 .itemClass(storageItemChange.itemClass().getName())
@@ -65,7 +64,7 @@ public final class GsonStorageItemChangeConverter implements
 
     @NonNull
     @Override
-    public <T extends Model> StorageItemChange<T> fromRecord(@NonNull StorageItemChange.Record record)
+    public <T extends Model> StorageItemChange<T> fromRecord(@NonNull StorageItemChangeRecord record)
             throws DataStoreException {
         Class<?> itemClass;
         try {
@@ -87,7 +86,7 @@ public final class GsonStorageItemChangeConverter implements
      * with {@link Class}-type objects.
      */
     static final class ClassTypeAdapterFactory implements TypeAdapterFactory {
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // (TypeAdapter<T>)
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
             if (!Class.class.isAssignableFrom(typeToken.getRawType())) {
