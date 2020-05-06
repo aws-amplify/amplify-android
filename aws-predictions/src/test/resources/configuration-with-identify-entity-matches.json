@@ -1,0 +1,12 @@
+{
+  "defaultRegion": "us-west-1",
+  "identify": {
+    "identifyEntities": {
+      "maxEntities": "10",
+      "celebrityDetectionEnabled": "false",
+      "region": "us-west-2",
+      "defaultNetworkPolicy": "auto",
+      "collectionId": "some-collection-id"
+    }
+  }
+}

@@ -209,7 +209,12 @@ public final class TextractResultTransformers {
                 .build();
     }
 
-    private static Cell fetchTableCell(Block block, Map<String, Block> blockMap) {
+    @Nullable
+    private static Cell fetchTableCell(@Nullable Block block, @NonNull Map<String, Block> blockMap) {
+        Objects.requireNonNull(blockMap);
+        if (block == null || !BlockType.CELL.toString().equals(block.getBlockType())) {
+            return null;
+        }
         StringBuilder wordsBuilder = new StringBuilder();
         AtomicBoolean isSelected = new AtomicBoolean(false);
 
