@@ -23,8 +23,10 @@ import com.amplifyframework.core.model.ModelSchema;
 
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
@@ -42,37 +44,43 @@ public class StorageItemChangeRecordTest {
      */
     @Test
     public void modelSchemaGenerationSucceeds() throws AmplifyException {
-        Map<String, ModelField> expectedFields = new HashMap<>();
-        expectedFields.put("id", ModelField.builder()
-            .name("id")
-            .targetType("ID")
-            .isRequired(true)
-            .type(String.class)
-            .build());
-        expectedFields.put("entry", ModelField.builder()
-            .name("entry")
-            .targetType("String")
-            .isRequired(true)
-            .type(String.class)
-            .build());
-        expectedFields.put("itemClass", ModelField.builder()
-            .name("itemClass")
-            .targetType("String")
-            .isRequired(true)
-            .type(String.class)
-            .build());
+        List<ModelField> fields = Arrays.asList(
+            ModelField.builder()
+                .name("id")
+                .targetType("ID")
+                .isRequired(true)
+                .type(String.class)
+                .build(),
+            ModelField.builder()
+                .name("entry")
+                .targetType("String")
+                .isRequired(true)
+                .type(String.class)
+                .build(),
+            ModelField.builder()
+                .name("itemClass")
+                .targetType("String")
+                .isRequired(true)
+                .type(String.class)
+                .build()
+        );
+
+        Map<String, ModelField> expectedFieldsMap = new HashMap<>();
+        for (ModelField field : fields) {
+            expectedFieldsMap.put(field.getName(), field);
+        }
 
         final ModelIndex index = ModelIndex.builder()
-                .indexFieldNames(Collections.singletonList("itemClass"))
-                .indexName("itemClassBasedIndex")
-                .build();
+            .indexFieldNames(Collections.singletonList("itemClass"))
+            .indexName("itemClassBasedIndex")
+            .build();
 
         assertEquals(
             // Expected
             ModelSchema.builder()
                 .name("StorageItemChangeRecord")
                 .pluralName("StorageItemChangeRecords")
-                .fields(expectedFields)
+                .fields(expectedFieldsMap)
                 .indexes(Collections.singletonMap("itemClassBasedIndex", index))
                 .build(),
             // Actual

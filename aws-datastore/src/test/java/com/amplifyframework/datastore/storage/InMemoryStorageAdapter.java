@@ -40,13 +40,11 @@ import io.reactivex.subjects.PublishSubject;
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     private final List<Model> items;
-    private final PublishSubject<StorageItemChangeRecord> changeRecordStream;
-    private final StorageItemChangeConverter storageItemChangeConverter;
+    private final PublishSubject<StorageItemChange<? extends Model>> itemChangeStream;
 
     private InMemoryStorageAdapter() {
         this.items = new ArrayList<>();
-        this.changeRecordStream = PublishSubject.create();
-        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
+        this.itemChangeStream = PublishSubject.create();
     }
 
     /**
@@ -69,7 +67,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void save(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
         save(item, initiator, null, onSuccess, onError);
@@ -81,7 +79,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
-            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError) {
         StorageItemChange.Type type = StorageItemChange.Type.CREATE;
         final int index = indexOf(item);
@@ -107,9 +105,8 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             .predicate(predicate)
             .initiator(initiator)
             .build();
-        StorageItemChangeRecord save = storageItemChangeConverter.toRecord(change);
-        changeRecordStream.onNext(save);
-        onSuccess.accept(save);
+        itemChangeStream.onNext(change);
+        onSuccess.accept(change);
     }
 
     @Override
@@ -143,7 +140,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     public <T extends Model> void delete(
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
-            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
         delete(item, initiator, null, onSuccess, onError);
@@ -155,7 +152,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
             @NonNull final T item,
             @NonNull final StorageItemChange.Initiator initiator,
             @Nullable final QueryPredicate predicate,
-            @NonNull final Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull final Consumer<StorageItemChange<T>> onSuccess,
             @NonNull final Consumer<DataStoreException> onError
     ) {
         final int index = indexOf(item);
@@ -174,25 +171,24 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
                     "Verify that there is a saved model that matches the provided predicate."));
             return;
         }
-        StorageItemChange<T> change = StorageItemChange.<T>builder()
+        StorageItemChange<T> deletion = StorageItemChange.<T>builder()
             .item((T) savedItem)
             .itemClass((Class<T>) savedItem.getClass())
             .type(StorageItemChange.Type.DELETE)
             .predicate(predicate)
             .initiator(initiator)
             .build();
-        StorageItemChangeRecord deletion = storageItemChangeConverter.toRecord(change);
-        changeRecordStream.onNext(deletion);
+        itemChangeStream.onNext(deletion);
         onSuccess.accept(deletion);
     }
 
     @NonNull
     @Override
     public Cancelable observe(
-            @NonNull Consumer<StorageItemChangeRecord> onNextItem,
+            @NonNull Consumer<StorageItemChange<? extends Model>> onNextItem,
             @NonNull Consumer<DataStoreException> onSubscriptionError,
             @NonNull Action onSubscriptionComplete) {
-        Disposable disposable = changeRecordStream.subscribe(
+        Disposable disposable = itemChangeStream.subscribe(
             onNextItem::accept,
             failure -> {
                 if (failure instanceof DataStoreException) {
@@ -212,7 +208,7 @@ public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     @Override
     public void terminate() {
         items.clear();
-        changeRecordStream.onComplete();
+        itemChangeStream.onComplete();
     }
 
     private int indexOf(Model item) {

@@ -18,11 +18,9 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
-import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -39,7 +37,6 @@ final class StorageObserver {
 
     private final LocalStorageAdapter localStorageAdapter;
     private final MutationOutbox mutationOutbox;
-    private final StorageItemChangeConverter storageItemChangeConverter;
     private final CompositeDisposable disposable;
 
     StorageObserver(
@@ -47,7 +44,6 @@ final class StorageObserver {
             @NonNull MutationOutbox mutationOutbox) {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
-        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.disposable = new CompositeDisposable();
     }
 
@@ -56,8 +52,7 @@ final class StorageObserver {
      * by the sync engine, then place that change into the mutation outbox.
      */
     void startObservingStorageChanges() {
-        disposable.add(streamOfStorageChangeRecords()
-            .map(storageItemChangeConverter::fromRecord)
+        disposable.add(streamOfStorageChanges()
             .filter(possiblyCyclicChange -> {
                 // Don't continue if the storage change was caused by the sync engine itself
                 return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
@@ -78,7 +73,7 @@ final class StorageObserver {
         disposable.clear();
     }
 
-    private Observable<StorageItemChangeRecord> streamOfStorageChangeRecords() {
+    private Observable<StorageItemChange<? extends Model>> streamOfStorageChanges() {
         return Observable.create(emitter ->
             localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );

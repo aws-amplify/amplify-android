@@ -68,16 +68,16 @@ public interface LocalStorageAdapter {
     /**
      * Save an item into local storage. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or error.
+     * @param <T> The type of the item being stored
      * @param item the item to save into the repository
      * @param initiator An identification of the actor who initiated this save
      * @param onSuccess A callback that will be invoked if the save succeeds
      * @param onError A callback that will be invoked if the save fails with an error
-     * @param <T> The type of the item being stored
      */
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -85,18 +85,18 @@ public interface LocalStorageAdapter {
      * Save an item into local storage only if the data being overwritten meets the
      * specific conditions. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or failure.
+     * @param <T> The type of the item being stored
      * @param item the item to save into the repository
      * @param initiator An identification of the actor who initiated this save
      * @param predicate Predicate condition for conditional write
      * @param onSuccess A callback that will be invoked if the save succeeds
      * @param onError A callback that will be invoked if the save fails with an error
-     * @param <T> The type of the item being stored
      */
     <T extends Model> void save(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -130,16 +130,16 @@ public interface LocalStorageAdapter {
 
     /**
      * Deletes an item from storage.
+     * @param <T> The type of item being deleted
      * @param item Item to delete
      * @param initiator An identification of the actor who initiated this deletion
      * @param onSuccess A callback that will be invoked when deletion succeeds
      * @param onError A callback that will be invoked when deletion fails with an error
-     * @param <T> The type of item being deleted
      */
     <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -147,18 +147,18 @@ public interface LocalStorageAdapter {
      * Deletes an item from storage only if the data being deleted meets the
      * specific conditions. A {@link Consumer} will be invoked when the
      * save operation is completed, to notify the caller of success or failure.
+     * @param <T> The type of item being deleted
      * @param item Item to delete
      * @param initiator An identification of the actor who initiated this deletion
      * @param predicate Predicate condition for conditional delete
      * @param onSuccess A callback that will be invoked when deletion succeeds
      * @param onError A callback that will be invoked when deletion fails with an error
-     * @param <T> The type of item being deleted
      */
     <T extends Model> void delete(
             @NonNull T item,
             @NonNull StorageItemChange.Initiator initiator,
             @Nullable QueryPredicate predicate,
-            @NonNull Consumer<StorageItemChangeRecord> onSuccess,
+            @NonNull Consumer<StorageItemChange<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );
 
@@ -175,7 +175,7 @@ public interface LocalStorageAdapter {
      */
     @NonNull
     Cancelable observe(
-            @NonNull Consumer<StorageItemChangeRecord> onItemChange,
+            @NonNull Consumer<StorageItemChange<? extends Model>> onItemChange,
             @NonNull Consumer<DataStoreException> onObservationError,
             @NonNull Action onObservationComplete
     );

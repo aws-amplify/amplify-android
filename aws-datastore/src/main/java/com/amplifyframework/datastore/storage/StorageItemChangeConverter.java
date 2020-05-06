@@ -26,17 +26,17 @@ import com.amplifyframework.datastore.DataStoreException;
  */
 public interface StorageItemChangeConverter {
     /**
-     * Serializes a StorageItemChange into a StorageItemChangeRecord.
-     * @param storageItemChange A storage item change instance, to be made into a record
+     * Converts a {@link StorageItemChange} into a {@link StorageItemChangeRecord}.
+     * @param change A storage item change instance, to be made into a record
      * @return A Record corresponding to the storage item change.
      * @param <T> Type of item being kept in the StorageItemChange.
      */
     @NonNull
-    <T extends Model> StorageItemChangeRecord toRecord(@NonNull StorageItemChange<T> storageItemChange);
+    <T extends Model> StorageItemChangeRecord toRecord(@NonNull StorageItemChange<T> change);
 
     /**
-     * De-serializes a {@link StorageItemChangeRecord} into a {@link StorageItemChange}.
-     * @param record Record to deserialize
+     * Converts a {@link StorageItemChangeRecord} into a {@link StorageItemChange}.
+     * @param record Record to convert into a storage item change
      * @param <T> Type of item represented inside of the change record
      * @return A {@link StorageItemChange} representation of provided record
      * @throws DataStoreException If unable to perform the conversion
