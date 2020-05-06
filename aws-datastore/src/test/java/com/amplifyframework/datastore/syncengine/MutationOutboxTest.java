@@ -17,16 +17,14 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.datastore.storage.StorageItemChangeConverter;
-import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.robolectric.RobolectricTestRunner;
 
 import java.util.Arrays;
 import java.util.List;
@@ -39,10 +37,11 @@ import static org.junit.Assert.assertTrue;
 /**
  * Tests the {@link MutationOutbox}.
  */
+@RunWith(RobolectricTestRunner.class)
 public final class MutationOutboxTest {
     private MutationOutbox mutationOutbox;
-    private StorageItemChangeConverter storageItemChangeConverter;
-    private SynchronousStorageAdapter storageAdapter;
+    private PendingMutation.Converter converter;
+    private SynchronousStorageAdapter storage;
 
     /**
      * Set up the object under test.
@@ -50,37 +49,32 @@ public final class MutationOutboxTest {
     @Before
     public void setup() {
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
-        storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
+        storage = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
         mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
-        storageItemChangeConverter = new GsonStorageItemChangeConverter();
+        converter = new GsonPendingMutationConverter();
     }
 
     /**
-     * Enqueueing a change should have the result of persisting
-     * the change to storage, and notifying any observers that
-     * there is a new change available.
+     * Enqueueing a mutation should have the result of persisting
+     * the mutation to storage, and notifying any observers that
+     * there is a new muation available.
      * @throws DataStoreException On failure to query results, for assertions
      */
     @Test
-    public void enqueuePersistsChangeAndNotifiesObserver() throws DataStoreException {
+    public void enqueuePersistsMutationAndNotifiesObserver() throws DataStoreException {
         // Observe the queue
-        TestObserver<StorageItemChange<? extends Model>> queueObserver = TestObserver.create();
-        mutationOutbox.observe().subscribe(queueObserver);
+        TestObserver<PendingMutation<? extends Model>> queueObserver = mutationOutbox.observe().test();
 
-        StorageItemChange<BlogOwner> createJameson = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.CREATE)
-            .itemClass(BlogOwner.class)
-            .item(BlogOwner.builder()
-                .name("Jameson Williams")
-                .build())
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
+        BlogOwner jameson = BlogOwner.builder()
+            .name("Jameson Williams")
             .build();
+        PendingMutation<BlogOwner> createJameson = PendingMutation.creation(jameson, BlogOwner.class);
 
         // Enqueue an save for a Jameson BlogOwner object,
-        // and make sure that it calls back onSuccess().
-        TestObserver<StorageItemChange<BlogOwner>> saveObserver = TestObserver.create();
-        mutationOutbox.enqueue(createJameson).subscribe(saveObserver);
+        // and make sure that it calls back onComplete().
+        TestObserver<Void> saveObserver = mutationOutbox.enqueue(createJameson).test();
         saveObserver.awaitTerminalEvent();
+        saveObserver.assertNoErrors().assertComplete();
         saveObserver.dispose();
 
         // Expected to observe the mutation on the subject
@@ -89,11 +83,11 @@ public final class MutationOutboxTest {
         queueObserver.dispose();
 
         // Assert that the storage contains the mutation
-        List<StorageItemChangeRecord> recordsInStorage =
-            storageAdapter.query(StorageItemChangeRecord.class);
+        List<PendingMutation.PersistentRecord> recordsInStorage =
+            storage.query(PendingMutation.PersistentRecord.class);
         assertEquals(1, recordsInStorage.size());
         assertEquals(
-            storageItemChangeConverter.toRecord(createJameson),
+            converter.toRecord(createJameson),
             recordsInStorage.get(0)
         );
     }
@@ -106,103 +100,83 @@ public final class MutationOutboxTest {
     @Test
     public void enqueueDoesNothingBeforeSubscription() throws DataStoreException {
         // Watch for notifications on the observe() API.
-        TestObserver<StorageItemChange<?>> testObserver = TestObserver.create();
-        mutationOutbox.observe().subscribe(testObserver);
+        TestObserver<PendingMutation<? extends Model>> testObserver = mutationOutbox.observe().test();
 
         // Enqueue something, but don't subscribe to the observable just yet.
-        mutationOutbox.enqueue(StorageItemChange.<BlogOwner>builder()
-            .itemClass(BlogOwner.class)
-            .item(BlogOwner.builder()
-                .name("Tony Daniels")
-                .build())
-            .type(StorageItemChange.Type.CREATE)
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-            .build());
-        // .subscribe() is NOT called.
+        BlogOwner tony = BlogOwner.builder()
+            .name("Tony Daniels")
+            .build();
+        mutationOutbox.enqueue(PendingMutation.creation(tony, BlogOwner.class));
+        // .subscribe() is NOT called on the enqueue() above!! This is the point!!!
 
         // Note that nothing has actually happened yet --
         // Nothing was put out on the observable ...
         testObserver.assertNoValues();
         testObserver.assertNotTerminated();
+        testObserver.dispose();
 
         // And nothing is in storage.
-        List<StorageItemChangeRecord> recordsInStorage =
-            storageAdapter.query(StorageItemChangeRecord.class);
-        assertTrue(recordsInStorage.isEmpty());
+        assertTrue(storage.query(PendingMutation.PersistentRecord.class).isEmpty());
     }
 
     /**
-     * If there are some changes that haven't been processed,
+     * If there are some mutations that haven't been processed,
      * you'll hear about them when you subscribe, even if nothing new
-     * has entered the sync engine recently.
+     * has entered the outbox recently.
      */
     @Test
     public void observeReplaysUnprocessedChangesOnSubscribe() {
-
         // Arrange: some mutations.
-        StorageItemChange<BlogOwner> updateTony = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.UPDATE)
-            .item(BlogOwner.builder()
-                .name("Tony Daniels")
-                .build())
-            .itemClass(BlogOwner.class)
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
+        BlogOwner tony = BlogOwner.builder()
+            .name("Tony Daniels")
             .build();
-        StorageItemChange<BlogOwner> insertSam = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.CREATE)
-            .item(BlogOwner.builder()
-                .name("Sam Watson")
-                .build())
-            .itemClass(BlogOwner.class)
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
+        PendingMutation<BlogOwner> updateTony = PendingMutation.update(tony, BlogOwner.class);
+
+        BlogOwner sam = BlogOwner.builder()
+            .name("Sam Watson")
             .build();
-        StorageItemChange<BlogOwner> deleteBetty = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.DELETE)
-            .item(BlogOwner.builder()
-                .name("Betty Smith")
-                .build())
-            .itemClass(BlogOwner.class)
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
+        PendingMutation<BlogOwner> insertSam = PendingMutation.creation(sam, BlogOwner.class);
+
+        BlogOwner betty = BlogOwner.builder()
+            .name("Betty Smith")
             .build();
+        PendingMutation<BlogOwner> deleteBetty = PendingMutation.deletion(betty, BlogOwner.class);
 
         // Arrange: when no-one is observing, enqueue some changes.
-        mutationOutbox.enqueue(updateTony).subscribe();
-        mutationOutbox.enqueue(insertSam).subscribe();
-        mutationOutbox.enqueue(deleteBetty).subscribe();
+        mutationOutbox.enqueue(updateTony).blockingAwait();
+        mutationOutbox.enqueue(insertSam).blockingAwait();
+        mutationOutbox.enqueue(deleteBetty).blockingAwait();
 
         // Act: observe the queue.
-        TestObserver<StorageItemChange<?>> testObserver = TestObserver.create();
+        TestObserver<PendingMutation<?>> testObserver = TestObserver.create();
         mutationOutbox.observe().subscribe(testObserver);
 
-        // Assert: we got some stuff.
+        // Assert: we got some stuff, even though we subscribed after.
+        // These values came from *storage*.
         testObserver.awaitCount(Arrays.asList(updateTony, insertSam, deleteBetty).size());
         testObserver.assertValues(updateTony, insertSam, deleteBetty);
+        testObserver.dispose();
     }
 
     /**
-     * Tests {@link MutationOutbox#remove(StorageItemChange)}.
+     * Tests {@link MutationOutbox#remove(PendingMutation)}.
      * @throws DataStoreException On failure to query results, for assertions
      */
     @Test
     public void removeRemovesChangesFromQueue() throws DataStoreException {
         // Arrange: there is a change in the queue.
-        StorageItemChange<BlogOwner> deleteBillGates = StorageItemChange.<BlogOwner>builder()
-            .type(StorageItemChange.Type.DELETE)
-            .itemClass(BlogOwner.class)
-            .item(BlogOwner.builder()
-                .name("Bill Gates")
-                .build())
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
+        BlogOwner bill = BlogOwner.builder()
+            .name("Bill Gates")
             .build();
-        storageAdapter.save(storageItemChangeConverter.toRecord(deleteBillGates));
+        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class);
+        storage.save(converter.toRecord(deleteBillGates));
 
-        TestObserver<StorageItemChange<BlogOwner>> testObserver = TestObserver.create();
-        mutationOutbox.remove(deleteBillGates).subscribe(testObserver);
+        TestObserver<Void> testObserver = mutationOutbox.remove(deleteBillGates).test();
 
-        testObserver.assertValue(deleteBillGates);
+        testObserver.awaitTerminalEvent();
+        testObserver.assertNoErrors().assertComplete();
+        testObserver.dispose();
 
-        List<StorageItemChangeRecord> recordsInStorage =
-            storageAdapter.query(StorageItemChangeRecord.class);
-        assertEquals(0, recordsInStorage.size());
+        assertEquals(0, storage.query(PendingMutation.PersistentRecord.class).size());
     }
 }

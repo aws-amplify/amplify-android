@@ -22,7 +22,7 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.storage.StorageItemChangeRecord;
+import com.amplifyframework.datastore.syncengine.PendingMutation;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -123,20 +123,21 @@ public class SqlCommandTest {
 
     /**
      * Tests that a CREATE index command is correctly constructs for the
-     * {@link StorageItemChangeRecord}.
+     * {@link PendingMutation.PersistentRecord}.
      * @throws AmplifyException from Amplify config
      */
     @Test
-    public void createIndexForStorageItemChangeRecord() throws AmplifyException {
+    public void createIndexForPendingMutationRecord() throws AmplifyException {
         final Iterator<SqlCommand> sqlCommandIterator = sqlCommandFactory
-                .createIndexesFor(ModelSchema.fromModelClass(StorageItemChangeRecord.class))
+                .createIndexesFor(ModelSchema.fromModelClass(PendingMutation.PersistentRecord.class))
                 .iterator();
         assertTrue(sqlCommandIterator.hasNext());
         assertEquals(
             // expected
             new SqlCommand(
-                "StorageItemChangeRecord",
-                "CREATE INDEX IF NOT EXISTS itemClassBasedIndex ON StorageItemChangeRecord (itemClass);"
+                "PersistentRecord",
+                "CREATE INDEX IF NOT EXISTS decodedModelClassNameBasedIndex " +
+                    "ON PersistentRecord (decodedModelClassName);"
             ),
             // actual
             sqlCommandIterator.next()
