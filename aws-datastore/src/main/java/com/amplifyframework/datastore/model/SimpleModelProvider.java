@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.datastore.model;
 
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
@@ -146,7 +146,8 @@ public final class SimpleModelProvider implements ModelProvider {
     /**
      * Configures and builds instances of SimpleModelProvider.
      */
-    static final class Builder {
+    @SuppressWarnings("WeakerAccess")
+    public static final class Builder {
         private final LinkedHashSet<Class<? extends Model>> modelClasses;
         private String version;
 
@@ -154,14 +155,15 @@ public final class SimpleModelProvider implements ModelProvider {
             this.modelClasses = new LinkedHashSet<>();
         }
 
-        <T extends Model> Builder addModel(@NonNull Class<T> modelClass) {
+        @SuppressWarnings("UnusedReturnValue")
+        public <T extends Model> Builder addModel(@NonNull Class<T> modelClass) {
             Objects.requireNonNull(modelClass);
             Builder.this.modelClasses.add(modelClass);
             return Builder.this;
         }
 
         @SafeVarargs
-        final Builder addModels(@NonNull Class<? extends Model>... modelClasses) {
+        public final Builder addModels(@NonNull Class<? extends Model>... modelClasses) {
             Objects.requireNonNull(modelClasses);
             for (Class<? extends Model> clazz : modelClasses) {
                 Objects.requireNonNull(clazz);
@@ -170,13 +172,13 @@ public final class SimpleModelProvider implements ModelProvider {
             return Builder.this;
         }
 
-        Builder version(@NonNull String version) {
+        public Builder version(@NonNull String version) {
             Builder.this.version = Objects.requireNonNull(version);
             return Builder.this;
         }
 
         @SuppressLint("SyntheticAccessor")
-        SimpleModelProvider build() {
+        public SimpleModelProvider build() {
             return SimpleModelProvider.instance(version, modelClasses);
         }
     }

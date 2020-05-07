@@ -21,9 +21,9 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
-import com.amplifyframework.util.ArrayUtils;
 import com.amplifyframework.util.Immutable;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -162,7 +162,7 @@ final class SqlCommand {
         for (int index = 0; index < length; index++) {
             array[index] = bindings.get(index).toString();
         }
-        return ArrayUtils.copyOf(array);
+        return Arrays.copyOf(array, array.length);
     }
 
     /**

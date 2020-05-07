@@ -1,0 +1,11 @@
+{
+  "defaultRegion": "us-west-1",
+  "identify": {
+    "identifyEntities": {
+      "maxEntities": "0",
+      "celebrityDetectionEnabled": "true",
+      "region": "us-west-2",
+      "defaultNetworkPolicy": "auto"
+    }
+  }
+}
