@@ -179,8 +179,8 @@ public interface AuthCategoryBehavior {
     void updatePassword(
             @NonNull String oldPassword,
             @NonNull String newPassword,
-            @Nullable Action onSuccess,
-            @Nullable Consumer<AuthException> onError
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError
     );
 
     /**

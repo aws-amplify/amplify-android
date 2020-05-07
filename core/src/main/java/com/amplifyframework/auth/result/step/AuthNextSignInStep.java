@@ -25,6 +25,11 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * This object represents all details around the next step in the sign in process. It holds an instance of the
+ * {@link AuthSignInStep} enum to denote the step itself and supplements it with additional details which can
+ * optionally accompany it. If there is no next step, {@link #getSignInStep()} will have a value of DONE.
+ */
 public final class AuthNextSignInStep {
     private final AuthSignInStep signInStep;
     private final Map<String, String> additionalInfo;

@@ -31,9 +31,4 @@ dependencies {
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
     testImplementation dependency.androidx.test.core
-
-    androidTestImplementation project(path: ':testutils')
-    androidTestImplementation dependency.androidx.annotation
-    androidTestImplementation dependency.androidx.test.runner
-    androidTestImplementation dependency.androidx.test.junit
 }

@@ -45,8 +45,10 @@ public final class SignInStateConverter {
     }
 
     public static AuthSignInStep getAuthSignInStep(SignInState fromState) throws AuthException {
-        if (CONVERT_SIGN_IN_STATE.containsKey(fromState)) {
-            return CONVERT_SIGN_IN_STATE.get(fromState);
+        AuthSignInStep convertedVal = CONVERT_SIGN_IN_STATE.get(fromState);
+
+        if (convertedVal != null) {
+            return convertedVal;
         } else {
             throw new AuthException("Unsupported sign in state",
                 "We currently do not support the " + fromState + " state from AWSMobileClient. " +
