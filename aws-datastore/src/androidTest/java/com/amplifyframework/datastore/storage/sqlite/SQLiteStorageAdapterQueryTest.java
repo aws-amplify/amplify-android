@@ -47,17 +47,28 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterQueryTest {
     private SynchronousStorageAdapter adapter;
 
+    /**
+     * Enables Android Strict Mode, to help catch common errors while using
+     * SQLite, such as forgetting to close the database.
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.enable();
     }
 
+    /**
+     * Remove any old database files, and the re-provision a new storage adapter,
+     * that is able to store the Comment-Blog family of models.
+     */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
     }
 
+    /**
+     * Close the open database, and cleanup any database files that it left.
+     */
     @After
     public void teardown() {
         TestStorageAdapter.cleanup(adapter);

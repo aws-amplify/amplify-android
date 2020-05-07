@@ -19,8 +19,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Tests the {@link AnalyticsBooleanProperty}.
+ */
 public class AnalyticsBooleanPropertyTest {
-
+    /**
+     * The {@link AnalyticsBooleanProperty#from(Boolean)} factory will create a property,
+     * and its value will encode either {@link Boolean#TRUE}, or {@link Boolean#FALSE},
+     * depending on what was provided.
+     */
     @Test
     public void fromReturnsBooleanPropertyWithPassedValue() {
         // Arrange: Create the properties

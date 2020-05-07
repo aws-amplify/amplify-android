@@ -23,7 +23,15 @@ import java.util.NoSuchElementException;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-public class AnalyticsPropertiesTest {
+/**
+ * Tests the {@link AnalyticsPropertiesTest}.
+ */
+public final class AnalyticsPropertiesTest {
+    /**
+     * It is possible to construct an {@link AnalyticsProperties} instance via a builder,
+     * by providing some varied property types. These same properties may be retrieved
+     * from the built {@link AnalyticsProperties} instance.
+     */
     @Test
     public void builderConfiguresCompleteProperties() {
         // Arrange: Build a new AnalyticsProperties object
@@ -49,6 +57,10 @@ public class AnalyticsPropertiesTest {
         assertEquals(Integer.valueOf(2), profileCount);
     }
 
+    /**
+     * The {@link AnalyticsProperties} are extensible to new types of third-party
+     * properties.
+     */
     @Test
     public void builderCanAcceptTypesThatImplementAnalyticsPropertiesBehavior() {
         // Arrange: Build a FooProperty and pass it to an AnalyticsProperties Builder
@@ -62,16 +74,20 @@ public class AnalyticsPropertiesTest {
         assertEquals(date, properties.get("SignUpDate").getValue());
     }
 
+    /**
+     * An attempt to {@link AnalyticsProperties#get(String)} a property that
+     * does not exist will raise an {@link NoSuchElementException}.
+     */
     @Test
     public void getRaisesNoSuchElementExceptionWhenPropertyNotFound() {
         AnalyticsProperties properties = AnalyticsProperties.builder().build();
 
-        assertThrows(NoSuchElementException.class, () -> {
-            properties.get("key-that-doesnt-exist");
-        });
+        assertThrows(NoSuchElementException.class,
+            () -> properties.get("key-that-doesnt-exist")
+        );
     }
 
-    class FooProperty implements AnalyticsPropertyBehavior<Date> {
+    private static final class FooProperty implements AnalyticsPropertyBehavior<Date> {
         private final Date value;
 
         FooProperty(Date value) {

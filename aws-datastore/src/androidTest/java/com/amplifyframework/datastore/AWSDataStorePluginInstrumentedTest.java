@@ -68,6 +68,13 @@ public final class AWSDataStorePluginInstrumentedTest {
         StrictMode.enable();
     }
 
+    /**
+     * Once, before any/all tests in this class, setup miscellaneous dependencies,
+     * including synchronous API, AppSync, and DataStore interfaces. The API and AppSync instances
+     * are used to arrange/validate data. The DataStore interface will delegate to an
+     * {@link AWSDataStorePlugin}, which is the thing we're actually testing.
+     * @throws AmplifyException On failure to read config, setup API or DataStore categories
+     */
     @BeforeClass
     public static void beforeAllTests() throws AmplifyException {
         Context context = getApplicationContext();

@@ -130,14 +130,13 @@ public final class StorageUploadFileOptions extends StorageOptions {
             return this;
         }
 
-        @SuppressWarnings("WeakerAccess")
         @Nullable
-        public String getContentType() {
+        String getContentType() {
             return contentType;
         }
 
         @NonNull
-        public Map<String, String> getMetadata() {
+        Map<String, String> getMetadata() {
             return Immutable.of(metadata);
         }
 

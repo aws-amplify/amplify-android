@@ -19,8 +19,17 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class AnalyticsEventTest {
+/**
+ * Tests the {@link AnalyticsEvent}.
+ */
+public final class AnalyticsEventTest {
 
+    /**
+     * An {@link AnalyticsEvent} has a property name, and some various properties
+     * which encode different value types. These same values that are passed while
+     * building an {@link AnalyticsEvent} (and its properties) should be available
+     * by means of getters.
+     */
     @Test
     public void builderConfiguresCompleteBasicAnalyticsEvent() {
         // Arrange: Build a new AnalyticsEvent

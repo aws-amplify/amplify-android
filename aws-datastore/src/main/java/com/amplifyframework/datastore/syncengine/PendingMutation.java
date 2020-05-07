@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -365,34 +364,17 @@ public final class PendingMutation<T extends Model> {
         /**
          * A model-creation mutation.
          */
-        CREATE(MutationType.CREATE),
+        CREATE,
 
         /**
          * Any change to an already-existing model, that does not *delete* the model.
          */
-        UPDATE(MutationType.UPDATE),
+        UPDATE,
 
         /**
          * The removal of a previously-created model.
          */
-        DELETE(MutationType.DELETE);
-
-        private final MutationType apiMutationType;
-
-        Type(MutationType apiMutationType) {
-            this.apiMutationType = apiMutationType;
-        }
-
-        public MutationType getApiMutationType() {
-            return apiMutationType;
-        }
-
-        @Override
-        public String toString() {
-            return "Type{" +
-                "apiMutationType=" + apiMutationType +
-                '}';
-        }
+        DELETE;
     }
 
     /**

@@ -39,31 +39,55 @@ public final class UserProfile {
         this.customProperties = builder.customProperties;
     }
 
+    /**
+     * Gets the user's name.
+     * @return User's name
+     */
     @Nullable
     public String getName() {
         return name;
     }
 
+    /**
+     * Gets the user's email.
+     * @return User's email
+     */
     @Nullable
     public String getEmail() {
         return email;
     }
 
+    /**
+     * Gets the user's plan.
+     * @return User's plan
+     */
     @Nullable
     public String getPlan() {
         return plan;
     }
 
+    /**
+     * Gets the user's location.
+     * @return User's location
+     */
     @Nullable
     public Location getLocation() {
         return location;
     }
 
+    /**
+     * Gets any custom properties associated to the user.
+     * @return User's custom properties
+     */
     @Nullable
     public AnalyticsProperties getCustomProperties() {
         return customProperties;
     }
 
+    /**
+     * Begins construction of an {@link UserProfile} using a builder pattern.
+     * @return An {@link UserProfile.Builder} instance
+     */
     @NonNull
     public static Builder builder() {
         return new Builder();
@@ -127,6 +151,11 @@ public final class UserProfile {
         private Location location;
         private AnalyticsProperties customProperties;
 
+        /**
+         * Configures the name to be used in the next-built UserProfile.
+         * @param name User's name
+         * @return Current builder instance, for method chaining
+         */
         @NonNull
         public Builder name(@NonNull final String name) {
             Objects.requireNonNull(name);
@@ -134,6 +163,11 @@ public final class UserProfile {
             return this;
         }
 
+        /**
+         * Configures the email to be used in the next-built UserProfile.
+         * @param email User's email
+         * @return Current builder instance, for method chaining
+         */
         @NonNull
         public Builder email(@NonNull final String email) {
             Objects.requireNonNull(email);
@@ -141,6 +175,11 @@ public final class UserProfile {
             return this;
         }
 
+        /**
+         * Configures the plan to be used in the next-built UserProfile.
+         * @param plan User's plan
+         * @return Current builder instance, for method chaining
+         */
         @NonNull
         public Builder plan(@NonNull final String plan) {
             Objects.requireNonNull(plan);
@@ -148,6 +187,11 @@ public final class UserProfile {
             return this;
         }
 
+        /**
+         * Configures the location to be used in the next-built UserProfile.
+         * @param location User's location
+         * @return Current builder instance, for method chaining
+         */
         @NonNull
         public Builder location(@NonNull final Location location) {
             Objects.requireNonNull(location);
@@ -155,6 +199,11 @@ public final class UserProfile {
             return this;
         }
 
+        /**
+         * Configures any additional, custom properties to be used in the next-built UserProfile.
+         * @param properties Additional properties bound to the next-built user
+         * @return Current builder instance, for method chaining
+         */
         @NonNull
         public Builder customProperties(@NonNull final AnalyticsProperties properties) {
             Objects.requireNonNull(properties);
@@ -162,6 +211,10 @@ public final class UserProfile {
             return this;
         }
 
+        /**
+         * Builds an instance of {@link UserProfile}, using the provided values.
+         * @return An {@link UserProfile}
+         */
         @NonNull
         public UserProfile build() {
             return new UserProfile(this);
@@ -188,36 +241,64 @@ public final class UserProfile {
             this.country = builder.country;
         }
 
+        /**
+         * Gets the user's last known latitude.
+         * @return User's latitude
+         */
         @Nullable
         public Double getLatitude() {
             return latitude;
         }
 
+        /**
+         * Gets the user's last known longitude.
+         * @return User's longitude
+         */
         @Nullable
         public Double getLongitude() {
             return longitude;
         }
 
+        /**
+         * Gets the user's postal code.
+         * @return User's postal code
+         */
         @Nullable
         public String getPostalCode() {
             return postalCode;
         }
 
+        /**
+         * Gets the user's city.
+         * @return User's city
+         */
         @Nullable
         public String getCity() {
             return city;
         }
 
+        /**
+         * Gets the user's region.
+         * @return User's region
+         */
         @Nullable
         public String getRegion() {
             return region;
         }
 
+        /**
+         * Gets the user's country.
+         * @return User's country
+         */
         @Nullable
         public String getCountry() {
             return country;
         }
 
+        /**
+         * Builds a {@link Location}.
+         * @return A new {@link Location}
+         */
         @NonNull
         public static Builder builder() {
             return new Builder();
@@ -287,6 +368,11 @@ public final class UserProfile {
             private String region;
             private String country;
 
+            /**
+             * Configures the latitude to use in the next-build {@link Location}.
+             * @param latitude user's latitude
+             * @return Current builder instance, for method chaining
+             */
             @NonNull
             public Builder latitude(@NonNull Double latitude) {
                 Objects.requireNonNull(latitude);
@@ -294,6 +380,11 @@ public final class UserProfile {
                 return this;
             }
 
+            /**
+             * Configures the longitude to use in the next-build {@link Location}.
+             * @param longitude user's longitude
+             * @return Current builder instance, for method chaining
+             */
             @NonNull
             public Builder longitude(@NonNull Double longitude) {
                 Objects.requireNonNull(longitude);
@@ -301,6 +392,11 @@ public final class UserProfile {
                 return this;
             }
 
+            /**
+             * Configures the postal code to use in the next-build {@link Location}.
+             * @param postalCode user's postal code
+             * @return Current builder instance, for method chaining
+             */
             @NonNull
             public Builder postalCode(@NonNull String postalCode) {
                 Objects.requireNonNull(postalCode);
@@ -308,6 +404,11 @@ public final class UserProfile {
                 return this;
             }
 
+            /**
+             * Configures the city to use in the next-build {@link Location}.
+             * @param city user's city
+             * @return Current builder instance, for method chaining
+             */
             @NonNull
             public Builder city(@NonNull String city) {
                 Objects.requireNonNull(city);
@@ -315,6 +416,11 @@ public final class UserProfile {
                 return this;
             }
 
+            /**
+             * Configures the region to use in the next-build {@link Location}.
+             * @param region user's region
+             * @return Current builder instance, for method chaining
+             */
             @NonNull
             public Builder region(@NonNull String region) {
                 Objects.requireNonNull(region);
@@ -322,6 +428,11 @@ public final class UserProfile {
                 return this;
             }
 
+            /**
+             * Configures the country to use in the next-build {@link Location}.
+             * @param country user's country
+             * @return Current builder instance, for method chaining
+             */
             @NonNull
             public Builder country(@NonNull String country) {
                 Objects.requireNonNull(country);
@@ -329,6 +440,10 @@ public final class UserProfile {
                 return this;
             }
 
+            /**
+             * Builds a {@link Location}.
+             * @return A {@link Location}
+             */
             @NonNull
             public Location build() {
                 return new Location(this);

@@ -80,6 +80,10 @@ public final class RxDataStoreBindingTest {
         this.rxDataStore = new RxDataStoreBinding(dataStoreCategory);
     }
 
+    /**
+     * When the DataStore behavior successfully saves a value, the Rx binding
+     * for save should just complete.
+     */
     @Test
     public void saveCompletesWhenBehaviorEmitsResult() {
         Model model = RandomModel.model();
@@ -114,6 +118,10 @@ public final class RxDataStoreBindingTest {
             .save(eq(model), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the DataStore save behavior emits an error, the Rx binding should
+     * do the same.
+     */
     @Test
     public void saveEmitsErrorWhenBehaviorDoes() {
         Model model = RandomModel.model();
@@ -137,6 +145,10 @@ public final class RxDataStoreBindingTest {
             .save(eq(model), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the DataStore delete behavior returns a result, the Rx binding
+     * should just complete.
+     */
     @Test
     public void deleteCompletesWhenBehaviorEmitsResult() {
         Model model = RandomModel.model();
@@ -167,6 +179,10 @@ public final class RxDataStoreBindingTest {
             .delete(eq(model), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the DataStore delete behavior emits a result, the Rx binding
+     * should just complete.
+     */
     @Test
     public void deleteEmitsErrorWhenBehaviorDoes() {
         // Arrange: delete() category behavior will callback failure consumer
@@ -191,6 +207,10 @@ public final class RxDataStoreBindingTest {
             .delete(eq(model), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the DataStore category behavior emits a query result, those results
+     * should be emitted onto an Observable in the Rx binding.
+     */
     @Test
     public void queryEmitsCategoryBehaviorResults() {
         // Arrange: query will return some results from category behavior
@@ -214,6 +234,10 @@ public final class RxDataStoreBindingTest {
             .query(eq(Model.class), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the DataStore emits a failure for a query, the Rx binding should terminate
+     * with that failure.
+     */
     @Test
     public void queryEmitsFailureWhenCategoryBehaviorDoes() {
         DataStoreException expectedFailure = new DataStoreException("Expected", "Failure");
@@ -233,6 +257,11 @@ public final class RxDataStoreBindingTest {
             .query(eq(Model.class), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * The Rx binding for observing the DataStore should be an Observable stream
+     * of DataStore changes. It should emit events whenever they are observed
+     * on the observe behavior.
+     */
     @Test
     public void observeReturnsCategoryBehaviorChanges() {
         // Arrange: observe(Class<?>) will spit out some values from category behavior.
@@ -270,6 +299,10 @@ public final class RxDataStoreBindingTest {
             .observe(eq(Model.class), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
     }
 
+    /**
+     * The Rx binding for the DataStore's observe method is an Observable. It should
+     * complete when the Rx binding's completion callback is triggered.
+     */
     @Test
     public void observeCompletesWhenCategoryBehaviorDoes() {
         // Category behavior is arranged to complete
@@ -296,6 +329,10 @@ public final class RxDataStoreBindingTest {
             .observe(eq(Model.class), anyConsumer(), anyConsumer(), anyConsumer(), anyAction());
     }
 
+    /**
+     * The Rx binding for the DataStore's observe behavior is an Observable. It should
+     * fail with an exception when the DataStore observe method calls back its error consumer.
+     */
     @Test
     public void observeFailsWhenCategoryBehaviorDoes() {
         // Arrange for observer() to callback failure
