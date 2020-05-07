@@ -21,6 +21,7 @@ import androidx.annotation.WorkerThread;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -65,8 +66,10 @@ final class MutationOutbox {
     @NonNull
     Single<Boolean> hasPendingMutation(@NonNull String modelId) {
         Objects.requireNonNull(modelId);
+        // Note that the getId() on the mutation is different from the ID of the decoded model.
+        QueryPredicate hasMatchingId = QueryField.field("decodedModelId").eq(modelId);
         return Single.create(emitter ->
-            storage.query(PendingMutation.PersistentRecord.class, QueryField.field("id").eq(modelId),
+            storage.query(PendingMutation.PersistentRecord.class, hasMatchingId,
                 results -> emitter.onSuccess(results.hasNext()),
                 emitter::onError
             )

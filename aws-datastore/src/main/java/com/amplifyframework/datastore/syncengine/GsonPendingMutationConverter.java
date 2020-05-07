@@ -45,11 +45,12 @@ public final class GsonPendingMutationConverter implements PendingMutation.Conve
     /**
      * Constructs a new instance of hte {@link GsonPendingMutationConverter}.
      */
-    public GsonPendingMutationConverter() {
+    GsonPendingMutationConverter() {
         this.gson = new GsonBuilder()
             .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
             .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
             .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
+            .registerTypeAdapter(TimeBasedUuid.class, new TimeBasedUuidTypeAdapter())
             .create();
     }
 
@@ -57,9 +58,10 @@ public final class GsonPendingMutationConverter implements PendingMutation.Conve
     @Override
     public <T extends Model> PendingMutation.PersistentRecord toRecord(@NonNull PendingMutation<T> mutation) {
         return PendingMutation.PersistentRecord.builder()
+            .decodedModelId(mutation.getMutatedItem().getId())
             .decodedModelClassName(mutation.getClassOfMutatedItem().getName())
             .encodedModelData(gson.toJson(mutation))
-            .id(mutation.getMutatedItem().getId())
+            .recordId(mutation.getMutationId())
             .build();
     }
 
@@ -124,6 +126,18 @@ public final class GsonPendingMutationConverter implements PendingMutation.Conve
                 throw new IOException(exception);
             }
             return clazz;
+        }
+    }
+
+    static final class TimeBasedUuidTypeAdapter extends TypeAdapter<TimeBasedUuid> {
+        @Override
+        public void write(JsonWriter jsonWriter, TimeBasedUuid value) throws IOException {
+            jsonWriter.jsonValue(value.toString());
+        }
+
+        @Override
+        public TimeBasedUuid read(JsonReader jsonReader) throws IOException {
+            return TimeBasedUuid.fromString(jsonReader.nextString());
         }
     }
 }
