@@ -13,15 +13,16 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage;
+package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.model.OperatorInterfaceAdapter;
+import com.amplifyframework.datastore.model.PredicateInterfaceAdapter;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -36,50 +37,49 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 
 /**
- * A utility to convert between {@link StorageItemChange} and {@link StorageItemChange.Record}.
+ * A utility to convert between {@link PendingMutation} and {@link PendingMutation.PersistentRecord}.
  */
-public final class GsonStorageItemChangeConverter implements
-        StorageItemChange.RecordFactory, StorageItemChange.StorageItemChangeFactory {
+public final class GsonPendingMutationConverter implements PendingMutation.Converter {
     private final Gson gson;
 
     /**
-     * Constructs a new instance of hte {@link GsonStorageItemChangeConverter}.
+     * Constructs a new instance of hte {@link GsonPendingMutationConverter}.
      */
-    public GsonStorageItemChangeConverter() {
+    public GsonPendingMutationConverter() {
         this.gson = new GsonBuilder()
-                .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
-                .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
-                .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
-                .create();
+            .registerTypeAdapterFactory(new ClassTypeAdapterFactory())
+            .registerTypeAdapter(QueryPredicate.class, new PredicateInterfaceAdapter())
+            .registerTypeAdapter(QueryOperator.class, new OperatorInterfaceAdapter())
+            .create();
     }
 
     @NonNull
     @Override
-    public <T extends Model> StorageItemChange.Record toRecord(@NonNull StorageItemChange<T> storageItemChange) {
-        return StorageItemChange.Record.builder()
-                .id(storageItemChange.changeId().toString())
-                .entry(gson.toJson(storageItemChange))
-                .itemClass(storageItemChange.itemClass().getName())
-                .build();
+    public <T extends Model> PendingMutation.PersistentRecord toRecord(@NonNull PendingMutation<T> mutation) {
+        return PendingMutation.PersistentRecord.builder()
+            .decodedModelClassName(mutation.getClassOfMutatedItem().getName())
+            .encodedModelData(gson.toJson(mutation))
+            .id(mutation.getMutatedItem().getId())
+            .build();
     }
 
     @NonNull
     @Override
-    public <T extends Model> StorageItemChange<T> fromRecord(@NonNull StorageItemChange.Record record)
-            throws DataStoreException {
-        Class<?> itemClass;
+    public <T extends Model> PendingMutation<T> fromRecord(
+            @NonNull PendingMutation.PersistentRecord record) throws DataStoreException {
+        final Class<?> itemClass;
         try {
-            itemClass = Class.forName(record.getItemClass());
+            itemClass = Class.forName(record.getDecodedModelClassName());
         } catch (ClassNotFoundException classNotFoundException) {
             throw new DataStoreException(
-                    "Tried to get the class of an item but couldn't find it.",
-                    classNotFoundException,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
+                "Could not find a class with the name " + record.getDecodedModelClassName(),
+                classNotFoundException,
+                "Verify that you have built this model into your project."
             );
         }
         final Type itemType =
-            TypeToken.getParameterized(StorageItemChange.class, itemClass).getType();
-        return gson.fromJson(record.getEntry(), itemType);
+            TypeToken.getParameterized(PendingMutation.class, itemClass).getType();
+        return gson.fromJson(record.getEncodedModelData(), itemType);
     }
 
     /**
@@ -87,7 +87,7 @@ public final class GsonStorageItemChangeConverter implements
      * with {@link Class}-type objects.
      */
     static final class ClassTypeAdapterFactory implements TypeAdapterFactory {
-        @SuppressWarnings("unchecked")
+        @SuppressWarnings("unchecked") // (TypeAdapter<T>)
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> typeToken) {
             if (!Class.class.isAssignableFrom(typeToken.getRawType())) {
@@ -98,7 +98,7 @@ public final class GsonStorageItemChangeConverter implements
     }
 
     /**
-     * {@link StorageItemChange} contains an {@link Class} member, but Gson doesn't
+     * {@link PendingMutation} contains an {@link Class} member, but Gson doesn't
      * know what to do with it. So, we need this custom {@link TypeAdapter}.
      */
     static final class ClassTypeAdapter extends TypeAdapter<Class<?>> {
@@ -117,7 +117,7 @@ public final class GsonStorageItemChangeConverter implements
                 jsonReader.nextNull();
                 return null;
             }
-            Class<?> clazz;
+            final Class<?> clazz;
             try {
                 clazz = Class.forName(jsonReader.nextString());
             } catch (ClassNotFoundException exception) {

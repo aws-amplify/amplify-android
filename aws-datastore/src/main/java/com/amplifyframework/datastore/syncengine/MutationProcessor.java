@@ -25,13 +25,13 @@ import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
+import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
@@ -66,7 +66,7 @@ final class MutationProcessor {
     /**
      * Start observing the mutation outbox for locally-initiated changes.
      *
-     * To process a StorageItemChange, we try to publish it to the remote GraphQL
+     * To process a pending mutation, we try to publish it to the remote GraphQL
      * API. If that succeeds, then we can remove it from the outbox. Otherwise,
      * we have to keep the mutation in the outbox, so that we can try to publish
      * it again later, when network conditions become favorable again.
@@ -76,14 +76,10 @@ final class MutationProcessor {
             mutationOutbox.observe()
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
-                .flatMapSingle(this::processOutboxItem)
+                .flatMapCompletable(this::processOutboxItem)
                 .subscribe(
-                    processedChange -> {
-                        LOG.info("Local DataStore change was published up to Cloud: " + processedChange);
-                        announceSuccessfulPublication(processedChange);
-                    },
-                    error -> LOG.warn("Error ended observation of mutation outbox: ", error),
-                    () -> LOG.warn("Observation of mutation outbox was completed.")
+                    () -> LOG.warn("Observation of mutation outbox was completed."),
+                    error -> LOG.warn("Error ended observation of mutation outbox: ", error)
                 )
         );
     }
@@ -92,25 +88,29 @@ final class MutationProcessor {
      * Process an item in the mutation outbox.
      * @param mutationOutboxItem An item in the mutation outbox
      * @param <T> Type of model
-     * @return A single echos back the processed change, upon success; emits failure, upon
+     * @return A Completable that emits success when the item is processed, emits failure, otherwise
      */
-    private <T extends Model> Single<StorageItemChange<T>> processOutboxItem(StorageItemChange<T> mutationOutboxItem) {
-        // First, publish the change over the network.
+    private <T extends Model> Completable processOutboxItem(PendingMutation<T> mutationOutboxItem) {
+        // First, publish the mutation over the network.
         return publishToNetwork(mutationOutboxItem)
             // Merge the response back into the local store.
             .flatMapCompletable(merger::merge)
             // Lastly, remove the item from the outbox, so we don't process it again.
-            .andThen(mutationOutbox.remove(mutationOutboxItem));
+            .andThen(mutationOutbox.remove(mutationOutboxItem))
+            .andThen(Completable.fromAction(() -> {
+                LOG.info("Pending mutation was published up to Cloud: " + mutationOutboxItem);
+                announceSuccessfulPublication(mutationOutboxItem);
+            }));
     }
 
     /**
-     * Publish a successfully processed storage item change to hub.
-     * @param processedChange A change that has been successfully processed and removed from outbox
+     * Publish a successfully processed pending mutation to hub.
+     * @param processedMutation A mutation that has been successfully processed and removed from outbox
      * @param <T> Type of model
      */
-    private <T extends Model> void announceSuccessfulPublication(StorageItemChange<T> processedChange) {
-        HubEvent<StorageItemChange<? extends Model>> publishedToCloudEvent =
-            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedChange);
+    private <T extends Model> void announceSuccessfulPublication(PendingMutation<T> processedMutation) {
+        HubEvent<PendingMutation<? extends Model>> publishedToCloudEvent =
+            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation);
         Amplify.Hub.publish(HubChannel.DATASTORE, publishedToCloudEvent);
     }
 
@@ -122,66 +122,66 @@ final class MutationProcessor {
     }
 
     /**
-     * Attempt to publish a change (update, delete, creation) over the network.
-     * @param storageItemChange A storage item change to be published to remote API
+     * Attempt to publish a mutation (update, delete, creation) over the network.
+     * @param pendingMutation A pending mutation, waiting to be published to remote API
      * @param <T> Type of model
      * @return A single which completes with the successfully published item, or emits error
      *         if the publication fails
      */
-    private <T extends Model> Single<ModelWithMetadata<T>> publishToNetwork(StorageItemChange<T> storageItemChange) {
-        switch (storageItemChange.type()) {
+    private <T extends Model> Single<ModelWithMetadata<T>> publishToNetwork(PendingMutation<T> pendingMutation) {
+        switch (pendingMutation.getMutationType()) {
             case UPDATE:
-                return update(storageItemChange);
+                return update(pendingMutation);
             case CREATE:
-                return create(storageItemChange);
+                return create(pendingMutation);
             case DELETE:
-                return delete(storageItemChange);
+                return delete(pendingMutation);
             default:
                 return Single.error(new DataStoreException(
-                   "Unknown change type in storage = " + storageItemChange.type(),
+                   "Unknown mutation type in storage = " + pendingMutation.getMutationType(),
                    "This is likely a bug. Please file a ticket with AWS."
                 ));
         }
     }
 
     // For an item in the outbox, dispatch an update mutation
-    private <T extends Model> Single<ModelWithMetadata<T>> update(StorageItemChange<T> storageItemChange) {
-        return versionRepository.findModelVersion(storageItemChange.item()).flatMap(version -> {
-            return publishWithStrategy(storageItemChange, (model, onSuccess, onError) -> {
+    private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
+        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
+            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
                 appSync.update(model, version, onSuccess, onError);
             });
         });
     }
 
     // For an item in the outbox, dispatch a create mutation
-    private <T extends Model> Single<ModelWithMetadata<T>> create(StorageItemChange<T> storageItemChange) {
-        return publishWithStrategy(storageItemChange, appSync::create);
+    private <T extends Model> Single<ModelWithMetadata<T>> create(PendingMutation<T> mutation) {
+        return publishWithStrategy(mutation, appSync::create);
     }
 
     // For an item in the outbox, dispatch a delete mutation
-    private <T extends Model> Single<ModelWithMetadata<T>> delete(StorageItemChange<T> storageItemChange) {
-        return versionRepository.findModelVersion(storageItemChange.item()).flatMap(version -> {
-            return publishWithStrategy(storageItemChange, (model, onSuccess, onError) -> {
-                final Class<T> modelClass = storageItemChange.itemClass();
-                final String modelId = storageItemChange.item().getId();
+    private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
+        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
+            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
+                final Class<T> modelClass = mutation.getClassOfMutatedItem();
+                final String modelId = mutation.getMutatedItem().getId();
                 appSync.delete(modelClass, modelId, version, onSuccess, onError);
             });
         });
     }
 
     /**
-     * For an item in storage that has changed, publish the changed item using a publication strategy.
-     * @param storageItemChange A change to an item in storage
-     * @param publicationStrategy A strategy to publish the changed item
+     * For an pending mutation, publish mutated item using a publication strategy.
+     * @param mutation A mutation that is waiting to be published
+     * @param publicationStrategy A strategy to publish the mutated item
      * @param <T> The model type of the item
-     * @return A single which emits the original storage item change, upon success; emits
+     * @return A single which emits the model with its metadata, upon success; emits
      *         a failure, if publication does not succeed
      */
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithStrategy(
-            StorageItemChange<T> storageItemChange, PublicationStrategy<T> publicationStrategy) {
+            PendingMutation<T> mutation, PublicationStrategy<T> publicationStrategy) {
         return Single.defer(() -> Single.create(subscriber -> {
             publicationStrategy.publish(
-                storageItemChange.item(),
+                mutation.getMutatedItem(),
                 result -> {
                     if (!result.hasErrors() && result.hasData()) {
                         subscriber.onSuccess(result.getData());
@@ -191,7 +191,7 @@ final class MutationProcessor {
                         "Failed to publish an item to the network. AppSync response contained errors: "
                             + result.getErrors(),
                         "Verify that your endpoint is configured to accept "
-                            + storageItemChange.itemClass().getSimpleName() + " models."
+                            + mutation.getClassOfMutatedItem().getSimpleName() + " models."
                     ));
                 },
                 subscriber::onError
@@ -205,7 +205,7 @@ final class MutationProcessor {
      */
     interface PublicationStrategy<T extends Model> {
         /**
-         * Publish a storage item change, over the network.
+         * Publish a pending mutation, over the network.
          * @param item An item to publish
          * @param onSuccess Called when publication succeeds
          * @param onFailure Called when publication fails

@@ -19,10 +19,11 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
-import com.amplifyframework.predictions.aws.request.AWSRekognitionRequest;
+import com.amplifyframework.predictions.aws.request.AWSImageIdentifyRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LabelType;
+import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.result.IdentifyResult;
 
@@ -30,11 +31,11 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
 /**
- *
- * Operation that identifies objects within an image via Amazon Translate, Amazon Rekognition, or Amazon Comprehend.
+ * Operation that identifies objects within an image via
+ * Amazon Translate and Amazon Rekognition.
  */
 public final class AWSIdentifyOperation
-        extends IdentifyOperation<AWSRekognitionRequest> {
+        extends IdentifyOperation<AWSImageIdentifyRequest> {
     private final AWSPredictionsService predictionsService;
     private final ExecutorService executorService;
     private final Consumer<IdentifyResult> onSuccess;
@@ -53,7 +54,7 @@ public final class AWSIdentifyOperation
             @NonNull AWSPredictionsService predictionsService,
             @NonNull ExecutorService executorService,
             @NonNull IdentifyAction actionType,
-            @NonNull AWSRekognitionRequest request,
+            @NonNull AWSImageIdentifyRequest request,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -66,29 +67,95 @@ public final class AWSIdentifyOperation
 
     @Override
     public void start() {
+        switch (getIdentifyAction().getType()) {
+            case DETECT_CELEBRITIES:
+                startCelebritiesDetection();
+                return;
+            case DETECT_LABELS:
+                startLabelsDetection();
+                return;
+            case DETECT_ENTITIES:
+                startEntitiesDetection();
+                return;
+            case DETECT_TEXT:
+                startTextDetection();
+                return;
+            default:
+        }
+    }
+
+    private void startCelebritiesDetection() {
+        executorService.execute(() ->
+            predictionsService.recognizeCelebrities(
+                    getRequest().getImageData(),
+                    onSuccess,
+                    onError
+            )
+        );
+    }
+
+    private void startLabelsDetection() {
         executorService.execute(() -> {
-            switch (getIdentifyAction().getType()) {
-                case DETECT_CELEBRITIES:
-                    predictionsService.recognizeCelebrities(getRequest().getImage(), onSuccess, onError);
+            final LabelType labelType;
+            try {
+                labelType = (LabelType) getIdentifyAction();
+            } catch (ClassCastException notLabelType) {
+                onError.accept(new PredictionsException(
+                        "The identify action type does not specify a label type.",
+                        "When passing in action type for label detection, use " +
+                                "LabelType instead of IdentifyActionType."
+                ));
+                return;
+            }
+            predictionsService.detectLabels(
+                    labelType,
+                    getRequest().getImageData(),
+                    onSuccess,
+                    onError
+            );
+        });
+    }
+
+    private void startEntitiesDetection() {
+        executorService.execute(() ->
+            predictionsService.detectEntities(getRequest().getImageData(),
+                    onSuccess,
+                    onError
+            )
+        );
+    }
+
+    private void startTextDetection() {
+        executorService.execute(() -> {
+            final TextFormatType textFormatType;
+            try {
+                textFormatType = (TextFormatType) getIdentifyAction();
+            } catch (ClassCastException notLabelType) {
+                onError.accept(new PredictionsException(
+                        "The identify action type does not specify a text format type.",
+                        "When passing in action type for text detection, use " +
+                                "TextFormatType instead of IdentifyActionType."
+                ));
+                return;
+            }
+
+            switch (textFormatType) {
+                case PLAIN:
+                    predictionsService.detectPlainText(
+                            getRequest().getImageData(),
+                            onSuccess,
+                            onError
+                    );
                     return;
-                case DETECT_LABELS:
-                    final LabelType labelType;
-                    try {
-                        labelType = (LabelType) getIdentifyAction();
-                    } catch (ClassCastException notLabelType) {
-                        onError.accept(new PredictionsException(
-                                "The identify action type does not specify a label type.",
-                                "When passing in action type for label detection, use " +
-                                        "LabelType instead of IdentifyActionType."
-                        ));
-                        return;
-                    }
-                    predictionsService.detectLabels(labelType, getRequest().getImage(), onSuccess, onError);
+                case FORM:
+                case TABLE:
+                case ALL:
+                    predictionsService.detectDocumentText(
+                            textFormatType,
+                            getRequest().getImageData(),
+                            onSuccess,
+                            onError);
                     return;
-                case DETECT_ENTITIES:
-                    predictionsService.detectEntities(getRequest().getImage(), onSuccess, onError);
-                    return;
-                case DETECT_TEXT:
                 default:
                     onError.accept(new PredictionsException(
                             "Unexpected error: invalid or unsupported identify action type.",

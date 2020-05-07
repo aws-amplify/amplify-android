@@ -27,6 +27,7 @@ import org.json.JSONObject;
  * Configures the behavior for text interpretation.
  */
 public final class InterpretTextConfiguration {
+    private static final String CONFIG_NAME = "interpretText";
     private final InterpretType type;
     private final NetworkPolicy networkPolicy;
 
@@ -47,11 +48,11 @@ public final class InterpretTextConfiguration {
      */
     @Nullable
     public static InterpretTextConfiguration fromJson(@NonNull JSONObject configurationJson) throws JSONException {
-        if (!configurationJson.has("interpretText")) {
+        if (!configurationJson.has(CONFIG_NAME)) {
             return null;
         }
 
-        JSONObject interpretTextJson = configurationJson.getJSONObject("interpretText");
+        JSONObject interpretTextJson = configurationJson.getJSONObject(CONFIG_NAME);
         String typeString = interpretTextJson.getString("type");
         String networkPolicyString = interpretTextJson.getString("defaultNetworkPolicy");
 

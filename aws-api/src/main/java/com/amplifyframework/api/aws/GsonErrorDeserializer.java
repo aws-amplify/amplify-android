@@ -58,19 +58,26 @@ final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Er
 
         for (String key : error.keySet()) {
             JsonElement value = error.get(key);
-            if (value != null) {
-                if (key.equals(MESSAGE_KEY)) {
+            if (value == null) {
+                continue;
+            }
+            switch (key) {
+                case MESSAGE_KEY:
                     message = context.deserialize(value, String.class);
-                } else if (key.equals(LOCATIONS_KEY)) {
+                    break;
+                case LOCATIONS_KEY:
                     Type locationsType = new TypeToken<List<GraphQLLocation>>() {}.getType();
                     locations = context.deserialize(value, locationsType);
-                } else if (key.equals(PATH_KEY)) {
+                    break;
+                case PATH_KEY:
                     path = getPath(value);
-                } else if (key.equals(EXTENSIONS_KEY)) {
+                    break;
+                case EXTENSIONS_KEY:
                     extensionsJson = value.getAsJsonObject();
-                } else {
+                    break;
+                default:
                     nonSpecifiedData.add(key, value);
-                }
+                    break;
             }
         }
 
@@ -91,6 +98,9 @@ final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Er
 
     private List<GraphQLPathSegment> getPath(JsonElement pathElement) {
         List<GraphQLPathSegment> path = new ArrayList<>();
+        if (pathElement.isJsonNull()) {
+            return null;
+        }
         if (!pathElement.isJsonArray()) {
             throw new JsonParseException("Expected a JsonArray but found a " +
                     pathElement.getClass().getName() + " while deserializing path");

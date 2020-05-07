@@ -108,7 +108,7 @@ public final class OrchestratorTest {
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         Await.result(
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChange<BlogOwner>> onResult, Consumer<DataStoreException> onError) ->
                 localStorageAdapter.save(
                     susan,
                     StorageItemChange.Initiator.DATA_STORE_API,

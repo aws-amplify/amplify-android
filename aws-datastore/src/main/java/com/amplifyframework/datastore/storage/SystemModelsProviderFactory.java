@@ -22,6 +22,7 @@ import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion;
 import com.amplifyframework.datastore.syncengine.LastSyncMetadata;
+import com.amplifyframework.datastore.syncengine.PendingMutation;
 
 /**
  * Creates a provide of system models, that are used internally by the DataStore.
@@ -48,12 +49,12 @@ public final class SystemModelsProviderFactory {
 
             // ModelMetadata.class stores the version of particular instances of a model. Unlike
             // PersistentModelVersion, which details with the structure of data, ModelMetadata
-            // deals actually with individual records, and their states.
+            // deals actually with individual object instances, and their states.
             ModelMetadata.class,
 
-            // StorageItemChange.Record.class is an internal system event
-            // it is used to stage local storage changes for upload to cloud
-            StorageItemChange.Record.class
+            // Used to create a persistent queue of mutations that need to be dispatched over
+            // the network.
+            PendingMutation.PersistentRecord.class
         );
     }
 }

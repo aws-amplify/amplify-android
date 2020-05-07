@@ -22,14 +22,17 @@ import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
-import com.amazonaws.services.rekognition.model.Image;
+import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
+
+import java.nio.ByteBuffer;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.
@@ -38,6 +41,7 @@ public final class AWSPredictionsService {
 
     private final AWSTranslateService translateService;
     private final AWSRekognitionService rekognitionService;
+    private final AWSTextractService textractService;
     private final AWSComprehendService comprehendService;
 
     /**
@@ -47,6 +51,7 @@ public final class AWSPredictionsService {
     public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
         this.translateService = new AWSTranslateService(configuration);
         this.rekognitionService = new AWSRekognitionService(configuration);
+        this.textractService = new AWSTextractService(configuration);
         this.comprehendService = new AWSComprehendService(configuration);
     }
 
@@ -73,45 +78,75 @@ public final class AWSPredictionsService {
     /**
      * Delegate to {@link AWSRekognitionService} to detect labels.
      * @param type the type of labels to detect
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectLabels(
             @NonNull LabelType type,
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.detectLabels(type, image, onSuccess, onError);
+        rekognitionService.detectLabels(type, imageData, onSuccess, onError);
     }
 
     /**
      * Delegate to {@link AWSRekognitionService} to recognize celebrities.
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void recognizeCelebrities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.recognizeCelebrities(image, onSuccess, onError);
+        rekognitionService.recognizeCelebrities(imageData, onSuccess, onError);
     }
 
     /**
      * Delegate to {@link AWSRekognitionService} to detect entities.
-     * @param image the Rekognition input image
+     * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
     public void detectEntities(
-            @NonNull Image image,
+            @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.detectEntities(image, onSuccess, onError);
+        rekognitionService.detectEntities(imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSRekognitionService} to detect plain text.
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectPlainText(
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.detectPlainText(imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSTextractService} to detect document text.
+     * @param type the type of text format to detect
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectDocumentText(
+            @NonNull TextFormatType type,
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        textractService.detectDocumentText(type, imageData, onSuccess, onError);
     }
 
     /**
@@ -146,6 +181,16 @@ public final class AWSPredictionsService {
     @NonNull
     public AmazonRekognitionClient getRekognitionClient() {
         return rekognitionService.getClient();
+    }
+
+    /**
+     * Return configured Amazon Textract client for
+     * direct access to AWS endpoint.
+     * @return the configured Amazon Textract client
+     */
+    @NonNull
+    public AmazonTextractClient getTextractClient() {
+        return textractService.getClient();
     }
 
     /**

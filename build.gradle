@@ -54,6 +54,7 @@ ext {
             annotation: 'androidx.annotation:annotation:1.1.0',
             appcompat: 'androidx.appcompat:appcompat:1.1.0',
             core: 'androidx.core:core:1.2.0',
+            multidex: 'androidx.multidex:multidex:2.0.1',
             test: [
                 core: 'androidx.test:core:1.2.0',
                 runner: 'androidx.test:runner:1.2.0',
@@ -67,6 +68,7 @@ ext {
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
             rekognition: "com.amazonaws:aws-android-sdk-rekognition:$awsSdkVersion",
+            textract: "com.amazonaws:aws-android-sdk-textract:$awsSdkVersion",
             translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion"
         ],
         okhttp: [
@@ -77,6 +79,7 @@ ext {
         rxandroid: 'io.reactivex.rxjava2:rxandroid:2.1.1',
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
         tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
+        threetenabp: 'com.jakewharton.threetenabp:threetenabp:1.2.3',
 
         junit: 'junit:junit:4.13',
         mockito: 'org.mockito:mockito-core:3.1.0',
@@ -97,6 +100,7 @@ private void configureAndroidLibrary(Project project) {
         compileSdkVersion rootProject.ext.compileSdkVersion
 
         defaultConfig {
+            multiDexEnabled true
             minSdkVersion rootProject.ext.minSdkVersion
             targetSdkVersion rootProject.ext.targetSdkVersion
             versionCode rootProject.findProperty('VERSION_CODE').toInteger()

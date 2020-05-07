@@ -46,29 +46,6 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
 
     @NonNull
     @Override
-    public IdentifyOperation<?> identify(
-            @NonNull IdentifyAction actionType,
-            @NonNull Bitmap image,
-            @NonNull Consumer<IdentifyResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    ) {
-        return getSelectedPlugin().identify(actionType, image, onSuccess, onError);
-    }
-
-    @NonNull
-    @Override
-    public IdentifyOperation<?> identify(
-            @NonNull IdentifyAction actionType,
-            @NonNull Bitmap image,
-            @NonNull IdentifyOptions options,
-            @NonNull Consumer<IdentifyResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    ) {
-        return getSelectedPlugin().identify(actionType, image, options, onSuccess, onError);
-    }
-
-    @NonNull
-    @Override
     public TranslateTextOperation<?> translateText(
             @NonNull String text,
             @NonNull Consumer<TranslateTextResult> onSuccess,
@@ -113,6 +90,29 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
     ) {
         return getSelectedPlugin().translateText(text, fromLanguage,
                 toLanguage, options, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().identify(actionType, image, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().identify(actionType, image, options, onSuccess, onError);
     }
 
     @NonNull
