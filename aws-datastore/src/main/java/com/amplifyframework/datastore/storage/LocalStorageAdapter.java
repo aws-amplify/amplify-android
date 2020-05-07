@@ -25,6 +25,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
@@ -116,14 +117,14 @@ public interface LocalStorageAdapter {
     /**
      * Query the storage for items of a given type with specific conditions.
      * @param itemClass Items that have this class will be solicited
-     * @param predicate Predicate condition to apply to query
+     * @param options options, such as predicates, pagination to apply to query
      * @param onSuccess A callback that will be notified if the query succeeds
      * @param onError A callback that will be notified if the query fails with an error
      * @param <T> Type type of the items that are being queried
      */
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError
     );

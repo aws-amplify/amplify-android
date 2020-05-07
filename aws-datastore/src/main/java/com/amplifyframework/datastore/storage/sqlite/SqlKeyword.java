@@ -139,7 +139,11 @@ public enum SqlKeyword {
     /**
      * SQL keyword to specify column or table alias.
      */
-    AS("AS");
+    AS("AS"),
+
+    OFFSET("OFFSET"),
+
+    LIMIT("LIMIT");
 
     private static final Map<QueryOperator.Type, SqlKeyword> QUERY_OPERATOR_TO_SQL = new HashMap<>();
     private static final Map<QueryPredicateGroup.Type, SqlKeyword> QUERY_PREDICATE_GROUP_TO_SQL = new HashMap<>();

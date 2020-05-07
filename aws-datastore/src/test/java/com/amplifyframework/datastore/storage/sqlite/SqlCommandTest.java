@@ -22,6 +22,9 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.QueryPaginationInput;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 
 import org.junit.Before;
@@ -35,7 +38,12 @@ import java.util.Iterator;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import static com.amplifyframework.core.model.query.QueryOptions.all;
+import static com.amplifyframework.core.model.query.QueryPaginationInput.firstPage;
+import static com.amplifyframework.core.model.query.QueryPaginationInput.firstResult;
+import static com.amplifyframework.core.model.query.QueryPaginationInput.page;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -63,11 +71,7 @@ public class SqlCommandTest {
      */
     @Test
     public void validModelSchemaReturnsExpectedSqlCommand() {
-        final SortedMap<String, ModelField> fields = getFieldsMap();
-        final ModelSchema personSchema = ModelSchema.builder()
-                .name("Person")
-                .fields(fields)
-                .build();
+        final ModelSchema personSchema = getPersonModelSchema();
 
         final SqlCommand sqlCommand = sqlCommandFactory.createTableFor(personSchema);
         assertEquals("Person", sqlCommand.tableName());
@@ -141,6 +145,62 @@ public class SqlCommandTest {
             // actual
             sqlCommandIterator.next()
         );
+    }
+
+    @Test
+    public void queryWithCustomPaginationInput() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                all().paginated(page(2).withLimit(20))
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " LIMIT 20 OFFSET 40;",
+                sqlCommand.sqlStatement()
+        );
+    }
+
+
+    @Test
+    public void queryWithFirstPagePaginationInput() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                all().paginated(firstPage())
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " LIMIT 100 OFFSET 0;",
+                sqlCommand.sqlStatement()
+        );
+    }
+
+
+    @Test
+    public void queryWithFirstResultPaginationInput() throws DataStoreException {
+        final ModelSchema personSchema = getPersonModelSchema();
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
+                personSchema,
+                all().paginated(firstResult())
+        );
+        assertNotNull(sqlCommand);
+        assertEquals(
+                PERSON_BASE_QUERY + " LIMIT 1 OFFSET 0;",
+                sqlCommand.sqlStatement()
+        );
+    }
+
+    private static final String PERSON_BASE_QUERY =
+            "SELECT Person.id AS Person_id, Person.age AS Person_age, Person.firstName AS Person_firstName, " +
+            "Person.lastName AS Person_lastName FROM Person";
+
+    private static ModelSchema getPersonModelSchema() {
+        final SortedMap<String, ModelField> fields = getFieldsMap();
+        return ModelSchema.builder()
+                .name("Person")
+                .fields(fields)
+                .build();
     }
 
     private static SortedMap<String, ModelField> getFieldsMap() {

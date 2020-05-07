@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
@@ -58,7 +59,7 @@ interface SQLCommandFactory {
      */
     @NonNull
     SqlCommand queryFor(@NonNull ModelSchema modelSchema,
-                        @Nullable QueryPredicate predicate) throws DataStoreException;
+                        @NonNull QueryOptions options) throws DataStoreException;
 
     /**
      * Generates the INSERT INTO command in a raw string representation and a compiled

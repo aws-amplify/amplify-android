@@ -33,6 +33,8 @@ import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
+import static com.amplifyframework.core.model.query.QueryOptions.byId;
+
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
  * for changes that have already occurred in the storage adapter, and need
@@ -68,9 +70,8 @@ final class MutationOutbox {
      */
     @NonNull
     Single<Boolean> hasPendingMutation(String modelId) {
-        QueryPredicate hasMatchingId = QueryField.field("id").eq(modelId);
         return Single.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class, hasMatchingId,
+            localStorageAdapter.query(StorageItemChange.Record.class, byId(modelId),
                 results -> emitter.onSuccess(results.hasNext()),
                 emitter::onError
             );

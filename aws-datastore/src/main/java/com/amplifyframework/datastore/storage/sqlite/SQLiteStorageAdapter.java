@@ -34,6 +34,7 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
@@ -68,6 +69,8 @@ import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
+
+import static com.amplifyframework.core.model.query.QueryOptions.all;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -365,7 +368,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(itemClass);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-        query(itemClass, null, onSuccess, onError);
+        query(itemClass, all(), onSuccess, onError);
     }
 
     /**
@@ -374,16 +377,16 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @Nullable QueryPredicate predicate,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onSuccess,
             @NonNull Consumer<DataStoreException> onError) {
         Objects.requireNonNull(itemClass);
-        // Objects.requireNonNull(predicate); It is not required!
+        Objects.requireNonNull(options);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
 
         threadPool.submit(() -> {
-            try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), predicate)) {
+            try (Cursor cursor = getQueryAllCursor(itemClass.getSimpleName(), options)) {
                 LOG.debug("Querying item for: " + itemClass.getSimpleName());
 
                 final Set<T> models = new HashSet<>();
@@ -792,15 +795,15 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) throws DataStoreException {
-        return getQueryAllCursor(tableName, null);
+        return getQueryAllCursor(tableName, all());
     }
 
     @SuppressWarnings("WeakerAccess")
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName,
-                             @Nullable QueryPredicate predicate) throws DataStoreException {
+                             @NonNull QueryOptions options) throws DataStoreException {
         final ModelSchema schema = modelSchemaRegistry.getModelSchemaForModelClass(tableName);
-        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, predicate);
+        final SqlCommand sqlCommand = sqlCommandFactory.queryFor(schema, options);
         final String rawQuery = sqlCommand.sqlStatement();
         final String[] bindings = sqlCommand.getBindingsAsArray();
         return this.databaseConnectionHandle.rawQuery(rawQuery, bindings);

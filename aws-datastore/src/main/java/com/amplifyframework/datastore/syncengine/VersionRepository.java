@@ -31,6 +31,8 @@ import java.util.Objects;
 
 import io.reactivex.Single;
 
+import static com.amplifyframework.core.model.query.QueryOptions.where;
+
 /**
  * The VersionRepository provides a higher-level facade to lookup the version
  * of the various models in the local storage.
@@ -57,7 +59,7 @@ final class VersionRepository {
         // The ModelMetadata for the model uses the same ID as an identifier.
         final QueryPredicate hasMatchingId = QueryField.field("id").eq(model.getId());
         return Single.create(emitter -> {
-            localStorageAdapter.query(ModelMetadata.class, hasMatchingId, iterableResults -> {
+            localStorageAdapter.query(ModelMetadata.class, where(hasMatchingId), iterableResults -> {
                 try {
                     emitter.onSuccess(extractVersion(model, iterableResults));
                 } catch (DataStoreException badVersionFailure) {

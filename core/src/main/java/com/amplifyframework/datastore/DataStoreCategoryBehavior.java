@@ -22,6 +22,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
@@ -121,6 +122,13 @@ public interface DataStoreCategoryBehavior {
     <T extends Model> void query(
             @NonNull Class<T> itemClass,
             @NonNull QueryPredicate predicate,
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure
+    );
+
+    <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure
     );

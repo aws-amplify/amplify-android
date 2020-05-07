@@ -26,6 +26,8 @@ import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
@@ -144,7 +146,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @WorkerThread
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
-                               @Nullable QueryPredicate predicate) throws DataStoreException {
+                               @NonNull QueryOptions options) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final String tableName = table.getName();
         StringBuilder rawQuery = new StringBuilder();
@@ -222,6 +224,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         // Append predicates.
         // WHERE condition
+        final QueryPredicate predicate = options.getQueryPredicate();
         if (predicate != null) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
             predicateBindings = sqlPredicate.getBindings();
@@ -229,6 +232,19 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
                     .append(sqlPredicate);
+        }
+
+        // Append pagination
+        final QueryPaginationInput paginationInput = options.getPaginationInput();
+        if (paginationInput != null) {
+            rawQuery.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.LIMIT)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(paginationInput.getLimit())
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.OFFSET)
+                    .append(SqlKeyword.DELIMITER)
+                    .append(paginationInput.getPage() * paginationInput.getLimit());
         }
 
         rawQuery.append(";");
