@@ -20,25 +20,32 @@ import android.graphics.RectF;
 
 import com.amplifyframework.predictions.models.AgeRange;
 import com.amplifyframework.predictions.models.BinaryFeature;
+import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Landmark;
 import com.amplifyframework.predictions.models.LandmarkType;
+import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
 import com.amplifyframework.testutils.FeatureAssert;
+import com.amplifyframework.testutils.random.RandomString;
 
 import com.amazonaws.services.rekognition.model.Beard;
 import com.amazonaws.services.rekognition.model.BoundingBox;
 import com.amazonaws.services.rekognition.model.EyeOpen;
 import com.amazonaws.services.rekognition.model.Eyeglasses;
 import com.amazonaws.services.rekognition.model.FaceDetail;
+import com.amazonaws.services.rekognition.model.Geometry;
 import com.amazonaws.services.rekognition.model.MouthOpen;
 import com.amazonaws.services.rekognition.model.Mustache;
+import com.amazonaws.services.rekognition.model.Point;
 import com.amazonaws.services.rekognition.model.Smile;
 import com.amazonaws.services.rekognition.model.Sunglasses;
+import com.amazonaws.services.rekognition.model.TextDetection;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -54,8 +61,9 @@ import static org.junit.Assert.assertTrue;
  * as intended.
  */
 @RunWith(RobolectricTestRunner.class)
-public final class IdentifyResultTransformersTest {
-    private static final double DELTA = 1E-5; // Enough precision for each pixel per image
+@SuppressWarnings("ConstantConditions") // NullPointerException will not be thrown
+public final class RekognitionResultTransformersTest {
+    private static final double DELTA = 1E-5;
 
     private Random random;
 
@@ -70,17 +78,28 @@ public final class IdentifyResultTransformersTest {
      */
     @Test
     public void testBoundingBoxConversion() {
-        BoundingBox box = new BoundingBox()
-                .withHeight(random.nextFloat())
-                .withLeft(random.nextFloat())
-                .withTop(random.nextFloat())
-                .withWidth(random.nextFloat());
-
-        RectF rect = IdentifyResultTransformers.fromBoundingBox(box);
+        BoundingBox box = randomBox();
+        RectF rect = RekognitionResultTransformers.fromBoundingBox(box);
         assertEquals(box.getHeight(), rect.height(), DELTA);
         assertEquals(box.getWidth(), rect.width(), DELTA);
         assertEquals(box.getLeft(), rect.left, DELTA);
         assertEquals(box.getTop(), rect.top, DELTA);
+    }
+
+    /**
+     * Tests that the polygonal boundary from Textract in the form
+     * of list of points is converted to an Amplify shape for polygons.
+     */
+    @Test
+    public void testPolygonConversion() {
+        List<Point> randomPolygon = randomPolygon();
+        Polygon polygon = RekognitionResultTransformers.fromPoints(randomPolygon);
+        List<PointF> actualPoints = polygon.getPoints();
+        List<PointF> expectedPoints = new ArrayList<>();
+        for (Point point : randomPolygon) {
+            expectedPoints.add(new PointF(point.getX(), point.getY()));
+        }
+        assertEquals(expectedPoints, actualPoints);
     }
 
     /**
@@ -95,7 +114,7 @@ public final class IdentifyResultTransformersTest {
                 .withRoll(random.nextFloat())
                 .withYaw(random.nextFloat());
 
-        Pose amplifyPose = IdentifyResultTransformers.fromRekognitionPose(rekognitionPose);
+        Pose amplifyPose = RekognitionResultTransformers.fromRekognitionPose(rekognitionPose);
         assertEquals(rekognitionPose.getPitch(), amplifyPose.getPitch(), DELTA);
         assertEquals(rekognitionPose.getRoll(), amplifyPose.getRoll(), DELTA);
         assertEquals(rekognitionPose.getYaw(), amplifyPose.getYaw(), DELTA);
@@ -120,9 +139,26 @@ public final class IdentifyResultTransformersTest {
                 .withHigh(high)
                 .withLow(low);
 
-        AgeRange amplifyAgeRange = IdentifyResultTransformers.fromRekognitionAgeRange(rekognitionAgeRange);
+        AgeRange amplifyAgeRange = RekognitionResultTransformers.fromRekognitionAgeRange(rekognitionAgeRange);
         assertEquals(rekognitionAgeRange.getHigh().intValue(), amplifyAgeRange.getHigh());
         assertEquals(rekognitionAgeRange.getLow().intValue(), amplifyAgeRange.getLow());
+    }
+
+    /**
+     * Tests that the text detection from Rekognition is converted
+     * to an Amplify image text feature.
+     */
+    @Test
+    public void testTextDetectionConversion() {
+        TextDetection detection = new TextDetection()
+                .withDetectedText(RandomString.string())
+                .withConfidence(random.nextFloat())
+                .withGeometry(randomGeometry());
+
+        // Test text detection conversion
+        IdentifiedText text = RekognitionResultTransformers.fromTextDetection(detection);
+        assertEquals(detection.getDetectedText(), text.getText());
+        assertEquals(detection.getConfidence(), text.getConfidence(), DELTA);
     }
 
     /**
@@ -131,7 +167,6 @@ public final class IdentifyResultTransformersTest {
      * landmarks that are mapped by their types.
      */
     @Test
-    @SuppressWarnings("ConstantConditions") // NullPointerException will not be thrown
     public void testLandmarksConversion() {
         com.amazonaws.services.rekognition.model.Landmark leftEyeDown =
                 new com.amazonaws.services.rekognition.model.Landmark()
@@ -154,7 +189,7 @@ public final class IdentifyResultTransformersTest {
                 mouthDown
         );
 
-        List<Landmark> amplifyLandmarks = IdentifyResultTransformers.fromLandmarks(rekognitionLandmarks);
+        List<Landmark> amplifyLandmarks = RekognitionResultTransformers.fromLandmarks(rekognitionLandmarks);
         Map<LandmarkType, List<PointF>> map = new HashMap<>();
         for (Landmark landmark : amplifyLandmarks) {
             map.put(landmark.getType(), landmark.getPoints());
@@ -210,7 +245,7 @@ public final class IdentifyResultTransformersTest {
                         .withValue(random.nextBoolean())
                         .withConfidence(random.nextFloat()));
 
-        List<BinaryFeature> features = IdentifyResultTransformers.fromFaceDetail(faceDetail);
+        List<BinaryFeature> features = RekognitionResultTransformers.fromFaceDetail(faceDetail);
         FeatureAssert.assertMatches(
                 Arrays.asList(
                         faceDetail.getBeard().getValue(),
@@ -223,5 +258,31 @@ public final class IdentifyResultTransformersTest {
                 ),
                 features
         );
+    }
+
+    private BoundingBox randomBox() {
+        return new BoundingBox()
+                .withHeight(random.nextFloat())
+                .withLeft(random.nextFloat())
+                .withTop(random.nextFloat())
+                .withWidth(random.nextFloat());
+    }
+
+    private List<Point> randomPolygon() {
+        final int minPoints = 3;
+        List<Point> points = new ArrayList<>();
+        for (int i = 0; i < minPoints; i++) {
+            points.add(new Point()
+                    .withX(random.nextFloat())
+                    .withY(random.nextFloat())
+            );
+        }
+        return points;
+    }
+
+    private Geometry randomGeometry() {
+        return new Geometry()
+                .withBoundingBox(randomBox())
+                .withPolygon(randomPolygon());
     }
 }

@@ -19,31 +19,34 @@ import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
 
-import com.google.gson.GsonBuilder;
+import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Implementation of a GraphQL Request serializer for the variables map using Gson.
  */
-public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
+final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerializer {
+    private final Gson gson;
+
+    GsonVariablesSerializer() {
+        gson = GsonFactory.create();
+    }
+
     @Override
     public String serialize(Map<String, Object> variables) {
-        return new GsonBuilder()
-                .registerTypeAdapter(Date.class, new DateSerializer())
-                .registerTypeAdapter(AWSDate.class, new AWSDateSerializer())
-                .registerTypeAdapter(AWSDateTime.class, new AWSDateTimeSerializer())
-                .registerTypeAdapter(AWSTime.class, new AWSTimeSerializer())
-                .create()
-                .toJson(variables);
+        return gson.toJson(variables);
     }
 
     /**
@@ -89,12 +92,26 @@ public final class GsonVariablesSerializer implements GraphQLRequest.VariablesSe
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
+    static class AWSTimestampSerializer implements JsonSerializer<AWSTimestamp> {
+        @Override
+        public JsonElement serialize(AWSTimestamp timestamp, Type typeOfSrc, JsonSerializationContext context) {
+            return new JsonPrimitive(timestamp.getSecondsSinceEpoch());
+        }
+    }
+
+    /**
+     * Earlier versions of the model gen used to use Java's {@link Date} to represent all of the
+     * temporal types. This led to challenges while trying to decode/encode the timezone,
+     * among other things. The model gen will now spit out {@link AWSDate}, {@link AWSDateTime},
+     * {@link AWSTime}, and {@link AWSTimestamp}, instead. This DateSerializer is left for
+     * compat, until such a time as it can be safely removed (that is, when all models no longer
+     * use a raw Date type.)
+     */
     static class DateSerializer implements JsonSerializer<Date> {
         @Override
         public JsonElement serialize(Date date, Type typeOfSrc, JsonSerializationContext context) {
-            long timeInMillis = date.getTime();
-            long timeInSeconds = TimeUnit.MILLISECONDS.toSeconds(timeInMillis);
-            return new JsonPrimitive(timeInSeconds);
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+            return new JsonPrimitive(dateFormat.format(date));
         }
     }
 }

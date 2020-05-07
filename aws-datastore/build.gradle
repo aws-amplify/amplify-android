@@ -20,6 +20,7 @@ apply from: rootProject.file("configuration/publishing.gradle")
 dependencies {
     implementation project(':core')
     implementation dependency.androidx.appcompat
+    implementation dependency.androidx.multidex
     implementation dependency.gson
     implementation dependency.rxjava
     implementation dependency.rxandroid

@@ -15,15 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -34,7 +32,6 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 
 /**
@@ -47,23 +44,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
     private final Gson gson;
 
-    /**
-     * Default constructor using default Gson object.
-     */
     GsonGraphQLResponseFactory() {
-        this(new GsonBuilder()
-                .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
-                .registerTypeAdapter(Date.class, new TemporalDeserializers.DateDeserializer())
-                .registerTypeAdapter(AWSDate.class, new TemporalDeserializers.AWSDateDeserializer())
-                .registerTypeAdapter(AWSDateTime.class, new TemporalDeserializers.AWSDateTimeDeserializer())
-                .registerTypeAdapter(AWSTime.class, new TemporalDeserializers.AWSTimeDeserializer())
-                .create());
+        this(GsonFactory.create(Collections.singletonMap(List.class, new GsonListDeserializer())));
     }
 
-    /**
-     * Constructor using customized Gson object.
-     * @param gson custom Gson object
-     */
+    @VisibleForTesting
     GsonGraphQLResponseFactory(Gson gson) {
         this.gson = gson;
     }

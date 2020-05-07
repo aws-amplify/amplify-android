@@ -13,11 +13,12 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.datastore.model;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.DataStoreException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -33,16 +34,21 @@ import java.util.Objects;
  * There is no compile-time guarantee that this class actually exists, or that it has that method,
  * or that we can use that method. But in the "happy path," this simplifies the amount of complexity
  * needed to begin using the DataStore. This utility class is used from
- * {@link AWSDataStorePlugin#AWSDataStorePlugin()}.
+ * {@link com.amplifyframework.datastore.AWSDataStorePlugin#AWSDataStorePlugin()}.
  */
-final class ModelProviderLocator {
+public final class ModelProviderLocator {
     private static final String DEFAULT_MODEL_PROVIDER_CLASS_NAME =
         "com.amplifyframework.datastore.generated.model.AmplifyModelProvider";
     private static final String GET_INSTANCE_ACCESSOR_METHOD_NAME = "getInstance";
 
     private ModelProviderLocator() {}
 
-    static ModelProvider locate() throws DataStoreException {
+    /**
+     * Locate the code-generated model provider.
+     * @return The code-generated model provider, if found
+     * @throws DataStoreException If unable to find the code-generated model provider
+     */
+    public static ModelProvider locate() throws DataStoreException {
         return locate(DEFAULT_MODEL_PROVIDER_CLASS_NAME);
     }
 

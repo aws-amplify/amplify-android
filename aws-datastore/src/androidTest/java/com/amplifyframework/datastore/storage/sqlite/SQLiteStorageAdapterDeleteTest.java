@@ -70,7 +70,7 @@ public final class SQLiteStorageAdapterDeleteTest {
         // Triggers a delete
         adapter.delete(raphael);
 
-        // Get the BlogOwner record from the database
+        // Get the BlogOwner from the database
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.isEmpty());
     }
@@ -99,11 +99,11 @@ public final class SQLiteStorageAdapterDeleteTest {
         // Deletes Raphael's Blog also to prevent foreign key violation
         adapter.delete(raphael);
 
-        // Get the BlogOwner record from the database
+        // Get the BlogOwner from the database
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertTrue(blogOwners.isEmpty());
 
-        // Get the Blog record from the database
+        // Get the Blog from the database
         final List<Blog> blogs = adapter.query(Blog.class);
         assertTrue(blogs.isEmpty());
     }

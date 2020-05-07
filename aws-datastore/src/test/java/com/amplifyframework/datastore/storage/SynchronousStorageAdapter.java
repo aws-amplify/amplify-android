@@ -101,7 +101,7 @@ public final class SynchronousStorageAdapter {
         throws DataStoreException {
         Await.result(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.save(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -199,7 +199,7 @@ public final class SynchronousStorageAdapter {
         throws DataStoreException {
         Await.result(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -222,7 +222,7 @@ public final class SynchronousStorageAdapter {
     public <T extends Model> DataStoreException deleteExpectingError(@NonNull T model) {
         return Await.error(
             operationTimeoutMs,
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChange<T>> onResult, Consumer<DataStoreException> onError) ->
                 asyncDelegate.delete(
                     model,
                     StorageItemChange.Initiator.DATA_STORE_API,
@@ -237,7 +237,7 @@ public final class SynchronousStorageAdapter {
      * Observe changes in the adapter.
      * @return An observable stream of storage item changes.
      */
-    public Observable<StorageItemChange.Record> observe() {
+    public Observable<StorageItemChange<? extends Model>> observe() {
         return Observable.create(emitter ->
             asyncDelegate.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );

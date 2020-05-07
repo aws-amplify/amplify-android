@@ -108,7 +108,7 @@ final class Merger {
                 localStorageAdapter.delete(
                     model,
                     StorageItemChange.Initiator.SYNC_ENGINE,
-                    record -> emitter.onComplete(),
+                    ignored -> emitter.onComplete(),
                     emitter::onError
                 );
             }, emitter::onComplete);
@@ -121,7 +121,7 @@ final class Merger {
             localStorageAdapter.save(
                 model,
                 StorageItemChange.Initiator.SYNC_ENGINE,
-                record -> emitter.onComplete(),
+                ignored -> emitter.onComplete(),
                 emitter::onError
             );
         }));

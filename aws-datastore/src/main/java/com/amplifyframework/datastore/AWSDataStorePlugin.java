@@ -35,13 +35,12 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
+import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -55,13 +54,9 @@ import io.reactivex.Completable;
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
-
-    // A utility to convert between StorageItemChange.Record and StorageItemChange
-    private final GsonStorageItemChangeConverter storageItemChangeConverter;
 
     // A component which synchronizes data state between the
     // local storage adapter, and a remote API
@@ -84,7 +79,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull GraphQlBehavior api,
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
-        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.categoryInitializationsPending = new CountDownLatch(1);
 
         this.orchestrator = new Orchestrator(
@@ -112,7 +106,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      *
      * @throws DataStoreException If it is not possible to access the code-generated model provider
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // This is a public API.
+    @SuppressWarnings("unused") // This is a public API.
     public AWSDataStorePlugin() throws DataStoreException {
         this(ModelProviderLocator.locate(), Amplify.API);
     }
@@ -187,9 +181,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) {
-        initializeStorageAdapter(context)
-            .andThen(orchestrator.start())
-            .blockingAwait();
+        Completable completable = initializeStorageAdapter(context);
+        if (Amplify.API.getPlugins().size() > 0) {
+            completable = completable.andThen(orchestrator.start());
+        }
+        completable.blockingAwait();
     }
 
     /**
@@ -247,9 +243,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
-            recordOfSave -> {
+            itemSave -> {
                 try {
-                    onItemSaved.accept(toDataStoreItemChange(recordOfSave));
+                    onItemSaved.accept(toDataStoreItemChange(itemSave));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToSave.accept(dataStoreException);
                 }
@@ -281,9 +277,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         afterInitialization(() -> sqliteStorageAdapter.delete(
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
-            recordOfDelete -> {
+            itemDeletion -> {
                 try {
-                    onItemDeleted.accept(toDataStoreItemChange(recordOfDelete));
+                    onItemDeleted.accept(toDataStoreItemChange(itemDeletion));
                 } catch (DataStoreException dataStoreException) {
                     onFailureToDelete.accept(dataStoreException);
                 }
@@ -332,9 +328,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
-            storageItemChangeRecord -> {
+            itemChange -> {
                 try {
-                    onDataStoreItemChange.accept(toDataStoreItemChange(storageItemChangeRecord));
+                    onDataStoreItemChange.accept(toDataStoreItemChange(itemChange));
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
                 }
@@ -352,12 +348,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
-            storageItemChangeRecord -> {
+            itemChange -> {
                 try {
-                    if (!storageItemChangeRecord.getItemClass().equals(itemClass.getName())) {
-                        return;
+                    if (itemChange.itemClass().equals(itemClass)) {
+                        @SuppressWarnings("unchecked") // This was just checked, right above.
+                        StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
+                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
                     }
-                    onDataStoreItemChange.accept(toDataStoreItemChange(storageItemChangeRecord));
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
                 }
@@ -376,15 +373,13 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull Consumer<DataStoreException> onObservationFailure,
             @NonNull Action onObservationCompleted) {
         afterInitialization(() -> onObservationStarted.accept(sqliteStorageAdapter.observe(
-            storageItemChangeRecord -> {
+            itemChange -> {
                 try {
-                    final DataStoreItemChange<T> dataStoreItemChange =
-                        toDataStoreItemChange(storageItemChangeRecord);
-                    if (!dataStoreItemChange.itemClass().equals(itemClass) ||
-                        !uniqueId.equals(dataStoreItemChange.item().getId())) {
-                        return;
+                    if (itemChange.itemClass().equals(itemClass) && itemChange.item().getId().equals(uniqueId)) {
+                        @SuppressWarnings("unchecked") // itemClass() was just inspected above. This is safe.
+                        StorageItemChange<T> typedChange = (StorageItemChange<T>) itemChange;
+                        onDataStoreItemChange.accept(toDataStoreItemChange(typedChange));
                     }
-                    onDataStoreItemChange.accept(dataStoreItemChange);
                 } catch (DataStoreException dataStoreException) {
                     onObservationFailure.accept(dataStoreException);
                 }
@@ -409,20 +404,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
         Completable.fromAction(categoryInitializationsPending::await)
             .andThen(Completable.fromRunnable(runnable))
             .blockingAwait();
-    }
-
-    /**
-     * Converts an {@link StorageItemChange.Record}, as recevied by the {@link LocalStorageAdapter}'s
-     * {@link LocalStorageAdapter#save(Model, StorageItemChange.Initiator, Consumer, Consumer)} and
-     * {@link LocalStorageAdapter#delete(Model, StorageItemChange.Initiator, Consumer, Consumer)} methods'
-     * callbacks, into an {@link DataStoreItemChange}, which can be returned via the public DataStore API.
-     * @param record A record of change in the storage layer
-     * @param <T> Type of data that was changed
-     * @return A {@link DataStoreItemChange} representing the storage change record
-     */
-    private <T extends Model> DataStoreItemChange<T> toDataStoreItemChange(final StorageItemChange.Record record)
-        throws DataStoreException {
-        return toDataStoreItemChange(record.toStorageItemChange(storageItemChangeConverter));
     }
 
     /**
