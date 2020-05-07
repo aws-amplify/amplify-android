@@ -34,6 +34,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
@@ -104,7 +105,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      *
      * @throws DataStoreException If it is not possible to access the code-generated model provider
      */
-    @SuppressWarnings({"unused", "WeakerAccess"}) // This is a public API.
+    @SuppressWarnings("unused") // This is a public API.
     public AWSDataStorePlugin() throws DataStoreException {
         this(ModelProviderLocator.locate(), Amplify.API);
     }
