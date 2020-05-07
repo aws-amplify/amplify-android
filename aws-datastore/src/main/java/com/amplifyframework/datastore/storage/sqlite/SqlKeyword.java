@@ -141,8 +141,14 @@ public enum SqlKeyword {
      */
     AS("AS"),
 
+    /**
+     * SQL keyword to specify an offset of the result set (used for paginating results).
+     */
     OFFSET("OFFSET"),
 
+    /**
+     * SQL keyword to specify a size limit of the result set (used for paginating results).
+     */
     LIMIT("LIMIT");
 
     private static final Map<QueryOperator.Type, SqlKeyword> QUERY_OPERATOR_TO_SQL = new HashMap<>();

@@ -22,8 +22,6 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.model.query.QueryOptions;
-import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
 
@@ -53,6 +51,10 @@ import static org.junit.Assert.assertTrue;
 @Config(sdk = Build.VERSION_CODES.P, manifest = Config.NONE)
 @RunWith(RobolectricTestRunner.class)
 public class SqlCommandTest {
+
+    private static final String PERSON_BASE_QUERY =
+            "SELECT Person.id AS Person_id, Person.age AS Person_age, Person.firstName AS Person_firstName, " +
+                    "Person.lastName AS Person_lastName FROM Person";
 
     private SQLCommandFactory sqlCommandFactory;
 
@@ -162,7 +164,6 @@ public class SqlCommandTest {
         );
     }
 
-
     @Test
     public void queryWithFirstPagePaginationInput() throws DataStoreException {
         final ModelSchema personSchema = getPersonModelSchema();
@@ -177,7 +178,6 @@ public class SqlCommandTest {
         );
     }
 
-
     @Test
     public void queryWithFirstResultPaginationInput() throws DataStoreException {
         final ModelSchema personSchema = getPersonModelSchema();
@@ -191,10 +191,6 @@ public class SqlCommandTest {
                 sqlCommand.sqlStatement()
         );
     }
-
-    private static final String PERSON_BASE_QUERY =
-            "SELECT Person.id AS Person_id, Person.age AS Person_age, Person.firstName AS Person_firstName, " +
-            "Person.lastName AS Person_lastName FROM Person";
 
     private static ModelSchema getPersonModelSchema() {
         final SortedMap<String, ModelField> fields = getFieldsMap();
