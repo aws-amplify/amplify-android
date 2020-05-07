@@ -27,6 +27,7 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.random.RandomString;
 

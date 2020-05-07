@@ -13,12 +13,11 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore.storage;
+package com.amplifyframework.datastore.model;
 
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.ModelProvider;
-import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.storage.sqlite.PersistentModelVersion;
 import com.amplifyframework.datastore.syncengine.LastSyncMetadata;
