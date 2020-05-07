@@ -259,5 +259,20 @@ public final class GraphQLResponse<T> {
          */
         <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast)
             throws ApiException;
+
+        /**
+         * Builds a response containing a list of data objects from JSON returned by an API.
+         * @param apiResponseJson
+         *        Response from the endpoint, containing a string response
+         * @param classToCast
+         *        The class type to which the JSON string should be
+         *        interpreted
+         * @param <T> The type of the elements in the data field list in the response object
+         * @return An instance of the casting class which models the data
+         *         provided in the response JSON string
+         * @throws ApiException If the class provided mismatches the data
+         */
+        <T> Page<T> buildPage(GraphQLRequest<T> request, String apiResponseJson, Class<T> classToCast)
+            throws ApiException;
     }
 }

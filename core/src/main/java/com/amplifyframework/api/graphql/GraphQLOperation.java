@@ -76,6 +76,23 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
     }
 
     /**
+     * Converts a response json string containing a list of objects to a formatted
+     * {@link GraphQLResponse} object that a response consumer can receive.
+     * @param jsonResponse json response from API to be converted
+     * @return wrapped response object
+     * @throws ApiException If the class provided mismatches the data
+     */
+    protected final Page<T> wrapPagedResultResponse(String jsonResponse) throws ApiException {
+        try {
+            return responseFactory.buildPage(getRequest(), jsonResponse, classToCast);
+        } catch (ClassCastException cce) {
+            throw new ApiException("Amplify encountered an error while deserializing an object",
+                    AmplifyException.TODO_RECOVERY_SUGGESTION);
+        }
+    }
+
+
+    /**
      * Gets the casting class.
      * @return Class to cast.
      */

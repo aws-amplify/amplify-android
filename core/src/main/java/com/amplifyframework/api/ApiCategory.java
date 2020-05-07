@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Page;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOptions;
@@ -86,6 +87,15 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
 
     @Nullable
     @Override
+    public <T> GraphQLOperation<T> pagedQuery(
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<Page<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().pagedQuery(graphQlRequest, onResponse, onFailure);
+    }
+
+    @Nullable
+    @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
@@ -124,6 +134,15 @@ public final class ApiCategory extends Category<ApiPlugin<?>> implements ApiCate
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         return getSelectedPlugin().query(apiName, graphQlRequest, onResponse, onFailure);
+    }
+
+    @Nullable
+    public <T> GraphQLOperation<T> pagedQuery(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<Page<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        return getSelectedPlugin().pagedQuery(apiName, graphQlRequest, onResponse, onFailure);
     }
 
     @Nullable

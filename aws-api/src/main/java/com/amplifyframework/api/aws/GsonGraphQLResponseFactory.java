@@ -19,8 +19,8 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -41,6 +41,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     private static final String DATA_KEY = "data";
     private static final String ERRORS_KEY = "errors";
     private static final String ITEMS_KEY = "items";
+    private static final String NEXT_TOKEN_KEY = "nextToken";
 
     private final Gson gson;
 
@@ -92,7 +93,35 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
         }
     }
 
+    @Override
     public <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(
+            String responseJson,
+            Class<T> classToCast
+    ) throws ApiException {
+        JsonElement jsonData = null;
+        JsonElement jsonErrors = null;
+        try {
+            final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
+            if (toJson.has(DATA_KEY)) {
+                jsonData = skipQueryLevel(toJson.get(DATA_KEY));
+            }
+            if (toJson.has(ERRORS_KEY)) {
+                jsonErrors = toJson.get(ERRORS_KEY);
+            }
+        } catch (JsonParseException jsonParseException) {
+            throw new ApiException(
+                    "Amplify encountered an error while serializing/deserializing an object.",
+                    jsonParseException,
+                    AmplifyException.TODO_RECOVERY_SUGGESTION
+            );
+        }
+
+        return buildSingleArrayResponse(jsonData, jsonErrors, classToCast);
+    }
+
+    @Override
+    public <T> AppSyncPage<T> buildPage(
+            GraphQLRequest<T> request,
             String responseJson,
             Class<T> classToCast
     ) throws ApiException {
@@ -115,6 +144,24 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             );
         }
 
+        GraphQLResponse<Iterable<T>> response = buildSingleArrayResponse(jsonData, jsonErrors, classToCast);
+
+        if(jsonData != null
+                && jsonData.isJsonObject()
+                && jsonData.getAsJsonObject().has(NEXT_TOKEN_KEY)
+                && jsonData.getAsJsonObject().get(NEXT_TOKEN_KEY).isJsonPrimitive())  {
+            String nextToken = jsonData.getAsJsonObject().get(NEXT_TOKEN_KEY).getAsString();
+            return new AppSyncPage<T>(response, request, nextToken);
+        }
+
+        return new AppSyncPage<T>(response);
+    }
+
+    private <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(
+            JsonElement jsonData,
+            JsonElement jsonErrors,
+            Class<T> classToCast
+    ) throws ApiException {
         List<GraphQLResponse.Error> errors = parseErrors(jsonErrors);
 
         if (jsonData == null || jsonData.isJsonNull()) {

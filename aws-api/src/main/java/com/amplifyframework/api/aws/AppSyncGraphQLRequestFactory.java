@@ -103,6 +103,15 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate
     ) throws ApiException {
+        return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null);
+    }
+
+    static <T extends Model> GraphQLRequest<T> buildQuery(
+            Class<T> modelClass,
+            QueryPredicate predicate,
+            int limit,
+            String nextToken
+    ) throws ApiException {
         try {
             StringBuilder doc = new StringBuilder();
             Map<String, Object> variables = new HashMap<>();
@@ -124,8 +133,11 @@ final class AppSyncGraphQLRequestFactory {
 
             if (predicate != null) {
                 variables.put("filter", parsePredicate(predicate));
-                variables.put("limit", DEFAULT_QUERY_LIMIT);
             }
+            if(nextToken != null) {
+                variables.put("nextToken", nextToken);
+            }
+            variables.put("limit", limit);
 
             return new GraphQLRequest<>(
                     doc.toString(),

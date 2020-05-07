@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
@@ -29,6 +30,7 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Page;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.HttpMethod;
 import com.amplifyframework.api.rest.RestOperation;
@@ -212,6 +214,22 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
+    public <T> GraphQLOperation<T> pagedQuery(
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull Consumer<Page<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        final String apiName;
+        try {
+            apiName = getSelectedApiName(EndpointType.GRAPHQL);
+        } catch (ApiException exception) {
+            onFailure.accept(exception);
+            return null;
+        }
+        return pagedQuery(apiName, graphQLRequest, onResponse, onFailure);
+    }
+
+    @Nullable
+    @Override
     public <T extends Model> GraphQLOperation<T> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
@@ -268,6 +286,24 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             final GraphQLOperation<T> operation =
                 buildMultiResponseOperation(apiName, graphQLRequest, onResponse, onFailure);
+            operation.start();
+            return operation;
+        } catch (ApiException exception) {
+            onFailure.accept(exception);
+            return null;
+        }
+    }
+
+    @Nullable
+    @Override
+    public <T> GraphQLOperation<T> pagedQuery(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull Consumer<Page<T>> onResponse,
+            @NonNull Consumer<ApiException> onFailure) {
+        try {
+            final GraphQLOperation<T> operation =
+                    buildPageOperation(apiName, graphQLRequest, onResponse, onFailure);
             operation.start();
             return operation;
         } catch (ApiException exception) {
@@ -787,9 +823,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
             throw new ApiException(
-                "No client information for API named " + apiName,
-                "Check your amplify configuration to make sure there " +
-                "is a correctly configured section for " + apiName
+                    "No client information for API named " + apiName,
+                    "Check your amplify configuration to make sure there " +
+                            "is a correctly configured section for " + apiName
             );
         }
 
@@ -799,6 +835,32 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .request(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
                 .onResponse(onResponse)
+                .onFailure(onFailure)
+                .build();
+    }
+
+
+    private <T> PagedResultOperation<T> buildPageOperation(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQLRequest,
+            @NonNull Consumer<Page<T>> onPage,
+            @NonNull Consumer<ApiException> onFailure)
+            throws ApiException {
+        final ClientDetails clientDetails = apiDetails.get(apiName);
+        if (clientDetails == null) {
+            throw new ApiException(
+                "No client information for API named " + apiName,
+                "Check your amplify configuration to make sure there " +
+                "is a correctly configured section for " + apiName
+            );
+        }
+
+        return PagedResultOperation.<T>builder()
+                .endpoint(clientDetails.apiConfiguration().getEndpoint())
+                .client(clientDetails.okHttpClient())
+                .request(graphQLRequest)
+                .responseFactory(gqlResponseFactory)
+                .onPage(onPage)
                 .onFailure(onFailure)
                 .build();
     }

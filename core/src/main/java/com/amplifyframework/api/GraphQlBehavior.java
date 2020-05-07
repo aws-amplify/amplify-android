@@ -22,6 +22,7 @@ import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Page;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
@@ -140,6 +141,29 @@ public interface GraphQlBehavior {
     );
 
     /**
+     * Perform a GraphQL query against a configured GraphQL endpoint.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * to the `onResponse` callback.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * Requires that only one API is configured in your
+     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
+     * the provided `onFailure` callback.
+     * @param graphQlRequest Wrapper for request details
+     * @param onPage Invoked when a page of results is available; may contain errors from endpoint
+     * @param onFailure Invoked when a response is not available due to operational failures
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiOperation} to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    @Nullable
+    <T> GraphQLOperation<T> pagedQuery(
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<Page<T>> onPage,
+            @NonNull Consumer<ApiException> onFailure
+    );
+
+    /**
      * This is a special helper method for easily calling a list query for
      * all items of the specified model type with no filtering condition.
      *
@@ -217,7 +241,6 @@ public interface GraphQlBehavior {
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
             @NonNull Consumer<ApiException> onFailure
     );
-
     /**
      * Perform a GraphQL query against a configured GraphQL endpoint.
      * This operation is asynchronous and may be canceled by calling
@@ -237,6 +260,28 @@ public interface GraphQlBehavior {
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull Consumer<ApiException> onFailure
+    );
+
+    /**
+     * Perform a GraphQL query against a configured GraphQL endpoint.
+     * This operation is asynchronous and may be canceled by calling
+     * cancel on the returned operation. The response will be provided
+     * to the `onResponse` callback.  If there is data present
+     * in the response, it will be cast as the requested class type.
+     * @param apiName The name of a configured API
+     * @param graphQlRequest Wrapper for request details
+     * @param onPage Invoked when a response is available; may contain errors from endpoint
+     * @param onFailure Invoked when a response is not available due to operational failures
+     * @param <T> The type of data in the response, if available
+     * @return An {@link ApiOperation} to track progress and provide
+     *         a means to cancel the asynchronous operation
+     */
+    @Nullable
+    <T> GraphQLOperation<T> pagedQuery(
+            @NonNull String apiName,
+            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull Consumer<Page<T>> onPage,
             @NonNull Consumer<ApiException> onFailure
     );
 
