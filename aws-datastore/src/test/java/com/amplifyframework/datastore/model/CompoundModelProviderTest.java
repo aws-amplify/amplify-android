@@ -13,7 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.datastore;
+package com.amplifyframework.datastore.model;
 
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.testmodels.commentsblog.Author;
