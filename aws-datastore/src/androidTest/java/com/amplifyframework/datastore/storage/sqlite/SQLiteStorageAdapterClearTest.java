@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 import android.content.Context;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -50,7 +51,7 @@ public final class SQLiteStorageAdapterClearTest {
 
     private SynchronousStorageAdapter adapter;
     private Context context;
-    private TestObserver<? extends StorageItemChange.Record> observer;
+    private TestObserver<StorageItemChange<? extends Model>> observer;
     private AtomicReference<Disposable> subscriberDisposableRef = new AtomicReference<>();
 
     @BeforeClass
@@ -134,7 +135,8 @@ public final class SQLiteStorageAdapterClearTest {
             .values()
             .stream()
             .filter(record -> {
-                return record.getEntry().contains(blogger.getName());
+                return record.item() instanceof BlogOwner &&
+                    blogger.equals(record.item());
             })
             .count();
         assertEquals(1, count);
