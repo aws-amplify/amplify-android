@@ -46,7 +46,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Immutable;
-import com.amplifyframework.util.StringUtils;
+import com.amplifyframework.util.Quotes;
 
 import com.google.gson.Gson;
 
@@ -733,11 +733,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                 .append(SqlKeyword.SELECT).append(SqlKeyword.DELIMITER)
                 .append("*").append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.FROM).append(SqlKeyword.DELIMITER)
-                .append(StringUtils.singleQuote(tableName)).append(SqlKeyword.DELIMITER)
+                .append(Quotes.wrapInSingle(tableName)).append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.WHERE).append(SqlKeyword.DELIMITER)
                 .append(columnName).append(SqlKeyword.DELIMITER)
                 .append(SqlKeyword.EQUAL).append(SqlKeyword.DELIMITER)
-                .append(StringUtils.singleQuote(columnValue))
+                .append(Quotes.wrapInSingle(columnValue))
                 .toString();
         try (Cursor cursor = databaseConnectionHandle.rawQuery(queryString, null)) {
             return cursor.getCount() > 0;

@@ -31,7 +31,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Collections;
@@ -82,7 +82,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append(SqlKeyword.DELIMITER)
                 .append(table.getName())
                 .append(SqlKeyword.DELIMITER);
-        if (CollectionUtils.isNullOrEmpty(table.getColumns())) {
+        if (Empty.check(table.getColumns())) {
             return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 

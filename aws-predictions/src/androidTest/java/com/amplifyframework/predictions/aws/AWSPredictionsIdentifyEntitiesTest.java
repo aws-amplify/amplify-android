@@ -29,7 +29,7 @@ import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -82,7 +82,7 @@ public final class AWSPredictionsIdentifyEntitiesTest {
         assertNotNull(result);
 
         // Assert that at least one entity is detected
-        assertFalse(CollectionUtils.isNullOrEmpty(result.getEntities()));
+        assertFalse(Empty.check(result.getEntities()));
         EntityDetails entity = result.getEntities().get(0);
 
         // Assert features from detected entity
