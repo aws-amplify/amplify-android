@@ -102,12 +102,10 @@ public final class SQLiteStorageAdapterClearTest {
         BlogOwner blogger2 = createBlogger("Dummy Blogger Jr.");
         //Save a record and check if it's there
         adapter.save(blogger1);
-        assertRecordIsInDb(blogger1.getName());
+        assertRecordIsInDb(blogger1);
         //Verify observer is still alive
         assertFalse(subscriberDisposableRef.get().isDisposed());
         assertObserverReceivedRecord(blogger1);
-        //The ensures files are created at least 1 second apart
-        Thread.sleep(1000);
 
         adapter.clear();
         //Make sure file was deleted and re-created
@@ -121,14 +119,13 @@ public final class SQLiteStorageAdapterClearTest {
         adapter.save(blogger2);
         //Check the new record is in the database
         //and the old record is not.
-        assertRecordIsInDb(blogger2.getName());
-        assertRecordIsNotInDb(blogger1.getName());
+        assertRecordIsInDb(blogger2);
+        assertRecordIsNotInDb(blogger1);
         assertObserverReceivedRecord(blogger2);
         //Terminate the adapter
         adapter.terminate();
         //Verify observer was disposed.
         assertTrue(subscriberDisposableRef.get().isDisposed());
-
     }
 
     private BlogOwner createBlogger(String name) throws DataStoreException {
@@ -139,7 +136,7 @@ public final class SQLiteStorageAdapterClearTest {
 
     private void assertObserverReceivedRecord(BlogOwner blogger) {
         for (StorageItemChange<? extends Model> owner : observer.values()) {
-            if (owner.item() instanceof BlogOwner &&
+            if (BlogOwner.class.isAssignableFrom(owner.itemClass()) &&
                 blogger.getName().equals(((BlogOwner) owner.item()).getName())) {
                 return;
             }
@@ -147,16 +144,16 @@ public final class SQLiteStorageAdapterClearTest {
         fail("Could not find " + blogger + " in event observer.");
     }
 
-    private void assertRecordIsInDb(String name) throws DataStoreException {
-        List<BlogOwner> blogOwners = adapter.query(BlogOwner.class, BlogOwner.NAME.eq(name));
-        assertNotNull(blogOwners);
-        assertEquals(1, blogOwners.size());
+    private <T extends Model> void assertRecordIsInDb(T item) throws DataStoreException {
+        List<? extends Model> results = adapter.query(item.getClass(), BlogOwner.ID.eq(item.getId()));
+        assertEquals(1, results.size());
+        assertEquals(item, results.get(0));
     }
 
-    private void assertRecordIsNotInDb(String name) throws DataStoreException {
-        List<BlogOwner> blogOwners = adapter.query(BlogOwner.class, BlogOwner.NAME.eq(name));
-        assertNotNull(blogOwners);
-        assertEquals(0, blogOwners.size());
+    private <T extends Model> void assertRecordIsNotInDb(T item) throws DataStoreException {
+        List<? extends Model> results = adapter.query(item.getClass(), BlogOwner.ID.eq(item.getId()));
+        assertNotNull(results);
+        assertEquals(0, results.size());
     }
 
     private void assertDbFileExists() {
