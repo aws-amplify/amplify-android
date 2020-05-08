@@ -19,9 +19,9 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.junit.Test;
-
-import java.util.UUID;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -39,26 +39,44 @@ public class GsonPendingMutationConverterTest {
     @Test
     public void convertStorageItemChangeToRecordAndBack() throws DataStoreException {
         // Arrange a PendingMutation<Blog>
-        String expectedChangeId = UUID.randomUUID().toString();
         Blog blog = Blog.builder()
             .name("A neat blog")
             .owner(BlogOwner.builder()
                 .name("Joe Swanson")
                 .build())
-            .id(expectedChangeId)
             .build();
-        PendingMutation<Blog> originalItemChange = PendingMutation.creation(blog, Blog.class);
+        PendingMutation<Blog> originalMutation = PendingMutation.creation(blog, Blog.class);
+        String expectedMutationId = originalMutation.getMutationId().toString();
 
         // Instantiate the object under test
         PendingMutation.Converter converter = new GsonPendingMutationConverter();
 
-        // Try to construct a record from the StorageItemChange instance.
-        PendingMutation.PersistentRecord record = converter.toRecord(originalItemChange);
+        // Try to construct a record from the PendingMutation instance.
+        PendingMutation.PersistentRecord record = converter.toRecord(originalMutation);
         assertNotNull(record);
-        assertEquals(expectedChangeId, record.getId());
+        assertEquals(expectedMutationId, record.getId());
 
         // Now, try to convert it back...
         PendingMutation<Blog> reconstructedItemChange = converter.fromRecord(record);
-        assertEquals(originalItemChange, reconstructedItemChange);
+        assertEquals(originalMutation, reconstructedItemChange);
+    }
+
+    /**
+     * Tests the functionality of just the
+     * {@link GsonPendingMutationConverter.TimeBasedUuidTypeAdapter}
+     * in isolation.
+     */
+    @Test
+    public void canConvertTimeBasedUuid() {
+        TimeBasedUuid original = TimeBasedUuid.create();
+
+        Gson gson = new GsonBuilder()
+            .registerTypeAdapter(TimeBasedUuid.class, new GsonPendingMutationConverter.TimeBasedUuidTypeAdapter())
+            .create();
+
+        String json = gson.toJson(original);
+        TimeBasedUuid reconstructed = gson.fromJson(json, TimeBasedUuid.class);
+
+        assertEquals(original, reconstructed);
     }
 }
