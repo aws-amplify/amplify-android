@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
-import com.amplifyframework.predictions.aws.models.VoiceType;
+import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.models.TextFormatType;
@@ -69,7 +69,7 @@ public final class AWSPredictionsService {
      */
     public void synthesizeSpeech(
             @NonNull String text,
-            @NonNull VoiceType voiceType,
+            @NonNull AWSVoiceType voiceType,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {

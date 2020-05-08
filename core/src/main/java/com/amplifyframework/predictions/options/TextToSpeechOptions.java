@@ -19,12 +19,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.async.Options;
+import com.amplifyframework.predictions.models.VoiceType;
 
 /**
  * Options for text to speech conversion operation.
  */
 public final class TextToSpeechOptions implements Options {
-    private final String voiceType;
+    private final VoiceType voiceType;
 
     private TextToSpeechOptions(final Builder builder) {
         this.voiceType = builder.getVoiceType();
@@ -36,7 +37,7 @@ public final class TextToSpeechOptions implements Options {
      * @return the custom voice type
      */
     @Nullable
-    public String getVoiceType() {
+    public VoiceType getVoiceType() {
         return voiceType;
     }
 
@@ -62,7 +63,7 @@ public final class TextToSpeechOptions implements Options {
      * Builder for {@link TextToSpeechOptions}.
      */
     public static final class Builder {
-        private String voiceType;
+        private VoiceType voiceType;
 
         /**
          * Sets the voice type of the synthesized speech and
@@ -71,7 +72,7 @@ public final class TextToSpeechOptions implements Options {
          * @return this builder instance
          */
         @NonNull
-        public Builder voiceType(@Nullable String voiceType) {
+        public Builder voiceType(@Nullable VoiceType voiceType) {
             this.voiceType = voiceType;
             return this;
         }
@@ -86,7 +87,7 @@ public final class TextToSpeechOptions implements Options {
             return new TextToSpeechOptions(this);
         }
 
-        String getVoiceType() {
+        VoiceType getVoiceType() {
             return voiceType;
         }
     }

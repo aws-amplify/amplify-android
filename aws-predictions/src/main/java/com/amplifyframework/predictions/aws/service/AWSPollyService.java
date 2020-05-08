@@ -21,7 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.aws.configuration.SpeechGeneratorConfiguration;
-import com.amplifyframework.predictions.aws.models.VoiceType;
+import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.util.UserAgent;
 
@@ -61,7 +61,7 @@ final class AWSPollyService {
 
     void synthesizeSpeech(
             @NonNull String text,
-            @NonNull VoiceType voiceType,
+            @NonNull AWSVoiceType voiceType,
             @NonNull Consumer<TextToSpeechResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
@@ -73,10 +73,10 @@ final class AWSPollyService {
         }
     }
 
-    private InputStream synthesizeSpeech(String text, VoiceType voiceType) throws PredictionsException {
+    private InputStream synthesizeSpeech(String text, AWSVoiceType voiceType) throws PredictionsException {
         final String languageCode;
         final String voiceId;
-        if (VoiceType.UNKNOWN.equals(voiceType)) {
+        if (AWSVoiceType.UNKNOWN.equals(voiceType)) {
             // Obtain voice + language from plugin configuration by default
             SpeechGeneratorConfiguration config = pluginConfiguration.getSpeechGeneratorConfiguration();
             languageCode = config.getLanguage();
@@ -84,7 +84,7 @@ final class AWSPollyService {
         } else {
             // Override configuration defaults if explicitly specified in the options
             languageCode = voiceType.getLanguageCode();
-            voiceId = voiceType.getName();
+            voiceId = voiceType.getVoice();
         }
 
         SynthesizeSpeechRequest request = new SynthesizeSpeechRequest()

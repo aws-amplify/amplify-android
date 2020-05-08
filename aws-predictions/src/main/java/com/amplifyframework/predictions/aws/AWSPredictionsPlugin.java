@@ -22,7 +22,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
-import com.amplifyframework.predictions.aws.models.VoiceType;
+import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.aws.operation.AWSIdentifyOperation;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
 import com.amplifyframework.predictions.aws.operation.AWSTextToSpeechOperation;
@@ -113,7 +113,7 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
             @NonNull Consumer<PredictionsException> onError
     ) {
         // Create translate request for Amazon Polly
-        VoiceType voiceType = VoiceType.fromName(options.getVoiceType());
+        AWSVoiceType voiceType = AWSVoiceType.fromVoice(options.getVoiceType());
         AWSPollyRequest request = new AWSPollyRequest(text, voiceType);
 
         AWSTextToSpeechOperation operation = new AWSTextToSpeechOperation(
