@@ -18,7 +18,6 @@ package com.amplifyframework.storage.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Options;
 import com.amplifyframework.storage.StorageAccessLevel;
 
 /**
@@ -26,7 +25,7 @@ import com.amplifyframework.storage.StorageAccessLevel;
  * storage operation will inspect the provided options
  * instance for access level and target ID.
  */
-abstract class StorageOptions implements Options {
+abstract class StorageOptions {
     private final StorageAccessLevel accessLevel;
     private final String targetIdentityId;
 
