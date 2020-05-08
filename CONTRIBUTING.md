@@ -403,17 +403,18 @@ the PR.
 ### Environment Debugging
 
 Are you using the right versions of Gradle, Ant, Groovy, Kotlin, Java, Mac OS X?
-
 ```
+./gradlew -version
+
 ------------------------------------------------------------
-Gradle 6.2.1
+Gradle 6.3
 ------------------------------------------------------------
 
-Build time:   2020-02-24 20:24:10 UTC
-Revision:     aacbcb7e587faa6a8e7851751a76183b6187b164
+Build time:   2020-03-24 19:52:07 UTC
+Revision:     bacd40b727b0130eeac8855ae3f9fd9a0b207c60
 
-Kotlin:       1.3.61
-Groovy:       2.5.8
+Kotlin:       1.3.70
+Groovy:       2.5.10
 Ant:          Apache Ant(TM) version 1.10.7 compiled on September 1 2019
 JVM:          1.8.0_212-release (JetBrains s.r.o 25.212-b4-5784211)
 OS:           Mac OS X 10.14.6 x86_64
