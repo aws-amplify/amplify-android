@@ -152,8 +152,8 @@ public final class AWSDataStorePluginInstrumentedTest {
             });
         inboundModelEventAccumulator.clear().start();
 
-        // Act: externally in the Cloud, someone creates a record for a blog owner,
-        // with a misspelling in the last name
+        // Act: externally in the Cloud, someone creates a BlogOwner,
+        // that contains a misspelling in the last name
         BlogOwner originalModel = BlogOwner.builder()
             .name("Jameson Willlllliams")
             .id(expectedId)
@@ -168,7 +168,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         inboundModelEventAccumulator.takeOne();
         inboundModelEventAccumulator.stop().clear().start();
 
-        // Act: externally, the record in the Cloud is updated, to correct the entry's last name
+        // Act: externally, the BlogOwner in the Cloud is updated, to correct the entry's last name
         BlogOwner updatedModel = originalModel.copyOfBuilder() // This uses the same model ID
             .name("Jameson Williams") // But with corrected name
             .build();
@@ -180,7 +180,7 @@ public final class AWSDataStorePluginInstrumentedTest {
         assertEquals(originalVersion + 1, newVersion);
 
         // Another HubEvent tells us that an update occurred in the Cloud;
-        // the update was applied locally, to an existing record.
+        // the update was applied locally, to an existing BlogOwner.
         inboundModelEventAccumulator.take(1);
         inboundModelEventAccumulator.stop().clear();
 

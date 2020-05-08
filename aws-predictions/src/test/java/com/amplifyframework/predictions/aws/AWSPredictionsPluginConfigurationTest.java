@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.aws;
 
 import com.amplifyframework.predictions.PredictionsException;
+import com.amplifyframework.predictions.aws.configuration.IdentifyEntitiesConfiguration;
 import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
 import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
 import com.amplifyframework.predictions.models.LanguageType;
@@ -28,7 +29,9 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSPredictionsPluginConfigurationTest {
@@ -121,5 +124,47 @@ public final class AWSPredictionsPluginConfigurationTest {
         assertNotNull(interpretConfig);
         assertEquals(InterpretTextConfiguration.InterpretType.SENTIMENT, interpretConfig.getType());
         assertEquals(NetworkPolicy.OFFLINE, interpretConfig.getNetworkPolicy());
+    }
+
+    /**
+     * Test that configuration with explicit "identifyEntities" section creates
+     * customized entities identification configuration instance for general
+     * entity detection if max-entities or collection ID is invalid.
+     * @throws Exception if configuration fails
+     */
+    @Test
+    public void testIdentifyEntitiesConfiguration() throws Exception {
+        JSONObject json = Resources.readAsJson("configuration-with-identify-entities.json");
+        AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
+
+        // Custom identify entities configuration with invalid match detection settings
+        IdentifyEntitiesConfiguration identifyConfig = pluginConfig.getIdentifyEntitiesConfiguration();
+        assertNotNull(identifyConfig);
+        assertTrue(identifyConfig.isCelebrityDetectionEnabled());
+        assertEquals(NetworkPolicy.AUTO, identifyConfig.getNetworkPolicy());
+        assertEquals(0, identifyConfig.getMaxEntities());
+        assertTrue(identifyConfig.getCollectionId().isEmpty());
+        assertTrue(identifyConfig.isGeneralEntityDetection());
+    }
+
+    /**
+     * Test that configuration with explicit "identifyEntities" section creates
+     * customized entities identification configuration instance for entity
+     * match detection if max-entities and collection ID are both valid.
+     * @throws Exception if configuration fails
+     */
+    @Test
+    public void testIdentifyEntityMatchesConfiguration() throws Exception {
+        JSONObject json = Resources.readAsJson("configuration-with-identify-entity-matches.json");
+        AWSPredictionsPluginConfiguration pluginConfig = AWSPredictionsPluginConfiguration.fromJson(json);
+
+        // Custom identify entities configuration with valid match detection settings
+        IdentifyEntitiesConfiguration identifyConfig = pluginConfig.getIdentifyEntitiesConfiguration();
+        assertNotNull(identifyConfig);
+        assertFalse(identifyConfig.isCelebrityDetectionEnabled());
+        assertEquals(NetworkPolicy.AUTO, identifyConfig.getNetworkPolicy());
+        assertEquals(10, identifyConfig.getMaxEntities());
+        assertEquals("some-collection-id", identifyConfig.getCollectionId());
+        assertFalse(identifyConfig.isGeneralEntityDetection());
     }
 }
