@@ -23,6 +23,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 import java.util.Iterator;
@@ -114,6 +115,15 @@ public final class DataStoreCategory
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
         getSelectedPlugin().query(itemClass, predicate, onQueryResults, onQueryFailure);
+    }
+
+    @Override
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        getSelectedPlugin().query(itemClass, options, onQueryResults, onQueryFailure);
     }
 
     /**
