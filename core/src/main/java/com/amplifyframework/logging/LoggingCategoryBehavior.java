@@ -18,6 +18,8 @@ package com.amplifyframework.logging;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.core.category.CategoryType;
+
 /**
  * Defines the client behavior (client API) consumed
  * by the app for collection and sending of Analytics
@@ -52,4 +54,17 @@ public interface LoggingCategoryBehavior {
      */
     @NonNull
     Logger forNamespace(@Nullable String namespace);
+
+    /**
+     * Gets a logger configured to emit logs against a particular category namespace.
+     *
+     * The log threshold will be {@link LogLevel#INFO}. To use a different level,
+     * see {@link #forNamespaceAndThreshold(String, LogLevel)}.
+     *
+     * @param categoryType the category type that will be used as namespace
+     * @return A logger that emits logs in the provided category type namespace
+     */
+    @NonNull
+    Logger forCategory(@NonNull CategoryType categoryType);
+
 }

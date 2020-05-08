@@ -20,17 +20,23 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.Resources;
 
+import org.json.JSONException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.skyscreamer.jsonassert.JSONAssert;
 
 import java.util.Date;
-
-import static org.junit.Assert.assertEquals;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Tests the {@link AppSyncGraphQLRequestFactory}.
@@ -41,9 +47,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
     /**
      * Validate construction of a GraphQL query from a class and an object ID.
      * @throws ApiException from possible query builder failure
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildQueryFromClassAndId() throws ApiException {
+    public void buildQueryFromClassAndId() throws ApiException, JSONException {
         // Arrange a hard-coded ID as found int the expected data file.
         final String uuidForExpectedQuery = "9a1bee5c-248f-4746-a7da-58f703ec572d";
 
@@ -52,18 +59,20 @@ public final class AppSyncGraphQLRequestFactoryTest {
             AppSyncGraphQLRequestFactory.buildQuery(Person.class, uuidForExpectedQuery);
 
         // Assert: content is expected content
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("query-for-person-by-id.txt"),
-            request.getContent()
+            request.getContent(),
+            true
         );
     }
 
     /**
      * Validate construction of a GraphQL query from a class and a predicate.
      * @throws AmplifyException from buildQuery().
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildQueryFromClassAndPredicate() throws AmplifyException {
+    public void buildQueryFromClassAndPredicate() throws AmplifyException, JSONException {
         // Arrange - ID for predicate, hard-coded version of what's in the expected txt
         final String expectedId = "aca4a318-181e-445a-beb9-7656f5005c7b";
 
@@ -72,9 +81,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
             AppSyncGraphQLRequestFactory.buildQuery(Person.class, Person.ID.eq(expectedId));
 
         // Validate request is expected request
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("query-person-by-predicate.txt"),
-            request.getContent()
+            request.getContent(),
+            true
         );
     }
 
@@ -82,10 +92,11 @@ public final class AppSyncGraphQLRequestFactoryTest {
      * Validates construction of a mutation query from a Person instance, a predicate,
      * and an {@link MutationType}.
      * @throws AmplifyException From buildMutation().
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @SuppressWarnings("deprecation")
     @Test
-    public void buildMutationFromPredicateAndMutationType() throws AmplifyException {
+    public void buildMutationFromPredicateAndMutationType() throws AmplifyException, JSONException {
         // Arrange a person to delete, using UUID from test resource file
         final String expectedId = "dfcdac69-0662-41df-a67b-48c62a023f97";
         final Person tony = Person.builder()
@@ -103,9 +114,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
         );
 
         // Assert: expected is actual
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("mutate-person-with-predicate.txt"),
-            requestToDeleteTony.getContent()
+            requestToDeleteTony.getContent(),
+            true
         );
     }
 
@@ -113,16 +125,44 @@ public final class AppSyncGraphQLRequestFactoryTest {
      * Validates construction of a subscription request using a class and an
      * {@link SubscriptionType}.
      * @throws ApiException from subscription builder potential failure
+     * @throws JSONException from JSONAssert.assertEquals
      */
     @Test
-    public void buildSubscriptionFromClassAndSubscriptionType() throws ApiException {
+    public void buildSubscriptionFromClassAndSubscriptionType() throws ApiException, JSONException {
         GraphQLRequest<Person> subscriptionRequest = AppSyncGraphQLRequestFactory.buildSubscription(
             Person.class, SubscriptionType.ON_CREATE
         );
 
-        assertEquals(
+        JSONAssert.assertEquals(
             Resources.readAsString("subscription-request-for-on-create.txt"),
-            subscriptionRequest.getContent()
+            subscriptionRequest.getContent(),
+            true
         );
+    }
+
+    /**
+     * Validates date serialization when creating GraphQLRequest.
+     * @throws ApiException from buildMutation potential failure
+     * @throws JSONException from JSONAssert.assertEquals JSON parsing error
+     */
+    @Test
+    public void validateDateSerializer() throws ApiException, JSONException {
+        // Create expectation
+        final Meeting meeting1 = Meeting.builder()
+                .name("meeting1")
+                .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
+                .date(new AWSDate("2001-02-03"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30:15Z"))
+                .time(new AWSTime("01:22:33"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build();
+
+        // Act: build a mutation to create a Meeting
+        GraphQLRequest<Meeting> requestToCreateMeeting1 =
+                AppSyncGraphQLRequestFactory.buildMutation(meeting1, null, MutationType.CREATE);
+
+        // Assert: expected is actual
+        JSONAssert.assertEquals(Resources.readAsString("create-meeting1.txt"),
+                requestToCreateMeeting1.getContent(), true);
     }
 }

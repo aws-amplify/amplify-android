@@ -34,6 +34,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.CollectionUtils;
 import com.amplifyframework.util.Immutable;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -149,7 +150,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
-        List<Object> selectionArgs = null;
+        List<Object> predicateBindings = Collections.emptyList();
 
         // Track the list of columns to return
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
@@ -223,7 +224,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         // WHERE condition
         if (predicate != null) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
-            selectionArgs = sqlPredicate.getSelectionArgs();
+            predicateBindings = sqlPredicate.getBindings();
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
@@ -232,7 +233,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        return new SqlCommand(table.getName(), queryString, selectionArgs);
+        return new SqlCommand(table.getName(), queryString, columns, predicateBindings);
     }
 
     /**
@@ -277,7 +278,8 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final String preparedInsertStatement = stringBuilder.toString();
         final SQLiteStatement compiledInsertStatement =
                 databaseConnectionHandle.compileStatement(preparedInsertStatement);
-        return new SqlCommand(table.getName(), preparedInsertStatement, compiledInsertStatement);
+        return new SqlCommand(table.getName(), preparedInsertStatement, columns,
+                Collections.emptyList(), compiledInsertStatement);
     }
 
     /**
@@ -331,8 +333,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 databaseConnectionHandle.compileStatement(preparedUpdateStatement);
         return new SqlCommand(table.getName(),
                 preparedUpdateStatement,
-                compiledUpdateStatement,
-                sqlPredicate.getSelectionArgs()
+                columns,
+                sqlPredicate.getBindings(),
+                compiledUpdateStatement
         );
     }
 
@@ -361,8 +364,9 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 databaseConnectionHandle.compileStatement(preparedDeleteStatement);
         return new SqlCommand(table.getName(),
                 preparedDeleteStatement,
-                compiledDeleteStatement,
-                sqlPredicate.getSelectionArgs()
+                Collections.emptyList(),
+                sqlPredicate.getBindings(),
+                compiledDeleteStatement
         );
     }
 

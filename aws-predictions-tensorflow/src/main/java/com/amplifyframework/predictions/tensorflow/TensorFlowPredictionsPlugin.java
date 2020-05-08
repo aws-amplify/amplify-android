@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.tensorflow;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
@@ -23,13 +24,18 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
+import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
+import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
+import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
+import com.amplifyframework.predictions.tensorflow.operation.TensorFlowIdentifyOperation;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowTranslateTextOperation;
 import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
@@ -93,7 +99,7 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        return translateText(text, TranslateTextOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
@@ -104,7 +110,10 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        TensorFlowTranslateTextOperation operation =
+                new TensorFlowTranslateTextOperation(onError);
+        operation.start();
+        return operation;
     }
 
     @NonNull
@@ -116,7 +125,8 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        return translateText(text, fromLanguage, toLanguage,
+                TranslateTextOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull
@@ -129,7 +139,36 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<TranslateTextResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        return new TensorFlowTranslateTextOperation(onError);
+        TensorFlowTranslateTextOperation operation =
+                new TensorFlowTranslateTextOperation(onError);
+        operation.start();
+        return operation;
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return identify(actionType, image, IdentifyOptions.defaults(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        TensorFlowIdentifyOperation operation =
+                new TensorFlowIdentifyOperation(actionType, onError);
+        operation.start();
+        return operation;
     }
 
     @NonNull
@@ -139,8 +178,7 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
             @NonNull Consumer<InterpretResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        final InterpretOptions options = InterpretOptions.defaults();
-        return interpret(text, options, onSuccess, onError);
+        return interpret(text, InterpretOptions.defaults(), onSuccess, onError);
     }
 
     @NonNull

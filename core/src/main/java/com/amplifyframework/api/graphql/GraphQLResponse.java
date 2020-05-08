@@ -20,9 +20,11 @@ import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -105,27 +107,84 @@ public final class GraphQLResponse<T> {
         return result;
     }
 
+    @Override
+    public String toString() {
+        return "GraphQLResponse{" +
+                "data=\'" + data + "\'" +
+                ", errors=\'" + errors + "\'" +
+                '}';
+    }
+
     /**
      * Error object that models GraphQL error.
      * See https://graphql.github.io/graphql-spec/June2018/#sec-Response-Format
      */
     public static final class Error {
         private final String message;
+        private final List<GraphQLLocation> locations;
+        private final List<GraphQLPathSegment> path;
+        private final Map<String, Object> extensions;
 
         /**
          * Constructs error response in accordance with GraphQL specs.
          * @param message error message
+         * @param locations list of locations describing the syntax element
+         * @param path The key path of the response field with error.
+         * @param extensions additional error map, reserved for implementors.
          */
-        public Error(@NonNull String message) {
+        public Error(@NonNull String message,
+                     @Nullable List<GraphQLLocation> locations,
+                     @Nullable List<GraphQLPathSegment> path,
+                     @Nullable Map<String, Object> extensions) {
             this.message = Objects.requireNonNull(message);
+            this.locations = locations;
+            this.path = path;
+            this.extensions = extensions;
         }
 
         /**
          * Gets the error message.
+         *
          * @return error message
          */
+        @NonNull
         public String getMessage() {
             return message;
+        }
+
+        /**
+         * Gets the list of locations where each location describes the beginning of an associated
+         * syntax element.
+         *
+         * @return locations
+         */
+        @Nullable
+        public List<GraphQLLocation> getLocations() {
+            return Immutable.of(locations);
+        }
+
+        /**
+         * Gets the key path of the response field which experienced the error.  This allows clients
+         * to identify whether a null result is intentional or caused by a runtime error.  The
+         * values are either strings or 0-index integers.
+         *
+         * @return path
+         */
+        @Nullable
+        public List<GraphQLPathSegment> getPath() {
+            return Immutable.of(path);
+        }
+
+        /**
+         * Returns additional error information of type Map&lt;String, Object&gt;.  Reserved for GraphQL
+         * implementors to add details however they see fit.  No additional restrictions on its
+         * contents.
+         *
+         * @return extensions
+         */
+        @Nullable
+        public Map<String, Object> getExtensions() {
+            return Immutable.of(extensions);
         }
 
         @Override
@@ -139,17 +198,30 @@ public final class GraphQLResponse<T> {
 
             Error error = (Error) thatObject;
 
-            return message.equals(error.message);
+            return ObjectsCompat.equals(message, error.message) &&
+                   ObjectsCompat.equals(locations, error.locations) &&
+                   ObjectsCompat.equals(path, error.path) &&
+                   ObjectsCompat.equals(extensions, error.extensions);
+
         }
 
         @Override
         public int hashCode() {
-            return message.hashCode();
+            int result = message.hashCode();
+            result = 31 * result + (locations != null ? locations.hashCode() : 0);
+            result = 31 * result + (path != null ? path.hashCode() : 0);
+            result = 31 * result + (extensions != null ? extensions.hashCode() : 0);
+            return result;
         }
 
         @Override
         public String toString() {
-            return String.valueOf(message);
+            return "GraphQLResponse.Error{" +
+                    "message=\'" + message + "\'" +
+                    ", locations=\'" + locations + "\'" +
+                    ", path=\'" + path + "\'" +
+                    ", extensions=\'" + extensions + "\'" +
+                    '}';
         }
     }
 

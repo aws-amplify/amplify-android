@@ -63,7 +63,7 @@ public final class S3Keys {
             @NonNull StorageAccessLevel accessLevel,
             @NonNull String identityId
     ) {
-        if (accessLevel.equals(StorageAccessLevel.PRIVATE) || accessLevel.equals(StorageAccessLevel.PROTECTED)) {
+        if (StorageAccessLevel.PRIVATE.equals(accessLevel) || StorageAccessLevel.PROTECTED.equals(accessLevel)) {
             return accessLevel.name().toLowerCase(Locale.US) + BUCKET_SEPARATOR + identityId;
         } else {
             return accessLevel.name().toLowerCase(Locale.US);

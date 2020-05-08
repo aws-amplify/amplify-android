@@ -34,7 +34,7 @@ import com.amazonaws.services.translate.model.TranslateTextRequest;
 /**
  * Predictions service for performing text translation.
  */
-public final class AWSTranslateService {
+final class AWSTranslateService {
     private final AmazonTranslateClient translate;
     private final AWSPredictionsPluginConfiguration pluginConfiguration;
 

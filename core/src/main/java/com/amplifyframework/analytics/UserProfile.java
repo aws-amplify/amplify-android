@@ -117,6 +117,9 @@ public final class UserProfile {
                 '}';
     }
 
+    /**
+     * Builder for creating a UserProfile object.
+     */
     public static final class Builder {
         private String name;
         private String email;
@@ -165,6 +168,9 @@ public final class UserProfile {
         }
     }
 
+    /**
+     * Represents a user's location.
+     */
     public static final class Location {
         private final Double latitude;
         private final Double longitude;
@@ -270,6 +276,9 @@ public final class UserProfile {
                     '}';
         }
 
+        /**
+         * Builder for creating a Location object.
+         */
         public static final class Builder {
             private Double latitude;
             private Double longitude;

@@ -1,0 +1,15 @@
+{
+  "data": {
+    "listTodos": null
+  },
+  "errors": [
+    {
+      "path": null,
+      "data": null,
+      "errorType": null,
+      "errorInfo": null,
+      "locations": null,
+      "message": "the message"
+    }
+  ]
+}

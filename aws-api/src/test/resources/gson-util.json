@@ -1,0 +1,23 @@
+{
+  "array": [
+    [
+      "foo",
+      0,
+      2,
+      3.5,
+      true,
+      false,
+      null
+    ],
+    {
+      "someString": "bar"
+    }
+  ],
+  "object" : {
+    "someString": "baz",
+    "someInteger": 4,
+    "someFloat" : 5.5,
+    "someBoolean" : false,
+    "someNull" : null
+  }
+}

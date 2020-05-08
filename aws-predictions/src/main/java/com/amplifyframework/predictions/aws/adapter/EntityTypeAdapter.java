@@ -19,8 +19,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.models.EntityType;
 
-import java.util.Locale;
-
 /**
  * Utility to convert AWS Comprehend's entity type
  * into Amplify-compatible data structure
@@ -37,24 +35,26 @@ public final class EntityTypeAdapter {
      */
     @NonNull
     public static EntityType fromComprehend(@NonNull String entity) {
-        switch (entity.toLowerCase(Locale.US)) {
-            case "person":
+        com.amazonaws.services.comprehend.model.EntityType type =
+                com.amazonaws.services.comprehend.model.EntityType.fromValue(entity);
+        switch (type) {
+            case PERSON:
                 return EntityType.PERSON;
-            case "location":
+            case LOCATION:
                 return EntityType.LOCATION;
-            case "organization":
+            case ORGANIZATION:
                 return EntityType.ORGANIZATION;
-            case "commercial_item":
+            case COMMERCIAL_ITEM:
                 return EntityType.COMMERCIAL_ITEM;
-            case "event":
+            case EVENT:
                 return EntityType.EVENT;
-            case "date":
+            case DATE:
                 return EntityType.DATE;
-            case "quantity":
+            case QUANTITY:
                 return EntityType.QUANTITY;
-            case "title":
+            case TITLE:
                 return EntityType.TITLE;
-            case "other":
+            case OTHER:
             default:
                 return EntityType.UNKNOWN;
         }

@@ -16,9 +16,17 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.GraphQLLocation;
+import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
+import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
 
+import com.google.gson.Gson;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -28,7 +36,11 @@ import org.robolectric.RobolectricTestRunner;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -39,7 +51,6 @@ import static org.junit.Assert.assertNotNull;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class GsonGraphQLResponseFactoryTest {
-
     private GraphQLResponse.Factory responseFactory;
 
     /**
@@ -47,7 +58,8 @@ public final class GsonGraphQLResponseFactoryTest {
      */
     @Before
     public void setup() {
-        responseFactory = new GsonGraphQLResponseFactory();
+        Gson gson = GsonFactory.create();
+        responseFactory = new GsonGraphQLResponseFactory(gson);
     }
 
     /**
@@ -122,15 +134,102 @@ public final class GsonGraphQLResponseFactoryTest {
         // Assert that we parsed the errors successfully.
         assertNotNull(response.getErrors());
 
-        final List<GraphQLResponse.Error> expectedErrors = Arrays.asList(
-            new GraphQLResponse.Error("failed"),
-            new GraphQLResponse.Error("failed"),
-            new GraphQLResponse.Error("failed")
+        final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            String message = "failed";
+            List<GraphQLLocation> locations = Collections.singletonList(
+                    new GraphQLLocation(5, 7));
+            List<GraphQLPathSegment> path = Arrays.asList(
+                    new GraphQLPathSegment("listTodos"),
+                    new GraphQLPathSegment("items"),
+                    new GraphQLPathSegment(i),
+                    new GraphQLPathSegment("name")
+            );
+            Map<String, Object> extensions = new HashMap<>();
+            extensions.put("errorType", null);
+            extensions.put("errorInfo", null);
+            extensions.put("data", null);
+            expectedErrors.add(new GraphQLResponse.Error(message, locations, path, extensions));
+        }
+
+        assertEquals(expectedErrors, response.getErrors());
+    }
+
+    /**
+     * This tests the GsonErrorDeserializer.  The test JSON response has 4 errors, which are all in
+     * different formats, but are expected to be parsed into the same resulting object:
+     * 1. Error contains errorType, errorInfo, data (AppSync specific fields) at root level
+     * 2. Error contains errorType, errorInfo, data inside extensions object
+     * 3. Error contains errorType, errorInfo, data at root AND inside extensions (fields inside
+     * extensions take precedence)
+     * 4. Error contains errorType at root, and errorInfo, data inside extensions (all should be
+     * merged into extensions)
+     *
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void errorResponseDeserializesExtensionsMap() throws ApiException {
+        // Arrange some JSON string from a "server"
+        final String partialResponseJson =
+                Resources.readAsString("error-extensions-gql-response.json");
+
+        // Act! Parse it into a model.
+        final GraphQLResponse<ListTodosResult> response =
+                responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
+
+        // Build the expected response.
+        String message = "Conflict resolver rejects mutation.";
+        List<GraphQLLocation> locations = Collections.singletonList(
+                new GraphQLLocation(11, 3));
+        List<GraphQLPathSegment> path = Arrays.asList(
+                new GraphQLPathSegment("listTodos"),
+                new GraphQLPathSegment("items"),
+                new GraphQLPathSegment(0),
+                new GraphQLPathSegment("name")
         );
 
-        final List<GraphQLResponse.Error> actualErrors = response.getErrors();
+        Map<String, Object> data = new HashMap<>();
+        data.put("id", "EF48518C-92EB-4F7A-A64E-D1B9325205CF");
+        data.put("title", "new3");
+        data.put("content", "Original content from DataStoreEndToEndTests at 2020-03-26 21:55:47 " +
+                "+0000");
+        data.put("_version", 2);
 
-        assertEquals(expectedErrors, actualErrors);
+        Map<String, Object> extensions = new HashMap<>();
+        extensions.put("errorType", "ConflictUnhandled");
+        extensions.put("errorInfo", null);
+        extensions.put("data", data);
+
+        GraphQLResponse.Error expectedError = new GraphQLResponse.Error(message, locations, path, extensions);
+        GraphQLResponse<ListTodosResult> expectedResponse = new GraphQLResponse<>(null,
+                Arrays.asList(expectedError, expectedError, expectedError, expectedError));
+
+        // Assert that the response is expected
+        assertEquals(expectedResponse, response);
+    }
+
+    @Test
+    public void errorWithNullFieldsCanBeParsed() throws ApiException {
+        // Arrange some JSON string from a "server"
+        final String responseJson = Resources.readAsString("error-null-properties.json");
+
+        // Act! Parse it into a model.
+        final GraphQLResponse<ListTodosResult> response =
+                responseFactory.buildSingleItemResponse(responseJson, ListTodosResult.class);
+
+        // Build the expected response.
+        Map<String, Object> extensions = new HashMap<>();
+        extensions.put("errorType", null);
+        extensions.put("errorInfo", null);
+        extensions.put("data", null);
+
+        GraphQLResponse.Error expectedError =
+            new GraphQLResponse.Error("the message", null, null, extensions);
+        GraphQLResponse<ListTodosResult> expectedResponse =
+            new GraphQLResponse<>(null, Collections.singletonList(expectedError));
+
+        // Assert that the response is expected
+        assertEquals(expectedResponse, response);
     }
 
     /**
@@ -177,5 +276,69 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readLines("base-sync-posts-response-items.json"),
             resultJsons
         );
+    }
+
+    @Test
+    public void awsDateTypesCanBeDeserialized() throws ApiException {
+        // Expect
+        List<Meeting> expectedMeetings = Arrays.asList(
+            Meeting.builder()
+                .name("meeting0")
+                .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
+                .date(new AWSDate("2001-02-03"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30Z"))
+                .time(new AWSTime("01:22"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build(),
+            Meeting.builder()
+                .name("meeting1")
+                .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
+                .date(new AWSDate("2001-02-03"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30:15Z"))
+                .time(new AWSTime("01:22:33"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build(),
+            Meeting.builder()
+                .name("meeting2")
+                .id("7a3d5d76-667e-4714-a882-8c8e00a6ffc9")
+                .date(new AWSDate("2001-02-03Z"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444Z"))
+                .time(new AWSTime("01:22:33.444"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build(),
+            Meeting.builder()
+                .name("meeting3")
+                .id("3a880283-5402-4ad7-bc41-052ca6edeba8")
+                .date(new AWSDate("2001-02-03+01:30"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30"))
+                .time(new AWSTime("01:22:33.444Z"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build(),
+            Meeting.builder()
+                .name("meeting4")
+                .id("5dfc35eb-f75a-4848-9655-9b8ca813b74d")
+                .date(new AWSDate("2001-02-03+01:30:15"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30:15"))
+                .time(new AWSTime("01:22:33.444+05:30"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build(),
+            Meeting.builder()
+                .name("meeting5")
+                .id("3ce161af-14e7-4880-843b-921838efdc9d")
+                .date(new AWSDate("2001-02-03+01:30:15"))
+                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30:15"))
+                .time(new AWSTime("01:22:33.444+05:30:15"))
+                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .build()
+        );
+
+        // Act
+        final String responseString = Resources.readAsString("list-meetings-response.json");
+        final GraphQLResponse<ListMeetingsResult> response =
+                responseFactory.buildSingleItemResponse(responseString, ListMeetingsResult.class);
+        final List<Meeting> actualMeetings = response.getData().getItems();
+
+        // Assert
+        assertEquals(expectedMeetings, actualMeetings);
     }
 }

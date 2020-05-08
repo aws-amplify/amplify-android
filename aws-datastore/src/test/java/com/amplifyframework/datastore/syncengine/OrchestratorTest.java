@@ -23,10 +23,10 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.AWSDataStorePluginConfiguration;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.SimpleModelProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
@@ -96,8 +96,11 @@ public final class OrchestratorTest {
         modelSchemaRegistry.load(modelProvider.models());
 
         Orchestrator orchestrator =
-            new Orchestrator(modelProvider, modelSchemaRegistry, localStorageAdapter, appSync,
-                () -> AWSDataStorePluginConfiguration.DEFAULT_BASE_SYNC_INTERVAL_MS
+            new Orchestrator(modelProvider,
+                modelSchemaRegistry,
+                localStorageAdapter,
+                appSync,
+                DataStoreConfiguration::defaults
             );
 
         // Arrange: storage engine is running
@@ -105,7 +108,7 @@ public final class OrchestratorTest {
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         Await.result(
-            (Consumer<StorageItemChange.Record> onResult, Consumer<DataStoreException> onError) ->
+            (Consumer<StorageItemChange<BlogOwner>> onResult, Consumer<DataStoreException> onError) ->
                 localStorageAdapter.save(
                     susan,
                     StorageItemChange.Initiator.DATA_STORE_API,

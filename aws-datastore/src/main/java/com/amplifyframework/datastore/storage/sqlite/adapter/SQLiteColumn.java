@@ -16,7 +16,7 @@
 package com.amplifyframework.datastore.storage.sqlite.adapter;
 
 import com.amplifyframework.core.model.PrimaryKey;
-import com.amplifyframework.datastore.storage.sqlite.SqliteDataType;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteDataType;
 
 /**
  * Adapts a {@link com.amplifyframework.core.model.ModelField}
@@ -28,13 +28,15 @@ public final class SQLiteColumn {
     private static final String CUSTOM_ALIAS_DELIMITER = "_";
 
     private final String name;
+    private final String fieldName;
     private final String tableName;
     private final String ownedType;
     private final boolean isNonNull;
-    private final SqliteDataType dataType;
+    private final SQLiteDataType dataType;
 
     private SQLiteColumn(Builder builder) {
         this.name = builder.name;
+        this.fieldName = builder.fieldName;
         this.tableName = builder.tableName;
         this.ownedType = builder.ownedType;
         this.isNonNull = builder.isNonNull;
@@ -55,6 +57,14 @@ public final class SQLiteColumn {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * Returns the name of the field linked to the column.
+     * @return the name of the field linked to the column
+     */
+    public String getFieldName() {
+        return fieldName;
     }
 
     /**
@@ -129,10 +139,11 @@ public final class SQLiteColumn {
      */
     public static final class Builder {
         private String name;
+        private String fieldName;
         private String tableName;
         private String ownedType;
         private boolean isNonNull = false;
-        private SqliteDataType dataType;
+        private SQLiteDataType dataType;
 
         /**
          * Sets the name of this column.
@@ -141,6 +152,16 @@ public final class SQLiteColumn {
          */
         public Builder name(String name) {
             this.name = name;
+            return this;
+        }
+
+        /**
+         * Sets the name of the field linked to this column.
+         * @param fieldName the name of the field linked to this column
+         * @return builder instance with given name
+         */
+        public Builder fieldName(String fieldName) {
+            this.fieldName = fieldName;
             return this;
         }
 
@@ -180,7 +201,7 @@ public final class SQLiteColumn {
          * @param dataType data type of this column
          * @return builder instance with given SQLite data type
          */
-        public Builder dataType(SqliteDataType dataType) {
+        public Builder dataType(SQLiteDataType dataType) {
             this.dataType = dataType;
             return this;
         }
