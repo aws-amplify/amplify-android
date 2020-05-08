@@ -17,15 +17,13 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Result;
-
 import java.io.InputStream;
 import java.util.Objects;
 
 /**
  * The result of the call to synthesize speech from text.
  */
-public final class TextToSpeechResult implements Result {
+public final class TextToSpeechResult {
     private final InputStream audioData;
 
     private TextToSpeechResult(InputStream audioData) {

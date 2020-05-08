@@ -18,14 +18,12 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.async.Result;
-
 import java.util.Objects;
 
 /**
  * A result of a remove operation on the Storage category.
  */
-public final class StorageRemoveResult implements Result {
+public final class StorageRemoveResult {
     private final String key;
 
     private StorageRemoveResult(String key) {

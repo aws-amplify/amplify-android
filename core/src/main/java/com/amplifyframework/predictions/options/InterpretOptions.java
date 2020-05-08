@@ -17,12 +17,10 @@ package com.amplifyframework.predictions.options;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Options;
-
 /**
  * Options for text interpretation operation.
  */
-public final class InterpretOptions implements Options {
+public final class InterpretOptions {
 
     private InterpretOptions() {
         // TODO: Add options

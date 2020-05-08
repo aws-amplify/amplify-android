@@ -17,12 +17,10 @@ package com.amplifyframework.predictions.options;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Options;
-
 /**
  * Options for image identification operation.
  */
-public final class IdentifyOptions implements Options {
+public final class IdentifyOptions {
 
     private IdentifyOptions() {
         // TODO: Add options
