@@ -19,7 +19,6 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.random.RandomString;
@@ -62,14 +61,14 @@ public final class MergerTest {
     }
 
     /**
-     * Assume there is a record A in the store. Then, we try to merge
-     * a mutation to delete record A. This should succeed. After the
+     * Assume there is a item A in the store. Then, we try to merge
+     * a mutation to delete item A. This should succeed. After the
      * merge, A should NOT be in the store anymore.
      * @throws DataStoreException On failure to arrange test data into store,
      *                            or on failure to query results for test assertions
      */
     @Test
-    public void mergeDeletionForExistingRecord() throws DataStoreException {
+    public void mergeDeletionForExistingItem() throws DataStoreException {
         // Arrange: A blog owner, and some metadata about it, are in the store.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -80,7 +79,7 @@ public final class MergerTest {
         // Just to be sure, our arrangement worked, and that thing is in there, right? Good.
         assertEquals(Collections.singletonList(blogOwner), storageAdapter.query(BlogOwner.class));
 
-        // Act: merge a deletion record against the model.
+        // Act: merge a model deletion.
         ModelMetadata deletionMetadata =
             new ModelMetadata(blogOwner.getId(), true, 1, Time.now());
         TestObserver<Void> observer =
@@ -93,22 +92,22 @@ public final class MergerTest {
     }
 
     /**
-     * Assume there is NOT a record in the store. Then, we try to
-     * merge a mutation to delete record A. This should succeed, since
+     * Assume there is NOT an item in the store. Then, we try to
+     * merge a mutation to delete item A. This should succeed, since
      * there was no work to be performed (it was already deleted.) After
-     * the merge, there should STILL be no matching record in the store.
+     * the merge, there should STILL be no matching item in the store.
      * @throws DataStoreException On failure to query results for assertions
      */
     @Test
-    public void mergeDeletionForNotExistingRecord() throws DataStoreException {
-        // Arrange, to start, there are no records matching the incoming deletion request.
+    public void mergeDeletionForNotExistingItem() throws DataStoreException {
+        // Arrange, to start, there are no items matching the incoming deletion request.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
             .build();
         // Note that putInStore does NOT happen!
         // putInStore(blogOwner, new ModelMetadata(blogOwner.getId(), false, 1, Time.now()));
 
-        // Act: merge a deletion record that refers to something not in the store
+        // Act: try to merge a deletion that refers to an item not in the store
         ModelMetadata deletionMetadata =
             new ModelMetadata(blogOwner.getId(), true, 1, Time.now());
         TestObserver<Void> observer =
@@ -121,12 +120,12 @@ public final class MergerTest {
     }
 
     /**
-     * Assume there is NO record A. Then, we try to merge a save for a
-     * record A. This should succeed, with A being in the store, at the end.
+     * Assume there is NO item A. Then, we try to merge a save for a
+     * item A. This should succeed, with A being in the store, at the end.
      * @throws DataStoreException On failure to query results for assertions
      */
     @Test
-    public void mergeSaveForNotExistingRecord() throws DataStoreException {
+    public void mergeSaveForNotExistingItem() throws DataStoreException {
         // Arrange: nothing in the store, to start.
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
@@ -135,25 +134,25 @@ public final class MergerTest {
         // Note that putInStore is NOT called!
         // putInStore(blogOwner, metadata);
 
-        // Act: merge a creation record
+        // Act: merge a creation for an item
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(blogOwner, metadata)).test();
         assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
         observer.assertNoErrors().assertComplete();
 
-        // Assert: the record & its associated metadata are now in the store.
+        // Assert: the item & its associated metadata are now in the store.
         assertEquals(Collections.singletonList(blogOwner), storageAdapter.query(BlogOwner.class));
         assertEquals(Collections.singletonList(metadata), storageAdapter.query(ModelMetadata.class));
     }
 
     /**
-     * Assume there is a record A in the store. We try to merge a save for A.
+     * Assume there is an item A in the store. We try to merge a save for A.
      * This should succeed, and it should be treated as an update. After the merge,
      * A should have the updates from the merge.
      * @throws DataStoreException On failure to arrange data into store
      */
     @Test
-    public void mergeSaveForExistingRecord() throws DataStoreException {
-        // Arrange: a record is already in the store.
+    public void mergeSaveForExistingItem() throws DataStoreException {
+        // Arrange: an item is already in the store.
         BlogOwner originalModel = BlogOwner.builder()
             .name("Jameson The Original")
             .build();
@@ -177,13 +176,13 @@ public final class MergerTest {
     }
 
     /**
-     * When a record comes into the merger to be merged,
+     * When an item comes into the merger to be merged,
      * if there is a pending mutation in the outbox, for a model of the same ID,
-     * then that record shall NOT be merged.
+     * then that item shall NOT be merged.
      * @throws DataStoreException On failure to arrange data into store
      */
     @Test
-    public void recordIsNotMergedWhenOutboxHasPendingMutation() throws DataStoreException {
+    public void itemIsNotMergedWhenOutboxHasPendingMutation() throws DataStoreException {
         // Arrange: some model with a well known ID exists on the system.
         // We pretend that the user has recently updated it via the DataStore update() API.
         String knownId = RandomString.string();
@@ -194,21 +193,15 @@ public final class MergerTest {
         ModelMetadata localMetadata =
             new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
         storageAdapter.save(blogOwner, localMetadata);
-        mutationOutbox.enqueue(StorageItemChange.<BlogOwner>builder()
-            .changeId(knownId)
-            .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-            .item(blogOwner)
-            .itemClass(BlogOwner.class)
-            .type(StorageItemChange.Type.UPDATE)
-            .build());
+        mutationOutbox.enqueue(PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE));
 
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same
-        // record should be DELETED.
+        // item should be DELETED.
         ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Time.now());
         merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata));
 
-        // Assert: the record is NOT deleted from the local store.
+        // Assert: the item is NOT deleted from the local store.
         // The original is still there.
         // Or in other words, the cloud data was NOT merged.
         final List<BlogOwner> blogOwnersInStorage = storageAdapter.query(BlogOwner.class);

@@ -90,7 +90,7 @@ public final class PersistentModelVersion implements Model {
             localStorageAdapter.save(
                 persistentModelVersion,
                 StorageItemChange.Initiator.DATA_STORE_API,
-                ignoredRecord -> emitter.onSuccess(persistentModelVersion),
+                ignored -> emitter.onSuccess(persistentModelVersion),
                 emitter::onError
             )
         );

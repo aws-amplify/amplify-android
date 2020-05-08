@@ -27,13 +27,13 @@ import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
@@ -41,38 +41,41 @@ import org.robolectric.RobolectricTestRunner;
 import java.util.Collections;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private Context context;
     private AWSDataStorePlugin awsDataStorePlugin;
+    private ModelProvider modelProvider;
 
     @Before
     public void setup() {
         this.context = getApplicationContext();
-        ModelProvider modelProvider = SimpleModelProvider.builder()
+        modelProvider = spy(SimpleModelProvider.builder()
             .version(RandomString.string())
             .addModel(Person.class)
-            .build();
+            .build());
         this.awsDataStorePlugin = new AWSDataStorePlugin(modelProvider);
     }
 
     /**
      * Configuring and initializing the plugin succeeds without freezing or
      * crashing the calling thread. Basic. 🙄
-     * @throws JSONException Not expected; on failure to arrange configuration object
-     * @throws DataStoreException Not expected; on failure to configure of initialize plugin
+     * @throws AmplifyException Not expected; on failure to configure of initialize plugin
      */
-    @Ignore("TODO: need a mechanism to re-enable this scenario........")
     @Test
-    public void configureAndInitializeInLocalMode() throws DataStoreException, JSONException {
-        JSONObject pluginJson = new JSONObject().put("syncMode", "none");
-        awsDataStorePlugin.configure(pluginJson, context);
+    public void configureAndInitializeInLocalMode() throws AmplifyException {
+        //Configure DataStore with an empty config (All defaults)
+        awsDataStorePlugin.configure(new JSONObject(), context);
         awsDataStorePlugin.initialize(context);
+        assertSyncProcessorNotStarted();
     }
 
     /**
@@ -93,6 +96,25 @@ public final class AWSDataStorePluginTest {
             .put("syncIntervalInMinutes", 60);
         awsDataStorePlugin.configure(pluginJson, context);
         awsDataStorePlugin.initialize(context);
+        assertSyncProcessorStarted();
+    }
+
+    private void assertSyncProcessorStarted() {
+        boolean syncProcessorInvoked = mockingDetails(modelProvider)
+            .getInvocations()
+            .stream()
+            .anyMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
+
+        assertTrue(syncProcessorInvoked);
+    }
+
+    private void assertSyncProcessorNotStarted() {
+        boolean syncProcessorNotInvoked = mockingDetails(modelProvider)
+            .getInvocations()
+            .stream()
+            .noneMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
+
+        assertTrue(syncProcessorNotInvoked);
     }
 
     @SuppressWarnings("unchecked")

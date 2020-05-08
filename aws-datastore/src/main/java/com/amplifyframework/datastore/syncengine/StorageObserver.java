@@ -18,7 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.logging.Logger;
@@ -29,15 +29,15 @@ import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
 
 /**
- * Observes a {@link LocalStorageAdapter} for changes. When a change occurs,
- * writes it onto a {@link MutationOutbox}.
+ * Observes a {@link LocalStorageAdapter} for its {@link StorageItemChange}s.
+ * When such a change is observed, build an {@link PendingMutation}, and write
+ * it onto a {@link MutationOutbox}.
  */
 final class StorageObserver {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final LocalStorageAdapter localStorageAdapter;
     private final MutationOutbox mutationOutbox;
-    private final StorageItemChange.StorageItemChangeFactory storageItemChangeConverter;
     private final CompositeDisposable disposable;
 
     StorageObserver(
@@ -45,7 +45,6 @@ final class StorageObserver {
             @NonNull MutationOutbox mutationOutbox) {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
-        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
         this.disposable = new CompositeDisposable();
     }
 
@@ -54,19 +53,31 @@ final class StorageObserver {
      * by the sync engine, then place that change into the mutation outbox.
      */
     void startObservingStorageChanges() {
-        disposable.add(streamOfStorageChangeRecords()
-            .map(storageItemChangeConverter::fromRecord)
+        disposable.add(streamOfStorageChanges()
             .filter(possiblyCyclicChange -> {
                 // Don't continue if the storage change was caused by the sync engine itself
                 return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
             })
-            .flatMapSingle(mutationOutbox::enqueue)
+            .map(this::toPendingMutation)
+            .flatMapCompletable(mutationOutbox::enqueue)
             .subscribe(
-                pendingChange -> LOG.info("Successfully enqueued " + pendingChange),
-                error -> LOG.warn("Storage adapter subscription ended in error", error),
-                () -> LOG.warn("Storage adapter subscription terminated with completion.")
+                () -> LOG.warn("Storage adapter subscription terminated with completion."),
+                error -> LOG.warn("Storage adapter subscription ended in error", error)
             )
         );
+    }
+
+    private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {
+        switch (change.type()) {
+            case CREATE:
+                return PendingMutation.creation(change.item(), change.itemClass());
+            case UPDATE:
+                return PendingMutation.update(change.item(), change.itemClass());
+            case DELETE:
+                return PendingMutation.deletion(change.item(), change.itemClass());
+            default:
+                throw new IllegalStateException("Unknown mutation type = " + change.type());
+        }
     }
 
     /**
@@ -76,7 +87,7 @@ final class StorageObserver {
         disposable.clear();
     }
 
-    private Observable<StorageItemChange.Record> streamOfStorageChangeRecords() {
+    private Observable<StorageItemChange<? extends Model>> streamOfStorageChanges() {
         return Observable.create(emitter ->
             localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
         );

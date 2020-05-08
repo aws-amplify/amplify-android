@@ -17,15 +17,13 @@ package com.amplifyframework.storage.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Result;
-
 import java.net.URL;
 import java.util.Objects;
 
 /**
  * The result of a call to get an item's URL from the Storage category.
  */
-public final class StorageGetUrlResult implements Result {
+public final class StorageGetUrlResult {
     private final URL url;
 
     private StorageGetUrlResult(@NonNull URL url) {

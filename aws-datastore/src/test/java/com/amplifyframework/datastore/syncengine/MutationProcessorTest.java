@@ -21,9 +21,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
@@ -52,7 +50,7 @@ import static org.mockito.Mockito.mock;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class MutationProcessorTest {
-    private static final GsonStorageItemChangeConverter RECORD_CONVERTER = new GsonStorageItemChangeConverter();
+    private static final PendingMutation.Converter RECORD_CONVERTER = new GsonPendingMutationConverter();
 
     private AppSync appSync;
     private SynchronousStorageAdapter storageAdapter;
@@ -129,7 +127,7 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Validate that we got "success" notifications out on Hub.
-        final List<StorageItemChange.Record> changesWeExpectToProcessSuccessfully = Arrays.asList(
+        final List<PendingMutation.PersistentRecord> changesWeExpectToProcessSuccessfully = Arrays.asList(
             Models.Tony.DELETION_RECORD,
             Models.Joe.CREATION_RECORD,
             Models.JoeBlog.CREATION_RECORD
@@ -143,18 +141,18 @@ public final class MutationProcessorTest {
 
         // Finally, we expect the mutation outbox to be empty, now, that the mutation
         // processor has drained it.
-        assertEquals(0, storageAdapter.query(StorageItemChange.Record.class).size());
+        assertEquals(0, storageAdapter.query(PendingMutation.PersistentRecord.class).size());
     }
 
     @SuppressWarnings("SameParameterValue")
-    private List<StorageItemChange.Record> takeRecordsFromAccumulator(int quantity) {
-        final List<StorageItemChange.Record> changeRecords = new ArrayList<>();
+    private List<PendingMutation.PersistentRecord> takeRecordsFromAccumulator(int quantity) {
+        final List<PendingMutation.PersistentRecord> changeRecords = new ArrayList<>();
         for (HubEvent<?> hubEvent : publicationEventAccumulator.take(quantity)) {
-            StorageItemChange<? extends Model> change = (StorageItemChange<? extends Model>) hubEvent.getData();
-            if (change == null) {
+            PendingMutation<? extends Model> mutation = (PendingMutation<? extends Model>) hubEvent.getData();
+            if (mutation == null) {
                 throw new IllegalStateException("Found null data in publication event: " + hubEvent);
             }
-            StorageItemChange.Record record = change.toRecord(RECORD_CONVERTER);
+            PendingMutation.PersistentRecord record = RECORD_CONVERTER.toRecord(mutation);
             changeRecords.add(record);
         }
         return changeRecords;
@@ -168,10 +166,10 @@ public final class MutationProcessorTest {
 
         /**
          * Tony is a BlogOwner. Tony has been deleted locally, and the mutation processor
-         * is supposed to pick up the deletion change and act on it. Before that happens,
+         * is supposed to pick up the deletion mutation and act on it. Before that happens,
          * the model metadata shows deleted == false, since it hasn't been updated, yet.
          * {@link Tony#MODEL} is not expected to be in the local storage, at the time
-         * the change is processed.
+         * the mutation is processed.
          */
         static final class Tony {
             static final BlogOwner MODEL = BlogOwner.builder()
@@ -182,13 +180,11 @@ public final class MutationProcessorTest {
             static final ModelMetadata MODEL_METADATA =
                 new ModelMetadata(Tony.MODEL.getId(), false, 1, Time.now());
 
-            static final StorageItemChange.Record DELETION_RECORD = StorageItemChange.<BlogOwner>builder()
-                .itemClass(BlogOwner.class)
-                .item(Tony.MODEL)
-                .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-                .type(StorageItemChange.Type.DELETE)
-                .build()
-                .toRecord(RECORD_CONVERTER);
+            static final PendingMutation<BlogOwner> DELETION =
+                PendingMutation.deletion(Tony.MODEL, BlogOwner.class);
+
+            static final PendingMutation.PersistentRecord DELETION_RECORD =
+                 RECORD_CONVERTER.toRecord(DELETION);
 
             private Tony() {}
         }
@@ -205,13 +201,11 @@ public final class MutationProcessorTest {
             static final ModelMetadata MODEL_METADATA =
                 new ModelMetadata(Joe.MODEL.getId(), false, 1, Time.now());
 
-            static final StorageItemChange.Record CREATION_RECORD = StorageItemChange.<BlogOwner>builder()
-                .itemClass(BlogOwner.class)
-                .item(Joe.MODEL)
-                .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-                .type(StorageItemChange.Type.CREATE)
-                .build()
-                .toRecord(RECORD_CONVERTER);
+            static final PendingMutation<BlogOwner> CREATION =
+                PendingMutation.creation(Joe.MODEL, BlogOwner.class);
+
+            static final PendingMutation.PersistentRecord CREATION_RECORD =
+                RECORD_CONVERTER.toRecord(CREATION);
 
             private Joe() {}
         }
@@ -230,13 +224,11 @@ public final class MutationProcessorTest {
             static final ModelMetadata MODEL_METADATA =
                 new ModelMetadata(JoeBlog.MODEL.getId(), false, 1, Time.now());
 
-            static final StorageItemChange.Record CREATION_RECORD = StorageItemChange.<Blog>builder()
-                .type(StorageItemChange.Type.CREATE)
-                .initiator(StorageItemChange.Initiator.DATA_STORE_API)
-                .itemClass(Blog.class)
-                .item(JoeBlog.MODEL)
-                .build()
-                .toRecord(RECORD_CONVERTER);
+            static final PendingMutation<Blog> CREATION =
+                PendingMutation.creation(JoeBlog.MODEL, Blog.class);
+
+            static final PendingMutation.PersistentRecord CREATION_RECORD =
+                RECORD_CONVERTER.toRecord(CREATION);
 
             private JoeBlog() {}
         }

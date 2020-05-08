@@ -82,7 +82,7 @@ public final class SQLiteStorageAdapterSaveTest {
             .build();
         adapter.save(raph);
 
-        // Get the BlogOwner record from the database
+        // Get the BlogOwner from the database
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertFalse(blogOwners.contains(raphael)); // Replaced by "Raph Kim"
@@ -100,7 +100,7 @@ public final class SQLiteStorageAdapterSaveTest {
             .build();
         adapter.save(alan);
 
-        // Get the BlogOwner record from the database
+        // Get the BlogOwner from the database
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(alan));
@@ -119,7 +119,7 @@ public final class SQLiteStorageAdapterSaveTest {
             .build();
         adapter.save(tony);
 
-        // Get the BlogOwner record from the database
+        // Get the BlogOwner from the database
         final List<BlogOwner> blogOwners = adapter.query(BlogOwner.class);
         assertEquals(1, blogOwners.size());
         assertTrue(blogOwners.contains(tony));
@@ -142,7 +142,7 @@ public final class SQLiteStorageAdapterSaveTest {
             .build();
         adapter.save(blog);
 
-        // Get the Blog record from the database
+        // Get the Blog from the database
         final List<Blog> blogs = adapter.query(Blog.class);
         assertEquals(1, blogs.size());
         assertTrue(blogs.contains(blog));

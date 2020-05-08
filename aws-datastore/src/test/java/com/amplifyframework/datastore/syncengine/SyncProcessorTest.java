@@ -21,17 +21,16 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.datastore.CompoundModelProvider;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
+import com.amplifyframework.datastore.model.CompoundModelProvider;
+import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
-import com.amplifyframework.datastore.storage.SystemModelsProviderFactory;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
@@ -72,7 +71,6 @@ public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
     private static final long BASE_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
 
-    private StorageItemChange.StorageItemChangeFactory storageRecordDeserializer;
     private AppSync appSync;
     private ModelProvider modelProvider;
     private SynchronousStorageAdapter storageAdapter;
@@ -85,7 +83,6 @@ public final class SyncProcessorTest {
      */
     @Before
     public void setup() throws AmplifyException {
-        this.storageRecordDeserializer = new GsonStorageItemChangeConverter();
         this.modelProvider =
             CompoundModelProvider.of(SystemModelsProviderFactory.create(), AmplifyModelProvider.getInstance());
 
@@ -129,11 +126,7 @@ public final class SyncProcessorTest {
 
         // Arrange a subscription to the storage adapter. We're going to watch for changes.
         // We expect to see content here as a result of the SyncProcessor applying updates.
-        final TestObserver<StorageItemChange<? extends Model>> adapterObserver = TestObserver.create();
-        storageAdapter.observe()
-            .map(record -> record.toStorageItemChange(storageRecordDeserializer))
-            .subscribe(adapterObserver);
-
+        final TestObserver<StorageItemChange<? extends Model>> adapterObserver = storageAdapter.observe().test();
         // Arrange: return some responses for the sync() call on the RemoteModelState
         AppSyncMocking.onSync(appSync)
             .mockSuccessResponse(Post.class, DELETED_DRUM_POST)
