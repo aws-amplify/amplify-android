@@ -22,7 +22,7 @@ import java.util.Objects;
 /**
  * A simple data structure that holds pagination information that can be applied queries.
  */
-public class QueryPaginationInput {
+public final class QueryPaginationInput {
 
     /**
      * The default page size.

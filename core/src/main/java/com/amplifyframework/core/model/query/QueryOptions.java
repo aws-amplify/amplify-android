@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.query;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
@@ -44,39 +46,52 @@ public final class QueryOptions {
     }
 
     /**
-     *
-     * @param queryPredicate
-     * @return
+     * Factory method that builds the options with the given {@link QueryPredicate}.
+     * @param queryPredicate the query conditions.
+     * @return options with a given predicate.
      */
-    public static QueryOptions where(QueryPredicate queryPredicate) {
+    public static QueryOptions where(@NonNull final QueryPredicate queryPredicate) {
         final QueryOptions options = new QueryOptions();
         options.queryPredicate = queryPredicate;
         return options;
     }
 
     /**
+     * Factory method that builds the options with a predicate matching the model id and the
+     * pagination set to the first result only.
      *
-     * @param modelId
-     * @return
+     * @param modelId model identifier.
+     * @return options with proper predicate and pagination to match a model by its id.
      */
-    public static QueryOptions byId(String modelId) {
+    public static QueryOptions byId(@NonNull final String modelId) {
         return where(QueryField.field("id").eq(modelId)).paginated(firstResult());
     }
 
     /**
+     * Updates the current options with a given {@code paginationInput}.
      *
-     * @param paginationInput
-     * @return
+     * @param paginationInput pagination information.
+     * @return current options with an updated {@code paginationInput}.
+     * @see QueryPaginationInput#page(Integer)
+     * @see QueryPaginationInput#firstPage()
      */
-    public QueryOptions paginated(QueryPaginationInput paginationInput) {
+    public QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
         this.paginationInput = paginationInput;
         return this;
     }
 
+    /**
+     * Returns the {@code queryPredicate} property.
+     * @return the {@code queryPredicate} property.
+     */
     public QueryPredicate getQueryPredicate() {
         return queryPredicate;
     }
 
+    /**
+     * Returns the {@code paginationInput} property.
+     * @return the {@code paginationInput} property.
+     */
     public QueryPaginationInput getPaginationInput() {
         return paginationInput;
     }

@@ -36,6 +36,7 @@ import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.util.CollectionUtils;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -152,7 +153,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
-        List<Object> predicateBindings = Collections.emptyList();
+        final List<Object> bindings = new ArrayList<>();
 
         // Track the list of columns to return
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
@@ -227,7 +228,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
         final QueryPredicate predicate = options.getQueryPredicate();
         if (predicate != null) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
-            predicateBindings = sqlPredicate.getBindings();
+            bindings.addAll(sqlPredicate.getBindings());
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
@@ -240,16 +241,18 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.LIMIT)
                     .append(SqlKeyword.DELIMITER)
-                    .append(paginationInput.getLimit())
+                    .append("?")
                     .append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.OFFSET)
                     .append(SqlKeyword.DELIMITER)
-                    .append(paginationInput.getPage() * paginationInput.getLimit());
+                    .append("?");
+            bindings.add(paginationInput.getLimit());
+            bindings.add(paginationInput.getPage() * paginationInput.getLimit());
         }
 
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        return new SqlCommand(table.getName(), queryString, columns, predicateBindings);
+        return new SqlCommand(table.getName(), queryString, columns, bindings);
     }
 
     /**

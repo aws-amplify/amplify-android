@@ -33,6 +33,7 @@ import org.robolectric.annotation.Config;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -159,9 +160,13 @@ public class SqlCommandTest {
         );
         assertNotNull(sqlCommand);
         assertEquals(
-                PERSON_BASE_QUERY + " LIMIT 20 OFFSET 40;",
+                PERSON_BASE_QUERY + " LIMIT ? OFFSET ?;",
                 sqlCommand.sqlStatement()
         );
+        final List<Object> bindings = sqlCommand.getBindings();
+        assertEquals(2, bindings.size());
+        assertEquals(20, bindings.get(0));
+        assertEquals(40, bindings.get(1));
     }
 
     @Test
@@ -173,9 +178,13 @@ public class SqlCommandTest {
         );
         assertNotNull(sqlCommand);
         assertEquals(
-                PERSON_BASE_QUERY + " LIMIT 100 OFFSET 0;",
+                PERSON_BASE_QUERY + " LIMIT ? OFFSET ?;",
                 sqlCommand.sqlStatement()
         );
+        final List<Object> bindings = sqlCommand.getBindings();
+        assertEquals(2, bindings.size());
+        assertEquals(100, bindings.get(0));
+        assertEquals(0, bindings.get(1));
     }
 
     @Test
@@ -187,9 +196,13 @@ public class SqlCommandTest {
         );
         assertNotNull(sqlCommand);
         assertEquals(
-                PERSON_BASE_QUERY + " LIMIT 1 OFFSET 0;",
+                PERSON_BASE_QUERY + " LIMIT ? OFFSET ?;",
                 sqlCommand.sqlStatement()
         );
+        final List<Object> bindings = sqlCommand.getBindings();
+        assertEquals(2, bindings.size());
+        assertEquals(1, bindings.get(0));
+        assertEquals(0, bindings.get(1));
     }
 
     private static ModelSchema getPersonModelSchema() {

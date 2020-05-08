@@ -134,8 +134,7 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to query storage adapter
      */
     public <T extends Model> List<T> query(@NonNull Class<T> modelClass) throws DataStoreException {
-        //noinspection ConstantConditions
-        return query(modelClass, null);
+        return query(modelClass, QueryOptions.all());
     }
 
     /**
