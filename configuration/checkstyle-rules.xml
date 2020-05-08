@@ -184,10 +184,7 @@
             how the code is composed, with only a quick visual inspection.
         -->
         <module name="AvoidStarImport" />
-        <module name="AvoidStaticImport">
-            <property name="excludes" value="com.amplifyframework.core.model.query.QueryOptions.*" />
-            <property name="excludes" value="com.amplifyframework.core.model.query.QueryPaginationInput.*" />
-        </module>
+        <module name="AvoidStaticImport" />
         <module name="RedundantImport" />
         <module name="UnusedImports" />
         <module name="ImportOrder">
