@@ -17,6 +17,7 @@ package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
@@ -53,6 +54,7 @@ public final class QueryOptions {
      * @see Page#startingAt(int)
      * @see Page#firstPage()
      */
+    @NonNull
     public QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
         this.paginationInput = paginationInput;
         return this;
@@ -62,6 +64,7 @@ public final class QueryOptions {
      * Returns the {@code queryPredicate} property.
      * @return the {@code queryPredicate} property.
      */
+    @Nullable
     public QueryPredicate getQueryPredicate() {
         return queryPredicate;
     }
@@ -70,8 +73,35 @@ public final class QueryOptions {
      * Returns the {@code paginationInput} property.
      * @return the {@code paginationInput} property.
      */
+    @Nullable
     public QueryPaginationInput getPaginationInput() {
         return paginationInput;
+    }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof QueryOptions)) {
+            return false;
+        }
+        QueryOptions that = (QueryOptions) object;
+        return ObjectsCompat.equals(queryPredicate, that.queryPredicate) &&
+                ObjectsCompat.equals(paginationInput, that.paginationInput);
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(queryPredicate, paginationInput);
+    }
+
+    @Override
+    public String toString() {
+        return "QueryOptions{" +
+                "queryPredicate=" + queryPredicate +
+                ", paginationInput=" + paginationInput +
+                '}';
     }
 
 }

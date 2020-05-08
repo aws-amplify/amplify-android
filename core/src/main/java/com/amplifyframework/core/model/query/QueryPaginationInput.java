@@ -16,6 +16,7 @@
 package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 /**
  * A simple data structure that holds pagination information that can be applied queries.
@@ -60,4 +61,31 @@ public final class QueryPaginationInput {
     public int getLimit() {
         return limit;
     }
+
+    @Override
+    public boolean equals(Object object) {
+        if (this == object) {
+            return true;
+        }
+        if (!(object instanceof QueryPaginationInput)) {
+            return false;
+        }
+        QueryPaginationInput that = (QueryPaginationInput) object;
+        return page == that.page &&
+                limit == that.limit;
+    }
+
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(page, limit);
+    }
+
+    @Override
+    public String toString() {
+        return "QueryPaginationInput{" +
+                "page=" + page +
+                ", limit=" + limit +
+                '}';
+    }
+
 }
