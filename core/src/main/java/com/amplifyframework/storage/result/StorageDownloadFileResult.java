@@ -17,15 +17,13 @@ package com.amplifyframework.storage.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Result;
-
 import java.io.File;
 import java.util.Objects;
 
 /**
  * The result of a call to get an item from the Storage category.
  */
-public final class StorageDownloadFileResult implements Result {
+public final class StorageDownloadFileResult {
     private final File file;
 
     private StorageDownloadFileResult(File file) {

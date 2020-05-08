@@ -18,7 +18,6 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Result;
 import com.amplifyframework.storage.StorageItem;
 
 import java.util.ArrayList;
@@ -28,7 +27,7 @@ import java.util.List;
 /**
  * A result of an list operation on the Storage category.
  */
-public final class StorageListResult implements Result {
+public final class StorageListResult {
     private final List<StorageItem> items;
 
     private StorageListResult(List<StorageItem> items) {

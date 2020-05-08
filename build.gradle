@@ -80,6 +80,7 @@ ext {
         rxjava: 'io.reactivex.rxjava2:rxjava:2.2.13',
         tensorflow: 'org.tensorflow:tensorflow-lite:2.0.0',
         threetenabp: 'com.jakewharton.threetenabp:threetenabp:1.2.3',
+        uuidgen: 'com.fasterxml.uuid:java-uuid-generator:4.0.1',
 
         junit: 'junit:junit:4.13',
         mockito: 'org.mockito:mockito-core:3.1.0',

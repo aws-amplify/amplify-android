@@ -18,7 +18,6 @@ package com.amplifyframework.predictions.result;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Result;
 import com.amplifyframework.predictions.models.Entity;
 import com.amplifyframework.predictions.models.Feature;
 import com.amplifyframework.predictions.models.KeyPhrase;
@@ -34,7 +33,7 @@ import java.util.Objects;
 /**
  * The result of the call to interpret text.
  */
-public final class InterpretResult implements Result {
+public final class InterpretResult {
     private final Language language;
     private final Sentiment sentiment;
     private final List<KeyPhrase> keyPhrases;

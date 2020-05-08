@@ -24,6 +24,7 @@ dependencies {
     implementation dependency.gson
     implementation dependency.rxjava
     implementation dependency.rxandroid
+    implementation dependency.uuidgen
 
     testImplementation project(path: ':testmodels')
     testImplementation project(path: ':testutils')

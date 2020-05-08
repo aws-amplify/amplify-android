@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
@@ -43,7 +44,7 @@ final class SyncTimeRegistry {
             String modelClassName = modelClazz.getSimpleName();
             QueryPredicate hasMatchingModelClassName = QueryField.field("modelClassName").eq(modelClassName);
 
-            localStorageAdapter.query(LastSyncMetadata.class, hasMatchingModelClassName, results -> {
+            localStorageAdapter.query(LastSyncMetadata.class, Where.matches(hasMatchingModelClassName), results -> {
                 try {
                     LastSyncMetadata syncMetadata = extractSingleResult(modelClazz, results);
                     emitter.onSuccess(SyncTime.from(syncMetadata.getLastSyncTime()));

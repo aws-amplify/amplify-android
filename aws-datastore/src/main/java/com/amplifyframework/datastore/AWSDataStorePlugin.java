@@ -32,6 +32,8 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
@@ -304,11 +306,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull QueryPredicate predicate,
+            @NonNull QueryPredicate queryPredicate,
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        this.query(itemClass, Where.matches(queryPredicate), onQueryResults, onQueryFailure);
+    }
+
+    @Override
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
         afterInitialization(() ->
-            sqliteStorageAdapter.query(itemClass, predicate, onQueryResults, onQueryFailure));
+                sqliteStorageAdapter.query(itemClass, options, onQueryResults, onQueryFailure));
     }
 
     @Override
