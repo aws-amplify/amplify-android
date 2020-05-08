@@ -18,13 +18,12 @@ package com.amplifyframework.predictions.options;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.Options;
 import com.amplifyframework.predictions.models.LanguageType;
 
 /**
  * Options for text transcription operation.
  */
-public final class SpeechToTextOptions implements Options {
+public final class SpeechToTextOptions {
     private final LanguageType language;
 
     private SpeechToTextOptions(final Builder builder) {

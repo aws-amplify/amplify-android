@@ -17,14 +17,12 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Result;
-
 import java.util.Objects;
 
 /**
  * The result of the call to transcribe text from audio.
  */
-public final class SpeechToTextResult implements Result {
+public final class SpeechToTextResult {
     private final String transcription;
 
     private SpeechToTextResult(final Builder builder) {
