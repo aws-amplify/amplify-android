@@ -37,6 +37,7 @@ import io.reactivex.Completable;
 public final class Orchestrator {
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
+    private final MutationOutbox mutationOutbox;
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
 
@@ -71,8 +72,9 @@ public final class Orchestrator {
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
+        this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
+
         RemoteModelMutations remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
-        MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
@@ -97,13 +99,14 @@ public final class Orchestrator {
      */
     @NonNull
     public Completable start() {
-        return Completable.fromAction(() -> {
-            storageObserver.startObservingStorageChanges();
-            subscriptionProcessor.startSubscriptions();
-            syncProcessor.hydrate().blockingAwait();
-            mutationProcessor.startDrainingMutationOutbox();
-            subscriptionProcessor.startDrainingMutationBuffer();
-        });
+        return mutationOutbox.load()
+            .andThen(Completable.fromAction(() -> {
+                storageObserver.startObservingStorageChanges();
+                subscriptionProcessor.startSubscriptions();
+                syncProcessor.hydrate().blockingAwait();
+                mutationProcessor.startDrainingMutationOutbox();
+                subscriptionProcessor.startDrainingMutationBuffer();
+            }));
     }
 
     /**

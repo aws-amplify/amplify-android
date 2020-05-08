@@ -16,78 +16,58 @@
 package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.async.NoOpCancelable;
-import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfiguration;
-import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
+import com.amplifyframework.datastore.appsync.AppSyncMocking;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
-import com.amplifyframework.testutils.Await;
+import com.amplifyframework.testutils.HubAccumulator;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
 
+import io.reactivex.Observable;
+
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.any;
-import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 
 /**
  * Tests the {@link Orchestrator}.
  */
-@SuppressWarnings("unchecked") // Mockito matchers, i.e. any(Raw.class), etc.
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
-    // A "reasonable" amount of time our test(s) will wait for async operations to complete
-    private static final long OPERATIONS_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5) /* ms */;
-
     /**
      * When an item is placed into storage, a cascade of
      * things happen which should ultimately result in a mutation call
      * to the API category, with an {@link MutationType} corresponding to the type of
      * modification that was made to the storage.
-     * @throws InterruptedException If our own mock API response doesn't get generated
      * @throws AmplifyException On failure to load model schema into registry
      */
+    @SuppressWarnings("unchecked") // Casting ? in HubEvent<?> to PendingMutation<? extends Model>
     @Test
-    public void itemsPlacedInStorageArePublishedToNetwork() throws InterruptedException, AmplifyException {
-        AppSync appSync = mock(AppSync.class);
-
+    public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()
             .name("Susan Quimby")
             .build();
 
-        CountDownLatch apiInvocationsPending = new CountDownLatch(1);
-        doAnswer(invocation -> {
-            // Count down our latch, to indicate that this code did run.
-            apiInvocationsPending.countDown();
+        HubAccumulator accumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(susan), 1)
+                .start();
 
-            // Simulate a successful response from the API.
-            int positionOfCreationItem = 0;
-            int positionOfResponseConsumer = 1;
-            Model createdItem = invocation.getArgument(positionOfCreationItem);
-            Consumer<GraphQLResponse<Model>> onResponse = invocation.getArgument(positionOfResponseConsumer);
-            onResponse.accept(new GraphQLResponse<>(createdItem, Collections.emptyList()));
-
-            // Technically, the AppSync create() returns a Cancelable of some kind.
-            return new NoOpCancelable();
-        }).when(appSync)
-            .create(eq(susan), any(Consumer.class), any(Consumer.class));
+        AppSync appSync = mock(AppSync.class);
+        AppSyncMocking.onCreate(appSync).mockResponse(susan);
 
         InMemoryStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         ModelProvider modelProvider = SimpleModelProvider.withRandomVersion();
@@ -107,18 +87,18 @@ public final class OrchestratorTest {
         orchestrator.start().blockingAwait();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
-        Await.result(
-            (Consumer<StorageItemChange<BlogOwner>> onResult, Consumer<DataStoreException> onError) ->
-                localStorageAdapter.save(
-                    susan,
-                    StorageItemChange.Initiator.DATA_STORE_API,
-                    onResult,
-                    onError
-                )
+        SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
+
+        assertEquals(
+            Collections.singletonList(susan),
+            Observable.fromIterable(accumulator.await())
+                .map(HubEvent::getData)
+                .map(data -> (PendingMutation<BlogOwner>) data)
+                .map(PendingMutation::getMutatedItem)
+                .toList()
+                .blockingGet()
         );
 
-        // Wait for the mock network callback to occur on the IO scheduler ...
-        apiInvocationsPending.await(OPERATIONS_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        assertEquals(0, apiInvocationsPending.getCount());
+        orchestrator.stop();
     }
 }

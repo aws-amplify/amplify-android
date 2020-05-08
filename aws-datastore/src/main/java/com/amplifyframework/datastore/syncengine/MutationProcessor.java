@@ -41,7 +41,6 @@ import io.reactivex.schedulers.Schedulers;
  * {@link AppSync}. The responses to these mutations are themselves forwarded to the Merger,
  * which may again modify the store.
  */
-@SuppressWarnings("CodeBlock2Expr")
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
@@ -72,16 +71,24 @@ final class MutationProcessor {
      * it again later, when network conditions become favorable again.
      */
     void startDrainingMutationOutbox() {
-        disposable.add(
-            mutationOutbox.observe()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .flatMapCompletable(this::processOutboxItem)
-                .subscribe(
-                    () -> LOG.warn("Observation of mutation outbox was completed."),
-                    error -> LOG.warn("Error ended observation of mutation outbox: ", error)
-                )
+        disposable.add(mutationOutbox.events()
+            .startWith(MutationOutbox.EnqueueEvent.ITEM_ADDED) // To start draining immediately
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .flatMapCompletable(event -> processNextOutboxItem())
+            .subscribe(
+                () -> LOG.warn("Observation of mutation outbox was completed."),
+                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+            )
         );
+    }
+
+    private Completable processNextOutboxItem() {
+        PendingMutation<? extends Model> next = mutationOutbox.peek();
+        if (next != null) {
+            return processOutboxItem(next);
+        }
+        return Completable.complete();
     }
 
     /**
@@ -94,7 +101,7 @@ final class MutationProcessor {
         // First, publish the mutation over the network.
         return publishToNetwork(mutationOutboxItem)
             // Merge the response back into the local store.
-            .flatMapCompletable(merger::merge)
+            .flatMapCompletable(mutation -> merger.merge(mutation, Merger.MergeStrategy.IGNORE_PENDING_MUTATIONS))
             // Lastly, remove the item from the outbox, so we don't process it again.
             .andThen(mutationOutbox.remove(mutationOutboxItem))
             .andThen(Completable.fromAction(() -> {
@@ -146,11 +153,12 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch an update mutation
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
-        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
-            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
-                appSync.update(model, version, onSuccess, onError);
-            });
-        });
+        return versionRepository.findModelVersion(mutation.getMutatedItem())
+            .flatMap(version ->
+                publishWithStrategy(mutation, (model, onSuccess, onError) ->
+                    appSync.update(model, version, onSuccess, onError)
+                )
+            );
     }
 
     // For an item in the outbox, dispatch a create mutation
@@ -160,13 +168,13 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch a delete mutation
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
-        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
-            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
+        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) -> {
                 final Class<T> modelClass = mutation.getClassOfMutatedItem();
                 final String modelId = mutation.getMutatedItem().getId();
                 appSync.delete(modelClass, modelId, version, onSuccess, onError);
-            });
-        });
+            })
+        );
     }
 
     /**
@@ -179,7 +187,7 @@ final class MutationProcessor {
      */
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithStrategy(
             PendingMutation<T> mutation, PublicationStrategy<T> publicationStrategy) {
-        return Single.defer(() -> Single.create(subscriber -> {
+        return Single.defer(() -> Single.create(subscriber ->
             publicationStrategy.publish(
                 mutation.getMutatedItem(),
                 result -> {
@@ -195,8 +203,8 @@ final class MutationProcessor {
                     ));
                 },
                 subscriber::onError
-            );
-        }));
+            )
+        ));
     }
 
     /**
