@@ -105,6 +105,12 @@
                  EmptyConsumer.create(), etc., instead of value -> {}.
             -->
             <property name="allowEmptyLambdas" value="false" />
+
+            <!--
+                Allows empty class bodies.  Useful for creating an
+                anonymous inner class, such as when defining a TypeToken.
+            -->
+            <property name="allowEmptyTypes" value="true" />
         </module>
 
         <!-- Disallow methods from having too many parameters. -->
@@ -232,6 +238,12 @@
         <module name="JavadocMethod">
             <property name="scope" value="protected" />
             <property name="validateThrows" value="true" />
+        </module>
+        <!--
+            Checks for missing Javadoc comments on public and protected class/interface definitions.
+        -->
+        <module name="MissingJavadocType">
+            <property name="scope" value="protected" />
         </module>
         <!--
             public and protected class/interface definitions should

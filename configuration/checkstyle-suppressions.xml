@@ -32,5 +32,6 @@
     -->
     <suppress checks="AvoidStaticImport" files="src/(androidTest|test)" />
     <suppress checks="MagicNumber" files="src/(androidTest|test)" />
+    <suppress checks="MissingJavadocType" files="src/(androidTest|test)" />
 </suppressions>
 

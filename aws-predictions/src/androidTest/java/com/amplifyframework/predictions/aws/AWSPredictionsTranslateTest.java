@@ -21,7 +21,6 @@ import com.amplifyframework.predictions.PredictionsCategory;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.test.R;
 import com.amplifyframework.predictions.models.LanguageType;
-import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
@@ -66,7 +65,7 @@ public final class AWSPredictionsTranslateTest {
      */
     @Test(expected = PredictionsException.class)
     public void testTranslateFailsForBlankInput() throws Exception {
-        predictions.translateText("", TranslateTextOptions.defaults());
+        predictions.translateText("");
     }
 
     /**
@@ -79,12 +78,7 @@ public final class AWSPredictionsTranslateTest {
 
         // Translate english text and assert non-null result.
         // Use configured default languages
-        TranslateTextResult result = predictions.translateText(
-                sampleText,
-                // LanguageType.ENGLISH,
-                // LanguageType.SPANISH,
-                TranslateTextOptions.defaults()
-        );
+        TranslateTextResult result = predictions.translateText(sampleText);
         assertNotNull(result);
 
         // Assert translated language is in Spanish
@@ -108,9 +102,8 @@ public final class AWSPredictionsTranslateTest {
         // Use configured default languages
         TranslateTextResult result = predictions.translateText(
                 sampleText,
-                 LanguageType.SPANISH,
-                 LanguageType.ENGLISH,
-                TranslateTextOptions.defaults()
+                LanguageType.SPANISH,
+                LanguageType.ENGLISH
         );
         assertNotNull(result);
 

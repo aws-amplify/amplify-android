@@ -18,16 +18,18 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.GsonStorageItemChangeConverter;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
+import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
 
+import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
@@ -38,82 +40,81 @@ import io.reactivex.subjects.PublishSubject;
  * for changes that have already occurred in the storage adapter, and need
  * to be synchronized with a remote GraphQL API, via (a) GraphQL mutation(s).
  *
- * This component may also be thought of as an "offline mutation queue," except for
- * that the implementation doesn't store GraphQL primitives, it stores storage change
- * primitives. These are consumed and converted to GraphQL mutations, though.
- *
- * Items in the mutation outbox are observed, and written out over the network.
- * When a write completes successfully, it is safe to remove the corresponding item
- * from the outbox.
+ * This component is an "offline mutation queue,"; items in the mutation outbox are observed,
+ * and written out over the network. When an item is written out over the network successfully,
+ * it is safe to remove it from this outbox.
  */
-// In this class, some lambdas look more readable w/ blocks
-// The generics get crazy, so we break convention and use labels MODEL and SIC, not just M, S.
-@SuppressWarnings({"CodeBlock2Expr", "checkstyle:MethodTypeParameterName"})
 final class MutationOutbox {
-    private final LocalStorageAdapter localStorageAdapter;
-    private final PublishSubject<StorageItemChange<? extends Model>> pendingStorageItemChanges;
-    private final GsonStorageItemChangeConverter storageItemChangeConverter;
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
+    private final LocalStorageAdapter storage;
+    private final PublishSubject<PendingMutation<? extends Model>> pendingMutations;
+    private final PendingMutation.Converter converter;
 
     MutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
-        this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
-        this.pendingStorageItemChanges = PublishSubject.create();
-        this.storageItemChangeConverter = new GsonStorageItemChangeConverter();
+        this.storage = Objects.requireNonNull(localStorageAdapter);
+        this.pendingMutations = PublishSubject.create();
+        this.converter = new GsonPendingMutationConverter();
     }
 
     /**
      * Checks to see if there is a pending mutation for a model with the given ID.
-     * @param modelId ID of any model
+     * @param modelId ID of any model in the system
      * @return An {@link Single} which emits true if there is a pending mutation for
-     *         the model id, emits false if not, emits error if it can't tell due to an error
+     *         the model id, emits false if not, and emits error if not determinable
      */
     @NonNull
-    Single<Boolean> hasPendingMutation(String modelId) {
-        QueryPredicate hasMatchingId = QueryField.field("id").eq(modelId);
-        return Single.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class, hasMatchingId,
+    Single<Boolean> hasPendingMutation(@NonNull String modelId) {
+        Objects.requireNonNull(modelId);
+        // Note that the getId() on the mutation is different from the ID of the decoded model.
+        QueryPredicate hasMatchingId = QueryField.field("decodedModelId").eq(modelId);
+        return Single.create(emitter ->
+            storage.query(PendingMutation.PersistentRecord.class, hasMatchingId,
                 results -> emitter.onSuccess(results.hasNext()),
                 emitter::onError
-            );
-        });
+            )
+        );
     }
 
     /**
-     * Write a new {@link StorageItemChange} into the outbox.
+     * Write a new {@link PendingMutation} into the outbox.
+     *
      * This involves:
-     *   1. Writing the {@link StorageItemChange.Record} into a persistent store
-     *      (we use the storage adapter, again, for this). To make our lives easier,
-     *      we first convert the {@link StorageItemChange} to a {@link StorageItemChange.Record},
-     *      which is something the storage adapter can handle.
-     *   2. Notifying the observers of the outbox that there is a new
-     *      {@link StorageItemChange} that needs to be processed.
-     * @param storageItemChange Storage item change to be placed into the outbox
-     * @param <MODEL> Any Java type that extends {@link Model}
-     * @param <SIC> Any Java type that extends {@link StorageItemChange} with template param of MODEL
-     * @return A Single that emits the StorageItemChange that was put into the outbox, if successful,
-     *         or emits error, if not.
+     *
+     *   1. Writing a {@link PendingMutation} into a persistent store, by first converting it
+     *      to and {@link PendingMutation.PersistentRecord}.
+     *
+     *   2. Notifying the observers of the outbox that there is a new {@link PendingMutation}
+     *      that needs to be processed.
+     *
+     * @param pendingMutation A mutation to be enqueued into the outbox
+     * @param <T> The type of model to which the mutation refers; e.g., if the PendingMutation
+     *            is intending to create Person object, this type could be Person.
+     * @return A Completable that emits success upon successful enqueue, or failure if it is not
+     *         possible to enqueue the mutation
      */
     @NonNull
-    <MODEL extends Model, SIC extends StorageItemChange<MODEL>> Single<SIC> enqueue(
-            @NonNull SIC storageItemChange) {
-        Objects.requireNonNull(storageItemChange);
+    <T extends Model> Completable enqueue(@NonNull PendingMutation<T> pendingMutation) {
+        Objects.requireNonNull(pendingMutation);
 
-        // defer() the creation of a Single, until someone subscribes enqueue().
-        // When they do, create() a single that wraps a save() call to LocalStorageAdapter.
-        return Single.defer(() -> Single.create(subscriber -> {
-            // Convert the storageItemChange (that we want to store) into a record
-            StorageItemChange.Record record = storageItemChange.toRecord(storageItemChangeConverter);
+        // defer() the creation of a Completable, until someone subscribes enqueue().
+        // When they do, create() a Completable that wraps a save() call to LocalStorageAdapter.
+        return Completable.defer(() -> Completable.create(subscriber -> {
+            // Convert the PendingMutation (that we want to store) into a Record
+            PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
             // Save it.
-            localStorageAdapter.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
-                recordOfRecord -> {
+            storage.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
+                saved -> {
                     // The return value is a record that we saved a record.
                     // So, we would have to "unwrap" it, to get the item we saved, out.
                     // Forget that. We know the save succeeded, so just emit the
                     // original thing enqueue() got as a param.
-                    pendingStorageItemChanges.onNext(storageItemChange);
-                    subscriber.onSuccess(storageItemChange);
+                    LOG.info("Successfully enqueued " + pendingMutation);
+                    pendingMutations.onNext(pendingMutation);
+                    subscriber.onComplete();
                 },
                 error -> {
-                    pendingStorageItemChanges.onError(error);
+                    pendingMutations.onError(error);
                     subscriber.onError(error);
                 }
             );
@@ -121,82 +122,72 @@ final class MutationOutbox {
     }
 
     /**
-     * Observe the {@link MutationOutbox}, for new {@link StorageItemChange}s.
-     * The Orchestrator may invoke this method to consume items out of the outbox. After
+     * Observe the {@link MutationOutbox}, for newly enqueued {@link PendingMutation}s.
+     * The {@link SyncProcessor} may invoke this method to consume items out of the outbox. After
      * processing an item on this observable, that item should be removed from the
-     * MutationOutbox.
+     * MutationOutbox via {@link #remove(PendingMutation)}.
      * @return An observable stream of items that have yet to be published via the network
      */
     @WorkerThread
     @NonNull
-    Observable<StorageItemChange<? extends Model>> observe() {
-        return pendingStorageItemChanges
+    Observable<PendingMutation<? extends Model>> observe() {
+        return pendingMutations
             .observeOn(Schedulers.io())
             .subscribeOn(Schedulers.io())
-            .startWith(previouslyUnprocessedChanges())
-            .filter(storageItemChange -> {
-                return !StorageItemChange.Initiator.SYNC_ENGINE.equals(storageItemChange.initiator());
-            });
+            .startWith(previouslyUnprocessedMutations());
     }
 
     /**
-     * Remove an item from the outbox. The sync engine calls this after it successfully
+     * Remove an item from the outbox. The {@link SyncProcessor} calls this after it successfully
      * publishes an update over the network.
-     * @param storageItemChange The item to remove from the outbox
-     * @param <MODEL> Java type that extends {@link Model} type.
-     * @param <SIC> Java type that extends a {@link StorageItemChange} with parameter type of MODEL.
-     * @return A Single which will complete with the successfully deleted storageItemChange,
-     *         of will error with a throwable cause, if the deletion fails
+     * @param pendingMutation A mutation that has been processed, and can be removed from the outbox
+     * @param <T> Type of model to which the mutation makes reference; for example, if the mutation is
+     *            to create a Person, T is Person.
+     * @return A Completable which completes when the requests PendingMutation is deleted,
+     *         -- or, emits an error, if unable to delete it
      */
     @NonNull
-    <MODEL extends Model, SIC extends StorageItemChange<MODEL>> Single<SIC> remove(
-            final SIC storageItemChange) {
-        // defer() creation of the Single until someone subscribe()s via remove() method.
-        // At that time, create() a Single that wraps a call to delete an item from the LocalStorageAdapter
-        return Single.defer(() -> Single.create(subscriber -> {
-            // Convert the storageItemChange into a record
-            StorageItemChange.Record record = storageItemChange.toRecord(storageItemChangeConverter);
+    <T extends Model> Completable remove(PendingMutation<T> pendingMutation) {
+        // defer() creation of the Completable until someone subscribe()s via remove() method.
+        // At that time, create() a Completable that wraps a call to LocalStorageAdapter#delete(...).
+        return Completable.defer(() -> Completable.create(subscriber -> {
+            // Convert the PendingMutation into a Record
+            PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
             // Delete it.
-            localStorageAdapter.delete(
+            storage.delete(
                 record,
                 StorageItemChange.Initiator.SYNC_ENGINE,
-                recordOfRecord -> {
-                    // The response is a record that we deleted a record.
-                    // We would have to unpack the contained item (the record we deleted)
-                    // So, forget that. Just return the copy we received via remove() method call.
-                    subscriber.onSuccess(storageItemChange);
-                },
+                ignored -> subscriber.onComplete(),
                 subscriber::onError
             );
         }));
     }
 
     /**
-     * Builds an Observable stream onto which any/all unhandled storage changes are emitted.
-     * This is effectively an Rx wrapper around a collection of query results. This should
-     * be used when the Sync Engine is coming online for the first time.
-     * @return An observable stream of unhandled changes
+     * Builds an Observable stream onto which any/all previously unhandled mutations are emitted.
+     * The {@link PendingMutation}s on this stream are taken out of durable storage.
+     * That storage may still contain mutations, perhaps remaining from a previously-terminated session.
+     * This contents of this stream should be processed whenever the {@link Orchestrator} comes online.
+     * @return An observable stream of mutations that weren't handled in the last session
      */
-    private Observable<StorageItemChange<? extends Model>> previouslyUnprocessedChanges() {
-        // defer() creation of this Observable until someone subscribe()s to previouslyUnprocessedChanges()
+    private Observable<PendingMutation<? extends Model>> previouslyUnprocessedMutations() {
+        // defer() creation of this Observable until someone subscribe()s to previouslyUnprocessedMutations()
         // when they do, respond by create()ing an Observable which emits the results of a
-        // query to LocalStorageAdapter, for any existing StorageItemChange.Record.
-        return Observable.defer(() -> Observable.create(emitter -> {
-            localStorageAdapter.query(StorageItemChange.Record.class,
-                queryResultsIterator -> {
-                    while (queryResultsIterator.hasNext()) {
+        // query to LocalStorageAdapter, for any existing instances of PendingMutation.Record.
+        return Observable.defer(() -> Observable.create(emitter ->
+            storage.query(PendingMutation.PersistentRecord.class,
+                results -> {
+                    while (results.hasNext()) {
                         try {
-                            final StorageItemChange<? extends Model> storageItemChange =
-                                queryResultsIterator.next().toStorageItemChange(storageItemChangeConverter);
-                            emitter.onNext(storageItemChange);
-                        } catch (DataStoreException exception) {
-                            emitter.onError(exception);
+                            emitter.onNext(converter.fromRecord(results.next()));
+                        } catch (DataStoreException conversionFailure) {
+                            emitter.onError(conversionFailure);
                         }
                     }
                     emitter.onComplete();
                 },
                 emitter::onError
-            );
-        }));
+            )
+        ));
     }
 }

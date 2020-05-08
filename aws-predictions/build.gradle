@@ -22,6 +22,8 @@ dependencies {
     implementation dependency.androidx.appcompat
     implementation dependency.aws.comprehend
     implementation dependency.aws.mobileclient
+    implementation dependency.aws.rekognition
+    implementation dependency.aws.textract
     implementation dependency.aws.translate
 
     testImplementation project(path: ':testutils')
@@ -30,9 +32,11 @@ dependencies {
         // https://github.com/robolectric/robolectric/issues/5245
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
+    testImplementation dependency.rxjava
 
     androidTestImplementation project(path: ':testutils')
     androidTestImplementation dependency.androidx.test.core
     androidTestImplementation dependency.androidx.test.runner
+    androidTestImplementation dependency.rxjava
 }
 

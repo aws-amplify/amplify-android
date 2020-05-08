@@ -69,7 +69,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @return a group connecting this group with another group/operation with an AND type
      */
     public QueryPredicateGroup and(QueryPredicate predicate) {
-        if (type.equals(Type.AND)) {
+        if (Type.AND.equals(type)) {
             predicates.add(predicate);
             return this;
         }
@@ -83,7 +83,7 @@ public final class QueryPredicateGroup implements QueryPredicate {
      * @return a group connecting this group with another group/operation with an OR type
      */
     public QueryPredicateGroup or(QueryPredicate predicate) {
-        if (type.equals(Type.OR)) {
+        if (Type.OR.equals(type)) {
             predicates.add(predicate);
             return this;
         }

@@ -15,12 +15,13 @@
 
 package com.amplifyframework.api.aws;
 
+import androidx.annotation.VisibleForTesting;
+
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -37,23 +38,17 @@ import java.util.List;
  * Converts JSON strings into models of a given type, using Gson.
  */
 final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
+    private static final String DATA_KEY = "data";
+    private static final String ERRORS_KEY = "errors";
+    private static final String ITEMS_KEY = "items";
+
     private final Gson gson;
 
-    /**
-     * Default constructor using default Gson object.
-     */
     GsonGraphQLResponseFactory() {
-        this(
-                new GsonBuilder()
-                .registerTypeAdapter(List.class, new GsonListDeserializer())
-                .create()
-        );
+        this(GsonFactory.create(Collections.singletonMap(List.class, new GsonListDeserializer())));
     }
 
-    /**
-     * Constructor using customized Gson object.
-     * @param gson custom Gson object
-     */
+    @VisibleForTesting
     GsonGraphQLResponseFactory(Gson gson) {
         this.gson = gson;
     }
@@ -68,11 +63,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
-            if (toJson.has("data")) {
-                jsonData = skipQueryLevel(toJson.get("data"));
+            if (toJson.has(DATA_KEY)) {
+                jsonData = skipQueryLevel(toJson.get(DATA_KEY));
             }
-            if (toJson.has("errors")) {
-                jsonErrors = toJson.get("errors");
+            if (toJson.has(ERRORS_KEY)) {
+                jsonErrors = toJson.get(ERRORS_KEY);
             }
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
@@ -86,7 +81,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         if (jsonData == null || jsonData.isJsonNull()) {
             return new GraphQLResponse<>(null, errors);
-        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || classToCast.equals(JsonElement.class)) {
+        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || JsonElement.class.equals(classToCast)) {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(data, errors);
         } else {
@@ -106,11 +101,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
 
         try {
             final JsonObject toJson = JsonParser.parseString(responseJson).getAsJsonObject();
-            if (toJson.has("data")) {
-                jsonData = skipQueryLevel(toJson.get("data"));
+            if (toJson.has(DATA_KEY)) {
+                jsonData = skipQueryLevel(toJson.get(DATA_KEY));
             }
-            if (toJson.has("errors")) {
-                jsonErrors = toJson.get("errors");
+            if (toJson.has(ERRORS_KEY)) {
+                jsonErrors = toJson.get(ERRORS_KEY);
             }
         } catch (JsonParseException jsonParseException) {
             throw new ApiException(
@@ -126,11 +121,11 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
             return new GraphQLResponse<>(null, errors);
         } else if (
                 jsonData.isJsonObject() &&
-                jsonData.getAsJsonObject().has("items")
+                jsonData.getAsJsonObject().has(ITEMS_KEY)
         ) {
-            Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get("items"), classToCast);
+            Iterable<T> data = parseDataAsList(jsonData.getAsJsonObject().get(ITEMS_KEY), classToCast);
             return new GraphQLResponse<>(data, errors);
-        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || classToCast.equals(JsonElement.class)) {
+        } else if (jsonData.isJsonObject() || jsonData.isJsonPrimitive() || JsonElement.class.equals(classToCast)) {
             T data = parseData(jsonData, classToCast);
             return new GraphQLResponse<>(Collections.singletonList(data), errors);
         } else {

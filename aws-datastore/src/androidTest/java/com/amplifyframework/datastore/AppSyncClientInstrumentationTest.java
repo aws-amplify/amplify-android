@@ -246,7 +246,7 @@ public final class AppSyncClientInstrumentationTest {
      * @param modelId The ID of the model instance to delete
      * @param version The version of the model being deleted as understood by client
      * @param <T> Type of model being deleted
-     * @return A record of the item that was deleted from endpoint, along with metadata about the deletion
+     * @return Model hat was deleted from endpoint, coupled with metadata about the deletion
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
     @SuppressWarnings("SameParameterValue") // Reads better with details in one place

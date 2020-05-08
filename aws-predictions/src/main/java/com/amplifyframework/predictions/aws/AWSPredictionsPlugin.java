@@ -16,21 +16,28 @@
 package com.amplifyframework.predictions.aws;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
+import com.amplifyframework.predictions.aws.operation.AWSIdentifyOperation;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
 import com.amplifyframework.predictions.aws.operation.AWSTranslateTextOperation;
 import com.amplifyframework.predictions.aws.request.AWSComprehendRequest;
+import com.amplifyframework.predictions.aws.request.AWSImageIdentifyRequest;
 import com.amplifyframework.predictions.aws.request.AWSTranslateRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
+import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
+import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
+import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
@@ -74,6 +81,8 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     public AWSPredictionsEscapeHatch getEscapeHatch() {
         return new AWSPredictionsEscapeHatch(
                 predictionsService.getTranslateClient(),
+                predictionsService.getRekognitionClient(),
+                predictionsService.getTextractClient(),
                 predictionsService.getComprehendClient()
         );
     }
@@ -130,6 +139,43 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
         AWSTranslateTextOperation operation = new AWSTranslateTextOperation(
                 predictionsService,
                 executorService,
+                request,
+                onSuccess,
+                onError
+        );
+
+        // Start operation and return
+        operation.start();
+        return operation;
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return identify(actionType, image, IdentifyOptions.defaults(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public IdentifyOperation<?> identify(
+            @NonNull IdentifyAction actionType,
+            @NonNull Bitmap image,
+            @NonNull IdentifyOptions options,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        // Create identify request for AWS Rekognition/Textract
+        AWSImageIdentifyRequest request = AWSImageIdentifyRequest.fromBitmap(image);
+
+        AWSIdentifyOperation operation = new AWSIdentifyOperation(
+                predictionsService,
+                executorService,
+                actionType,
                 request,
                 onSuccess,
                 onError

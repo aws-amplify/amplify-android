@@ -1,30 +1,61 @@
+<img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="400">
+
 ## Amplify for Android (Preview)
-<img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="550">
 
-AWS Amplify provides a high-level interface to perform different categories of cloud operations. Each category can be implemented by a _plugin_. Our default plugins support interaction with Amazon Web Services (AWS), but AWS Amplify is designed to be extensible to any other backend or service.
+AWS Amplify provides a high-level interface to perform different
+categories of cloud operations. Each category is fulfilled by a
+_plugin_. You specify which plugins to use during setup.
 
-If you're new to the project, checkout the [Getting Started Guide](https://aws-amplify.github.io/docs/android/start).
+The default plugins that we provide are designed to facilitate
+interaction with Amazon Web Services (AWS). But, the Amplify framework
+is designed to be extensible to any other backend or service.
 
-## Features/APIs
+If you're new to the project, checkout the
+[Getting Started Guide](https://docs.amplify.aws/lib/getting-started/setup/q/platform/android).
 
-- [**Analytics**](https://docs.amplify.aws/lib/analytics/getting-started?platform=android): Easily collect and report usage data for your app.
-- [**API**](https://docs.amplify.aws/lib/graphqlapi/getting-started?platform=android): An interface for interacting with REST and GraphQL endpoints. Provides AWS Signature Version 4 signing.
-- [**DataStore**](https://docs.amplify.aws/lib/datastore/getting-started?platform=android): Provides a persistent on-device storage repository for you to write, read, and observe changes to data. Data is sycnhronized to the cloud as well as across devices.
-- [**Storage**](https://docs.amplify.aws/lib/storage/getting-started?platform=android): Manage user content for your app, storing it in public, protected or private buckets.
+## The Categories
+
+### [DataStore](https://docs.amplify.aws/lib/datastore/getting-started/q/platform/android):
+
+Model your app's data. Save, query, and observe changes to your data
+from a local repository. Let DataStore synchronize your local data with
+the Cloud. Our default implemenation syncs local data to/from an Amazon
+DynamoDB database, via an Amazon AppSync front-end.
+
+### [REST APIs](https://docs.amplify.aws/lib/restapi/getting-started/q/platform/android):
+
+Easy auth and request signing against multiple REST endpoints. Our
+default plugin works great with Amazon API Gateway.
+
+### [GraphQL APIs](https://docs.amplify.aws/lib/graphqlapi/getting-started/q/platform/android)
+
+Data modeling and simple auth against GraphQL endpoints. Our default
+plugin targets AppSync.
+
+### [Analytics](https://docs.amplify.aws/lib/analytics/getting-started/q/platform/android):
+
+Collect and report usage data for your app. Our default plugin
+communicates with Amazon Pinpoint.
+
+### [Storage](https://docs.amplify.aws/lib/storage/getting-started/q/platform/android):
+
+Store and retrieve files in the Cloud. We use Amazon Simple Storage
+Service (S3) by default.
 
 ## Platform Support
 
-Amplify SDK supports Android API level 16 (Android 4.1) and above.
+The Amplify Framework supports Android API level 16 (Android 4.1) and above.
 
-## Installation
+## Using Amplify from Your App
 
-### Using Gradle
+### Specifying Gradle Dependencies
 
-To use Amplify, specify which modules you want to use inside of your app's `build.gradle` dependencies section:
+To begin, include Amplify from your `app` module's `build.gradle`
+dependencies section:
 
 ```gradle
 dependencies {
-    // Specify only the modules that the app will use
+    // Only specify modules that provide functionality your app will use
     implementation 'com.amplifyframework:aws-datastore:0.10.0'
     implementation 'com.amplifyframework:aws-api:0.10.0'
     implementation 'com.amplifyframework:aws-storage-s3:0.10.0'
@@ -32,42 +63,12 @@ dependencies {
 }
 ```
 
-### Local Publishing of Artifacts
-
-You can manually install the library by cloning this repo and publishing the Android modules to the local maven repository.
-
-Execute following commands from the project root:
-
-```
-./gradlew publishToMavenLocal
-```
-
-Locally published artifacts can be accessed by specifying `mavenLocal()` inside the app's `build.gradle` file:
-
-``` gradle
-buildscript {
-    repositories {
-        mavenLocal() // This should ideally appear before other repositories
-    }
-    dependencies {
-        classpath 'com.android.tools.build:gradle:3.6.1'
-    }
-}
-
-allprojects {
-    repositories {
-        mavenLocal() // This should ideally appear before other repositories
-    }
-}
-```
-
-## Using Amplify
-
 ### Java 8 Compatibility
 
-Amplify Android uses Java 8 features. Please add compile options inside app's `build.gradle` like following:
+Amplify Android uses Java 8 features. Please add a `compileOptions`
+block inside your app's `build.gradle`, as below:
 
-``` gradle
+```gradle
 android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
@@ -76,13 +77,50 @@ android {
 }
 ```
 
-### Using AWS Mobile Client
+### AWS Mobile Client
 
-Amplify relies on the AWS Mobile Client for authentication with AWS services. Please refer to the [this documentation](https://docs.amplify.aws/lib/auth/getting-started?platform=android) for details.
+The default plugins for Amplify Android rely on the AWS Mobile Client to
+provide authentication with AWS services.
 
-You need to ensure `AWSMobileClient` is [initialized](https://docs.amplify.aws/lib/auth/getting-started?platform=android#initialization) before you initalize and configure `Amplify`. Please note that AWSMobileClient initialization is not required when using API or DataStore category with _API Key_ as the authorization mode.
+Please see [Getting Started with Authentication](https://docs.amplify.aws/lib/auth/getting-started?platform=android)
+for full details.
+
+In summary, you need to ensure `AWSMobileClient` is [initialized](https://docs.amplify.aws/lib/auth/getting-started/q/platform/android#initialization)
+before interfacting with `Amplify`:
+
+```
+AWSMobileClient awsAuth = AWSMobileClient.getInstance();
+Context context = getApplicationContext();
+awsAuth.initialize(context, new Callback<UserStateDetails>() {
+    @Override
+    public void onResult(UserStateDetails userStateDetails) {
+        Amplify.addPlugin(new AWSApiPlugin()); // For example
+        Amplify.configuration(context);
+        Toast.makeText(context, "OK!", Toast.LENGTH_SHORT);
+    }
+
+    @Override
+    public void onError(Exception error) {
+        Toast.makeText(context, "Uh oh...", Toast.LENGTH_SHORT);
+    }
+});
+```
+
+Please note that `AWSMobileClient` initialization is ___not___ required
+when using the `AWSApiPlugin` or `AWSDataStorePlugin` with _api key_ as the
+authorization mode.
 
 ## License
 
-This library is licensed under the Apache 2.0 License. 
+This library is licensed under the [Apache 2.0 License](./LICENSE).
+
+## Report a Bug
+
+We appreciate your feedback -- comments, questions, and bug reports. Please
+[submit a GitHub issue](https://github.com/aws-amplify/amplify-android/issues),
+and we'll get back to you.
+
+## Contribute to the Project
+
+Please see the [Contributor's Guide](./CONTRIBUTING.md).
 

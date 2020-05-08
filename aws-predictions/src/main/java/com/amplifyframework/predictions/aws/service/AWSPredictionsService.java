@@ -20,12 +20,19 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
+import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
+import com.amplifyframework.predictions.models.TextFormatType;
+import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
+import com.amazonaws.services.rekognition.AmazonRekognitionClient;
+import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
+
+import java.nio.ByteBuffer;
 
 /**
  * Predictions service that makes inferences via AWS cloud computing.
@@ -33,30 +40,19 @@ import com.amazonaws.services.translate.AmazonTranslateClient;
 public final class AWSPredictionsService {
 
     private final AWSTranslateService translateService;
+    private final AWSRekognitionService rekognitionService;
+    private final AWSTextractService textractService;
     private final AWSComprehendService comprehendService;
 
     /**
      * Constructs an instance of {@link AWSPredictionsService}.
      * @param configuration the configuration for AWS Predictions Plugin
-     * @throws PredictionsException if any service fails to initialize
      */
     public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
         this.translateService = new AWSTranslateService(configuration);
+        this.rekognitionService = new AWSRekognitionService(configuration);
+        this.textractService = new AWSTextractService(configuration);
         this.comprehendService = new AWSComprehendService(configuration);
-    }
-
-    /**
-     * Delegate to {@link AWSComprehendService} to make text interpretation.
-     * @param text the input text to interpret
-     * @param onSuccess triggered upon successful result
-     * @param onError triggered upon encountering error
-     */
-    public void comprehend(
-            @NonNull String text,
-            @NonNull Consumer<InterpretResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    ) {
-        comprehendService.comprehend(text, onSuccess, onError);
     }
 
     /**
@@ -80,6 +76,94 @@ public final class AWSPredictionsService {
     }
 
     /**
+     * Delegate to {@link AWSRekognitionService} to detect labels.
+     * @param type the type of labels to detect
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectLabels(
+            @NonNull LabelType type,
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.detectLabels(type, imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSRekognitionService} to recognize celebrities.
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void recognizeCelebrities(
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.recognizeCelebrities(imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSRekognitionService} to detect entities.
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectEntities(
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.detectEntities(imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSRekognitionService} to detect plain text.
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectPlainText(
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        rekognitionService.detectPlainText(imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSTextractService} to detect document text.
+     * @param type the type of text format to detect
+     * @param imageData the image data
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void detectDocumentText(
+            @NonNull TextFormatType type,
+            @NonNull ByteBuffer imageData,
+            @NonNull Consumer<IdentifyResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        textractService.detectDocumentText(type, imageData, onSuccess, onError);
+    }
+
+    /**
+     * Delegate to {@link AWSComprehendService} to make text interpretation.
+     * @param text the input text to interpret
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void comprehend(
+            @NonNull String text,
+            @NonNull Consumer<InterpretResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        comprehendService.comprehend(text, onSuccess, onError);
+    }
+
+    /**
      * Return configured Amazon Translate client for
      * direct access to AWS endpoint.
      * @return the configured Amazon Translate client
@@ -87,6 +171,26 @@ public final class AWSPredictionsService {
     @NonNull
     public AmazonTranslateClient getTranslateClient() {
         return translateService.getClient();
+    }
+
+    /**
+     * Return configured Amazon Rekognition client for
+     * direct access to AWS endpoint.
+     * @return the configured Amazon Rekognition client
+     */
+    @NonNull
+    public AmazonRekognitionClient getRekognitionClient() {
+        return rekognitionService.getClient();
+    }
+
+    /**
+     * Return configured Amazon Textract client for
+     * direct access to AWS endpoint.
+     * @return the configured Amazon Textract client
+     */
+    @NonNull
+    public AmazonTextractClient getTextractClient() {
+        return textractService.getClient();
     }
 
     /**

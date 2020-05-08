@@ -104,7 +104,7 @@ public final class ModelAssociation {
      * @return True if this field owns the identity of another model
      */
     public boolean isOwner() {
-        return getName().equals(BelongsTo.class.getSimpleName());
+        return BelongsTo.class.getSimpleName().equals(getName());
     }
 
     @Override
