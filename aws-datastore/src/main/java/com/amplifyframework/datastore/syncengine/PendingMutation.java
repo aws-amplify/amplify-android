@@ -37,7 +37,7 @@ import java.util.UUID;
  * logic onto them, before ultimately uploading to a remote endpoint.
  * @param <T> Type of model that has experienced a mutation
  */
-public final class PendingMutation<T extends Model> implements Comparable<PendingMutation<T>> {
+public final class PendingMutation<T extends Model> implements Comparable<PendingMutation<? extends Model>> {
     private final T mutatedItem;
     private final Class<T> classOfMutatedItem;
     private final Type mutationType;
@@ -65,7 +65,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             @NonNull T mutatedItem,
             @NonNull Class<T> classOfMutatedItem,
             @NonNull Type mutationType) {
-        return new PendingMutation<T>(
+        return new PendingMutation<>(
             Objects.requireNonNull(mutationId),
             Objects.requireNonNull(mutatedItem),
             Objects.requireNonNull(classOfMutatedItem),
@@ -198,7 +198,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @return -1, 0, 1 if this mutation is smaller, same, or bigger than another
      */
     @Override
-    public int compareTo(@NonNull PendingMutation<T> another) {
+    public int compareTo(@NonNull PendingMutation<? extends Model> another) {
         Objects.requireNonNull(another);
         return this.mutationId.compareTo(another.getMutationId());
     }
@@ -216,6 +216,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * referenced model is just a Gson-serialized String version of itself -- handled external
      * to the data modeling system.
      */
+    @SuppressWarnings("unused")
     @ModelConfig(pluralName = "PersistentRecords")
     @Index(fields = "decodedModelClassName", name = "decodedModelClassNameBasedIndex")
     public static final class PersistentRecord implements Model, Comparable<PersistentRecord> {
@@ -259,6 +260,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * @return The record id
          */
         @NonNull
+        @Override
         public String getId() {
             return this.id;
         }
@@ -273,7 +275,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          *         decoded and {@link Model#getId()} were called.
          */
         @NonNull
-        public String getDecodedModelId() {
+        String getDecodedModelId() {
             return this.decodedModelId;
         }
 
@@ -283,7 +285,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * @return The model data, in its encoded string form
          */
         @NonNull
-        public String getEncodedModelData() {
+        String getEncodedModelData() {
             return this.encodedModelData;
         }
 
@@ -294,7 +296,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * @return Class of encoded model
          */
         @NonNull
-        public String getDecodedModelClassName() {
+        String getDecodedModelClassName() {
             return decodedModelClassName;
         }
 
@@ -362,7 +364,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * Utility for construction of {@link PersistentRecord} through chained configurator calls.
          * @param <T> Type of model for which a pending mutation is being built
          */
-        public static final class Builder<T extends Model> {
+        static final class Builder<T extends Model> {
             private TimeBasedUuid recordId;
             private UUID decodedModelId;
             private String encodedModelData;
@@ -374,7 +376,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
              * @return Current builder, for fluent configuration chaining
              */
             @NonNull
-            public PersistentRecord.Builder<T> recordId(@NonNull TimeBasedUuid timeBasedUuid) {
+            PersistentRecord.Builder<T> recordId(@NonNull TimeBasedUuid timeBasedUuid) {
                 Objects.requireNonNull(timeBasedUuid);
                 this.recordId = timeBasedUuid;
                 return this;
@@ -389,7 +391,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
              * @return The ID of the model, when that model is in its decoded form
              */
             @NonNull
-            public PersistentRecord.Builder<T> decodedModelId(@NonNull String decodedModelId) {
+            PersistentRecord.Builder<T> decodedModelId(@NonNull String decodedModelId) {
                 Objects.requireNonNull(decodedModelId);
                 // This is stored this way for the purpose of validating hte input.
                 this.decodedModelId = UUID.fromString(decodedModelId);
@@ -403,7 +405,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
              * @return Current Builder instance, for fluent configuration chaining
              */
             @NonNull
-            public PersistentRecord.Builder<T> encodedModelData(@NonNull String encodedModelData) {
+            PersistentRecord.Builder<T> encodedModelData(@NonNull String encodedModelData) {
                 this.encodedModelData = Objects.requireNonNull(encodedModelData);
                 return this;
             }
@@ -417,7 +419,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
              * @return Current builder for fluent method chaining
              */
             @NonNull
-            public PersistentRecord.Builder<T> decodedModelClassName(@NonNull String decodedModelClassName) {
+            PersistentRecord.Builder<T> decodedModelClassName(@NonNull String decodedModelClassName) {
                 this.decodedModelClassName = Objects.requireNonNull(decodedModelClassName);
                 return this;
             }
@@ -427,7 +429,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
              * @return A new instance of a {@link PersistentRecord}.
              */
             @NonNull
-            public PendingMutation.PersistentRecord build() {
+            PendingMutation.PersistentRecord build() {
                 return new PendingMutation.PersistentRecord(
                     Objects.requireNonNull(recordId).toString(),
                     Objects.requireNonNull(decodedModelId).toString(),
@@ -441,7 +443,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     /**
      * The type of mutation this is.
      */
-    public enum Type {
+    enum Type {
         /**
          * A model-creation mutation.
          */
@@ -455,7 +457,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         /**
          * The removal of a previously-created model.
          */
-        DELETE;
+        DELETE
     }
 
     /**

@@ -94,7 +94,7 @@ public final class TimeBasedUuidTest {
      * to the same hash-code. This way they can be included into collections safely, etc.
      */
     @Test
-    public void timeBasedUuidHasSanHashCode() {
+    public void timeBasedUuidHasSaneHashCode() {
         TimeBasedUuid first = TimeBasedUuid.create();
         TimeBasedUuid second = TimeBasedUuid.fromString(first.toString());
 

@@ -15,7 +15,10 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testmodels.commentsblog.Post;
+import com.amplifyframework.testmodels.commentsblog.PostStatus;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -49,23 +52,34 @@ public final class PendingMutationTest {
     @Test
     public void pendingMutationsAreComparable() {
         // First, create a bunch of pending mutations.
-        List<PendingMutation<BlogOwner>> expectedOrder = new ArrayList<>();
+        final List<PendingMutation<? extends Model>> expectedOrder = new ArrayList<>();
         final int desiredQuantity = 10;
         for (int index = 0; index < desiredQuantity; index++) {
-            BlogOwner blogger = BlogOwner.builder()
-                .name(String.format(Locale.US, "Blogger #%d", index))
-                .build();
-            expectedOrder.add(PendingMutation.creation(blogger, BlogOwner.class));
+            // Populate a few different types of models, according to a random boolean value,
+            // to make sure the comparator can work across model types
+            if (random.nextBoolean()) {
+                BlogOwner blogger = BlogOwner.builder()
+                    .name(String.format(Locale.US, "Blogger #%d", index))
+                    .build();
+                expectedOrder.add(PendingMutation.creation(blogger, BlogOwner.class));
+            } else {
+                Post post = Post.builder()
+                    .title(String.format(Locale.US, "Title #%d", index))
+                    .status(PostStatus.ACTIVE)
+                    .rating(5)
+                    .build();
+                expectedOrder.add(PendingMutation.creation(post, Post.class));
+            }
         }
 
         // Okay! Now, scatter them.
-        List<PendingMutation<BlogOwner>> outOfOrder = new ArrayList<>(expectedOrder);
+        List<PendingMutation<? extends Model>> outOfOrder = new ArrayList<>(expectedOrder);
         //noinspection ComparatorMethodParameterNotUsed Intentional; result is random
         Collections.sort(outOfOrder, (one, two) -> random.nextInt());
         assertNotEquals(expectedOrder, outOfOrder);
 
         // Now sort them according to the item comparator, {@link PendingMutation#compareTo(Object)}.
-        List<PendingMutation<BlogOwner>> actualOrder = new ArrayList<>(outOfOrder);
+        List<PendingMutation<? extends Model>> actualOrder = new ArrayList<>(outOfOrder);
         Collections.sort(actualOrder);
 
         assertEquals(expectedOrder, actualOrder);
