@@ -18,14 +18,12 @@ package com.amplifyframework.storage.result;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.async.Result;
-
 import java.util.Objects;
 
 /**
  * The result of a file upload operation in the Storage category.
  */
-public final class StorageUploadFileResult implements Result {
+public final class StorageUploadFileResult {
     private final String key;
 
     private StorageUploadFileResult(String key) {

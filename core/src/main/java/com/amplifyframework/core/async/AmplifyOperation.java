@@ -20,8 +20,6 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.category.CategoryType;
 
-import java.util.UUID;
-
 /**
  * An abstract representation of an Amplify unit of work. Subclasses may aggregate multiple work items
  * to fulfill a single "AmplifyOperation", such as an "extract text operation" which might include
@@ -30,17 +28,9 @@ import java.util.UUID;
  * AmplifyOperations are used by plugin developers to perform tasks on behalf of the calling app. They have a default
  * implementation of a `publish` method that sends a contextualized event to the Hub.
  *
- * Pausable/resumable tasks that do not require Hub dispatching should use {@link AsyncOperation} instead.
- *
  * @param <R> type of the request object
  */
-public abstract class AmplifyOperation<R> implements AsyncOperation {
-
-    // The unique ID of the operation. In categories where operations are persisted for future
-    // processing, this id can be used to identify previously-scheduled work for progress tracking
-    // or other functions.
-    private final UUID operationId;
-
+public abstract class AmplifyOperation<R> {
     // Required by Hub to find the HubChannel mapped to the
     // CategoryType.
     private final CategoryType categoryType;
@@ -59,16 +49,7 @@ public abstract class AmplifyOperation<R> implements AsyncOperation {
     protected AmplifyOperation(@NonNull final CategoryType categoryType,
                                @Nullable final R request) {
         this.categoryType = categoryType;
-        this.operationId = UUID.randomUUID();
         this.request = request;
-    }
-
-    /**
-     * Gets the ID of the operation.
-     * @return Operation unique ID
-     */
-    public final UUID getOperationId() {
-        return operationId;
     }
 
     /**
@@ -86,4 +67,9 @@ public abstract class AmplifyOperation<R> implements AsyncOperation {
     public R getRequest() {
         return request;
     }
+
+    /**
+     * Start performing the operation.
+     */
+    public abstract void start();
 }
