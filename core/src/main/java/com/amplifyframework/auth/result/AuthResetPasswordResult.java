@@ -22,6 +22,9 @@ import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
 
 import java.util.Objects;
 
+/**
+ * Wraps the result of a reset password operation.
+ */
 public final class AuthResetPasswordResult {
     private final boolean isPasswordReset;
     private final AuthNextResetPasswordStep nextStep;

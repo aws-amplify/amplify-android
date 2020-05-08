@@ -17,6 +17,9 @@ package com.amplifyframework.auth.cognito;
 
 import com.amplifyframework.auth.AuthProvider;
 
+/**
+ * Cognito extension of Auth Provider to include Cognito-specific preset providers.
+ */
 public final class AWSCognitoAuthProvider extends AuthProvider {
     private static final String DEVELOPER = "cognito-identity.amazonaws.com";
 

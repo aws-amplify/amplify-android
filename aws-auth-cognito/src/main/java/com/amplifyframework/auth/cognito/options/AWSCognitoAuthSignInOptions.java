@@ -25,6 +25,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Cognito extension of sign in options to add the platform specific fields.
+ */
 public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     private final Map<String, String> metadata;
 
@@ -78,6 +81,9 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
                 '}';
     }
 
+    /**
+     * The builder for this class.
+     */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> metadata;
 

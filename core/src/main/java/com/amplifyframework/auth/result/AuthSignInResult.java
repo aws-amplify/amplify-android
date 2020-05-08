@@ -22,6 +22,9 @@ import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 
 import java.util.Objects;
 
+/**
+ * Wraps the result of a sign up operation.
+ */
 public final class AuthSignInResult {
     private final boolean isSignInComplete;
     private final AuthNextSignInStep nextStep;

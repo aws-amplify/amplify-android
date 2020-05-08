@@ -26,11 +26,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+/**
+ * Advanced options for signing up.
+ */
 public class AuthSignUpOptions {
     private final List<AuthUserAttribute> userAttributes;
 
     /**
-     * Advanced options for signing in.
+     * Advanced options for signing up.
      * @param userAttributes Additional user attributes which should be associated with this user on registration
      */
     protected AuthSignUpOptions(
@@ -91,6 +94,10 @@ public class AuthSignUpOptions {
                 '}';
     }
 
+    /**
+     * The builder for this class.
+     * @param <T> The type of builder - used to support plugin extensions of this.
+     */
     public abstract static class Builder<T extends Builder<T>> {
         private final List<AuthUserAttribute> userAttributes;
         // Used as an internal convenience if the user wants to specify just one attribute.
@@ -164,6 +171,9 @@ public class AuthSignUpOptions {
         }
     }
 
+    /**
+     * The specific implementation of builder for this as the parent class.
+     */
     public static final class CoreBuilder extends Builder<CoreBuilder> {
 
         @Override

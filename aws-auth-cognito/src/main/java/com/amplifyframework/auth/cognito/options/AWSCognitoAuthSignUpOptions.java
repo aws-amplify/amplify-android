@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Cognito extension of sign up options to add the platform specific fields.
+ */
 public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
     private final Map<String, String> validationData;
 
@@ -86,6 +89,9 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
                 '}';
     }
 
+    /**
+     * The builder for this class.
+     */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> validationData;
 

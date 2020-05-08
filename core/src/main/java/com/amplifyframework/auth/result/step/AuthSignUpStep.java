@@ -15,6 +15,9 @@
 
 package com.amplifyframework.auth.result.step;
 
+/**
+ * Represents the various common steps a user could be in for the sign up flow.
+ */
 public enum AuthSignUpStep {
     /**
      * The user is registered but confirmSignUp needs to be called with the confirmation code sent to the user

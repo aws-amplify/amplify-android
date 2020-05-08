@@ -18,6 +18,9 @@ package com.amplifyframework.auth;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+/**
+ * Factory for preset user attributes and the ability to specify a custom one.
+ */
 public final class AuthUserAttributeKey {
     private static final String ADDRESS = "address";
     private static final String BIRTHDATE = "birthdate";

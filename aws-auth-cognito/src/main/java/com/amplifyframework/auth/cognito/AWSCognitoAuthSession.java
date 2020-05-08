@@ -24,6 +24,9 @@ import com.amplifyframework.auth.AuthSession;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 
+/**
+ * Cognito extension of AuthSession containing AWS Cognito specific tokens.
+ */
 public final class AWSCognitoAuthSession extends AuthSession implements AWSCredentialsProvider {
     private final AWSCredentials awsCredentials;
     private final String userSub;
@@ -139,6 +142,9 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
         // NO-OP since this is a session snapshot
     }
 
+    /**
+     * The builder for this class.
+     */
     public static final class Builder {
         private boolean isSignedIn;
         private AWSCredentials awsCredentials;

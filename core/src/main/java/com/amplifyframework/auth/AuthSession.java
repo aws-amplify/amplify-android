@@ -18,6 +18,10 @@ package com.amplifyframework.auth;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+/**
+ * Stores the current auth state of the category. When cast to a plugin specific object,
+ * implementation-specific auth details such as tokens can be retrieved as well.
+ */
 public class AuthSession {
     private final boolean isSignedIn;
 

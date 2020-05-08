@@ -71,6 +71,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * A Cognito implementation of the Auth Plugin.
+ */
 public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final String AWS_COGNITO_AUTH_PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final long SECONDS_BEFORE_TIMEOUT = 10;

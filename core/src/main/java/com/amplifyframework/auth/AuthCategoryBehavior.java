@@ -29,6 +29,9 @@ import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
+/**
+ * Specifies the behavior for the Auth category.
+ */
 public interface AuthCategoryBehavior {
 
     /**

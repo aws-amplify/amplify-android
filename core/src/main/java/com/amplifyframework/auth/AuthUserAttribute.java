@@ -17,6 +17,9 @@ package com.amplifyframework.auth;
 
 import androidx.core.util.ObjectsCompat;
 
+/**
+ * Holds the key and value for a user attribute.
+ */
 public final class AuthUserAttribute {
     private AuthUserAttributeKey key;
     private String value;

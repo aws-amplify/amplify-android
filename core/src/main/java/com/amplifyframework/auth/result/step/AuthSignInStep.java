@@ -17,6 +17,9 @@ package com.amplifyframework.auth.result.step;
 
 import com.amplifyframework.core.Consumer;
 
+/**
+ * Represents the various common steps a user could be in for the sign in flow.
+ */
 public enum AuthSignInStep {
     /**
      * Multifactor authentication is enabled on this account and requires you to call

@@ -18,6 +18,9 @@ package com.amplifyframework.auth.result.step;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 
+/**
+ * Represents the various common steps a user could be in for the reset password flow.
+ */
 public enum AuthResetPasswordStep {
     /**
      * A code was sent to enable the user to change their password. Submit this code using

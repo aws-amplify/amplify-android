@@ -20,6 +20,9 @@ import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
 
+/**
+ * Represents a logged in user with its locally cached attributes.
+ */
 public final class AuthUser {
     private String userId;
     private String username;
