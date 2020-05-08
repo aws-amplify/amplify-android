@@ -21,6 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
@@ -134,7 +135,7 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to query storage adapter
      */
     public <T extends Model> List<T> query(@NonNull Class<T> modelClass) throws DataStoreException {
-        return query(modelClass, QueryOptions.all());
+        return query(modelClass, Where.matchesAll());
     }
 
     /**

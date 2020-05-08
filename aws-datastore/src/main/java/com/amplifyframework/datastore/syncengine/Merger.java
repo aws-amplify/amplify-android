@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -32,8 +33,6 @@ import com.amplifyframework.logging.Logger;
 import java.util.Objects;
 
 import io.reactivex.Completable;
-
-import static com.amplifyframework.core.model.query.QueryOptions.byId;
 
 /**
  * The merger is responsible for merging cloud data back into the local store.
@@ -136,7 +135,7 @@ final class Merger {
      */
     private <T extends Model> void ifPresent(
             Class<T> clazz, String modelId, Action onPresent, Action onNotPresent) {
-        localStorageAdapter.query(clazz, byId(modelId), iterator -> {
+        localStorageAdapter.query(clazz, Where.id(modelId), iterator -> {
             if (iterator.hasNext()) {
                 onPresent.call();
             } else {

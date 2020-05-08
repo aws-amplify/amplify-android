@@ -35,6 +35,7 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
@@ -68,8 +69,6 @@ import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
-
-import static com.amplifyframework.core.model.query.QueryOptions.all;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -361,7 +360,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(itemClass);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
-        query(itemClass, all(), onSuccess, onError);
+        query(itemClass, Where.matchesAll(), onSuccess, onError);
     }
 
     /**
@@ -787,7 +786,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
 
     @VisibleForTesting
     Cursor getQueryAllCursor(@NonNull String tableName) throws DataStoreException {
-        return getQueryAllCursor(tableName, all());
+        return getQueryAllCursor(tableName, Where.matchesAll());
     }
 
     @SuppressWarnings("WeakerAccess")

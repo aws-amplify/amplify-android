@@ -17,8 +17,6 @@ package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
 
-import java.util.Objects;
-
 /**
  * A simple data structure that holds pagination information that can be applied queries.
  */
@@ -27,45 +25,14 @@ public final class QueryPaginationInput {
     /**
      * The default page size.
      */
-    public static final Integer DEFAULT_LIMIT = 100;
+    public static final int DEFAULT_LIMIT = 100;
 
-    private final Integer page;
-    private final Integer limit;
+    private final int page;
+    private final int limit;
 
-    private QueryPaginationInput(@NonNull Integer page, @NonNull Integer limit) {
+    QueryPaginationInput(int page, int limit) {
         this.page = page;
         this.limit = limit;
-    }
-
-    /**
-     * Creates a {@link QueryPaginationInput} in an expressive way, enabling a short
-     * and developer friendly to create a new instance.
-     *
-     * @param page the page number (starting at 0)
-     * @return a new instance of <code>QueryPaginationInput</code>.
-     */
-    public static QueryPaginationInput page(@NonNull Integer page) {
-        return new QueryPaginationInput(Objects.requireNonNull(page), DEFAULT_LIMIT);
-    }
-
-    /**
-     * Utility that creates a <code>QueryPaginationInput</code>
-     * with <code>page</code> 0 and <code>limit</code> {@link #DEFAULT_LIMIT}.
-     *
-     * @return an instance with <code>page</code> 0 and <code>limit</code> {@link #DEFAULT_LIMIT}.
-     */
-    public static QueryPaginationInput firstPage() {
-        return page(0);
-    }
-
-    /**
-     * Utility that creates a <code>QueryPaginationInput</code>
-     * with <code>page</code> 0 and <code>limit</code> 1.
-     *
-     * @return an instance with <code>page</code> 0 and <code>limit</code> 1.
-     */
-    public static QueryPaginationInput firstResult() {
-        return page(0).withLimit(1);
     }
 
     /**
@@ -82,7 +49,7 @@ public final class QueryPaginationInput {
      * Returns the {@code page} property.
      * @return the {@code page} property.
      */
-    public Integer getPage() {
+    public int getPage() {
         return page;
     }
 
@@ -90,7 +57,7 @@ public final class QueryPaginationInput {
      * Returns the {@code limit} property.
      * @return the {@code limit} property.
      */
-    public Integer getLimit() {
+    public int getLimit() {
         return limit;
     }
 }

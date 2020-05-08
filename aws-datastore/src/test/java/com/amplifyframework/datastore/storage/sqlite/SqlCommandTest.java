@@ -22,6 +22,8 @@ import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
 
@@ -37,10 +39,6 @@ import java.util.List;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import static com.amplifyframework.core.model.query.QueryOptions.all;
-import static com.amplifyframework.core.model.query.QueryPaginationInput.firstPage;
-import static com.amplifyframework.core.model.query.QueryPaginationInput.firstResult;
-import static com.amplifyframework.core.model.query.QueryPaginationInput.page;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -156,7 +154,7 @@ public class SqlCommandTest {
         final ModelSchema personSchema = getPersonModelSchema();
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
                 personSchema,
-                all().paginated(page(2).withLimit(20))
+                Where.matchesAll().paginated(Page.startingAt(2).withLimit(20))
         );
         assertNotNull(sqlCommand);
         assertEquals(
@@ -174,7 +172,7 @@ public class SqlCommandTest {
         final ModelSchema personSchema = getPersonModelSchema();
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
                 personSchema,
-                all().paginated(firstPage())
+                Where.matchesAll().paginated(Page.firstPage())
         );
         assertNotNull(sqlCommand);
         assertEquals(
@@ -192,7 +190,7 @@ public class SqlCommandTest {
         final ModelSchema personSchema = getPersonModelSchema();
         final SqlCommand sqlCommand = sqlCommandFactory.queryFor(
                 personSchema,
-                all().paginated(firstResult())
+                Where.matchesAll().paginated(Page.firstResult())
         );
         assertNotNull(sqlCommand);
         assertEquals(

@@ -20,6 +20,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -32,8 +33,6 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
-
-import static com.amplifyframework.core.model.query.QueryOptions.byId;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
@@ -67,7 +66,7 @@ final class MutationOutbox {
     Single<Boolean> hasPendingMutation(@NonNull String modelId) {
         Objects.requireNonNull(modelId);
         return Single.create(emitter ->
-            storage.query(PendingMutation.PersistentRecord.class, byId(modelId),
+            storage.query(PendingMutation.PersistentRecord.class, Where.id(modelId),
                 results -> emitter.onSuccess(results.hasNext()),
                 emitter::onError
             )

@@ -16,11 +16,9 @@
 package com.amplifyframework.core.model.query;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-
-import static com.amplifyframework.core.model.query.QueryPaginationInput.firstResult;
 
 /**
  * A data structure that provides a query construction mechanism that consolidates all query-related
@@ -32,39 +30,19 @@ public final class QueryOptions {
     private QueryPaginationInput paginationInput;
 
     /**
-     * This class should be created using the factory methods {@link #all()} and {@link #where(QueryPredicate)}.
+     * This class should be created using the factory methods such as {@link Where#matchesAll()}
+     * and {@link Where#matches(QueryPredicate)}.
      */
-    private QueryOptions() {}
-
-    /**
-     * Factory method that builds a default <code>QueryOptions</code> that has no predicate and
-     * no pagination set (i.e. <em>all</em> results).
-     * @return default QueryOptions
-     */
-    public static QueryOptions all() {
-        return new QueryOptions();
+    QueryOptions(
+            @Nullable QueryPredicate queryPredicate,
+            @Nullable QueryPaginationInput paginationInput
+    ) {
+        this.queryPredicate = queryPredicate;
+        this.paginationInput = paginationInput;
     }
 
-    /**
-     * Factory method that builds the options with the given {@link QueryPredicate}.
-     * @param queryPredicate the query conditions.
-     * @return options with a given predicate.
-     */
-    public static QueryOptions where(@NonNull final QueryPredicate queryPredicate) {
-        final QueryOptions options = new QueryOptions();
-        options.queryPredicate = queryPredicate;
-        return options;
-    }
-
-    /**
-     * Factory method that builds the options with a predicate matching the model id and the
-     * pagination set to the first result only.
-     *
-     * @param modelId model identifier.
-     * @return options with proper predicate and pagination to match a model by its id.
-     */
-    public static QueryOptions byId(@NonNull final String modelId) {
-        return where(QueryField.field("id").eq(modelId)).paginated(firstResult());
+    QueryOptions() {
+        this(null, null);
     }
 
     /**
@@ -72,8 +50,8 @@ public final class QueryOptions {
      *
      * @param paginationInput pagination information.
      * @return current options with an updated {@code paginationInput}.
-     * @see QueryPaginationInput#page(Integer)
-     * @see QueryPaginationInput#firstPage()
+     * @see Page#startingAt(int)
+     * @see Page#firstPage()
      */
     public QueryOptions paginated(@NonNull final QueryPaginationInput paginationInput) {
         this.paginationInput = paginationInput;
