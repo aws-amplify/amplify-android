@@ -28,5 +28,5 @@ public interface VoiceType {
      * @return the name of the voice
      */
     @NonNull
-    String getVoice();
+    String getName();
 }

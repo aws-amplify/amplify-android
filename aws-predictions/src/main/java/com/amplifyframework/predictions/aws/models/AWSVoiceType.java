@@ -90,11 +90,11 @@ public enum AWSVoiceType implements VoiceType {
     WELSH_GWYNETH("Gwyneth", "cy-GB"),
     UNKNOWN("unknown", "unknown");
 
-    private final String voice;
+    private final String name;
     private final String languageCode;
 
     AWSVoiceType(String name, String languageCode) {
-        this.voice = name;
+        this.name = name;
         this.languageCode = languageCode;
     }
 
@@ -116,7 +116,7 @@ public enum AWSVoiceType implements VoiceType {
             return (AWSVoiceType) voice;
         }
 
-        return fromName(voice.getVoice());
+        return fromName(voice.getName());
     }
 
     /**
@@ -133,7 +133,7 @@ public enum AWSVoiceType implements VoiceType {
         }
 
         for (AWSVoiceType voiceType : values()) {
-            if (voiceType.getVoice().equals(name)) {
+            if (voiceType.getName().equals(name)) {
                 return voiceType;
             }
         }
@@ -145,8 +145,8 @@ public enum AWSVoiceType implements VoiceType {
      * @return the name of the voice
      */
     @NonNull
-    public String getVoice() {
-        return voice;
+    public String getName() {
+        return name;
     }
 
     /**

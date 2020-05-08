@@ -84,7 +84,7 @@ final class AWSPollyService {
         } else {
             // Override configuration defaults if explicitly specified in the options
             languageCode = voiceType.getLanguageCode();
-            voiceId = voiceType.getVoice();
+            voiceId = voiceType.getName();
         }
 
         SynthesizeSpeechRequest request = new SynthesizeSpeechRequest()
