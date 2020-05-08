@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
@@ -36,11 +38,6 @@ import java.util.List;
 
 import io.reactivex.Observable;
 
-import static com.amplifyframework.core.model.query.QueryOptions.all;
-import static com.amplifyframework.core.model.query.QueryOptions.where;
-import static com.amplifyframework.core.model.query.QueryPaginationInput.firstPage;
-import static com.amplifyframework.core.model.query.QueryPaginationInput.firstResult;
-import static com.amplifyframework.core.model.query.QueryPaginationInput.page;
 import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
 import static org.junit.Assert.assertEquals;
@@ -168,7 +165,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(adapter.query(Post.class, where(predicate)))
+            Observable.fromIterable(adapter.query(Post.class, Where.matches(predicate)))
                 .toList()
                 .map(HashSet::new)
                 .blockingGet()
@@ -196,7 +193,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Post> actualPosts = adapter.query(
                 Post.class,
-                where(
+                Where.matches(
                     Post.TITLE.beginsWith("4")
                         .or(Post.TITLE.beginsWith("7"))
                         .or(Post.TITLE.beginsWith("9"))
@@ -235,7 +232,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         final List<Blog> blogsOwnedByJaneDoe = adapter.query(
             Blog.class,
-            where(field("BlogOwner.name").eq("Jane Doe"))
+            Where.matches(field("BlogOwner.name").eq("Jane Doe"))
         );
         assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }
@@ -252,7 +249,7 @@ public final class SQLiteStorageAdapterQueryTest {
         adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-        final List<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, where(predicate));
+        final List<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, Where.matches(predicate));
         assertTrue(resultOfMaliciousQuery.isEmpty());
 
         final List<BlogOwner> resultAfterMaliciousQuery = adapter.query(BlogOwner.class);
@@ -266,7 +263,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            all().paginated(page(0).withLimit(pageSize))
+            Where.matchesAll().paginated(Page.startingAt(0).withLimit(pageSize))
         );
         assertNotNull(result);
         assertEquals(pageSize, result.size());
@@ -279,7 +276,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            all().paginated(firstPage())
+            Where.matchesAll().paginated(Page.firstPage())
         );
         assertNotNull(result);
         assertEquals(pageSize, result.size());
@@ -291,7 +288,7 @@ public final class SQLiteStorageAdapterQueryTest {
 
         List<BlogOwner> result = adapter.query(
             BlogOwner.class,
-            all().paginated(firstResult())
+            Where.matchesAll().paginated(Page.firstResult())
         );
         assertNotNull(result);
         assertEquals(1, result.size());

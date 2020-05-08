@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
@@ -32,7 +33,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import static com.amplifyframework.core.model.query.QueryOptions.byId;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -71,7 +71,7 @@ public final class SQLiteStorageAdapterModelConverterTest {
         final Todo todo = createTestTodoModel();
         this.adapter.save(todo);
 
-        final List<Todo> result = this.adapter.query(Todo.class, byId(todo.getId()));
+        final List<Todo> result = this.adapter.query(Todo.class, Where.id(todo.getId()));
         assertEquals(result.size(), 1);
 
         final Todo queriedTodo = result.get(0);
