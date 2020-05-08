@@ -18,8 +18,6 @@ package com.amplifyframework.hub;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.async.AmplifyOperation;
-import com.amplifyframework.core.async.EventListener;
 import com.amplifyframework.core.category.Category;
 import com.amplifyframework.core.category.CategoryType;
 
@@ -70,33 +68,6 @@ public final class HubCategory extends Category<HubPlugin<?>> implements HubCate
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.HUB;
-    }
-
-    /**
-     * Convenience method to allow callers to subscribe to Hub events
-     * for a particular operation.  Internally, the subscription
-     * transforms the HubEvent into the Operation's expected AsyncEvent
-     * type, so callers may re-use their `subscriber`s.
-     *
-     * @param operation The operation to subscribe to events for
-     * @param eventListener The Operation-specific listener to be invoked
-     *                 when an AsyncEvent for that operation is received.
-     * @param <E> The type of the event that the event listener will receive
-     * @param <R> The type of the request object of the {@link AmplifyOperation}
-     * @return A subscription token
-     */
-    @NonNull
-    public <E, R> SubscriptionToken subscribe(
-            @NonNull final AmplifyOperation<R> operation,
-            @SuppressWarnings("unused") @NonNull final EventListener<E> eventListener) {
-        HubChannel channel = HubChannel.forCategoryType(operation.getCategoryType());
-        HubSubscriber transformingListener = event -> {
-            // TODO: check for casting of Object to E and
-            // see if it can be prevented.
-            // eventListener.onEvent(event.getData());
-        };
-
-        return subscribe(channel, event -> true, transformingListener);
     }
 
     private HubPlugin<?> getHubPlugin() {
