@@ -43,13 +43,11 @@ public final class AuthNextSignInStep {
      */
     public AuthNextSignInStep(
             @NonNull AuthSignInStep signInStep,
-            @Nullable Map<String, String> additionalInfo,
+            @NonNull Map<String, String> additionalInfo,
             @Nullable AuthCodeDeliveryDetails codeDeliveryDetails) {
         this.signInStep = Objects.requireNonNull(signInStep);
         this.additionalInfo = new HashMap<>();
-        if (additionalInfo != null) {
-            this.additionalInfo.putAll(additionalInfo);
-        }
+        this.additionalInfo.putAll(Objects.requireNonNull(additionalInfo));
         this.codeDeliveryDetails = codeDeliveryDetails;
     }
 

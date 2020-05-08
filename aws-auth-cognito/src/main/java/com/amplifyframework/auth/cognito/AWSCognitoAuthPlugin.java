@@ -64,6 +64,7 @@ import com.amazonaws.mobileconnectors.cognitoidentityprovider.util.CognitoJWTPar
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -427,7 +428,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             false,
                             new AuthNextResetPasswordStep(
                                     AuthResetPasswordStep.CONFIRM_RESET_PASSWORD_WITH_CODE,
-                                    null,
+                                    Collections.emptyMap(),
                                     convertCodeDeliveryDetails(result.getParameters())
                             )
                     ));
@@ -569,7 +570,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         result.getConfirmationState()
                                 ? AuthSignUpStep.DONE
                                 : AuthSignUpStep.CONFIRM_SIGN_UP_STEP,
-                        null,
+                        Collections.emptyMap(),
                         newDetails
                 )
         );
@@ -582,7 +583,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             SignInState.DONE.equals(result.getSignInState()),
             new AuthNextSignInStep(
                     SignInStateConverter.getAuthSignInStep(result.getSignInState()),
-                    result.getParameters(),
+                    result.getParameters() == null ? Collections.emptyMap() : result.getParameters(),
                     convertCodeDeliveryDetails(result.getCodeDetails())
             )
         );

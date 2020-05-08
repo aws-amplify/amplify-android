@@ -23,7 +23,6 @@ import com.amplifyframework.auth.AuthCategoryConfiguration;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthUser;
-import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
@@ -54,6 +53,7 @@ import org.json.JSONObject;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
@@ -63,6 +63,7 @@ import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -84,6 +85,7 @@ public final class AuthComponentTest {
     private static final String ATTRIBUTE_KEY = AuthUserAttributeKey.email().getKeyString();
     private static final String ATTRIBUTE_VAL = "email@email.com";
     private static final String CONFIRMATION_CODE = "confirm";
+    private static final String PLUGIN_KEY = "awsCognitoAuthPlugin";
     private static final Map<String, String> METADATA = Collections.singletonMap("aCustomKey", "aCustomVal");
     private AWSMobileClient mobileClient;
     private AuthCategory authCategory;
@@ -117,7 +119,7 @@ public final class AuthComponentTest {
         JSONObject pluginConfig = new JSONObject().put("TestKey", "TestVal");
         JSONObject json = new JSONObject().put("plugins",
                 new JSONObject().put(
-                    new AWSCognitoAuthPlugin().getPluginKey(),
+                    PLUGIN_KEY,
                     pluginConfig
                 )
         );
@@ -125,17 +127,16 @@ public final class AuthComponentTest {
         authConfig.populateFromJSON(json);
 
         doAnswer(invocation -> {
-            assertEquals(context, invocation.getArgument(0));
-            assertEquals(pluginConfig.toString(), invocation.getArgument(1).toString());
-            assertTrue(invocation.getArgument(1) instanceof AWSConfiguration);
-
             Callback<UserStateDetails> callback = invocation.getArgument(2);
             callback.onResult(userStateDetails);
             return null;
         }).when(mobileClient).initialize(any(), any(), any());
 
         authCategory.configure(authConfig, context);
-        verify(mobileClient).initialize(any(), any(), any());
+
+        ArgumentCaptor<AWSConfiguration> awsConfigCaptor = ArgumentCaptor.forClass(AWSConfiguration.class);
+        verify(mobileClient).initialize(eq(context), awsConfigCaptor.capture(), any());
+        assertEquals(pluginConfig.toString(), awsConfigCaptor.getValue().toString());
     }
 
     /**
@@ -150,7 +151,7 @@ public final class AuthComponentTest {
         JSONObject pluginConfig = new JSONObject().put("TestKey", "TestVal");
         JSONObject json = new JSONObject().put("plugins",
                 new JSONObject().put(
-                        new AWSCognitoAuthPlugin().getPluginKey(),
+                        PLUGIN_KEY,
                         pluginConfig
                 )
         );
@@ -185,30 +186,25 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            assertEquals(USERNAME, invocation.getArgument(0));
-            assertEquals(PASSWORD, invocation.getArgument(1));
-            Map<String, String> attributeMap = invocation.getArgument(2);
-            assertEquals(ATTRIBUTE_VAL, attributeMap.get(ATTRIBUTE_KEY));
-            assertEquals(METADATA, invocation.getArgument(3));
-
             Callback<SignUpResult> callback = invocation.getArgument(4);
             callback.onResult(amcResult);
             return null;
         }).when(mobileClient).signUp(any(), any(), any(), any(), any());
 
+        AWSCognitoAuthSignUpOptions options = AWSCognitoAuthSignUpOptions.builder()
+                .userAttribute(AuthUserAttributeKey.email(), ATTRIBUTE_VAL)
+                .validationData(METADATA)
+                .build();
+
         AuthSignUpResult result = synchronousAuth.signUp(
                 USERNAME,
                 PASSWORD,
-                AWSCognitoAuthSignUpOptions.builder()
-                    .userAttributes(
-                        Collections.singletonList(new AuthUserAttribute(AuthUserAttributeKey.email(), ATTRIBUTE_VAL))
-                    )
-                    .validationData(METADATA)
-                    .build()
+                options
         );
 
         validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
-        verify(mobileClient).signUp(any(), any(), any(), any(), any());
+        Map<String, String> expectedAttributeMap = Collections.singletonMap(ATTRIBUTE_KEY, ATTRIBUTE_VAL);
+        verify(mobileClient).signUp(eq(USERNAME), eq(PASSWORD), eq(expectedAttributeMap), eq(METADATA), any());
     }
 
     /**
@@ -230,9 +226,6 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            assertEquals(USERNAME, invocation.getArgument(0));
-            assertEquals(CONFIRMATION_CODE, invocation.getArgument(1));
-
             Callback<SignUpResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
@@ -240,7 +233,7 @@ public final class AuthComponentTest {
 
         AuthSignUpResult result = synchronousAuth.confirmSignUp(USERNAME, CONFIRMATION_CODE);
         validateSignUpResult(result, AuthSignUpStep.DONE);
-        verify(mobileClient).confirmSignUp(any(), any(), any());
+        verify(mobileClient).confirmSignUp(eq(USERNAME), eq(CONFIRMATION_CODE), any());
     }
 
     /**
@@ -262,8 +255,6 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            assertEquals(USERNAME, invocation.getArgument(0));
-
             Callback<SignUpResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
@@ -271,7 +262,7 @@ public final class AuthComponentTest {
 
         AuthSignUpResult result = synchronousAuth.resendSignUpCode(USERNAME);
         validateSignUpResult(result, AuthSignUpStep.CONFIRM_SIGN_UP_STEP);
-        verify(mobileClient).resendSignUp(any(), any());
+        verify(mobileClient).resendSignUp(eq(USERNAME), any());
     }
 
     /**
@@ -292,10 +283,6 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            assertEquals(USERNAME, invocation.getArgument(0));
-            assertEquals(PASSWORD, invocation.getArgument(1));
-            assertEquals(METADATA, invocation.getArgument(2));
-
             Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
             return null;
@@ -313,7 +300,7 @@ public final class AuthComponentTest {
                 AuthSignInStep.CONFIRM_SIGN_IN_WITH_SMS_MFA_CODE
         );
 
-        verify(mobileClient).signIn(any(), any(), any(), any());
+        verify(mobileClient).signIn(eq(USERNAME), eq(PASSWORD), eq(METADATA), any());
     }
 
     /**
@@ -333,8 +320,6 @@ public final class AuthComponentTest {
         );
 
         doAnswer(invocation -> {
-            assertEquals(CONFIRMATION_CODE, invocation.getArgument(0));
-
             Callback<SignInResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
@@ -342,7 +327,7 @@ public final class AuthComponentTest {
 
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
-        verify(mobileClient).confirmSignIn(any(String.class), any());
+        verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any());
     }
 
     /**
@@ -362,8 +347,6 @@ public final class AuthComponentTest {
         ));
 
         doAnswer(invocation -> {
-            assertEquals(USERNAME, invocation.getArgument(0));
-
             Callback<ForgotPasswordResult> callback = invocation.getArgument(1);
             callback.onResult(amcResult);
             return null;
@@ -377,7 +360,7 @@ public final class AuthComponentTest {
                 result.getNextStep().getResetPasswordStep()
         );
         validateCodeDeliveryDetails(result.getNextStep().getCodeDeliveryDetails());
-        verify(mobileClient).forgotPassword(any(), any());
+        verify(mobileClient).forgotPassword(eq(USERNAME), any());
     }
 
     /**
@@ -392,9 +375,6 @@ public final class AuthComponentTest {
         ForgotPasswordResult amcResult = new ForgotPasswordResult(ForgotPasswordState.DONE);
 
         doAnswer(invocation -> {
-            assertEquals(NEW_PASSWORD, invocation.getArgument(0));
-            assertEquals(CONFIRMATION_CODE, invocation.getArgument(1));
-
             Callback<ForgotPasswordResult> callback = invocation.getArgument(2);
             callback.onResult(amcResult);
             return null;
@@ -402,7 +382,7 @@ public final class AuthComponentTest {
             .confirmForgotPassword(any(), any(), any());
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
-        verify(mobileClient).confirmForgotPassword(any(), any(), any());
+        verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
     }
 
     /**
@@ -425,7 +405,7 @@ public final class AuthComponentTest {
     @Test
     public void getEscapeHatch() {
         AWSCognitoAuthPlugin plugin =
-                (AWSCognitoAuthPlugin) authCategory.getPlugin(new AWSCognitoAuthPlugin().getPluginKey());
+                (AWSCognitoAuthPlugin) authCategory.getPlugin(PLUGIN_KEY);
         AWSMobileClient client = plugin.getEscapeHatch();
         assertEquals(mobileClient, client);
     }

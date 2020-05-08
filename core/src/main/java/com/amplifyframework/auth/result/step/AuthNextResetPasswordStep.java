@@ -43,13 +43,12 @@ public final class AuthNextResetPasswordStep {
      */
     public AuthNextResetPasswordStep(
             @NonNull AuthResetPasswordStep resetPasswordStep,
-            @Nullable Map<String, String> additionalInfo,
+            @NonNull Map<String, String> additionalInfo,
             @Nullable AuthCodeDeliveryDetails codeDeliveryDetails) {
         this.resetPasswordStep = Objects.requireNonNull(resetPasswordStep);
         this.additionalInfo = new HashMap<>();
-        if (additionalInfo != null) {
-            this.additionalInfo.putAll(additionalInfo);
-        }
+        this.additionalInfo.putAll(Objects.requireNonNull(additionalInfo));
+
         this.codeDeliveryDetails = codeDeliveryDetails;
     }
 

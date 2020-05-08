@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.AuthUserAttribute;
+import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.util.Immutable;
 
 import java.util.ArrayList;
@@ -92,6 +93,9 @@ public class AuthSignUpOptions {
 
     public abstract static class Builder<T extends Builder<T>> {
         private final List<AuthUserAttribute> userAttributes;
+        // Used as an internal convenience if the user wants to specify just one attribute.
+        // Should be merged into the userAttributes list whenever it is retrieved or used in the constructor.
+        private AuthUserAttribute singleUserAttribute;
 
         /**
          * Initialize the builder object with an empty array list for userAttributes.
@@ -108,10 +112,16 @@ public class AuthSignUpOptions {
 
         /**
          * Returns the list of user attributes so extending classes can include this value in their constructor.
+         * If the single user attribute is set, it is merged into the returned list here.
          * @return the list of user attributes
          */
         protected List<AuthUserAttribute> getUserAttributes() {
-            return userAttributes;
+            List<AuthUserAttribute> mergedList = new ArrayList<>();
+            mergedList.addAll(userAttributes);
+            if (singleUserAttribute != null && !mergedList.contains(singleUserAttribute)) {
+                mergedList.add(singleUserAttribute);
+            }
+            return mergedList;
         }
 
         /**
@@ -128,12 +138,29 @@ public class AuthSignUpOptions {
         }
 
         /**
+         * Convenience method to set a single attribute. This is merged in with the list of userAttributes if that
+         * is also set (which it shouldn't be - it should be either a list or this is used but it will work if
+         * both are set).
+         * @param key The attribute key
+         * @param val The attribute value
+         * @return The type of Builder object being used.
+         */
+        @NonNull
+        public T userAttribute(@NonNull AuthUserAttributeKey key, @NonNull String val) {
+            this.singleUserAttribute = new AuthUserAttribute(
+                    Objects.requireNonNull(key),
+                    Objects.requireNonNull(val)
+            );
+            return getThis();
+        }
+
+        /**
          * Build an instance of AuthSignUpOptions (or one of its subclasses).
          * @return an instance of AuthSignUpOptions (or one of its subclasses)
          */
         @NonNull
         public AuthSignUpOptions build() {
-            return new AuthSignUpOptions(Immutable.of(userAttributes));
+            return new AuthSignUpOptions(Immutable.of(getUserAttributes()));
         }
     }
 
