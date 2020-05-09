@@ -26,7 +26,7 @@ import com.amplifyframework.predictions.result.IdentifyCelebritiesResult;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -92,7 +92,7 @@ public final class AWSPredictionsIdentifyCelebritiesTest {
         assertNotNull(result);
 
         // Assert that Jeff Bezos is detected
-        assertFalse(CollectionUtils.isNullOrEmpty(result.getCelebrities()));
+        assertFalse(Empty.check(result.getCelebrities()));
         assertTrue(Observable.fromIterable(result.getCelebrities())
                 .map(celeb -> celeb.getCelebrity().getName())
                 .toList()

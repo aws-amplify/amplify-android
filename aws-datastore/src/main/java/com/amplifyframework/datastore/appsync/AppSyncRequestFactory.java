@@ -24,8 +24,8 @@ import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
-import com.amplifyframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -75,7 +75,7 @@ final class AppSyncRequestFactory {
             throws DataStoreException {
 
         final StringBuilder doc = new StringBuilder();
-        final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
+        final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
 
         int indent = 0;
         // Outer container, e.g. query SyncBlogPost {
@@ -130,7 +130,7 @@ final class AppSyncRequestFactory {
     static <T extends Model> String buildSubscriptionDoc(
             Class<T> modelClass, SubscriptionType subscriptionType) throws DataStoreException {
 
-        final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
+        final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
         String verb;
         switch (subscriptionType) {
             case ON_CREATE:
@@ -194,7 +194,7 @@ final class AppSyncRequestFactory {
     private static <T extends Model> String buildMutation(Class<T> modelClass, MutationType mutationType)
             throws DataStoreException {
 
-        final String capitalizedModelName = StringUtils.capitalizeFirst(modelClass.getSimpleName());
+        final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
         int indent = 0;
         StringBuilder doc = new StringBuilder();
 
