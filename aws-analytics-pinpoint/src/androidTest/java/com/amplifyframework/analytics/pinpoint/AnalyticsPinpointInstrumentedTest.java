@@ -19,8 +19,8 @@ import android.app.Application;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.analytics.AnalyticsCategory;
 import com.amplifyframework.analytics.AnalyticsEvent;
-import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
@@ -123,10 +123,9 @@ public class AnalyticsPinpointInstrumentedTest {
     /**
      * Record a basic analytics event and test that events are flushed from local database periodically.
      *
-     * @throws AnalyticsException Caused by incorrect usage of the Analytics API.
      */
     @Test
-    public void testAutoFlush() throws AnalyticsException {
+    public void testAutoFlush() {
         AnalyticsEvent event1 = AnalyticsEvent.builder()
                 .name("Amplify-event" + UUID.randomUUID().toString())
                 .addProperty("DemoProperty1", "DemoValue1")
@@ -203,10 +202,9 @@ public class AnalyticsPinpointInstrumentedTest {
      * Registers a global property and then Unregisters the global property
      * and ensures that it is respected in events recorded thereafter.
      *
-     * @throws JSONException Caused by unexpected event structure.
      */
     @Test
-    public void unregisterGlobalPropertiesRemovesGivenProperties() throws JSONException {
+    public void unregisterGlobalPropertiesRemovesGivenProperties() {
         // Arrange: Register a global property
         Amplify.Analytics.registerGlobalProperties(
                 AnalyticsProperties.builder()
@@ -226,6 +224,11 @@ public class AnalyticsPinpointInstrumentedTest {
         assertFalse(analyticsClient.getAllEvents().get(1).has("attributes"));
     }
 
+    /**
+     * The {@link AnalyticsCategory#identifyUser(String, UserProfile)} method should set
+     * an {@link EndpointProfile} on the Pinpoint {@link TargetingClient}, containing
+     * all provided Amplify attributes.
+     */
     @Test
     public void testIdentifyUser() {
         UserProfile.Location location = UserProfile.Location.builder()

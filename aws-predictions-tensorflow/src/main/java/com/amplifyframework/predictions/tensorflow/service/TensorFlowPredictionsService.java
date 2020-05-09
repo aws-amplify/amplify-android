@@ -35,7 +35,6 @@ import java.util.Map;
  * pre-trained models to make predictions offline.
  */
 public final class TensorFlowPredictionsService {
-
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-predictions-tensorflow");
 
     private final TensorFlowTextClassificationService textClassificationService;
@@ -48,6 +47,14 @@ public final class TensorFlowPredictionsService {
         this.textClassificationService = TensorFlowTextClassificationService.fromContext(context);
     }
 
+    /**
+     * Classifies a piece of text.
+     * @param text Text to classify
+     * @param onSuccess Invoked upon successful classification of the text
+     * @param onError Invoked upon failure to classify the provided text, either
+     *                due to issues with the text, or issues with the classification
+     *                service
+     */
     public void classify(
             @NonNull String text,
             @NonNull Consumer<InterpretResult> onSuccess,

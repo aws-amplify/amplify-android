@@ -43,16 +43,30 @@ public final class AWSTime {
     private final LocalTime localTime;
     private final ZoneOffset zoneOffset;
 
+    /**
+     * Constructs an {@link AWSTime} from an {@link Date}.
+     * This assumed the timezone is UTC. The UTC time is pulled from {@link Date#getTime()}.
+     * @param date A Date, in UTC
+     */
     public AWSTime(@NonNull Date date) {
         this.zoneOffset = null;
         this.localTime = Instant.ofEpochMilli(date.getTime()).atOffset(ZoneOffset.UTC).toLocalTime();
     }
 
+    /**
+     * Constructs an {@link AWSTime}, with a provided date, and a given offset from UTC, expressed in seconds.
+     * @param date A {@link Date}
+     * @param offsetInSeconds The number of seconds that offsets the provided date from UTC
+     */
     public AWSTime(@NonNull Date date, int offsetInSeconds) {
         this.zoneOffset = ZoneOffset.ofTotalSeconds(offsetInSeconds);
         this.localTime = Instant.ofEpochMilli(date.getTime()).atOffset(this.zoneOffset).toLocalTime();
     }
 
+    /**
+     * Constructs an {@link AWSTime} from a valid, extended ISO-8601 Time string.
+     * @param text A valid, extended ISO-8601 Time string
+     */
     public AWSTime(@NonNull String text) {
         LocalTime localTime;
         ZoneOffset zoneOffset;
@@ -69,6 +83,10 @@ public final class AWSTime {
         this.zoneOffset = zoneOffset;
     }
 
+    /**
+     * Builds a string-representation of the time, in ISO-8601 extended offset time format.
+     * @return A string-representation of the time, in ISO-8601 extended offset time format
+     */
     public String format() {
         if (zoneOffset != null) {
             OffsetTime offsetTime = OffsetTime.of(localTime, zoneOffset);

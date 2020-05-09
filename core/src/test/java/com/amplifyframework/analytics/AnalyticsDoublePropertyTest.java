@@ -19,8 +19,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class AnalyticsDoublePropertyTest {
-
+/**
+ * Tests the {@link AnalyticsDoubleProperty}.
+ */
+public final class AnalyticsDoublePropertyTest {
+    /**
+     * {@link AnalyticsDoubleProperty#from(Double)} will create a property that
+     * stores the double, so that it can be retrieved by means of
+     * {@link AnalyticsDoubleProperty#getValue()}.
+     */
     @Test
     public void fromReturnsDoublePropertyWithPassedValue() {
         // Arrange: Create the property

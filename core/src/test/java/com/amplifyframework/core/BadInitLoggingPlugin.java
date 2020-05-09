@@ -35,6 +35,10 @@ import org.json.JSONObject;
 public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
     private BadInitLoggingPlugin() {}
 
+    /**
+     * Creates an instance of the {@link BadInitLoggingPlugin}.
+     * @return A BadInitLoggingPlugin
+     */
     public static BadInitLoggingPlugin instance() {
         return new BadInitLoggingPlugin();
     }

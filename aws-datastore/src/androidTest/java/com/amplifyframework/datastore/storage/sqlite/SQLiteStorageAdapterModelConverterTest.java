@@ -36,23 +36,39 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+/**
+ * This is a basic test to ensure that an {@link Model} class can be saved and queried
+ * into the {@link SQLiteStorageAdapter}. This is one of the original tests that was written
+ * for the {@link SQLiteStorageAdapter}, when this level of basic functionality was
+ * in question. Now, the test may serve as a "smoke test."
+ */
 public final class SQLiteStorageAdapterModelConverterTest {
-
     private static final Date MAY_THE_FOURTH = new Date(1588627200000L);
 
     private SynchronousStorageAdapter adapter;
 
+    /**
+     * Enable Android Strict Model. This helps catch common errors while using a SQLite database,
+     * such as forgetting to close a handle to it (in the source code).
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.enable();
     }
 
+    /**
+     * Delete any existing SQLite database files, and create a new storage adapter that
+     * is able to warehouse the To-do family of models.
+     */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
     }
 
+    /**
+     * Close the adapter and delete any database files that it may have left behind.
+     */
     @After
     public void teardown() {
         if (adapter != null) {

@@ -50,17 +50,28 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterQueryTest {
     private SynchronousStorageAdapter adapter;
 
+    /**
+     * Enables Android Strict Mode, to help catch common errors while using
+     * SQLite, such as forgetting to close the database.
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.enable();
     }
 
+    /**
+     * Remove any old database files, and the re-provision a new storage adapter,
+     * that is able to store the Comment-Blog family of models.
+     */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
     }
 
+    /**
+     * Close the open database, and cleanup any database files that it left.
+     */
     @After
     public void teardown() {
         TestStorageAdapter.cleanup(adapter);
@@ -256,6 +267,11 @@ public final class SQLiteStorageAdapterQueryTest {
         assertTrue(resultAfterMaliciousQuery.contains(jane));
     }
 
+    /**
+     * When there are 20 items available, and the user queries with a page size of 10,
+     * the user should be given two pages of 10 items each.
+     * @throws DataStoreException On arranging records, or from the query action itself
+     */
     @Test
     public void queryWithPaginationWithCustomValues() throws DataStoreException {
         final int pageSize = 10;
@@ -269,6 +285,11 @@ public final class SQLiteStorageAdapterQueryTest {
         assertEquals(pageSize, result.size());
     }
 
+    /**
+     * When there are 102 items, and the user requests just the {@link Page#firstPage()},
+     * with a page size of 100, that first page should come back with 100 items.
+     * @throws DataStoreException On arranging records, or from the query action itself
+     */
     @Test
     public void queryWithPaginationWithFirstPage() throws DataStoreException {
         final int pageSize = 100;
@@ -282,6 +303,13 @@ public final class SQLiteStorageAdapterQueryTest {
         assertEquals(pageSize, result.size());
     }
 
+    /**
+     * When the user requests only the {@link Page#firstResult()}, they should get back
+     * a single page that contains one value. (This, assuming that there is at least one
+     * value that could be returned.)
+     * @throws DataStoreException On failure to arrange items into store, or
+     *                            from the query action itself
+     */
     @Test
     public void queryWithPaginationWithFirstResult() throws DataStoreException {
         createBlogOwnerRecords(2);

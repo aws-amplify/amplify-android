@@ -95,8 +95,7 @@ public final class StorageGetUrlOptions extends StorageOptions {
             return this;
         }
 
-        @SuppressWarnings("WeakerAccess")
-        public int getExpires() {
+        int getExpires() {
             return expires;
         }
 

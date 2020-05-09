@@ -29,18 +29,24 @@ import io.reactivex.observers.TestObserver;
 /**
  * Tests the {@link RxHubBinding}.
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public final class RxHubBindingTest {
     private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(1);
 
     private RxHubCategoryBehavior rxHub;
 
+    /**
+     * Sets up the object under test, an {@link RxHubBinding}.
+     */
     @Before
     public void setup() {
         this.rxHub = new RxHubBinding();
     }
 
+    /**
+     * A subscriber should receive a value published on the Hub.
+     */
     @Test
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     public void publishedEventIsReceived() {
         // Act: Create a subscriber,
         TestObserver<HubEvent<?>> observer = rxHub.on(HubChannel.HUB).test();
@@ -54,6 +60,9 @@ public final class RxHubBindingTest {
         observer.awaitCount(1).assertValue(event);
     }
 
+    /**
+     * A cancelled subscription should not continue to receive Hub events.
+     */
     @Test
     public void subscriberDoesNotReceiveEventWhenCanceled() {
         // Act: subscribe, then cancel

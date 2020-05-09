@@ -30,7 +30,14 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-public class AWSTimeTest {
+/**
+ * Tests the {@link AWSTime}.
+ */
+public final class AWSTimeTest {
+    /**
+     * There are several possible formats of String for which a valid {@link AWSTime}
+     * can be constructed.
+     */
     @Test
     public void parsesExpectedFormats() {
         List<String> values = Arrays.asList(
@@ -48,6 +55,10 @@ public class AWSTimeTest {
         assertEquals("01:22:00", new AWSTime("01:22").format());
     }
 
+    /**
+     * An {@link AWSTime} may be converted to and from a Java {@link Date}.
+     * When no zone offset is provided, the Date is assumed to be relative to GMT.
+     */
     @Test
     public void convertsToAndFromDate() {
         Calendar cal = new GregorianCalendar();
@@ -62,9 +73,14 @@ public class AWSTimeTest {
         Date date = cal.getTime();
         AWSTime awsTime = new AWSTime(date);
         assertEquals(date, awsTime.toDate());
-        assertThrows(IllegalStateException.class, () -> awsTime.getOffsetTotalSeconds());
+        assertThrows(IllegalStateException.class, awsTime::getOffsetTotalSeconds);
     }
 
+    /**
+     * An {@link AWSTime} may be converted to and from a Java {@link Date}.
+     * When an offset time is additionally provided, it may be stored into the {@link AWSTime}
+     * and used for further computations.
+     */
     @Test
     public void convertsToAndFromDateWithOffset() {
         Calendar cal = new GregorianCalendar();

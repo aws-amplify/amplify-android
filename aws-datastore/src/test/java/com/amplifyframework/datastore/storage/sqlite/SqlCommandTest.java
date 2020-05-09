@@ -23,6 +23,8 @@ import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.syncengine.PendingMutation;
@@ -149,6 +151,12 @@ public class SqlCommandTest {
         );
     }
 
+    /**
+     * Verifies that the correct SQL bindings are generated when specifying the
+     * {@link Page#startingAt(int)} and {@link QueryPaginationInput#withLimit(Integer)}
+     * page details.
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)} 
+     */
     @Test
     public void queryWithCustomPaginationInput() throws DataStoreException {
         final ModelSchema personSchema = getPersonModelSchema();
@@ -167,6 +175,11 @@ public class SqlCommandTest {
         assertEquals(40, bindings.get(1));
     }
 
+    /**
+     * Validates that the correct SQL bindings are created when using the
+     * {@link Page#firstPage()} query option.
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
     @Test
     public void queryWithFirstPagePaginationInput() throws DataStoreException {
         final ModelSchema personSchema = getPersonModelSchema();
@@ -185,6 +198,11 @@ public class SqlCommandTest {
         assertEquals(0, bindings.get(1));
     }
 
+    /**
+     * Validates that the correct bindings are generated when usign the {@link Page#firstResult()}
+     * pagination option.
+     * @throws DataStoreException From {@link SQLCommandFactory#queryFor(ModelSchema, QueryOptions)}
+     */
     @Test
     public void queryWithFirstResultPaginationInput() throws DataStoreException {
         final ModelSchema personSchema = getPersonModelSchema();

@@ -33,6 +33,10 @@ public final class AWSTimestampTest {
     private static final long MS_SINCE_EPOCH = 1_588_703_119_659L;
     private static final long SEC_SINCE_EPOCH = 1_588_703_119L;
 
+    /**
+     * The {@link AWSTimestamp#AWSTimestamp()} simple constructor will store and use
+     * the current time. The current time is retrievable via {@link AWSTime#getOffsetTotalSeconds()}.
+     */
     @Test
     public void correctValueStoredFromDefaultConstructor() {
         AWSTimestamp timestamp = new AWSTimestamp();
@@ -40,6 +44,11 @@ public final class AWSTimestampTest {
         assertTrue(timestamp.getSecondsSinceEpoch() <= evaluationTimeInSeconds + 1);
     }
 
+    /**
+     * The {@link AWSTimestamp#AWSTimestamp(Date)} can construct an {@link AWSTimestamp}.
+     * It does this by pulling the {@link Date#getTime()} and converting it to seconds since
+     * the epoch. This value is available via {@link AWSTimestamp#getSecondsSinceEpoch()}.
+     */
     @Test
     public void correctValueStoredWhenConstructedFromDate() {
         Date date = new Date(MS_SINCE_EPOCH);
@@ -47,12 +56,22 @@ public final class AWSTimestampTest {
         assertEquals(SEC_SINCE_EPOCH, timestamp.getSecondsSinceEpoch());
     }
 
+    /**
+     * The {@link AWSTimestamp#AWSTimestamp(long, TimeUnit)} is able to construct
+     * a valid timestamp. The {@link AWSTimestamp#getSecondsSinceEpoch()} will return
+     * the correct number of seconds since the epoch.
+     */
     @Test
     public void correctValueStoredWhenConstructedFromLong() {
         AWSTimestamp timestamp = new AWSTimestamp(SEC_SINCE_EPOCH, TimeUnit.SECONDS);
         assertEquals(SEC_SINCE_EPOCH, timestamp.getSecondsSinceEpoch());
     }
 
+    /**
+     * {@link AWSTimestamp} has a sane implementation of {@link Object#equals(Object)}
+     * and {@link Object#hashCode()}, such like-valued instances are considered equal to
+     * one another, and produce the same hash.
+     */
     @Test
     public void testEqualsAndHash() {
         // Arrange two values that are logically the same.

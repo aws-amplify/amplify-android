@@ -19,8 +19,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class AnalyticsStringPropertyTest {
-
+/**
+ * Tests the {@link AnalyticsStringProperty}.
+ */
+public final class AnalyticsStringPropertyTest {
+    /**
+     * The {@link AnalyticsStringProperty#from(String)} factory will create a property
+     * and store the provided string. It will be available via
+     * {@link AnalyticsStringProperty#getValue()}.
+     */
     @Test
     public void fromReturnsStringPropertyWithPassedValue() {
         // Arrange: Create the property

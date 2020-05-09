@@ -42,6 +42,14 @@ public final class VersionRepositoryTest {
     private SynchronousStorageAdapter storageAdapter;
     private VersionRepository versionRepository;
 
+    /**
+     * Sets up the test. A {@link VersionRepository} is tested with respect to the varying
+     * state of its dependency, the {@link InMemoryStorageAdapter}.
+     *
+     * An {@link InMemoryStorageAdapter} is used as a test fake. Versions can be arranged into
+     * it, and validated against it. To facilitate that arrangement, an {@link SynchronousStorageAdapter}
+     * utility is used to wrap the {@link InMemoryStorageAdapter}.
+     */
     @Before
     public void setup() {
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();

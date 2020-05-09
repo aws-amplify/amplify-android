@@ -33,6 +33,10 @@ public final class TensorFlowTextClassificationRequest {
         this.text = Objects.requireNonNull(text);
     }
 
+    /**
+     * Gets the text for which classification is being requested.
+     * @return Contents of text on which to run classification
+     */
     @NonNull
     public String getText() {
         return text;
