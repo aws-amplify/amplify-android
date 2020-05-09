@@ -30,10 +30,18 @@ import androidx.core.util.ObjectsCompat;
 public final class GraphQLPathSegment {
     private final Object value;
 
+    /**
+     * Constructs a new GraphQLPathSegment.
+     * @param value An integer value
+     */
     public GraphQLPathSegment(int value) {
         this.value = Integer.valueOf(value);
     }
 
+    /**
+     * Constructs a new GraphQLPathSegment.
+     * @param value A string value
+     */
     public GraphQLPathSegment(@NonNull String value) {
         this.value = value;
     }

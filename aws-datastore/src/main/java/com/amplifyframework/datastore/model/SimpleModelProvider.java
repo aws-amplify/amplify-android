@@ -155,6 +155,13 @@ public final class SimpleModelProvider implements ModelProvider {
             this.modelClasses = new LinkedHashSet<>();
         }
 
+        /**
+         * Adds a single model to the set of model classes that the newly-build
+         * {@link SimpleModelProvider} will provide.
+         * @param modelClass A model class that will be provided in newly-built provider
+         * @param <T> Type of model that will be provided
+         * @return Current builder instance, with which to make chained builder configuration calls
+         */
         @SuppressWarnings("UnusedReturnValue")
         public <T extends Model> Builder addModel(@NonNull Class<T> modelClass) {
             Objects.requireNonNull(modelClass);
@@ -162,6 +169,12 @@ public final class SimpleModelProvider implements ModelProvider {
             return Builder.this;
         }
 
+        /**
+         * Adds a variable number of model classes to the set of model classes that will
+         * be provided by the newly-build {@link SimpleModelProvider}.
+         * @param modelClasses These classes will be provided by the newly-build {@link SimpleModelProvider}
+         * @return Current builder instance, with which to make chained builder configuration calls
+         */
         @SafeVarargs
         public final Builder addModels(@NonNull Class<? extends Model>... modelClasses) {
             Objects.requireNonNull(modelClasses);
@@ -172,11 +185,20 @@ public final class SimpleModelProvider implements ModelProvider {
             return Builder.this;
         }
 
+        /**
+         * Configures the version that will be used in the newly-built {@link SimpleModelProvider}.
+         * @param version Version for model provider
+         * @return Current builder instance, with which to make chained builder configuration calls
+         */
         public Builder version(@NonNull String version) {
             Builder.this.version = Objects.requireNonNull(version);
             return Builder.this;
         }
 
+        /**
+         * Builds a new {@link SimpleModelProvider}.
+         * @return A {@link SimpleModelProvider}
+         */
         @SuppressLint("SyntheticAccessor")
         public SimpleModelProvider build() {
             return SimpleModelProvider.instance(version, modelClasses);

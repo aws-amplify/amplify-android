@@ -76,6 +76,9 @@ public final class RxApiBindingTest {
         this.rxApi = new RxApiBinding(apiCategory);
     }
 
+    /**
+     * When the API behavior emits results for a query, so too should the Rx binding.
+     */
     @Test
     public void queryEmitsResults() {
         GraphQLResponse<Iterable<Model>> response =
@@ -99,6 +102,9 @@ public final class RxApiBindingTest {
             .query(eq(Model.class), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the API behavior emits a failure for a query, so too should the Rx binding.
+     */
     @Test
     public void queryEmitsFailure() {
         // Arrange: category behavior emits a failure
@@ -122,6 +128,9 @@ public final class RxApiBindingTest {
             .query(eq(Model.class), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the API behavior emits a result for a mutation, so too should the Rx binding.
+     */
     @Test
     public void mutateEmitsResult() {
         // Arrange: category behaviour will yield a response
@@ -147,6 +156,9 @@ public final class RxApiBindingTest {
             .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the API behavior emits a failure for a mutation, so too should the Rx binding.
+     */
     @Test
     public void mutateEmitsFailure() {
         // Arrange category behavior to fail
@@ -172,6 +184,10 @@ public final class RxApiBindingTest {
             .mutate(eq(model), eq(mutationType), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the API subscribe operation emits values and then completes, the Rx
+     * binding should follow suit.
+     */
     @Test
     public void subscribeStartsEmitsValuesAndCompletes() {
         // Arrange a category behavior which emits an expected sequence of callback events
@@ -207,6 +223,10 @@ public final class RxApiBindingTest {
         observer.assertNoErrors();
     }
 
+    /**
+     * When the subscribe API behavior starts and then immediately fails,
+     * the Rx binding should emit that same failure.
+     */
     @Test
     public void subscribeStartsAndFails() {
         // Arrange a category behavior which starts and then fails
@@ -238,6 +258,10 @@ public final class RxApiBindingTest {
         observer.assertError(expectedFailure);
     }
 
+    /**
+     * When the REST GET behavior emits a failure, the Rx binding should
+     * emit that same failure as well.
+     */
     @Test
     public void httpGetEmitsFailure() {
         RestOptions options = RestOptions.builder()
@@ -261,6 +285,10 @@ public final class RxApiBindingTest {
             .get(eq(options), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When REST GET behavior emits a result, the Rx binding
+     * should emit it, too.
+     */
     @Test
     public void httpGetEmitsResult() {
         RestOptions options = RestOptions.builder()
@@ -286,6 +314,10 @@ public final class RxApiBindingTest {
             .get(eq(options), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the REST POST behavior emits a failure, the Rx binding
+     * should do the same.
+     */
     @Test
     public void httpPostEmitsFailure() {
         byte[] body = RandomString.string().getBytes();
@@ -313,6 +345,10 @@ public final class RxApiBindingTest {
             .post(eq(options), anyConsumer(), anyConsumer());
     }
 
+    /**
+     * When the REST POST behavior emits a result, the Rx binding
+     * should do the same.
+     */
     @Test
     public void httpPostEmitsResult() {
         // Arrange response from category behavior

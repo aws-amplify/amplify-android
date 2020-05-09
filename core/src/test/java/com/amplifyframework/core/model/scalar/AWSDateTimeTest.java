@@ -28,7 +28,15 @@ import java.util.TimeZone;
 
 import static org.junit.Assert.assertEquals;
 
-public class AWSDateTimeTest {
+/**
+ * Tests the {@link AWSDateTime}.
+ */
+public final class AWSDateTimeTest {
+    /**
+     * An {@link AWSDateTime} can be constructed from a range of
+     * different string representations. The formatted version of an {@link AWSDateTime}
+     * is rendered to string in a consistent format.
+     */
     @Test
     public void parsesExpectedFormats() {
         List<String> values = Arrays.asList(
@@ -45,6 +53,10 @@ public class AWSDateTimeTest {
         assertEquals("2001-02-03T01:30:00Z", new AWSDateTime("2001-02-03T01:30Z").format());
     }
 
+    /**
+     * An {@link AWSDateTime} may be constructed from a Java {@link Date}, and
+     * converted back to one.
+     */
     @Test
     public void convertsToAndFromDateWithOffset() {
         Calendar cal = new GregorianCalendar(2001, 2, 3, 4, 5, 6);
