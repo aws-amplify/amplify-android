@@ -44,6 +44,12 @@ public final class SignInStateConverter {
         CONVERT_SIGN_IN_STATE = Collections.unmodifiableMap(convertSignInStateInit);
     }
 
+    /**
+     * Take an old AWSMobileClient SignInState and convert it to the proper corresponding value in Amplify Auth.
+     * @param fromState the AWSMobileClient state to convert from
+     * @return The new Auth State enum which corresponds to the old state
+     * @throws AuthException Thrown if the AWSMobileClient state is not supported in Amplify Auth
+     */
     public static AuthSignInStep getAuthSignInStep(SignInState fromState) throws AuthException {
         AuthSignInStep convertedVal = CONVERT_SIGN_IN_STATE.get(fromState);
 

@@ -42,6 +42,10 @@ public final class AuthUserAttributeKey {
 
     private final String attributeKey;
 
+    /**
+     * Construct a new instance of AuthUserAttributeKey.
+     * @param attributeKey the attribute key to use in the new object.
+     */
     protected AuthUserAttributeKey(String attributeKey) {
         this.attributeKey = attributeKey;
     }

@@ -55,6 +55,10 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         return validationData;
     }
 
+    /**
+     * Returns a builder for this object.
+     * @return a builder for this object.
+     */
     @NonNull
     public static CognitoBuilder builder() {
         return new CognitoBuilder();
@@ -95,16 +99,28 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> validationData;
 
+        /**
+         * Constructs the builder.
+         */
         public CognitoBuilder() {
             super();
             this.validationData = new HashMap<>();
         }
 
+        /**
+         * Gets the type of builder to support proper flow with this being an extended class.
+         * @return the type of builder to support proper flow with this being an extended class.
+         */
         @Override
         public CognitoBuilder getThis() {
             return this;
         }
 
+        /**
+         * A map of custom data the user can send as part of the sign up process for validation.
+         * @param validationData A map of custom data the user can send as part of the sign up process for validation.
+         * @return the instance of the builder.
+         */
         @NonNull
         public CognitoBuilder validationData(@NonNull Map<String, String> validationData) {
             Objects.requireNonNull(validationData);
@@ -113,6 +129,10 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
             return getThis();
         }
 
+        /**
+         * Build the object.
+         * @return a new instance of AWSCognitoAuthSignUpOptions.
+         */
         @NonNull
         public AWSCognitoAuthSignUpOptions build() {
             return new AWSCognitoAuthSignUpOptions(

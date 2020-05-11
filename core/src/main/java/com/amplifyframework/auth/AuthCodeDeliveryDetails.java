@@ -135,11 +135,20 @@ public final class AuthCodeDeliveryDetails {
             this.value = Objects.requireNonNull(value);
         }
 
+        /**
+         * Get the string value of the enum.
+         * @return the string value of the enum.
+         */
         @NonNull
         public String getValue() {
             return value;
         }
 
+        /**
+         * Get the corresponding ENUM value to the string provided.
+         * @param value the string provided.
+         * @return the corresponding ENUM value.
+         */
         @NonNull
         public static DeliveryMedium fromString(String value) {
             for (DeliveryMedium v : values()) {

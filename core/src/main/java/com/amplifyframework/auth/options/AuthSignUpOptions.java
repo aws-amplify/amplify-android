@@ -51,6 +51,10 @@ public class AuthSignUpOptions {
         return userAttributes;
     }
 
+    /**
+     * Get a builder to construct an instance of this object.
+     * @return a builder to construct an instance of this object.
+     */
     @NonNull
     public static Builder<?> builder() {
         return new CoreBuilder();

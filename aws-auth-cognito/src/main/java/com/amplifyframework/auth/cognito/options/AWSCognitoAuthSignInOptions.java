@@ -50,6 +50,10 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
         return metadata;
     }
 
+    /**
+     * Get a builder object.
+     * @return a builder object.
+     */
     @NonNull
     public static CognitoBuilder builder() {
         return new CognitoBuilder();
@@ -87,16 +91,28 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> metadata;
 
+        /**
+         * Constructor for the builder.
+         */
         public CognitoBuilder() {
             super();
             this.metadata = new HashMap<>();
         }
 
+        /**
+         * Returns the type of builder this is to support proper flow with it being an extended class.
+         * @return the type of builder this is to support proper flow with it being an extended class.
+         */
         @Override
         public CognitoBuilder getThis() {
             return this;
         }
 
+        /**
+         * Set the metadata field for the object being built.
+         * @param metadata Custom user metadata to be sent with the sign in request.
+         * @return The builder object to continue building.
+         */
         @NonNull
         public CognitoBuilder metadata(@NonNull Map<String, String> metadata) {
             Objects.requireNonNull(metadata);
@@ -105,6 +121,10 @@ public final class AWSCognitoAuthSignInOptions extends AuthSignInOptions {
             return getThis();
         }
 
+        /**
+         * Construct and return the object with the values set in the builder.
+         * @return a new instance of AWSCognitoAuthSignInOptions with the values specified in the builder.
+         */
         @NonNull
         public AWSCognitoAuthSignInOptions build() {
             return new AWSCognitoAuthSignInOptions(

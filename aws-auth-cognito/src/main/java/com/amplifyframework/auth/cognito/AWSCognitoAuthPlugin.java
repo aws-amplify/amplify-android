@@ -82,6 +82,9 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private String userId;
     private AWSMobileClient awsMobileClient;
 
+    /**
+     * A Cognito implementation of the Auth Plugin.
+     */
     public AWSCognitoAuthPlugin() {
         this.awsMobileClient = AWSMobileClient.getInstance();
     }

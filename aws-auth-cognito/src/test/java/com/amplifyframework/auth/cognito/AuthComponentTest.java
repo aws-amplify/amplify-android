@@ -91,6 +91,10 @@ public final class AuthComponentTest {
     private AuthCategory authCategory;
     private SynchronousAuth synchronousAuth;
 
+    /**
+     * Get all setup for the future tests with mocks and a standard response for tokens.
+     * @throws AmplifyException If add plugin fails
+     */
     @Before
     public void setup() throws AmplifyException {
         mobileClient = mock(AWSMobileClient.class);

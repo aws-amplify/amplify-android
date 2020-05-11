@@ -29,6 +29,10 @@ public class AuthProvider {
 
     private final String providerKey;
 
+    /**
+     * Create a new instance of an Auth Provider with the specified key.
+     * @param providerKey the String key to use for the provider.
+     */
     protected AuthProvider(String providerKey) {
         this.providerKey = providerKey;
     }
