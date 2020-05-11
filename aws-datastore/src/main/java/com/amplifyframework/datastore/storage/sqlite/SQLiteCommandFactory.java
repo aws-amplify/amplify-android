@@ -26,14 +26,17 @@ import com.amplifyframework.core.model.ModelIndex;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.PrimaryKey;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.QueryPaginationInput;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLPredicate;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -82,7 +85,7 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
                 .append(SqlKeyword.DELIMITER)
                 .append(table.getName())
                 .append(SqlKeyword.DELIMITER);
-        if (CollectionUtils.isNullOrEmpty(table.getColumns())) {
+        if (Empty.check(table.getColumns())) {
             return new SqlCommand(table.getName(), stringBuilder.toString());
         }
 
@@ -144,13 +147,13 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
     @WorkerThread
     @Override
     public SqlCommand queryFor(@NonNull ModelSchema modelSchema,
-                               @Nullable QueryPredicate predicate) throws DataStoreException {
+                               @NonNull QueryOptions options) throws DataStoreException {
         final SQLiteTable table = SQLiteTable.fromSchema(modelSchema);
         final String tableName = table.getName();
         StringBuilder rawQuery = new StringBuilder();
         StringBuilder selectColumns = new StringBuilder();
         StringBuilder joinStatement = new StringBuilder();
-        List<Object> predicateBindings = Collections.emptyList();
+        final List<Object> bindings = new ArrayList<>();
 
         // Track the list of columns to return
         List<SQLiteColumn> columns = new LinkedList<>(table.getSortedColumns());
@@ -222,18 +225,34 @@ final class SQLiteCommandFactory implements SQLCommandFactory {
 
         // Append predicates.
         // WHERE condition
+        final QueryPredicate predicate = options.getQueryPredicate();
         if (predicate != null) {
             final SQLPredicate sqlPredicate = new SQLPredicate(predicate);
-            predicateBindings = sqlPredicate.getBindings();
+            bindings.addAll(sqlPredicate.getBindings());
             rawQuery.append(SqlKeyword.DELIMITER)
                     .append(SqlKeyword.WHERE)
                     .append(SqlKeyword.DELIMITER)
                     .append(sqlPredicate);
         }
 
+        // Append pagination
+        final QueryPaginationInput paginationInput = options.getPaginationInput();
+        if (paginationInput != null) {
+            rawQuery.append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.LIMIT)
+                    .append(SqlKeyword.DELIMITER)
+                    .append("?")
+                    .append(SqlKeyword.DELIMITER)
+                    .append(SqlKeyword.OFFSET)
+                    .append(SqlKeyword.DELIMITER)
+                    .append("?");
+            bindings.add(paginationInput.getLimit());
+            bindings.add(paginationInput.getPage() * paginationInput.getLimit());
+        }
+
         rawQuery.append(";");
         final String queryString = rawQuery.toString();
-        return new SqlCommand(table.getName(), queryString, columns, predicateBindings);
+        return new SqlCommand(table.getName(), queryString, columns, bindings);
     }
 
     /**

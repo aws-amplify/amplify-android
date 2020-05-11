@@ -44,6 +44,12 @@ public final class LoggingCategoryTest {
     private FakeLogger arrangedDefaultLogger;
     private LoggingCategory realLoggingCategory;
 
+    /**
+     * Sets up the object test, an {@link LoggingCategory}.
+     * It uses a faked logging plugin. The fake logging plugin uses fake logger.
+     * The fake logger has a convenient ability to capture and replay logs that have been
+     * passed to it. This is useful for making assertions about what has been logged.
+     */
     @Before
     public void setup() {
         this.arrangedDefaultLogger = FakeLogger.instance(RandomString.string(), LogLevel.VERBOSE);

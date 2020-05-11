@@ -39,17 +39,28 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterDeleteTest {
     private SynchronousStorageAdapter adapter;
 
+    /**
+     * Enables strict mode, for the purpose of catching some common errors while using
+     * a SQL data-base, such as forgetting to close it when done.
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.enable();
     }
 
+    /**
+     * Clear the storage adapter, and then provision a new one that will allow us
+     * to store the Comments-Blog models.
+     */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
     }
 
+    /**
+     * Close the storage adapter, and cleanup any database files it left.
+     */
     @After
     public void teardown() {
         TestStorageAdapter.cleanup(adapter);

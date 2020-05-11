@@ -36,19 +36,36 @@ import java.util.Date;
 public final class AWSDateTime {
     private final OffsetDateTime offsetDateTime;
 
+    /**
+     * Constructs a new {@link AWSDateTime} from a Java {@link Date} and a zone offset, in seconds.
+     * @param date A date in local time
+     * @param offsetInSeconds The offset of the local timezone with respect to GMT, expressed in seconds.
+     */
     public AWSDateTime(@NonNull Date date, int offsetInSeconds) {
         ZoneOffset zoneOffset = ZoneOffset.ofTotalSeconds(offsetInSeconds);
         this.offsetDateTime = Instant.ofEpochMilli(date.getTime()).atOffset(zoneOffset);
     }
 
+    /**
+     * Constructs an {@link AWSDateTime} from a valid extended ISO-8601 DateTime string.
+     * @param text a valid extended ISO-8601 DateTime string
+     */
     public AWSDateTime(@NonNull String text) {
         this.offsetDateTime = OffsetDateTime.parse(text, DateTimeFormatter.ISO_OFFSET_DATE_TIME);
     }
 
+    /**
+     * Formats the {@link AWSDateTime} as an extended ISO-8601 DateTime string.
+     * @return an extended ISO-8601 DateTime string
+     */
     public String format() {
         return DateTimeFormatter.ISO_OFFSET_DATE_TIME.format(this.offsetDateTime);
     }
 
+    /**
+     * Gets a {@link Date} representation of the {@link AWSDateTime}.
+     * @return A Java {@link Date} representation of the {@link AWSDateTime}
+     */
     public Date toDate() {
         return DateTimeUtils.toDate(offsetDateTime.toInstant());
     }

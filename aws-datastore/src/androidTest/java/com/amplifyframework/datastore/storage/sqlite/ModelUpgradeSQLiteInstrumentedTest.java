@@ -29,7 +29,7 @@ import com.amplifyframework.datastore.model.SystemModelsProviderFactory;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.RandomVersionModelProvider;
 import com.amplifyframework.testutils.Await;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import org.junit.After;
 import org.junit.Before;
@@ -103,7 +103,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
                 sqliteStorageAdapter.initialize(context, onResult, onError)
         );
         // Assert if initialize succeeds.
-        assertFalse(CollectionUtils.isNullOrEmpty(firstResults));
+        assertFalse(Empty.check(firstResults));
 
         // Assert if version is stored correctly
         String expectedVersion =
@@ -132,7 +132,7 @@ public final class ModelUpgradeSQLiteInstrumentedTest {
             (Consumer<List<ModelSchema>> onResult, Consumer<DataStoreException> onError) ->
                 sqliteStorageAdapter.initialize(context, onResult, onError)
         );
-        assertFalse(CollectionUtils.isNullOrEmpty(secondResults));
+        assertFalse(Empty.check(secondResults));
 
         // Check if the new version is stored in local storage.
         expectedVersion =

@@ -19,8 +19,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class AnalyticsIntegerPropertyTest {
-
+/**
+ * Tests the {@link AnalyticsIntegerProperty}.
+ */
+public final class AnalyticsIntegerPropertyTest {
+    /**
+     * The {@link AnalyticsIntegerProperty#from(Integer)} factory will create a property,
+     * and store the provided value. It may be obtained by calling
+     * {@link AnalyticsIntegerProperty#getValue()}.
+     */
     @Test
     public void fromReturnsIntegerPropertyWithPassedValue() {
         // Arrange: Create the property

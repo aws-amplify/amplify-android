@@ -67,6 +67,9 @@ public final class RekognitionResultTransformersTest {
 
     private Random random;
 
+    /**
+     * Sets up test dependencies.
+     */
     @Before
     public void setUp() {
         random = new Random();

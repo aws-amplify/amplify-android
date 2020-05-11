@@ -57,6 +57,12 @@ public final class MutationProcessorTest {
     private MutationProcessor mutationProcessor;
     private HubAccumulator publicationEventAccumulator;
 
+    /**
+     * Sets up the {@link MutationProcessor}, under test. This requires numerous dependent
+     * objects. A fake {@link AppSync} is used, to mock responses when mutations are posted.
+     * A {@link SynchronousStorageAdapter} is created and held in reference, to facilitate
+     * arranging data into and out storage (that storage is used by several different components).
+     */
     @Before
     public void setup() {
         this.appSync = mock(AppSync.class);

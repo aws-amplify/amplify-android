@@ -31,9 +31,17 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+/**
+ * Tests the {@link DataStoreConfiguration}.
+ */
 @RunWith(RobolectricTestRunner.class)
 public final class DataStoreConfigurationTest {
-
+    /**
+     * Validates expectations on what are "default" values for the {@link DataStoreConfiguration},
+     * when the user does not specify any others, neither by file nor by passing values into it
+     * using {@link DataStoreConfiguration.Builder}.
+     * @throws DataStoreException Possible while attempting to create a default configuration
+     */
     @Test
     public void testDefaultConfiguration() throws DataStoreException {
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration.defaults();
@@ -48,9 +56,15 @@ public final class DataStoreConfigurationTest {
         assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
     }
 
+    /**
+     * When a user supplies some configuration values via the builder, these values should
+     * override any that may have been present in the configuration file.
+     * @throws JSONException While arranging config file JSON
+     * @throws DataStoreException While building a configuration instance
+     */
     @Test
-    public void testDefaultOverridenFromConfiguration() throws JSONException, DataStoreException {
-        Long expectedSyncIntervalMinutes = 6L;
+    public void testDefaultOverriddenFromConfiguration() throws JSONException, DataStoreException {
+        long expectedSyncIntervalMinutes = 6L;
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
         JSONObject jsonConfigFromFile = new JSONObject()
@@ -66,9 +80,15 @@ public final class DataStoreConfigurationTest {
         assertTrue(dataStoreConfiguration.getDataStoreErrorHandler() instanceof DefaultDataStoreErrorHandler);
     }
 
+    /**
+     * When building a configuration from both a config file and a configuration object,
+     * default values should be overriden, and the provided ones shall be used, instead.
+     * @throws JSONException While arranging config file JSON
+     * @throws DataStoreException While building DataStoreConfiguration instances via build()
+     */
     @Test
-    public void testDefaultOverridenFromConfigurationAndObject() throws DataStoreException, JSONException {
-        Long expectedSyncIntervalMinutes = 6L;
+    public void testDefaultOverriddenFromConfigurationAndObject() throws JSONException, DataStoreException {
+        long expectedSyncIntervalMinutes = 6L;
         Long expectedSyncIntervalMs = TimeUnit.MINUTES.toMillis(expectedSyncIntervalMinutes);
         Integer expectedSyncMaxRecords = 3;
         DummyConflictHandler dummyConflictHandler = new DummyConflictHandler();
@@ -96,6 +116,12 @@ public final class DataStoreConfigurationTest {
         assertEquals(errorHandler, dataStoreConfiguration.getDataStoreErrorHandler());
     }
 
+    /**
+     * If the config file contains an invalid key, the parsing code should through a
+     * {@link DataStoreException}, to warn the user.
+     * @throws DataStoreException On failure to build a config object
+     * @throws JSONException While arranging a JSONObject in our test code
+     */
     @Test(expected = DataStoreException.class)
     public void testInvalidKeyThrowsException() throws DataStoreException, JSONException {
         JSONObject jsonConfigFromFile = new JSONObject()

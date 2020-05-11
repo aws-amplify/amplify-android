@@ -15,7 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.Page;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
@@ -37,8 +38,10 @@ import java.util.List;
 
 import io.reactivex.Observable;
 
+import static com.amplifyframework.core.model.query.predicate.QueryField.field;
 import static com.amplifyframework.core.model.query.predicate.QueryPredicateOperation.not;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -47,17 +50,28 @@ import static org.junit.Assert.assertTrue;
 public final class SQLiteStorageAdapterQueryTest {
     private SynchronousStorageAdapter adapter;
 
+    /**
+     * Enables Android Strict Mode, to help catch common errors while using
+     * SQLite, such as forgetting to close the database.
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.enable();
     }
 
+    /**
+     * Remove any old database files, and the re-provision a new storage adapter,
+     * that is able to store the Comment-Blog family of models.
+     */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
         this.adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
     }
 
+    /**
+     * Close the open database, and cleanup any database files that it left.
+     */
     @After
     public void teardown() {
         TestStorageAdapter.cleanup(adapter);
@@ -149,8 +163,12 @@ public final class SQLiteStorageAdapterQueryTest {
         }
 
         // 1, 4, 5, 6
-        QueryPredicate predicate = Post.RATING.ge(4).and(Post.RATING.lt(7))
-                .or(Post.RATING.eq(1).and(Post.RATING.ne(7)));
+        QueryPredicate predicate = Post.RATING.ge(4)
+                .and(Post.RATING.lt(7))
+                .or(
+                    Post.RATING.eq(1)
+                    .and(Post.RATING.ne(7))
+                );
 
         assertEquals(
             Observable.fromArray(1, 4, 5, 6)
@@ -158,7 +176,7 @@ public final class SQLiteStorageAdapterQueryTest {
                 .toList()
                 .map(HashSet::new)
                 .blockingGet(),
-            Observable.fromIterable(adapter.query(Post.class, predicate))
+            Observable.fromIterable(adapter.query(Post.class, Where.matches(predicate)))
                 .toList()
                 .map(HashSet::new)
                 .blockingGet()
@@ -184,11 +202,14 @@ public final class SQLiteStorageAdapterQueryTest {
             savedModels.add(post);
         }
 
-        final List<Post> actualPosts = adapter.query(Post.class, Post.TITLE
-            .beginsWith("4")
-                .or(Post.TITLE.beginsWith("7"))
-                .or(Post.TITLE.beginsWith("9"))
-            .and(not(Post.TITLE.gt(8)))
+        final List<Post> actualPosts = adapter.query(
+                Post.class,
+                Where.matches(
+                    Post.TITLE.beginsWith("4")
+                        .or(Post.TITLE.beginsWith("7"))
+                        .or(Post.TITLE.beginsWith("9"))
+                        .and(not(Post.TITLE.gt(8)))
+                )
         );
         assertEquals(
             Observable.fromArray(4, 7)
@@ -220,8 +241,10 @@ public final class SQLiteStorageAdapterQueryTest {
             .build();
         adapter.save(blog);
 
-        final List<Blog> blogsOwnedByJaneDoe =
-            adapter.query(Blog.class, QueryField.field("BlogOwner.name").eq("Jane Doe"));
+        final List<Blog> blogsOwnedByJaneDoe = adapter.query(
+            Blog.class,
+            Where.matches(field("BlogOwner.name").eq("Jane Doe"))
+        );
         assertTrue(blogsOwnedByJaneDoe.contains(blog));
     }
 
@@ -237,10 +260,74 @@ public final class SQLiteStorageAdapterQueryTest {
         adapter.save(jane);
 
         QueryPredicate predicate = BlogOwner.NAME.eq("Jane; DROP TABLE Person; --");
-        final List<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, predicate);
+        final List<BlogOwner> resultOfMaliciousQuery = adapter.query(BlogOwner.class, Where.matches(predicate));
         assertTrue(resultOfMaliciousQuery.isEmpty());
 
         final List<BlogOwner> resultAfterMaliciousQuery = adapter.query(BlogOwner.class);
         assertTrue(resultAfterMaliciousQuery.contains(jane));
+    }
+
+    /**
+     * When there are 20 items available, and the user queries with a page size of 10,
+     * the user should be given two pages of 10 items each.
+     * @throws DataStoreException On arranging records, or from the query action itself
+     */
+    @Test
+    public void queryWithPaginationWithCustomValues() throws DataStoreException {
+        final int pageSize = 10;
+        createBlogOwnerRecords(pageSize * 2);
+
+        List<BlogOwner> result = adapter.query(
+            BlogOwner.class,
+            Where.matchesAll().paginated(Page.startingAt(0).withLimit(pageSize))
+        );
+        assertNotNull(result);
+        assertEquals(pageSize, result.size());
+    }
+
+    /**
+     * When there are 102 items, and the user requests just the {@link Page#firstPage()},
+     * with a page size of 100, that first page should come back with 100 items.
+     * @throws DataStoreException On arranging records, or from the query action itself
+     */
+    @Test
+    public void queryWithPaginationWithFirstPage() throws DataStoreException {
+        final int pageSize = 100;
+        createBlogOwnerRecords(pageSize + 2);
+
+        List<BlogOwner> result = adapter.query(
+            BlogOwner.class,
+            Where.matchesAll().paginated(Page.firstPage())
+        );
+        assertNotNull(result);
+        assertEquals(pageSize, result.size());
+    }
+
+    /**
+     * When the user requests only the {@link Page#firstResult()}, they should get back
+     * a single page that contains one value. (This, assuming that there is at least one
+     * value that could be returned.)
+     * @throws DataStoreException On failure to arrange items into store, or
+     *                            from the query action itself
+     */
+    @Test
+    public void queryWithPaginationWithFirstResult() throws DataStoreException {
+        createBlogOwnerRecords(2);
+
+        List<BlogOwner> result = adapter.query(
+            BlogOwner.class,
+            Where.matchesAll().paginated(Page.firstResult())
+        );
+        assertNotNull(result);
+        assertEquals(1, result.size());
+    }
+
+    private void createBlogOwnerRecords(final int count) throws DataStoreException {
+        for (int i = 0; i < count * 2; i++) {
+            final BlogOwner blogOwner = BlogOwner.builder()
+                    .name("John Doe " + i)
+                    .build();
+            adapter.save(blogOwner);
+        }
     }
 }
