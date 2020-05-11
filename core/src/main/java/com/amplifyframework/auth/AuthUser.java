@@ -16,19 +16,19 @@
 package com.amplifyframework.auth;
 
 import androidx.annotation.NonNull;
-import androidx.core.util.Consumer;
 import androidx.core.util.ObjectsCompat;
-
-import com.amplifyframework.core.Action;
 
 import java.util.Objects;
 
-public abstract class AuthUser {
+/**
+ * Represents a logged in user with its locally cached attributes.
+ */
+public final class AuthUser {
     private String userId;
     private String username;
 
     /**
-     * Object to represent a logged in user with its associated attributes.
+     * Object to represent a logged in user with its locally cached attributes.
      * @param userId A unique identifier for this user
      * @param username The username used for logging in
      */
@@ -55,24 +55,6 @@ public abstract class AuthUser {
         return username;
     }
 
-    /**
-     * Interface for changing the password of an existing user.
-     * @param oldPassword The user's existing password
-     * @param newPassword The new password desired on the user account
-     * @param onSuccess Success callback
-     * @param onError Error callback
-     */
-    public abstract void changePassword(
-            @NonNull String oldPassword,
-            @NonNull String newPassword,
-            Action onSuccess,
-            Consumer<AuthException> onError
-    );
-
-    /**
-     * When overriding, be sure to include userId and username in the hash.
-     * @return Hash code of this object
-     */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
@@ -81,10 +63,6 @@ public abstract class AuthUser {
         );
     }
 
-    /**
-     * When overriding, be sure to include userId and username in the comparison.
-     * @return True if the two objects are equal, false otherwise
-     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj) {
@@ -98,10 +76,6 @@ public abstract class AuthUser {
         }
     }
 
-    /**
-     * When overriding, be sure to include userId and username in the output string.
-     * @return A string representation of the object
-     */
     @Override
     public String toString() {
         return "AuthUser{" +

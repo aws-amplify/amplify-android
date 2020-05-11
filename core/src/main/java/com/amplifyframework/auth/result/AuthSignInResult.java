@@ -15,56 +15,65 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.auth.AuthCodeDeliveryDetails;
-import com.amplifyframework.auth.AuthSignInState;
+import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 
+import java.util.Objects;
+
+/**
+ * Wraps the result of a sign up operation.
+ */
 public final class AuthSignInResult {
-    private final AuthSignInState signInState;
-    private final AuthCodeDeliveryDetails codeDeliveryDetails;
+    private final boolean isSignInComplete;
+    private final AuthNextSignInStep nextStep;
 
     /**
-     * Wraps the result of a sign in operation.
-     * @param signInState The current state of the sign in process
-     * @param codeDeliveryDetails Details about how/whether an MFA code was sent
+     * Wraps the result of a sign up operation.
+     * @param isSignInComplete True if the user is successfully authenticated, False otherwise. Check
+     *                         {@link #getNextStep()} to see if there are any required or optional steps to still
+     *                         be taken in the sign in flow.
+     * @param nextStep Details about the next step in the sign in process (or whether the flow is now done).
      */
-    public AuthSignInResult(AuthSignInState signInState, AuthCodeDeliveryDetails codeDeliveryDetails) {
-        this.signInState = signInState;
-        this.codeDeliveryDetails = codeDeliveryDetails;
+    public AuthSignInResult(boolean isSignInComplete, @NonNull AuthNextSignInStep nextStep) {
+        this.isSignInComplete = isSignInComplete;
+        this.nextStep = Objects.requireNonNull(nextStep);
     }
 
     /**
-     * The current state of the sign in process specifying if it is done or what, if any,
-     * additional challenge must be completed in order to finish the sign in operation.
-     * @return the current state of the sign in process
+     * True if the user is successfully authenticated, False otherwise. Check
+     * {@link #getNextStep()} to see if there are any required or optional steps to still
+     * be taken in the sign in flow.
+     * @return True if the user is successfully authenticated, False otherwise
      */
-    public AuthSignInState getSignInState() {
-        return signInState;
+    public boolean isSignInComplete() {
+        return isSignInComplete;
     }
 
     /**
-     * Details about how/whether an MFA code was sent.
-     * @return Details about how/whether an MFA code was sent
+     * Returns details about the next step in the sign in process (or whether the flow is now done).
+     * @return details about the next step in the sign in process (or whether the flow is now done)
      */
-    public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
-        return codeDeliveryDetails;
+    @NonNull
+    public AuthNextSignInStep getNextStep() {
+        return nextStep;
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the hash.
+     * When overriding, be sure to include isSignInComplete and nextStep in the hash.
      * @return Hash code of this object
      */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                getSignInState(),
-                getCodeDeliveryDetails()
+                isSignInComplete(),
+                getNextStep()
         );
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the comparison.
+     * When overriding, be sure to include isSignInComplete and nextStep in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
     @Override
@@ -74,21 +83,21 @@ public final class AuthSignInResult {
         } else if (obj == null || getClass() != obj.getClass()) {
             return false;
         } else {
-            AuthSignInResult authSignInResult = (AuthSignInResult) obj;
-            return ObjectsCompat.equals(getSignInState(), authSignInResult.getSignInState()) &&
-                    ObjectsCompat.equals(getCodeDeliveryDetails(), authSignInResult.getCodeDeliveryDetails());
+            AuthSignInResult authSignUpResult = (AuthSignInResult) obj;
+            return ObjectsCompat.equals(isSignInComplete(), authSignUpResult.isSignInComplete()) &&
+                    ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep());
         }
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the output string.
+     * When overriding, be sure to include isSignInComplete and nextStep in the output string.
      * @return A string representation of the object
      */
     @Override
     public String toString() {
         return "AuthSignInResult{" +
-                "signInState=" + signInState +
-                ", codeDeliveryDetails=" + codeDeliveryDetails +
+                "isSignInComplete=" + isSignInComplete() +
+                ", nextStep=" + getNextStep() +
                 '}';
     }
 }

@@ -15,54 +15,65 @@
 
 package com.amplifyframework.auth.result;
 
+import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.auth.AuthCodeDeliveryDetails;
+import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 
+import java.util.Objects;
+
+/**
+ * Wraps the result of a sign up operation.
+ */
 public final class AuthSignUpResult {
-    private final boolean userConfirmed;
-    private final AuthCodeDeliveryDetails codeDeliveryDetails;
+    private final boolean isSignUpComplete;
+    private final AuthNextSignUpStep nextStep;
 
     /**
      * Wraps the result of a sign up operation.
-     * @param userConfirmed True if the user has been confirmed, False otherwise
-     * @param codeDeliveryDetails Details about how/whether a confirmation code was sent
+     * @param isSignUpComplete True if the user is successfully registered, False otherwise. Not that even if the user
+     *                         is successfully registered, there still may be additional steps that can be performed
+     *                         such as user confirmation. Check {@link #getNextStep()} for this information.
+     * @param nextStep Details about the next step in the sign up process (or whether the flow is now done).
      */
-    public AuthSignUpResult(boolean userConfirmed, AuthCodeDeliveryDetails codeDeliveryDetails) {
-        this.userConfirmed = userConfirmed;
-        this.codeDeliveryDetails = codeDeliveryDetails;
+    public AuthSignUpResult(boolean isSignUpComplete, @NonNull AuthNextSignUpStep nextStep) {
+        this.isSignUpComplete = isSignUpComplete;
+        this.nextStep = Objects.requireNonNull(nextStep);
     }
 
     /**
-     * True if the user has been confirmed, False otherwise.
-     * @return True if the user has been confirmed, False otherwise
+     * True if the user is successfully registered, False otherwise. Note that even if the user
+     * is successfully signed up, there still may be additional steps that can be performed
+     * such as user confirmation. Check {@link #getNextStep()} for this information.
+     * @return True if the user is successfully registered, False otherwise
      */
-    public boolean isUserConfirmed() {
-        return userConfirmed;
+    public boolean isSignUpComplete() {
+        return isSignUpComplete;
     }
 
     /**
-     * Details about how/whether a confirmation code was sent.
-     * @return Details about how/whether a confirmation code was sent
+     * Returns details about the next step in the sign up process (or whether the flow is now done).
+     * @return details about the next step in the sign up process (or whether the flow is now done)
      */
-    public AuthCodeDeliveryDetails getCodeDeliveryDetails() {
-        return codeDeliveryDetails;
+    @NonNull
+    public AuthNextSignUpStep getNextStep() {
+        return nextStep;
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the hash.
+     * When overriding, be sure to include isSignUpComplete and nextStep in the hash.
      * @return Hash code of this object
      */
     @Override
     public int hashCode() {
         return ObjectsCompat.hash(
-                isUserConfirmed(),
-                getCodeDeliveryDetails()
+                isSignUpComplete(),
+                getNextStep()
         );
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the comparison.
+     * When overriding, be sure to include isSignUpComplete and nextStep in the comparison.
      * @return True if the two objects are equal, false otherwise
      */
     @Override
@@ -73,20 +84,20 @@ public final class AuthSignUpResult {
             return false;
         } else {
             AuthSignUpResult authSignUpResult = (AuthSignUpResult) obj;
-            return ObjectsCompat.equals(isUserConfirmed(), authSignUpResult.isUserConfirmed()) &&
-                    ObjectsCompat.equals(getCodeDeliveryDetails(), authSignUpResult.getCodeDeliveryDetails());
+            return ObjectsCompat.equals(isSignUpComplete(), authSignUpResult.isSignUpComplete()) &&
+                    ObjectsCompat.equals(getNextStep(), authSignUpResult.getNextStep());
         }
     }
 
     /**
-     * When overriding, be sure to include the parent properties in the output string.
+     * When overriding, be sure to include isSignUpComplete and nextStep in the output string.
      * @return A string representation of the object
      */
     @Override
     public String toString() {
         return "AuthSignUpResult{" +
-                "userConfirmed=" + userConfirmed +
-                ", codeDeliveryDetails=" + codeDeliveryDetails +
+                "userConfirmed=" + isSignUpComplete() +
+                ", nextStep=" + getNextStep() +
                 '}';
     }
 }

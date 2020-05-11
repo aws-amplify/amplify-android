@@ -18,6 +18,9 @@ package com.amplifyframework.auth;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
+/**
+ * A factory for some preset third party auth providers and the ability to create a new, custom one.
+ */
 public class AuthProvider {
     private static final String AMAZON = "www.amazon.com";
     private static final String FACEBOOK = "graph.facebook.com";
@@ -26,6 +29,10 @@ public class AuthProvider {
 
     private final String providerKey;
 
+    /**
+     * Create a new instance of an Auth Provider with the specified key.
+     * @param providerKey the String key to use for the provider.
+     */
     protected AuthProvider(String providerKey) {
         this.providerKey = providerKey;
     }

@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+/**
+ * Cognito extension of sign up options to add the platform specific fields.
+ */
 public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
     private final Map<String, String> validationData;
 
@@ -52,6 +55,10 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
         return validationData;
     }
 
+    /**
+     * Returns a builder for this object.
+     * @return a builder for this object.
+     */
     @NonNull
     public static CognitoBuilder builder() {
         return new CognitoBuilder();
@@ -86,19 +93,34 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
                 '}';
     }
 
+    /**
+     * The builder for this class.
+     */
     public static final class CognitoBuilder extends Builder<CognitoBuilder> {
         private Map<String, String> validationData;
 
+        /**
+         * Constructs the builder.
+         */
         public CognitoBuilder() {
             super();
             this.validationData = new HashMap<>();
         }
 
+        /**
+         * Gets the type of builder to support proper flow with this being an extended class.
+         * @return the type of builder to support proper flow with this being an extended class.
+         */
         @Override
         public CognitoBuilder getThis() {
             return this;
         }
 
+        /**
+         * A map of custom data the user can send as part of the sign up process for validation.
+         * @param validationData A map of custom data the user can send as part of the sign up process for validation.
+         * @return the instance of the builder.
+         */
         @NonNull
         public CognitoBuilder validationData(@NonNull Map<String, String> validationData) {
             Objects.requireNonNull(validationData);
@@ -107,6 +129,10 @@ public final class AWSCognitoAuthSignUpOptions extends AuthSignUpOptions {
             return getThis();
         }
 
+        /**
+         * Build the object.
+         * @return a new instance of AWSCognitoAuthSignUpOptions.
+         */
         @NonNull
         public AWSCognitoAuthSignUpOptions build() {
             return new AWSCognitoAuthSignUpOptions(

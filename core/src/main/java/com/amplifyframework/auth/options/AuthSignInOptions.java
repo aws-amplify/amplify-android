@@ -17,8 +17,15 @@ package com.amplifyframework.auth.options;
 
 import androidx.annotation.NonNull;
 
-// Note: This is currently empty but exists here to support common sign in options in the future.
+/**
+ * The shared options among all Auth plugins.
+ * Note: This is currently empty but exists here to support common sign in options in the future.
+ */
 public abstract class AuthSignInOptions {
+    /**
+     * The builder for this class.
+     * @param <T> The type of builder - used to support plugin extensions of this.
+     */
     public abstract static class Builder<T extends Builder<T>> {
         /**
          * Return the type of builder this is so that chaining can work correctly without implicit casting.

@@ -24,6 +24,9 @@ import com.amplifyframework.auth.AuthSession;
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
 
+/**
+ * Cognito extension of AuthSession containing AWS Cognito specific tokens.
+ */
 public final class AWSCognitoAuthSession extends AuthSession implements AWSCredentialsProvider {
     private final AWSCredentials awsCredentials;
     private final String userSub;
@@ -50,36 +53,64 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
         this.refreshToken = refreshToken;
     }
 
+    /**
+     * AWS Credentials from Identity Pools.
+     * @return AWS Credentials from Identity Pools.
+     */
     @Nullable
     public AWSCredentials getAWSCredentials() {
         return awsCredentials;
     }
 
+    /**
+     * User sub.
+     * @return user sub
+     */
     @Nullable
     public String getUserSub() {
         return userSub;
     }
 
+    /**
+     * Identity id.
+     * @return identity id.
+     */
     @Nullable
     public String getIdentityId() {
         return identityId;
     }
 
+    /**
+     * Access token.
+     * @return Access token.
+     */
     @Nullable
     public String getAccessToken() {
         return accessToken;
     }
 
+    /**
+     * Id token.
+     * @return Id token.
+     */
     @Nullable
     public String getIdToken() {
         return idToken;
     }
 
+    /**
+     * Refresh token.
+     * @return refresh token.
+     */
     @Nullable
     public String getRefreshToken() {
         return refreshToken;
     }
 
+    /**
+     * Builder.
+     * @return builder.
+     */
     @NonNull
     public static Builder builder() {
         return new Builder();
@@ -139,6 +170,9 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
         // NO-OP since this is a session snapshot
     }
 
+    /**
+     * The builder for this class.
+     */
     public static final class Builder {
         private boolean isSignedIn;
         private AWSCredentials awsCredentials;
@@ -148,48 +182,87 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
         private String idToken;
         private String refreshToken;
 
+        /**
+         * Will be replaced in next PR.
+         * @param isSignedIn Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder isSignedIn(boolean isSignedIn) {
             this.isSignedIn = isSignedIn;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @param awsCredentials Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder awsCredentials(@Nullable AWSCredentials awsCredentials) {
             this.awsCredentials = awsCredentials;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @param userSub Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder userSub(@Nullable String userSub) {
             this.userSub = userSub;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @param identityId Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder identityId(@Nullable String identityId) {
             this.identityId = identityId;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @param accessToken Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder accessToken(@Nullable String accessToken) {
             this.accessToken = accessToken;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @param idToken Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder idToken(@Nullable String idToken) {
             this.idToken = idToken;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @param refreshToken Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public Builder refreshToken(@Nullable String refreshToken) {
             this.refreshToken = refreshToken;
             return this;
         }
 
+        /**
+         * Will be replaced in next PR.
+         * @return Will be replaced in next PR.
+         */
         @NonNull
         public AWSCognitoAuthSession build() {
             return new AWSCognitoAuthSession(

@@ -21,6 +21,9 @@ import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
 
+/**
+ * Wrapper class for representing the various aspects of a confirmation code sent to a user.
+ */
 public final class AuthCodeDeliveryDetails {
     private String destination;
     private DeliveryMedium deliveryMedium;
@@ -113,6 +116,9 @@ public final class AuthCodeDeliveryDetails {
                 '}';
     }
 
+    /**
+     * The various ways a code could have been sent.
+     */
     public enum DeliveryMedium {
         /** Code was sent via email. */
         EMAIL("email"),
@@ -129,11 +135,20 @@ public final class AuthCodeDeliveryDetails {
             this.value = Objects.requireNonNull(value);
         }
 
+        /**
+         * Get the string value of the enum.
+         * @return the string value of the enum.
+         */
         @NonNull
         public String getValue() {
             return value;
         }
 
+        /**
+         * Get the corresponding ENUM value to the string provided.
+         * @param value the string provided.
+         * @return the corresponding ENUM value.
+         */
         @NonNull
         public static DeliveryMedium fromString(String value) {
             for (DeliveryMedium v : values()) {
