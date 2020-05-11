@@ -32,6 +32,12 @@ public final class SystemModelsProviderFactory {
 
     private SystemModelsProviderFactory() {}
 
+    /**
+     * Creates a {@link ModelProvider} that provides the set of "system models."
+     * System models are models that a user doesn't directly interact with, but are important
+     * for storing metadata about the user's data.
+     * @return A ModelProvider which provides the set of "system models"
+     */
     @NonNull
     public static ModelProvider create() {
         return SimpleModelProvider.instance(

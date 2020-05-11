@@ -16,6 +16,7 @@
 package com.amplifyframework.predictions.aws;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 /**
  * Determines the type of computing resource that will be used to
@@ -43,8 +44,15 @@ public enum NetworkPolicy {
         this.configurationKey = configurationKey;
     }
 
+    /**
+     * Attempts to find a NetworkPolicy which has the provided value as a configuration key.
+     * @param configurationKey An arbitrary, possibly null string which might be a configuration
+     *                         key for one of the enumerated NetworkPolicy -- or, maybe not
+     * @return An enumerated NetworkPolicy, if there is a match
+     * @throws IllegalArgumentException If there is not a match
+     */
     @NonNull
-    public static NetworkPolicy fromKey(String configurationKey) {
+    public static NetworkPolicy fromKey(@Nullable String configurationKey) {
         for (NetworkPolicy policy : values()) {
             if (policy.getConfigurationKey().equals(configurationKey)) {
                 return policy;

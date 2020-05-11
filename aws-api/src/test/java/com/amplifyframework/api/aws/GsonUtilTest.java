@@ -28,8 +28,14 @@ import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
+/**
+ * Tests the {@link GsonUtil}.
+ */
 public class GsonUtilTest {
-
+    /**
+     * Validates that the {@link GsonUtil} is able to convert a Gson-typed {@link JsonObject}
+     * into a Java-language {@link Map} of {@link String}-{@link Object} entries.
+     */
     @Test
     public void validateJsonObjectToMap() {
 
@@ -58,7 +64,7 @@ public class GsonUtilTest {
         object.put("someBoolean", false);
         object.put("someNull", null);
 
-        Map<String, Object> expected = new HashMap<String, Object>();
+        Map<String, Object> expected = new HashMap<>();
         expected.put("array", array);
         expected.put("object", object);
 

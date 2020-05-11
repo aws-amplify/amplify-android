@@ -53,12 +53,16 @@ public final class AWSTimestamp {
     /**
      * Constructs an AWSTimestamp from a Date.
      * @param date A date, that will be interrogated for the current UNIX time;
-     *             any sub-second precision contained in the Date will be discarded
+     *             any sub-second precision contained in the Date will be discarded.
      */
     public AWSTimestamp(@NonNull Date date) {
         this(date.getTime(), TimeUnit.MILLISECONDS);
     }
 
+    /**
+     * Gets the number of seconds that have elapsed since the UNIX epoch.
+     * @return Seconds since UNIX epoch
+     */
     public long getSecondsSinceEpoch() {
         return this.secondsSinceEpoch;
     }

@@ -20,6 +20,8 @@ import androidx.test.core.app.ApplicationProvider;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
@@ -58,6 +60,12 @@ public final class AWSApiPluginTest {
     private HttpUrl baseUrl;
     private AWSApiPlugin plugin;
 
+    /**
+     * Sets up the test.
+     * @throws ApiException On failure to configure plugin
+     * @throws IOException On failure to start web server
+     * @throws JSONException On failure to arrange configuration JSON
+     */
     @Before
     public void setup() throws ApiException, IOException, JSONException {
         webServer = new MockWebServer();
@@ -76,16 +84,31 @@ public final class AWSApiPluginTest {
         this.plugin.configure(configuration, ApplicationProvider.getApplicationContext());
     }
 
+    /**
+     * Stop the {@link MockWebServer} that was started in {@link #setup()}.
+     * @throws IOException On failure to shutdown the MockWebServer
+     */
     @After
     public void cleanup() throws IOException {
         webServer.shutdown();
     }
 
+    /**
+     * The value of {@link AWSApiPlugin#getPluginKey()} should be stable.
+     * Think twice before updating this value. It is expected by the Amplify CLI / code-gen.
+     */
     @Test
     public void pluginKeyHasStableValue() {
         assertEquals("awsAPIPlugin", plugin.getPluginKey());
     }
 
+    /**
+     * The object returned by {@link AWSApiPlugin#getEscapeHatch()} should be useful.
+     * To validate this, obtain the escape hatch (which contains a collection of {@link OkHttpClient}),
+     * and use them to make some simple network calls.
+     * @throws IOException On failure interacting with OkHttpClient.
+     * @throws JSONException On failure to arrange fake response JSON
+     */
     @Test
     public void clientReturnedFromEscapeHatchIsUseful() throws IOException, JSONException {
         // Get the actual OkHttpClient through the escape hatch.
@@ -95,7 +118,7 @@ public final class AWSApiPluginTest {
 
         // Now, arrange some fake response from the endpoint of that client
         String expectedBody = new JSONObject()
-            .put("", "")
+            .put("key", "value")
             .toString();
         webServer.enqueue(new MockResponse().setBody(expectedBody));
 
@@ -110,6 +133,11 @@ public final class AWSApiPluginTest {
         assertEquals(expectedBody, actualResponseBody.string());
     }
 
+    /**
+     * It should be possible to perform a GraphQL query. When the server returns a
+     * valid response, content should be returned via the query(...) methods' value consumer.
+     * @throws ApiException If call to query(...) itself emits such an exception
+     */
     @Test
     public void graphQlQueryRendersValidResponse() throws ApiException {
         webServer.enqueue(new MockResponse()
@@ -129,8 +157,16 @@ public final class AWSApiPluginTest {
         );
     }
 
+    /**
+     * It should be possible to perform a successful call to
+     * {@link AWSApiPlugin#mutate(Model, MutationType, Consumer, Consumer)}.
+     * When the server returns a valid response, then the mutate methods should
+     * emit content via their value consumer.
+     * @throws ApiException If call to mutate(...) itself emits such an exception
+     * @throws JSONException On failure to arrange response JSON
+     */
     @Test
-    public void graphQlMutationGetsResponse() throws ApiException, JSONException {
+    public void graphQlMutationGetsResponse() throws JSONException, ApiException {
         // Arrange a response from the "server"
         String expectedName = RandomString.string();
         webServer.enqueue(new MockResponse().setBody(new JSONObject()
@@ -155,6 +191,12 @@ public final class AWSApiPluginTest {
         assertEquals(expectedName, actualResponse.getData().getName());
     }
 
+    /**
+     * Given that only one API was configured in {@link #setup()},
+     * the {@link AWSApiPlugin#getSelectedApiName(EndpointType)} should be able to identify
+     * this same API according to just its {@link EndpointType}.
+     * @throws ApiException If the {@link AWSApiPlugin#getSelectedApiName(EndpointType)} itself fails
+     */
     @Test
     public void singleConfiguredApiIsSelected() throws ApiException {
         String selectedApi = plugin.getSelectedApiName(EndpointType.GRAPHQL);

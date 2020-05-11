@@ -36,9 +36,9 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
-import com.amplifyframework.util.StringUtils;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -74,10 +74,10 @@ final class AppSyncGraphQLRequestFactory {
 
             doc.append("query ")
                     .append("Get")
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("(")
                     .append("$id: ID!) { get")
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("(id: $id) { ")
                     .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
                     .append("}}");
@@ -111,13 +111,13 @@ final class AppSyncGraphQLRequestFactory {
 
             doc.append("query ")
                     .append("List")
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("(")
                     .append("$filter: Model")
                     .append(graphQlTypeName)
                     .append("FilterInput ")
                     .append("$limit: Int $nextToken: String) { list")
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("s(filter: $filter, limit: $limit, nextToken: $nextToken) { items {")
                     .append(getModelFields(modelClass, DEFAULT_LEVEL_DEPTH))
                     .append("} nextToken }}");
@@ -158,11 +158,11 @@ final class AppSyncGraphQLRequestFactory {
             String graphQlTypeName = schema.getName();
 
             doc.append("mutation ")
-                    .append(StringUtils.capitalize(typeStr))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalize(typeStr))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("($input: ")
-                    .append(StringUtils.capitalize(typeStr))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalize(typeStr))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("Input!");
 
             if (predicate != null) {
@@ -173,7 +173,7 @@ final class AppSyncGraphQLRequestFactory {
 
             doc.append("){ ")
                     .append(typeStr.toLowerCase(Locale.getDefault()))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName))
+                    .append(Casing.capitalizeFirst(graphQlTypeName))
                     .append("(input: $input");
 
             if (predicate != null) {
@@ -239,16 +239,20 @@ final class AppSyncGraphQLRequestFactory {
             String graphQlTypeName = schema.getName();
 
             doc.append("subscription ")
-                    .append(StringUtils.allCapsToPascalCase(typeStr))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName));
+                    .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
+                        .to(Casing.CaseType.PASCAL_CASE)
+                        .convert(typeStr))
+                    .append(Casing.capitalizeFirst(graphQlTypeName));
 
             if (schema.hasOwnerAuthorization()) {
                 doc.append("($owner: String!) ");
             }
 
             doc.append("{")
-                    .append(StringUtils.allCapsToCamelCase(typeStr))
-                    .append(StringUtils.capitalizeFirst(graphQlTypeName));
+                    .append(Casing.from(Casing.CaseType.SCREAMING_SNAKE_CASE)
+                        .to(Casing.CaseType.CAMEL_CASE)
+                        .convert(typeStr))
+                    .append(Casing.capitalizeFirst(graphQlTypeName));
 
             if (schema.hasOwnerAuthorization()) {
                 doc.append("(owner: $owner) ");

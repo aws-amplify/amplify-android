@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -135,7 +135,7 @@ final class Merger {
      */
     private <T extends Model> void ifPresent(
             Class<T> clazz, String modelId, Action onPresent, Action onNotPresent) {
-        localStorageAdapter.query(clazz, QueryField.field("id").eq(modelId), iterator -> {
+        localStorageAdapter.query(clazz, Where.id(modelId), iterator -> {
             if (iterator.hasNext()) {
                 onPresent.call();
             } else {

@@ -28,7 +28,7 @@ import com.amplifyframework.predictions.result.IdentifyLabelsResult;
 import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -94,7 +94,7 @@ public final class AWSPredictionsIdentifyLabelsTest {
         assertFalse(result.isUnsafeContent());
 
         // Assert at least one label is detected as "Person"
-        assertFalse(CollectionUtils.isNullOrEmpty(result.getLabels()));
+        assertFalse(Empty.check(result.getLabels()));
         assertTrue(Observable.fromIterable(result.getLabels())
                 .map(Label::getName)
                 .toList()

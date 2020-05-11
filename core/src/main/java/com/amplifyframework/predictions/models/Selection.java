@@ -63,6 +63,10 @@ public final class Selection {
         return selected;
     }
 
+    /**
+     * Begins construction of an {@link Selection} by means of the builder pattern.
+     * @return A new {@link Selection.Builder} instance
+     */
     public static Builder builder() {
         return new Builder();
     }
@@ -108,6 +112,11 @@ public final class Selection {
             return this;
         }
 
+        /**
+         * Builds and returns a new {@link Selection}, that is configured
+         * using the values provided to the current builder instance.
+         * @return A new {@link Selection}
+         */
         public Selection build() {
             return new Selection(box, polygon, selected);
         }
