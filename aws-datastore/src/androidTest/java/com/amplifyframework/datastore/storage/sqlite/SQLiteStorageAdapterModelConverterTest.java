@@ -15,6 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
@@ -43,7 +45,7 @@ import static org.junit.Assert.assertNotNull;
  * in question. Now, the test may serve as a "smoke test."
  */
 public final class SQLiteStorageAdapterModelConverterTest {
-    private static final Date MAY_THE_FOURTH = new Date(1588627200000L);
+    private static final AWSDateTime MAY_THE_FOURTH = new AWSDateTime("2020-05-04T14:20:00-07:00");
 
     private SynchronousStorageAdapter adapter;
 
@@ -102,8 +104,8 @@ public final class SQLiteStorageAdapterModelConverterTest {
 
         // Test date scalars
         // TODO fix tests once new Date/Time handling is done
-        // assertEquals(todo.getCreatedAt(), queriedTodo.getCreatedAt());
-        // assertEquals(todo.getDueDate(), queriedTodo.getDueDate());
+        assertEquals(todo.getCreatedAt(), queriedTodo.getCreatedAt());
+        assertEquals(todo.getDueDate(), queriedTodo.getDueDate());
         assertEquals(todo.getLastUpdated(), queriedTodo.getLastUpdated());
 
         // Test status enum
