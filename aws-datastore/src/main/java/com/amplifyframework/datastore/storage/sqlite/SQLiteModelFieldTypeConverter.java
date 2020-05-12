@@ -150,11 +150,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 case MODEL:
                     return convertModelAssociationToTarget(cursor, field);
                 case ENUM:
-                    @SuppressWarnings("rawtypes")
-                    final Class<? extends Enum> enumClass = field.getType().asSubclass(Enum.class);
-                    @SuppressWarnings({"rawtypes", "unchecked"})
-                    final Enum enumValue = Enum.valueOf(enumClass, valueAsString);
-                    return enumValue;
+                    return convertEnumValueToTarget(valueAsString, field);
                 case CUSTOM_TYPE:
                     return convertCustomTypeToTarget(cursor, field, columnIndex);
                 case INTEGER:
@@ -220,6 +216,15 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
     private Object convertCustomTypeToTarget(Cursor cursor, ModelField field, int columnIndex) throws IOException {
         final String stringValue = cursor.getString(columnIndex);
         return gson.getAdapter(field.getType()).fromJson(stringValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    private <E extends Enum<E>> E convertEnumValueToTarget(
+            @NonNull final String value,
+            @NonNull ModelField field
+    ) {
+        Class<E> enumClazz = (Class<E>) field.getType().asSubclass(Enum.class);
+        return Enum.valueOf(enumClazz, value);
     }
 
     @Override

@@ -92,31 +92,7 @@ public final class SQLiteStorageAdapterModelConverterTest {
 
         final Todo queriedTodo = result.get(0);
         assertNotNull(queriedTodo);
-
-        // Test common scalar types
-        assertEquals(todo.getTitle(), queriedTodo.getTitle());
-        assertEquals(todo.getContent(), queriedTodo.getContent());
-        assertEquals(todo.getDuplicate(), queriedTodo.getDuplicate());
-        assertEquals(todo.getPriority(), queriedTodo.getPriority());
-        assertEquals(todo.getHoursSpent(), queriedTodo.getHoursSpent());
-
-        // Test date scalars
-        // TODO fix tests once new Date/Time handling is done
-        assertEquals(todo.getCreatedAt(), queriedTodo.getCreatedAt());
-        assertEquals(todo.getDueDate(), queriedTodo.getDueDate());
-        assertEquals(todo.getLastUpdated(), queriedTodo.getLastUpdated());
-
-        // Test status enum
-        assertEquals(todo.getStatus(), queriedTodo.getStatus());
-
-        // Test embedded TodoOwner
-        assertNotNull(queriedTodo.getOwner());
-        assertEquals(todo.getOwner().getName(), queriedTodo.getOwner().getName());
-        assertEquals(todo.getOwner().getEmail(), queriedTodo.getOwner().getEmail());
-
-        // Test embedded tags (String[])
-        assertNotNull(queriedTodo.getTags());
-        assertEquals(todo.getTags().size(), queriedTodo.getTags().size());
+        assertEquals(todo, queriedTodo);
     }
 
     private Todo createTestTodoModel() {

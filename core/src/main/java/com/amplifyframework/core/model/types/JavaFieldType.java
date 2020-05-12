@@ -58,7 +58,7 @@ public enum JavaFieldType {
     DATE(AWSDate.class.getSimpleName()),
 
     /**
-     * Represents the Date data type.
+     * Represents the DateTime data type.
      */
     DATE_TIME(AWSDateTime.class.getSimpleName()),
 
