@@ -50,8 +50,7 @@ import java.util.Objects;
  * valid in a <code>SQLiteStatement</code>.
  */
 final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
-
-    private static final Logger LOGGER = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final Class<? extends Model> modelType;
     private final ModelSchemaRegistry modelSchemaRegistry;
