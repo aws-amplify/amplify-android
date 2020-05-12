@@ -26,7 +26,6 @@ import java.util.Random;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotSame;
 
 /**
@@ -59,9 +58,10 @@ public final class TimeBasedUuidTest {
 
         // Now, scatter them, into a new array.
         List<TimeBasedUuid> randomOrder = new ArrayList<>(expectedOrder);
-        Collections.sort(randomOrder, (one, two) -> random.nextInt());
-        // Sanity check: this is actually out of order, now, right?
-        assertNotEquals(expectedOrder, randomOrder);
+        while (expectedOrder.equals(randomOrder)) {
+            //noinspection ComparatorMethodParameterNotUsed Intenionally ignored in favor of random result
+            Collections.sort(randomOrder, (one, two) -> random.nextInt());
+        }
 
         // Act! sort them using the *default* comparator for the items.
         List<TimeBasedUuid> actualSortedOrder = new ArrayList<>(randomOrder);

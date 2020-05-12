@@ -23,6 +23,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.GraphQlBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -66,6 +67,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
+    // Used to interrogate plugins, to understand if sync should be automatically turned on
+    private final ApiCategory api;
+
     // User-provided configuration for the plugin.
     private final DataStoreConfiguration userProvidedConfiguration;
 
@@ -77,11 +81,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
-            @NonNull GraphQlBehavior api,
+            @NonNull ApiCategory api,
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
-
+        this.api = api;
         this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
@@ -131,7 +135,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @param api Interface to a remote system where models will be synchronized
      */
     @VisibleForTesting
-    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull GraphQlBehavior api) {
+    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull ApiCategory api) {
         this(
             Objects.requireNonNull(modelProvider),
             ModelSchemaRegistry.instance(),
@@ -183,7 +187,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void initialize(@NonNull Context context) {
         Completable completable = initializeStorageAdapter(context);
-        if (Amplify.API.getPlugins().size() > 0) {
+        if (!api.getPlugins().isEmpty()) {
             completable = completable.andThen(orchestrator.start());
         }
         completable.blockingAwait();
