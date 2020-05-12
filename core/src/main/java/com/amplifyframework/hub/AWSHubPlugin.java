@@ -18,12 +18,12 @@ package com.amplifyframework.hub;
 import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import org.json.JSONObject;
 
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -34,38 +34,30 @@ import java.util.concurrent.Executors;
  * an {@link ExecutorService}.
  */
 public final class AWSHubPlugin extends HubPlugin<Void> {
-    private final Map<SubscriptionToken, HubSubscription> subscriptionsByToken;
-    private final Map<HubChannel, Set<HubSubscription>> subscriptionsByChannel;
-    private final Object subscriptionsLock;
+    private final Set<Subscription> subscriptions;
     private final ExecutorService executorService;
 
     /**
      * Constructs a new AWSHubPlugin.
      */
+    @SuppressWarnings("WeakerAccess") // This is a public API
     public AWSHubPlugin() {
+        this.subscriptions = new HashSet<>();
         this.executorService = Executors.newCachedThreadPool();
-        this.subscriptionsByToken = new HashMap<>();
-        this.subscriptionsByChannel = new HashMap<>();
-        this.subscriptionsLock = new Object();
     }
 
     @Override
-    public <T> void publish(@NonNull final HubChannel hubChannel, @NonNull final HubEvent<T> hubEvent) {
+    public <T> void publish(@NonNull HubChannel hubChannel, @NonNull HubEvent<T> hubEvent) {
+        Objects.requireNonNull(hubChannel);
+        Objects.requireNonNull(hubEvent);
         executorService.execute(() -> {
-            final Set<HubSubscription> safeSubscriptions = new HashSet<>();
-            synchronized (subscriptionsLock) {
-                final Set<HubSubscription> channelSubscriptions = subscriptionsByChannel.get(hubChannel);
-                if (channelSubscriptions != null) {
-                    safeSubscriptions.addAll(channelSubscriptions);
+            synchronized (subscriptions) {
+                for (Subscription subscription : subscriptions) {
+                    if (subscription.getHubChannel().equals(hubChannel) &&
+                            subscription.getHubEventFilter().filter(hubEvent)) {
+                        executorService.execute(() -> subscription.getHubSubscriber().onEvent(hubEvent));
+                    }
                 }
-            }
-
-            for (HubSubscription subscription : safeSubscriptions) {
-                if (subscription.getHubEventFilter() != null &&
-                        !subscription.getHubEventFilter().filter(hubEvent)) {
-                    continue;
-                }
-                executorService.execute(() -> subscription.getHubSubscriber().onEvent(hubEvent));
             }
         });
     }
@@ -74,52 +66,34 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
     @Override
     public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
                                        @NonNull HubSubscriber hubSubscriber) {
-        return subscribe(hubChannel, null, hubSubscriber);
+        return subscribe(hubChannel, HubEventFilters.always(), hubSubscriber);
     }
 
     @NonNull
     @Override
-    public SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                       @Nullable HubEventFilter hubEventFilter,
-                                       @NonNull HubSubscriber hubSubscriber) {
+    public SubscriptionToken subscribe(
+            @NonNull HubChannel hubChannel,
+            @NonNull HubEventFilter hubEventFilter,
+            @NonNull HubSubscriber hubSubscriber) {
         Objects.requireNonNull(hubChannel);
+        Objects.requireNonNull(hubEventFilter);
         Objects.requireNonNull(hubSubscriber);
-
-        final SubscriptionToken token = SubscriptionToken.create();
-        final HubSubscription hubSubscription =
-            new HubSubscription(hubChannel, hubEventFilter, hubSubscriber);
-
-        synchronized (subscriptionsLock) {
-            subscriptionsByToken.put(token, hubSubscription);
-
-            Set<HubSubscription> existingSubscriptions = subscriptionsByChannel.get(hubChannel);
-            if (existingSubscriptions == null) {
-                Set<HubSubscription> subscriptionsToAdd = new HashSet<>();
-                subscriptionsToAdd.add(hubSubscription);
-                subscriptionsByChannel.put(hubChannel, subscriptionsToAdd);
-            } else {
-                existingSubscriptions.add(hubSubscription);
-            }
+        SubscriptionToken token = SubscriptionToken.create();
+        synchronized (subscriptions) {
+            subscriptions.add(new Subscription(token, hubChannel, hubEventFilter, hubSubscriber));
         }
-
         return token;
     }
 
     @Override
     public void unsubscribe(@NonNull SubscriptionToken subscriptionToken) {
-        synchronized (subscriptionsLock) {
-            // First, find the subscription while trying to remove its subscription from the token map.
-            HubSubscription subscriptionBeingEnded = subscriptionsByToken.remove(subscriptionToken);
-            if (subscriptionBeingEnded == null) {
-                // If not subscribed, no-op
-                return;
-            }
-
-            // Now that we have a handle to the subscription, figure out which channel
-            final HubChannel channelToUpdate = subscriptionBeingEnded.getHubChannel();
-            final Set<HubSubscription> channelSubscriptions = subscriptionsByChannel.get(channelToUpdate);
-            if (channelSubscriptions != null) {
-                channelSubscriptions.remove(subscriptionBeingEnded);
+        Objects.requireNonNull(subscriptionToken);
+        synchronized (subscriptions) {
+            Iterator<Subscription> iterator = subscriptions.iterator();
+            while (iterator.hasNext()) {
+                if (iterator.next().getSubscriptionToken().equals(subscriptionToken)) {
+                    iterator.remove();
+                }
             }
         }
     }
@@ -141,24 +115,27 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
     }
 
     /**
-     * Encapsulates information about a subscription.  This is needed so
-     * that we can have O(1) lookup with a subscriptions map for
-     * subscribe and unsubscribe(), but still be able to lookup the set
-     * of subscribers for a channel in O(1), as well. Lastly, this
-     * subscription object provides a reference to the optional event
-     * filter which is evaluated when events are published.
+     * Encapsulates information about a subscription.
      */
-    static final class HubSubscription {
+    static final class Subscription {
+        private final SubscriptionToken subscriptionToken;
         private final HubChannel channel;
         private final HubEventFilter hubEventFilter;
         private final HubSubscriber hubSubscriber;
 
-        HubSubscription(@NonNull final HubChannel channel,
-                        @Nullable final HubEventFilter hubEventFilter,
-                        @Nullable final HubSubscriber hubSubscriber) {
-            this.channel = channel;
-            this.hubEventFilter = hubEventFilter;
-            this.hubSubscriber = hubSubscriber;
+        Subscription(
+                @NonNull SubscriptionToken subscriptionToken,
+                @NonNull HubChannel channel,
+                @NonNull HubEventFilter hubEventFilter,
+                @NonNull HubSubscriber hubSubscriber) {
+            this.subscriptionToken = Objects.requireNonNull(subscriptionToken);
+            this.channel = Objects.requireNonNull(channel);
+            this.hubEventFilter = Objects.requireNonNull(hubEventFilter);
+            this.hubSubscriber = Objects.requireNonNull(hubSubscriber);
+        }
+
+        SubscriptionToken getSubscriptionToken() {
+            return subscriptionToken;
         }
 
         HubChannel getHubChannel() {
@@ -171,6 +148,48 @@ public final class AWSHubPlugin extends HubPlugin<Void> {
 
         HubSubscriber getHubSubscriber() {
             return hubSubscriber;
+        }
+
+        @Override
+        public boolean equals(Object thatObject) {
+            if (this == thatObject) {
+                return true;
+            }
+            if (thatObject == null || getClass() != thatObject.getClass()) {
+                return false;
+            }
+
+            Subscription that = (Subscription) thatObject;
+
+            if (!ObjectsCompat.equals(subscriptionToken, that.subscriptionToken)) {
+                return false;
+            }
+            if (channel != that.channel) {
+                return false;
+            }
+            if (!ObjectsCompat.equals(hubEventFilter, that.hubEventFilter)) {
+                return false;
+            }
+            return ObjectsCompat.equals(hubSubscriber, that.hubSubscriber);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = subscriptionToken.hashCode();
+            result = 31 * result + channel.hashCode();
+            result = 31 * result + hubEventFilter.hashCode();
+            result = 31 * result + hubSubscriber.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString() {
+            return "Subscription{" +
+                "subscriptionToken=" + subscriptionToken +
+                ", channel=" + channel +
+                ", hubEventFilter=" + hubEventFilter +
+                ", hubSubscriber=" + hubSubscriber +
+                '}';
         }
     }
 }
