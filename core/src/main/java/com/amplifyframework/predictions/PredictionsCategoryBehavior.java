@@ -23,12 +23,15 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TextToSpeechOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 /**
@@ -36,6 +39,38 @@ import com.amplifyframework.predictions.result.TranslateTextResult;
  * perform text analysis, and detect features in an image, using Machine Learning.
  */
 public interface PredictionsCategoryBehavior {
+    /**
+     * Convert the text into synthesized speech audio.
+     * @param text the text to convert
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
+    /**
+     * Convert the text into synthesized speech audio.
+     * @param text the text to convert
+     * @param options Parameters to specific plugin behavior
+     * @param onSuccess Triggered upon successful translation
+     * @param onError Triggered upon encountering error
+     * @return The predictions operation object that can be used to directly access
+     *          the ongoing translation operation
+     */
+    @NonNull
+    TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull TextToSpeechOptions options,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    );
+
     /**
      * Translate the text from and to the languages specified in the configuration.
      * @param text The text to translate

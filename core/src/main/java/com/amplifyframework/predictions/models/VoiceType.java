@@ -13,25 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.predictions.options;
+package com.amplifyframework.predictions.models;
 
 import androidx.annotation.NonNull;
 
 /**
- * Options for text interpretation operation.
+ * Contains details about a specific voice to be
+ * used for synthesizing speech.
  */
-public final class InterpretOptions {
-
-    private InterpretOptions() {
-        // TODO: Add options
-    }
-
+public interface VoiceType {
     /**
-     * Creates an instance of options with default values assigned.
-     * @return Default instance of options
+     * Returns the name of the voice to be used
+     * for synthesized speech.
+     * @return the name of the voice
      */
     @NonNull
-    public static InterpretOptions defaults() {
-        return new InterpretOptions();
-    }
+    String getName();
 }

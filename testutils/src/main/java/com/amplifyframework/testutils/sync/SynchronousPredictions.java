@@ -25,9 +25,11 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.testutils.Await;
 
@@ -57,6 +59,46 @@ public final class SynchronousPredictions {
     @NonNull
     public static synchronized SynchronousPredictions delegatingTo(@NonNull PredictionsCategoryBehavior predictions) {
         return new SynchronousPredictions(predictions);
+    }
+
+    /**
+     * Convert given text to speech synchronously using default options
+     * and return the result of operation.
+     * @param text the input text to translate
+     * @return the result of text to speech conversion containing
+     *          synthesized speech audio data
+     * @throws PredictionsException if conversion fails or times out
+     */
+    @NonNull
+    public TextToSpeechResult convertTextToSpeech(
+            @NonNull String text
+    ) throws PredictionsException {
+        return convertTextToSpeech(text, TextToSpeechOptions.defaults());
+    }
+
+    /**
+     * Convert given text to speech synchronously using default options
+     * and return the result of operation.
+     * @param text the input text to translate
+     * @param options text to speech options
+     * @return the result of text to speech conversion containing
+     *          synthesized speech audio data
+     * @throws PredictionsException if conversion fails or times out
+     */
+    @NonNull
+    public TextToSpeechResult convertTextToSpeech(
+            @NonNull String text,
+            @NonNull TextToSpeechOptions options
+    ) throws PredictionsException {
+        return Await.<TextToSpeechResult, PredictionsException>result(
+            PREDICTIONS_OPERATION_TIMEOUT_MS,
+            (onResult, onError) -> asyncDelegate.convertTextToSpeech(
+                    text,
+                    options,
+                    onResult,
+                    onError
+            )
+        );
     }
 
     /**
