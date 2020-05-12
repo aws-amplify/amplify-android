@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
@@ -32,7 +31,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
