@@ -133,7 +133,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @return The mutated item
      */
     @NonNull
-    T getMutatedItem() {
+    public T getMutatedItem() {
         return mutatedItem;
     }
 

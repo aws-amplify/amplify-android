@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
  * to centralize a single pattern for it.
  */
 @SuppressWarnings("SameParameterValue")
-final class Latch {
+public final class Latch {
     private static final long REASONABLE_WAIT_TIME_MS = TimeUnit.SECONDS.toMillis(5);
 
     private Latch() {}
@@ -56,7 +56,7 @@ final class Latch {
      * @param latch A latch on which we will await count down
      * @throws RuntimeException If the latch doesn't count down in the allotted time
      */
-    static void await(@NonNull CountDownLatch latch) {
+    public static void await(@NonNull CountDownLatch latch) {
         await(latch, REASONABLE_WAIT_TIME_MS);
     }
 }

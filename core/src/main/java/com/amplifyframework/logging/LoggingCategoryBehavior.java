@@ -66,5 +66,4 @@ public interface LoggingCategoryBehavior {
      */
     @NonNull
     Logger forCategory(@NonNull CategoryType categoryType);
-
 }
