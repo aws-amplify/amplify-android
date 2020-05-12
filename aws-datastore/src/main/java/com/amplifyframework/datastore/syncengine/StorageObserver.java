@@ -67,6 +67,15 @@ final class StorageObserver {
         );
     }
 
+    /**
+     * Checks if the storage observer is listening
+     * for events.
+     * @return true if there are listeners. False otherwise.
+     */
+    boolean isObserving() {
+        return disposable.size() > 0;
+    }
+
     private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {
         switch (change.type()) {
             case CREATE:

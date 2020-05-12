@@ -293,8 +293,10 @@ public final class SynchronousStorageAdapter {
      * either completes or throws an exception.
      */
     public void clear() {
-        Completable.fromObservable(emitter -> {
-            asyncDelegate.clear(emitter::onComplete, emitter::onError);
+        Completable.fromSingle(single -> {
+            asyncDelegate.clear(() -> {
+                single.onSuccess(true);
+            }, single::onError);
         }).blockingAwait();
     }
 }

@@ -186,11 +186,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @WorkerThread
     @Override
     public void initialize(@NonNull Context context) {
-        Completable completable = initializeStorageAdapter(context);
-        if (!api.getPlugins().isEmpty()) {
-            completable = completable.andThen(orchestrator.start());
-        }
-        completable.blockingAwait();
+        initializeStorageAdapter(context)
+            .andThen(initializeOrchestrator())
+            .blockingAwait();
     }
 
     /**
@@ -418,17 +416,23 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
                       @NonNull Consumer<DataStoreException> onError) {
         afterInitialization(() -> {
             orchestrator.stop();
-            sqliteStorageAdapter.clear(() -> {
-                orchestrator.start();
-                onComplete.call();
-            }, onError);
+            sqliteStorageAdapter.clear(onComplete, onError);
         });
     }
 
     private void afterInitialization(@NonNull final Runnable runnable) {
         Completable.fromAction(categoryInitializationsPending::await)
+            .andThen(initializeOrchestrator())
             .andThen(Completable.fromRunnable(runnable))
             .blockingAwait();
+    }
+
+    private Completable initializeOrchestrator() {
+        if (api.getPlugins().isEmpty()) {
+            return Completable.complete();
+        } else {
+            return orchestrator.start();
+        }
     }
 
     /**

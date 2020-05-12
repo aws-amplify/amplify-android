@@ -85,6 +85,15 @@ final class MutationProcessor {
     }
 
     /**
+     * Checks if the mutation processor is listening
+     * for events.
+     * @return True if there are listeners. False otherwise.
+     */
+    boolean isObserving() {
+        return disposable.size() > 0;
+    }
+
+    /**
      * Process an item in the mutation outbox.
      * @param mutationOutboxItem An item in the mutation outbox
      * @param <T> Type of model
@@ -118,7 +127,7 @@ final class MutationProcessor {
      * Don't process any more mutations.
      */
     void stopDrainingMutationOutbox() {
-        disposable.dispose();
+        disposable.clear();
     }
 
     /**

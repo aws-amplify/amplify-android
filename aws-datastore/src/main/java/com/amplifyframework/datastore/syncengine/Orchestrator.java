@@ -18,11 +18,13 @@ package com.amplifyframework.datastore.syncengine;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -35,6 +37,7 @@ import io.reactivex.Completable;
  * and {@link AppSync}.
  */
 public final class Orchestrator {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
     private final MutationProcessor mutationProcessor;
@@ -96,22 +99,38 @@ public final class Orchestrator {
      * @return A Completable operation to start the sync engine orchestrator
      */
     @NonNull
-    public Completable start() {
-        return Completable.fromAction(() -> {
-            storageObserver.startObservingStorageChanges();
-            subscriptionProcessor.startSubscriptions();
-            syncProcessor.hydrate().blockingAwait();
-            mutationProcessor.startDrainingMutationOutbox();
-            subscriptionProcessor.startDrainingMutationBuffer();
+    public synchronized Completable start() {
+        return Completable.fromSingle(single -> {
+            try {
+                if (!storageObserver.isObserving()) {
+                    LOG.debug("Starting local storage observer.");
+                    storageObserver.startObservingStorageChanges();
+                }
+                if (!subscriptionProcessor.isObserving()) {
+                    LOG.debug("Starting subscription processor.");
+                    subscriptionProcessor.startSubscriptions();
+                }
+                syncProcessor.hydrate().blockingAwait();
+                if (!mutationProcessor.isObserving()) {
+                    LOG.debug("Starting mutation processor.");
+                    mutationProcessor.startDrainingMutationOutbox();
+                }
+                subscriptionProcessor.startDrainingMutationBuffer();
+                single.onSuccess(true);
+            } catch (Exception exception) {
+                single.onError(exception);
+            }
         });
     }
 
     /**
      * Stop all model synchronization.
      */
-    public void stop() {
+    public synchronized void stop() {
+        LOG.debug("Stopping remote synchronization.");
         storageObserver.stopObservingStorageChanges();
         subscriptionProcessor.stopAllSubscriptionActivity();
         mutationProcessor.stopDrainingMutationOutbox();
+        LOG.debug("Stopped remote synchronization.");
     }
 }

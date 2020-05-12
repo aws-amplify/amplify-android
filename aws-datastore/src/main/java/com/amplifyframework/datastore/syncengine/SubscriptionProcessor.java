@@ -84,6 +84,15 @@ final class SubscriptionProcessor {
     }
 
     /**
+     * Checks if the subscription processor is listening
+     * for events.
+     * @return true if there are listeners. False otherwise.
+     */
+    boolean isObserving() {
+        return disposable.size() > 0;
+    }
+
+    /**
      * Stop any active subscriptions, and stop draining the mutation buffer.
      */
     void stopAllSubscriptionActivity() {

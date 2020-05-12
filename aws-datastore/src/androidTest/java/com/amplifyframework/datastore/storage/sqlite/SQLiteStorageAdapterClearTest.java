@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -58,11 +59,17 @@ public final class SQLiteStorageAdapterClearTest {
     private AtomicReference<Disposable> subscriberDisposableRef = new AtomicReference<>();
     private TestFileObserver fileObserver;
 
+    /**
+     * Enable strict mode.
+     */
     @BeforeClass
     public static void enableStrictMode() {
         StrictMode.enable();
     }
 
+    /**
+     * Setup actions for every test in this class.
+     */
     @Before
     public void setup() {
         TestStorageAdapter.cleanup();
@@ -79,6 +86,9 @@ public final class SQLiteStorageAdapterClearTest {
         fileObserver.startWatching();
     }
 
+    /**
+     * Tearing down components created for each test.
+     */
     @After
     public void teardown() {
         fileObserver.stopWatching();
@@ -145,13 +155,13 @@ public final class SQLiteStorageAdapterClearTest {
     }
 
     private <T extends Model> void assertRecordIsInDb(T item) throws DataStoreException {
-        List<? extends Model> results = adapter.query(item.getClass(), BlogOwner.ID.eq(item.getId()));
+        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getId()));
         assertEquals(1, results.size());
         assertEquals(item, results.get(0));
     }
 
     private <T extends Model> void assertRecordIsNotInDb(T item) throws DataStoreException {
-        List<? extends Model> results = adapter.query(item.getClass(), BlogOwner.ID.eq(item.getId()));
+        List<? extends Model> results = adapter.query(item.getClass(), Where.id(item.getId()));
         assertNotNull(results);
         assertEquals(0, results.size());
     }
