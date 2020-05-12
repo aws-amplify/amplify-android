@@ -16,11 +16,11 @@
 package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -32,7 +32,6 @@ import com.amplifyframework.datastore.model.ModelHelper;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteColumn;
 import com.amplifyframework.datastore.storage.sqlite.adapter.SQLiteTable;
 import com.amplifyframework.logging.Logger;
-
 import com.google.gson.Gson;
 
 import java.io.IOException;
