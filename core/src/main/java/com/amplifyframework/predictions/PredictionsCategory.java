@@ -25,12 +25,15 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TextToSpeechOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 /**
@@ -42,6 +45,27 @@ public final class PredictionsCategory extends Category<PredictionsPlugin<?>> im
     @Override
     public CategoryType getCategoryType() {
         return CategoryType.PREDICTIONS;
+    }
+
+    @NonNull
+    @Override
+    public TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().convertTextToSpeech(text, onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull TextToSpeechOptions options,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return getSelectedPlugin().convertTextToSpeech(text, options, onSuccess, onError);
     }
 
     @NonNull
