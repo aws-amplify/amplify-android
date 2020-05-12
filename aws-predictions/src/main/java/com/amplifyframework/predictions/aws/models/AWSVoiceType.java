@@ -28,7 +28,7 @@ import com.amplifyframework.predictions.models.VoiceType;
 @SuppressWarnings("JavadocVariable")
 public enum AWSVoiceType implements VoiceType {
     ARABIC_ZEINA("Zeina", "arb"),
-    CHINESE_ZHIYU("Zhiyu", "cmn-CN"),
+    MANDARIN_CHINESE_ZHIYU("Zhiyu", "cmn-CN"),
     DANISH_NAJA("Naja", "da-DK"),
     DANISH_MADS("Mads", "da-DK"),
     DUTCH_LOTTE("Lotte", "nl-NL"),
