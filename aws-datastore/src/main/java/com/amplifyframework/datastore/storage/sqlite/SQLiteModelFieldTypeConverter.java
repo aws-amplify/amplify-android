@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -50,8 +49,7 @@ import java.util.Objects;
  * valid in a <code>SQLiteStatement</code>.
  */
 final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
-
-    private static final Logger LOGGER = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final Class<? extends Model> modelType;
     private final ModelSchemaRegistry modelSchemaRegistry;
