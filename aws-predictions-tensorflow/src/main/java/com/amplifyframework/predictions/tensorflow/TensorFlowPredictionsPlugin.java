@@ -28,15 +28,19 @@ import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TextToSpeechOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowIdentifyOperation;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowInterpretOperation;
+import com.amplifyframework.predictions.tensorflow.operation.TensorFlowTextToSpeechOperation;
 import com.amplifyframework.predictions.tensorflow.operation.TensorFlowTranslateTextOperation;
 import com.amplifyframework.predictions.tensorflow.request.TensorFlowTextClassificationRequest;
 import com.amplifyframework.predictions.tensorflow.service.TensorFlowPredictionsService;
@@ -90,6 +94,30 @@ public final class TensorFlowPredictionsPlugin extends PredictionsPlugin<TensorF
     @Override
     public TensorFlowPredictionsEscapeHatch getEscapeHatch() {
         return new TensorFlowPredictionsEscapeHatch(predictionsService.getInterpreters());
+    }
+
+    @NonNull
+    @Override
+    public TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return convertTextToSpeech(text, TextToSpeechOptions.defaults(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull TextToSpeechOptions options,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        TensorFlowTextToSpeechOperation operation =
+                new TensorFlowTextToSpeechOperation(onError);
+        operation.start();
+        return operation;
     }
 
     @NonNull

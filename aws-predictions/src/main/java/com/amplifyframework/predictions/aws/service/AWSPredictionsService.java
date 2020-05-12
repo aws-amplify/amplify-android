@@ -20,14 +20,17 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
+import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
+import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
@@ -39,6 +42,7 @@ import java.nio.ByteBuffer;
  */
 public final class AWSPredictionsService {
 
+    private final AWSPollyService pollyService;
     private final AWSTranslateService translateService;
     private final AWSRekognitionService rekognitionService;
     private final AWSTextractService textractService;
@@ -49,10 +53,27 @@ public final class AWSPredictionsService {
      * @param configuration the configuration for AWS Predictions Plugin
      */
     public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
+        this.pollyService = new AWSPollyService(configuration);
         this.translateService = new AWSTranslateService(configuration);
         this.rekognitionService = new AWSRekognitionService(configuration);
         this.textractService = new AWSTextractService(configuration);
         this.comprehendService = new AWSComprehendService(configuration);
+    }
+
+    /**
+     * Delegate to {@link AWSPollyService} to synthesize speech.
+     * @param text the input text to convert to speech
+     * @param voiceType the voice type to synthesize speech with
+     * @param onSuccess triggered upon successful result
+     * @param onError triggered upon encountering error
+     */
+    public void synthesizeSpeech(
+            @NonNull String text,
+            @NonNull AWSVoiceType voiceType,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        pollyService.synthesizeSpeech(text, voiceType, onSuccess, onError);
     }
 
     /**
@@ -171,6 +192,16 @@ public final class AWSPredictionsService {
     @NonNull
     public AmazonTranslateClient getTranslateClient() {
         return translateService.getClient();
+    }
+
+    /**
+     * Return configured Amazon Polly client for
+     * direct access to AWS endpoint.
+     * @return the configured Amazon Polly client
+     */
+    @NonNull
+    public AmazonPollyClient getPollyClient() {
+        return pollyService.getClient();
     }
 
     /**
