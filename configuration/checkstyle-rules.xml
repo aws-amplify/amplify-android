@@ -245,6 +245,20 @@
         <module name="MissingJavadocType">
             <property name="scope" value="protected" />
         </module>
+        <module name="MissingJavadocMethod">
+            <property name="scope" value="protected" />
+            <!--
+                 false is already the default value for this. This is
+                 here to document the rationale for deliberately using
+                 this configuration. Getter Javadocs usually degrade to
+                 "Gets the foo." However, the getter is the one place a
+                 user will actually interact with the property value. So
+                 you should document the property and its purpose on the
+                 getter, _in preference to_ other locations.
+            -->
+            <property name="allowMissingPropertyJavadoc" value="false" />
+        </module>
+
         <!--
             public and protected class/interface definitions should
             include a high-level descriptive doc.

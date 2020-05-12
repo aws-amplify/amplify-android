@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
@@ -57,7 +58,7 @@ final class VersionRepository {
         // The ModelMetadata for the model uses the same ID as an identifier.
         final QueryPredicate hasMatchingId = QueryField.field("id").eq(model.getId());
         return Single.create(emitter -> {
-            localStorageAdapter.query(ModelMetadata.class, hasMatchingId, iterableResults -> {
+            localStorageAdapter.query(ModelMetadata.class, Where.matches(hasMatchingId), iterableResults -> {
                 try {
                     emitter.onSuccess(extractVersion(model, iterableResults));
                 } catch (DataStoreException badVersionFailure) {

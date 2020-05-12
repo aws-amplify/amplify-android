@@ -33,7 +33,7 @@ import com.amplifyframework.testutils.Assets;
 import com.amplifyframework.testutils.FeatureAssert;
 import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 import com.amplifyframework.testutils.sync.SynchronousPredictions;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -118,7 +118,7 @@ public final class AWSPredictionsIdentifyTextTest {
 
         // Assert that one table is detected.
         List<Table> tables = result.getTables();
-        assertFalse(CollectionUtils.isNullOrEmpty(tables));
+        assertFalse(Empty.check(tables));
         assertEquals(1, tables.size());
 
         // Assert that table has correct dimensions.
@@ -149,7 +149,7 @@ public final class AWSPredictionsIdentifyTextTest {
 
         // Assert that four key-values are detected.
         List<BoundedKeyValue> keyValues = result.getKeyValues();
-        assertFalse(CollectionUtils.isNullOrEmpty(keyValues));
+        assertFalse(Empty.check(keyValues));
         assertEquals(4, keyValues.size());
 
         // Assert that key-value pairs have correct values.

@@ -30,7 +30,13 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
-public class AWSDateTest {
+/**
+ * Tests the {@link AWSDate}.
+ */
+public final class AWSDateTest {
+    /**
+     * An {@link AWSDate} may be created from a variety of different formats of String.
+     */
     @Test
     public void parsesExpectedFormats() {
         List<String> values = Arrays.asList(
@@ -44,6 +50,10 @@ public class AWSDateTest {
         }
     }
 
+    /**
+     * An {@link AWSDate} may be created from a Java {@link Date}, and can
+     * be converted back to a Java {@link Date}.
+     */
     @Test
     public void convertsToAndFromDate() {
         Calendar cal = new GregorianCalendar();
@@ -58,9 +68,13 @@ public class AWSDateTest {
         Date date = cal.getTime();
         AWSDate awsDate = new AWSDate(date);
         assertEquals(date, awsDate.toDate());
-        assertThrows(IllegalStateException.class, () -> awsDate.getOffsetTotalSeconds());
+        assertThrows(IllegalStateException.class, awsDate::getOffsetTotalSeconds);
     }
 
+    /**
+     * An {@link AWSDate} can be constructed from a Java {@link Date}, along
+     * with a timezone offset in seconds.
+     */
     @Test
     public void convertsToAndFromDateWithOffset() {
         Calendar cal = new GregorianCalendar();

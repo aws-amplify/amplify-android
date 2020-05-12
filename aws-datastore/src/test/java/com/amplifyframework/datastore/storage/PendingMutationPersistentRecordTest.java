@@ -52,6 +52,12 @@ public class PendingMutationPersistentRecordTest {
                 .type(String.class)
                 .build(),
             ModelField.builder()
+                .name("decodedModelId")
+                .targetType("String")
+                .isRequired(true)
+                .type(String.class)
+                .build(),
+            ModelField.builder()
                 .name("encodedModelData")
                 .targetType("String")
                 .isRequired(true)

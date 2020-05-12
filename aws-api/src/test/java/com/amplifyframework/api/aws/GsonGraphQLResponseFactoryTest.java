@@ -208,6 +208,15 @@ public final class GsonGraphQLResponseFactoryTest {
         assertEquals(expectedResponse, response);
     }
 
+    /**
+     * If an {@link GraphQLResponse} contains a non-null {@link GraphQLResponse.Error},
+     * and if that error object itself contains some null-valued fields, the response factory
+     * should be resilient to this, and continue to render a response, anyway, without
+     * throwing an exception over the issue.
+     * @throws ApiException On failure to build a response, perhaps because the null
+     *                      valued items inside of the {@link GraphQLResponse.Error}
+     *                      could not be parsed
+     */
     @Test
     public void errorWithNullFieldsCanBeParsed() throws ApiException {
         // Arrange some JSON string from a "server"
@@ -278,6 +287,14 @@ public final class GsonGraphQLResponseFactoryTest {
         );
     }
 
+    /**
+     * {@link AWSDate}, {@link AWSDateTime}, {@link AWSTime}, and {@link AWSTimestamp} all
+     * have different JSON representations. It must be possible to recover the Java type which
+     * models the JSON representation of each.
+     * @throws ApiException If the response factory fails to construct a response,
+     *                      perhaps because deserialization to one of these types
+     *                      has failed.
+     */
     @Test
     public void awsDateTypesCanBeDeserialized() throws ApiException {
         // Expect

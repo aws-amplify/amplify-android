@@ -21,6 +21,8 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
@@ -178,25 +180,24 @@ public final class SynchronousStorageAdapter {
      * @throws DataStoreException On any failure to query storage adapter
      */
     public <T extends Model> List<T> query(@NonNull Class<T> modelClass) throws DataStoreException {
-        //noinspection ConstantConditions
-        return query(modelClass, null);
+        return query(modelClass, Where.matchesAll());
     }
 
     /**
      * Query the storage adapter for models of a given class, and considering some additional criteria
      * that each model must meet.
      * @param modelClass Class of models being queried
-     * @param predicate Additional criteria that the models must match
+     * @param options Query options with predicate and pagination info
      * @param <T> Type of model being queried
      * @return The list of models which are of the requested class and meet the requested criteria
      * @throws DataStoreException On any failure to query the storage adapter
      */
-    public <T extends Model> List<T> query(@NonNull Class<T> modelClass, @NonNull QueryPredicate predicate)
+    public <T extends Model> List<T> query(@NonNull Class<T> modelClass, @NonNull QueryOptions options)
             throws DataStoreException {
         Iterator<T> resultIterator = Await.result(
             operationTimeoutMs,
             (Consumer<Iterator<T>> onResult, Consumer<DataStoreException> onError) ->
-                asyncDelegate.query(modelClass, predicate, onResult, onError)
+                asyncDelegate.query(modelClass, options, onResult, onError)
         );
         final List<T> resultSet = new ArrayList<>();
         while (resultIterator.hasNext()) {

@@ -55,6 +55,12 @@ public final class AWSDataStorePluginTest {
     private AWSDataStorePlugin awsDataStorePlugin;
     private ModelProvider modelProvider;
 
+    /**
+     * Sets up the test. The {@link SimpleModelProvider} is spy'd, so that
+     * we can check if the SyncProcessor queries it. If it does, that means
+     * the SyncProcessor is running. Otherwise, either the SyncProcessor is *not*
+     * running, or it is running but not functioning as we expect it to.
+     */
     @Before
     public void setup() {
         this.context = getApplicationContext();

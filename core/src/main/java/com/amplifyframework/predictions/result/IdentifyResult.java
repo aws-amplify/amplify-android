@@ -15,11 +15,9 @@
 
 package com.amplifyframework.predictions.result;
 
-import com.amplifyframework.core.async.Result;
-
 /**
  * Interface to group different types of results from
  * identify operation in Predictions category.
  */
-public interface IdentifyResult extends Result {
+public interface IdentifyResult {
 }
