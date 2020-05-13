@@ -35,6 +35,7 @@ import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
+import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
@@ -372,6 +373,18 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                         case SIGNED_OUT:
                         case GUEST:
                             MobileClientSessionAdapter.fetchSignedOutSession(awsMobileClient, onSuccess);
+                            break;
+                        case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
+                        case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
+                            onSuccess.accept(
+                                    new AWSCognitoAuthSession(
+                                            true,
+                                            AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                                            AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                                            AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                                            AuthSessionResult.failure(new AuthException.SessionExpiredException())
+                                    )
+                            );
                             break;
                         default:
                             MobileClientSessionAdapter.fetchSignedInSession(awsMobileClient, onSuccess);

@@ -16,6 +16,7 @@
 package com.amplifyframework;
 
 import androidx.annotation.NonNull;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
 
@@ -77,5 +78,49 @@ public class AmplifyException extends Exception {
     @NonNull
     public final String getRecoverySuggestion() {
         return recoverySuggestion;
+    }
+
+    /**
+     * If any child classes override this method, they should be sure to include the recoverySuggestion, message, and
+     * cause in their hash.
+     */
+    @Override
+    public int hashCode() {
+        return ObjectsCompat.hash(
+                getRecoverySuggestion(),
+                getMessage(),
+                getCause()
+        );
+    }
+
+    /**
+     * If any child classes override this method, they should be sure to include the recoverySuggestion, message, and
+     * cause in their equality check.
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null || !(obj instanceof AmplifyException)) {
+            return false;
+        } else {
+            AmplifyException amplifyException = (AmplifyException) obj;
+            return ObjectsCompat.equals(getRecoverySuggestion(), amplifyException.getRecoverySuggestion()) &&
+                    ObjectsCompat.equals(getMessage(), amplifyException.getMessage()) &&
+                    ObjectsCompat.equals(getCause(), amplifyException.getCause());
+        }
+    }
+
+    /**
+     * If any child classes override this method, they should be sure to include the recoverySuggestion, message, and
+     * cause in their returned string.
+     */
+    @Override
+    public String toString() {
+        return "AuthException {" +
+                "message=" + getMessage() +
+                ", cause=" + getCause() +
+                ", recoverySuggestion=" + getRecoverySuggestion() +
+                '}';
     }
 }
