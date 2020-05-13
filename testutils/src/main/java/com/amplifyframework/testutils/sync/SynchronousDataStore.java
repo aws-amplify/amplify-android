@@ -89,7 +89,7 @@ public final class SynchronousDataStore {
     }
 
     /**
-     * Call the clar method of the underlying DataStore implementation.
+     * Call the clear method of the underlying DataStore implementation.
      */
     public void clear() {
         Completable.fromSingle(single -> {
