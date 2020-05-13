@@ -34,6 +34,11 @@ public enum HubChannel {
     API(CategoryType.API),
 
     /**
+     * Hub messages relating to Amplify Auth.
+     */
+    AUTH(CategoryType.AUTH),
+
+    /**
      * Hub messages relating to Amplify DataStore.
      */
     DATASTORE(CategoryType.DATASTORE),
