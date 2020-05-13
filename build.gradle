@@ -68,6 +68,7 @@ ext {
             cognitoauth: "com.amazonaws:aws-android-sdk-cognitoauth:$awsSdkVersion",
             pinpoint: "com.amazonaws:aws-android-sdk-pinpoint:$awsSdkVersion",
             mobileclient: "com.amazonaws:aws-android-sdk-mobile-client:$awsSdkVersion",
+            polly: "com.amazonaws:aws-android-sdk-polly:$awsSdkVersion",
             rekognition: "com.amazonaws:aws-android-sdk-rekognition:$awsSdkVersion",
             textract: "com.amazonaws:aws-android-sdk-textract:$awsSdkVersion",
             translate: "com.amazonaws:aws-android-sdk-translate:$awsSdkVersion"

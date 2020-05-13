@@ -17,10 +17,13 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import android.database.Cursor;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
@@ -36,10 +39,6 @@ import com.amplifyframework.logging.Logger;
 import com.google.gson.Gson;
 
 import java.io.IOException;
-import java.sql.Time;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -49,9 +48,8 @@ import java.util.Objects;
  * to <code>Model</code> properties and from <code>Model</code> properties to values that are
  * valid in a <code>SQLiteStatement</code>.
  */
-final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
-
-    private static final Logger LOGGER = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
+    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final Class<? extends Model> modelType;
     private final ModelSchemaRegistry modelSchemaRegistry;
@@ -71,6 +69,52 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
         final SQLiteTable sqliteTable = SQLiteTable.fromSchema(
                 modelSchemaRegistry.getModelSchemaForModelClass(modelType.getSimpleName()));
         this.columns = sqliteTable.getColumns();
+    }
+
+    /**
+     * Helper that converts a given value to a {@code fieldType} to the correct SQLite type.
+     *
+     * @param value the field value
+     * @param fieldType the field type as a enum
+     * @param gson an optional {@code Gson} instance
+     * @return the converted value
+     * @see #convertValueFromSource(Cursor, ModelField)
+     */
+    public static Object convertRawValueToTarget(
+            @Nullable final Object value,
+            @NonNull final JavaFieldType fieldType,
+            @Nullable Gson gson
+    ) {
+        if (value == null) {
+            return null;
+        }
+        switch (fieldType) {
+            case INTEGER:
+            case LONG:
+            case FLOAT:
+            case STRING:
+                // these types require no special treatment
+                return value;
+            case BOOLEAN:
+                boolean booleanValue = (boolean) value;
+                return booleanValue ? 1L : 0L;
+            case MODEL:
+                return ((Model) value).getId();
+            case ENUM:
+                return ((Enum) value).name();
+            case CUSTOM_TYPE:
+                final Gson jsonConverter = gson != null ? gson : new Gson();
+                return jsonConverter.toJson(value);
+            case DATE:
+                return ((AWSDate) value).format();
+            case DATE_TIME:
+                return ((AWSDateTime) value).format();
+            case TIME:
+                return ((AWSTime) value).format();
+            default:
+                LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", fieldType));
+                return null;
+        }
     }
 
     @Override
@@ -106,6 +150,7 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
                 case MODEL:
                     return convertModelAssociationToTarget(cursor, field);
                 case ENUM:
+                    return convertEnumValueToTarget(valueAsString, field);
                 case CUSTOM_TYPE:
                     return convertCustomTypeToTarget(cursor, field, columnIndex);
                 case INTEGER:
@@ -117,10 +162,11 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
                 case LONG:
                     return cursor.getLong(columnIndex);
                 case DATE:
-                    return convertDateToTarget(cursor, field, columnIndex);
+                    return new AWSDate(valueAsString);
+                case DATE_TIME:
+                    return new AWSDateTime(valueAsString);
                 case TIME:
-                    final long timeInLongFormat = cursor.getLong(columnIndex);
-                    return new Time(timeInLongFormat);
+                    return new AWSTime(valueAsString);
                 default:
                     LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", javaFieldType));
                     return null;
@@ -172,15 +218,13 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
         return gson.getAdapter(field.getType()).fromJson(stringValue);
     }
 
-    private Object convertDateToTarget(Cursor cursor, ModelField field, int columnIndex) throws ParseException {
-        // TODO wire up the new Date/Time handling here
-        final String dateInStringFormat = cursor.getString(columnIndex);
-        if (dateInStringFormat != null) {
-            return SimpleDateFormat
-                    .getDateInstance()
-                    .parse(dateInStringFormat);
-        }
-        return null;
+    @SuppressWarnings("unchecked")
+    private <E extends Enum<E>> E convertEnumValueToTarget(
+            @NonNull final String value,
+            @NonNull ModelField field
+    ) {
+        Class<E> enumClazz = (Class<E>) field.getType().asSubclass(Enum.class);
+        return Enum.valueOf(enumClazz, value);
     }
 
     @Override
@@ -190,34 +234,7 @@ final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cur
             return null;
         }
         final JavaFieldType javaFieldType = TypeConverter.getJavaFieldType(field);
-
-        switch (javaFieldType) {
-            case INTEGER:
-            case LONG:
-            case FLOAT:
-            case STRING:
-                // these types require no special treatment
-                return fieldValue;
-            case BOOLEAN:
-                boolean booleanValue = (boolean) fieldValue;
-                return booleanValue ? 1L : 0L;
-            case MODEL:
-                return ((Model) fieldValue).getId();
-            case ENUM:
-            case CUSTOM_TYPE:
-                return gson.toJson(fieldValue);
-            case DATE:
-                // TODO integrate with new Date/Time handling
-                final Date dateValue = (Date) fieldValue;
-                return SimpleDateFormat
-                        .getDateInstance()
-                        .format(dateValue);
-            case TIME:
-                return ((Time) fieldValue).getTime();
-            default:
-                LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", javaFieldType));
-                return null;
-        }
+        return convertRawValueToTarget(fieldValue, javaFieldType, gson);
     }
 
 }

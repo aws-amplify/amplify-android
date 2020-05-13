@@ -28,7 +28,6 @@ import org.json.JSONObject;
  * AWS' default implementation of the {@link LoggingCategoryBehavior},
  * which emits logs to Android's {@link Log} class.
  */
-@SuppressWarnings("WeakerAccess")
 final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     @NonNull
     @Override

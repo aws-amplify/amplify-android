@@ -15,6 +15,8 @@
 
 package com.amplifyframework.predictions.options;
 
+import androidx.annotation.NonNull;
+
 /**
  * Options for text language translation operation.
  */
@@ -28,6 +30,7 @@ public final class TranslateTextOptions {
      * Creates an instance of options with default values assigned.
      * @return Default instance of options
      */
+    @NonNull
     public static TranslateTextOptions defaults() {
         return new TranslateTextOptions();
     }

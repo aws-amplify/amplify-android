@@ -17,6 +17,9 @@ package com.amplifyframework.core.model.types;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
+import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.core.model.Model;
 
 /**
@@ -50,14 +53,19 @@ public enum JavaFieldType {
     STRING(String.class.getSimpleName()),
 
     /**
-     * Represents the java.util.Date data type.
+     * Represents the Date data type.
      */
-    DATE(java.util.Date.class.getSimpleName()),
+    DATE(AWSDate.class.getSimpleName()),
 
     /**
-     * Represents the java.sql.Time data type.
+     * Represents the DateTime data type.
      */
-    TIME(java.sql.Time.class.getSimpleName()),
+    DATE_TIME(AWSDateTime.class.getSimpleName()),
+
+    /**
+     * Represents the Time data type.
+     */
+    TIME(AWSTime.class.getSimpleName()),
 
     /**
      * Represents the Enum type.

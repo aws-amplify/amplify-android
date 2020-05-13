@@ -16,7 +16,6 @@
 package com.amplifyframework.hub;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Defines the client behavior (client API) consumed
@@ -64,7 +63,7 @@ public interface HubCategoryBehavior {
      */
     @NonNull
     SubscriptionToken subscribe(@NonNull HubChannel hubChannel,
-                                @Nullable HubEventFilter hubEventFilter,
+                                @NonNull HubEventFilter hubEventFilter,
                                 @NonNull HubSubscriber hubSubscriber);
 
     /**
