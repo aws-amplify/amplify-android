@@ -25,10 +25,12 @@ import com.amplifyframework.api.aws.AWSApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.datastore.appsync.SynchronousAppSync;
+import com.amplifyframework.datastore.syncengine.PendingMutation;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEventFilter;
 import com.amplifyframework.testmodels.commentsblog.AmplifyModelProvider;
@@ -36,13 +38,14 @@ import com.amplifyframework.testmodels.commentsblog.Blog;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.Resources;
-import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousApi;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import java.util.UUID;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -54,7 +57,7 @@ import static org.junit.Assert.assertNotNull;
  * which were defined by the schema in:
  * testmodels/src/main/java/com/amplifyframework/testmodels/commentsblog/schema.graphql.
  */
-@Ignore("Flaky, right now.")
+@Ignore("AWSDataStorePlugin must not refer to Amplify.API - need to update source")
 public final class AWSDataStorePluginInstrumentedTest {
     private static SynchronousApi api;
     private static SynchronousAppSync appSync;
@@ -68,6 +71,13 @@ public final class AWSDataStorePluginInstrumentedTest {
         StrictMode.enable();
     }
 
+    /**
+     * Once, before any/all tests in this class, setup miscellaneous dependencies,
+     * including synchronous API, AppSync, and DataStore interfaces. The API and AppSync instances
+     * are used to arrange/validate data. The DataStore interface will delegate to an
+     * {@link AWSDataStorePlugin}, which is the thing we're actually testing.
+     * @throws AmplifyException On failure to read config, setup API or DataStore categories
+     */
     @BeforeClass
     public static void beforeAllTests() throws AmplifyException {
         Context context = getApplicationContext();
@@ -97,21 +107,21 @@ public final class AWSDataStorePluginInstrumentedTest {
      *                      for remote presence of saved item
      */
     @Test
-    public void blogOwnerSavedIntoDataStoreIsThenQueriableInRemoteAppSyncApi() throws DataStoreException, ApiException {
+    public void syncUpToCloudIsWorking() throws DataStoreException, ApiException {
         // Start listening for model publication events on the Hub.
-        HubAccumulator outboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
-        outboundModelEventAccumulator.clear().start();
+        String expectedId = UUID.randomUUID().toString();
+        HubAccumulator publishedMutationsAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(expectedId), 1).start();
 
         // Save Charley Crockett, a guy who has a blog, into the DataStore.
         BlogOwner localCharley = BlogOwner.builder()
             .name("Charley Crockett")
+            .id(expectedId)
             .build();
         dataStore.save(localCharley);
 
         // Wait for a Hub event telling us that our Charley model got published to the cloud.
-        outboundModelEventAccumulator.takeOne();
-        outboundModelEventAccumulator.stop().clear();
+        publishedMutationsAccumulator.await();
 
         // Try to get Charley from the backend.
         BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
@@ -128,29 +138,16 @@ public final class AWSDataStorePluginInstrumentedTest {
      * @throws DataStoreException On failure to query the local data store for
      *                            local presence of arranged data (second step)
      */
-    @SuppressWarnings("unchecked")
     @Test
-    public void blogOwnerCreatedAndUpdatedRemotelyIsFoundLocally() throws DataStoreException {
+    public void syncDownFromCloudIsWorking() throws DataStoreException {
         // Arrange a stable ID for the model we create/update,
         // so that we can match it in an event accumulator, below.
-        String expectedId = RandomString.string();
+        String expectedId = UUID.randomUUID().toString();
 
         // Now, start watching the Hub for notifications that we received and processed models
         // from the Cloud. Look specifically for events relating to the model with the above ID.
         HubAccumulator inboundModelEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, (HubEventFilter) hubEvent -> {
-                if (!DataStoreChannelEventName.RECEIVED_FROM_CLOUD.toString().equals(hubEvent.getName())) {
-                    return false;
-                }
-
-                ModelWithMetadata<BlogOwner> modelWithMetadata =
-                    (ModelWithMetadata<BlogOwner>) hubEvent.getData();
-                if (modelWithMetadata == null) {
-                    return false;
-                }
-                return modelWithMetadata.getSyncMetadata().getId().equals(expectedId);
-            });
-        inboundModelEventAccumulator.clear().start();
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(expectedId), 1).start();
 
         // Act: externally in the Cloud, someone creates a BlogOwner,
         // that contains a misspelling in the last name
@@ -165,8 +162,11 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // A hub event tells us that a model was created in the cloud;
         // this model was synced into our local store.
-        inboundModelEventAccumulator.takeOne();
-        inboundModelEventAccumulator.stop().clear().start();
+        inboundModelEventAccumulator.await();
+
+        // Now, wait for another.
+        inboundModelEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, receiptOf(expectedId), 1).start();
 
         // Act: externally, the BlogOwner in the Cloud is updated, to correct the entry's last name
         BlogOwner updatedModel = originalModel.copyOfBuilder() // This uses the same model ID
@@ -181,11 +181,29 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Another HubEvent tells us that an update occurred in the Cloud;
         // the update was applied locally, to an existing BlogOwner.
-        inboundModelEventAccumulator.take(1);
-        inboundModelEventAccumulator.stop().clear();
+        inboundModelEventAccumulator.await();
 
         // Jameson should be in the local DataStore, and last name should be updated.
         BlogOwner localOwner = dataStore.get(BlogOwner.class, originalModel.getId());
         assertEquals("Jameson Williams", localOwner.getName());
+    }
+
+    private HubEventFilter publicationOf(String expectedId) {
+        return filterFor(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, expectedId);
+    }
+
+    private HubEventFilter receiptOf(String expectedId) {
+        return filterFor(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, expectedId);
+    }
+
+    private static HubEventFilter filterFor(DataStoreChannelEventName expectedEventName, String expectedId) {
+        return event -> {
+            if (!DataStoreChannelEventName.fromString(event.getName()).equals(expectedEventName)) {
+                return false;
+            }
+            PendingMutation<? extends Model> mutation = (PendingMutation<? extends Model>) event.getData();
+            String modelId = event.getData() == null ? null : mutation.getMutatedItem().getId();
+            return expectedId.equals(modelId);
+        };
     }
 }

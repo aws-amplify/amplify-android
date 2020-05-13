@@ -17,6 +17,7 @@ package com.amplifyframework.datastore.storage.sqlite;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.appsync.AWSAppSyncScalarType;
@@ -61,6 +62,7 @@ public final class TypeConverter {
         JAVA_TO_SQL.put(JavaFieldType.STRING, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.ENUM, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.DATE, SQLiteDataType.TEXT);
+        JAVA_TO_SQL.put(JavaFieldType.DATE_TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.TIME, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.MODEL, SQLiteDataType.TEXT);
         JAVA_TO_SQL.put(JavaFieldType.CUSTOM_TYPE, SQLiteDataType.TEXT);
@@ -75,6 +77,26 @@ public final class TypeConverter {
         }
         try {
             return JavaFieldType.from(field.getType().getSimpleName());
+        } catch (IllegalArgumentException exception) {
+            // fallback to custom type, which will result in the field being converted to a JSON string
+            return JavaFieldType.CUSTOM_TYPE;
+        }
+    }
+
+    /**
+     * Gets the {@link JavaFieldType} from the value class.
+     * @param value The value to guess the type from.
+     * @return the {@link JavaFieldType} from the value class.
+     */
+    public static JavaFieldType getJavaFieldTypeFromValue(@NonNull Object value) {
+        if (value instanceof Model) {
+            return JavaFieldType.MODEL;
+        }
+        if (value instanceof Enum) {
+            return JavaFieldType.ENUM;
+        }
+        try {
+            return JavaFieldType.from(value.getClass().getSimpleName());
         } catch (IllegalArgumentException exception) {
             // fallback to custom type, which will result in the field being converted to a JSON string
             return JavaFieldType.CUSTOM_TYPE;

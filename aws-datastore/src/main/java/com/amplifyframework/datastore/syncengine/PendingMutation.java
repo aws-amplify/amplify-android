@@ -19,7 +19,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
@@ -39,13 +38,15 @@ import java.util.UUID;
  * logic onto them, before ultimately uploading to a remote endpoint.
  * @param <T> Type of model that has experienced a mutation
  */
-public final class PendingMutation<T extends Model> {
+public final class PendingMutation<T extends Model> implements Comparable<PendingMutation<? extends Model>> {
     private final T mutatedItem;
     private final Class<T> classOfMutatedItem;
     private final Type mutationType;
+    private final TimeBasedUuid mutationId;
     private QueryPredicate predicate;
 
-    private PendingMutation(T mutatedItem, Class<T> classOfMutatedItem, Type mutationType, QueryPredicate predicate) {
+    private PendingMutation(TimeBasedUuid mutationId, T mutatedItem, Class<T> classOfMutatedItem, Type mutationType, QueryPredicate predicate) {
+        this.mutationId = mutationId;
         this.mutatedItem = mutatedItem;
         this.classOfMutatedItem = classOfMutatedItem;
         this.mutationType = mutationType;
@@ -53,7 +54,9 @@ public final class PendingMutation<T extends Model> {
     }
 
     /**
-     * Creates a {@link PendingMutation}.
+     * Creates a {@link PendingMutation}, using a provided mutation ID.
+     * @param mutationId A globally-unique, *time-based* ID for this mutation event;
+     *                   the ID is used for temporal ordering of mutations
      * @param mutatedItem The item that undergone a mutation
      * @param classOfMutatedItem The class of the item that has undergone mutation
      * @param mutationType Type of mutation
@@ -61,13 +64,31 @@ public final class PendingMutation<T extends Model> {
      * @return A {@link PendingMutation}
      */
     static <T extends Model> PendingMutation<T> instance(
-            @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType, @Nullable QueryPredicate predicate) {
-        return new PendingMutation<T>(
+            @NonNull TimeBasedUuid mutationId,
+            @NonNull T mutatedItem,
+            @NonNull Class<T> classOfMutatedItem,
+            @NonNull Type mutationType,
+            @Nullable QueryPredicate predicate) {
+        return new PendingMutation<>(
+            Objects.requireNonNull(mutationId),
             Objects.requireNonNull(mutatedItem),
             Objects.requireNonNull(classOfMutatedItem),
             Objects.requireNonNull(mutationType),
             predicate
         );
+    }
+
+    /**
+     * Creates a {@link PendingMutation}, using a newly generated mutation ID.
+     * @param mutatedItem The item that undergone a mutation
+     * @param classOfMutatedItem The class of the item that has undergone mutation
+     * @param mutationType Type of mutation
+     * @param <T> The type of the item that has undergone mutation
+     * @return A {@link PendingMutation}
+     */
+    static <T extends Model> PendingMutation<T> instance(
+            @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType) {
+        return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType);
     }
 
     /**
@@ -104,11 +125,20 @@ public final class PendingMutation<T extends Model> {
     }
 
     /**
+     * Gets the ID of this mutation.
+     * @return Mutation ID
+     */
+    @NonNull
+    TimeBasedUuid getMutationId() {
+        return mutationId;
+    }
+
+    /**
      * Gets the item that has been mutated.
      * @return The mutated item
      */
     @NonNull
-    T getMutatedItem() {
+    public T getMutatedItem() {
         return mutatedItem;
     }
 
@@ -146,21 +176,16 @@ public final class PendingMutation<T extends Model> {
 
         PendingMutation<?> that = (PendingMutation<?>) thatObject;
 
-        if (!ObjectsCompat.equals(mutatedItem, that.mutatedItem)) {
-            return false;
-        }
-        if (!ObjectsCompat.equals(classOfMutatedItem, that.classOfMutatedItem)) {
-            return false;
-        }
-        if (!ObjectsCompat.equals(predicate, that.predicate)) {
-            return false;
-        }
-        return ObjectsCompat.equals(mutationType, that.mutationType);
+        return ObjectsCompat.equals(mutationId, that.mutationId) &&
+            ObjectsCompat.equals(mutatedItem, that.mutatedItem) &&
+            ObjectsCompat.equals(classOfMutatedItem, that.classOfMutatedItem) &&
+            ObjectsCompat.equals(mutationType, that.mutationType);
     }
 
     @Override
     public int hashCode() {
-        int result = mutatedItem.hashCode();
+        int result = mutationId.hashCode();
+        result = 31 * result + mutatedItem.hashCode();
         result = 31 * result + classOfMutatedItem.hashCode();
         result = 31 * result + mutationType.hashCode();
         return result;
@@ -172,7 +197,20 @@ public final class PendingMutation<T extends Model> {
             "mutatedItem=" + mutatedItem +
             ", classOfMutatedItem=" + classOfMutatedItem +
             ", mutationType=" + mutationType +
+            ", mutationId=" + mutationId +
             '}';
+    }
+
+    /**
+     * Mutations may be ordered according to their {@link TimeBasedUuid} field.
+     * {@link TimeBasedUuid} is itself {@link Comparable}.
+     * @param another Some other PendingMutation.
+     * @return -1, 0, 1 if this mutation is smaller, same, or bigger than another
+     */
+    @Override
+    public int compareTo(@NonNull PendingMutation<? extends Model> another) {
+        Objects.requireNonNull(another);
+        return this.mutationId.compareTo(another.getMutationId());
     }
 
     /**
@@ -188,11 +226,15 @@ public final class PendingMutation<T extends Model> {
      * referenced model is just a Gson-serialized String version of itself -- handled external
      * to the data modeling system.
      */
+    @SuppressWarnings("unused")
     @ModelConfig(pluralName = "PersistentRecords")
     @Index(fields = "decodedModelClassName", name = "decodedModelClassNameBasedIndex")
-    public static final class PersistentRecord implements Model {
+    public static final class PersistentRecord implements Model, Comparable<PersistentRecord> {
         @ModelField(targetType = "ID", isRequired = true)
         private final String id;
+
+        @ModelField(targetType = "String", isRequired = true)
+        private final String decodedModelId;
 
         @ModelField(targetType = "String", isRequired = true)
         private final String encodedModelData;
@@ -204,24 +246,47 @@ public final class PendingMutation<T extends Model> {
          * Constructs a Record.
          * Note: by arrangement of the {@link PersistentRecord.Builder#build()} method, it should be
          * impossible for any null value to be passed into this constructor.
-         * @param id ID for the record
+         * @param id ID for the mutation record
+         * @param decodedModelId The id of the model that is encoded into this record
          * @param encodedModelData entry for record
          * @param decodedModelClassName Class of item held in entry
          */
         @SuppressWarnings("checkstyle:ParameterName") // "id" is less than 3 chars, but is name used by model
-        private PersistentRecord(String id, String encodedModelData, String decodedModelClassName) {
+        private PersistentRecord(
+                String id,
+                String decodedModelId,
+                String encodedModelData,
+                String decodedModelClassName) {
             this.id = id;
+            this.decodedModelId = decodedModelId;
             this.encodedModelData = encodedModelData;
             this.decodedModelClassName = decodedModelClassName;
         }
 
         /**
-         * Gets the ID of the record. This ID should match the ID of the encoded item.
-         * @return ID for record - same as ID for encoded item.
+         * Gets the ID of the record. This ID does *NOT* match the encoded item.
+         * Instead, this is a unique time-based UUID for the mutation itself.
+         * For the ID of the model (in its decoded form), use {@link #getDecodedModelId()}.
+         * @return The record id
          */
         @NonNull
+        @Override
         public String getId() {
             return this.id;
+        }
+
+        /**
+         * Gets the ID of the model (in the model's decoded form).
+         * This is not the same as {@link #getId()}, which is an ID for the mutation itself.
+         * The mutation ID is a v1 UUID which can be compared by timestamp. This current ID
+         * is a v4 ID which is a better choice choice for UUID since it does not rely on flaky
+         * notions of time.
+         * @return The ID of the model, that would be returned if that model were
+         *         decoded and {@link Model#getId()} were called.
+         */
+        @NonNull
+        String getDecodedModelId() {
+            return this.decodedModelId;
         }
 
         /**
@@ -230,7 +295,7 @@ public final class PendingMutation<T extends Model> {
          * @return The model data, in its encoded string form
          */
         @NonNull
-        public String getEncodedModelData() {
+        String getEncodedModelData() {
             return this.encodedModelData;
         }
 
@@ -241,7 +306,7 @@ public final class PendingMutation<T extends Model> {
          * @return Class of encoded model
          */
         @NonNull
-        public String getDecodedModelClassName() {
+        String getDecodedModelClassName() {
             return decodedModelClassName;
         }
 
@@ -256,18 +321,16 @@ public final class PendingMutation<T extends Model> {
 
             PersistentRecord record = (PersistentRecord) thatObject;
 
-            if (!id.equals(record.id)) {
-                return false;
-            }
-            if (!ObjectsCompat.equals(encodedModelData, record.encodedModelData)) {
-                return false;
-            }
-            return ObjectsCompat.equals(decodedModelClassName, record.decodedModelClassName);
+            return ObjectsCompat.equals(id, record.id) &&
+                ObjectsCompat.equals(decodedModelId, record.decodedModelId) &&
+                ObjectsCompat.equals(encodedModelData, record.encodedModelData) &&
+                ObjectsCompat.equals(decodedModelClassName, record.decodedModelClassName);
         }
 
         @Override
         public int hashCode() {
             int result = id.hashCode();
+            result = 31 * result + decodedModelId.hashCode();
             result = 31 * result + encodedModelData.hashCode();
             result = 31 * result + decodedModelClassName.hashCode();
             return result;
@@ -277,6 +340,7 @@ public final class PendingMutation<T extends Model> {
         public String toString() {
             return "Record{" +
                 "id='" + id + '\'' +
+                ", decodedModelId='" + decodedModelId + '\'' +
                 ", encodedModelData='" + encodedModelData + '\'' +
                 ", decodedModelClassName='" + decodedModelClassName + '\'' +
                 '}';
@@ -293,37 +357,54 @@ public final class PendingMutation<T extends Model> {
         }
 
         /**
+         * Determines an ordering for this record with respect to another.
+         * This is achieved by considering the record ID as a v1 UUID,
+         * and comparing those. (See {@link TimeBasedUuid#compareTo(TimeBasedUuid)},
+         * to which this delegates.
+         * @param another Some other pending mutation
+         * @return -1, 0, 1 if this current mutation is smaller, same, or bigger than another
+         */
+        @Override
+        public int compareTo(PersistentRecord another) {
+            return TimeBasedUuid.fromString(getId())
+                .compareTo(TimeBasedUuid.fromString(another.getId()));
+        }
+
+        /**
          * Utility for construction of {@link PersistentRecord} through chained configurator calls.
          * @param <T> Type of model for which a pending mutation is being built
          */
-        public static final class Builder<T extends Model> {
-            private UUID id;
+        static final class Builder<T extends Model> {
+            private TimeBasedUuid recordId;
+            private UUID decodedModelId;
             private String encodedModelData;
             private String decodedModelClassName;
 
             /**
-             * Configures the Record ID to a specified UUID value.
-             * The value will be used up until the next invocation of {@link #build()}.
-             * A random UUID will be used, after that, unless you explicitly use this
-             * call again.
-             * @param id A string interpretation of a Java UUID.
+             * Configures the Record ID to a specified TimeBasedUUID value.
+             * @param timeBasedUuid A time based UUID for the record.
              * @return Current builder, for fluent configuration chaining
              */
-            @SuppressWarnings("checkstyle:ParameterName") // "id" < 3 chars; kept for naming consistency w/ model
             @NonNull
-            public PersistentRecord.Builder<T> id(@NonNull String id) {
-                this.id = UUID.fromString(Objects.requireNonNull(id));
+            PersistentRecord.Builder<T> recordId(@NonNull TimeBasedUuid timeBasedUuid) {
+                Objects.requireNonNull(timeBasedUuid);
+                this.recordId = timeBasedUuid;
                 return this;
             }
 
             /**
-             * Configures the Builder to generate a random ID for the next {@link PersistentRecord}.
-             * This is the default behavior of the {@link PersistentRecord.Builder}.
-             * @return Current instance of the Builder, for fluent configuration chaining
+             * Configures the ID that is associated with the decoded form of the model
+             * that is encoded into this record. For example, if this record encodes
+             * a Blog object, then this ID value is the same as the value returned by calling
+             * getId() on that object.
+             * @param decodedModelId The ID of the model in it decoded state
+             * @return The ID of the model, when that model is in its decoded form
              */
             @NonNull
-            public PersistentRecord.Builder<T> randomId() {
-                this.id = null;
+            PersistentRecord.Builder<T> decodedModelId(@NonNull String decodedModelId) {
+                Objects.requireNonNull(decodedModelId);
+                // This is stored this way for the purpose of validating hte input.
+                this.decodedModelId = UUID.fromString(decodedModelId);
                 return this;
             }
 
@@ -334,7 +415,7 @@ public final class PendingMutation<T extends Model> {
              * @return Current Builder instance, for fluent configuration chaining
              */
             @NonNull
-            public PersistentRecord.Builder<T> encodedModelData(@NonNull String encodedModelData) {
+            PersistentRecord.Builder<T> encodedModelData(@NonNull String encodedModelData) {
                 this.encodedModelData = Objects.requireNonNull(encodedModelData);
                 return this;
             }
@@ -348,7 +429,7 @@ public final class PendingMutation<T extends Model> {
              * @return Current builder for fluent method chaining
              */
             @NonNull
-            public PersistentRecord.Builder<T> decodedModelClassName(@NonNull String decodedModelClassName) {
+            PersistentRecord.Builder<T> decodedModelClassName(@NonNull String decodedModelClassName) {
                 this.decodedModelClassName = Objects.requireNonNull(decodedModelClassName);
                 return this;
             }
@@ -358,11 +439,10 @@ public final class PendingMutation<T extends Model> {
              * @return A new instance of a {@link PersistentRecord}.
              */
             @NonNull
-            public PendingMutation.PersistentRecord build() {
-                final UUID usedId = id == null ? UUID.randomUUID() : id;
-                randomId();
+            PendingMutation.PersistentRecord build() {
                 return new PendingMutation.PersistentRecord(
-                    Objects.requireNonNull(usedId).toString(),
+                    Objects.requireNonNull(recordId).toString(),
+                    Objects.requireNonNull(decodedModelId).toString(),
                     Objects.requireNonNull(encodedModelData),
                     Objects.requireNonNull(decodedModelClassName)
                 );
@@ -373,38 +453,21 @@ public final class PendingMutation<T extends Model> {
     /**
      * The type of mutation this is.
      */
-    public enum Type {
+    enum Type {
         /**
          * A model-creation mutation.
          */
-        CREATE(MutationType.CREATE),
+        CREATE,
 
         /**
          * Any change to an already-existing model, that does not *delete* the model.
          */
-        UPDATE(MutationType.UPDATE),
+        UPDATE,
 
         /**
          * The removal of a previously-created model.
          */
-        DELETE(MutationType.DELETE);
-
-        private final MutationType apiMutationType;
-
-        Type(MutationType apiMutationType) {
-            this.apiMutationType = apiMutationType;
-        }
-
-        public MutationType getApiMutationType() {
-            return apiMutationType;
-        }
-
-        @Override
-        public String toString() {
-            return "Type{" +
-                "apiMutationType=" + apiMutationType +
-                '}';
-        }
+        DELETE
     }
 
     /**

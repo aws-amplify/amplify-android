@@ -52,6 +52,13 @@ public final class MergerTest {
     private MutationOutbox mutationOutbox;
     private Merger merger;
 
+    /**
+     * Sets up the test. A {@link Merger} is being tested. To construct one, several
+     * intermediary objects are needed. A reference is held to a {@link MutationOutbox},
+     * to arrange state. A {@link SynchronousStorageAdapter} is crated to facilitate
+     * arranging model data into the {@link InMemoryStorageAdapter} which backs the various
+     * components.
+     */
     @Before
     public void setup() {
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();

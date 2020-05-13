@@ -29,6 +29,11 @@ public final class EmptyCategoryConfiguration extends CategoryConfiguration {
         this.categoryType = categoryType;
     }
 
+    /**
+     * Creates an {@link EmptyCategoryConfiguration} for the given {@link CategoryType}.
+     * @param categoryType Type of category that will use an empty configuration
+     * @return An empty category configuration
+     */
     public static EmptyCategoryConfiguration forCategoryType(CategoryType categoryType) {
         return new EmptyCategoryConfiguration(categoryType);
     }

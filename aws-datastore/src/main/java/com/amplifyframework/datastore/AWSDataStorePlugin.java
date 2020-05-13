@@ -23,6 +23,7 @@ import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.GraphQlBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -32,6 +33,8 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.query.QueryOptions;
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
@@ -64,6 +67,9 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     // Keeps track of whether of not the category is initialized yet
     private final CountDownLatch categoryInitializationsPending;
 
+    // Used to interrogate plugins, to understand if sync should be automatically turned on
+    private final ApiCategory api;
+
     // User-provided configuration for the plugin.
     private final DataStoreConfiguration userProvidedConfiguration;
 
@@ -75,11 +81,11 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     private AWSDataStorePlugin(
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
-            @NonNull GraphQlBehavior api,
+            @NonNull ApiCategory api,
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
-
+        this.api = api;
         this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
@@ -129,7 +135,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * @param api Interface to a remote system where models will be synchronized
      */
     @VisibleForTesting
-    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull GraphQlBehavior api) {
+    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull ApiCategory api) {
         this(
             Objects.requireNonNull(modelProvider),
             ModelSchemaRegistry.instance(),
@@ -181,7 +187,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public void initialize(@NonNull Context context) {
         Completable completable = initializeStorageAdapter(context);
-        if (Amplify.API.getPlugins().size() > 0) {
+        if (!api.getPlugins().isEmpty()) {
             completable = completable.andThen(orchestrator.start());
         }
         completable.blockingAwait();
@@ -304,11 +310,20 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     @Override
     public <T extends Model> void query(
             @NonNull Class<T> itemClass,
-            @NonNull QueryPredicate predicate,
+            @NonNull QueryPredicate queryPredicate,
+            @NonNull Consumer<Iterator<T>> onQueryResults,
+            @NonNull Consumer<DataStoreException> onQueryFailure) {
+        this.query(itemClass, Where.matches(queryPredicate), onQueryResults, onQueryFailure);
+    }
+
+    @Override
+    public <T extends Model> void query(
+            @NonNull Class<T> itemClass,
+            @NonNull QueryOptions options,
             @NonNull Consumer<Iterator<T>> onQueryResults,
             @NonNull Consumer<DataStoreException> onQueryFailure) {
         afterInitialization(() ->
-            sqliteStorageAdapter.query(itemClass, predicate, onQueryResults, onQueryFailure));
+                sqliteStorageAdapter.query(itemClass, options, onQueryResults, onQueryFailure));
     }
 
     @Override

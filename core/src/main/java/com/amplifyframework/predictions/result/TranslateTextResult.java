@@ -17,7 +17,6 @@ package com.amplifyframework.predictions.result;
 
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.async.Result;
 import com.amplifyframework.predictions.models.LanguageType;
 
 import java.util.Objects;
@@ -25,7 +24,7 @@ import java.util.Objects;
 /**
  * The result of the call to translate text to another language.
  */
-public final class TranslateTextResult implements Result {
+public final class TranslateTextResult {
     private final String translatedText;
     private final LanguageType targetLanguage;
 

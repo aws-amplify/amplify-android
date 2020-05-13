@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -13,22 +13,20 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.async;
+package com.amplifyframework.predictions.models;
+
+import androidx.annotation.NonNull;
 
 /**
- * A callback that received notifications of events surrounding async
- * operations. This can be used in cases where an event will be
- * generated.
- * @param <T> the parameter type of the event object.
+ * Contains details about a specific voice to be
+ * used for synthesizing speech.
  */
-public interface EventListener<T> {
-
+public interface VoiceType {
     /**
-     * The event object will be passed through the
-     * onEvent method.
-     *
-     * @param event the event object
+     * Returns the name of the voice to be used
+     * for synthesized speech.
+     * @return the name of the voice
      */
-    void onEvent(T event);
+    @NonNull
+    String getName();
 }
-

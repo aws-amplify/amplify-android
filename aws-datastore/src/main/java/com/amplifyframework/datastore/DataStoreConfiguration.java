@@ -143,15 +143,22 @@ public final class DataStoreConfiguration {
     }
 
     /**
-     * Get the sync interval. The sync interval is the amount of time after a base sync, during which
-     * the optimized delta-sync may be requested, instead of a full base sync.
-     * @return The sync interval
+     * Get the sync interval, expressed in milliseconds. The sync interval is the amount of
+     * time after a base sync, during which the optimized delta-sync may be requested, instead
+     * of a full base sync.
+     * @return The sync interval, expressed in milliseconds
      */
     @IntRange(from = 0)
     public Long getSyncIntervalMs() {
         return this.syncIntervalMs;
     }
 
+    /**
+     * Gets the sync interval, expressed in minutes. This method serves the same purpose
+     * as {@link #getSyncIntervalMs()} -- except, for convenience, returns the value in
+     * minutes, not milliseconds.
+     * @return The sync interval, expressed in minutes
+     */
     @IntRange(from = 0)
     public Long getSyncIntervalInMinutes() {
         return this.syncIntervalInMinutes;

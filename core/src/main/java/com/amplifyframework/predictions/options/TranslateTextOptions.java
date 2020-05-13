@@ -15,12 +15,12 @@
 
 package com.amplifyframework.predictions.options;
 
-import com.amplifyframework.core.async.Options;
+import androidx.annotation.NonNull;
 
 /**
  * Options for text language translation operation.
  */
-public final class TranslateTextOptions implements Options {
+public final class TranslateTextOptions {
 
     private TranslateTextOptions() {
         // TODO: Add options
@@ -30,6 +30,7 @@ public final class TranslateTextOptions implements Options {
      * Creates an instance of options with default values assigned.
      * @return Default instance of options
      */
+    @NonNull
     public static TranslateTextOptions defaults() {
         return new TranslateTextOptions();
     }

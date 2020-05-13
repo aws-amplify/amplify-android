@@ -31,16 +31,15 @@ import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.util.Time;
 
-import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+
+import io.reactivex.Observable;
 
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.mock;
@@ -55,8 +54,13 @@ public final class MutationProcessorTest {
     private AppSync appSync;
     private SynchronousStorageAdapter storageAdapter;
     private MutationProcessor mutationProcessor;
-    private HubAccumulator publicationEventAccumulator;
 
+    /**
+     * Creates a {@link MutationProcessor} to test. This requires several dependencies:
+     *  - A fake {@link AppSync} is used, to mock responses when mutations are posted.
+     *  - A {@link SynchronousStorageAdapter} is created and held in reference, to facilitate
+     *    arranging data into and out storage. (Storage is to house several different components).
+     */
     @Before
     public void setup() {
         this.appSync = mock(AppSync.class);
@@ -68,28 +72,25 @@ public final class MutationProcessorTest {
         Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
-
-        this.publicationEventAccumulator =
-            HubAccumulator.create(HubChannel.DATASTORE, DataStoreChannelEventName.PUBLISHED_TO_CLOUD);
-        this.publicationEventAccumulator.clear().start();
-    }
-
-    /**
-     * Stop accumulating events, after the test completes.
-     */
-    @After
-    public void stopAccumulator() {
-        this.publicationEventAccumulator.stop().clear();
     }
 
     /**
      * Validates that the {@link MutationProcessor} will read form the {@link MutationOutbox},
-     * and will publish any items there-in to the {@link AppSync}.
+     * and will publish any items there-in to the {@link AppSync} instance.
      * @throws DataStoreException On failure to arrange items in to the MutationOutbox
      */
-    @Ignore("Intermittent failures. Expected records occasionally do not match hub-broadcast records.")
     @Test
     public void canDrainMutationOutbox() throws DataStoreException {
+        // Start accumulating publication events for the records we expect to see.
+        final List<PendingMutation<? extends Model>> expectedToPublish = Arrays.asList(
+            Models.Tony.DELETION,
+            Models.Joe.CREATION,
+            Models.JoeBlog.CREATION
+        );
+        DataStoreChannelEventName eventName = DataStoreChannelEventName.PUBLISHED_TO_CLOUD;
+        HubAccumulator publicationEventAccumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, eventName, expectedToPublish.size()).start();
+
         // Arrange some local state, in the LocalStorageAdapter.
         // The "outbox" has three changes pending: 1 deletions, 2 creations.
         storageAdapter.save(
@@ -108,7 +109,7 @@ public final class MutationProcessorTest {
             Models.Joe.CREATION_RECORD,
 
             // Joe's blog has also been created locally, and is present in the local store.
-            // There is a creation record for him, pending in the ourbox, which still
+            // There is a creation record for him, pending in the outbox, which still
             // needs to be processed.
             Models.JoeBlog.MODEL,
             Models.JoeBlog.MODEL_METADATA,
@@ -127,35 +128,21 @@ public final class MutationProcessorTest {
         mutationProcessor.startDrainingMutationOutbox();
 
         // Validate that we got "success" notifications out on Hub.
-        final List<PendingMutation.PersistentRecord> changesWeExpectToProcessSuccessfully = Arrays.asList(
-            Models.Tony.DELETION_RECORD,
-            Models.Joe.CREATION_RECORD,
-            Models.JoeBlog.CREATION_RECORD
-        );
         assertEquals(
-            // Expected change records
-            changesWeExpectToProcessSuccessfully,
+            // Expected mutations
+            expectedToPublish,
             // Look at the records we saw on the hub. Did we get all of them?
-            takeRecordsFromAccumulator(changesWeExpectToProcessSuccessfully.size())
+            Observable.fromIterable(publicationEventAccumulator.await())
+                .map(HubEvent::getData)
+                .toSortedList()
+                .blockingGet()
         );
 
         // Finally, we expect the mutation outbox to be empty, now, that the mutation
         // processor has drained it.
-        assertEquals(0, storageAdapter.query(PendingMutation.PersistentRecord.class).size());
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private List<PendingMutation.PersistentRecord> takeRecordsFromAccumulator(int quantity) {
-        final List<PendingMutation.PersistentRecord> changeRecords = new ArrayList<>();
-        for (HubEvent<?> hubEvent : publicationEventAccumulator.take(quantity)) {
-            PendingMutation<? extends Model> mutation = (PendingMutation<? extends Model>) hubEvent.getData();
-            if (mutation == null) {
-                throw new IllegalStateException("Found null data in publication event: " + hubEvent);
-            }
-            PendingMutation.PersistentRecord record = RECORD_CONVERTER.toRecord(mutation);
-            changeRecords.add(record);
-        }
-        return changeRecords;
+        List<PendingMutation.PersistentRecord> pendingMutationRecordsStillInStorage =
+            storageAdapter.query(PendingMutation.PersistentRecord.class);
+        assertEquals(0, pendingMutationRecordsStillInStorage.size());
     }
 
     /**

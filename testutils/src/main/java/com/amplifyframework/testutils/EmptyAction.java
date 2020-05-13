@@ -29,6 +29,10 @@ public final class EmptyAction implements Action {
     public void call() {
     }
 
+    /**
+     * Creates a new instance of an {@link EmptyAction}.
+     * @return A new {@link EmptyAction}
+     */
     @NonNull
     public static EmptyAction instance() {
         return new EmptyAction();

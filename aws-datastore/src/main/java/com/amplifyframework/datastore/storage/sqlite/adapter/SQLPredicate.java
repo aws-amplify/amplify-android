@@ -28,8 +28,11 @@ import com.amplifyframework.core.model.query.predicate.QueryOperator;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
+import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
+import com.amplifyframework.datastore.storage.sqlite.SQLiteModelFieldTypeConverter;
 import com.amplifyframework.datastore.storage.sqlite.SqlKeyword;
+import com.amplifyframework.datastore.storage.sqlite.TypeConverter;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Iterator;
@@ -47,8 +50,8 @@ import java.util.List;
  *     {@code
  *     QueryPredicate nameCheck = QueryField.field("name").eq("Jane");
  *     SQLPredicate adapted = new SQLPredicate(nameCheck);
- *     System.out.println(adapted.toString()); // Prints "name = ?"
- *     System.out.println(adapted.getSelectionArgs()); // Prints "[Jane]"
+ *     LOG.verbose(adapted.toString()); // Prints "name = ?"
+ *     LOG.verbose(adapted.getSelectionArgs()); // Prints "[Jane]"
  *     }
  *</pre>
  *
@@ -93,6 +96,13 @@ public final class SQLPredicate {
         return Immutable.of(bindings);
     }
 
+    private void addBinding(Object value) {
+        final JavaFieldType fieldType = TypeConverter.getJavaFieldTypeFromValue(value);
+        final Object sqlValue = SQLiteModelFieldTypeConverter.convertRawValueToTarget(
+                value, fieldType, null);
+        bindings.add(sqlValue);
+    }
+
     // Utility method to recursively parse a given predicate.
     private StringBuilder parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
         if (queryPredicate instanceof QueryPredicateOperation) {
@@ -118,8 +128,8 @@ public final class SQLPredicate {
         switch (op.type()) {
             case BETWEEN:
                 BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) op;
-                bindings.add(betweenOp.start());
-                bindings.add(betweenOp.end());
+                addBinding(betweenOp.start());
+                addBinding(betweenOp.end());
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.BETWEEN)
@@ -131,7 +141,7 @@ public final class SQLPredicate {
                         .append("?");
             case CONTAINS:
                 ContainsQueryOperator containsOp = (ContainsQueryOperator) op;
-                bindings.add(containsOp.value());
+                addBinding(containsOp.value());
                 return builder.append("?")
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.IN)
@@ -139,7 +149,7 @@ public final class SQLPredicate {
                         .append(field);
             case BEGINS_WITH:
                 BeginsWithQueryOperator beginsWithOp = (BeginsWithQueryOperator) op;
-                bindings.add(beginsWithOp.value() + "%");
+                addBinding(beginsWithOp.value() + "%");
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.LIKE)
@@ -151,7 +161,7 @@ public final class SQLPredicate {
             case GREATER_THAN:
             case LESS_OR_EQUAL:
             case GREATER_OR_EQUAL:
-                bindings.add(getOperatorValue(op));
+                addBinding(getOperatorValue(op));
                 return builder.append(field)
                         .append(SqlKeyword.DELIMITER)
                         .append(SqlKeyword.fromQueryOperator(op.type()))

@@ -20,6 +20,7 @@ import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -32,6 +33,7 @@ import java.util.List;
 import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -178,5 +180,54 @@ public final class MutationOutboxTest {
         testObserver.dispose();
 
         assertEquals(0, storage.query(PendingMutation.PersistentRecord.class).size());
+    }
+
+    /**
+     * When there is a pending mutation for a particular model ID
+     * {@link MutationOutbox#hasPendingMutation(String)} must say "yes!".
+     * @throws DataStoreException On failure to arrange data into storage before test action
+     */
+    @Test
+    public void hasPendingMutationReturnsTrueForExistingModel() throws DataStoreException {
+        String expectedId = RandomString.string();
+        BlogOwner joe = BlogOwner.builder()
+            .name("Joe")
+            .id(expectedId)
+            .build();
+        TimeBasedUuid differentId = TimeBasedUuid.create();
+        PendingMutation<BlogOwner> pendingMutation =
+            PendingMutation.instance(differentId, joe, BlogOwner.class, PendingMutation.Type.CREATE);
+        PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
+        storage.save(record);
+
+        assertTrue(mutationOutbox.hasPendingMutation(expectedId).blockingGet());
+        assertFalse(mutationOutbox.hasPendingMutation(differentId.toString()).blockingGet());
+    }
+
+    /**
+     * When the mutation out box is asked if there is a pending mutation, and there is no
+     * corresponding mutation known to the storage layer, then the mutation outbox shall say
+     * "heck no!".
+     *
+     * To throw a wrench in things, make sure the model is in storage -- just that there is
+     * no pending mutation for it.
+     *
+     * @throws DataStoreException On failure to save the model item into storage
+     */
+    @Test
+    public void hasPendingMutationReturnsFalseForItemNotInStore() throws DataStoreException {
+        String joeId = RandomString.string();
+        BlogOwner joe = BlogOwner.builder()
+            .name("Joe Swanson III")
+            .id(joeId)
+            .build();
+        storage.save(joe);
+
+        TimeBasedUuid mutationId = TimeBasedUuid.create();
+        PendingMutation<BlogOwner> pendingMutation =
+            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE);
+
+        assertFalse(mutationOutbox.hasPendingMutation(joeId).blockingGet());
+        assertFalse(mutationOutbox.hasPendingMutation(pendingMutation.getMutationId().toString()).blockingGet());
     }
 }

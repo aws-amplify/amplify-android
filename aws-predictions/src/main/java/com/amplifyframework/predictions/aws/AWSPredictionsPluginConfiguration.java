@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.configuration.IdentifyEntitiesConfiguration;
 import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
+import com.amplifyframework.predictions.aws.configuration.SpeechGeneratorConfiguration;
 import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
 
 import com.amazonaws.regions.Region;
@@ -34,18 +35,21 @@ import org.json.JSONObject;
 public final class AWSPredictionsPluginConfiguration {
     private final Region defaultRegion;
     private final NetworkPolicy defaultNetworkPolicy;
+    private final SpeechGeneratorConfiguration speechGeneratorConfiguration;
     private final TranslateTextConfiguration translateTextConfiguration;
     private final IdentifyEntitiesConfiguration identifyEntitiesConfiguration;
     private final InterpretTextConfiguration interpretTextConfiguration;
 
     private AWSPredictionsPluginConfiguration(
             Region defaultRegion,
+            SpeechGeneratorConfiguration speechGeneratorConfiguration,
             TranslateTextConfiguration translateTextConfiguration,
             IdentifyEntitiesConfiguration identifyEntitiesConfiguration,
             InterpretTextConfiguration interpretTextConfiguration
     ) {
         this.defaultRegion = defaultRegion;
         this.defaultNetworkPolicy = NetworkPolicy.AUTO;
+        this.speechGeneratorConfiguration = speechGeneratorConfiguration;
         this.translateTextConfiguration = translateTextConfiguration;
         this.identifyEntitiesConfiguration = identifyEntitiesConfiguration;
         this.interpretTextConfiguration = interpretTextConfiguration;
@@ -68,9 +72,10 @@ public final class AWSPredictionsPluginConfiguration {
         }
 
         final Region defaultRegion;
+        final SpeechGeneratorConfiguration speechGeneratorConfiguration;
+        final TranslateTextConfiguration translateTextConfiguration;
         final InterpretTextConfiguration interpretConfiguration;
         final IdentifyEntitiesConfiguration identifyEntitiesConfiguration;
-        final TranslateTextConfiguration translateTextConfiguration;
 
         // Required sections
         try {
@@ -80,8 +85,10 @@ public final class AWSPredictionsPluginConfiguration {
 
             if (configurationJson.has(ConfigKey.CONVERT.key())) {
                 JSONObject convertJson = configurationJson.getJSONObject(ConfigKey.CONVERT.key());
+                speechGeneratorConfiguration = SpeechGeneratorConfiguration.fromJson(convertJson);
                 translateTextConfiguration = TranslateTextConfiguration.fromJson(convertJson);
             } else {
+                speechGeneratorConfiguration = null;
                 translateTextConfiguration = null;
             }
 
@@ -109,6 +116,7 @@ public final class AWSPredictionsPluginConfiguration {
 
         return new AWSPredictionsPluginConfiguration(
                 defaultRegion,
+                speechGeneratorConfiguration,
                 translateTextConfiguration,
                 identifyEntitiesConfiguration,
                 interpretConfiguration
@@ -131,6 +139,23 @@ public final class AWSPredictionsPluginConfiguration {
     @NonNull
     public NetworkPolicy getDefaultNetworkPolicy() {
         return defaultNetworkPolicy;
+    }
+
+    /**
+     * Gets the configuration for speech generation.
+     * Null if not configured.
+     * @return the configuration for speech generation
+     * @throws PredictionsException if not configured
+     */
+    @NonNull
+    public SpeechGeneratorConfiguration getSpeechGeneratorConfiguration() throws PredictionsException {
+        if (speechGeneratorConfiguration == null) {
+            throw new PredictionsException(
+                    "Speech generation is not configured.",
+                    "Verify that speechGenerator is configured under " + ConfigKey.CONVERT.key()
+            );
+        }
+        return speechGeneratorConfiguration;
     }
 
     /**

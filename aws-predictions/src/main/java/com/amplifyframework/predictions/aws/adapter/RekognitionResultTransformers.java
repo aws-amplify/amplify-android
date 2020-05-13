@@ -28,7 +28,7 @@ import com.amplifyframework.predictions.models.Landmark;
 import com.amplifyframework.predictions.models.LandmarkType;
 import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Pose;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import com.amazonaws.services.rekognition.model.BoundingBox;
 import com.amazonaws.services.rekognition.model.FaceDetail;
@@ -76,7 +76,7 @@ public final class RekognitionResultTransformers {
      */
     @Nullable
     public static Polygon fromPoints(@Nullable List<Point> polygon) {
-        if (CollectionUtils.isNullOrEmpty(polygon)) {
+        if (Empty.check(polygon)) {
             return null;
         }
         List<PointF> points = new ArrayList<>();
@@ -150,7 +150,7 @@ public final class RekognitionResultTransformers {
             @Nullable List<com.amazonaws.services.rekognition.model.Landmark> landmarks
     ) {
         List<Landmark> amplifyLandmarks = new ArrayList<>();
-        if (CollectionUtils.isNullOrEmpty(landmarks)) {
+        if (Empty.check(landmarks)) {
             return amplifyLandmarks;
         }
 

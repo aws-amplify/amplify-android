@@ -20,7 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.api.GraphQlBehavior;
+import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryConfiguration;
@@ -31,12 +31,11 @@ import com.amplifyframework.testutils.HubAccumulator;
 
 import java.util.Objects;
 
-@SuppressWarnings("SameParameterValue")
 final class DataStoreCategoryConfigurator {
     private Context context;
     @RawRes private Integer resourceId;
     private ModelProvider modelProvider;
-    private GraphQlBehavior api;
+    private ApiCategory api;
     private boolean clearRequested;
 
     private DataStoreCategoryConfigurator() {}
@@ -46,6 +45,7 @@ final class DataStoreCategoryConfigurator {
         return new DataStoreCategoryConfigurator();
     }
 
+    @SuppressWarnings("SameParameterValue")
     @NonNull
     DataStoreCategoryConfigurator clearDatabase(boolean willClear) {
         this.clearRequested = willClear;
@@ -71,7 +71,7 @@ final class DataStoreCategoryConfigurator {
     }
 
     @NonNull
-    DataStoreCategoryConfigurator api(@NonNull GraphQlBehavior api) {
+    DataStoreCategoryConfigurator api(@NonNull ApiCategory api) {
         this.api = Objects.requireNonNull(api);
         return DataStoreCategoryConfigurator.this;
     }
@@ -93,7 +93,7 @@ final class DataStoreCategoryConfigurator {
 
     private DataStoreCategory buildCategory() throws AmplifyException {
         HubAccumulator initializationObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED)
+            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED, 1)
                 .start();
 
         CategoryConfiguration dataStoreConfiguration =
@@ -106,8 +106,7 @@ final class DataStoreCategoryConfigurator {
         dataStoreCategory.configure(dataStoreConfiguration, context);
         dataStoreCategory.initialize(context);
 
-        initializationObserver.takeOne();
-        initializationObserver.stop().clear();
+        initializationObserver.await();
 
         return dataStoreCategory;
     }

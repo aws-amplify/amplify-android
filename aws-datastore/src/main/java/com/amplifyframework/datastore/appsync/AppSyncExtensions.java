@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.appsync;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
+import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.util.Immutable;
 
 import java.util.Map;
@@ -36,6 +37,11 @@ public final class AppSyncExtensions {
     private final String errorInfo;
     private final Map<String, Object> data;
 
+    /**
+     * Constructs an {@link AppSyncExtensions} from extensions data found via
+     * {@link GraphQLResponse.Error#getExtensions()}.
+     * @param extensions As from {@link GraphQLResponse.Error#getExtensions()}
+     */
     @SuppressWarnings("unchecked")
     public AppSyncExtensions(Map<String, Object> extensions) {
         this.errorType = (String) extensions.get(ERROR_TYPE_KEY);
@@ -43,6 +49,14 @@ public final class AppSyncExtensions {
         this.data = (Map<String, Object>) extensions.get(DATA_KEY);
     }
 
+    /**
+     * Constructs {@link AppSyncExtensions} from the a specific set of fields that
+     * is AppSync is known to send in a GraphQL response. Unlike {@link #AppSyncExtensions(Map)},
+     * this constructor makes no assumptions about how the extension data was identified/obtained.
+     * @param errorType The type of error, as described by AppSync
+     * @param errorInfo Info about the error, as described by AppSync
+     * @param data Additional error data, as defined by AppSync
+     */
     public AppSyncExtensions(String errorType, String errorInfo, Map<String, Object> data) {
         this.errorType = errorType;
         this.errorInfo = errorInfo;

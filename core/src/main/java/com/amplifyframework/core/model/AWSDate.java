@@ -44,16 +44,30 @@ public final class AWSDate {
     private final LocalDate localDate;
     private final ZoneOffset zoneOffset;
 
+    /**
+     * Constructs a new {@link AWSDate} from a Java {@link Date}.
+     * @param date A Java Date, relative to UTC
+     */
     public AWSDate(@NonNull Date date) {
         this.zoneOffset = null;
         this.localDate = Instant.ofEpochMilli(date.getTime()).atOffset(ZoneOffset.UTC).toLocalDate();
     }
 
+    /**
+     * Construct sa new {@link AWSDate} from a Java {@link Date} and a zone offset in seconds.
+     * @param date A date
+     * @param offsetInSeconds Count of seconds that offset the date from UTC
+     */
     public AWSDate(@NonNull Date date, int offsetInSeconds) {
         this.zoneOffset = ZoneOffset.ofTotalSeconds(offsetInSeconds);
         this.localDate = Instant.ofEpochMilli(date.getTime()).atOffset(this.zoneOffset).toLocalDate();
     }
 
+    /**
+     * Constructs an {@link AWSDate from a }valid extended ISO-8601 Date string,
+     * with an optional timezone offset.
+     * @param text A valid extended ISO-8601 Date string, with an optional timezone offset
+     */
     public AWSDate(@NonNull String text) {
         LocalDate localDate;
         ZoneOffset zoneOffset;
@@ -70,6 +84,11 @@ public final class AWSDate {
         this.zoneOffset = zoneOffset;
     }
 
+    /**
+     * Formats the current {@link AWSDate} into an extended ISO-8601 Date string,
+     * with an optional timezone offset.
+     * @return An extended ISO-8601 Date string, with an optional timezone offset
+     */
     public String format() {
         if (zoneOffset != null) {
             OffsetDateTime odt = OffsetDateTime.of(localDate, LocalTime.MIDNIGHT, zoneOffset);

@@ -18,6 +18,7 @@ package com.amplifyframework.predictions.aws;
 import androidx.annotation.NonNull;
 
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
+import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
@@ -31,17 +32,20 @@ import java.util.Objects;
  */
 public final class AWSPredictionsEscapeHatch {
     private final AmazonTranslateClient translate;
+    private final AmazonPollyClient polly;
     private final AmazonRekognitionClient rekognition;
     private final AmazonTextractClient textract;
     private final AmazonComprehendClient comprehend;
 
     AWSPredictionsEscapeHatch(
             @NonNull AmazonTranslateClient translate,
+            @NonNull AmazonPollyClient polly,
             @NonNull AmazonRekognitionClient rekognition,
             @NonNull AmazonTextractClient textract,
             @NonNull AmazonComprehendClient comprehend
     ) {
         this.translate = Objects.requireNonNull(translate);
+        this.polly = Objects.requireNonNull(polly);
         this.rekognition = Objects.requireNonNull(rekognition);
         this.textract = Objects.requireNonNull(textract);
         this.comprehend = Objects.requireNonNull(comprehend);
@@ -55,6 +59,16 @@ public final class AWSPredictionsEscapeHatch {
     @NonNull
     public AmazonTranslateClient getTranslateClient() {
         return translate;
+    }
+
+    /**
+     * Return configured Amazon Polly client to access
+     * low-level methods for speech synthesis.
+     * @return the configured Amazon Polly client
+     */
+    @NonNull
+    public AmazonPollyClient getPollyClient() {
+        return polly;
     }
 
     /**

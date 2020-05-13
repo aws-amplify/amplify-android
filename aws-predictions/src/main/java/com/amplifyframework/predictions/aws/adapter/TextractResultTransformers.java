@@ -27,7 +27,7 @@ import com.amplifyframework.predictions.models.IdentifiedText;
 import com.amplifyframework.predictions.models.Polygon;
 import com.amplifyframework.predictions.models.Selection;
 import com.amplifyframework.predictions.models.Table;
-import com.amplifyframework.util.CollectionUtils;
+import com.amplifyframework.util.Empty;
 
 import com.amazonaws.services.textract.model.Block;
 import com.amazonaws.services.textract.model.BlockType;
@@ -80,7 +80,7 @@ public final class TextractResultTransformers {
      */
     @Nullable
     public static Polygon fromPoints(@Nullable List<Point> polygon) {
-        if (CollectionUtils.isNullOrEmpty(polygon)) {
+        if (Empty.check(polygon)) {
             return null;
         }
         List<PointF> points = new ArrayList<>();

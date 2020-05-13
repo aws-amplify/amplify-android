@@ -22,6 +22,11 @@ public final class GraphQLLocation {
     private int line;
     private int column;
 
+    /**
+     * Constructs a new GraphQLLocation.
+     * @param line line number corresponding to position in the request where an error occurred
+     * @param column column number corresponding to position in the request where an error occurred
+     */
     public GraphQLLocation(int line, int column) {
         this.line = line;
         this.column = column;
