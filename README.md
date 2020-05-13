@@ -1,4 +1,7 @@
 <img src="https://s3.amazonaws.com/aws-mobile-hub-images/aws-amplify-logo.png" alt="AWS Amplify" width="400">
+ <a href="https://discord.gg/jWVbPfC" target="_blank">
+   <img src="https://img.shields.io/discord/308323056592486420?logo=discord"" alt="Discord Chat" />  
+ </a>
 
 ## Amplify for Android (Preview)
 
