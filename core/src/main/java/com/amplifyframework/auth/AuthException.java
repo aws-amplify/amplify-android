@@ -22,7 +22,7 @@ import com.amplifyframework.AmplifyException;
 /**
  * Exception thrown by Storage category plugins.
  */
-public final class AuthException extends AmplifyException {
+public class AuthException extends AmplifyException {
 
     private static final long serialVersionUID = 1L;
 
@@ -50,5 +50,145 @@ public final class AuthException extends AmplifyException {
             @NonNull final String recoverySuggestion
     ) {
         super(message, recoverySuggestion);
+    }
+
+    /**
+     * Auth exception caused by the user being signed out.
+     */
+    public static class SignedOutException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "You are currently signed out.";
+        private static final String RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public SignedOutException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SignedOutException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not get valid credentials due to the device being offline.
+     */
+    public static class SessionUnavailableOfflineException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Unable to fetch/refresh credentials because the server is unreachable.";
+        private static final String RECOVERY_SUGGESTION = "Check online connectivity and retry operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public SessionUnavailableOfflineException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SessionUnavailableOfflineException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not get valid credentials due to an error from the underlying service.
+     */
+    public static class SessionUnavailableServiceException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Unable to fetch/refresh credentials because of a service error.";
+        private static final String RECOVERY_SUGGESTION = "Retry with exponential backoff.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public SessionUnavailableServiceException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SessionUnavailableServiceException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the action because the configuration of the signed in account does not support it.
+     */
+    public static class InvalidAccountTypeException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "The account type you have configured doesn't support this operation.";
+        private static final String RECOVERY_SUGGESTION =
+                "Update your Auth configuration to an account type which supports this operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public InvalidAccountTypeException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public InvalidAccountTypeException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Unable to get valid credentials until the user signs in again.
+     */
+    public static class SessionExpiredException extends AuthException {
+        private static final long serialVersionUID = 1L;
+        private static final String MESSAGE = "Your session has expired.";
+        private static final String RECOVERY_SUGGESTION = "Please sign in and reattempt the operation.";
+
+        /**
+         * Default message/recovery suggestion without a cause.
+         */
+        public SessionExpiredException() {
+            super(MESSAGE, RECOVERY_SUGGESTION);
+        }
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public SessionExpiredException(Throwable cause) {
+            super(MESSAGE, cause, RECOVERY_SUGGESTION);
+        }
+    }
+
+    /**
+     * Could not perform the Auth operation for an unknown reason.
+     */
+    public static class UnknownException extends AuthException {
+        private static final long serialVersionUID = 1L;
+
+        /**
+         * Default message/recovery suggestion with a cause.
+         * @param cause The original error.
+         */
+        public UnknownException(Throwable cause) {
+            super(
+                    "An unclassified error prevented this operation.",
+                    cause,
+                    "See the attached exception for more details"
+            );
+        }
     }
 }
