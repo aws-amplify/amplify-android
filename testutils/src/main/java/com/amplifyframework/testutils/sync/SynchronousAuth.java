@@ -223,4 +223,19 @@ public final class SynchronousAuth {
                 asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
         );
     }
+
+    /**
+     * Sign out synchronously.
+     * @return Dummy object - just indicates it completed successfully
+     * @throws AuthException exception
+     */
+    @NonNull
+    public Object signOut() throws AuthException {
+        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.signOut(
+                    () -> onResult.accept(new Object()),
+                    onError
+                )
+        );
+    }
 }
