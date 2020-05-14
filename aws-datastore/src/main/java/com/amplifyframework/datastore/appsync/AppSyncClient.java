@@ -22,6 +22,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.GraphQlBehavior;
+import com.amplifyframework.api.graphql.DelegatingApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -286,10 +287,12 @@ public final class AppSyncClient implements AppSync {
 
         final Cancelable cancelable = api.subscribe(
             request,
-            onSubscriptionStarted,
-            stringResponseConsumer,
-            failureConsumer,
-            onSubscriptionCompleted
+            DelegatingApiSubscriptionListener.create(
+                onSubscriptionStarted,
+                stringResponseConsumer,
+                failureConsumer,
+                onSubscriptionCompleted
+            )
         );
         if (cancelable != null) {
             return cancelable;

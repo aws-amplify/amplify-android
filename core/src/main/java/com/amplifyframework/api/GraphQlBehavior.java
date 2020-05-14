@@ -18,12 +18,12 @@ package com.amplifyframework.api;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.amplifyframework.api.graphql.ApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -415,80 +415,50 @@ public interface GraphQlBehavior {
      *
      * Initiates a GraphQL subscription against a configured GraphQL
      * endpoint. The operation is on-going and emits a stream of
-     * {@link GraphQLResponse}s to the provided `onNextResponse` callback.
+     * {@link GraphQLResponse}s to the provided {@link ApiSubscriptionListener}.
      * The subscription may be canceled by calling {@link GraphQLOperation#cancel()} on the
      * returned object.
      *
      * Requires that only one API is configured in your `amplifyconfiguration.json`.
-     * Otherwise, emits an ApiException to the provided `onSubscriptionFailure` callback.
+     * Otherwise, emits an {@link ApiException} to the provided {@link ApiSubscriptionListener}.
      *
      * @param modelClass The class of the Model we are subscribing to
      * @param subscriptionType
      *        The type of events for which notifications are requested
      *        (e.g. OnCreate, OnUpdate, OnDelete)
-     * @param onSubscriptionEstablished
-     *        Called when a subscription has been established over the network
-     * @param onNextResponse
-     *        Consumes a stream of responses on the subscription. This may be
-     *        called 0..n times per subscription.
-     * @param onSubscriptionFailure
-     *        Called when the subscription stream terminates with a failure.
-     *        Note that items passed via onNextResponse may themselves contain
-     *        errors in the response from the endpoint, but the subscription
-     *        may continue to be active even after these are received.
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param onSubscriptionComplete
-     *        Called when a subscription has ended gracefully (without failure).
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param <T> The type of data expected in the subscription stream. Must extend Model.
+     * @param apiSubscriptionListener Called back when subscriptions starts, produces data,
+     *                             fails or completes
+     * @param <T> Type of application data received over subscription
      * @return A {@link GraphQLOperation} representing this ongoing subscription
      */
     @Nullable
     <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener
     );
 
     /**
      * Initiates a GraphQL subscription against a configured GraphQL
      * endpoint. The operation is on-going and emits a stream of
-     * {@link GraphQLResponse}s to the provided `onNextResponse` callback.
+     * {@link GraphQLResponse}s to the provided {@link ApiSubscriptionListener}.
      * The subscription may be canceled by calling {@link GraphQLOperation#cancel()} on
      * the returned object.
      *
      * Requires that only one API is configured in your
-     * `amplifyconfiguration.json`. Otherwise, emits an ApiException to
-     * the provided `onSubscriptionFailure` callback.
+     * `amplifyconfiguration.json`. Otherwise, emits an {@link ApiException}
+     * to the provided {@link ApiSubscriptionListener}.
      *
      * @param graphQlRequest Wrapper for request details
-     * @param onSubscriptionEstablished
-     *        Called when a subscription has been established over the network
-     * @param onNextResponse
-     *        Consumes a stream of responses on the subscription. This may be
-     *        called 0..n times per subscription.
-     * @param onSubscriptionFailure
-     *        Called when the subscription stream terminates with a failure.
-     *        Note that items passed via onNextResponse may themselves contain
-     *        errors in the response from the endpoint, but the subscription
-     *        may continue to be active even after these are received.
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param onSubscriptionComplete
-     *        Called when a subscription has ended gracefully (without failure).
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param <T> The type of data expected in the subscription stream
+     * @param apiSubscriptionListener Called back when subscriptions starts, produces data,
+     *                             fails or completes
+     * @param <T> Type of application data received over subscription
      * @return An {@link GraphQLOperation} representing this ongoing subscription
      */
     @Nullable
     <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener
     );
 
     /**
@@ -497,7 +467,7 @@ public interface GraphQlBehavior {
      *
      * Initiates a GraphQL subscription against a configured GraphQL
      * endpoint. The operation is on-going and emits a stream of
-     * {@link GraphQLResponse}s to the provided `onNextResponse` callback.
+     * {@link GraphQLResponse}s to the provided {@link ApiSubscriptionListener}.
      * The subscription may be canceled by calling {@link GraphQLOperation#cancel()}
      * on the returned object.
      *
@@ -506,21 +476,9 @@ public interface GraphQlBehavior {
      * @param subscriptionType
      *        The type of events for which notifications are requested
      *        (e.g. OnCreate, OnUpdate, OnDelete)
-     * @param onSubscriptionEstablished
-     *        Called when a subscription has been established over the network
-     * @param onNextResponse
-     *        Consumes a stream of responses on the subscription. This may be
-     *        called 0..n times per subscription.
-     * @param onSubscriptionFailure
-     *        Called when the subscription stream terminates with a failure.
-     *        Note that items passed via onNextResponse may themselves contain
-     *        errors in the response from the endpoint, but the subscription
-     *        may continue to be active even after these are received.
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param onSubscriptionComplete
-     *        Called when a subscription has ended gracefully (without failure).
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param <T> The type of data expected in the subscription stream. Must extend Model.
+     * @param apiSubscriptionListener Called back when subscriptions starts, produces data,
+     *                             fails or completes
+     * @param <T> Type of application data received over subscription
      * @return An {@link GraphQLOperation} representing this ongoing subscription
      */
     @Nullable
@@ -528,45 +486,26 @@ public interface GraphQlBehavior {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener
     );
 
     /**
      * Initiates a GraphQL subscription against a configured GraphQL
      * endpoint. The operation is on-going and emits a stream of
-     * {@link GraphQLResponse}s to the provided `onNextResponse` callback.
+     * {@link GraphQLResponse}s to the provided {@link ApiSubscriptionListener}.
      * The subscription may be canceled by calling {@link GraphQLOperation#cancel()}
      * on the returned object.
      *
      * @param apiName The name of a configured API
      * @param graphQlRequest Wrapper for request details
-     * @param onSubscriptionEstablished
-     *        Called when a subscription has been established over the network
-     * @param onNextResponse
-     *        Consumes a stream of responses on the subscription. This may be
-     *        called 0..n times per subscription.
-     * @param onSubscriptionFailure
-     *        Called when the subscription stream terminates with a failure.
-     *        Note that items passed via onNextResponse may themselves contain
-     *        errors in the response from the endpoint, but the subscription
-     *        may continue to be active even after these are received.
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param onSubscriptionComplete
-     *        Called when a subscription has ended gracefully (without failure).
-     *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param <T> The type of data expected in the subscription stream
-     * @return An {@link GraphQLOperation} representing this ongoing subscription
+     * @param apiSubscriptionListener Called back when subscriptions starts, produces data,
+     *                             fails or completes
+     * @param <T> Type of application data received over subscription
+     * @return A {@link GraphQLOperation} that represents the ongoing subscription
      */
-    @Nullable
     <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener
     );
 }

@@ -21,6 +21,7 @@ import androidx.annotation.VisibleForTesting;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.DelegatingApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -156,14 +157,20 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     public <T extends Model> Observable<GraphQLResponse<T>> subscribe(
             @NonNull Class<T> modelClass, @NonNull SubscriptionType subscriptionType) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(modelClass, subscriptionType, onStart, onResult, onError, onComplete));
+            api.subscribe(modelClass, subscriptionType,
+                DelegatingApiSubscriptionListener.create(onStart, onResult, onError, onComplete)
+            )
+        );
     }
 
     @NonNull
     @Override
     public <T> Observable<GraphQLResponse<T>> subscribe(@NonNull GraphQLRequest<T> graphQlRequest) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(graphQlRequest, onStart, onResult, onError, onComplete));
+            api.subscribe(graphQlRequest,
+                DelegatingApiSubscriptionListener.create(onStart, onResult, onError, onComplete)
+            )
+        );
     }
 
     @NonNull
@@ -171,7 +178,10 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     public <T extends Model> Observable<GraphQLResponse<T>> subscribe(
             @NonNull String apiName, @NonNull Class<T> modelClass, @NonNull SubscriptionType subscriptionType) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(apiName, modelClass, subscriptionType, onStart, onResult, onError, onComplete));
+            api.subscribe(apiName, modelClass, subscriptionType,
+                DelegatingApiSubscriptionListener.create(onStart, onResult, onError, onComplete)
+            )
+        );
     }
 
     @NonNull
@@ -179,7 +189,10 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     public <T> Observable<GraphQLResponse<T>> subscribe(
             @NonNull String apiName, @NonNull GraphQLRequest<T> graphQlRequest) {
         return toObservable((onStart, onResult, onError, onComplete) ->
-            api.subscribe(apiName, graphQlRequest, onStart, onResult, onError, onComplete));
+            api.subscribe(apiName, graphQlRequest,
+                DelegatingApiSubscriptionListener.create(onStart, onResult, onError, onComplete)
+            )
+        );
     }
 
     @NonNull

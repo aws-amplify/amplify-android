@@ -19,9 +19,9 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.graphql.ApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.Consumer;
@@ -153,10 +153,7 @@ public final class AWSDataStorePluginTest {
             return null;
         }).when(mockApiPlugin).subscribe(
             any(GraphQLRequest.class),
-            any(Consumer.class),
-            any(Consumer.class),
-            any(Consumer.class),
-            any(Action.class)
+            any(ApiSubscriptionListener.class)
         );
 
         return mockApiPlugin;

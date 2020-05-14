@@ -20,6 +20,7 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.DelegatingApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -282,10 +283,12 @@ public final class SynchronousApi {
                         apiName,
                         clazz,
                         SubscriptionType.ON_CREATE,
-                        onSubscriptionStarted,
-                        emitter::onNext,
-                        onError,
-                        emitter::onComplete
+                        DelegatingApiSubscriptionListener.create(
+                            onSubscriptionStarted,
+                            emitter::onNext,
+                            onError,
+                            emitter::onComplete
+                        )
                     );
                     if (cancelable != null) {
                         disposable.add(Disposables.fromAction(cancelable::cancel));
@@ -312,10 +315,12 @@ public final class SynchronousApi {
                     Cancelable cancelable = asyncDelegate.subscribe(
                         apiName,
                         request,
-                        onSubscriptionStarted,
-                        emitter::onNext,
-                        onError,
-                        emitter::onComplete
+                        DelegatingApiSubscriptionListener.create(
+                            onSubscriptionStarted,
+                            emitter::onNext,
+                            onError,
+                            emitter::onComplete
+                        )
                     );
                     if (cancelable != null) {
                         disposable.add(Disposables.fromAction(cancelable::cancel));

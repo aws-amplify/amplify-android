@@ -25,6 +25,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.aws.operation.AWSRestOperation;
+import com.amplifyframework.api.graphql.ApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -35,7 +36,6 @@ import com.amplifyframework.api.rest.RestOperation;
 import com.amplifyframework.api.rest.RestOperationRequest;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
@@ -388,51 +388,30 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T extends Model> GraphQLOperation<T> subscribe(
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete) {
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            onSubscriptionFailure.accept(exception);
+            apiSubscriptionListener.onSubscriptionFailure(exception);
             return null;
         }
-        return subscribe(
-            apiName,
-            modelClass,
-            subscriptionType,
-            onSubscriptionEstablished,
-            onNextResponse,
-            onSubscriptionFailure,
-            onSubscriptionComplete
-        );
+        return subscribe(apiName, modelClass, subscriptionType, apiSubscriptionListener);
     }
 
     @Nullable
     @Override
     public <T> GraphQLOperation<T> subscribe(
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete) {
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener) {
         final String apiName;
         try {
             apiName = getSelectedApiName(EndpointType.GRAPHQL);
         } catch (ApiException exception) {
-            onSubscriptionFailure.accept(exception);
+            apiSubscriptionListener.onSubscriptionFailure(exception);
             return null;
         }
-        return subscribe(
-            apiName,
-            graphQLRequest,
-            onSubscriptionEstablished,
-            onNextResponse,
-            onSubscriptionFailure,
-            onSubscriptionComplete
-        );
+        return subscribe(apiName, graphQLRequest, apiSubscriptionListener);
     }
 
     @Nullable
@@ -441,10 +420,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull SubscriptionType subscriptionType,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete) {
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener) {
         final GraphQLRequest<T> request;
         try {
             request = AppSyncGraphQLRequestFactory.buildSubscription(
@@ -453,17 +429,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 authProvider.getCognitoUserPoolsAuthProvider()
             );
         } catch (ApiException errorBuildingRequest) {
-            onSubscriptionFailure.accept(errorBuildingRequest);
+            apiSubscriptionListener.onSubscriptionFailure(errorBuildingRequest);
             return null;
         }
-        return subscribe(
-            apiName,
-            request,
-            onSubscriptionEstablished,
-            onNextResponse,
-            onSubscriptionFailure,
-            onSubscriptionComplete
-        );
+        return subscribe(apiName, request, apiSubscriptionListener);
     }
 
     @Nullable
@@ -471,13 +440,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
     public <T> GraphQLOperation<T> subscribe(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
-            @NonNull Consumer<ApiException> onSubscriptionFailure,
-            @NonNull Action onSubscriptionComplete) {
+            @NonNull ApiSubscriptionListener<T> apiSubscriptionListener) {
         final ClientDetails clientDetails = apiDetails.get(apiName);
         if (clientDetails == null) {
-            onSubscriptionFailure.accept(
+            apiSubscriptionListener.onSubscriptionFailure(
                     new ApiException(
                             "No client information for API named " + apiName,
                             "Check your amplify configuration to make sure there " +
@@ -494,10 +460,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 .graphQLRequest(graphQLRequest)
                 .responseFactory(gqlResponseFactory)
                 .executorService(executorService)
-                .onSubscriptionStarted(onSubscriptionEstablished)
-                .onNextItem(onNextResponse)
-                .onSubscriptionError(onSubscriptionFailure)
-                .onSubscriptionComplete(onSubscriptionComplete)
+                .onSubscriptionStarted(apiSubscriptionListener::onSubscriptionStarted)
+                .onNextItem(apiSubscriptionListener::onSubscriptionData)
+                .onSubscriptionError(apiSubscriptionListener::onSubscriptionFailure)
+                .onSubscriptionComplete(apiSubscriptionListener::onSubscriptionComplete)
                 .build();
         operation.start();
         return operation;

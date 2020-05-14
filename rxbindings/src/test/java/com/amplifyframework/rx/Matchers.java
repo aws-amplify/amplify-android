@@ -17,6 +17,7 @@ package com.amplifyframework.rx;
 
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.api.graphql.ApiSubscriptionListener;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
@@ -52,6 +53,16 @@ final class Matchers {
      */
     @NonNull
     static <T> Consumer<T> anyConsumer() {
+        return ArgumentMatchers.any();
+    }
+
+    /**
+     * Match any {@link ApiSubscriptionListener}.
+     * @param <T> Type of data that the subscription receives
+     * @return A matched subscription listener
+     */
+    @NonNull
+    static <T> ApiSubscriptionListener<T> anySubscriptionListener() {
         return ArgumentMatchers.any();
     }
 

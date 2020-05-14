@@ -22,12 +22,12 @@ import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryConfiguration;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
+import com.amplifyframework.api.graphql.ApiSubscriptionListener;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
-import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testutils.random.RandomModel;
@@ -40,8 +40,8 @@ import java.util.Collections;
 
 import io.reactivex.observers.TestObserver;
 
-import static com.amplifyframework.rx.Matchers.anyAction;
 import static com.amplifyframework.rx.Matchers.anyConsumer;
+import static com.amplifyframework.rx.Matchers.anySubscriptionListener;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.mock;
@@ -195,23 +195,17 @@ public final class RxApiBindingTest {
         Model model = RandomModel.model();
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
         doAnswer(invocation -> {
-            final int onStartPosition = 2;
-            final int onNextPosition = 3;
-            final int onCompletePosition = 5;
-            Consumer<String> onStart = invocation.getArgument(onStartPosition);
-            Consumer<GraphQLResponse<Model>> onNext = invocation.getArgument(onNextPosition);
-            Action onComplete = invocation.getArgument(onCompletePosition);
-            onStart.accept(token);
-            onNext.accept(response);
-            onComplete.call();
+            final int subscriptionListenerPosition = 2;
+            ApiSubscriptionListener<Model> subscriptionListener =
+                invocation.getArgument(subscriptionListenerPosition);
+            subscriptionListener.onSubscriptionStarted(token);
+            subscriptionListener.onSubscriptionData(response);
+            subscriptionListener.onSubscriptionComplete();
             return null;
         }).when(delegate).subscribe(
             eq(Model.class),
             eq(SubscriptionType.ON_CREATE),
-            anyConsumer(),
-            anyConsumer(),
-            anyConsumer(),
-            anyAction()
+            anySubscriptionListener()
         );
 
         // Act: subscribe via binding
@@ -233,20 +227,16 @@ public final class RxApiBindingTest {
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         String token = RandomString.string();
         doAnswer(invocation -> {
-            final int onStartPosition = 2;
-            final int onFailurePosition = 4;
-            Consumer<String> onStart = invocation.getArgument(onStartPosition);
-            Consumer<ApiException> onFailure = invocation.getArgument(onFailurePosition);
-            onStart.accept(token);
-            onFailure.accept(expectedFailure);
+            final int subscriptionListenerPosition = 2;
+            ApiSubscriptionListener<? extends Model> subscriptionListener =
+                invocation.getArgument(subscriptionListenerPosition);
+            subscriptionListener.onSubscriptionStarted(token);
+            subscriptionListener.onSubscriptionFailure(expectedFailure);
             return null;
         }).when(delegate).subscribe(
             eq(Model.class),
             eq(SubscriptionType.ON_CREATE),
-            anyConsumer(),
-            anyConsumer(),
-            anyConsumer(),
-            anyAction()
+            anySubscriptionListener()
         );
 
         // Act: subscribe via binding
