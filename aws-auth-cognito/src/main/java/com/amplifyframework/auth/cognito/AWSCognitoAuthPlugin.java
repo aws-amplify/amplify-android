@@ -166,7 +166,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                                 break;
                             case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
                             case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
-                                userId = null;
+                                fetchAndSetUserId(() -> { /* No response needed */ });
                                 if (lastEvent != AuthChannelEventName.SESSION_EXPIRED) {
                                     lastEvent = AuthChannelEventName.SESSION_EXPIRED;
                                     Amplify.Hub.publish(
