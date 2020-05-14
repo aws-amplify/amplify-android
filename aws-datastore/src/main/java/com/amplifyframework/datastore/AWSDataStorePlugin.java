@@ -43,25 +43,19 @@ import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
 import com.amplifyframework.hub.HubChannel;
-import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
-import java.io.IOException;
-import java.net.SocketException;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 
 import io.reactivex.Completable;
-import io.reactivex.exceptions.UndeliverableException;
-import io.reactivex.plugins.RxJavaPlugins;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -89,34 +83,6 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull ApiCategory api,
             @Nullable DataStoreConfiguration userProvidedConfiguration) {
-        // See https://github.com/ReactiveX/RxJava/wiki/What's-different-in-2.0#error-handling
-        // Without this, the host app crashes on an unhandled exception.
-        RxJavaPlugins.setErrorHandler(e -> {
-            if (e instanceof UndeliverableException) {
-                e = e.getCause();
-            }
-            if ((e instanceof IOException) || (e instanceof SocketException)) {
-                // fine, irrelevant network problem or API that throws on cancellation
-                return;
-            }
-            if (e instanceof InterruptedException) {
-                // fine, some blocking code was interrupted by a dispose call
-                return;
-            }
-            if ((e instanceof NullPointerException) || (e instanceof IllegalArgumentException)) {
-                // that's likely a bug in the application
-                Thread.currentThread().getUncaughtExceptionHandler()
-                    .uncaughtException(Thread.currentThread(), e);
-                return;
-            }
-            if (e instanceof IllegalStateException) {
-                // that's a bug in RxJava or in a custom operator
-                Thread.currentThread().getUncaughtExceptionHandler()
-                    .uncaughtException(Thread.currentThread(), e);
-                return;
-            }
-            LOG.warn("Amplify received an unhandled exception.", e);
-        });
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.api = api;

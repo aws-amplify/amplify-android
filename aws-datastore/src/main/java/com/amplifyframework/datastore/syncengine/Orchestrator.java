@@ -18,18 +18,15 @@ package com.amplifyframework.datastore.syncengine;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import io.reactivex.Completable;
 
@@ -38,7 +35,6 @@ import io.reactivex.Completable;
  * and {@link AppSync}.
  */
 public final class Orchestrator {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
     private final MutationProcessor mutationProcessor;
@@ -101,29 +97,13 @@ public final class Orchestrator {
      */
     @NonNull
     public Completable start() {
-        AtomicBoolean errorOccurred = new AtomicBoolean(false);
         return Completable.fromAction(() -> {
-            LOG.debug("Start observing changes made to local store.");
             storageObserver.startObservingStorageChanges();
-            LOG.debug("Establishing subscriptions with remote data store.");
             subscriptionProcessor.startSubscriptions();
-            LOG.debug("Start initial sync from remote data store.");
-            syncProcessor
-                .hydrate()
-                .doOnError(error -> {
-                    LOG.warn("Unable to perform initial synchronization.", error);
-                    errorOccurred.set(true);
-                }).doOnComplete(() -> {
-                    if (!errorOccurred.get()) {
-                        LOG.debug("Starting MutationProcessor and SubscriptionProcessor.");
-                        mutationProcessor.startDrainingMutationOutbox();
-                        subscriptionProcessor.startDrainingMutationBuffer();
-                    }
-                })
-                // This will prevent the host app from crashing if no API is configured.
-                .onErrorComplete()
-                .blockingAwait();
-        });
+            syncProcessor.hydrate().blockingAwait();
+            mutationProcessor.startDrainingMutationOutbox();
+            subscriptionProcessor.startDrainingMutationBuffer();
+        }).onErrorComplete();
     }
 
     /**
