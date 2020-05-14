@@ -376,15 +376,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
                             break;
                         case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
                         case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
-                            onSuccess.accept(
-                                    new AWSCognitoAuthSession(
-                                            true,
-                                            AuthSessionResult.failure(new AuthException.SessionExpiredException()),
-                                            AuthSessionResult.failure(new AuthException.SessionExpiredException()),
-                                            AuthSessionResult.failure(new AuthException.SessionExpiredException()),
-                                            AuthSessionResult.failure(new AuthException.SessionExpiredException())
-                                    )
-                            );
+                            onSuccess.accept(expiredSession());
                             break;
                         default:
                             MobileClientSessionAdapter.fetchSignedInSession(awsMobileClient, onSuccess);
@@ -519,6 +511,16 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public AWSMobileClient getEscapeHatch() {
         return awsMobileClient;
+    }
+
+    private AuthSession expiredSession() {
+        return new AWSCognitoAuthSession(
+                true,
+                AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                AuthSessionResult.failure(new AuthException.SessionExpiredException())
+        );
     }
 
     private void fetchAndSetUserId(Action onComplete) {
