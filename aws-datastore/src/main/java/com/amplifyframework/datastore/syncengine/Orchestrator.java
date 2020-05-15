@@ -71,7 +71,6 @@ public final class Orchestrator {
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
-        RemoteModelMutations remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
@@ -86,7 +85,7 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .build();
-        this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
+        this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
     }
 
