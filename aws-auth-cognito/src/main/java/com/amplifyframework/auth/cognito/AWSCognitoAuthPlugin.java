@@ -34,6 +34,7 @@ import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
@@ -328,14 +329,28 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
-    public void signInWithUI(
+    public void signInWithWebUI(
             @NonNull Activity callingActivity,
-            @NonNull final Consumer<String> onSuccess,
+            @NonNull final Consumer<AuthSignInResult> onSuccess,
             @NonNull final Consumer<AmplifyException> onException
     ) {
+        signInWithWebUI(callingActivity, AuthWebUISignInOptions.builder().build(), onSuccess, onException);
+    }
+
+    @Override
+    public void signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AmplifyException> onException
+    ) {
         HostedUIOptions hostedUIOptions = HostedUIOptions.builder()
-                .scopes("openid", "email")
+                .scopes(options.getScopes().toArray(new String[options.getScopes().size()]))
+                .signInQueryParameters(options.getSignInQueryParameters())
+                .signOutQueryParameters(options.getSignOutQueryParameters())
+                .tokenQueryParameters(options.getTokenQueryParameters())
                 .build();
+
         SignInUIOptions signInUIOptions = SignInUIOptions.builder()
                 .hostedUIOptions(hostedUIOptions)
                 .build();
@@ -343,20 +358,20 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         awsMobileClient.showSignIn(callingActivity, signInUIOptions, new Callback<UserStateDetails>() {
             @Override
             public void onResult(UserStateDetails details) {
-                fetchAndSetUserId(() -> onSuccess.accept(details.getUserState().toString()));
+                fetchAndSetUserId(() -> onSuccess.accept(null));
             }
 
             @Override
             public void onError(Exception error) {
                 onException.accept(
-                    new AmplifyException("Sign in with UI failed", error, "See attached exception for more details")
+                        new AmplifyException("Sign in with UI failed", error, "See attached exception for more details")
                 );
             }
         });
     }
 
     @Override
-    public void handleSignInWithUIResponse(@NonNull Intent intent) {
+    public void handleWebUISignInResponse(@NonNull Intent intent) {
         awsMobileClient.handleAuthResponse(intent);
     }
 

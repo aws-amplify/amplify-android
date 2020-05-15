@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
@@ -118,22 +119,36 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
-     * Launch a pre-built sign in UI flow. You should also put the {@link #handleSignInWithUIResponse(Intent)} method in
+     * Launch a pre-built sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)} method in
      * your activity's onResume method to capture the response which comes back from the UI flow.
      * @param callingActivity The activity in your app you are calling this from
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void signInWithUI(
+    void signInWithWebUI(
             @NonNull Activity callingActivity,
-            @NonNull Consumer<String> onSuccess,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
             @NonNull Consumer<AmplifyException> onError);
 
     /**
-     * Handles the response which comes back from {@link #signInWithUI(Activity, Consumer, Consumer)}.
+     * Launch a hosted web sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)}
+     * method in your activity's onResume method to capture the response which comes back from the UI flow.
+     * @param callingActivity The activity in your app you are calling this from
+     * @param options Advanced options for signing in with a hosted web ui.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AmplifyException> onError);
+
+    /**
+     * Handles the response which comes back from {@link #signInWithWebUI(Activity, Consumer, Consumer)}.
      * @param intent The app activity's intent
      */
-    void handleSignInWithUIResponse(Intent intent);
+    void handleWebUISignInResponse(Intent intent);
 
     /**
      * Retrieve the user's current session information - by default just whether they are signed out or in.
