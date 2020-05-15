@@ -19,6 +19,7 @@ import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
@@ -44,6 +45,7 @@ import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import io.reactivex.Completable;
@@ -53,6 +55,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -65,8 +68,8 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
+    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private Context context;
-    private AWSDataStorePlugin awsDataStorePlugin;
     private ModelProvider modelProvider;
     private AtomicInteger subscriptionStartedCounter;
     private AtomicInteger subscriptionCancelledCounter;
@@ -94,18 +97,12 @@ public final class AWSDataStorePluginTest {
      * @throws JSONException On JSON parsing/processing of the config file.
      */
     @Test
-    public void configureAndInitializeInLocalMode() throws AmplifyException, JSONException {
-        // Configure DataStore with an empty config (All defaults)
-        ApiCategory mockApiCategory = mockApiCategoryWithoutPlugins();
-        awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
-        awsDataStorePlugin.configure(new JSONObject(), context);
-        awsDataStorePlugin.initialize(context);
-
-        // Verify that the only call to the API category was to get a list of plugins
-        verify(mockApiCategory, times(1)).getPlugins();
-        verifyNoMoreInteractions(mockApiCategory);
-
-        // Verify no synchronization processes started.
+    public void configureAndInitializeInLocalMode() throws AmplifyException {
+        //Configure DataStore with an empty config (All defaults)
+        ApiCategory emptyApiCategory = spy(ApiCategory.class);
+        AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
+        standAloneDataStorePlugin.configure(new JSONObject(), context);
+        standAloneDataStorePlugin.initialize(context);
         assertSyncProcessorNotStarted();
     }
 
@@ -120,10 +117,55 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        this.awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
         assertRemoteSubscriptionsStarted();
+    }
+
+    /**
+     * Simulate a situation where the user has added the API plugin, but it's
+     * either not pushed or exceptions occur while trying to start up the sync processes.
+     * The outcome is that the local store should still be available and the
+     * host app should not crash.
+     * @throws JSONException If an exception occurs while building the JSON configuration.
+     * @throws AmplifyException If an exception occurs setting up the mock API
+     */
+    @Test
+    public void configureAndInitializeInApiModeWithoutApi() throws JSONException, AmplifyException {
+        ApiCategory mockApiCategory = mockApiPluginWithExceptions();
+        JSONObject dataStorePluginJson = new JSONObject()
+            .put("syncIntervalInMinutes", 60);
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        awsDataStorePlugin.configure(dataStorePluginJson, context);
+        awsDataStorePlugin.initialize(context);
+
+        // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
+        Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
+
+        Person person1 = createPerson("Test", "Dummy I");
+        Throwable exception = Completable.fromSingle(single -> { // Save a record to local store
+            awsDataStorePlugin.save(person1, itemSaved -> {
+                assertNotNull(itemSaved.item().getId());
+                assertEquals(person1.getLastName(), itemSaved.item().getLastName());
+                single.onSuccess(true);
+            }, single::onError);
+        }).andThen(
+            Completable.fromSingle(single -> { // Verify the record has been saved
+                awsDataStorePlugin.query(Person.class, results -> {
+                    Person actualPerson = results.next();
+                    assertNotNull(actualPerson);
+                    assertFalse(results.hasNext()); // We should only have one result.
+                    assertEquals(person1, actualPerson);
+                    single.onSuccess(true);
+                }, single::onError);
+            })
+        ).doOnError(error -> {
+            fail(error.getMessage());
+        }).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (exception != null) {
+            throw new AmplifyException("Unexpected exception.", exception, "Look at the stacktrace.");
+        }
     }
 
     /**
@@ -199,6 +241,16 @@ public final class AWSDataStorePluginTest {
         verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
+    private void assertSyncProcessorStarted() {
+        boolean syncProcessorInvoked = mockingDetails(modelProvider)
+            .getInvocations()
+            .stream()
+            .anyMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
+
+        // Verify that the API mutate method was called once for each model saved.
+        verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
+    }
+
     private void assertRemoteSubscriptionsCancelled() {
         // Check that we've had active subscriptions
         assertTrue(subscriptionStartedCounter.get() > 0);
@@ -232,12 +284,10 @@ public final class AWSDataStorePluginTest {
     }
 
     @SuppressWarnings("unchecked")
-    private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
+    private static ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
-
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
         when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
-        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         // Make believe that queries return response immediately
         doAnswer(invocation -> {
@@ -272,6 +322,49 @@ public final class AWSDataStorePluginTest {
 
             this.subscriptionStartedCounter.incrementAndGet();
             return mockOperation;
+        }).when(mockApiPlugin).subscribe(
+            any(GraphQLRequest.class),
+            any(Consumer.class),
+            any(Consumer.class),
+            any(Consumer.class),
+            any(Action.class)
+        );
+        mockApiCategory.addPlugin(mockApiPlugin);
+        return mockApiCategory;
+    }
+
+    /**
+     * Almost the same as mockApiCategoryWithGraphQlApi, but it calls the onError callback instead.
+     * @return A mock version of the API Category.
+     * @throws AmplifyException Throw if an error happens when adding the plugin.
+     */
+    @SuppressWarnings("unchecked")
+    private static ApiCategory mockApiPluginWithExceptions() throws AmplifyException {
+        ApiCategory mockApiCategory = spy(ApiCategory.class);
+        ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
+        when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+
+        doAnswer(invocation -> {
+            int indexOfErrorConsumer = 2;
+            Consumer<ApiException> onError = invocation.getArgument(indexOfErrorConsumer);
+            onError.accept(new ApiException("Fake exception thrown from the API.query method", "Just retry"));
+            return null;
+        }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
+
+        doAnswer(invocation -> {
+            int indexOfErrorConsumer = 2;
+            Consumer<ApiException> onError = invocation.getArgument(indexOfErrorConsumer);
+            onError.accept(new ApiException("Fake exception thrown from the API.mutate method", "Just retry"));
+            return null;
+        }).when(mockApiPlugin).mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
+
+        doAnswer(invocation -> {
+            int indexOfErrorConsumer = 3;
+            Consumer<ApiException> onError = invocation.getArgument(indexOfErrorConsumer);
+            ApiException apiException =
+                new ApiException("Fake exception thrown from the API.subscribe method", "Just retry");
+            onError.accept(apiException);
+            return null;
         }).when(mockApiPlugin).subscribe(
             any(GraphQLRequest.class),
             any(Consumer.class),
