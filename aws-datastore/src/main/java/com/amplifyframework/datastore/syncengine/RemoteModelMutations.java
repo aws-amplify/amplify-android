@@ -34,12 +34,16 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import io.reactivex.Emitter;
 import io.reactivex.Observable;
+import io.reactivex.ObservableEmitter;
 
 /**
  * An implementation detail of the {@link SubscriptionProcessor}.
@@ -73,31 +77,52 @@ final class RemoteModelMutations {
         this.subscriptions = new HashSet<>();
     }
 
+    private List<Observable<SubscriptionEvent<? extends Model>>> createObservables() {
+        List<Observable<SubscriptionEvent<? extends Model>>> observables =
+            Collections.synchronizedList(new ArrayList<>());
+        // For every model and subscription type (create, update, delete)
+        for (Class<? extends Model> modelClass : modelProvider.models()) {
+            for (SubscriptionType subscriptionType : SubscriptionType.values()) {
+                // Create an individual observable for each model/subscriptionType combination
+                // These observables will be merged before we return the results
+                Observable<SubscriptionEvent<? extends Model>> subscriptionEventObservable =
+                    Observable.create((ObservableEmitter<SubscriptionEvent<? extends Model>> localEmitter) -> {
+                        subscriptions.add(Subscription.request()
+                            .appSync(appSync)
+                            .modelClass(modelClass)
+                            .subscriptionType(subscriptionType)
+                            .commonEmitter(localEmitter)
+                            .begin());
+                    });
+                observables.add(subscriptionEventObservable);
+            }
+        }
+        return observables;
+    }
+
     @WorkerThread
     Observable<SubscriptionEvent<? extends Model>> observe() {
-        return Observable.defer(() -> Observable.create(emitter -> {
-            emitter.setCancellable(() -> {
+        // Return a merged observer back to the caller. If any of the member observables fails,
+        // we're logging the error as a warning and forcing the master observable to complete.
+        // TODO: implement retry strategy with backoff (See RxJava retryWhen as a potential solution for that)
+        return Observable.defer(() -> Observable
+            .merge(createObservables())
+            .doOnError(exception -> {
+                LOG.warn("An error occurred with one of the subscriptions to the remote data store.", exception.getCause());
+            })
+            .onErrorResumeNext(next -> {
+                next.onComplete();
+            })
+            .doOnComplete(() -> {
+                LOG.info("Terminating all subscriptions.");
                 synchronized (subscriptions) {
                     for (final Subscription subscription : subscriptions) {
                         subscription.end();
                     }
                     subscriptions.clear();
                 }
-            });
+            }));
 
-            synchronized (subscriptions) {
-                for (Class<? extends Model> modelClass : modelProvider.models()) {
-                    for (SubscriptionType subscriptionType : SubscriptionType.values()) {
-                        subscriptions.add(Subscription.request()
-                            .appSync(appSync)
-                            .modelClass(modelClass)
-                            .subscriptionType(subscriptionType)
-                            .commonEmitter(emitter)
-                            .begin());
-                    }
-                }
-            }
-        }));
     }
 
     static final class Subscription {
