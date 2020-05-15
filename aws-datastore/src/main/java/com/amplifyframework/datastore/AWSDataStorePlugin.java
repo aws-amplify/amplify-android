@@ -37,6 +37,7 @@ import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
+import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
@@ -248,15 +249,42 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             item,
             StorageItemChange.Initiator.DATA_STORE_API,
             predicate,
-            itemSave -> {
-                try {
-                    onItemSaved.accept(toDataStoreItemChange(itemSave));
-                } catch (DataStoreException dataStoreException) {
-                    onFailureToSave.accept(dataStoreException);
-                }
-            },
+            itemSave -> ensureModelMetadata(itemSave, onItemSaved, onFailureToSave),
             onFailureToSave
         ));
+    }
+
+    /*
+     * If cloud sync is enabled, this newly created item will be synced to the cloud.
+     *
+     * We'll get back a response from the create mutation, and one on the creations subscription.
+     * There will be a race to save model metadata. One will create, one will update.
+     * So that both can work as updates, we'll create the metadata record, up-front.
+     * It is tempting to consider deleting the metadata, here too. But, we need the
+     * record for when AppSync comes back to tell us the model is _deleted.
+     */
+    private <T extends Model> void ensureModelMetadata(
+            StorageItemChange<T> storageItemChange,
+            Consumer<DataStoreItemChange<T>> onItemSaved,
+            Consumer<DataStoreException> onFailureToSave) {
+        try {
+            DataStoreItemChange<T> dataStoreChange = toDataStoreItemChange(storageItemChange);
+            if (!DataStoreItemChange.Type.CREATE.equals(dataStoreChange.type())) {
+                onItemSaved.accept(dataStoreChange);
+                return;
+            }
+            // The initiator must NOT be StorageItemChange.Initiator.DATA_STORE_API, which would cause this
+            // record to get queued for publication
+            StorageItemChange.Initiator initiator = StorageItemChange.Initiator.SYNC_ENGINE;
+            String modelId = storageItemChange.item().getId();
+            ModelMetadata metadata = new ModelMetadata(modelId, null, null, null);
+            sqliteStorageAdapter.save(metadata, initiator,
+                metadataSave -> onItemSaved.accept(dataStoreChange),
+                onFailureToSave
+            );
+        } catch (DataStoreException dataStoreException) {
+            onFailureToSave.accept(dataStoreException);
+        }
     }
 
     /**
