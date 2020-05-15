@@ -19,6 +19,7 @@ import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.model.Model;
@@ -29,6 +30,7 @@ import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Time;
 
 import java.util.HashSet;
@@ -52,6 +54,7 @@ import io.reactivex.schedulers.Schedulers;
  * the {@link Merger}.
  */
 final class SyncProcessor {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final ModelProvider modelProvider;
     private final ModelSchemaRegistry modelSchemaRegistry;
     private final SyncTimeRegistry syncTimeRegistry;
@@ -111,6 +114,10 @@ final class SyncProcessor {
                         // For each ModelWithMetadata, merge it into the local store.
                         .flatMapCompletable(merger::merge)
                     )
+                    .doOnError(exception -> {
+                        LOG.warn("Remote synchronization failed to start due to an exception.", exception);
+                    })
+                    .onErrorComplete()
                     .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now()))
             );
     }
