@@ -159,5 +159,10 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     public AuthUser getCurrentUser() {
         return getSelectedPlugin().getCurrentUser();
     }
+
+    @Override
+    public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().signOut(onSuccess, onError);
+    }
 }
 

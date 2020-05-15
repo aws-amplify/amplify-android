@@ -191,4 +191,14 @@ public interface AuthCategoryBehavior {
      * @return the currently logged in user with basic info and methods for fetching/updating user attributes
      */
     AuthUser getCurrentUser();
+
+    /**
+     * Sign out of all devices. The current credentials cached on other devices will be valid but will not be able to
+     * be refreshed without signing in again so will expire shortly.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signOut(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
 }
