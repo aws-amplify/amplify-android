@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.auth.AuthChannelEventName;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
@@ -44,7 +45,10 @@ import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
 import com.amplifyframework.core.Action;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -81,6 +85,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     private static final String MOBILE_CLIENT_TOKEN_KEY = "token";
     private String userId;
     private AWSMobileClient awsMobileClient;
+    private AuthChannelEventName lastEvent;
 
     /**
      * A Cognito implementation of the Auth Plugin.
@@ -115,17 +120,60 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             new Callback<UserStateDetails>() {
                 @Override
                 public void onResult(UserStateDetails result) {
-                    if (UserState.SIGNED_IN.equals(result.getUserState())) {
-                        userId = getUserIdFromToken(result.getDetails().get(MOBILE_CLIENT_TOKEN_KEY));
-                    } else {
-                        userId = null;
+                    switch (result.getUserState()) {
+                        case GUEST:
+                        case SIGNED_OUT:
+                            lastEvent = AuthChannelEventName.SIGNED_OUT;
+                            userId = null;
+                            break;
+                        case SIGNED_IN:
+                            lastEvent = AuthChannelEventName.SIGNED_IN;
+                            userId = getUserIdFromToken(result.getDetails().get(MOBILE_CLIENT_TOKEN_KEY));
+                            break;
+                        case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
+                        case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
+                            lastEvent = AuthChannelEventName.SESSION_EXPIRED;
+                            userId = getUserIdFromToken(result.getDetails().get(MOBILE_CLIENT_TOKEN_KEY));
+                            break;
+                        default:
+                            userId = null;
+                            lastEvent = null;
                     }
 
                     // Set up a listener to asynchronously update the user id if the user state changes in the future
                     awsMobileClient.addUserStateListener(userStateDetails -> {
                         switch (userStateDetails.getUserState()) {
+                            case SIGNED_OUT:
+                            case GUEST:
+                                userId = null;
+                                if (lastEvent != AuthChannelEventName.SIGNED_OUT) {
+                                    lastEvent = AuthChannelEventName.SIGNED_OUT;
+                                    Amplify.Hub.publish(
+                                            HubChannel.AUTH,
+                                            HubEvent.create(AuthChannelEventName.SIGNED_OUT)
+                                    );
+                                }
+                                break;
                             case SIGNED_IN:
                                 fetchAndSetUserId(() -> { /* No response needed */ });
+                                if (lastEvent != AuthChannelEventName.SIGNED_IN) {
+                                    lastEvent = AuthChannelEventName.SIGNED_IN;
+                                    Amplify.Hub.publish(
+                                            HubChannel.AUTH,
+                                            HubEvent.create(AuthChannelEventName.SIGNED_IN)
+                                    );
+                                }
+                                break;
+                            case SIGNED_OUT_FEDERATED_TOKENS_INVALID:
+                            case SIGNED_OUT_USER_POOLS_TOKENS_INVALID:
+                                fetchAndSetUserId(() -> { /* No response needed */ });
+                                if (lastEvent != AuthChannelEventName.SESSION_EXPIRED) {
+                                    lastEvent = AuthChannelEventName.SESSION_EXPIRED;
+                                    Amplify.Hub.publish(
+                                            HubChannel.AUTH,
+                                            HubEvent.create(AuthChannelEventName.SESSION_EXPIRED)
+                                    );
+                                }
                                 break;
                             default:
                                 userId = null;
