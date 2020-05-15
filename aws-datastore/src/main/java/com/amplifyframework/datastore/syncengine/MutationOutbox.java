@@ -35,6 +35,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
@@ -49,12 +50,12 @@ final class MutationOutbox {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final LocalStorageAdapter storage;
-    private final PublishSubject<PendingMutation<? extends Model>> pendingMutations;
+    private final Subject<PendingMutation<? extends Model>> pendingMutations;
     private final PendingMutation.Converter converter;
 
     MutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
         this.storage = Objects.requireNonNull(localStorageAdapter);
-        this.pendingMutations = PublishSubject.create();
+        this.pendingMutations = PublishSubject.<PendingMutation<? extends Model>>create().toSerialized();
         this.converter = new GsonPendingMutationConverter();
     }
 

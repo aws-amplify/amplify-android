@@ -1,11 +1,12 @@
 package com.amplifyframework.testmodels.todo;
 
+import com.amplifyframework.core.model.AWSDate;
+import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
 
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,11 +42,11 @@ public final class Todo implements Model {
     private final @ModelField(targetType = "TodoStatus", isRequired = true)
     TodoStatus status;
     private final @ModelField(targetType = "AWSDateTime", isRequired = true)
-    Date createdAt;
+    AWSDateTime createdAt;
     private final @ModelField(targetType = "AWSTimestamp")
     Long lastUpdated;
     private final @ModelField(targetType = "AWSDate")
-    Date dueDate;
+    AWSDate dueDate;
     private final @ModelField(targetType = "Int")
     Integer priority;
     private final @ModelField(targetType = "Float")
@@ -73,7 +74,7 @@ public final class Todo implements Model {
         return status;
     }
 
-    public Date getCreatedAt() {
+    public AWSDateTime getCreatedAt() {
         return createdAt;
     }
 
@@ -81,7 +82,7 @@ public final class Todo implements Model {
         return lastUpdated;
     }
 
-    public Date getDueDate() {
+    public AWSDate getDueDate() {
         return dueDate;
     }
 
@@ -105,7 +106,7 @@ public final class Todo implements Model {
         return tags;
     }
 
-    private Todo(String id, String title, String content, TodoStatus status, Date createdAt, Long lastUpdated, Date dueDate, Integer priority, Float hoursSpent, Boolean duplicate, TodoOwner owner, List<String> tags) {
+    private Todo(String id, String title, String content, TodoStatus status, AWSDateTime createdAt, Long lastUpdated, AWSDate dueDate, Integer priority, Float hoursSpent, Boolean duplicate, TodoOwner owner, List<String> tags) {
         this.id = id;
         this.title = title;
         this.content = content;
@@ -233,7 +234,7 @@ public final class Todo implements Model {
 
 
     public interface CreatedAtStep {
-        DuplicateStep createdAt(Date createdAt);
+        DuplicateStep createdAt(AWSDateTime createdAt);
     }
 
 
@@ -254,7 +255,7 @@ public final class Todo implements Model {
 
         BuildStep lastUpdated(Long lastUpdated);
 
-        BuildStep dueDate(Date dueDate);
+        BuildStep dueDate(AWSDate dueDate);
 
         BuildStep priority(Integer priority);
 
@@ -269,11 +270,11 @@ public final class Todo implements Model {
         private String title;
         private String content;
         private TodoStatus status;
-        private Date createdAt;
+        private AWSDateTime createdAt;
         private Boolean duplicate;
         private TodoOwner owner;
         private Long lastUpdated;
-        private Date dueDate;
+        private AWSDate dueDate;
         private Integer priority;
         private Float hoursSpent;
         private List<String> tags;
@@ -319,7 +320,7 @@ public final class Todo implements Model {
         }
 
         @Override
-        public DuplicateStep createdAt(Date createdAt) {
+        public DuplicateStep createdAt(AWSDateTime createdAt) {
             Objects.requireNonNull(createdAt);
             this.createdAt = createdAt;
             return this;
@@ -346,7 +347,7 @@ public final class Todo implements Model {
         }
 
         @Override
-        public BuildStep dueDate(Date dueDate) {
+        public BuildStep dueDate(AWSDate dueDate) {
             this.dueDate = dueDate;
             return this;
         }
@@ -393,7 +394,7 @@ public final class Todo implements Model {
 
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String title, String content, TodoStatus status, Date createdAt, Long lastUpdated, Date dueDate, Integer priority, Float hoursSpent, Boolean duplicate, TodoOwner owner, List<String> tags) {
+        private CopyOfBuilder(String id, String title, String content, TodoStatus status, AWSDateTime createdAt, Long lastUpdated, AWSDate dueDate, Integer priority, Float hoursSpent, Boolean duplicate, TodoOwner owner, List<String> tags) {
             super.id(id);
             super.title(title)
                     .content(content)
@@ -424,7 +425,7 @@ public final class Todo implements Model {
         }
 
         @Override
-        public CopyOfBuilder createdAt(Date createdAt) {
+        public CopyOfBuilder createdAt(AWSDateTime createdAt) {
             return (CopyOfBuilder) super.createdAt(createdAt);
         }
 
@@ -444,7 +445,7 @@ public final class Todo implements Model {
         }
 
         @Override
-        public CopyOfBuilder dueDate(Date dueDate) {
+        public CopyOfBuilder dueDate(AWSDate dueDate) {
             return (CopyOfBuilder) super.dueDate(dueDate);
         }
 

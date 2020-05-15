@@ -31,7 +31,6 @@ import com.amplifyframework.testutils.HubAccumulator;
 
 import java.util.Objects;
 
-@SuppressWarnings("SameParameterValue")
 final class DataStoreCategoryConfigurator {
     private Context context;
     @RawRes private Integer resourceId;
@@ -46,6 +45,7 @@ final class DataStoreCategoryConfigurator {
         return new DataStoreCategoryConfigurator();
     }
 
+    @SuppressWarnings("SameParameterValue")
     @NonNull
     DataStoreCategoryConfigurator clearDatabase(boolean willClear) {
         this.clearRequested = willClear;
@@ -93,7 +93,7 @@ final class DataStoreCategoryConfigurator {
 
     private DataStoreCategory buildCategory() throws AmplifyException {
         HubAccumulator initializationObserver =
-            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED)
+            HubAccumulator.create(HubChannel.DATASTORE, InitializationStatus.SUCCEEDED, 1)
                 .start();
 
         CategoryConfiguration dataStoreConfiguration =
@@ -106,8 +106,7 @@ final class DataStoreCategoryConfigurator {
         dataStoreCategory.configure(dataStoreConfiguration, context);
         dataStoreCategory.initialize(context);
 
-        initializationObserver.takeOne();
-        initializationObserver.stop().clear();
+        initializationObserver.await();
 
         return dataStoreCategory;
     }

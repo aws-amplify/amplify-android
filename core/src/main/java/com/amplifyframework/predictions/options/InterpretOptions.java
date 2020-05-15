@@ -15,6 +15,8 @@
 
 package com.amplifyframework.predictions.options;
 
+import androidx.annotation.NonNull;
+
 /**
  * Options for text interpretation operation.
  */
@@ -28,6 +30,7 @@ public final class InterpretOptions {
      * Creates an instance of options with default values assigned.
      * @return Default instance of options
      */
+    @NonNull
     public static InterpretOptions defaults() {
         return new InterpretOptions();
     }

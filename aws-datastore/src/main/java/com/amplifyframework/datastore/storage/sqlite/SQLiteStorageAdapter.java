@@ -69,6 +69,7 @@ import io.reactivex.Completable;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 /**
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
@@ -99,7 +100,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final Gson gson;
 
     // Used to publish events to the observables subscribed.
-    private final PublishSubject<StorageItemChange<? extends Model>> itemChangeSubject;
+    private final Subject<StorageItemChange<? extends Model>> itemChangeSubject;
 
     // Map of tableName => Insert Prepared statement.
     private Map<String, SqlCommand> insertSqlPreparedStatements;
@@ -138,7 +139,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
-        this.itemChangeSubject = PublishSubject.create();
+        this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
         this.toBeDisposed = new CompositeDisposable();
     }
 

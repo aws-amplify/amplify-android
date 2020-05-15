@@ -22,23 +22,29 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
+import com.amplifyframework.predictions.aws.models.AWSVoiceType;
 import com.amplifyframework.predictions.aws.operation.AWSIdentifyOperation;
 import com.amplifyframework.predictions.aws.operation.AWSInterpretOperation;
+import com.amplifyframework.predictions.aws.operation.AWSTextToSpeechOperation;
 import com.amplifyframework.predictions.aws.operation.AWSTranslateTextOperation;
 import com.amplifyframework.predictions.aws.request.AWSComprehendRequest;
 import com.amplifyframework.predictions.aws.request.AWSImageIdentifyRequest;
+import com.amplifyframework.predictions.aws.request.AWSPollyRequest;
 import com.amplifyframework.predictions.aws.request.AWSTranslateRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.operation.InterpretOperation;
+import com.amplifyframework.predictions.operation.TextToSpeechOperation;
 import com.amplifyframework.predictions.operation.TranslateTextOperation;
 import com.amplifyframework.predictions.options.IdentifyOptions;
 import com.amplifyframework.predictions.options.InterpretOptions;
+import com.amplifyframework.predictions.options.TextToSpeechOptions;
 import com.amplifyframework.predictions.options.TranslateTextOptions;
 import com.amplifyframework.predictions.result.IdentifyResult;
 import com.amplifyframework.predictions.result.InterpretResult;
+import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
 import org.json.JSONObject;
@@ -81,10 +87,46 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     public AWSPredictionsEscapeHatch getEscapeHatch() {
         return new AWSPredictionsEscapeHatch(
                 predictionsService.getTranslateClient(),
+                predictionsService.getPollyClient(),
                 predictionsService.getRekognitionClient(),
                 predictionsService.getTextractClient(),
                 predictionsService.getComprehendClient()
         );
+    }
+
+    @NonNull
+    @Override
+    public TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        return convertTextToSpeech(text, TextToSpeechOptions.defaults(), onSuccess, onError);
+    }
+
+    @NonNull
+    @Override
+    public TextToSpeechOperation<?> convertTextToSpeech(
+            @NonNull String text,
+            @NonNull TextToSpeechOptions options,
+            @NonNull Consumer<TextToSpeechResult> onSuccess,
+            @NonNull Consumer<PredictionsException> onError
+    ) {
+        // Create translate request for Amazon Polly
+        AWSVoiceType voiceType = AWSVoiceType.fromVoice(options.getVoiceType());
+        AWSPollyRequest request = new AWSPollyRequest(text, voiceType);
+
+        AWSTextToSpeechOperation operation = new AWSTextToSpeechOperation(
+                predictionsService,
+                executorService,
+                request,
+                onSuccess,
+                onError
+        );
+
+        // Start operation and return
+        operation.start();
+        return operation;
     }
 
     @NonNull
