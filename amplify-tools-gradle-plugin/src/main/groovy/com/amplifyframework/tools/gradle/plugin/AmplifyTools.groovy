@@ -1,5 +1,7 @@
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
 
 class AmplifyTools implements Plugin<Project> {
     void apply(Project project) {
@@ -16,10 +18,10 @@ class AmplifyTools implements Plugin<Project> {
         project.task('verifyNode') {
             try {
                 project.exec {
-                    commandLine 'which', 'node'
+                    commandLine 'node', '-v'
                     standardOutput = new ByteArrayOutputStream()
                 }
-            } catch (e) {
+            } catch (commandLineFailure) {
                 doesNodeExist = false
                 println("Node is not installed. Visit https://nodejs.org/en/download/ to install it")
             }
@@ -39,7 +41,7 @@ class AmplifyTools implements Plugin<Project> {
             def inputConfigFile = project.file('amplify-gradle-config.json')
             if (inputConfigFile.isFile()) {
                 def configText = inputConfigFile.text
-                def jsonSlurper = new groovy.json.JsonSlurper()
+                def jsonSlurper = new JsonSlurper()
                 def configJson = jsonSlurper.parseText(configText)
                 profile = configJson.profile
                 accessKeyId = configJson.accessKeyId
@@ -62,22 +64,24 @@ class AmplifyTools implements Plugin<Project> {
             }
             if (transformConfFile.isFile()) {
                 def tranformConfText = transformConfFile.text
-                def jsonSlurper = new groovy.json.JsonSlurper()
+                def jsonSlurper = new JsonSlurper()
                 def transformConfJson = jsonSlurper.parseText(tranformConfText)
 
-                def resolverConfigMap = ['ResolverConfig':
-                                                 ['project':
-                                                          ['ConflictHandler'  : 'AUTOMERGE',
-                                                           'ConflictDetection': 'VERSION']
-                                                 ]
+                def resolverConfigMap = [
+                        'ResolverConfig': [
+                                'project': [
+                                        'ConflictHandler'  : 'AUTOMERGE',
+                                        'ConflictDetection': 'VERSION'
+                                ]
+                        ]
                 ]
                 if (!syncEnabled) {
                     transformConfJson.remove('ResolverConfig')
                 } else if (!transformConfJson.ResolverConfig) {
                     transformConfJson << resolverConfigMap
                 }
-                def transformConfJsonStr = groovy.json.JsonOutput.toJson(transformConfJson)
-                def transformConfJsonStrPretty = groovy.json.JsonOutput.prettyPrint(transformConfJsonStr)
+                def transformConfJsonStr = JsonOutput.toJson(transformConfJson)
+                def transformConfJsonStrPretty = JsonOutput.prettyPrint(transformConfJsonStr)
                 transformConfFile.write(transformConfJsonStrPretty)
             }
         }
