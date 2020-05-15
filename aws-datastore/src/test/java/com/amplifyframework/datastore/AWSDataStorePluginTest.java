@@ -46,7 +46,7 @@ import java.util.Collections;
 import io.reactivex.Completable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
-import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -69,7 +69,6 @@ public final class AWSDataStorePluginTest {
      * the SyncProcessor is running. Otherwise, either the SyncProcessor is *not*
      * running, or it is running but not functioning as we expect it to.
      */
-    @SuppressWarnings("unchecked")
     @Before
     public void setup() {
         this.context = getApplicationContext();

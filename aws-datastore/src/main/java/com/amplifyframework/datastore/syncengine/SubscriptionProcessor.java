@@ -116,8 +116,8 @@ final class SubscriptionProcessor {
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
         .doOnError(exception -> {
-            LOG.warn("An error occurred with one of the subscriptions to the remote data store for " +
-                "model "+clazz.getSimpleName()+" "+subscriptionType.name(),
+            LOG.warn("An error occurred with one of the subscriptions to the remote DataStore for " +
+                "model " + clazz.getSimpleName() + " " + subscriptionType.name(),
                 exception.getCause());
         })
         .onErrorResumeNext(next -> {
