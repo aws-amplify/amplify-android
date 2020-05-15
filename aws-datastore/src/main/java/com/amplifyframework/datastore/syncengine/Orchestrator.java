@@ -103,7 +103,7 @@ public final class Orchestrator {
             syncProcessor.hydrate().blockingAwait();
             mutationProcessor.startDrainingMutationOutbox();
             subscriptionProcessor.startDrainingMutationBuffer();
-        }).onErrorComplete();
+        });
     }
 
     /**

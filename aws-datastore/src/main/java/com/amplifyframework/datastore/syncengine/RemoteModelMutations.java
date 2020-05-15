@@ -108,7 +108,8 @@ final class RemoteModelMutations {
         return Observable.defer(() -> Observable
             .merge(createObservables())
             .doOnError(exception -> {
-                LOG.warn("An error occurred with one of the subscriptions to the remote data store.", exception.getCause());
+                LOG.warn("An error occurred with one of the subscriptions to the remote data store.",
+                    exception.getCause());
             })
             .onErrorResumeNext(next -> {
                 next.onComplete();
