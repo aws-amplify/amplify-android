@@ -33,6 +33,7 @@ class AmplifyTools implements Plugin<Project> {
                 }
             }
         }
+        project.createAmplifyApp.dependsOn('verifyNode')
 
         project.task('getConfig') {
             def inputConfigFile = project.file('amplify-gradle-config.json')
@@ -48,6 +49,7 @@ class AmplifyTools implements Plugin<Project> {
                 syncEnabled = configJson.syncEnabled
             }
         }
+        project.getConfig.dependsOn('createAmplifyApp')
 
         project.task('datastoreSync') {
             def transformConfFile = project.file('amplify/backend/api/amplifyDatasource/transform.conf.json')
@@ -79,6 +81,7 @@ class AmplifyTools implements Plugin<Project> {
                 transformConfFile.write(transformConfJsonStrPretty)
             }
         }
+        project.datastoreSync.dependsOn('getConfig')
 
         project.task('modelgen') {
             doLast {
@@ -137,83 +140,83 @@ class AmplifyTools implements Plugin<Project> {
         }
 
         project.task('addModelgenToWorkspace') {
-            //Open file
-            def xml = new XmlParser().parse('./.idea/workspace.xml')
-            def RunManagerNode = xml.component.find {
-                it.'@name' == 'RunManager'
-            } as Node
-            def configModelgenCheck = RunManagerNode.children().find {
-                it.'@name' == 'modelgen'
-            } as Node
+            if(project.file('./.idea/workspace.xml').exists()) {
+                //Open XML file
+                def xml = new XmlParser().parse('./.idea/workspace.xml')
+                def RunManagerNode = xml.component.find {
+                    it.'@name' == 'RunManager'
+                } as Node
+                def configModelgenCheck = RunManagerNode.children().find {
+                    it.'@name' == 'modelgen'
+                } as Node
 
-            if (!configModelgenCheck) {
-                // Nested nodes for modelgen run configuration
-                def configurationNode = new Node(null, 'configuration', [name: "modelgen", type:"GradleRunConfiguration", factoryName:"Gradle", nameIsGenerated:"true"])
-                def externalSystemNode = new Node(configurationNode, 'ExternalSystemSettings')
-                def executionOption = new Node(externalSystemNode, 'option', [name: "executionName"])
-                def projectPathOption = new Node(externalSystemNode, 'option', [name: "externalProjectPath", value: "\$PROJECT_DIR\$"])
-                def externalSystemIdOption = new Node(externalSystemNode, 'option', [name: "externalSystemIdString", value: "GRADLE"])
-                def scriptParametersOption = new Node(externalSystemNode, 'option', [name: "scriptParameters", value: ""])
-                def taskDescriptionsOption = new Node(externalSystemNode, 'option', [name: "taskDescriptions"])
-                def descriptionList = new Node(taskDescriptionsOption, 'list')
-                def taskNamesOption = new Node(externalSystemNode, 'option', [name: "taskNames"])
-                def nameList = new Node(taskNamesOption, 'list')
-                def modelgenOption = new Node(nameList, 'option', [value: "modelgen"])
-                def vmOption = new Node(externalSystemNode, 'option', [name: "vmOptions", value: ""])
-                def systemDebugNode = new Node(configurationNode, 'GradleScriptDebugEnabled', null, true)
-                def methodNode = new Node(configurationNode, 'method', [v:"2"])
+                if (!configModelgenCheck) {
+                    // Nested nodes for modelgen run configuration
+                    def configurationNode = new Node(null, 'configuration', [name: "modelgen", type:"GradleRunConfiguration", factoryName:"Gradle", nameIsGenerated:"true"])
+                    def externalSystemNode = new Node(configurationNode, 'ExternalSystemSettings')
+                    def executionOption = new Node(externalSystemNode, 'option', [name: "executionName"])
+                    def projectPathOption = new Node(externalSystemNode, 'option', [name: "externalProjectPath", value: "\$PROJECT_DIR\$"])
+                    def externalSystemIdOption = new Node(externalSystemNode, 'option', [name: "externalSystemIdString", value: "GRADLE"])
+                    def scriptParametersOption = new Node(externalSystemNode, 'option', [name: "scriptParameters", value: ""])
+                    def taskDescriptionsOption = new Node(externalSystemNode, 'option', [name: "taskDescriptions"])
+                    def descriptionList = new Node(taskDescriptionsOption, 'list')
+                    def taskNamesOption = new Node(externalSystemNode, 'option', [name: "taskNames"])
+                    def nameList = new Node(taskNamesOption, 'list')
+                    def modelgenOption = new Node(nameList, 'option', [value: "modelgen"])
+                    def vmOption = new Node(externalSystemNode, 'option', [name: "vmOptions", value: ""])
+                    def systemDebugNode = new Node(configurationNode, 'GradleScriptDebugEnabled', null, true)
+                    def methodNode = new Node(configurationNode, 'method', [v:"2"])
 
-                RunManagerNode.append(configurationNode)
+                    RunManagerNode.append(configurationNode)
 
-                //Save File
-                def writer = new FileWriter('./.idea/workspace.xml')
+                    //Save File
+                    def writer = new FileWriter('./.idea/workspace.xml')
 
-                //Pretty print XML
-                groovy.xml.XmlUtil.serialize(xml, writer)
+                    //Pretty print XML
+                    groovy.xml.XmlUtil.serialize(xml, writer)
+                }
             }
         }
+        project.modelgen.dependsOn('datastoreSync')
 
         project.task('addAmplifyPushToWorkspace') {
-            //Open file
-            def xml = new XmlParser().parse('./.idea/workspace.xml')
-            def RunManagerNode = xml.component.find {
-                it.'@name' == 'RunManager'
-            } as Node
-            def configAmplifyPushCheck = RunManagerNode.children().find {
-                it.'@name' == 'amplifyPush'
-            } as Node
+            if(project.file('./.idea/workspace.xml').exists()) {
+                //Open file
+                def xml = new XmlParser().parse('./.idea/workspace.xml')
+                def RunManagerNode = xml.component.find {
+                    it.'@name' == 'RunManager'
+                } as Node
+                def configAmplifyPushCheck = RunManagerNode.children().find {
+                    it.'@name' == 'amplifyPush'
+                } as Node
 
-            if (!configAmplifyPushCheck) {
-                // Nested nodes for amplifyPush run configuration
-                def configurationNode = new Node(null, 'configuration', [name: "amplifyPush", type:"GradleRunConfiguration", factoryName:"Gradle", nameIsGenerated:"true"])
-                def externalSystemNode = new Node(configurationNode, 'ExternalSystemSettings')
-                def executionOption = new Node(externalSystemNode, 'option', [name: "executionName"])
-                def projectPathOption = new Node(externalSystemNode, 'option', [name: "externalProjectPath", value: "\$PROJECT_DIR\$"])
-                def externalSystemIdOption = new Node(externalSystemNode, 'option', [name: "externalSystemIdString", value: "GRADLE"])
-                def scriptParametersOption = new Node(externalSystemNode, 'option', [name: "scriptParameters", value: ""])
-                def taskDescriptionsOption = new Node(externalSystemNode, 'option', [name: "taskDescriptions"])
-                def descriptionList = new Node(taskDescriptionsOption, 'list')
-                def taskNamesOption = new Node(externalSystemNode, 'option', [name: "taskNames"])
-                def nameList = new Node(taskNamesOption, 'list')
-                def amplifyPushOption = new Node(nameList, 'option', [value: "amplifyPush"])
-                def vmOption = new Node(externalSystemNode, 'option', [name: "vmOptions", value: ""])
-                def systemDebugNode = new Node(configurationNode, 'GradleScriptDebugEnabled', null, true)
-                def methodNode = new Node(configurationNode, 'method', [v:"2"])
+                if (!configAmplifyPushCheck) {
+                    // Nested nodes for amplifyPush run configuration
+                    def configurationNode = new Node(null, 'configuration', [name: "amplifyPush", type:"GradleRunConfiguration", factoryName:"Gradle", nameIsGenerated:"true"])
+                    def externalSystemNode = new Node(configurationNode, 'ExternalSystemSettings')
+                    def executionOption = new Node(externalSystemNode, 'option', [name: "executionName"])
+                    def projectPathOption = new Node(externalSystemNode, 'option', [name: "externalProjectPath", value: "\$PROJECT_DIR\$"])
+                    def externalSystemIdOption = new Node(externalSystemNode, 'option', [name: "externalSystemIdString", value: "GRADLE"])
+                    def scriptParametersOption = new Node(externalSystemNode, 'option', [name: "scriptParameters", value: ""])
+                    def taskDescriptionsOption = new Node(externalSystemNode, 'option', [name: "taskDescriptions"])
+                    def descriptionList = new Node(taskDescriptionsOption, 'list')
+                    def taskNamesOption = new Node(externalSystemNode, 'option', [name: "taskNames"])
+                    def nameList = new Node(taskNamesOption, 'list')
+                    def amplifyPushOption = new Node(nameList, 'option', [value: "amplifyPush"])
+                    def vmOption = new Node(externalSystemNode, 'option', [name: "vmOptions", value: ""])
+                    def systemDebugNode = new Node(configurationNode, 'GradleScriptDebugEnabled', null, true)
+                    def methodNode = new Node(configurationNode, 'method', [v:"2"])
 
-                RunManagerNode.append(configurationNode)
+                    RunManagerNode.append(configurationNode)
 
-                //Save File
-                def writer = new FileWriter('./.idea/workspace.xml')
+                    //Save File
+                    def writer = new FileWriter('./.idea/workspace.xml')
 
-                //Pretty print XML
-                groovy.xml.XmlUtil.serialize(xml, writer)
+                    //Pretty print XML
+                    groovy.xml.XmlUtil.serialize(xml, writer)
+                }
             }
         }
-
-        project.createAmplifyApp.dependsOn('verifyNode')
-        project.getConfig.dependsOn('createAmplifyApp')
-        project.datastoreSync.dependsOn('getConfig')
-        project.modelgen.dependsOn('datastoreSync')
         project.amplifyPush.dependsOn('datastoreSync')
     }
 }
