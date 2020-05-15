@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -204,6 +205,18 @@ public final class SynchronousAuth {
                     () -> onResult.accept(new Object()),
                     onError
                 )
+        );
+    }
+
+    /**
+     * Fetch auth session synchronously.
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSession fetchAuthSession() throws AuthException {
+        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.fetchAuthSession(onResult, onError)
         );
     }
 
