@@ -41,6 +41,7 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.SignOutOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
@@ -416,6 +417,42 @@ public final class AuthComponentTest {
 
         synchronousAuth.confirmResetPassword(NEW_PASSWORD, CONFIRMATION_CODE);
         verify(mobileClient).confirmForgotPassword(eq(NEW_PASSWORD), eq(CONFIRMATION_CODE), any());
+    }
+
+    /**
+     * Tests that signOut calls the AWSMobileClient sign out method with the global signout option set to true.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signOut() throws AuthException {
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(mobileClient).signOut(any(), any());
+
+        synchronousAuth.signOut();
+
+        ArgumentCaptor<SignOutOptions> signOutOptionsCaptor = ArgumentCaptor.forClass(SignOutOptions.class);
+        verify(mobileClient).signOut(signOutOptionsCaptor.capture(), any());
+        assertTrue(signOutOptionsCaptor.getValue().isSignOutGlobally());
+    }
+
+    /**
+     * Tests that if sign out fails, the returned Exception gets wrapped in an AuthException.
+     * @throws AuthException expected exception
+     */
+    @Test(expected = AuthException.class)
+    public void signOutFails() throws AuthException {
+        Exception exception = new Exception("Test exception");
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onError(exception);
+            return null;
+        }).when(mobileClient).signOut(any(), any());
+
+        synchronousAuth.signOut();
     }
 
     /**

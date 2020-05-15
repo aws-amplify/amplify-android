@@ -54,6 +54,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.HostedUIOptions;
 import com.amazonaws.mobile.client.SignInUIOptions;
+import com.amazonaws.mobile.client.SignOutOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
@@ -553,6 +554,32 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
+        awsMobileClient.signOut(SignOutOptions.builder().signOutGlobally(true).build(), new Callback<Void>() {
+            @Override
+            public void onResult(Void result) {
+                onSuccess.call();
+            }
+
+            @Override
+            public void onError(Exception error) {
+                if (error != null && error.getMessage() != null && error.getMessage().contains("signed-out")) {
+                    onError.accept(new AuthException(
+                            "Failed to sign out since Auth is already signed out",
+                            "No need to sign out - you already are!"
+                    ));
+                } else {
+                    onError.accept(new AuthException(
+                            "Failed to sign out",
+                            error,
+                            "See attached exception for more details"
+                    ));
+                }
+            }
+        });
     }
 
     @NonNull
