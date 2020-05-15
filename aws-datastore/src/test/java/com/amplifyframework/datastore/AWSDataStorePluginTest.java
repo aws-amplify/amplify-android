@@ -42,6 +42,7 @@ import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 
@@ -60,6 +61,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
+    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private Context context;
     private ModelProvider modelProvider;
 
@@ -132,7 +134,7 @@ public final class AWSDataStorePluginTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         Person person1 = createPerson("Test", "Dummy I");
-        Completable.fromSingle(single -> { // Save a record to local store
+        Throwable exception = Completable.fromSingle(single -> { // Save a record to local store
             awsDataStorePlugin.save(person1, itemSaved -> {
                 assertNotNull(itemSaved.item().getId());
                 assertEquals(person1.getLastName(), itemSaved.item().getLastName());
@@ -150,7 +152,10 @@ public final class AWSDataStorePluginTest {
             })
         ).doOnError(error -> {
             fail(error.getMessage());
-        }).blockingAwait();
+        }).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        if (exception != null) {
+            throw new AmplifyException("Unexpected exception.", exception, "Look at the stacktrace.");
+        }
     }
 
     private void assertSyncProcessorStarted() {
