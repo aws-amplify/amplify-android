@@ -38,8 +38,6 @@ public final class DataStoreConfiguration {
     @VisibleForTesting
     static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     @VisibleForTesting
-    static final long DEFAULT_SYNC_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DEFAULT_SYNC_INTERVAL_MINUTES);
-    @VisibleForTesting 
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
