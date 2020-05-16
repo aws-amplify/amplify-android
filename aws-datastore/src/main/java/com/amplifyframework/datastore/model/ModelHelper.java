@@ -55,7 +55,7 @@ public final class ModelHelper {
             final Method fieldGetter = modelClass.getMethod(getterName);
             return fieldGetter.invoke(model);
         } catch (Exception exception) {
-            LOGGER.warn(String.format(
+            LOGGER.verbose(String.format(
                     "Could not find %s() on %s. Fallback to direct field access.",
                     getterName, modelClass.getName()
             ));
