@@ -35,6 +35,7 @@ import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -63,7 +64,6 @@ import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
@@ -181,7 +181,7 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        this.awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
 
@@ -235,17 +235,7 @@ public final class AWSDataStorePluginTest {
                     single.onSuccess(true);
                 }, single::onError);
             })
-        ).blockingAwait();
-
-        // Verify that the API mutate method was called once for each model saved.
-        verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
-    }
-
-    private void assertSyncProcessorStarted() {
-        boolean syncProcessorInvoked = mockingDetails(modelProvider)
-            .getInvocations()
-            .stream()
-            .anyMatch(invocation -> invocation.getLocation().getSourceFile().contains("SyncProcessor"));
+        ).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
         // Verify that the API mutate method was called once for each model saved.
         verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
@@ -284,10 +274,11 @@ public final class AWSDataStorePluginTest {
     }
 
     @SuppressWarnings("unchecked")
-    private static ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
+    private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
         when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         // Make believe that queries return response immediately
         doAnswer(invocation -> {
@@ -309,11 +300,8 @@ public final class AWSDataStorePluginTest {
 
         // Make believe that subscriptions return response immediately
         doAnswer(invocation -> {
-            int indexOfStartConsumer = 2;
-            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfStartConsumer);
-            // Calling onResponse with an invalid input generates an error in RemoteModelMutations.
-            // Disabling it for now since it does not affect the assertions we need for this test.
-            // onResponse.accept(new GraphQLResponse<>(RandomString.string(), null));
+            int indexOfStartConsumer = 1;
+            Consumer<String> onStart = invocation.getArgument(indexOfStartConsumer);
             GraphQLOperation<?> mockOperation = mock(GraphQLOperation.class);
             doAnswer(opAnswer -> {
                 this.subscriptionCancelledCounter.incrementAndGet();
@@ -321,6 +309,8 @@ public final class AWSDataStorePluginTest {
             }).when(mockOperation).cancel();
 
             this.subscriptionStartedCounter.incrementAndGet();
+            // Trigger the subscription start event.
+            onStart.accept(RandomString.string());
             return mockOperation;
         }).when(mockApiPlugin).subscribe(
             any(GraphQLRequest.class),
@@ -343,6 +333,7 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
         when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+        when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         doAnswer(invocation -> {
             int indexOfErrorConsumer = 2;

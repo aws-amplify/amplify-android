@@ -101,18 +101,20 @@ final class SubscriptionProcessor {
     @SuppressWarnings("unchecked")
     private static <T extends Model> Observable<SubscriptionEvent<? extends Model>>
             subscriptionObservable(AppSync appSync, SubscriptionType subscriptionType, Class<T> clazz) {
+        AtomicReference<Cancelable> cancelable = new AtomicReference<>(NoOpCancelable::new);
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
             CountDownLatch latch = new CountDownLatch(1);
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
-            AtomicReference<Cancelable> cancelable = new AtomicReference<>(NoOpCancelable::new);
             emitter.setCancellable(cancelable::get);
-            cancelable.set(method.subscribe(
-                clazz,
-                token -> latch.countDown(),
-                emitter::onNext,
-                emitter::onError,
-                emitter::onComplete
-            ));
+            synchronized (cancelable) {
+                cancelable.set(method.subscribe(
+                    clazz,
+                    token -> latch.countDown(),
+                    emitter::onNext,
+                    emitter::onError,
+                    emitter::onComplete
+                ));
+            }
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
         .doOnError(exception -> {
@@ -122,6 +124,18 @@ final class SubscriptionProcessor {
         })
         .onErrorResumeNext(next -> {
             next.onComplete();
+        })
+        .doOnDispose(() -> {
+            // When the observable is disposed, we need to call cancel() on the subscription
+            // so it can properly dispose of resources if necessary. For the AWS API plugin,
+            // this means means closing the underlying network connection.
+            synchronized (cancelable) {
+                Cancelable subscriptionOperation = cancelable.get();
+                if (subscriptionOperation != null) {
+                    LOG.info("Terminating subscription operation.");
+                    subscriptionOperation.cancel();
+                }
+            }
         })
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
