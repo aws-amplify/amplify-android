@@ -27,28 +27,7 @@ import com.amplifyframework.core.category.CategoryType;
  */
 public interface LoggingCategoryBehavior {
     /**
-     * Gets the default logger used by the Amplify framework.
-     * @return Default logger
-     */
-    @NonNull
-    Logger getDefaultLogger();
-
-    /**
-     * Gets a logger that is configured to emit logs against the provided namespace.
-     * Logs will only be emitted if they are at or above the provided threshold.
-     * Passing {@link LogLevel#VERBOSE} results in all logs being emitted. Passing
-     * a value of {@link LogLevel#NONE} will result in no log(s) being emitted.
-     * @param namespace A namespace for all logs emitted by the returned logger instance
-     * @param threshold Only logs at or above this log level will be emitted
-     * @return A logger that emits logs in a given namespace, at or above the provide threshold
-     */
-    @NonNull
-    Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold);
-
-    /**
      * Gets a logger configured to emit logs against a particular namespace.
-     * The log threshold will be {@link LogLevel#INFO}. To use a different level,
-     * see {@link #forNamespaceAndThreshold(String, LogLevel)}.
      * @param namespace A namespace for all logs emitted by the returned logger instance
      * @return A logger that emits logs in the provided namespace
      */
@@ -57,10 +36,6 @@ public interface LoggingCategoryBehavior {
 
     /**
      * Gets a logger configured to emit logs against a particular category namespace.
-     *
-     * The log threshold will be {@link LogLevel#INFO}. To use a different level,
-     * see {@link #forNamespaceAndThreshold(String, LogLevel)}.
-     *
      * @param categoryType the category type that will be used as namespace
      * @return A logger that emits logs in the provided category type namespace
      */

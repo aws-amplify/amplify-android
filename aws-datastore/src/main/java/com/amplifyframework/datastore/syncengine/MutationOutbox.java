@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryField;
@@ -47,7 +48,7 @@ import io.reactivex.subjects.Subject;
  * it is safe to remove it from this outbox.
  */
 final class MutationOutbox {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
 
     private final LocalStorageAdapter storage;
     private final Subject<PendingMutation<? extends Model>> pendingMutations;

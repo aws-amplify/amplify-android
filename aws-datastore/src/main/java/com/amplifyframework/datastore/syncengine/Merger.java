@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
@@ -42,7 +43,7 @@ import io.reactivex.Completable;
  */
 @SuppressWarnings("CodeBlock2Expr")
 final class Merger {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
     private final MutationOutbox mutationOutbox;
     private final LocalStorageAdapter localStorageAdapter;
 

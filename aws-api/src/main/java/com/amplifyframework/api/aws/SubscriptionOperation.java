@@ -25,6 +25,7 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
@@ -34,7 +35,7 @@ import okhttp3.OkHttpClient;
 
 @SuppressWarnings("unused")
 final class SubscriptionOperation<T> extends GraphQLOperation<T> {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
+    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.API);
 
     private final String endpoint;
     private final OkHttpClient client;

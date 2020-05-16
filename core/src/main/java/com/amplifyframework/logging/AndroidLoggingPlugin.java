@@ -24,45 +24,53 @@ import com.amplifyframework.core.category.CategoryType;
 
 import org.json.JSONObject;
 
+import java.util.Locale;
+
 /**
  * AWS' default implementation of the {@link LoggingCategoryBehavior},
  * which emits logs to Android's {@link Log} class.
  */
 final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
-    @NonNull
-    @Override
-    public Logger getDefaultLogger() {
-        return forNamespaceAndThreshold(null, null);
+    private static final String AMPLIFY_NAMESPACE = "amplify";
+    private final LogLevel defaultLoggerThreshold;
+
+    /**
+     * Creates a logging plugin using {@link LogLevel#INFO} as the default
+     * logging threshold.
+     */
+    /* intentionally not public */ AndroidLoggingPlugin() {
+        this(LogLevel.INFO);
     }
 
-    @NonNull
-    @Override
-    public Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold) {
-        if (namespace == null) {
-            if (threshold == null) {
-                return new AndroidLogger();
-            } else {
-                return new AndroidLogger(threshold);
-            }
-        } else {
-            if (threshold == null) {
-                return new AndroidLogger(namespace);
-            } else {
-                return new AndroidLogger(namespace, threshold);
-            }
-        }
+    /**
+     * Constructs a logging plugin that used the provided threshold by default,
+     * when creating loggers.
+     * @param defaultLoggerThreshold default threshold to use when creating loggers.
+     */
+    AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
+        this.defaultLoggerThreshold = defaultLoggerThreshold;
     }
 
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
-        return forNamespaceAndThreshold(namespace, null);
+        String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
+        return new AndroidLogger(usedNamespace, defaultLoggerThreshold);
     }
 
     @NonNull
     @Override
     public Logger forCategory(@NonNull CategoryType categoryType) {
-        return forNamespace("amplify:" + categoryType.getConfigurationKey());
+        StringBuilder slug = new StringBuilder();
+        for (char character : categoryType.getConfigurationKey().toCharArray()) {
+            if (Character.isLowerCase(character)) {
+                slug.append(character);
+            } else {
+                slug.append('-').append(Character.toLowerCase(character));
+            }
+        }
+        String namespace = String.format(Locale.US, "%s:%s", AMPLIFY_NAMESPACE, slug.toString());
+        return new AndroidLogger(namespace, defaultLoggerThreshold);
     }
 
     @NonNull

@@ -19,6 +19,8 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
+import com.amplifyframework.core.category.CategoryType;
+
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
@@ -31,9 +33,12 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -42,7 +47,6 @@ import static org.junit.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 public class AndroidLoggingPluginTest {
     private LogOutputStream systemLog;
-    private AndroidLoggingPlugin plugin;
 
     /**
      * Setup logging plugin, for test. Redirect system output a buffer,
@@ -52,8 +56,6 @@ public class AndroidLoggingPluginTest {
     public void setup() {
         systemLog = new LogOutputStream();
         ShadowLog.stream = new PrintStream(systemLog);
-        plugin = new AndroidLoggingPlugin();
-        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
     }
 
     /**
@@ -70,7 +72,9 @@ public class AndroidLoggingPluginTest {
      */
     @Test
     public void productionLogsEmittedAtDefaultThreshold() {
-        final Logger logger = plugin.getDefaultLogger();
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
+        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
+        Logger logger = plugin.forNamespace("amplify");
 
         logger.error("A most serious issue, indeed.");
         logger.warn("Ahh, bummer, but alright.");
@@ -93,8 +97,9 @@ public class AndroidLoggingPluginTest {
      */
     @Test
     public void allContentLoggedAtThresholdVerbose() {
-        Logger logger =
-            plugin.forNamespaceAndThreshold("kool-module", LogLevel.VERBOSE);
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin(LogLevel.VERBOSE);
+        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
+        Logger logger = plugin.forNamespace("kool-module");
 
         logger.verbose("This logs");
         logger.debug("This too");
@@ -119,14 +124,45 @@ public class AndroidLoggingPluginTest {
      */
     @Test
     public void noContentLoggedAtThresholdNone() {
-        Logger logger =
-            plugin.forNamespaceAndThreshold("logging-test", LogLevel.NONE);
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin(LogLevel.NONE);
+        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
+        Logger logger = plugin.forNamespace("logging-test");
 
         logger.error("An error happened!");
         logger.info(null);
         logger.warn("Uh oh, not great...");
 
         assertTrue(systemLog.getLines().isEmpty());
+    }
+
+    /**
+     * The {@link AndroidLoggingPlugin#forCategory(CategoryType)} implementation contains
+     * special rules to normalize a log slut from a category name. Validate these conversions.
+     */
+    @Test
+    public void correctSlugGeneratedForCategories() {
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
+
+        final Map<CategoryType, String> actuals = new HashMap<>();
+        for (CategoryType categoryType : CategoryType.values()) {
+            String result = plugin.forCategory(categoryType).getNamespace();
+            actuals.put(categoryType, result);
+        }
+        final Map<CategoryType, String> expected = new HashMap<>();
+        expected.put(CategoryType.ANALYTICS, "amplify:analytics");
+        expected.put(CategoryType.API, "amplify:api");
+        expected.put(CategoryType.AUTH, "amplify:auth");
+        expected.put(CategoryType.DATASTORE, "amplify:data-store");
+        expected.put(CategoryType.HUB, "amplify:hub");
+        expected.put(CategoryType.LOGGING, "amplify:logging");
+        expected.put(CategoryType.PREDICTIONS, "amplify:predictions");
+        expected.put(CategoryType.STORAGE, "amplify:storage");
+
+        for (Map.Entry<CategoryType, String> actualsEntry : actuals.entrySet()) {
+            String expectedValue = expected.get(actualsEntry.getKey());
+            assertNotNull(expectedValue); // If this fails, you probably added a new category. Add a mapping above.
+            assertEquals(expectedValue, actualsEntry.getValue());
+        }
     }
 
     static final class LogOutputStream extends ByteArrayOutputStream {

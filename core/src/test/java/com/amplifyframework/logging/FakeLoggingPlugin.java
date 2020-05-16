@@ -31,33 +31,17 @@ import org.json.JSONObject;
  * in isolation to the details of the {@link AndroidLoggingPlugin}.
  * @param <E> The type of the escape hatch used by the plugin.
  */
-@SuppressWarnings("unused")
 final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
     private final E escapeHatch;
-    private final Logger defaultLogger;
+    private final Logger logger;
 
-    private JSONObject pluginConfiguration;
-    private Context context;
-
-    private FakeLoggingPlugin(E escapeHatch, Logger defaultLogger) {
+    private FakeLoggingPlugin(E escapeHatch, Logger logger) {
         this.escapeHatch = escapeHatch;
-        this.defaultLogger = defaultLogger;
+        this.logger = logger;
     }
 
-    static FakeLoggingPlugin<Void> instance(@NonNull Logger defaultLogger) {
+    static FakeLoggingPlugin<Void> instance(Logger defaultLogger) {
         return new FakeLoggingPlugin<>(null, defaultLogger);
-    }
-
-    static FakeLoggingPlugin<Void> instance() {
-        return new FakeLoggingPlugin<>(null, FakeLogger.instance());
-    }
-
-    static <E> FakeLoggingPlugin<E> instance(@NonNull E escapeHatch, @NonNull Logger defaultLogger) {
-        return new FakeLoggingPlugin<>(escapeHatch, defaultLogger);
-    }
-
-    static <E> FakeLoggingPlugin<E> instance(@NonNull E escapeHatch) {
-        return new FakeLoggingPlugin<>(escapeHatch, FakeLogger.instance());
     }
 
     @NonNull
@@ -68,8 +52,6 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
 
     @Override
     public void configure(@NonNull JSONObject pluginConfiguration, @NonNull Context context) {
-        this.pluginConfiguration = pluginConfiguration;
-        this.context = context;
     }
 
     @Nullable
@@ -80,40 +62,13 @@ final class FakeLoggingPlugin<E> extends LoggingPlugin<E> {
 
     @NonNull
     @Override
-    public Logger getDefaultLogger() {
-        return defaultLogger;
-    }
-
-    @NonNull
-    @Override
-    public Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold) {
-        if (namespace == null) {
-            return threshold == null ? FakeLogger.instance() : FakeLogger.instance(threshold);
-        }
-        return threshold == null ? FakeLogger.instance(namespace) : FakeLogger.instance(namespace, threshold);
-    }
-
-    @NonNull
-    @Override
     public Logger forNamespace(@Nullable String namespace) {
-        if (namespace == null) {
-            return FakeLogger.instance();
-        } else {
-            return FakeLogger.instance(namespace);
-        }
+        return logger;
     }
 
     @NonNull
     @Override
     public Logger forCategory(@NonNull CategoryType categoryType) {
-        return forNamespace("amplify:" + categoryType.getConfigurationKey());
-    }
-
-    JSONObject getPluginConfiguration() {
-        return pluginConfiguration;
-    }
-
-    Context getContext() {
-        return context;
+        return logger;
     }
 }

@@ -21,6 +21,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.result.InterpretResult;
@@ -35,7 +36,7 @@ import java.util.Map;
  * pre-trained models to make predictions offline.
  */
 public final class TensorFlowPredictionsService {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-predictions-tensorflow");
+    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.PREDICTIONS);
 
     private final TensorFlowTextClassificationService textClassificationService;
 

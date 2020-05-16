@@ -19,6 +19,7 @@ import android.os.Handler;
 import android.os.HandlerThread;
 
 import com.amplifyframework.core.Amplify;
+import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
@@ -29,7 +30,7 @@ import java.util.Locale;
  * Submits all the recorded event periodically.
  */
 final class AutoEventSubmitter {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
+    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.ANALYTICS);
 
     private final Handler handler;
     private Runnable submitRunnable;
