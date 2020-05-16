@@ -187,11 +187,11 @@ final class MutationProcessor {
                         subscriber.onSuccess(result.getData());
                         return;
                     }
+                    String modelName = mutation.getClassOfMutatedItem().getSimpleName();
                     subscriber.onError(new DataStoreException(
-                        "Failed to publish an item to the network. AppSync response contained errors: "
-                            + result.getErrors(),
-                        "Verify that your endpoint is configured to accept "
-                            + mutation.getClassOfMutatedItem().getSimpleName() + " models."
+                        "Mutation failed. Failed mutation = " + mutation + ". " +
+                            "AppSync response contained errors = " + result.getErrors(),
+                        "Verify that your AppSync endpoint is able to store " + modelName + " models."
                     ));
                 },
                 subscriber::onError
