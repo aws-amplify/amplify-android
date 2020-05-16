@@ -76,7 +76,8 @@ public final class DataStoreConfiguration {
      * Begin building a new instance of {@link DataStoreConfiguration} by reading DataStore
      * settings from the config file and an optional set of user-provided overrides.
      * @param pluginJson DataStore plugin configuration from amplifyconfiguration.json
-     * @param userProvidedConfiguration An instance of {@link DataStoreConfiguration} with settings specified by the user
+     * @param userProvidedConfiguration An instance of {@link DataStoreConfiguration}
+     *                                 with settings specified by the user
      *                                  which will be used as overrides.
      * @return A new builder instance
      * an invalid configuration value
