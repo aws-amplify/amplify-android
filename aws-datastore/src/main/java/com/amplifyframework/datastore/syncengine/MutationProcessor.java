@@ -189,7 +189,8 @@ final class MutationProcessor {
                     }
                     String modelName = mutation.getClassOfMutatedItem().getSimpleName();
                     subscriber.onError(new DataStoreException(
-                        "Mutation failed. AppSync response contained errors. Failed mutation = " + mutation,
+                        "Mutation failed. Failed mutation = " + mutation + ". " +
+                            "AppSync response contained errors = " + response.getErrors(),
                         "Verify that your AppSync endpoint is able to store " + modelName + " models."
                     ));
                 },
