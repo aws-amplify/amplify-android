@@ -19,6 +19,8 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.configuration.IdentifyEntitiesConfiguration;
+import com.amplifyframework.predictions.aws.configuration.IdentifyLabelsConfiguration;
+import com.amplifyframework.predictions.aws.configuration.IdentifyTextConfiguration;
 import com.amplifyframework.predictions.aws.configuration.InterpretTextConfiguration;
 import com.amplifyframework.predictions.aws.configuration.SpeechGeneratorConfiguration;
 import com.amplifyframework.predictions.aws.configuration.TranslateTextConfiguration;
@@ -37,21 +39,27 @@ public final class AWSPredictionsPluginConfiguration {
     private final NetworkPolicy defaultNetworkPolicy;
     private final SpeechGeneratorConfiguration speechGeneratorConfiguration;
     private final TranslateTextConfiguration translateTextConfiguration;
+    private final IdentifyLabelsConfiguration identifyLabelsConfiguration;
     private final IdentifyEntitiesConfiguration identifyEntitiesConfiguration;
+    private final IdentifyTextConfiguration identifyTextConfiguration;
     private final InterpretTextConfiguration interpretTextConfiguration;
 
     private AWSPredictionsPluginConfiguration(
             Region defaultRegion,
             SpeechGeneratorConfiguration speechGeneratorConfiguration,
             TranslateTextConfiguration translateTextConfiguration,
+            IdentifyLabelsConfiguration identifyLabelsConfiguration,
             IdentifyEntitiesConfiguration identifyEntitiesConfiguration,
+            IdentifyTextConfiguration identifyTextConfiguration,
             InterpretTextConfiguration interpretTextConfiguration
     ) {
         this.defaultRegion = defaultRegion;
         this.defaultNetworkPolicy = NetworkPolicy.AUTO;
         this.speechGeneratorConfiguration = speechGeneratorConfiguration;
         this.translateTextConfiguration = translateTextConfiguration;
+        this.identifyLabelsConfiguration = identifyLabelsConfiguration;
         this.identifyEntitiesConfiguration = identifyEntitiesConfiguration;
+        this.identifyTextConfiguration = identifyTextConfiguration;
         this.interpretTextConfiguration = interpretTextConfiguration;
     }
 
@@ -74,10 +82,11 @@ public final class AWSPredictionsPluginConfiguration {
         final Region defaultRegion;
         final SpeechGeneratorConfiguration speechGeneratorConfiguration;
         final TranslateTextConfiguration translateTextConfiguration;
-        final InterpretTextConfiguration interpretConfiguration;
+        final IdentifyLabelsConfiguration identifyLabelsConfiguration;
         final IdentifyEntitiesConfiguration identifyEntitiesConfiguration;
+        final IdentifyTextConfiguration identifyTextConfiguration;
+        final InterpretTextConfiguration interpretConfiguration;
 
-        // Required sections
         try {
             // Get default region
             String regionString = configurationJson.getString(ConfigKey.DEFAULT_REGION.key());
@@ -94,9 +103,13 @@ public final class AWSPredictionsPluginConfiguration {
 
             if (configurationJson.has(ConfigKey.IDENTIFY.key())) {
                 JSONObject identifyJson = configurationJson.getJSONObject(ConfigKey.IDENTIFY.key());
+                identifyLabelsConfiguration = IdentifyLabelsConfiguration.fromJson(identifyJson);
                 identifyEntitiesConfiguration = IdentifyEntitiesConfiguration.fromJson(identifyJson);
+                identifyTextConfiguration = IdentifyTextConfiguration.fromJson(identifyJson);
             } else {
+                identifyLabelsConfiguration = null;
                 identifyEntitiesConfiguration = null;
+                identifyTextConfiguration = null;
             }
 
             if (configurationJson.has(ConfigKey.INTERPRET.key())) {
@@ -105,7 +118,6 @@ public final class AWSPredictionsPluginConfiguration {
             } else {
                 interpretConfiguration = null;
             }
-
         } catch (JSONException | IllegalArgumentException exception) {
             throw new PredictionsException(
                     "Issue encountered while parsing configuration JSON",
@@ -118,7 +130,9 @@ public final class AWSPredictionsPluginConfiguration {
                 defaultRegion,
                 speechGeneratorConfiguration,
                 translateTextConfiguration,
+                identifyLabelsConfiguration,
                 identifyEntitiesConfiguration,
+                identifyTextConfiguration,
                 interpretConfiguration
         );
     }
@@ -176,6 +190,23 @@ public final class AWSPredictionsPluginConfiguration {
     }
 
     /**
+     * Gets the configuration for labels detection.
+     * Null if not configured.
+     * @return the configuration for labels detection
+     * @throws PredictionsException if not configured
+     */
+    @NonNull
+    public IdentifyLabelsConfiguration getIdentifyLabelsConfiguration() throws PredictionsException {
+        if (identifyLabelsConfiguration == null) {
+            throw new PredictionsException(
+                    "Labels detection is not configured.",
+                    "Verify that identifyLabels is configured under " + ConfigKey.IDENTIFY.key()
+            );
+        }
+        return identifyLabelsConfiguration;
+    }
+
+    /**
      * Gets the configuration for entities detection.
      * Null if not configured.
      * @return the configuration for entities detection
@@ -190,6 +221,23 @@ public final class AWSPredictionsPluginConfiguration {
             );
         }
         return identifyEntitiesConfiguration;
+    }
+
+    /**
+     * Gets the configuration for text detection.
+     * Null if not configured.
+     * @return the configuration for text detection
+     * @throws PredictionsException if not configured
+     */
+    @NonNull
+    public IdentifyTextConfiguration getIdentifyTextConfiguration() throws PredictionsException {
+        if (identifyTextConfiguration == null) {
+            throw new PredictionsException(
+                    "Text detection is not configured.",
+                    "Verify that identifyText is configured under " + ConfigKey.IDENTIFY.key()
+            );
+        }
+        return identifyTextConfiguration;
     }
 
     /**
