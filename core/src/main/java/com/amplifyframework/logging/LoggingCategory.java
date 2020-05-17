@@ -52,26 +52,8 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
 
     @NonNull
     @Override
-    public Logger getDefaultLogger() {
-        return getLoggingPlugin().getDefaultLogger();
-    }
-
-    @NonNull
-    @Override
-    public Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold) {
-        return getLoggingPlugin().forNamespaceAndThreshold(namespace, threshold);
-    }
-
-    @NonNull
-    @Override
     public Logger forNamespace(@Nullable String namespace) {
         return getLoggingPlugin().forNamespace(namespace);
-    }
-
-    @NonNull
-    @Override
-    public Logger forCategory(@NonNull CategoryType categoryType) {
-        return getLoggingPlugin().forCategory(categoryType);
     }
 
     @NonNull
