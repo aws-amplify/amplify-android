@@ -634,8 +634,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             int columnIndex,
             @Nullable Object value
     ) throws DataStoreException {
-        LOG.verbose("SQLiteStorageAdapter.bindValueToStatement");
-        LOG.verbose("value = " + value);
+        LOG.verbose("SQLiteStorageAdapter.bindValueToStatement(..., value = " + value);
         if (value == null) {
             statement.bindNull(columnIndex);
         } else if (value instanceof String) {

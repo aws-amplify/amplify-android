@@ -103,7 +103,7 @@ final class MutationProcessor {
             // Lastly, remove the item from the outbox, so we don't process it again.
             .andThen(mutationOutbox.remove(mutationOutboxItem))
             .doOnComplete(() -> {
-                LOG.verbose(
+                LOG.debug(
                     "Pending mutation was published to cloud successfully, " +
                         "and removed from the mutation outbox: " + mutationOutboxItem
                 );
