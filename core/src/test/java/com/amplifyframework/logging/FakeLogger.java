@@ -32,11 +32,7 @@ import java.util.Objects;
  * work of verifying an actual log line against one that was captured by this logger
  * implementation.
  */
-@SuppressWarnings("unused")
 final class FakeLogger implements Logger {
-    private static final LogLevel DEFAULT_THRESHOLD = LogLevel.INFO;
-    private static final String DEFAULT_NAMESPACE = FakeLogger.class.getSimpleName();
-
     private final String namespace;
     private final LogLevel threshold;
     private final List<Log> logs;
@@ -47,30 +43,23 @@ final class FakeLogger implements Logger {
         this.logs = new ArrayList<>();
     }
 
-    static FakeLogger instance() {
-        return new FakeLogger(DEFAULT_NAMESPACE, DEFAULT_THRESHOLD);
-    }
-
-    static FakeLogger instance(@NonNull String namespace) {
-        Objects.requireNonNull(namespace);
-        return new FakeLogger(namespace, DEFAULT_THRESHOLD);
-    }
-
+    @SuppressWarnings("SameParameterValue")
     static FakeLogger instance(@NonNull String namespace, @NonNull LogLevel threshold) {
         Objects.requireNonNull(namespace);
         Objects.requireNonNull(threshold);
         return new FakeLogger(namespace, threshold);
     }
 
-    static FakeLogger instance(@NonNull LogLevel threshold) {
-        Objects.requireNonNull(threshold);
-        return new FakeLogger(DEFAULT_NAMESPACE, threshold);
-    }
-
     @NonNull
     @Override
     public LogLevel getThresholdLevel() {
         return threshold;
+    }
+
+    @NonNull
+    @Override
+    public String getNamespace() {
+        return namespace;
     }
 
     @Override
@@ -108,15 +97,10 @@ final class FakeLogger implements Logger {
         logs.add(Log.instance(LogLevel.VERBOSE, message));
     }
 
-    String getNamespace() {
-        return namespace;
-    }
-
     List<Log> getLogs() {
         return Immutable.of(logs);
     }
 
-    @SuppressWarnings("SameParameterValue")
     static final class Log {
         private final LogLevel logLevel;
         private final String message;
@@ -141,21 +125,6 @@ final class FakeLogger implements Logger {
             Objects.requireNonNull(message);
             Objects.requireNonNull(throwable);
             return new Log(level, message, throwable);
-        }
-
-        @NonNull
-        LogLevel getLogLevel() {
-            return logLevel;
-        }
-
-        @Nullable
-        String getMessage() {
-            return message;
-        }
-
-        @Nullable
-        Throwable getThrowable() {
-            return throwable;
         }
 
         void assertEquals(

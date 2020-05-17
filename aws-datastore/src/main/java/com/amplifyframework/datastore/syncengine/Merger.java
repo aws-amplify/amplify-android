@@ -40,7 +40,6 @@ import io.reactivex.Completable;
  * All of these sources must be rectified with the current state of the local storage.
  * This is the purpose of the merger.
  */
-@SuppressWarnings("CodeBlock2Expr")
 final class Merger {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final MutationOutbox mutationOutbox;
@@ -87,22 +86,24 @@ final class Merger {
             // Update the metadata for it
             .andThen(save(metadata))
             // Let the world know that we've done a good thing.
-            .andThen(announceSuccessfulMerge(modelWithMetadata));
+            .doOnComplete(() -> {
+                announceSuccessfulMerge(modelWithMetadata);
+                LOG.debug("Remote model update was sync'd down into local storage: " + modelWithMetadata);
+            })
+            .doOnError(failure ->
+                LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
+            );
     }
 
     /**
      * Announce a successful merge over Hub.
      * @param modelWithMetadata Model with metadata that was successfully merged
      * @param <T> Type of model
-     * @return A completable operation for the publication.
      */
-    private <T extends Model> Completable announceSuccessfulMerge(ModelWithMetadata<T> modelWithMetadata) {
-        return Completable.fromAction(() -> {
-            Amplify.Hub.publish(HubChannel.DATASTORE,
-                HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, modelWithMetadata)
-            );
-            LOG.info("Remote model update was sync'd down into local storage: " + modelWithMetadata);
-        });
+    private <T extends Model> void announceSuccessfulMerge(ModelWithMetadata<T> modelWithMetadata) {
+        Amplify.Hub.publish(HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.RECEIVED_FROM_CLOUD, modelWithMetadata)
+        );
     }
 
     // Delete a model.
@@ -111,27 +112,28 @@ final class Merger {
             // First, check if the thing exists.
             // If we don't, we'll get an exception saying basically,
             // "failed to delete a non-existing thing."
-            ifPresent(model.getClass(), model.getId(), () -> {
-                localStorageAdapter.delete(
+            ifPresent(model.getClass(), model.getId(),
+                () -> localStorageAdapter.delete(
                     model,
                     StorageItemChange.Initiator.SYNC_ENGINE,
                     ignored -> emitter.onComplete(),
                     emitter::onError
-                );
-            }, emitter::onComplete);
+                ),
+                emitter::onComplete
+            );
         }));
     }
 
     // Create or update a model.
     private <T extends Model> Completable save(T model) {
-        return Completable.defer(() -> Completable.create(emitter -> {
+        return Completable.defer(() -> Completable.create(emitter ->
             localStorageAdapter.save(
                 model,
                 StorageItemChange.Initiator.SYNC_ENGINE,
                 ignored -> emitter.onComplete(),
                 emitter::onError
-            );
-        }));
+            )
+        ));
     }
 
     /**

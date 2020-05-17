@@ -32,6 +32,13 @@ public interface Logger {
     LogLevel getThresholdLevel();
 
     /**
+     * Gets the namespace of the logger.
+     * @return namespace for logger
+     */
+    @NonNull
+    String getNamespace();
+
+    /**
      * Logs a message at the {@link LogLevel#ERROR} level.
      * @param message An error message
      */

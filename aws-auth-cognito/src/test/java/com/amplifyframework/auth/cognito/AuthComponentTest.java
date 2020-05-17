@@ -27,6 +27,7 @@ import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
+import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
@@ -36,8 +37,11 @@ import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
 import com.amplifyframework.testutils.sync.SynchronousAuth;
 
+import com.amazonaws.auth.AWSCredentials;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.SignOutOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
@@ -66,6 +70,7 @@ import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -75,7 +80,6 @@ import static org.mockito.Mockito.verify;
  */
 @RunWith(RobolectricTestRunner.class)
 public final class AuthComponentTest {
-    private static final String USER_ID = "myId";
     private static final String DESTINATION = "e***@email.com";
     private static final String DELIVERY_MEDIUM = "sms";
     private static final String ATTRIBUTE_NAME = "email";
@@ -86,6 +90,24 @@ public final class AuthComponentTest {
     private static final String ATTRIBUTE_VAL = "email@email.com";
     private static final String CONFIRMATION_CODE = "confirm";
     private static final String PLUGIN_KEY = "awsCognitoAuthPlugin";
+    private static final String IDENTITY_ID = "identityId";
+    private static final String ACCESS_KEY = "accessKey";
+    private static final String SECRET_KEY = "secretKey";
+    private static final String ID_TOKEN = "idToken";
+    private static final String REFRESH_TOKEN = "refreshToken";
+    // Actual JWT token used since access token needs to be parsable as part of user sub retrieval.
+    private static final String ACCESS_TOKEN = "eyJraWQiOiJjM2VKd2oxMURcL2ozUE8zd0s2MFwvNWVvRFl2Z0lESmVpdDVaU0YzanFne" +
+            "GM9IiwiYWxnIjoiUlMyNTYifQ.eyJzdWIiOiI2OWJjMjUyYi1kZDA3LTQxYzAtYjFkYi1hNDYwNjZiOGVmNTEiLCJldmVudF9pZCI6Im" +
+            "U4ZWE3MDdiLTE4ODctNGQ3Zi04MDM4LTQwODdkYWE5ZjUwOSIsInRva2VuX3VzZSI6ImFjY2VzcyIsInNjb3BlIjoiYXdzLmNvZ25pdG" +
+            "8uc2lnbmluLnVzZXIuYWRtaW4iLCJhdXRoX3RpbWUiOjE1ODkzOTM3NTksImlzcyI6Imh0dHBzOlwvXC9jb2duaXRvLWlkcC51cy1lYX" +
+            "N0LTEuYW1hem9uYXdzLmNvbVwvdXMtZWFzdC0xX3lGT2w4ZktVVSIsImV4cCI6MTU4OTM5NzM1OSwiaWF0IjoxNTg5MzkzNzU5LCJqdG" +
+            "kiOiI0OWIzOGVlYi1iYzAzLTRhOWEtOWQ2YS04YjczYjEyMWRjNmMiLCJjbGllbnRfaWQiOiIycW1yb3A5NWxjdmZqZ2Q5cGI4bGpmZ3" +
+            "FyOCIsInVzZXJuYW1lIjoidXNlcm5hbWUyIn0.Y38IDR0wB1MvTxKP0K7mYeM6HLV-BQGQMhZsGJlWUbqXXZYy1R2aAs0Nz5EdBIVvN_" +
+            "wIvDuWVK2M-9IS-lptJPQcjc8d5CHWPUNQzG4N7qkqDd5ATdj6Rvbpn8JiMgMJwM4bemNl4ZxlLs63iEMqzZUGq3iuwKHp8EpMAjSfwn" +
+            "lNbI7OGWEfXR0FHA_pHtwu1cBHlHvf21R0saGdki2rcN_elSrizKMqESfyKLvYf-kv0N8aSMxJ0cujwevrfCe1a0WGuUmZkzbUO2AJ3o" +
+            "O8KyMzoWePPXetwjBk7HB-RX9k-kltuHGrdMMEXMCHlWkSZJ7VwQksLOA2RMfQs-0i0w";
+    // User sub value here should match the one encoded in the access token above
+    private static final String USER_SUB = "69bc252b-dd07-41c0-b1db-a46066b8ef51";
     private static final Map<String, String> METADATA = Collections.singletonMap("aCustomKey", "aCustomVal");
     private AWSMobileClient mobileClient;
     private AuthCategory authCategory;
@@ -99,14 +121,8 @@ public final class AuthComponentTest {
     public void setup() throws AmplifyException {
         mobileClient = mock(AWSMobileClient.class);
         authCategory = new AuthCategory();
-        authCategory.addPlugin(new AWSCognitoAuthPlugin(mobileClient, USER_ID));
+        authCategory.addPlugin(new AWSCognitoAuthPlugin(mobileClient, USER_SUB));
         synchronousAuth = SynchronousAuth.delegatingTo(authCategory);
-
-        doAnswer(invocation -> {
-            Callback<Tokens> callback = invocation.getArgument(0);
-            callback.onError(new Exception());
-            return null;
-        }).when(mobileClient).getTokens(any());
     }
 
     /**
@@ -286,6 +302,13 @@ public final class AuthComponentTest {
             )
         );
 
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
         doAnswer(invocation -> {
             Callback<SignInResult> callback = invocation.getArgument(3);
             callback.onResult(amcResult);
@@ -322,6 +345,13 @@ public final class AuthComponentTest {
                         ATTRIBUTE_NAME
                 )
         );
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
 
         doAnswer(invocation -> {
             Callback<SignInResult> callback = invocation.getArgument(1);
@@ -390,6 +420,315 @@ public final class AuthComponentTest {
     }
 
     /**
+     * Tests that signOut calls the AWSMobileClient sign out method with the global signout option set to true.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signOut() throws AuthException {
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onResult(null);
+            return null;
+        }).when(mobileClient).signOut(any(), any());
+
+        synchronousAuth.signOut();
+
+        ArgumentCaptor<SignOutOptions> signOutOptionsCaptor = ArgumentCaptor.forClass(SignOutOptions.class);
+        verify(mobileClient).signOut(signOutOptionsCaptor.capture(), any());
+        assertTrue(signOutOptionsCaptor.getValue().isSignOutGlobally());
+    }
+
+    /**
+     * Tests that if sign out fails, the returned Exception gets wrapped in an AuthException.
+     * @throws AuthException expected exception
+     */
+    @Test(expected = AuthException.class)
+    public void signOutFails() throws AuthException {
+        Exception exception = new Exception("Test exception");
+
+        doAnswer(invocation -> {
+            Callback<Void> callback = invocation.getArgument(1);
+            callback.onError(exception);
+            return null;
+        }).when(mobileClient).signOut(any(), any());
+
+        synchronousAuth.signOut();
+    }
+
+    /**
+     * Test that a signed out account which supports identity pools but doesn't have guest credentials returns failed
+     * results for all fields with the signed out exception.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedOutSessionWithIdentityPoolAndNoGuest() throws AuthException {
+        doAnswer(invocation -> null).when(mobileClient).getIdentityId();
+
+        UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_OUT, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+        verify(mobileClient).getIdentityId();
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                false,
+                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException())
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
+     * Test that a signed out account which supports identity pools and has guest credentials returns the proper
+     * success results for identity pool fields and signed out failure results for user pool fields.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedOutSessionWithIdentityPoolAndGuest() throws AuthException {
+        doAnswer(invocation -> IDENTITY_ID).when(mobileClient).getIdentityId();
+
+        AWSCredentials awsCredentialsResult = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
+        doAnswer(invocation -> {
+            Callback<AWSCredentials> callback = invocation.getArgument(0);
+            callback.onResult(awsCredentialsResult);
+            return null;
+        }).when(mobileClient).getAWSCredentials(any());
+
+        UserStateDetails stateResult = new UserStateDetails(UserState.GUEST, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+        verify(mobileClient).getIdentityId();
+        verify(mobileClient).getAWSCredentials(any());
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                false,
+                AuthSessionResult.success(IDENTITY_ID),
+                AuthSessionResult.success(awsCredentialsResult),
+                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException())
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
+     * Test that a signed out account which does not support identity pools returns invalid account failures for
+     * identity pool fields and signed out failures for user pool fields.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedOutSessionWithNoIdentityPool() throws AuthException {
+        doThrow(new RuntimeException()).when(mobileClient).getIdentityId();
+
+        AWSCredentials awsCredentialsResult = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
+        doAnswer(invocation -> {
+            Callback<AWSCredentials> callback = invocation.getArgument(0);
+            callback.onResult(awsCredentialsResult);
+            return null;
+        }).when(mobileClient).getAWSCredentials(any());
+
+        UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_OUT, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+        verify(mobileClient).getIdentityId();
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                false,
+                AuthSessionResult.failure(new AuthException.InvalidAccountTypeException()),
+                AuthSessionResult.failure(new AuthException.InvalidAccountTypeException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException()),
+                AuthSessionResult.failure(new AuthException.SignedOutException())
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
+     * Test that a signed in account with user and identity pool support returns all proper success results.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedInSessionWithIdentityAndUserPools() throws AuthException {
+        doAnswer(invocation -> IDENTITY_ID).when(mobileClient).getIdentityId();
+
+        UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_IN, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        AWSCredentials awsCredentialsResult = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
+        doAnswer(invocation -> {
+            Callback<AWSCredentials> callback = invocation.getArgument(0);
+            callback.onResult(awsCredentialsResult);
+            return null;
+        }).when(mobileClient).getAWSCredentials(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+        verify(mobileClient).getTokens(any());
+        verify(mobileClient).getAWSCredentials(any());
+        verify(mobileClient).getIdentityId();
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                true,
+                AuthSessionResult.success(IDENTITY_ID),
+                AuthSessionResult.success(awsCredentialsResult),
+                AuthSessionResult.success(USER_SUB),
+                AuthSessionResult.success(new AWSCognitoUserPoolTokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN))
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
+     * Test that a signed in account with only identity pool support returns proper success results for identity fields
+     * and invalid account failures for user pool results.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedInSessionWithIdentityPoolOnly() throws AuthException {
+        doAnswer(invocation -> IDENTITY_ID).when(mobileClient).getIdentityId();
+
+        UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_IN, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onError(new Exception("You must be signed-in with Cognito Userpools to be able to use getTokens"));
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        AWSCredentials awsCredentialsResult = new BasicAWSCredentials(ACCESS_KEY, SECRET_KEY);
+        doAnswer(invocation -> {
+            Callback<AWSCredentials> callback = invocation.getArgument(0);
+            callback.onResult(awsCredentialsResult);
+            return null;
+        }).when(mobileClient).getAWSCredentials(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+        verify(mobileClient).getTokens(any());
+        verify(mobileClient).getAWSCredentials(any());
+        verify(mobileClient).getIdentityId();
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                true,
+                AuthSessionResult.success(IDENTITY_ID),
+                AuthSessionResult.success(awsCredentialsResult),
+                AuthSessionResult.failure(new AuthException.InvalidAccountTypeException()),
+                AuthSessionResult.failure(new AuthException.InvalidAccountTypeException())
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
+     * Test that a signed in account with only user pool support returns proper success results for user pool fields
+     * and invalid account failures for identity results.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedInSessionWithUserPoolOnly() throws AuthException {
+        doAnswer(invocation -> IDENTITY_ID).when(mobileClient).getIdentityId();
+
+        UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_IN, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        Exception credentialsException = new Exception("Cognito Identity not configured");
+        doAnswer(invocation -> {
+            Callback<AWSCredentials> callback = invocation.getArgument(0);
+            callback.onError(credentialsException);
+            return null;
+        }).when(mobileClient).getAWSCredentials(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+        verify(mobileClient).getTokens(any());
+        verify(mobileClient).getAWSCredentials(any());
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                true,
+                AuthSessionResult.failure(new AuthException.InvalidAccountTypeException(credentialsException)),
+                AuthSessionResult.failure(new AuthException.InvalidAccountTypeException(credentialsException)),
+                AuthSessionResult.success(USER_SUB),
+                AuthSessionResult.success(new AWSCognitoUserPoolTokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN))
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
+     * Test that a signed in account with expired tokens gets back expired session exceptions for all fields.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signedInSessionWithExpiredTokens() throws AuthException {
+        UserStateDetails stateResult = new UserStateDetails(UserState.SIGNED_OUT_USER_POOLS_TOKENS_INVALID, null);
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(0);
+            callback.onResult(stateResult);
+            return null;
+        }).when(mobileClient).currentUserState(any());
+
+        AWSCognitoAuthSession authSession = (AWSCognitoAuthSession) synchronousAuth.fetchAuthSession();
+        verify(mobileClient).currentUserState(any());
+
+        AWSCognitoAuthSession expectedResult = new AWSCognitoAuthSession(
+                true,
+                AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                AuthSessionResult.failure(new AuthException.SessionExpiredException()),
+                AuthSessionResult.failure(new AuthException.SessionExpiredException())
+        );
+
+        assertEquals(expectedResult, authSession);
+    }
+
+    /**
      * Tests that the getCurrentUser method of the Auth wrapper of AWSMobileClient (AMC) returns a new
      * AWSCognitoAuthUser object containing the userId property in the plugin and the username from AMC.getUsername().
      */
@@ -398,7 +737,7 @@ public final class AuthComponentTest {
         doAnswer(invocation -> USERNAME).when(mobileClient).getUsername();
         AuthUser user = authCategory.getCurrentUser();
 
-        assertEquals(USER_ID, user.getUserId());
+        assertEquals(USER_SUB, user.getUserId());
         assertEquals(USERNAME, user.getUsername());
     }
 

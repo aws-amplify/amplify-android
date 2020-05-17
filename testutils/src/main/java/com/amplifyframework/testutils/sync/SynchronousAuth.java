@@ -20,6 +20,7 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -208,6 +209,18 @@ public final class SynchronousAuth {
     }
 
     /**
+     * Fetch auth session synchronously.
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSession fetchAuthSession() throws AuthException {
+        return Await.<AuthSession, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.fetchAuthSession(onResult, onError)
+        );
+    }
+
+    /**
      * Update the password of an existing user - must be signed in to perform this action.
      * @param oldPassword The user's existing password
      * @param newPassword The new password desired on the user account
@@ -221,6 +234,21 @@ public final class SynchronousAuth {
     ) throws AuthException {
         return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.updatePassword(oldPassword, newPassword, () -> onResult.accept(new Object()), onError)
+        );
+    }
+
+    /**
+     * Sign out synchronously.
+     * @return Dummy object - just indicates it completed successfully
+     * @throws AuthException exception
+     */
+    @NonNull
+    public Object signOut() throws AuthException {
+        return Await.<Object, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.signOut(
+                    () -> onResult.accept(new Object()),
+                    onError
+                )
         );
     }
 }
