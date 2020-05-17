@@ -676,7 +676,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull ModelSchema modelSchema,
             @NonNull SqlCommand sqlCommand,
             @NonNull ModelConflictStrategy modelConflictStrategy)
-            throws IllegalAccessException, DataStoreException {
+            throws DataStoreException {
         Objects.requireNonNull(model);
         Objects.requireNonNull(modelSchema);
         Objects.requireNonNull(sqlCommand);
@@ -732,16 +732,11 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull String columnName,
             @NonNull String columnValue) {
         // SELECT * FROM '{tableName}' WHERE {columnName} = '{columnValue}'
-        final String queryString = new StringBuilder()
-                .append(SqlKeyword.SELECT).append(SqlKeyword.DELIMITER)
-                .append("*").append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.FROM).append(SqlKeyword.DELIMITER)
-                .append(Quotes.wrapInSingle(tableName)).append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.WHERE).append(SqlKeyword.DELIMITER)
-                .append(columnName).append(SqlKeyword.DELIMITER)
-                .append(SqlKeyword.EQUAL).append(SqlKeyword.DELIMITER)
-                .append(Quotes.wrapInSingle(columnValue))
-                .toString();
+        final String queryString = "" +
+            SqlKeyword.SELECT + SqlKeyword.DELIMITER + "*" + SqlKeyword.DELIMITER +
+            SqlKeyword.FROM + SqlKeyword.DELIMITER + Quotes.wrapInSingle(tableName) + SqlKeyword.DELIMITER +
+            SqlKeyword.WHERE + SqlKeyword.DELIMITER + columnName + SqlKeyword.DELIMITER +
+            SqlKeyword.EQUAL + SqlKeyword.DELIMITER + Quotes.wrapInSingle(columnValue);
         try (Cursor cursor = databaseConnectionHandle.rawQuery(queryString, null)) {
             return cursor.getCount() > 0;
         }
@@ -753,29 +748,23 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
      * Drop all tables if the version has changed.
      */
     private Completable updateModels() {
-        return PersistentModelVersion.fromLocalStorage(this)
-                .flatMap(iterator -> {
-                    if (iterator.hasNext()) {
-                        LOG.verbose("Successfully read model version from local storage. " +
-                                "Checking if the model version need to be updated...");
-                        PersistentModelVersion persistentModelVersion = iterator.next();
-                        String oldVersion = persistentModelVersion.getVersion();
-                        String newVersion = modelsProvider.version();
-                        if (!ObjectsCompat.equals(oldVersion, newVersion)) {
-                            LOG.debug("Updating version as it has changed from " +
-                                    oldVersion + " to " + newVersion);
-                            Objects.requireNonNull(sqliteStorageHelper);
-                            Objects.requireNonNull(databaseConnectionHandle);
-                            sqliteStorageHelper.update(
-                                    databaseConnectionHandle,
-                                    oldVersion,
-                                    newVersion);
-                        }
-                    }
-                    return PersistentModelVersion.saveToLocalStorage(
-                            this,
-                            new PersistentModelVersion(modelsProvider.version()));
-                }).ignoreElement();
+        return PersistentModelVersion.fromLocalStorage(this).flatMap(iterator -> {
+            if (iterator.hasNext()) {
+                LOG.verbose("Successfully read model version from local storage. " +
+                    "Checking if the model version need to be updated...");
+                PersistentModelVersion persistentModelVersion = iterator.next();
+                String oldVersion = persistentModelVersion.getVersion();
+                String newVersion = modelsProvider.version();
+                if (!ObjectsCompat.equals(oldVersion, newVersion)) {
+                    LOG.debug("Updating version as it has changed from " + oldVersion + " to " + newVersion);
+                    Objects.requireNonNull(sqliteStorageHelper);
+                    Objects.requireNonNull(databaseConnectionHandle);
+                    sqliteStorageHelper.update(databaseConnectionHandle, oldVersion, newVersion);
+                }
+            }
+            PersistentModelVersion persistentModelVersion = new PersistentModelVersion(modelsProvider.version());
+            return PersistentModelVersion.saveToLocalStorage(this, persistentModelVersion);
+        }).ignoreElement();
     }
 
     private <T extends Model> T deserializeModelFromRawMap(
@@ -783,11 +772,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull Class<T> itemClass) throws IOException {
         final String modelInJsonFormat = gson.toJson(mapForModel);
         return gson.getAdapter(itemClass).fromJson(modelInJsonFormat);
-    }
-
-    @VisibleForTesting
-    Cursor getQueryAllCursor(@NonNull String tableName) throws DataStoreException {
-        return getQueryAllCursor(tableName, Where.matchesAll());
     }
 
     @SuppressWarnings("WeakerAccess")
