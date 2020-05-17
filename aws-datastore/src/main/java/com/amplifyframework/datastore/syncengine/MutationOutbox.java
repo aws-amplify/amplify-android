@@ -107,7 +107,7 @@ final class MutationOutbox {
                     // So, we would have to "unwrap" it, to get the item we saved, out.
                     // Forget that. We know the save succeeded, so just emit the
                     // original thing enqueue() got as a param.
-                    LOG.verbose("New mutation has been enqueued to mutation outbox: " + pendingMutation);
+                    LOG.debug("New mutation has been enqueued to mutation outbox: " + pendingMutation);
                     pendingMutations.onNext(pendingMutation);
                     subscriber.onComplete();
                 },
@@ -152,7 +152,7 @@ final class MutationOutbox {
                 converter.toRecord(pendingMutation),
                 StorageItemChange.Initiator.SYNC_ENGINE,
                 deletionResult -> {
-                    LOG.verbose("Successfully removed pending mutation from mutation outbox: " + pendingMutation);
+                    LOG.debug("Successfully removed pending mutation from mutation outbox: " + pendingMutation);
                     subscriber.onComplete();
                 },
                 failure -> {
@@ -177,7 +177,7 @@ final class MutationOutbox {
                     while (results.hasNext()) {
                         try {
                             PendingMutation<? extends Model> pendingMutation = converter.fromRecord(results.next());
-                            LOG.verbose("Found a previously unprocessed mutation. Enqueuing " + pendingMutation);
+                            LOG.debug("Found a previously unprocessed mutation. Enqueuing " + pendingMutation);
                             emitter.onNext(pendingMutation);
                         } catch (DataStoreException conversionFailure) {
                             emitter.onError(conversionFailure);

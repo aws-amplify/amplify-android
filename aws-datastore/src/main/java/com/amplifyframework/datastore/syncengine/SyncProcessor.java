@@ -169,7 +169,7 @@ final class SyncProcessor {
                 appSync.sync(modelClass, lastSyncTimeAsLong, metadataEmitter(emitter), emitter::onError);
             emitter.setDisposable(asDisposable(cancelable));
         }).doOnSuccess(results ->
-            LOG.verbose("Successfully sync'd down cloud state for model type = " + modelClass.getSimpleName())
+            LOG.debug("Successfully sync'd down cloud state for model type = " + modelClass.getSimpleName())
         ).doOnError(failureToSync ->
             LOG.warn("Failed to sync down cloud state for model type = " + modelClass.getSimpleName(), failureToSync)
         );
