@@ -35,6 +35,7 @@ import java.util.List;
 
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 /**
  * A simple in-memory implementation of the LocalStorageAdapter
@@ -42,11 +43,11 @@ import io.reactivex.subjects.PublishSubject;
  */
 public final class InMemoryStorageAdapter implements LocalStorageAdapter {
     private final List<Model> items;
-    private final PublishSubject<StorageItemChange<? extends Model>> itemChangeStream;
+    private final Subject<StorageItemChange<? extends Model>> itemChangeStream;
 
     private InMemoryStorageAdapter() {
         this.items = new ArrayList<>();
-        this.itemChangeStream = PublishSubject.create();
+        this.itemChangeStream = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
     }
 
     /**

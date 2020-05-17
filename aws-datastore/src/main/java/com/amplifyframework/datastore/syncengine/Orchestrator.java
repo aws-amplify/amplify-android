@@ -18,11 +18,13 @@ package com.amplifyframework.datastore.syncengine;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
+import com.amplifyframework.logging.Logger;
 
 import org.json.JSONObject;
 
@@ -35,6 +37,8 @@ import io.reactivex.Completable;
  * and {@link AppSync}.
  */
 public final class Orchestrator {
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
     private final MutationProcessor mutationProcessor;
@@ -71,7 +75,6 @@ public final class Orchestrator {
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
-        RemoteModelMutations remoteModelMutations = new RemoteModelMutations(appSync, modelProvider);
         MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
@@ -86,7 +89,7 @@ public final class Orchestrator {
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
             .build();
-        this.subscriptionProcessor = new SubscriptionProcessor(remoteModelMutations, merger);
+        this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
     }
 
@@ -97,19 +100,21 @@ public final class Orchestrator {
      */
     @NonNull
     public Completable start() {
-        return Completable.fromAction(() -> {
+        return Completable.defer(() -> Completable.fromAction(() -> {
             storageObserver.startObservingStorageChanges();
             subscriptionProcessor.startSubscriptions();
             syncProcessor.hydrate().blockingAwait();
             mutationProcessor.startDrainingMutationOutbox();
             subscriptionProcessor.startDrainingMutationBuffer();
-        });
+            LOG.info("Cloud synchronization is now fully active.");
+        }));
     }
 
     /**
      * Stop all model synchronization.
      */
     public void stop() {
+        LOG.info("Intentionally stopping cloud synchronization, now.");
         storageObserver.stopObservingStorageChanges();
         subscriptionProcessor.stopAllSubscriptionActivity();
         mutationProcessor.stopDrainingMutationOutbox();

@@ -139,7 +139,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             }
 
             final String valueAsString = cursor.getString(columnIndex);
-            LOGGER.debug(String.format(
+            LOGGER.verbose(String.format(
                     "Attempt to convert value \"%s\" from field %s of type %s from model %s",
                     valueAsString, field.getName(), field.getType(), modelType.getSimpleName()
             ));

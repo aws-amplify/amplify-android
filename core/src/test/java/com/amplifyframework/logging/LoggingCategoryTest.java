@@ -53,7 +53,8 @@ public final class LoggingCategoryTest {
     @Before
     public void setup() {
         this.arrangedDefaultLogger = FakeLogger.instance(RandomString.string(), LogLevel.VERBOSE);
-        this.realLoggingCategory = new LoggingCategory(FakeLoggingPlugin.instance(arrangedDefaultLogger));
+        FakeLoggingPlugin<?> plugin = FakeLoggingPlugin.instance(arrangedDefaultLogger);
+        this.realLoggingCategory = new LoggingCategory(plugin);
     }
 
     /**
@@ -69,7 +70,7 @@ public final class LoggingCategoryTest {
         // Act: log a warning, before configure() is called on the category
         String message = RandomString.string();
         Throwable issue = new RuntimeException(RandomString.string());
-        realLoggingCategory.getDefaultLogger().warn(message, issue);
+        realLoggingCategory.forNamespace(RandomString.string()).warn(message, issue);
 
         // Assert: one log was emitted via the default logging plugin.
         List<FakeLogger.Log> capturedLogs = arrangedDefaultLogger.getLogs();
@@ -95,7 +96,7 @@ public final class LoggingCategoryTest {
         // Act: log a warning
         String message = RandomString.string();
         Throwable issue = new RuntimeException(RandomString.string());
-        realLoggingCategory.getDefaultLogger().warn(message, issue);
+        realLoggingCategory.forNamespace(RandomString.string()).warn(message, issue);
 
         // Assert: warning was emitted via the default logging plugin.
         List<FakeLogger.Log> capturedLogs = arrangedDefaultLogger.getLogs();
@@ -122,7 +123,7 @@ public final class LoggingCategoryTest {
         // Act: try to log something
         String message = RandomString.string();
         Throwable issue = new RuntimeException(RandomString.string());
-        realLoggingCategory.getDefaultLogger().warn(message, issue);
+        realLoggingCategory.forNamespace(RandomString.string()).warn(message, issue);
 
         // Assert: nothing showed up via the default logging plugin
         assertTrue(arrangedDefaultLogger.getLogs().isEmpty());

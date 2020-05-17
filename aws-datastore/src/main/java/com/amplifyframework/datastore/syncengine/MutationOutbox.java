@@ -35,6 +35,7 @@ import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
+import io.reactivex.subjects.Subject;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
@@ -49,12 +50,12 @@ final class MutationOutbox {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final LocalStorageAdapter storage;
-    private final PublishSubject<PendingMutation<? extends Model>> pendingMutations;
+    private final Subject<PendingMutation<? extends Model>> pendingMutations;
     private final PendingMutation.Converter converter;
 
     MutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
         this.storage = Objects.requireNonNull(localStorageAdapter);
-        this.pendingMutations = PublishSubject.create();
+        this.pendingMutations = PublishSubject.<PendingMutation<? extends Model>>create().toSerialized();
         this.converter = new GsonPendingMutationConverter();
     }
 
@@ -97,29 +98,26 @@ final class MutationOutbox {
     @NonNull
     <T extends Model> Completable enqueue(@NonNull PendingMutation<T> pendingMutation) {
         Objects.requireNonNull(pendingMutation);
-
-        // defer() the creation of a Completable, until someone subscribes enqueue().
-        // When they do, create() a Completable that wraps a save() call to LocalStorageAdapter.
-        return Completable.defer(() -> Completable.create(subscriber -> {
-            // Convert the PendingMutation (that we want to store) into a Record
-            PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
-            // Save it.
-            storage.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
-                saved -> {
+        return Completable.defer(() -> Completable.create(subscriber ->
+            storage.save(
+                converter.toRecord(pendingMutation),
+                StorageItemChange.Initiator.SYNC_ENGINE,
+                saveResult -> {
                     // The return value is a record that we saved a record.
                     // So, we would have to "unwrap" it, to get the item we saved, out.
                     // Forget that. We know the save succeeded, so just emit the
                     // original thing enqueue() got as a param.
-                    LOG.info("Successfully enqueued " + pendingMutation);
+                    LOG.debug("New mutation has been enqueued to mutation outbox: " + pendingMutation);
                     pendingMutations.onNext(pendingMutation);
                     subscriber.onComplete();
                 },
-                error -> {
-                    pendingMutations.onError(error);
-                    subscriber.onError(error);
+                failure -> {
+                    LOG.warn("Failed to enqueue mutation into mutation outbox: " + pendingMutation, failure);
+                    pendingMutations.onError(failure);
+                    subscriber.onError(failure);
                 }
-            );
-        }));
+            )
+        ));
     }
 
     /**
@@ -149,19 +147,20 @@ final class MutationOutbox {
      */
     @NonNull
     <T extends Model> Completable remove(PendingMutation<T> pendingMutation) {
-        // defer() creation of the Completable until someone subscribe()s via remove() method.
-        // At that time, create() a Completable that wraps a call to LocalStorageAdapter#delete(...).
-        return Completable.defer(() -> Completable.create(subscriber -> {
-            // Convert the PendingMutation into a Record
-            PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
-            // Delete it.
+        return Completable.defer(() -> Completable.create(subscriber ->
             storage.delete(
-                record,
+                converter.toRecord(pendingMutation),
                 StorageItemChange.Initiator.SYNC_ENGINE,
-                ignored -> subscriber.onComplete(),
-                subscriber::onError
-            );
-        }));
+                deletionResult -> {
+                    LOG.debug("Successfully removed pending mutation from mutation outbox: " + pendingMutation);
+                    subscriber.onComplete();
+                },
+                failure -> {
+                    LOG.warn("Failed to remove pending mutation from mutation outbox: " + pendingMutation, failure);
+                    subscriber.onError(failure);
+                }
+            )
+        ));
     }
 
     /**
@@ -172,15 +171,14 @@ final class MutationOutbox {
      * @return An observable stream of mutations that weren't handled in the last session
      */
     private Observable<PendingMutation<? extends Model>> previouslyUnprocessedMutations() {
-        // defer() creation of this Observable until someone subscribe()s to previouslyUnprocessedMutations()
-        // when they do, respond by create()ing an Observable which emits the results of a
-        // query to LocalStorageAdapter, for any existing instances of PendingMutation.Record.
         return Observable.defer(() -> Observable.create(emitter ->
             storage.query(PendingMutation.PersistentRecord.class,
                 results -> {
                     while (results.hasNext()) {
                         try {
-                            emitter.onNext(converter.fromRecord(results.next()));
+                            PendingMutation<? extends Model> pendingMutation = converter.fromRecord(results.next());
+                            LOG.debug("Found a previously unprocessed mutation. Enqueuing " + pendingMutation);
+                            emitter.onNext(pendingMutation);
                         } catch (DataStoreException conversionFailure) {
                             emitter.onError(conversionFailure);
                         }
