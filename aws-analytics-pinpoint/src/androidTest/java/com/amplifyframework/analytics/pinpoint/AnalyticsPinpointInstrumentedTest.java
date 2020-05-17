@@ -50,13 +50,10 @@ import static org.junit.Assert.assertTrue;
  * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
  */
 public class AnalyticsPinpointInstrumentedTest {
-
-    /**
-     * Log tag for the test class.
-     */
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
-    private static final int EVENT_FLUSH_TIMEOUT = 60;
-    private static final int EVENT_FLUSH_WAIT = 2;
+
+    private static final int EVENT_FLUSH_TIMEOUT = 60 /* seconds */;
+    private static final int EVENT_FLUSH_WAIT = 2 /* seconds */;
 
     private static AnalyticsClient analyticsClient;
     private static TargetingClient targetingClient;
