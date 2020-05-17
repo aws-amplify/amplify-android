@@ -48,7 +48,7 @@ final class MutationProcessor {
     private final Merger merger;
     private final AppSync appSync;
     private final MutationOutbox mutationOutbox;
-    private final CompositeDisposable ongoingOperationsDispoable;
+    private final CompositeDisposable ongoingOperationsDisposable;
 
     MutationProcessor(
             @NonNull Merger merger,
@@ -59,7 +59,7 @@ final class MutationProcessor {
         this.versionRepository = Objects.requireNonNull(versionRepository);
         this.appSync = Objects.requireNonNull(appSync);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
-        this.ongoingOperationsDispoable = new CompositeDisposable();
+        this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
     /**
@@ -71,7 +71,7 @@ final class MutationProcessor {
      * it again later, when network conditions become favorable again.
      */
     void startDrainingMutationOutbox() {
-        ongoingOperationsDispoable.add(
+        ongoingOperationsDisposable.add(
             mutationOutbox.observe()
                 .doOnSubscribe(disposable ->
                     LOG.info(
@@ -128,7 +128,7 @@ final class MutationProcessor {
      * Don't process any more mutations.
      */
     void stopDrainingMutationOutbox() {
-        ongoingOperationsDispoable.dispose();
+        ongoingOperationsDisposable.dispose();
     }
 
     /**
