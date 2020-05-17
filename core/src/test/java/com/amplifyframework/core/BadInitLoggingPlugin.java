@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingPlugin;
 
@@ -69,12 +68,6 @@ public final class BadInitLoggingPlugin extends LoggingPlugin<Void> {
     @NonNull
     @Override
     public Logger forNamespace(@Nullable String namespace) {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public Logger forCategory(@NonNull CategoryType categoryType) {
         return null;
     }
 }

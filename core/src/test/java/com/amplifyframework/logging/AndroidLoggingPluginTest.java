@@ -19,8 +19,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.test.core.app.ApplicationProvider;
 
-import com.amplifyframework.core.category.CategoryType;
-
 import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
@@ -33,12 +31,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -133,36 +128,6 @@ public class AndroidLoggingPluginTest {
         logger.warn("Uh oh, not great...");
 
         assertTrue(systemLog.getLines().isEmpty());
-    }
-
-    /**
-     * The {@link AndroidLoggingPlugin#forCategory(CategoryType)} implementation contains
-     * special rules to normalize a log slut from a category name. Validate these conversions.
-     */
-    @Test
-    public void correctSlugGeneratedForCategories() {
-        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
-
-        final Map<CategoryType, String> actuals = new HashMap<>();
-        for (CategoryType categoryType : CategoryType.values()) {
-            String result = plugin.forCategory(categoryType).getNamespace();
-            actuals.put(categoryType, result);
-        }
-        final Map<CategoryType, String> expected = new HashMap<>();
-        expected.put(CategoryType.ANALYTICS, "amplify:analytics");
-        expected.put(CategoryType.API, "amplify:api");
-        expected.put(CategoryType.AUTH, "amplify:auth");
-        expected.put(CategoryType.DATASTORE, "amplify:data-store");
-        expected.put(CategoryType.HUB, "amplify:hub");
-        expected.put(CategoryType.LOGGING, "amplify:logging");
-        expected.put(CategoryType.PREDICTIONS, "amplify:predictions");
-        expected.put(CategoryType.STORAGE, "amplify:storage");
-
-        for (Map.Entry<CategoryType, String> actualsEntry : actuals.entrySet()) {
-            String expectedValue = expected.get(actualsEntry.getKey());
-            assertNotNull(expectedValue); // If this fails, you probably added a new category. Add a mapping above.
-            assertEquals(expectedValue, actualsEntry.getValue());
-        }
     }
 
     static final class LogOutputStream extends ByteArrayOutputStream {

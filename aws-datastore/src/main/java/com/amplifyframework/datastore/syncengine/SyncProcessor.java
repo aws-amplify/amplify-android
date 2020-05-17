@@ -22,7 +22,6 @@ import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
@@ -55,7 +54,7 @@ import io.reactivex.schedulers.Schedulers;
  * the {@link Merger}.
  */
 final class SyncProcessor {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final ModelProvider modelProvider;
     private final ModelSchemaRegistry modelSchemaRegistry;
     private final SyncTimeRegistry syncTimeRegistry;

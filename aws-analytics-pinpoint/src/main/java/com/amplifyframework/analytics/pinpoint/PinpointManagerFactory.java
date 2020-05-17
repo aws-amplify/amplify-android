@@ -19,7 +19,6 @@ import android.content.Context;
 
 import com.amplifyframework.analytics.AnalyticsException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
@@ -40,7 +39,8 @@ import java.util.concurrent.TimeUnit;
  * Factory class to vend out pinpoint analytics client.
  */
 final class PinpointManagerFactory {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.ANALYTICS);
+
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int INITIALIZATION_TIMEOUT_MS = 5000;
 
     private PinpointManagerFactory() {

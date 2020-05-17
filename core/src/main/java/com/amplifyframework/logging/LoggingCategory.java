@@ -57,12 +57,6 @@ public final class LoggingCategory extends Category<LoggingPlugin<?>> implements
     }
 
     @NonNull
-    @Override
-    public Logger forCategory(@NonNull CategoryType categoryType) {
-        return getLoggingPlugin().forCategory(categoryType);
-    }
-
-    @NonNull
     private LoggingPlugin<?> getLoggingPlugin() {
         if (!super.isInitialized() || super.getPlugins().isEmpty()) {
             return defaultPlugin;

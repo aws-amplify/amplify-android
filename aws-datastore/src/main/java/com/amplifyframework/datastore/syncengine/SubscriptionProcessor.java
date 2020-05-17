@@ -26,7 +26,6 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.DataStoreException;
@@ -53,8 +52,8 @@ import io.reactivex.subjects.ReplaySubject;
  * marries mutated models back into the local DataStore, through the {@link Merger}.
  */
 final class SubscriptionProcessor {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
     private static final long SUBSCRIPTION_START_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final AppSync appSync;
     private final ModelProvider modelProvider;

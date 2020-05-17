@@ -18,7 +18,6 @@ package com.amplifyframework.datastore;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 
 /**
@@ -26,7 +25,7 @@ import com.amplifyframework.logging.Logger;
  * and moves on.
  */
 public final class DefaultDataStoreErrorHandler implements DataStoreErrorHandler {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private DefaultDataStoreErrorHandler() {}
 

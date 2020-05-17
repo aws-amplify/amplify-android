@@ -20,11 +20,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.category.CategoryType;
-
 import org.json.JSONObject;
-
-import java.util.Locale;
 
 /**
  * AWS' default implementation of the {@link LoggingCategoryBehavior},
@@ -56,21 +52,6 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     public Logger forNamespace(@Nullable String namespace) {
         String usedNamespace = namespace == null ? AMPLIFY_NAMESPACE : namespace;
         return new AndroidLogger(usedNamespace, defaultLoggerThreshold);
-    }
-
-    @NonNull
-    @Override
-    public Logger forCategory(@NonNull CategoryType categoryType) {
-        StringBuilder slug = new StringBuilder();
-        for (char character : categoryType.getConfigurationKey().toCharArray()) {
-            if (Character.isLowerCase(character)) {
-                slug.append(character);
-            } else {
-                slug.append('-').append(Character.toLowerCase(character));
-            }
-        }
-        String namespace = String.format(Locale.US, "%s:%s", AMPLIFY_NAMESPACE, slug.toString());
-        return new AndroidLogger(namespace, defaultLoggerThreshold);
     }
 
     @NonNull

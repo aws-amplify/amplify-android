@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
@@ -44,7 +43,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 @SuppressWarnings("CodeBlock2Expr")
 final class MutationProcessor {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final VersionRepository versionRepository;
     private final Merger merger;

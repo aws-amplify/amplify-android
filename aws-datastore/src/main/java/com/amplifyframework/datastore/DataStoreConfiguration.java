@@ -20,6 +20,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.core.Amplify;
+import com.amplifyframework.logging.Logger;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -40,6 +43,8 @@ public final class DataStoreConfiguration {
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
+
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final DataStoreErrorHandler dataStoreErrorHandler;
     private final DataStoreConflictHandler dataStoreConflictHandler;

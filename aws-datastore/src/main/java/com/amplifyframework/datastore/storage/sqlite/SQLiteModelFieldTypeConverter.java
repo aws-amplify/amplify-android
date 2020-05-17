@@ -21,7 +21,6 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
@@ -50,7 +49,7 @@ import java.util.Objects;
  * valid in a <code>SQLiteStatement</code>.
  */
 public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConverter<Cursor, Model> {
-    private static final Logger LOGGER = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOGGER = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final Class<? extends Model> modelType;
     private final ModelSchemaRegistry modelSchemaRegistry;

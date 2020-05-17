@@ -24,7 +24,6 @@ import com.amplifyframework.analytics.AnalyticsEvent;
 import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.UserProfile;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
@@ -51,8 +50,11 @@ import static org.junit.Assert.assertTrue;
  * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
  */
 public class AnalyticsPinpointInstrumentedTest {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.ANALYTICS);
 
+    /**
+     * Log tag for the test class.
+     */
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
     private static final int EVENT_FLUSH_TIMEOUT = 60;
     private static final int EVENT_FLUSH_WAIT = 2;
 

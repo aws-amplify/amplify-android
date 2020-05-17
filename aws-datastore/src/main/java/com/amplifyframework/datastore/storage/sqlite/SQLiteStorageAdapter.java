@@ -29,7 +29,6 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelProvider;
@@ -76,7 +75,7 @@ import io.reactivex.subjects.Subject;
  * An implementation of {@link LocalStorageAdapter} using {@link android.database.sqlite.SQLiteDatabase}.
  */
 public final class SQLiteStorageAdapter implements LocalStorageAdapter {
-    private static final Logger LOG = Amplify.Logging.forCategory(CategoryType.DATASTORE);
+    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     // Database Version
     private static final int DATABASE_VERSION = 1;
