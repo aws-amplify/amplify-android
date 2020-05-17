@@ -30,6 +30,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -43,6 +44,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long ITEM_PROCESSING_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private final VersionRepository versionRepository;
     private final Merger merger;
@@ -78,10 +80,10 @@ final class MutationProcessor {
                         "Pending mutations will be published to the cloud."
                 )
             )
-            .startWith(MutationOutbox.EnqueueEvent.ITEM_ADDED) // To start draining immediately
-            .subscribeOn(Schedulers.io())
-            .observeOn(Schedulers.io())
-            .flatMapCompletable(event -> processNextOutboxItem())
+            .startWith(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
+            .subscribeOn(Schedulers.single())
+            .observeOn(Schedulers.single())
+            .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
                 error -> LOG.warn("Error ended observation of mutation outbox: ", error)
@@ -89,12 +91,21 @@ final class MutationProcessor {
         );
     }
 
-    private Completable processNextOutboxItem() {
-        PendingMutation<? extends Model> next = mutationOutbox.peek();
-        if (next != null) {
-            return processOutboxItem(next);
-        }
-        return Completable.complete();
+    private Completable drainMutationOutbox() {
+        PendingMutation<? extends Model> next;
+        do {
+            next = mutationOutbox.peek();
+            if (next == null) {
+                return Completable.complete();
+            }
+            boolean itemFailedToProcess = !processOutboxItem(next)
+                .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (itemFailedToProcess) {
+                return Completable.error(new DataStoreException(
+                    "Failed to process " + next, "Check your internet connection."
+                ));
+            }
+        } while (true);
     }
 
     /**

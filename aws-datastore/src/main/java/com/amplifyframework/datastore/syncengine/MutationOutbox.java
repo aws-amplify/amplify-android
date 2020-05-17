@@ -95,24 +95,19 @@ interface MutationOutbox {
      * When one is received, a consumer should inspect {@link #peek()},
      * to consume the pending mutations in the outbox. Note that it is possible
      * that the contents of the outbox has changed since the event was dispatched.
-     * @return A stream of {@link EnqueueEvent}
+     * @return A stream of {@link OutboxEvent}
      */
     @NonNull
-    Observable<EnqueueEvent> events();
+    Observable<OutboxEvent> events();
 
     /**
-     * Different types of events that may occur as a result of calling {@link #enqueue(PendingMutation)}.
+     * Different types of events that may occur in the {@link MutationOutbox}.
      */
-    enum EnqueueEvent {
+    enum OutboxEvent {
         /**
-         * A new mutation is added to the outbox.
+         * There is content available in the Mutation Outbox.
          */
-        ITEM_ADDED,
-
-        /**
-         * An existing item in the outbox has been updated.
-         */
-        ITEM_UPDATED
+        CONTENT_AVAILABLE
     }
 }
 

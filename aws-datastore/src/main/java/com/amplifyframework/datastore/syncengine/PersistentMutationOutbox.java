@@ -54,7 +54,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
     private final ConcurrentHashMap<String, PendingMutation<? extends Model>> mutationsByModelId;
     private final Queue<PendingMutation<? extends Model>> mutationQueue;
     private final PendingMutation.Converter converter;
-    private final Subject<EnqueueEvent> events;
+    private final Subject<OutboxEvent> events;
     private final Semaphore semaphore;
 
     PersistentMutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
@@ -62,7 +62,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         this.mutationsByModelId = new ConcurrentHashMap<>();
         this.mutationQueue = new LinkedList<>();
         this.converter = new GsonPendingMutationConverter();
-        this.events = PublishSubject.<EnqueueEvent>create().toSerialized();
+        this.events = PublishSubject.<OutboxEvent>create().toSerialized();
         this.semaphore = new Semaphore(1);
     }
 
@@ -83,7 +83,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         PendingMutation<T> existingMutation = (PendingMutation<T>) mutationsByModelId.get(modelId);
         if (existingMutation == null) {
             return save(incomingMutation)
-                .andThen(emit(EnqueueEvent.ITEM_ADDED));
+                .andThen(notifyContentAvailable());
         }
         switch (incomingMutation.getMutationType()) {
             case CREATE:
@@ -149,7 +149,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         T item = incomingMutation.getMutatedItem();
         Class<T> clazz = incomingMutation.getClassOfMutatedItem();
         return save(PendingMutation.instance(id, item, clazz, type))
-            .andThen(emit(EnqueueEvent.ITEM_UPDATED));
+            .andThen(notifyContentAvailable());
     }
 
     private <T extends Model> Completable save(PendingMutation<T> pendingMutation) {
@@ -194,6 +194,9 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     mutationsByModelId.remove(modelId);
                     removeFromQueue(modelId);
                     LOG.info("Successfully removed from mutations outbox" + pendingMutation);
+                    if (!mutationQueue.isEmpty()) {
+                        notifyContentAvailable();
+                    }
                     semaphore.release();
                     subscriber.onComplete();
                 },
@@ -249,12 +252,12 @@ final class PersistentMutationOutbox implements MutationOutbox {
 
     @NonNull
     @Override
-    public Observable<EnqueueEvent> events() {
+    public Observable<OutboxEvent> events() {
         return events;
     }
 
-    private Completable emit(EnqueueEvent event) {
-        return Completable.fromAction(() -> events.onNext(event));
+    private Completable notifyContentAvailable() {
+        return Completable.fromAction(() -> events.onNext(OutboxEvent.CONTENT_AVAILABLE));
     }
 
     @Nullable

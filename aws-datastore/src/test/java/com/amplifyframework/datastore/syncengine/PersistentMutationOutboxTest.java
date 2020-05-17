@@ -19,7 +19,7 @@ import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
-import com.amplifyframework.datastore.syncengine.MutationOutbox.EnqueueEvent;
+import com.amplifyframework.datastore.syncengine.MutationOutbox.OutboxEvent;
 import com.amplifyframework.datastore.syncengine.PendingMutation.PersistentRecord;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.random.RandomString;
@@ -69,7 +69,7 @@ public final class PersistentMutationOutboxTest {
     @Test
     public void enqueuePersistsMutationAndNotifiesObserver() throws DataStoreException {
         // Observe the queue
-        TestObserver<EnqueueEvent> queueObserver = mutationOutbox.events().test();
+        TestObserver<OutboxEvent> queueObserver = mutationOutbox.events().test();
 
         BlogOwner jameson = BlogOwner.builder()
             .name("Jameson Williams")
@@ -85,7 +85,7 @@ public final class PersistentMutationOutboxTest {
 
         // Expected to observe the mutation on the subject
         queueObserver.awaitCount(1);
-        queueObserver.assertValue(EnqueueEvent.ITEM_ADDED);
+        queueObserver.assertValue(OutboxEvent.CONTENT_AVAILABLE);
         queueObserver.dispose();
 
         // Assert that the storage contains the mutation
@@ -106,7 +106,7 @@ public final class PersistentMutationOutboxTest {
     @Test
     public void enqueueDoesNothingBeforeSubscription() throws DataStoreException {
         // Watch for notifications on the observe() API.
-        TestObserver<EnqueueEvent> testObserver = mutationOutbox.events().test();
+        TestObserver<OutboxEvent> testObserver = mutationOutbox.events().test();
 
         // Enqueue something, but don't subscribe to the observable just yet.
         BlogOwner tony = BlogOwner.builder()
@@ -610,12 +610,12 @@ public final class PersistentMutationOutboxTest {
 
     /**
      * When an already-pending mutation is updated, then the {@link Observable} returned by
-     * {@link MutationOutbox#events()} should emit an {@link EnqueueEvent#ITEM_UPDATED} event.
+     * {@link MutationOutbox#events()} should emit an {@link OutboxEvent#CONTENT_AVAILABLE} event.
      */
     @Test
     public void updateEventPostedWhenExistingOutboxItemUpdate() {
         // Watch for events.
-        TestObserver<EnqueueEvent> eventsObserver = mutationOutbox.events().test();
+        TestObserver<OutboxEvent> eventsObserver = mutationOutbox.events().test();
 
         // Create tony.
         BlogOwner tonyWrongName = BlogOwner.builder()
@@ -634,17 +634,17 @@ public final class PersistentMutationOutboxTest {
         eventsObserver.awaitCount(2)
             .assertNoErrors()
             .assertNotTerminated()
-            .assertValues(EnqueueEvent.ITEM_ADDED, EnqueueEvent.ITEM_UPDATED);
+            .assertValues(OutboxEvent.CONTENT_AVAILABLE, OutboxEvent.CONTENT_AVAILABLE);
     }
 
     /**
      * When an new mutation is enqueued into the outbox, the {@link Observable} made available by
-     * {@link MutationOutbox#events()} should emit an {@link EnqueueEvent#ITEM_ADDED} event.
+     * {@link MutationOutbox#events()} should emit an {@link OutboxEvent#CONTENT_AVAILABLE} event.
      */
     @Test
     public void enqueueEventPostedWhenNewOutboxItemAdded() {
         // Watch for events.
-        TestObserver<EnqueueEvent> eventsObserver = mutationOutbox.events().test();
+        TestObserver<OutboxEvent> eventsObserver = mutationOutbox.events().test();
 
         // Enqueue one
         mutationOutbox.enqueue(PendingMutation.deletion(BlogOwner.builder()
@@ -656,6 +656,6 @@ public final class PersistentMutationOutboxTest {
         eventsObserver.awaitCount(1)
             .assertNoErrors()
             .assertNotTerminated()
-            .assertValue(EnqueueEvent.ITEM_ADDED);
+            .assertValue(OutboxEvent.CONTENT_AVAILABLE);
     }
 }
