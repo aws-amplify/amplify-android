@@ -108,7 +108,7 @@ final class SubscriptionOperation<T> extends GraphQLOperation<T> {
     @Override
     public void start() {
         executorService.submit(() -> {
-            LOG.debug("Request " + getRequest().getContent());
+            LOG.debug("Requesting subscription: " + getRequest().getContent());
             subscriptionId = subscriptionEndpoint.requestSubscription(
                 getRequest(),
                 onSubscriptionStarted,
