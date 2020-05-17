@@ -730,9 +730,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             @NonNull String tableName,
             @NonNull String columnName,
             @NonNull String columnValue) {
-        // SELECT * FROM '{tableName}' WHERE {columnName} = '{columnValue}'
+        // SELECT 1 FROM '{tableName}' WHERE {columnName} = '{columnValue}'
         final String queryString = "" +
-            SqlKeyword.SELECT + SqlKeyword.DELIMITER + "*" + SqlKeyword.DELIMITER +
+            SqlKeyword.SELECT + SqlKeyword.DELIMITER + "1" + SqlKeyword.DELIMITER +
             SqlKeyword.FROM + SqlKeyword.DELIMITER + Quotes.wrapInSingle(tableName) + SqlKeyword.DELIMITER +
             SqlKeyword.WHERE + SqlKeyword.DELIMITER + columnName + SqlKeyword.DELIMITER +
             SqlKeyword.EQUAL + SqlKeyword.DELIMITER + Quotes.wrapInSingle(columnValue);
