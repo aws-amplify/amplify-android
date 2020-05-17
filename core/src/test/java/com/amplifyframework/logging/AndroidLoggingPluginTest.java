@@ -42,7 +42,6 @@ import static org.junit.Assert.assertTrue;
 @RunWith(RobolectricTestRunner.class)
 public class AndroidLoggingPluginTest {
     private LogOutputStream systemLog;
-    private AndroidLoggingPlugin plugin;
 
     /**
      * Setup logging plugin, for test. Redirect system output a buffer,
@@ -52,8 +51,6 @@ public class AndroidLoggingPluginTest {
     public void setup() {
         systemLog = new LogOutputStream();
         ShadowLog.stream = new PrintStream(systemLog);
-        plugin = new AndroidLoggingPlugin();
-        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
     }
 
     /**
@@ -70,7 +67,9 @@ public class AndroidLoggingPluginTest {
      */
     @Test
     public void productionLogsEmittedAtDefaultThreshold() {
-        final Logger logger = plugin.getDefaultLogger();
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin();
+        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
+        Logger logger = plugin.forNamespace("amplify");
 
         logger.error("A most serious issue, indeed.");
         logger.warn("Ahh, bummer, but alright.");
@@ -93,8 +92,9 @@ public class AndroidLoggingPluginTest {
      */
     @Test
     public void allContentLoggedAtThresholdVerbose() {
-        Logger logger =
-            plugin.forNamespaceAndThreshold("kool-module", LogLevel.VERBOSE);
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin(LogLevel.VERBOSE);
+        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
+        Logger logger = plugin.forNamespace("kool-module");
 
         logger.verbose("This logs");
         logger.debug("This too");
@@ -119,8 +119,9 @@ public class AndroidLoggingPluginTest {
      */
     @Test
     public void noContentLoggedAtThresholdNone() {
-        Logger logger =
-            plugin.forNamespaceAndThreshold("logging-test", LogLevel.NONE);
+        AndroidLoggingPlugin plugin = new AndroidLoggingPlugin(LogLevel.NONE);
+        plugin.configure(new JSONObject(), ApplicationProvider.getApplicationContext());
+        Logger logger = plugin.forNamespace("logging-test");
 
         logger.error("An error happened!");
         logger.info(null);
