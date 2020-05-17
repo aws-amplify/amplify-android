@@ -26,7 +26,7 @@ import org.json.JSONObject;
  * AWS' default implementation of the {@link LoggingCategoryBehavior},
  * which emits logs to Android's {@link Log} class.
  */
-final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
+public final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
     private static final String AMPLIFY_NAMESPACE = "amplify";
     private final LogLevel defaultLoggerThreshold;
 
@@ -34,7 +34,8 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
      * Creates a logging plugin using {@link LogLevel#INFO} as the default
      * logging threshold.
      */
-    /* intentionally not public */ AndroidLoggingPlugin() {
+    @SuppressWarnings("WeakerAccess") // This is a a public API
+    public AndroidLoggingPlugin() {
         this(LogLevel.INFO);
     }
 
@@ -43,7 +44,8 @@ final class AndroidLoggingPlugin extends LoggingPlugin<Void> {
      * when creating loggers.
      * @param defaultLoggerThreshold default threshold to use when creating loggers.
      */
-    AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
+    @SuppressWarnings("WeakerAccess") // This is a a public API
+    public AndroidLoggingPlugin(@NonNull LogLevel defaultLoggerThreshold) {
         this.defaultLoggerThreshold = defaultLoggerThreshold;
     }
 
