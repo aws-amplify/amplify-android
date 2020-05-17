@@ -41,7 +41,6 @@ import io.reactivex.schedulers.Schedulers;
  * {@link AppSync}. The responses to these mutations are themselves forwarded to the Merger,
  * which may again modify the store.
  */
-@SuppressWarnings("CodeBlock2Expr")
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
@@ -49,7 +48,7 @@ final class MutationProcessor {
     private final Merger merger;
     private final AppSync appSync;
     private final MutationOutbox mutationOutbox;
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable ongoingOperationsDisposable;
 
     MutationProcessor(
             @NonNull Merger merger,
@@ -60,7 +59,7 @@ final class MutationProcessor {
         this.versionRepository = Objects.requireNonNull(versionRepository);
         this.appSync = Objects.requireNonNull(appSync);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
-        this.disposable = new CompositeDisposable();
+        this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
     /**
@@ -72,8 +71,14 @@ final class MutationProcessor {
      * it again later, when network conditions become favorable again.
      */
     void startDrainingMutationOutbox() {
-        disposable.add(
+        ongoingOperationsDisposable.add(
             mutationOutbox.observe()
+                .doOnSubscribe(disposable ->
+                    LOG.info(
+                        "Started processing the mutation outbox. " +
+                            "Pending mutations will be published to the cloud."
+                    )
+                )
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
                 .flatMapCompletable(this::processOutboxItem)
@@ -97,10 +102,14 @@ final class MutationProcessor {
             .flatMapCompletable(merger::merge)
             // Lastly, remove the item from the outbox, so we don't process it again.
             .andThen(mutationOutbox.remove(mutationOutboxItem))
-            .andThen(Completable.fromAction(() -> {
-                LOG.info("Pending mutation was published up to Cloud: " + mutationOutboxItem);
+            .doOnComplete(() -> {
+                LOG.verbose(
+                    "Pending mutation was published to cloud successfully, " +
+                        "and removed from the mutation outbox: " + mutationOutboxItem
+                );
                 announceSuccessfulPublication(mutationOutboxItem);
-            }));
+            })
+            .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
     }
 
     /**
@@ -109,16 +118,17 @@ final class MutationProcessor {
      * @param <T> Type of model
      */
     private <T extends Model> void announceSuccessfulPublication(PendingMutation<T> processedMutation) {
-        HubEvent<PendingMutation<? extends Model>> publishedToCloudEvent =
-            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation);
-        Amplify.Hub.publish(HubChannel.DATASTORE, publishedToCloudEvent);
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
+        );
     }
 
     /**
      * Don't process any more mutations.
      */
     void stopDrainingMutationOutbox() {
-        disposable.dispose();
+        ongoingOperationsDisposable.dispose();
     }
 
     /**
@@ -146,11 +156,12 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch an update mutation
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
-        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
-            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
-                appSync.update(model, version, onSuccess, onError);
-            });
-        });
+        final T updatedItem = mutation.getMutatedItem();
+        return versionRepository.findModelVersion(updatedItem).flatMap(version ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) ->
+                appSync.update(model, version, onSuccess, onError)
+            )
+        );
     }
 
     // For an item in the outbox, dispatch a create mutation
@@ -160,13 +171,13 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch a delete mutation
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
-        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
-            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
-                final Class<T> modelClass = mutation.getClassOfMutatedItem();
-                final String modelId = mutation.getMutatedItem().getId();
-                appSync.delete(modelClass, modelId, version, onSuccess, onError);
-            });
-        });
+        final T deletedItem = mutation.getMutatedItem();
+        final Class<T> deletedItemClass = mutation.getClassOfMutatedItem();
+        return versionRepository.findModelVersion(deletedItem).flatMap(version ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) ->
+                appSync.delete(deletedItemClass, deletedItem.getId(), version, onSuccess, onError)
+            )
+        );
     }
 
     /**
@@ -179,24 +190,25 @@ final class MutationProcessor {
      */
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithStrategy(
             PendingMutation<T> mutation, PublicationStrategy<T> publicationStrategy) {
-        return Single.defer(() -> Single.create(subscriber -> {
+        T mutatedItem = mutation.getMutatedItem();
+        String modelClassName = mutation.getClassOfMutatedItem().getSimpleName();
+        return Single.defer(() -> Single.create(subscriber ->
             publicationStrategy.publish(
-                mutation.getMutatedItem(),
+                mutatedItem,
                 result -> {
                     if (!result.hasErrors() && result.hasData()) {
                         subscriber.onSuccess(result.getData());
                         return;
                     }
-                    String modelName = mutation.getClassOfMutatedItem().getSimpleName();
                     subscriber.onError(new DataStoreException(
                         "Mutation failed. Failed mutation = " + mutation + ". " +
                             "AppSync response contained errors = " + result.getErrors(),
-                        "Verify that your AppSync endpoint is able to store " + modelName + " models."
+                        "Verify that your AppSync endpoint is able to store " + modelClassName + " models."
                     ));
                 },
                 subscriber::onError
-            );
-        }));
+            )
+        ));
     }
 
     /**
