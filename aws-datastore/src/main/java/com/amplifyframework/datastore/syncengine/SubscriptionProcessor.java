@@ -127,9 +127,9 @@ final class SubscriptionProcessor {
         })
         .doOnError(subscriptionError ->
             LOG.warn(String.format(Locale.US,
-        "An error occurred on the remote %s subscription for model %s: %s",
-        clazz.getSimpleName(), subscriptionType.name(), subscriptionError.getCause()
-            ))
+                "An error occurred on the remote %s subscription for model %s.",
+                clazz.getSimpleName(), subscriptionType.name()
+            ), subscriptionError)
         )
         .onErrorResumeNext((ObservableSource<GraphQLResponse<ModelWithMetadata<T>>>) Observer::onComplete)
         .subscribeOn(Schedulers.io())

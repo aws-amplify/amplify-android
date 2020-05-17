@@ -81,7 +81,7 @@ final class Merger {
                 LOG.verbose("Remote model update was sync'd down into local storage: " + modelWithMetadata);
             })
             .doOnError(failure ->
-                LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata)
+                LOG.warn("Failed to sync remote model into local storage: " + modelWithMetadata, failure)
             );
     }
 

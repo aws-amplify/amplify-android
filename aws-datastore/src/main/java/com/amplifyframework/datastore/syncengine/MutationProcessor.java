@@ -74,7 +74,10 @@ final class MutationProcessor {
         ongoingOperationsDispoable.add(
             mutationOutbox.observe()
                 .doOnSubscribe(disposable ->
-                    LOG.info("Started processing the mutation outbox. Pending mutations will be published to cloud.")
+                    LOG.info(
+                        "Started processing the mutation outbox. " +
+                            "Pending mutations will be published to the cloud."
+                    )
                 )
                 .subscribeOn(Schedulers.io())
                 .observeOn(Schedulers.io())
@@ -102,7 +105,7 @@ final class MutationProcessor {
             .doOnComplete(() -> {
                 LOG.verbose(
                     "Pending mutation was published to cloud successfully, " +
-                    "and removed from the mutation outbox: " + mutationOutboxItem
+                        "and removed from the mutation outbox: " + mutationOutboxItem
                 );
                 announceSuccessfulPublication(mutationOutboxItem);
             })

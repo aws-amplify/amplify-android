@@ -112,7 +112,7 @@ final class MutationOutbox {
                     subscriber.onComplete();
                 },
                 failure -> {
-                    LOG.warn("Failed to enqueue mutation into mutation outbox: " + pendingMutation);
+                    LOG.warn("Failed to enqueue mutation into mutation outbox: " + pendingMutation, failure);
                     pendingMutations.onError(failure);
                     subscriber.onError(failure);
                 }
@@ -152,11 +152,11 @@ final class MutationOutbox {
                 converter.toRecord(pendingMutation),
                 StorageItemChange.Initiator.SYNC_ENGINE,
                 deletionResult -> {
-                    LOG.verbose("Successfully remove pending mutation from mutation outbox: " + pendingMutation);
+                    LOG.verbose("Successfully removed pending mutation from mutation outbox: " + pendingMutation);
                     subscriber.onComplete();
                 },
                 failure -> {
-                    LOG.warn("Failed to remove pending mutation from mutation outbox: " + pendingMutation);
+                    LOG.warn("Failed to remove pending mutation from mutation outbox: " + pendingMutation, failure);
                     subscriber.onError(failure);
                 }
             )
