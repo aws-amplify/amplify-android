@@ -19,7 +19,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.GraphQlBehavior;
+import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.MutationType;
@@ -32,7 +32,7 @@ import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 
 /**
- * An Rx-idiomatic expression of Amplify's {@link GraphQlBehavior}.
+ * An Rx-idiomatic expression of Amplify's {@link GraphQLBehavior}.
  */
 @SuppressWarnings("unused") // This is a public API
 public interface RxGraphQlBehavior {

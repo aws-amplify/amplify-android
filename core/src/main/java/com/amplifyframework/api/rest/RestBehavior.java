@@ -13,14 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.api.rest;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.api.rest.RestOperation;
-import com.amplifyframework.api.rest.RestOptions;
-import com.amplifyframework.api.rest.RestResponse;
+import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiOperation;
 import com.amplifyframework.core.Consumer;
 
 /**
