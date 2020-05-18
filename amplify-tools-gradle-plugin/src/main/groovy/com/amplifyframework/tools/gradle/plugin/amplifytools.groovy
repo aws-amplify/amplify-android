@@ -94,6 +94,7 @@ class amplifytools implements Plugin<Project> {
                 }
             }
         }
+        project.modelgen.dependsOn('datastoreSync')
 
         project.task('amplifyPush') {
             def AWSCLOUDFORMATIONCONFIG
@@ -142,6 +143,7 @@ class amplifytools implements Plugin<Project> {
                 }
             }
         }
+        project.amplifyPush.dependsOn('datastoreSync')
 
         project.task('addModelgenToWorkspace') {
             if(project.file('./.idea/workspace.xml').exists()) {
@@ -181,7 +183,6 @@ class amplifytools implements Plugin<Project> {
                 }
             }
         }
-        project.modelgen.dependsOn('datastoreSync')
 
         project.task('addAmplifyPushToWorkspace') {
             if(project.file('./.idea/workspace.xml').exists()) {
@@ -221,6 +222,5 @@ class amplifytools implements Plugin<Project> {
                 }
             }
         }
-        project.amplifyPush.dependsOn('datastoreSync')
     }
 }

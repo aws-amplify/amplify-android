@@ -23,6 +23,3 @@ sourceSets.main.groovy.srcDirs = ["src/main/groovy"]
 dependencies {
     implementation dependency.androidx.appcompat
 }
-
-sourceCompatibility = "1.7"
-targetCompatibility = "1.7"
