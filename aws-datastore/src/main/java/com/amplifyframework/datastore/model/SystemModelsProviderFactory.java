@@ -28,7 +28,7 @@ import com.amplifyframework.datastore.syncengine.PendingMutation;
  */
 public final class SystemModelsProviderFactory {
     // CHANGE this models version whenever any system models are added/removed/updated.
-    private static final String SYSTEM_MODELS_VERSION = "b9357be1-3106-475e-9700-7eaa6051a382";
+    private static final String SYSTEM_MODELS_VERSION = "6232f439-0e0a-4aaa-a1b0-7a3abf7fcebc";
 
     private SystemModelsProviderFactory() {}
 
@@ -43,6 +43,10 @@ public final class SystemModelsProviderFactory {
         return SimpleModelProvider.instance(
             SYSTEM_MODELS_VERSION,
 
+            // Used to create a persistent queue of mutations that need to be dispatched over
+            // the network.
+            PendingMutation.PersistentRecord.class,
+
             // Metadata about the last time a model type was successfully sync'd with the cloud.
             // For example, "Post" model was last saved at 1585702708000 milliseconds past the Epoch.
             LastSyncMetadata.class,
@@ -55,11 +59,7 @@ public final class SystemModelsProviderFactory {
             // ModelMetadata.class stores the version of particular instances of a model. Unlike
             // PersistentModelVersion, which details with the structure of data, ModelMetadata
             // deals actually with individual object instances, and their states.
-            ModelMetadata.class,
-
-            // Used to create a persistent queue of mutations that need to be dispatched over
-            // the network.
-            PendingMutation.PersistentRecord.class
+            ModelMetadata.class
         );
     }
 }

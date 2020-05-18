@@ -41,6 +41,7 @@ public final class Orchestrator {
 
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
+    private final MutationOutbox mutationOutbox;
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
 
@@ -75,7 +76,7 @@ public final class Orchestrator {
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
-        MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
+        this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
@@ -100,14 +101,15 @@ public final class Orchestrator {
      */
     @NonNull
     public Completable start() {
-        return Completable.defer(() -> Completable.fromAction(() -> {
-            storageObserver.startObservingStorageChanges();
-            subscriptionProcessor.startSubscriptions();
-            syncProcessor.hydrate().blockingAwait();
-            mutationProcessor.startDrainingMutationOutbox();
-            subscriptionProcessor.startDrainingMutationBuffer();
-            LOG.info("Cloud synchronization is now fully active.");
-        }));
+        return mutationOutbox.load()
+            .andThen(Completable.fromAction(() -> {
+                storageObserver.startObservingStorageChanges();
+                subscriptionProcessor.startSubscriptions();
+                syncProcessor.hydrate().blockingAwait();
+                mutationProcessor.startDrainingMutationOutbox();
+                subscriptionProcessor.startDrainingMutationBuffer();
+                LOG.info("Cloud synchronization is now fully active.");
+            }));
     }
 
     /**
@@ -120,3 +122,4 @@ public final class Orchestrator {
         mutationProcessor.stopDrainingMutationOutbox();
     }
 }
+
