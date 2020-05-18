@@ -3,7 +3,7 @@ import org.gradle.api.Project
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-class AmplifyTools implements Plugin<Project> {
+class amplifytools implements Plugin<Project> {
     void apply(Project project) {
         def doesNodeExist = true
         def doesGradleConfigExist
