@@ -135,7 +135,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner tony = BlogOwner.builder()
             .name("Tony Daniels")
             .build();
-        PendingMutation<BlogOwner> updateTony = PendingMutation.update(tony, BlogOwner.class);
+        PendingMutation<BlogOwner> updateTony = PendingMutation.update(tony, BlogOwner.class, null);
         BlogOwner sam = BlogOwner.builder()
             .name("Sam Watson")
             .build();
@@ -165,7 +165,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner bill = BlogOwner.builder()
             .name("Bill Gates")
             .build();
-        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class);
+        PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class, null);
         storage.save(converter.toRecord(deleteBillGates));
 
         TestObserver<Void> testObserver = mutationOutbox.remove(deleteBillGates).test();
@@ -190,7 +190,7 @@ public final class PersistentMutationOutboxTest {
             .build();
         TimeBasedUuid mutationId = TimeBasedUuid.create();
         PendingMutation<BlogOwner> pendingMutation =
-            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE);
+            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, null);
         mutationOutbox.enqueue(pendingMutation).blockingAwait();
 
         assertTrue(mutationOutbox.hasPendingMutation(modelId));
@@ -218,7 +218,7 @@ public final class PersistentMutationOutboxTest {
         TimeBasedUuid mutationId = TimeBasedUuid.create();
         @SuppressWarnings("unused") // This is the point of this field.
         PendingMutation<BlogOwner> unrelatedMutation =
-            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE);
+            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, null);
 
         assertFalse(mutationOutbox.hasPendingMutation(joeId));
         assertFalse(mutationOutbox.hasPendingMutation(mutationId.toString()));
@@ -277,7 +277,7 @@ public final class PersistentMutationOutboxTest {
             .name("Tony with improvements applied")
             .build();
         PendingMutation<BlogOwner> existingUpdate =
-            PendingMutation.update(modelInExistingMutation, BlogOwner.class);
+            PendingMutation.update(modelInExistingMutation, BlogOwner.class, null);
         String exitingUpdateId = existingUpdate.getMutationId().toString();
         mutationOutbox.enqueue(existingUpdate).blockingAwait();
 
@@ -318,7 +318,7 @@ public final class PersistentMutationOutboxTest {
             .name("Papa Tony")
             .build();
         PendingMutation<BlogOwner> existingDeletion =
-            PendingMutation.deletion(modelInExistingMutation, BlogOwner.class);
+            PendingMutation.deletion(modelInExistingMutation, BlogOwner.class, null);
         String existingDeletionId = existingDeletion.getMutationId().toString();
         mutationOutbox.enqueue(existingDeletion).blockingAwait();
 
@@ -358,7 +358,7 @@ public final class PersistentMutationOutboxTest {
             .name("Papa Tony")
             .build();
         PendingMutation<BlogOwner> existingDeletion =
-            PendingMutation.deletion(modelInExistingMutation, BlogOwner.class);
+            PendingMutation.deletion(modelInExistingMutation, BlogOwner.class, null);
         String existingDeletionId = existingDeletion.getMutationId().toString();
         mutationOutbox.enqueue(existingDeletion).blockingAwait();
 
@@ -367,7 +367,7 @@ public final class PersistentMutationOutboxTest {
             .name("Tony Jr.")
             .build();
         PendingMutation<BlogOwner> incomingUpdate =
-            PendingMutation.update(modelInIncomingMutation, BlogOwner.class);
+            PendingMutation.update(modelInIncomingMutation, BlogOwner.class, null);
         String incomingUpdateId = incomingUpdate.getMutationId().toString();
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
@@ -397,7 +397,7 @@ public final class PersistentMutationOutboxTest {
             .name("Papa Tony")
             .build();
         PendingMutation<BlogOwner> existingUpdate =
-            PendingMutation.update(modelInExistingMutation, BlogOwner.class);
+            PendingMutation.update(modelInExistingMutation, BlogOwner.class, null);
         String existingUpdateId = existingUpdate.getMutationId().toString();
         mutationOutbox.enqueue(existingUpdate).blockingAwait();
 
@@ -406,7 +406,7 @@ public final class PersistentMutationOutboxTest {
             .name("Tony Jr.")
             .build();
         PendingMutation<BlogOwner> incomingUpdate =
-            PendingMutation.update(modelInIncomingMutation, BlogOwner.class);
+            PendingMutation.update(modelInIncomingMutation, BlogOwner.class, null);
         String incomingUpdateId = incomingUpdate.getMutationId().toString();
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
@@ -437,7 +437,8 @@ public final class PersistentMutationOutboxTest {
                 existingUpdate.getMutationId(),
                 modelInIncomingMutation,
                 BlogOwner.class,
-                PendingMutation.Type.UPDATE
+                PendingMutation.Type.UPDATE,
+                null
             ),
             mutationOutbox.peek()
         );
@@ -465,7 +466,7 @@ public final class PersistentMutationOutboxTest {
             .name("Tony Jr.")
             .build();
         PendingMutation<BlogOwner> incomingUpdate =
-            PendingMutation.update(modelInIncomingMutation, BlogOwner.class);
+            PendingMutation.update(modelInIncomingMutation, BlogOwner.class, null);
         String incomingUpdateId = incomingUpdate.getMutationId().toString();
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
@@ -496,7 +497,8 @@ public final class PersistentMutationOutboxTest {
                 existingCreation.getMutationId(),
                 modelInIncomingMutation,
                 BlogOwner.class,
-                PendingMutation.Type.CREATE
+                PendingMutation.Type.CREATE,
+                null
             ),
             mutationOutbox.peek()
         );
@@ -516,7 +518,7 @@ public final class PersistentMutationOutboxTest {
         String existingCreationId = existingCreation.getMutationId().toString();
         mutationOutbox.enqueue(existingCreation).blockingAwait();
 
-        PendingMutation<BlogOwner> incomingDeletion = PendingMutation.deletion(joe, BlogOwner.class);
+        PendingMutation<BlogOwner> incomingDeletion = PendingMutation.deletion(joe, BlogOwner.class, null);
         String incomingDeletionId = incomingDeletion.getMutationId().toString();
         mutationOutbox.enqueue(incomingDeletion).blockingAwait();
 
@@ -538,11 +540,11 @@ public final class PersistentMutationOutboxTest {
         BlogOwner joe = BlogOwner.builder()
             .name("Original Joe")
             .build();
-        PendingMutation<BlogOwner> exitingUpdate = PendingMutation.update(joe, BlogOwner.class);
+        PendingMutation<BlogOwner> exitingUpdate = PendingMutation.update(joe, BlogOwner.class, null);
         String existingUpdateId = exitingUpdate.getMutationId().toString();
         mutationOutbox.enqueue(exitingUpdate).blockingAwait();
 
-        PendingMutation<BlogOwner> incomingDeletion = PendingMutation.deletion(joe, BlogOwner.class);
+        PendingMutation<BlogOwner> incomingDeletion = PendingMutation.deletion(joe, BlogOwner.class, null);
         String incomingDeletionId = incomingDeletion.getMutationId().toString();
         mutationOutbox.enqueue(incomingDeletion).blockingAwait();
 
@@ -571,7 +573,8 @@ public final class PersistentMutationOutboxTest {
                 exitingUpdate.getMutationId(),
                 joe,
                 BlogOwner.class,
-                PendingMutation.Type.DELETE
+                PendingMutation.Type.DELETE,
+                null
             ),
             mutationOutbox.peek()
         );
@@ -587,8 +590,8 @@ public final class PersistentMutationOutboxTest {
         BlogOwner sammy = BlogOwner.builder()
             .name("Sammy Swanson")
             .build();
-        PendingMutation<BlogOwner> exitingDeletion = PendingMutation.deletion(sammy, BlogOwner.class);
-        PendingMutation<BlogOwner> incomingDeletion = PendingMutation.deletion(sammy, BlogOwner.class);
+        PendingMutation<BlogOwner> exitingDeletion = PendingMutation.deletion(sammy, BlogOwner.class, null);
+        PendingMutation<BlogOwner> incomingDeletion = PendingMutation.deletion(sammy, BlogOwner.class, null);
         assertNotEquals(exitingDeletion.getMutationId(), incomingDeletion.getMutationId());
 
         mutationOutbox.enqueue(exitingDeletion).blockingAwait();
@@ -628,7 +631,7 @@ public final class PersistentMutationOutboxTest {
         BlogOwner tonySpelledRight = tonyWrongName.copyOfBuilder()
             .name("Tony Jon (\"TJ\") Swanson")
             .build();
-        mutationOutbox.enqueue(PendingMutation.update(tonySpelledRight, BlogOwner.class)).blockingAwait();
+        mutationOutbox.enqueue(PendingMutation.update(tonySpelledRight, BlogOwner.class, null)).blockingAwait();
 
         // Assert: an event for the original creation, then another for the update
         eventsObserver.awaitCount(2)
@@ -649,7 +652,7 @@ public final class PersistentMutationOutboxTest {
         // Enqueue one
         mutationOutbox.enqueue(PendingMutation.deletion(BlogOwner.builder()
             .name("Tony Swanson")
-            .build(), BlogOwner.class
+            .build(), BlogOwner.class, null
         )).blockingAwait();
 
         // Assert: we got an event!
