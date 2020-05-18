@@ -45,7 +45,10 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     private final TimeBasedUuid mutationId;
     private QueryPredicate predicate;
 
-    private PendingMutation(TimeBasedUuid mutationId, T mutatedItem, Class<T> classOfMutatedItem, Type mutationType, QueryPredicate predicate) {
+    private PendingMutation(TimeBasedUuid mutationId,
+                            T mutatedItem, Class<T> classOfMutatedItem,
+                            Type mutationType,
+                            QueryPredicate predicate) {
         this.mutationId = mutationId;
         this.mutatedItem = mutatedItem;
         this.classOfMutatedItem = classOfMutatedItem;
@@ -60,6 +63,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param mutatedItem The item that undergone a mutation
      * @param classOfMutatedItem The class of the item that has undergone mutation
      * @param mutationType Type of mutation
+     * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of the item that has undergone mutation
      * @return A {@link PendingMutation}
      */
@@ -83,12 +87,15 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param mutatedItem The item that undergone a mutation
      * @param classOfMutatedItem The class of the item that has undergone mutation
      * @param mutationType Type of mutation
+     * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of the item that has undergone mutation
      * @return A {@link PendingMutation}
      */
-    static <T extends Model> PendingMutation<T> instance(
-            @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType) {
-        return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType);
+    static <T extends Model> PendingMutation<T> instance(@NonNull T mutatedItem,
+                                                         @NonNull Class<T> classOfMutatedItem,
+                                                         @NonNull Type mutationType,
+                                                         @Nullable QueryPredicate predicate) {
+        return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType, predicate);
     }
 
     /**
@@ -106,10 +113,13 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * Creates a {@link PendingMutation} that represents an update to a model.
      * @param updatedItem The model that was updated
      * @param classOfUpdatedItem The class of the updated model
+     * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
      */
-    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem, @NonNull Class<T> classOfUpdatedItem, @Nullable QueryPredicate predicate) {
+    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
+                                                       @NonNull Class<T> classOfUpdatedItem,
+                                                       @Nullable QueryPredicate predicate) {
         return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, predicate);
     }
 
@@ -118,9 +128,12 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param deletedItem The model that was deleted
      * @param classOfDeletedItem The class of the deleted model
      * @param <T> The type of model that was deleted
+     * @param predicate A condition to be used when updating the remote store
      * @return A PendingMutation representing the model deletion
      */
-    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem, @NonNull Class<T> classOfDeletedItem, @Nullable QueryPredicate predicate) {
+    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
+                                                         @NonNull Class<T> classOfDeletedItem,
+                                                         @Nullable QueryPredicate predicate) {
         return instance(deletedItem, classOfDeletedItem, Type.DELETE, predicate);
     }
 

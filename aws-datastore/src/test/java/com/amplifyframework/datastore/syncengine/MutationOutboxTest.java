@@ -196,7 +196,7 @@ public final class MutationOutboxTest {
             .build();
         TimeBasedUuid differentId = TimeBasedUuid.create();
         PendingMutation<BlogOwner> pendingMutation =
-            PendingMutation.instance(differentId, joe, BlogOwner.class, PendingMutation.Type.CREATE);
+            PendingMutation.instance(differentId, joe, BlogOwner.class, PendingMutation.Type.CREATE, null);
         PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
         storage.save(record);
 
@@ -225,7 +225,7 @@ public final class MutationOutboxTest {
 
         TimeBasedUuid mutationId = TimeBasedUuid.create();
         PendingMutation<BlogOwner> pendingMutation =
-            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE);
+            PendingMutation.instance(mutationId, joe, BlogOwner.class, PendingMutation.Type.CREATE, null);
 
         assertFalse(mutationOutbox.hasPendingMutation(joeId).blockingGet());
         assertFalse(mutationOutbox.hasPendingMutation(pendingMutation.getMutationId().toString()).blockingGet());

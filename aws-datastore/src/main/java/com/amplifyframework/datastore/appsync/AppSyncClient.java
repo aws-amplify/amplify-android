@@ -31,6 +31,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
 import java.util.Collections;
@@ -149,10 +150,11 @@ public final class AppSyncClient implements AppSync {
     public <T extends Model> Cancelable update(
             @NonNull T model,
             @NonNull Integer version,
+            @Nullable QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass());
+            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass(), predicate != null);
 
             Class<T> modelClass = (Class<T>) model.getClass();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
@@ -161,6 +163,9 @@ public final class AppSyncClient implements AppSync {
             updateInput.put("_version", version);
 
             final Map<String, Object> variables = Collections.singletonMap("input", updateInput);
+            if (predicate != null) {
+                variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
+            }
 
             return mutation(doc, variables, (Class<T>) model.getClass(), onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
@@ -179,16 +184,20 @@ public final class AppSyncClient implements AppSync {
             @NonNull Class<T> clazz,
             @NonNull String objectId,
             @NonNull Integer version,
+            @Nullable QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz);
+            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz, predicate != null);
 
             final Map<String, Object> deleteInput = new HashMap<>();
             deleteInput.put("id", objectId);
             deleteInput.put("_version", version);
 
             final Map<String, Object> variables = Collections.singletonMap("input", deleteInput);
+            if (predicate != null) {
+                variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
+            }
 
             return mutation(doc, variables, clazz, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {
