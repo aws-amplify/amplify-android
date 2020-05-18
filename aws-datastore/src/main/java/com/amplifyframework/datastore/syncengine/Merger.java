@@ -55,24 +55,34 @@ final class Merger {
     }
 
     /**
-     * Merge an item back into the local store.
-     * TODO: check the state of the mutation outbox, before accessing the local storage.
+     * Merge an item back into the local store, using a default strategy.
      * @param modelWithMetadata A model, combined with metadata about it
+     * @param <T> Type of model
+     * @return A completable operation to merge the model
+     */
+    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
+        return merge(modelWithMetadata, MergeStrategy.CONSIDER_PENDING_MUTATIONS);
+    }
+
+    /**
+     * Merge an item back into the local store, using a merge strategy.
+     * @param modelWithMetadata A model, combined with metadata about it
+     * @param mergeStrategy A strategy to use while merging - check for pending mutations in outbox?
      * @param <T> Type of model
      * @return A completable operation to merge the item
      */
-    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
+    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata, MergeStrategy mergeStrategy) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
         boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
         T model = modelWithMetadata.getModel();
 
         // Check if there is a pending mutation for this model, in the outbox.
-        return mutationOutbox.hasPendingMutation(model.getId())
-            // If there is *not* a pending mutation, we will proceed. Otherwise, not.
-            .filter(value -> !Boolean.TRUE.equals(value))
-            .ignoreElement() // ignore the always-`false` element
-            // Apply the model change (delete/save)
-            .andThen(isDelete ? delete(model) : save(model))
+        boolean checkOutbox = !MergeStrategy.IGNORE_PENDING_MUTATIONS.equals(mergeStrategy);
+        if (checkOutbox && mutationOutbox.hasPendingMutation(model.getId())) {
+            LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
+            return Completable.complete();
+        }
+        return (isDelete ? delete(model) : save(model))
             // Update the metadata for it
             .andThen(save(metadata))
             // Let the world know that we've done a good thing.
@@ -144,5 +154,23 @@ final class Merger {
                 onNotPresent.call();
             }
         }, failure -> onNotPresent.call());
+    }
+
+    /**
+     * The strategy to use while merging. Whether to consider the contents of the mutation
+     * outbox before saving data locally, or, to ignore it.
+     */
+    enum MergeStrategy {
+        /**
+         * When merging, the contents of the mutation outbox will *not* be considered.
+         */
+        IGNORE_PENDING_MUTATIONS,
+
+        /**
+         * When merging, the contents of the mutation outbox will be considered.
+         * If there is already a pending mutation in the mutation outbox, for a model of the
+         * same ID as the model being merged -- then the merge will *not* modify the existing model.
+         */
+        CONSIDER_PENDING_MUTATIONS
     }
 }

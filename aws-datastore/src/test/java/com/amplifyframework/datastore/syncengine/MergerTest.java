@@ -63,7 +63,7 @@ public final class MergerTest {
     public void setup() {
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
-        this.mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
+        this.mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
         this.merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
     }
 
