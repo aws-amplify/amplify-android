@@ -13,12 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.util;
+package com.amplifyframework.core.model;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.util.Immutable;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ public final class FieldFinder {
 
     /**
      * Get a set of all the fields of a class that are
-     * annotated with {@link ModelField} annotation.
+     * annotated with {@link com.amplifyframework.core.model.ModelField} annotation.
      *
      * @param clazz the Class object.
      * @return set of fields

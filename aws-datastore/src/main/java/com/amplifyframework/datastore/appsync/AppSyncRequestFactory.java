@@ -25,7 +25,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
-import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.core.model.FieldFinder;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;

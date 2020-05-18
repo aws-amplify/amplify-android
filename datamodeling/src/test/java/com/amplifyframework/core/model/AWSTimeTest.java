@@ -13,9 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.scalar;
-
-import com.amplifyframework.core.model.AWSTime;
+package com.amplifyframework.core.model;
 
 import org.junit.Test;
 

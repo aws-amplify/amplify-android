@@ -26,7 +26,6 @@ import com.amplifyframework.core.model.annotations.HasMany;
 import com.amplifyframework.core.model.annotations.HasOne;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
-import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
 
 import java.lang.annotation.Annotation;

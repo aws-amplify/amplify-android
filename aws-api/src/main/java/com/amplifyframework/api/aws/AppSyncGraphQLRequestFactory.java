@@ -37,7 +37,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
 import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.util.Casing;
-import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.core.model.FieldFinder;
 import com.amplifyframework.util.Immutable;
 
 import java.lang.reflect.Field;

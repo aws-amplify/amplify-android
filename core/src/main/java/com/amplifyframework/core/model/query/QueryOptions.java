@@ -26,7 +26,6 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
  * options (e.g. predicates, pagination, etc) and allows consumers to build queries in a fluent way.
  */
 public final class QueryOptions {
-
     private QueryPredicate queryPredicate;
     private QueryPaginationInput paginationInput;
 

@@ -18,7 +18,7 @@ package com.amplifyframework.core.model.query.predicate;
 import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.util.FieldFinder;
+import com.amplifyframework.core.model.FieldFinder;
 
 import java.util.Arrays;
 import java.util.Collections;
