@@ -22,8 +22,6 @@ import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.request.AWSImageIdentifyRequest;
 import com.amplifyframework.predictions.aws.service.AWSPredictionsService;
 import com.amplifyframework.predictions.models.IdentifyAction;
-import com.amplifyframework.predictions.models.LabelType;
-import com.amplifyframework.predictions.models.TextFormatType;
 import com.amplifyframework.predictions.operation.IdentifyOperation;
 import com.amplifyframework.predictions.result.IdentifyResult;
 
@@ -85,83 +83,36 @@ public final class AWSIdentifyOperation
     }
 
     private void startCelebritiesDetection() {
-        executorService.execute(() ->
-            predictionsService.recognizeCelebrities(
-                    getRequest().getImageData(),
-                    onSuccess,
-                    onError
-            )
-        );
+        executorService.execute(() -> predictionsService.recognizeCelebrities(
+                getRequest().getImageData(),
+                onSuccess,
+                onError
+        ));
     }
 
     private void startLabelsDetection() {
-        executorService.execute(() -> {
-            final LabelType labelType;
-            try {
-                labelType = (LabelType) getIdentifyAction();
-            } catch (ClassCastException notLabelType) {
-                onError.accept(new PredictionsException(
-                        "The identify action type does not specify a label type.",
-                        "When passing in action type for label detection, use " +
-                                "LabelType instead of IdentifyActionType."
-                ));
-                return;
-            }
-            predictionsService.detectLabels(
-                    labelType,
-                    getRequest().getImageData(),
-                    onSuccess,
-                    onError
-            );
-        });
+        executorService.execute(() -> predictionsService.detectLabels(
+                getIdentifyAction(),
+                getRequest().getImageData(),
+                onSuccess,
+                onError
+        ));
     }
 
     private void startEntitiesDetection() {
-        executorService.execute(() ->
-            predictionsService.detectEntities(getRequest().getImageData(),
-                    onSuccess,
-                    onError
-            )
-        );
+        executorService.execute(() -> predictionsService.detectEntities(
+                getRequest().getImageData(),
+                onSuccess,
+                onError
+        ));
     }
 
     private void startTextDetection() {
-        executorService.execute(() -> {
-            final TextFormatType textFormatType;
-            try {
-                textFormatType = (TextFormatType) getIdentifyAction();
-            } catch (ClassCastException notLabelType) {
-                onError.accept(new PredictionsException(
-                        "The identify action type does not specify a text format type.",
-                        "When passing in action type for text detection, use " +
-                                "TextFormatType instead of IdentifyActionType."
-                ));
-                return;
-            }
-
-            switch (textFormatType) {
-                case PLAIN:
-                    predictionsService.detectPlainText(
-                            getRequest().getImageData(),
-                            onSuccess,
-                            onError
-                    );
-                    return;
-                case FORM:
-                case TABLE:
-                case ALL:
-                    predictionsService.detectDocumentText(
-                            textFormatType,
-                            getRequest().getImageData(),
-                            onSuccess,
-                            onError);
-                    return;
-                default:
-                    onError.accept(new PredictionsException(
-                            "Unexpected error: invalid or unsupported identify action type.",
-                            "Please verify that a valid implementation of IdentifyAction was used."
-                    ));
-            }
-        });
+        executorService.execute(() -> predictionsService.detectText(
+                getIdentifyAction(),
+                getRequest().getImageData(),
+                onSuccess,
+                onError
+        ));
     }
 }
