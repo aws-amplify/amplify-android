@@ -65,7 +65,6 @@ import static org.mockito.Mockito.verify;
 /**
  * Tests the {@link SyncProcessor}.
  */
-@SuppressWarnings("unchecked")
 @RunWith(RobolectricTestRunner.class)
 public final class SyncProcessorTest {
     private static final long OP_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(2);
@@ -96,7 +95,7 @@ public final class SyncProcessorTest {
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
 
         final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(inMemoryStorageAdapter);
-        final MutationOutbox mutationOutbox = new MutationOutbox(inMemoryStorageAdapter);
+        final MutationOutbox mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
         final Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
 
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
@@ -119,6 +118,7 @@ public final class SyncProcessorTest {
      * then the local storage adapter should have all of the remote model state.
      * @throws DataStoreException On failure interacting with storage adapter
      */
+    @SuppressWarnings("unchecked") // Varied types in Observable.fromArray(...).
     @Test
     public void localStorageAdapterIsHydratedFromRemoteModelState() throws DataStoreException {
         // Arrange: drum post is already in the adapter before hydration.
@@ -251,7 +251,7 @@ public final class SyncProcessorTest {
         // Consider the model instances and their metadata.
         assertEquals(
             // Expect a metadata for Jameson & deleted drum post, and an entry for Jameson
-            Observable.fromArray(BLOGGER_JAMESON)
+            Observable.just(BLOGGER_JAMESON)
                 .flatMap(blogger -> Observable.fromArray(blogger.getModel(), blogger.getSyncMetadata()))
                 .startWith(DELETED_DRUM_POST.getSyncMetadata())
                 .toList()
@@ -321,8 +321,7 @@ public final class SyncProcessorTest {
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
 
         // Act: hydrate the store.
-        //noinspection ResultOfMethodCallIgnored
-        syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Assert: the sync time that was passed to AppSync should have been `null`.
         ArgumentCaptor<Long> lastSyncTimeCaptor = ArgumentCaptor.forClass(Long.class);
@@ -360,8 +359,7 @@ public final class SyncProcessorTest {
             .mockSuccessResponse(BlogOwner.class, BLOGGER_JAMESON);
 
         // Act: hydrate the store.
-        //noinspection ResultOfMethodCallIgnored
-        syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        assertTrue(syncProcessor.hydrate().blockingAwait(OP_TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Assert: the sync time that was passed to AppSync should have been `null`.
         ArgumentCaptor<Long> lastSyncTimeCaptor = ArgumentCaptor.forClass(Long.class);

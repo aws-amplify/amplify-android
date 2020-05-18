@@ -22,8 +22,11 @@ import com.amplifyframework.datastore.DataStoreCategoryBehavior;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.DataStoreItemChange;
 import com.amplifyframework.testutils.Await;
+import com.amplifyframework.util.Immutable;
 
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -73,17 +76,30 @@ public final class SynchronousDataStore {
      */
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) throws DataStoreException {
-        final Iterator<T> iterator = awaitIterator((onResult, onError) ->
-            asyncDelegate.query(clazz, onResult, onError));
-
-        while (iterator.hasNext()) {
-            T value = iterator.next();
+        for (T value : list(clazz)) {
             if (value.getId().equals(itemId)) {
                 return value;
             }
         }
-
         throw new NoSuchElementException("No item in DataStore with class = " + clazz + " and id = " + itemId);
+    }
+
+    /**
+     * Lists all DataStore items of a given class.
+     * @param clazz Class of item being listed
+     * @param <T> The type of item being listed
+     * @return A list of DataStore items of the given class, possibly empty
+     * @throws DataStoreException On failure querying data store
+     */
+    @NonNull
+    public <T extends Model> List<T> list(@NonNull Class<T> clazz) throws DataStoreException {
+        final Iterator<T> iterator =
+            awaitIterator((onResult, onError) -> asyncDelegate.query(clazz, onResult, onError));
+        List<T> items = new ArrayList<>();
+        while (iterator.hasNext()) {
+            items.add(iterator.next());
+        }
+        return Immutable.of(items);
     }
 
     // Syntax fluff to get rid of type bounds at location of call
