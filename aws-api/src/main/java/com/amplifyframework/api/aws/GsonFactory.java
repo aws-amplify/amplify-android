@@ -22,7 +22,6 @@ import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.core.model.AWSTimestamp;
-
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -60,7 +59,10 @@ final class GsonFactory {
             .registerTypeAdapter(AWSTime.class, new TemporalDeserializers.AWSTimeDeserializer())
             .registerTypeAdapter(AWSTimestamp.class, new TemporalDeserializers.AWSTimestampDeserializer())
             .registerTypeAdapter(AWSDateTime.class, new TemporalDeserializers.AWSDateTimeDeserializer())
-            .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer());
+            .registerTypeAdapter(GraphQLResponse.class, new GraphQLResponseDeserializer())
+            .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
+            .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer())
+            .registerTypeAdapter(String.class, new StringDeserializer());
     }
 
     private static void withAdditionalAdapters(GsonBuilder builder, Map<Class<?>, Object> additionalAdapters) {

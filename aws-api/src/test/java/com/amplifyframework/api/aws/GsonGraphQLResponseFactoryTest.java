@@ -83,6 +83,7 @@ public final class GsonGraphQLResponseFactoryTest {
         assertNotNull(response);
         assertFalse(response.hasData());
         assertFalse(response.hasErrors());
+        assertEquals(new ArrayList<>(), response.getErrors());
     }
 
     /**
