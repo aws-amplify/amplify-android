@@ -22,10 +22,10 @@ import androidx.core.util.ObjectsCompat;
  * A factory for some preset third party auth providers and the ability to create a new, custom one.
  */
 public class AuthProvider {
-    private static final String AMAZON = "www.amazon.com";
-    private static final String FACEBOOK = "graph.facebook.com";
-    private static final String GOOGLE = "accounts.google.com";
-    private static final String TWITTER = "api.twitter.com";
+    private static final String AMAZON = "amazon";
+    private static final String FACEBOOK = "facebook";
+    private static final String GOOGLE = "google";
+    private static final String APPLE = "apple";
 
     private final String providerKey;
 
@@ -62,11 +62,11 @@ public class AuthProvider {
     }
 
     /**
-     * Factory method for getting a pre-configured Twitter provider.
-     * @return a pre-configured Twitter provider
+     * Factory method for getting a pre-configured Apple provider.
+     * @return a pre-configured Apple provider
      */
-    public static AuthProvider twitter() {
-        return new AuthProvider(TWITTER);
+    public static AuthProvider apple() {
+        return new AuthProvider(APPLE);
     }
 
     /**
