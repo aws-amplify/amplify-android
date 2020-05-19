@@ -20,6 +20,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.Page;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -39,9 +40,11 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
+import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -55,14 +58,14 @@ import java.util.Map;
  * with automatically generated GraphQL documents that follow
  * AppSync specifications.
  */
-final class AppSyncGraphQLRequestFactory {
+public final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
     private static final int DEFAULT_LEVEL_DEPTH = 2;
 
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
 
-    static <T extends Model> GraphQLRequest<T> buildQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             String objectId
     ) throws ApiException {
@@ -99,9 +102,30 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    static <T extends Model> GraphQLRequest<T> buildQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
+    ) throws ApiException {
+        Type dataType = TypeToken.getParameterized(Iterable.class, modelClass).getType();
+        return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
+    }
+
+    public static <R, T extends Model> GraphQLRequest<R> buildPagedQuery(
+            Class<T> modelClass,
+            QueryPredicate predicate,
+            int limit,
+            String nextToken
+    ) throws ApiException {
+        Type responseType = TypeToken.getParameterized(Page.class, modelClass).getType();
+        return buildQuery(modelClass, predicate, limit, nextToken, responseType);
+    }
+
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
+            Class<T> modelClass,
+            QueryPredicate predicate,
+            int limit,
+            String nextToken,
+            Type responseType
     ) throws ApiException {
         try {
             StringBuilder doc = new StringBuilder();
@@ -124,13 +148,16 @@ final class AppSyncGraphQLRequestFactory {
 
             if (predicate != null) {
                 variables.put("filter", parsePredicate(predicate));
-                variables.put("limit", DEFAULT_QUERY_LIMIT);
             }
+            if(nextToken != null) {
+                variables.put("nextToken", nextToken);
+            }
+            variables.put("limit", limit);
 
             return new GraphQLRequest<>(
                     doc.toString(),
                     variables,
-                    modelClass,
+                    responseType,
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
@@ -143,7 +170,7 @@ final class AppSyncGraphQLRequestFactory {
     }
 
     @SuppressWarnings("unchecked")
-    static <T extends Model> GraphQLRequest<T> buildMutation(
+    static <R, T extends Model> GraphQLRequest<R> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
@@ -220,14 +247,14 @@ final class AppSyncGraphQLRequestFactory {
     }
 
     @SuppressWarnings("SameParameterValue")
-    static <T extends Model> GraphQLRequest<T> buildSubscription(
+    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type
     ) throws ApiException {
         return buildSubscription(modelClass, type, null);
     }
 
-    static <T extends Model> GraphQLRequest<T> buildSubscription(
+    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type,
             CognitoUserPoolsAuthProvider cognitoAuth

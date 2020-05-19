@@ -27,6 +27,8 @@ import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
 
 import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -34,6 +36,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -76,8 +79,9 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsString("null-gql-response.json");
 
         // Act! Parse it into a model.
+
         final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildSingleItemResponse(nullResponseJson, ListTodosResult.class);
+            responseFactory.buildResponse(null, nullResponseJson, ListTodosResult.class);
 
         // Assert that the model is constructed without content
         assertNotNull(response);
@@ -99,8 +103,9 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
+        Type responseType = new TypeToken<ListTodosResult>(){}.getType();
         final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
+            responseFactory.buildResponse(null, partialResponseJson, ListTodosResult.class);
 
         // Assert that the model contained things...
         assertNotNull(response);
@@ -176,7 +181,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         final GraphQLResponse<ListTodosResult> response =
-                responseFactory.buildSingleItemResponse(partialResponseJson, ListTodosResult.class);
+                responseFactory.buildResponse(null, partialResponseJson, ListTodosResult.class);
 
         // Build the expected response.
         String message = "Conflict resolver rejects mutation.";
@@ -225,7 +230,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a model.
         final GraphQLResponse<ListTodosResult> response =
-                responseFactory.buildSingleItemResponse(responseJson, ListTodosResult.class);
+                responseFactory.buildResponse(null, responseJson, ListTodosResult.class);
 
         // Build the expected response.
         Map<String, Object> extensions = new HashMap<>();
@@ -255,7 +260,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
-                responseFactory.buildSingleItemResponse(partialResponseJson.toString(), String.class);
+                responseFactory.buildResponse(null, partialResponseJson.toString(), String.class);
 
         // Assert that the response data is just the data block as a JSON string
         assertEquals(
@@ -273,9 +278,10 @@ public final class GsonGraphQLResponseFactoryTest {
         final JSONObject baseQueryResponseJson =
             Resources.readAsJson("base-sync-posts-response.json");
 
-        final Iterable<String> queryResults =
-            responseFactory.buildSingleArrayResponse(baseQueryResponseJson.toString(), String.class)
-                .getData();
+        Type responseType = new TypeToken<Iterable<String>>(){}.getType();
+        GraphQLResponse<Iterable<String>> response = responseFactory.buildResponse(null, baseQueryResponseJson.toString(),
+                responseType);
+        final Iterable<String> queryResults = response.getData();
 
         final List<String> resultJsons = new ArrayList<>();
         for (final String queryResult : queryResults) {
@@ -352,8 +358,9 @@ public final class GsonGraphQLResponseFactoryTest {
 
         // Act
         final String responseString = Resources.readAsString("list-meetings-response.json");
+
         final GraphQLResponse<ListMeetingsResult> response =
-                responseFactory.buildSingleItemResponse(responseString, ListMeetingsResult.class);
+                responseFactory.buildResponse(null, responseString, ListMeetingsResult.class);
         final List<Meeting> actualMeetings = response.getData().getItems();
 
         // Assert

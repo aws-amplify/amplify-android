@@ -16,6 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
+
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;
@@ -41,36 +42,36 @@ import okhttp3.ResponseBody;
 
 /**
  * An operation to enqueue a GraphQL request to OkHttp client,
- * with the goal of obtaining a single response. Games aside,
- * this means a query or a mutation, and *NOT* a subscription.
- * @param <T> Casted type of GraphQL result data
+ * with the goal of obtaining a list of responses. For example,
+ * this is used for a LIST query vs. a GET query or most mutations.
+ * @param <R> Casted type of GraphQL result data
  */
-public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
+public final class AppSyncGraphQLOperation<R> extends GraphQLOperation<R> {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-api");
     private static final String CONTENT_TYPE = "application/json";
 
     private final String endpoint;
     private final OkHttpClient client;
-    private final Consumer<GraphQLResponse<T>> onResponse;
+    private final Consumer<GraphQLResponse<R>> onResponse;
     private final Consumer<ApiException> onFailure;
 
     private Call ongoingCall;
 
     /**
-     * Constructs a new SingleResultOperation.
+     * Constructs a new AppSyncGraphQLOperation.
      * @param endpoint API endpoint being hit
      * @param client OkHttp client being used to hit the endpoint
      * @param request GraphQL request being enacted
      * @param responseFactory an implementation of GsonGraphQLResponseFactory
-     * @param onResponse Called when a response is available from the endpoint
-     * @param onFailure Called upon failure to obtain a response from endpoint
+     * @param onResponse Invoked when response is attained from endpoint
+     * @param onFailure Invoked upon failure to obtain response from endpoint
      */
-    private SingleItemResultOperation(
+    private AppSyncGraphQLOperation(
             @NonNull String endpoint,
             @NonNull OkHttpClient client,
-            @NonNull GraphQLRequest<T> request,
+            @NonNull GraphQLRequest<R> request,
             @NonNull GraphQLResponse.Factory responseFactory,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         super(request, responseFactory);
         this.endpoint = endpoint;
@@ -113,12 +114,12 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
         ongoingCall.cancel();
     }
 
-    static <T> Builder<T> builder() {
+    static <R> Builder<R> builder() {
         return new Builder<>();
     }
 
+    @SuppressLint("SyntheticAccessor")
     class OkHttpCallback implements Callback {
-        @SuppressLint("SyntheticAccessor")
         @Override
         public void onResponse(@NonNull Call call,
                                @NonNull Response response) {
@@ -137,14 +138,13 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
             }
 
             try {
-                onResponse.accept(wrapSingleResultResponse(jsonResponse));
+                onResponse.accept(wrapResponse(jsonResponse, getResponseType()));
                 //TODO: Dispatch to hub
             } catch (ApiException exception) {
                 onFailure.accept(exception);
             }
         }
 
-        @SuppressLint("SyntheticAccessor")
         @Override
         public void onFailure(@NonNull Call call,
                               @NonNull IOException exception) {
@@ -155,47 +155,47 @@ public final class SingleItemResultOperation<T> extends GraphQLOperation<T> {
         }
     }
 
-    static final class Builder<T> {
+    static final class Builder<R> {
         private String endpoint;
         private OkHttpClient client;
-        private GraphQLRequest<T> request;
+        private GraphQLRequest<R> request;
         private GraphQLResponse.Factory responseFactory;
-        private Consumer<GraphQLResponse<T>> onResponse;
+        private Consumer<GraphQLResponse<R>> onResponse;
         private Consumer<ApiException> onFailure;
 
-        Builder<T> endpoint(@NonNull String endpoint) {
+        Builder<R> endpoint(@NonNull String endpoint) {
             this.endpoint = Objects.requireNonNull(endpoint);
             return this;
         }
 
-        Builder<T> client(@NonNull OkHttpClient client) {
+        Builder<R> client(@NonNull OkHttpClient client) {
             this.client = Objects.requireNonNull(client);
             return this;
         }
 
-        Builder<T> request(@NonNull GraphQLRequest<T> request) {
+        Builder<R> request(@NonNull GraphQLRequest<R> request) {
             this.request = Objects.requireNonNull(request);
             return this;
         }
 
-        Builder<T> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
+        Builder<R> responseFactory(@NonNull GraphQLResponse.Factory responseFactory) {
             this.responseFactory = Objects.requireNonNull(responseFactory);
             return this;
         }
 
-        Builder<T> onResponse(@NonNull Consumer<GraphQLResponse<T>> onResponse) {
+        Builder<R> onResponse(@NonNull Consumer<GraphQLResponse<R>> onResponse) {
             this.onResponse = Objects.requireNonNull(onResponse);
             return this;
         }
 
-        Builder<T> onFailure(@NonNull Consumer<ApiException> onFailure) {
+        Builder<R> onFailure(@NonNull Consumer<ApiException> onFailure) {
             this.onFailure = Objects.requireNonNull(onFailure);
             return this;
         }
 
         @SuppressLint("SyntheticAccessor")
-        SingleItemResultOperation<T> build() {
-            return new SingleItemResultOperation<>(
+        AppSyncGraphQLOperation<R> build() {
+            return new AppSyncGraphQLOperation<>(
                 Objects.requireNonNull(endpoint),
                 Objects.requireNonNull(client),
                 Objects.requireNonNull(request),

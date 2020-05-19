@@ -21,26 +21,28 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.ApiOperation;
 
+import java.lang.reflect.Type;
+
 /**
  * A GraphQLOperation is an API operation which returns a GraphQLResponse.
- * @param <T> The type of data contained in the GraphQLResponse.
+ * @param <R> The type of data contained in the GraphQLResponse.
  */
-public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>> {
+public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>> {
     private final GraphQLResponse.Factory responseFactory;
-    private final Class<T> classToCast;
+    private final Type responseType;
 
     /**
      * Constructs a new instance of a GraphQLOperation.
-     * @param graphQlRequest A GraphQL request
+     * @param graphQLRequest A GraphQL request
      * @param responseFactory an implementation of ResponseFactory
      */
     public GraphQLOperation(
-            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull GraphQLRequest<R> graphQLRequest,
             @NonNull GraphQLResponse.Factory responseFactory
     ) {
-        super(graphQlRequest);
+        super(graphQLRequest);
         this.responseFactory = responseFactory;
-        this.classToCast = graphQlRequest.getModelClass();
+        this.responseType = graphQLRequest.getResponseType();
     }
 
     /**
@@ -50,9 +52,9 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
      * @return wrapped response object
      * @throws ApiException If the class provided mismatches the data
      */
-    protected final GraphQLResponse<T> wrapSingleResultResponse(String jsonResponse) throws ApiException {
+    protected final GraphQLResponse<R> wrapResponse(String jsonResponse, Type type) throws ApiException {
         try {
-            return responseFactory.buildSingleItemResponse(jsonResponse, classToCast);
+            return responseFactory.buildResponse(getRequest(), jsonResponse, type);
         } catch (ClassCastException cce) {
             throw new ApiException("Amplify encountered an error while deserializing an object",
                     AmplifyException.TODO_RECOVERY_SUGGESTION);
@@ -60,26 +62,10 @@ public abstract class GraphQLOperation<T> extends ApiOperation<GraphQLRequest<T>
     }
 
     /**
-     * Converts a response json string containing a list of objects to a formatted
-     * {@link GraphQLResponse} object that a response consumer can receive.
-     * @param jsonResponse json response from API to be converted
-     * @return wrapped response object
-     * @throws ApiException If the class provided mismatches the data
+     * Gets the Type to use for deserializing the response.
+     * @return response type
      */
-    protected final GraphQLResponse<Iterable<T>> wrapMultiResultResponse(String jsonResponse) throws ApiException {
-        try {
-            return responseFactory.buildSingleArrayResponse(jsonResponse, classToCast);
-        } catch (ClassCastException cce) {
-            throw new ApiException("Amplify encountered an error while deserializing an object",
-                    AmplifyException.TODO_RECOVERY_SUGGESTION);
-        }
-    }
-
-    /**
-     * Gets the casting class.
-     * @return Class to cast.
-     */
-    protected final Class<T> getClassToCast() {
-        return classToCast;
+    protected final Type getResponseType() {
+        return responseType;
     }
 }

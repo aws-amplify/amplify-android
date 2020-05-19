@@ -32,7 +32,9 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
+import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -90,8 +92,9 @@ public final class AppSyncClient implements AppSync {
             return new NoOpCancelable();
         }
 
-        final GraphQLRequest<String> request =
-            new GraphQLRequest<>(queryDoc, Collections.emptyMap(), String.class, variablesSerializer);
+        Type responseType = new TypeToken<Iterable<String>>(){}.getType();
+        final GraphQLRequest<Iterable<String>> request =
+            new GraphQLRequest<>(queryDoc, Collections.emptyMap(), responseType, variablesSerializer);
 
         final Consumer<GraphQLResponse<Iterable<String>>> responseConsumer = apiQueryResponse -> {
             if (apiQueryResponse.hasErrors()) {
@@ -266,6 +269,7 @@ public final class AppSyncClient implements AppSync {
             onSubscriptionFailure.accept(docGenerationException);
             return new NoOpCancelable();
         }
+
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
 

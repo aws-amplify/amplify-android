@@ -19,11 +19,14 @@ import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.Page;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 /**
@@ -42,32 +45,19 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     @Override
-    public <T> GraphQLResponse<T> buildSingleItemResponse(
-            String responseJson,
-            Class<T> classToCast
-    ) throws ApiException {
+    @SuppressWarnings("unchecked") // Cast from GraphQLRequest<R> to GraphQLRequest<Page<Object>>
+    public <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String responseJson, Type typeOfR) throws ApiException {
+        Type responseType = TypeToken.getParameterized(GraphQLResponse.class, typeOfR).getType();
         try {
-            // Get the type of the desired response (GraphQLResponse<T>)
-            Type responseType = TypeToken.getParameterized(GraphQLResponse.class, classToCast).getType();
-            return gson.fromJson(responseJson, responseType);
-        } catch (JsonSyntaxException jsonSyntaxException) {
-            throw new ApiException(
-                    "Amplify encountered an error while deserializing an object.",
-                    jsonSyntaxException,
-                    AmplifyException.TODO_RECOVERY_SUGGESTION
-            );
-        }
-    }
-
-    public <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(
-            String responseJson,
-            Class<T> classToCast
-    ) throws ApiException {
-        try {
-            // Get the type of the desired response (GraphQLResponse<Iterable<T>>)
-            Type iterableType = TypeToken.getParameterized(Iterable.class, classToCast).getType();
-            Type responseType = TypeToken.getParameterized(GraphQLResponse.class, iterableType).getType();
-            return gson.fromJson(responseJson, responseType);
+            if(typeOfR instanceof ParameterizedType && ((ParameterizedType) typeOfR).getRawType().equals(Page.class)) {
+                Gson pageGson = gson
+                        .newBuilder()
+                        .registerTypeAdapter(Page.class, new AppSyncPageDeserializer((GraphQLRequest<Page<Object>>) request))
+                        .create();
+                return pageGson.fromJson(responseJson, responseType);
+            } else {
+                return gson.fromJson(responseJson, responseType);
+            }
         } catch (JsonSyntaxException jsonSyntaxException) {
             throw new ApiException(
                     "Amplify encountered an error while deserializing an object.",
