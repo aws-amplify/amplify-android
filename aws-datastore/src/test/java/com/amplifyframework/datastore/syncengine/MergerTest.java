@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.ModelMetadata;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -29,10 +30,10 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
@@ -40,9 +41,6 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Tests the {@link Merger}.
- * NOTE: the tests show that the Merger is not currently working to spec.
- * At the moment, Merger just applies changes into the local store, without
- * any consideration to the {@link MutationOutbox}. TODO: fix this.
  */
 @RunWith(RobolectricTestRunner.class)
 public final class MergerTest {
@@ -64,7 +62,8 @@ public final class MergerTest {
         InMemoryStorageAdapter inMemoryStorageAdapter = InMemoryStorageAdapter.create();
         this.storageAdapter = SynchronousStorageAdapter.delegatingTo(inMemoryStorageAdapter);
         this.mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
-        this.merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
+        VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
+        this.merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
     }
 
     /**
@@ -88,7 +87,7 @@ public final class MergerTest {
 
         // Act: merge a model deletion.
         ModelMetadata deletionMetadata =
-            new ModelMetadata(blogOwner.getId(), true, 1, Time.now());
+            new ModelMetadata(blogOwner.getId(), true, 2, Time.now());
         TestObserver<Void> observer =
             merger.merge(new ModelWithMetadata<>(blogOwner, deletionMetadata)).test();
         assertTrue(observer.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS));
@@ -139,7 +138,7 @@ public final class MergerTest {
             .build();
         ModelMetadata metadata = new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
         // Note that putInStore is NOT called!
-        // putInStore(blogOwner, metadata);
+        // storageAdapter.save(blogOwner, metadata);
 
         // Act: merge a creation for an item
         TestObserver<Void> observer = merger.merge(new ModelWithMetadata<>(blogOwner, metadata)).test();
@@ -200,13 +199,20 @@ public final class MergerTest {
         ModelMetadata localMetadata =
             new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
         storageAdapter.save(blogOwner, localMetadata);
-        mutationOutbox.enqueue(PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE));
+
+        PendingMutation<BlogOwner> pendingMutation =
+            PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE);
+        TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(pendingMutation).test();
+        enqueueObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        enqueueObserver.assertNoErrors().assertComplete();
 
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same
         // item should be DELETED.
         ModelMetadata cloudMetadata = new ModelMetadata(knownId, true, 2, Time.now());
-        merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata));
+        TestObserver<Void> mergeObserver = merger.merge(new ModelWithMetadata<>(blogOwner, cloudMetadata)).test();
+        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.assertNoErrors().assertComplete();
 
         // Assert: the item is NOT deleted from the local store.
         // The original is still there.
@@ -214,5 +220,117 @@ public final class MergerTest {
         final List<BlogOwner> blogOwnersInStorage = storageAdapter.query(BlogOwner.class);
         assertEquals(1, blogOwnersInStorage.size());
         assertEquals(blogOwner, blogOwnersInStorage.get(0));
+    }
+
+    /**
+     * An incoming mutation whose model has a LOWER version than an already existing model
+     * shall be rejected from the merger.
+     * @throws DataStoreException On failure interacting with local store during test arrange/verify.
+     */
+    @Test
+    public void itemWithLowerVersionIsNotMerged() throws DataStoreException {
+        // Arrange a model and metadata into storage.
+        BlogOwner existingModel = BlogOwner.builder()
+            .name("Cornelius Daniels")
+            .build();
+        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 55, Time.now());
+        storageAdapter.save(existingModel, existingMetadata);
+
+        // Act: try to merge, but specify a LOWER version.
+        BlogOwner incomingModel = existingModel.copyOfBuilder()
+            .name("Cornelius Daniels, but woke af, now.")
+            .build();
+        ModelMetadata lowerVersionMetadata =
+            new ModelMetadata(incomingModel.getId(), false, 33, Time.now());
+        ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
+            new ModelWithMetadata<>(existingModel, lowerVersionMetadata);
+        TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
+        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.assertNoErrors().assertComplete();
+
+        // Assert: Joey is still the same old Joey.
+        assertEquals(Collections.singletonList(existingModel), storageAdapter.query(BlogOwner.class));
+
+        // And his metadata is the still the same.
+        assertEquals(
+            Collections.singletonList(existingMetadata),
+            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+        );
+    }
+
+    /**
+     * If the incoming change has the SAME version as the data currently in the DB, we refuse to update it.
+     * The user may have updated the data locally via the DataStore API. So we would clobber it.
+     * The version must be strictly HIGHER than the current version, in order for the merge to succeed.
+     * @throws DataStoreException On failure to interact with storage during arrange/verify
+     */
+    @Test
+    public void itemWithSameVersionIsNotMerged() throws DataStoreException {
+        // Arrange a model and metadata into storage.
+        BlogOwner existingModel = BlogOwner.builder()
+            .name("Cornelius Daniels")
+            .build();
+        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 55, Time.now());
+        storageAdapter.save(existingModel, existingMetadata);
+
+        // Act: try to merge, but specify a LOWER version.
+        BlogOwner incomingModel = existingModel.copyOfBuilder()
+            .name("Cornelius Daniels, but woke af, now.")
+            .build();
+        ModelMetadata lowerVersionMetadata =
+            new ModelMetadata(incomingModel.getId(), false, 33, Time.now());
+        ModelWithMetadata<BlogOwner> modelWithLowerVersionMetadata =
+            new ModelWithMetadata<>(incomingModel, lowerVersionMetadata);
+        TestObserver<Void> mergeObserver = merger.merge(modelWithLowerVersionMetadata).test();
+        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.assertNoErrors().assertComplete();
+
+        // Assert: Joey is still the same old Joey.
+        List<BlogOwner> actualBlogOwners = storageAdapter.query(BlogOwner.class);
+        assertEquals(1, actualBlogOwners.size());
+        assertEquals(existingModel, actualBlogOwners.get(0));
+
+        // And his metadata is the still the same.
+        assertEquals(
+            Collections.singletonList(existingMetadata),
+            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+        );
+    }
+
+    /**
+     * Gray-box, we know that "no version" evaluates to a version of 0.
+     * So, this test should always behave like {@link #itemWithLowerVersionIsNotMerged()}.
+     * But, it the inputs to the system are technically different, so it is
+     * a distinct test in terms of system input/output.
+     * @throws DataStoreException On failure to interact with storage during arrange/verification
+     */
+    @Test
+    public void itemWithoutVersionIsNotMerged() throws DataStoreException {
+        // Arrange a model and metadata into storage.
+        BlogOwner existingModel = BlogOwner.builder()
+            .name("Cornelius Daniels")
+            .build();
+        ModelMetadata existingMetadata = new ModelMetadata(existingModel.getId(), false, 1, Time.now());
+        storageAdapter.save(existingModel, existingMetadata);
+
+        // Act: try to merge, but don't specify a version in the metadata being used to merge.
+        BlogOwner incomingModel = existingModel.copyOfBuilder()
+            .name("Cornelius Daniels, but woke af, now.")
+            .build();
+        ModelMetadata metadataWithoutVersion = new ModelMetadata(incomingModel.getId(), null, null, null);
+        ModelWithMetadata<BlogOwner> incomingModelWithMetadata =
+            new ModelWithMetadata<>(existingModel, metadataWithoutVersion);
+        TestObserver<Void> mergeObserver = merger.merge(incomingModelWithMetadata).test();
+        mergeObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
+        mergeObserver.assertNoErrors().assertComplete();
+
+        // Assert: Joey is still the same old Joey.
+        assertEquals(Collections.singletonList(existingModel), storageAdapter.query(BlogOwner.class));
+
+        // And his metadata is the still the same.
+        assertEquals(
+            Collections.singletonList(existingMetadata),
+            storageAdapter.query(ModelMetadata.class, Where.id(existingModel.getId()))
+        );
     }
 }
