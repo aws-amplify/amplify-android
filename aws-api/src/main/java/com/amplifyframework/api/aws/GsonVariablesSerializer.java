@@ -16,10 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
-import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
@@ -54,9 +51,9 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSDateSerializer implements JsonSerializer<AWSDate> {
+    static class AWSDateSerializer implements JsonSerializer<Temporal.Date> {
         @Override
-        public JsonElement serialize(AWSDate date, Type typeOfSrc, JsonSerializationContext context) {
+        public JsonElement serialize(Temporal.Date date, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(date.format());
         }
     }
@@ -66,9 +63,9 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSDateTimeSerializer implements JsonSerializer<AWSDateTime> {
+    static class AWSDateTimeSerializer implements JsonSerializer<Temporal.DateTime> {
         @Override
-        public JsonElement serialize(AWSDateTime dateTime, Type typeOfSrc, JsonSerializationContext context) {
+        public JsonElement serialize(Temporal.DateTime dateTime, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(dateTime.format());
         }
     }
@@ -78,9 +75,9 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSTimeSerializer implements JsonSerializer<AWSTime> {
+    static class AWSTimeSerializer implements JsonSerializer<Temporal.Time> {
         @Override
-        public JsonElement serialize(AWSTime time, Type typeOfSrc, JsonSerializationContext context) {
+        public JsonElement serialize(Temporal.Time time, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(time.format());
         }
     }
@@ -92,9 +89,9 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSTimestampSerializer implements JsonSerializer<AWSTimestamp> {
+    static class AWSTimestampSerializer implements JsonSerializer<Temporal.Timestamp> {
         @Override
-        public JsonElement serialize(AWSTimestamp timestamp, Type typeOfSrc, JsonSerializationContext context) {
+        public JsonElement serialize(Temporal.Timestamp timestamp, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(timestamp.getSecondsSinceEpoch());
         }
     }
@@ -102,8 +99,8 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
     /**
      * Earlier versions of the model gen used to use Java's {@link Date} to represent all of the
      * temporal types. This led to challenges while trying to decode/encode the timezone,
-     * among other things. The model gen will now spit out {@link AWSDate}, {@link AWSDateTime},
-     * {@link AWSTime}, and {@link AWSTimestamp}, instead. This DateSerializer is left for
+     * among other things. The model gen will now spit out {@link Temporal.Date}, {@link Temporal.DateTime},
+     * {@link Temporal.Time}, and {@link Temporal.Timestamp}, instead. This DateSerializer is left for
      * compat, until such a time as it can be safely removed (that is, when all models no longer
      * use a raw Date type.)
      */
