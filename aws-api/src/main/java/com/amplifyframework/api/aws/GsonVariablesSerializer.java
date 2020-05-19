@@ -47,11 +47,11 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
     }
 
     /**
-     * Serializer of AWSDate, an extended ISO-8601 Date string, with an optional timezone offset.
+     * Serializer of {@link Temporal.Date}, an extended ISO-8601 Date string, with an optional timezone offset.
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSDateSerializer implements JsonSerializer<Temporal.Date> {
+    static class TemporalDateSerializer implements JsonSerializer<Temporal.Date> {
         @Override
         public JsonElement serialize(Temporal.Date date, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(date.format());
@@ -59,11 +59,12 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
     }
 
     /**
-     * Serializer of AWSDateTime, an extended ISO-8601 DateTime string.  Time zone offset is required.
+     * Serializer of {@link Temporal.DateTime}, an extended ISO-8601 DateTime string.
+     * Time zone offset is required.
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSDateTimeSerializer implements JsonSerializer<Temporal.DateTime> {
+    static class TemporalDateTimeSerializer implements JsonSerializer<Temporal.DateTime> {
         @Override
         public JsonElement serialize(Temporal.DateTime dateTime, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(dateTime.format());
@@ -71,11 +72,11 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
     }
 
     /**
-     * Serializer of AWSTime, an extended ISO-8601 Time string, with an optional timezone offset.
+     * Serializer of {@link Temporal.Time}, an extended ISO-8601 Time string, with an optional timezone offset.
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSTimeSerializer implements JsonSerializer<Temporal.Time> {
+    static class TemporalTimeSerializer implements JsonSerializer<Temporal.Time> {
         @Override
         public JsonElement serialize(Temporal.Time time, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(time.format());
@@ -83,13 +84,13 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
     }
 
     /**
-     * Serializer of AWSTimestamp, an AppSync scalar type that represents the number of seconds elapsed since
-     * 1970-01-01T00:00Z. Timestamps are serialized as numbers. Negative values are also accepted and these represent
-     * the number of seconds till 1970-01-01T00:00Z.
+     * Serializer of {@link Temporal.Timestamp}, an AppSync scalar type that represents
+     * the number of seconds elapsed since 1970-01-01T00:00Z. Timestamps are serialized as numbers.
+     * Negative values are also accepted and these represent the number of seconds till 1970-01-01T00:00Z.
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSTimestampSerializer implements JsonSerializer<Temporal.Timestamp> {
+    static class TemporalTimestampSerializer implements JsonSerializer<Temporal.Timestamp> {
         @Override
         public JsonElement serialize(Temporal.Timestamp timestamp, Type typeOfSrc, JsonSerializationContext context) {
             return new JsonPrimitive(timestamp.getSecondsSinceEpoch());

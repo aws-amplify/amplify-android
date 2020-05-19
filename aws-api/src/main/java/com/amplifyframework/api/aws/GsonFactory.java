@@ -45,10 +45,10 @@ final class GsonFactory {
     private static void withSerializers(GsonBuilder builder) {
         builder
             .registerTypeAdapter(Date.class, new GsonVariablesSerializer.DateSerializer())
-            .registerTypeAdapter(Temporal.Timestamp.class, new GsonVariablesSerializer.AWSTimestampSerializer())
-            .registerTypeAdapter(Temporal.Date.class, new GsonVariablesSerializer.AWSDateSerializer())
-            .registerTypeAdapter(Temporal.DateTime.class, new GsonVariablesSerializer.AWSDateTimeSerializer())
-            .registerTypeAdapter(Temporal.Time.class, new GsonVariablesSerializer.AWSTimeSerializer());
+            .registerTypeAdapter(Temporal.Timestamp.class, new GsonVariablesSerializer.TemporalTimestampSerializer())
+            .registerTypeAdapter(Temporal.Date.class, new GsonVariablesSerializer.TemporalDateSerializer())
+            .registerTypeAdapter(Temporal.DateTime.class, new GsonVariablesSerializer.TemporalDateTimeSerializer())
+            .registerTypeAdapter(Temporal.Time.class, new GsonVariablesSerializer.TemporalTimeSerializer());
     }
 
     private static void withDeserializers(GsonBuilder builder) {
