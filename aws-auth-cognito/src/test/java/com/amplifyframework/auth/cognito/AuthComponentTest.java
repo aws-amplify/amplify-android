@@ -15,6 +15,7 @@
 
 package com.amplifyframework.auth.cognito;
 
+import android.app.Activity;
 import android.content.Context;
 
 import com.amplifyframework.AmplifyException;
@@ -22,10 +23,12 @@ import com.amplifyframework.auth.AuthCategory;
 import com.amplifyframework.auth.AuthCategoryConfiguration;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttributeKey;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -41,6 +44,8 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.HostedUIOptions;
+import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.SignOutOptions;
 import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
@@ -61,11 +66,15 @@ import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.any;
@@ -362,6 +371,105 @@ public final class AuthComponentTest {
         AuthSignInResult result = synchronousAuth.confirmSignIn(CONFIRMATION_CODE);
         validateSignInResult(result, true, AuthSignInStep.DONE);
         verify(mobileClient).confirmSignIn(eq(CONFIRMATION_CODE), any());
+    }
+
+    /**
+     * Tests that the signInWithSocialWebUI method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.showSignIn
+     * with the proper parameters and converts the returned result to the proper AuthSignInResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signInWithSocialWebUI() throws AuthException {
+        Map<String, String> additionalInfoMap = Collections.singletonMap("testKey", "testVal");
+        UserStateDetails userStateResult = new UserStateDetails(UserState.SIGNED_IN, additionalInfoMap);
+
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(2);
+            callback.onResult(userStateResult);
+            return null;
+        }).when(mobileClient).showSignIn(any(), any(), any());
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        Activity activity = new Activity();
+        AuthSignInResult result = synchronousAuth.signInWithSocialWebUI(
+                AuthProvider.facebook(),
+                activity
+        );
+        assertTrue(result.isSignInComplete());
+        assertEquals(AuthSignInStep.DONE, result.getNextStep().getSignInStep());
+        assertEquals(additionalInfoMap, result.getNextStep().getAdditionalInfo());
+
+        ArgumentCaptor<SignInUIOptions> optionsCaptor = ArgumentCaptor.forClass(SignInUIOptions.class);
+        verify(mobileClient).showSignIn(eq(activity), optionsCaptor.capture(), any());
+        HostedUIOptions hostedUIOptions = optionsCaptor.getValue().getHostedUIOptions();
+        assertNotNull(hostedUIOptions);
+        assertEquals("Facebook", hostedUIOptions.getIdentityProvider());
+    }
+
+    /**
+     * Tests that the signInWithWebUI method of the Auth wrapper of AWSMobileClient (AMC) calls AMC.showSignIn
+     * with the proper parameters and converts the returned result to the proper AuthSignInResult.
+     * @throws AuthException test fails if this gets thrown since method should succeed
+     */
+    @Test
+    public void signInWithWebUI() throws AuthException {
+        Map<String, String> additionalInfoMap = Collections.singletonMap("testKey", "testVal");
+        UserStateDetails userStateResult = new UserStateDetails(UserState.SIGNED_IN, additionalInfoMap);
+
+        doAnswer(invocation -> {
+            Callback<UserStateDetails> callback = invocation.getArgument(2);
+            callback.onResult(userStateResult);
+            return null;
+        }).when(mobileClient).showSignIn(any(), any(), any());
+
+        Tokens tokensResult = new Tokens(ACCESS_TOKEN, ID_TOKEN, REFRESH_TOKEN);
+        doAnswer(invocation -> {
+            Callback<Tokens> callback = invocation.getArgument(0);
+            callback.onResult(tokensResult);
+            return null;
+        }).when(mobileClient).getTokens(any());
+
+        Activity activity = new Activity();
+        String federationProviderName = "testFedProvider";
+        String idpIdentifier = "testIdpID";
+        List<String> scopes = Collections.singletonList("scope");
+        Map<String, String> signInMap = Collections.singletonMap("signInKey", "signInVal");
+        Map<String, String> signOutMap = Collections.singletonMap("signOutKey", "signOutVal");
+        Map<String, String> tokensMap = Collections.singletonMap("tokensKey", "tokensVal");
+
+        AuthSignInResult result = synchronousAuth.signInWithWebUI(
+                activity,
+                AWSCognitoAuthWebUISignInOptions
+                        .builder()
+                        .federationProviderName(federationProviderName)
+                        .idpIdentifier(idpIdentifier)
+                        .scopes(scopes)
+                        .signInQueryParameters(signInMap)
+                        .signOutQueryParameters(signOutMap)
+                        .tokenQueryParameters(tokensMap)
+                        .build()
+        );
+        assertTrue(result.isSignInComplete());
+        assertEquals(AuthSignInStep.DONE, result.getNextStep().getSignInStep());
+        assertEquals(additionalInfoMap, result.getNextStep().getAdditionalInfo());
+
+        ArgumentCaptor<SignInUIOptions> optionsCaptor = ArgumentCaptor.forClass(SignInUIOptions.class);
+        verify(mobileClient).showSignIn(eq(activity), optionsCaptor.capture(), any());
+        HostedUIOptions hostedUIOptions = optionsCaptor.getValue().getHostedUIOptions();
+        assertNotNull(hostedUIOptions);
+        assertNull(hostedUIOptions.getIdentityProvider());
+        assertEquals(federationProviderName, hostedUIOptions.getFederationProviderName());
+        assertEquals(idpIdentifier, hostedUIOptions.getIdpIdentifier());
+        assertArrayEquals(scopes.toArray(), hostedUIOptions.getScopes());
+        assertEquals(signInMap, hostedUIOptions.getSignInQueryParameters());
+        assertEquals(signOutMap, hostedUIOptions.getSignOutQueryParameters());
+        assertEquals(tokensMap, hostedUIOptions.getTokenQueryParameters());
     }
 
     /**

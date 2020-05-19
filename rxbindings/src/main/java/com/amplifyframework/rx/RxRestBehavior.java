@@ -18,7 +18,7 @@ package com.amplifyframework.rx;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.RestBehavior;
+import com.amplifyframework.api.rest.RestBehavior;
 import com.amplifyframework.api.rest.RestOptions;
 import com.amplifyframework.api.rest.RestResponse;
 

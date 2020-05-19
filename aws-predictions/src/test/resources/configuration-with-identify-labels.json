@@ -1,0 +1,10 @@
+{
+  "defaultRegion": "us-west-1",
+  "identify": {
+    "identifyLabels": {
+      "region": "us-west-2",
+      "type": "LABELS",
+      "defaultNetworkPolicy": "auto"
+    }
+  }
+}

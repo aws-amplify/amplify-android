@@ -133,9 +133,19 @@ final class AWSRekognitionService {
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
+        final IdentifyEntitiesConfiguration config;
         try {
-            List<CelebrityDetails> celebrities = detectCelebrities(imageData);
-            onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
+            config = pluginConfiguration.getIdentifyEntitiesConfiguration();
+            if (config.isCelebrityDetectionEnabled()) {
+                List<CelebrityDetails> celebrities = detectCelebrities(imageData);
+                onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
+            } else {
+                onError.accept(new PredictionsException("Celebrity detection is disabled.",
+                        "Please enable celebrity detection via Amplify CLI. This feature " +
+                                "should be accessible by running `amplify update predictions` " +
+                                "in the console and updating entities detection resource with " +
+                                "advanced configuration setting."));
+            }
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }

@@ -13,16 +13,13 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.api;
+package com.amplifyframework.api.graphql;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.api.graphql.GraphQLOperation;
-import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.SubscriptionType;
+import com.amplifyframework.api.ApiException;
+import com.amplifyframework.api.ApiOperation;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
@@ -32,7 +29,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicate;
  * GraphQL behaviors include varying approaches to perform the query,
  * subscribe and mutate GraphQL operations.
  */
-public interface GraphQlBehavior {
+public interface GraphQLBehavior {
 
     /**
      * This is a special helper method for easily calling a list query for

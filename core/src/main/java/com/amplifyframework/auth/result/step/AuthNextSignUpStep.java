@@ -115,7 +115,7 @@ public final class AuthNextSignUpStep {
      */
     @Override
     public String toString() {
-        return "AuthSignUpResult{" +
+        return "AuthNextSignUpStep{" +
                 "signUpStep=" + getSignUpStep() +
                 ", additionalInfo=" + getAdditionalInfo() +
                 ", codeDeliveryDetails=" + getCodeDeliveryDetails() +
