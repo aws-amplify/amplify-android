@@ -39,42 +39,38 @@ import java.util.concurrent.TimeUnit;
  * Factory class to vend out pinpoint analytics client.
  */
 final class PinpointManagerFactory {
-
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
-    private static final int INITIALIZATION_TIMEOUT_MS = 5000;
+    private static final long INITIALIZATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 
-    private PinpointManagerFactory() {
-    }
+    private PinpointManagerFactory() {}
 
-    static PinpointManager create(Context context,
-                                  AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration)
+    static PinpointManager create(
+            Context context,
+            AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration)
             throws AnalyticsException {
-        final PinpointManager pinpointManager;
-        final AWSConfiguration awsConfiguration = new AWSConfiguration(context);
-
-        CountDownLatch mobileClientLatch = new CountDownLatch(1);
         // Initialize the AWSMobileClient
-        AWSMobileClient.getInstance().initialize(context, awsConfiguration,
-                new Callback<UserStateDetails>() {
-                    @Override
-                    public void onResult(UserStateDetails userStateDetails) {
-                        LOG.info("Mobile client initialized");
-                        mobileClientLatch.countDown();
-                    }
+        AWSConfiguration awsConfiguration = new AWSConfiguration(context);
+        CountDownLatch mobileClientLatch = new CountDownLatch(1);
+        AWSMobileClient.getInstance().initialize(context, awsConfiguration, new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails userStateDetails) {
+                LOG.info("Mobile client initialized");
+                mobileClientLatch.countDown();
+            }
 
-                    @Override
-                    public void onError(Exception exception) {
-                        LOG.error("Error initializing AWS Mobile Client", exception);
-                    }
-                });
-
+            @Override
+            public void onError(Exception exception) {
+                LOG.error("Error initializing AWS Mobile Client", exception);
+            }
+        });
         try {
             if (!mobileClientLatch.await(INITIALIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                throw new AnalyticsException("Failed to initialize mobile client.",
-                        "Please check your awsconfiguration json.");
+                throw new AnalyticsException(
+                    "Failed to initialize mobile client.", "Please check your awsconfiguration json."
+                );
             }
         } catch (InterruptedException exception) {
-            throw new RuntimeException("Failed to initialize mobile client: " + exception.getLocalizedMessage());
+            throw new RuntimeException("Failed to initialize mobile client." + exception);
         }
 
         ClientConfiguration clientConfiguration = new ClientConfiguration();
@@ -89,7 +85,6 @@ final class PinpointManagerFactory {
                 AWSMobileClient.getInstance()
         ).withClientConfiguration(clientConfiguration);
 
-        pinpointManager = new PinpointManager(pinpointConfiguration);
-        return pinpointManager;
+        return new PinpointManager(pinpointConfiguration);
     }
 }

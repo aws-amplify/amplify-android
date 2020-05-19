@@ -1,0 +1,10 @@
+{
+  "defaultRegion": "us-west-1",
+  "identify": {
+    "identifyText": {
+      "format": "ALL",
+      "region": "us-west-2",
+      "defaultNetworkPolicy": "auto"
+    }
+  }
+}

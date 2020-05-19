@@ -15,9 +15,12 @@
 
 package com.amplifyframework.api;
 
+import com.amplifyframework.api.graphql.GraphQLBehavior;
+import com.amplifyframework.api.rest.RestBehavior;
+
 /**
  * API category behaviors include REST and GraphQL operations. These
  * include the family of HTTP verbs (GET, POST, etc.), and the GraphQL
  * query/subscribe/mutate operations.
  */
-public interface ApiCategoryBehavior extends RestBehavior, GraphQlBehavior { }
+public interface ApiCategoryBehavior extends RestBehavior, GraphQLBehavior {}

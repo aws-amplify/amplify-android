@@ -16,104 +16,81 @@
 package com.amplifyframework.auth.cognito;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.auth.AuthSession;
+import com.amplifyframework.auth.result.AuthSessionResult;
 
 import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSCredentialsProvider;
+
+import java.util.Objects;
 
 /**
  * Cognito extension of AuthSession containing AWS Cognito specific tokens.
  */
 public final class AWSCognitoAuthSession extends AuthSession implements AWSCredentialsProvider {
-    private final AWSCredentials awsCredentials;
-    private final String userSub;
-    private final String identityId;
-    private final String accessToken;
-    private final String idToken;
-    private final String refreshToken;
+    private final AuthSessionResult<String> identityId;
+    private final AuthSessionResult<AWSCredentials> awsCredentials;
+    private final AuthSessionResult<String> userSub;
+    private final AuthSessionResult<AWSCognitoUserPoolTokens> userPoolTokens;
 
-    private AWSCognitoAuthSession(
+    /**
+     * Cognito extension of AuthSession containing AWS Cognito specific tokens.
+     * @param isSignedIn Are you currently in a signed in state (an AuthN indicator to be technical)
+     * @param awsCredentials The credentials which come from Identity Pool
+     * @param userSub The id which comes from User Pools
+     * @param identityId The id which comes from Identity Pools
+     * @param userPoolTokens The tokens which come from User Pools (access, id, refresh tokens)
+     */
+    public AWSCognitoAuthSession(
             boolean isSignedIn,
-            AWSCredentials awsCredentials,
-            String userSub,
-            String identityId,
-            String accessToken,
-            String idToken,
-            String refreshToken
+            @NonNull AuthSessionResult<String> identityId,
+            @NonNull AuthSessionResult<AWSCredentials> awsCredentials,
+            @NonNull AuthSessionResult<String> userSub,
+            @NonNull AuthSessionResult<AWSCognitoUserPoolTokens> userPoolTokens
     ) {
         super(isSignedIn);
-        this.awsCredentials = awsCredentials;
-        this.userSub = userSub;
-        this.identityId = identityId;
-        this.accessToken = accessToken;
-        this.idToken = idToken;
-        this.refreshToken = refreshToken;
+        this.identityId = Objects.requireNonNull(identityId);
+        this.awsCredentials = Objects.requireNonNull(awsCredentials);
+        this.userSub = Objects.requireNonNull(userSub);
+        this.userPoolTokens = Objects.requireNonNull(userPoolTokens);
     }
 
     /**
-     * AWS Credentials from Identity Pools.
-     * @return AWS Credentials from Identity Pools.
+     * The credentials which come from Identity Pool.
+     * @return the credentials which come from Identity Pool
      */
-    @Nullable
-    public AWSCredentials getAWSCredentials() {
+    @NonNull
+    public AuthSessionResult<AWSCredentials> getAWSCredentials() {
         return awsCredentials;
     }
 
     /**
-     * User sub.
-     * @return user sub
+     * The id which comes from User Pools.
+     * @return the id which comes from User Pools
      */
-    @Nullable
-    public String getUserSub() {
+    @NonNull
+    public AuthSessionResult<String> getUserSub() {
         return userSub;
     }
 
     /**
-     * Identity id.
-     * @return identity id.
+     * The id which comes from Identity Pools.
+     * @return the id which comes from Identity Pools
      */
-    @Nullable
-    public String getIdentityId() {
+    @NonNull
+    public AuthSessionResult<String> getIdentityId() {
         return identityId;
     }
 
     /**
-     * Access token.
-     * @return Access token.
-     */
-    @Nullable
-    public String getAccessToken() {
-        return accessToken;
-    }
-
-    /**
-     * Id token.
-     * @return Id token.
-     */
-    @Nullable
-    public String getIdToken() {
-        return idToken;
-    }
-
-    /**
-     * Refresh token.
-     * @return refresh token.
-     */
-    @Nullable
-    public String getRefreshToken() {
-        return refreshToken;
-    }
-
-    /**
-     * Builder.
-     * @return builder.
+     * The tokens which come from User Pools (access, id, refresh tokens).
+     * @return the tokens which come from User Pools (access, id, refresh tokens)
      */
     @NonNull
-    public static Builder builder() {
-        return new Builder();
+    public AuthSessionResult<AWSCognitoUserPoolTokens> getUserPoolTokens() {
+        return userPoolTokens;
     }
 
     @Override
@@ -123,9 +100,7 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
             getAWSCredentials(),
             getUserSub(),
             getIdentityId(),
-            getAccessToken(),
-            getIdToken(),
-            getRefreshToken()
+            getUserPoolTokens()
         );
     }
 
@@ -141,9 +116,7 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
                     ObjectsCompat.equals(getAWSCredentials(), cognitoAuthState.getAWSCredentials()) &&
                     ObjectsCompat.equals(getUserSub(), cognitoAuthState.getUserSub()) &&
                     ObjectsCompat.equals(getIdentityId(), cognitoAuthState.getIdentityId()) &&
-                    ObjectsCompat.equals(getAccessToken(), cognitoAuthState.getAccessToken()) &&
-                    ObjectsCompat.equals(getIdToken(), cognitoAuthState.getIdToken()) &&
-                    ObjectsCompat.equals(getRefreshToken(), cognitoAuthState.getRefreshToken());
+                    ObjectsCompat.equals(getUserPoolTokens(), cognitoAuthState.getUserPoolTokens());
         }
     }
 
@@ -151,129 +124,25 @@ public final class AWSCognitoAuthSession extends AuthSession implements AWSCrede
     public String toString() {
         return "AWSCognitoAuthSession{" +
                 "isSignedIn=" + isSignedIn() +
-                ", awsCredentials=" + awsCredentials +
-                ", userSub='" + userSub + '\'' +
-                ", identityId='" + identityId + '\'' +
-                ", accessToken='" + accessToken + '\'' +
-                ", idToken='" + idToken + '\'' +
-                ", refreshToken='" + refreshToken + '\'' +
+                ", awsCredentials=" + getAWSCredentials() +
+                ", userSub='" + getUserSub() + '\'' +
+                ", identityId='" + getIdentityId() + '\'' +
+                ", userPoolTokens='" + getUserPoolTokens() + '\'' +
                 '}';
     }
 
     @Override
     public AWSCredentials getCredentials() {
-        return awsCredentials;
+        switch (getAWSCredentials().getType()) {
+            case SUCCESS:
+                return getAWSCredentials().getValue();
+            default:
+                return null;
+        }
     }
 
     @Override
     public void refresh() {
         // NO-OP since this is a session snapshot
-    }
-
-    /**
-     * The builder for this class.
-     */
-    public static final class Builder {
-        private boolean isSignedIn;
-        private AWSCredentials awsCredentials;
-        private String userSub;
-        private String identityId;
-        private String accessToken;
-        private String idToken;
-        private String refreshToken;
-
-        /**
-         * Will be replaced in next PR.
-         * @param isSignedIn Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder isSignedIn(boolean isSignedIn) {
-            this.isSignedIn = isSignedIn;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @param awsCredentials Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder awsCredentials(@Nullable AWSCredentials awsCredentials) {
-            this.awsCredentials = awsCredentials;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @param userSub Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder userSub(@Nullable String userSub) {
-            this.userSub = userSub;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @param identityId Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder identityId(@Nullable String identityId) {
-            this.identityId = identityId;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @param accessToken Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder accessToken(@Nullable String accessToken) {
-            this.accessToken = accessToken;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @param idToken Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder idToken(@Nullable String idToken) {
-            this.idToken = idToken;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @param refreshToken Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public Builder refreshToken(@Nullable String refreshToken) {
-            this.refreshToken = refreshToken;
-            return this;
-        }
-
-        /**
-         * Will be replaced in next PR.
-         * @return Will be replaced in next PR.
-         */
-        @NonNull
-        public AWSCognitoAuthSession build() {
-            return new AWSCognitoAuthSession(
-                    isSignedIn,
-                    awsCredentials,
-                    userSub,
-                    identityId,
-                    accessToken,
-                    idToken,
-                    refreshToken
-            );
-        }
     }
 }

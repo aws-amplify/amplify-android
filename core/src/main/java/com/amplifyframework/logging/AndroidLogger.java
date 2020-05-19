@@ -23,33 +23,24 @@ import androidx.annotation.Nullable;
 import java.util.Objects;
 
 final class AndroidLogger implements Logger {
-    private static final String DEFAULT_NAMESPACE = "amplify";
-    private static final LogLevel DEFAULT_LOG_LEVEL = LogLevel.INFO;
-
     private final LogLevel threshold;
     private final String namespace;
-
-    AndroidLogger(@NonNull LogLevel threshold) {
-        this(DEFAULT_NAMESPACE, threshold);
-    }
 
     AndroidLogger(@NonNull String namespace, @NonNull LogLevel threshold) {
         this.threshold = Objects.requireNonNull(threshold);
         this.namespace = Objects.requireNonNull(namespace);
     }
 
-    AndroidLogger(@NonNull String namespace) {
-        this(namespace, DEFAULT_LOG_LEVEL);
-    }
-
-    AndroidLogger() {
-        this(DEFAULT_NAMESPACE, DEFAULT_LOG_LEVEL);
-    }
-
     @NonNull
     @Override
     public LogLevel getThresholdLevel() {
         return threshold;
+    }
+
+    @NonNull
+    @Override
+    public String getNamespace() {
+        return namespace;
     }
 
     @Override
