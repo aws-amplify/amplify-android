@@ -25,9 +25,9 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.AsyncUtils;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -38,7 +38,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Observable;
 import io.reactivex.disposables.CompositeDisposable;
@@ -101,41 +100,28 @@ final class SubscriptionProcessor {
     @SuppressWarnings("unchecked")
     private static <T extends Model> Observable<SubscriptionEvent<? extends Model>>
             subscriptionObservable(AppSync appSync, SubscriptionType subscriptionType, Class<T> clazz) {
-        AtomicReference<Cancelable> cancelable = new AtomicReference<>(NoOpCancelable::new);
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
             CountDownLatch latch = new CountDownLatch(1);
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
-            emitter.setCancellable(cancelable::get);
-            synchronized (cancelable) {
-                cancelable.set(method.subscribe(
-                    clazz,
-                    token -> latch.countDown(),
-                    emitter::onNext,
-                    emitter::onError,
-                    emitter::onComplete
-                ));
-            }
+            Cancelable subscriptionCancelable = method.subscribe(
+                clazz,
+                token -> latch.countDown(),
+                emitter::onNext,
+                emitter::onError,
+                emitter::onComplete
+            );
+            // When the observable is disposed, we need to call cancel() on the subscription
+            // so it can properly dispose of resources if necessary. For the AWS API plugin,
+            // this means means closing the underlying network connection.
+            emitter.setDisposable(
+                AsyncUtils.asDisposable(subscriptionCancelable)
+            );
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
         .doOnError(exception -> {
             LOG.warn("An error occurred with one of the subscriptions to the remote DataStore for " +
                 "model " + clazz.getSimpleName() + " " + subscriptionType.name(),
                 exception.getCause());
-        })
-        .onErrorResumeNext(next -> {
-            next.onComplete();
-        })
-        .doOnDispose(() -> {
-            // When the observable is disposed, we need to call cancel() on the subscription
-            // so it can properly dispose of resources if necessary. For the AWS API plugin,
-            // this means means closing the underlying network connection.
-            synchronized (cancelable) {
-                Cancelable subscriptionOperation = cancelable.get();
-                if (subscriptionOperation != null) {
-                    LOG.info("Terminating subscription operation.");
-                    subscriptionOperation.cancel();
-                }
-            }
         })
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
@@ -165,11 +151,20 @@ final class SubscriptionProcessor {
 
     /**
      * Checks if the subscription processor is listening
-     * for events.
+     * for events coming from the remote DataStore.
      * @return true if there are listeners. False otherwise.
      */
-    boolean isObserving() {
+    boolean isObservingSubscriptionEvents() {
         return disposable.size() > 0;
+    }
+
+    /**
+     * Check if the subscription processor is processing
+     * changes coming from the remote DataStore.
+     * @return
+     */
+    boolean isDrainingMutationBuffer() {
+        return buffer.hasObservers();
     }
 
     /**

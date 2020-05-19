@@ -85,11 +85,10 @@ final class MutationProcessor {
     }
 
     /**
-     * Checks if the mutation processor is listening
-     * for events.
-     * @return True if there are listeners. False otherwise.
+     * Checks if the mutation processor is actively observing the mutation outbox.
+     * @return True if the mutation processor is subscribed the mutation outbox.
      */
-    boolean isObserving() {
+    boolean isDrainingMutationOutbox() {
         return disposable.size() > 0;
     }
 

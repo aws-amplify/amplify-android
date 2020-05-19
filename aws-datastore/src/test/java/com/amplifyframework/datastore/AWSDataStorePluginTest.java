@@ -24,6 +24,7 @@ import com.amplifyframework.api.ApiPlugin;
 import com.amplifyframework.api.graphql.GraphQLOperation;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -36,6 +37,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
 import com.amplifyframework.testmodels.personcar.Person;
 import com.amplifyframework.testutils.random.RandomString;
+import com.amplifyframework.testutils.sync.SynchronousDataStore;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,17 +48,12 @@ import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import io.reactivex.Completable;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -68,7 +65,7 @@ import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
-    private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+    private static final String MOCK_API_PLUGIN_NAME = "MockApiPlugin";
     private Context context;
     private ModelProvider modelProvider;
     private AtomicInteger subscriptionStartedCounter;
@@ -85,8 +82,8 @@ public final class AWSDataStorePluginTest {
     public void setup() {
         this.context = getApplicationContext();
         modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
-        subscriptionCancelledCounter = new AtomicInteger(0);
-        subscriptionStartedCounter = new AtomicInteger(0);
+        subscriptionCancelledCounter = new AtomicInteger();
+        subscriptionStartedCounter = new AtomicInteger();
         modelCount = modelProvider.models().size();
     }
 
@@ -94,7 +91,6 @@ public final class AWSDataStorePluginTest {
      * Configuring and initializing the plugin succeeds without freezing or
      * crashing the calling thread. Basic. 🙄
      * @throws AmplifyException Not expected; on failure to configure of initialize plugin.
-     * @throws JSONException On JSON parsing/processing of the config file.
      */
     @Test
     public void configureAndInitializeInLocalMode() throws AmplifyException {
@@ -137,6 +133,7 @@ public final class AWSDataStorePluginTest {
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
 
@@ -144,28 +141,10 @@ public final class AWSDataStorePluginTest {
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
         Person person1 = createPerson("Test", "Dummy I");
-        Throwable exception = Completable.fromSingle(single -> { // Save a record to local store
-            awsDataStorePlugin.save(person1, itemSaved -> {
-                assertNotNull(itemSaved.item().getId());
-                assertEquals(person1.getLastName(), itemSaved.item().getLastName());
-                single.onSuccess(true);
-            }, single::onError);
-        }).andThen(
-            Completable.fromSingle(single -> { // Verify the record has been saved
-                awsDataStorePlugin.query(Person.class, results -> {
-                    Person actualPerson = results.next();
-                    assertNotNull(actualPerson);
-                    assertFalse(results.hasNext()); // We should only have one result.
-                    assertEquals(person1, actualPerson);
-                    single.onSuccess(true);
-                }, single::onError);
-            })
-        ).doOnError(error -> {
-            fail(error.getMessage());
-        }).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
-        if (exception != null) {
-            throw new AmplifyException("Unexpected exception.", exception, "Look at the stacktrace.");
-        }
+        synchronousDataStore.save(person1);
+        assertNotNull(person1.getId());
+        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
+        assertEquals(person1, person1FromDb);
     }
 
     /**
@@ -182,6 +161,7 @@ public final class AWSDataStorePluginTest {
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        SynchronousDataStore synchronousDataStore = SynchronousDataStore.delegatingTo(awsDataStorePlugin);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
 
@@ -192,52 +172,18 @@ public final class AWSDataStorePluginTest {
 
         Person person1 = createPerson("Test", "Dummy I");
         Person person2 = createPerson("Test", "Dummy II");
-        Completable.fromSingle(single -> { // Save a record to local store
-            awsDataStorePlugin.save(person1, itemSaved -> {
-                assertNotNull(itemSaved.item().getId());
-                assertEquals(person1.getLastName(), itemSaved.item().getLastName());
-                single.onSuccess(true);
-            }, single::onError);
-        }).andThen(
-            Completable.fromSingle(single -> { // Verify the record has been saved
-                awsDataStorePlugin.query(Person.class, results -> {
-                    Person actualPerson = results.next();
-                    assertNotNull(actualPerson);
-                    assertFalse(results.hasNext()); // We should only have one result.
-                    assertEquals(person1, actualPerson);
-                    single.onSuccess(true);
-                }, single::onError);
-            })
-        ).andThen(
-            Completable.fromSingle(single -> { // Clear the local store.
-                awsDataStorePlugin.clear(() -> {
-                    // Make sure the remote subscription operations were cancelled
-                    assertRemoteSubscriptionsCancelled();
-                    single.onSuccess(true);
-                }, single::onError);
-            })
-        ).andThen(
-            Completable.fromSingle(single -> { // Save a new record to local store
-                awsDataStorePlugin.save(person2, itemSaved -> {
-                    assertEquals(person2.getLastName(), itemSaved.item().getLastName());
-                    // Check if the sync process restarted.
-                    assertRemoteSubscriptionsStarted();
-                    single.onSuccess(true);
-                }, single::onError);
-            })
-        ).andThen(
-            Completable.fromSingle(single -> { // Verify the record has been saved
-                awsDataStorePlugin.query(Person.class, results -> {
-                    Person actualPerson = results.next();
-                    assertNotNull(actualPerson);
-                    assertFalse(results.hasNext()); //we should only have one result.
-                    assertEquals(person2, actualPerson);
-                    single.onSuccess(true);
-                }, single::onError);
-            })
-        ).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-        // Verify that the API mutate method was called once for each model saved.
+        synchronousDataStore.save(person1);
+        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
+        assertEquals(person1, result1);
+
+        synchronousDataStore.clear();
+        assertRemoteSubscriptionsCancelled();
+
+        synchronousDataStore.save(person2);
+        Person result2 = synchronousDataStore.get(Person.class, person2.getId());
+        assertEquals(person2, result2);
+
         verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
     }
 
@@ -253,7 +199,11 @@ public final class AWSDataStorePluginTest {
         // If subscriptions are active, the active counters should be:
         // activeCount - cancelledCount = modelCount * 3
         // The difference between active and cancelled should always be at most modelCount * 3
-        assertEquals(modelCount * 3, subscriptionStartedCounter.get() - subscriptionCancelledCounter.get());
+        final int diffTypesOfSubscriptions = SubscriptionType.values().length;
+        assertEquals(
+            modelCount * diffTypesOfSubscriptions,
+            subscriptionStartedCounter.get() - subscriptionCancelledCounter.get()
+        );
     }
 
     /**
@@ -277,7 +227,7 @@ public final class AWSDataStorePluginTest {
     private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
-        when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+        when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         // Make believe that queries return response immediately
@@ -332,7 +282,7 @@ public final class AWSDataStorePluginTest {
     private static ApiCategory mockApiPluginWithExceptions() throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
         ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
-        when(mockApiPlugin.getPluginKey()).thenReturn("MockApiPlugin");
+        when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
         doAnswer(invocation -> {

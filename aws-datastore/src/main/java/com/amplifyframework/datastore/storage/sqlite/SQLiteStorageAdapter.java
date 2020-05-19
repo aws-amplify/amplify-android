@@ -581,12 +581,9 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         sqliteStorageHelper.close();
         databaseConnectionHandle.close();
 
-        try {
-            context.deleteDatabase(DATABASE_NAME);
-        } catch (Exception exception) {
+        if (!context.deleteDatabase(DATABASE_NAME)) {
             DataStoreException dataStoreException = new DataStoreException(
                 "Error while trying to clear data from the local DataStore storage.",
-                exception,
                 "See attached exception for details.");
             onError.accept(dataStoreException);
         }

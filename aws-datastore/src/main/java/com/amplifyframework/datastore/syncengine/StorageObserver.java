@@ -69,10 +69,10 @@ final class StorageObserver {
 
     /**
      * Checks if the storage observer is listening
-     * for events.
+     * for events emitted by the local DataStore.
      * @return true if there are listeners. False otherwise.
      */
-    boolean isObserving() {
+    boolean isObservingStorageChanges() {
         return disposable.size() > 0;
     }
 

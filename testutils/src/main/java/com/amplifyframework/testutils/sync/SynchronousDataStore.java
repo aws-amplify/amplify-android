@@ -15,6 +15,7 @@
 
 package com.amplifyframework.testutils.sync;
 
+import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.model.Model;
@@ -26,6 +27,7 @@ import com.amplifyframework.testutils.Await;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 
@@ -36,6 +38,7 @@ import io.reactivex.Completable;
  * that a DataStore operation has completed with some kind of terminal result.
  */
 public final class SynchronousDataStore {
+    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
     private final DataStoreCategoryBehavior asyncDelegate;
 
     private SynchronousDataStore(DataStoreCategoryBehavior asyncDelegate) {
@@ -75,8 +78,7 @@ public final class SynchronousDataStore {
      */
     @NonNull
     public <T extends Model> T get(@NonNull Class<T> clazz, @NonNull String itemId) throws DataStoreException {
-        final Iterator<T> iterator = awaitIterator((onResult, onError) ->
-            asyncDelegate.query(clazz, onResult, onError));
+        final Iterator<T> iterator = query(clazz);
 
         while (iterator.hasNext()) {
             T value = iterator.next();
@@ -89,14 +91,30 @@ public final class SynchronousDataStore {
     }
 
     /**
+     * Search for an item in the DataStore by its class type.
+     * @param clazz Class of item being accessed
+     * @param <T> The type of item being accessed
+     * @return An item with the provided class and ID, if present in DataStore
+     * @throws NoSuchElementException If there is no matching item in the DataStore
+     * @throws DataStoreException On failure querying data store
+     */
+    @NonNull
+    public <T extends Model> Iterator<T> query(@NonNull Class<T> clazz) throws DataStoreException {
+        final Iterator<T> iterator = awaitIterator((onResult, onError) ->
+            asyncDelegate.query(clazz, onResult, onError));
+        return iterator;
+    }
+
+    /**
      * Call the clear method of the underlying DataStore implementation.
      */
+    @SuppressLint("CheckResult")
     public void clear() {
         Completable.fromSingle(single -> {
             asyncDelegate.clear(() -> {
                 single.onSuccess(true);
             }, single::onError);
-        }).blockingAwait();
+        }).blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
     // Syntax fluff to get rid of type bounds at location of call

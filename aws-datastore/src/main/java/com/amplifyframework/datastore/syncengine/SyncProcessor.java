@@ -26,6 +26,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.AsyncUtils;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
@@ -36,13 +37,11 @@ import com.amplifyframework.util.Time;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
 import io.reactivex.SingleEmitter;
-import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -164,37 +163,8 @@ final class SyncProcessor {
         return Single.create(emitter -> {
             final Cancelable cancelable =
                 appSync.sync(modelClass, lastSyncTimeAsLong, metadataEmitter(emitter), emitter::onError);
-            emitter.setDisposable(asDisposable(cancelable));
+            emitter.setDisposable(AsyncUtils.asDisposable(cancelable));
         });
-    }
-
-    /**
-     * A utility method to convert a cancelable to a Disposable.
-     * TODO: Move this out to a more generic location?
-     * @param cancelable An Amplify Cancelable
-     * @return An RxJava2 Disposable that disposed by invoking the cancellation.
-     */
-    private static Disposable asDisposable(@NonNull Cancelable cancelable) {
-        Objects.requireNonNull(cancelable);
-        return new Disposable() {
-            private final AtomicReference<Boolean> isCanceled = new AtomicReference<>(false);
-            @Override
-            public void dispose() {
-                synchronized (isCanceled) {
-                    if (!isCanceled.get()) {
-                        cancelable.cancel();
-                        isCanceled.set(true);
-                    }
-                }
-            }
-
-            @Override
-            public boolean isDisposed() {
-                synchronized (isCanceled) {
-                    return isCanceled.get();
-                }
-            }
-        };
     }
 
     private static <T extends Model> Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> metadataEmitter(

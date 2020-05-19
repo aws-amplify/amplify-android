@@ -39,9 +39,8 @@ import org.junit.Test;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.TimeUnit;
 
-import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.TestObserver;
 
 import static org.junit.Assert.assertEquals;
@@ -52,11 +51,11 @@ import static org.junit.Assert.fail;
 
 public final class SQLiteStorageAdapterClearTest {
     private static final String DATABASE_NAME = "AmplifyDatastore.db";
+    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
 
     private SynchronousStorageAdapter adapter;
     private Context context;
     private TestObserver<StorageItemChange<? extends Model>> observer;
-    private AtomicReference<Disposable> subscriberDisposableRef = new AtomicReference<>();
     private TestFileObserver fileObserver;
 
     /**
@@ -75,13 +74,9 @@ public final class SQLiteStorageAdapterClearTest {
         TestStorageAdapter.cleanup();
         context = ApplicationProvider.getApplicationContext();
         adapter = TestStorageAdapter.create(AmplifyModelProvider.getInstance());
-        //Set subscriberDisposableRef = <value received from RxJava>.
-        //Needed so we can make assertions on the state of the subscriber later.
         observer = adapter
             .observe()
-            .doOnSubscribe(subscriberDisposableRef::set)
             .test();
-
         fileObserver = new TestFileObserver(Objects.requireNonNull(context.getDatabasePath(DATABASE_NAME).getParent()));
         fileObserver.startWatching();
     }
@@ -114,7 +109,7 @@ public final class SQLiteStorageAdapterClearTest {
         adapter.save(blogger1);
         assertRecordIsInDb(blogger1);
         //Verify observer is still alive
-        assertFalse(subscriberDisposableRef.get().isDisposed());
+        assertFalse(observer.isDisposed());
         assertObserverReceivedRecord(blogger1);
 
         adapter.clear();
@@ -123,7 +118,7 @@ public final class SQLiteStorageAdapterClearTest {
         assertEquals(1, fileObserver.deleteFileEventCount);
         assertDbFileExists();
         //Verify observer is still alive
-        assertFalse(subscriberDisposableRef.get().isDisposed());
+        assertFalse(observer.isDisposed());
 
         //Make sure the new file is writable
         adapter.save(blogger2);
@@ -135,7 +130,8 @@ public final class SQLiteStorageAdapterClearTest {
         //Terminate the adapter
         adapter.terminate();
         //Verify observer was disposed.
-        assertTrue(subscriberDisposableRef.get().isDisposed());
+        observer.assertComplete();
+        observer.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 
     private BlogOwner createBlogger(String name) throws DataStoreException {
@@ -147,7 +143,7 @@ public final class SQLiteStorageAdapterClearTest {
     private void assertObserverReceivedRecord(BlogOwner blogger) {
         for (StorageItemChange<? extends Model> owner : observer.values()) {
             if (BlogOwner.class.isAssignableFrom(owner.itemClass()) &&
-                blogger.getName().equals(((BlogOwner) owner.item()).getName())) {
+                    blogger.equals((owner.item()))) {
                 return;
             }
         }

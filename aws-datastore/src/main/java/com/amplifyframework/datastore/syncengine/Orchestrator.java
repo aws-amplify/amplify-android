@@ -18,10 +18,12 @@ package com.amplifyframework.datastore.syncengine;
 import android.content.Context;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
+import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.logging.Logger;
@@ -96,29 +98,32 @@ public final class Orchestrator {
      * Start performing sync operations between the local storage adapter
      * and the remote GraphQL endpoint.
      * @return A Completable operation to start the sync engine orchestrator
+     * @throws DataStoreException If an error occurs while starting the {@link Orchestrator}
      */
     @NonNull
     public synchronized Completable start() {
-        return Completable.fromSingle(single -> {
-            try {
-                if (!storageObserver.isObserving()) {
-                    LOG.debug("Starting local storage observer.");
-                    storageObserver.startObservingStorageChanges();
-                }
-                if (!subscriptionProcessor.isObserving()) {
-                    LOG.debug("Starting subscription processor.");
-                    subscriptionProcessor.startSubscriptions();
-                }
-                syncProcessor.hydrate().blockingAwait();
-                if (!mutationProcessor.isObserving()) {
-                    LOG.debug("Starting mutation processor.");
-                    mutationProcessor.startDrainingMutationOutbox();
-                }
-                subscriptionProcessor.startDrainingMutationBuffer();
-                single.onSuccess(true);
-            } catch (Exception exception) {
-                single.onError(exception);
+        return Completable.fromAction(() -> {
+            if (!storageObserver.isObservingStorageChanges()) {
+                LOG.debug("Starting local storage observer.");
+                storageObserver.startObservingStorageChanges();
             }
+            if (!subscriptionProcessor.isObservingSubscriptionEvents()) {
+                LOG.debug("Starting subscription processor.");
+                subscriptionProcessor.startSubscriptions();
+            }
+            syncProcessor.hydrate().blockingAwait();
+            if (!mutationProcessor.isDrainingMutationOutbox()) {
+                LOG.debug("Starting mutation processor.");
+                mutationProcessor.startDrainingMutationOutbox();
+            }
+            if (!subscriptionProcessor.isDrainingMutationBuffer()) {
+                LOG.debug("Starting to process subscription data.");
+                subscriptionProcessor.startDrainingMutationBuffer();
+            }
+        }).doOnError(error -> {
+            throw new DataStoreException("Failed to start the orchestrator",
+                error,
+                AmplifyException.TODO_RECOVERY_SUGGESTION);
         });
     }
 

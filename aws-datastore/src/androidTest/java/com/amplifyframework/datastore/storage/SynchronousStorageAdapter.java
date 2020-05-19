@@ -293,10 +293,11 @@ public final class SynchronousStorageAdapter {
      * either completes or throws an exception.
      */
     public void clear() {
+        //noinspection ResultOfMethodCallIgnored
         Completable.fromSingle(single -> {
             asyncDelegate.clear(() -> {
                 single.onSuccess(true);
             }, single::onError);
-        }).blockingAwait();
+        }).blockingAwait(DEFAULT_OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
     }
 }
