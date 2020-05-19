@@ -20,7 +20,6 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
@@ -106,10 +105,31 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     }
 
     @Override
+    public void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().signInWithSocialWebUI(provider, callingActivity, onSuccess, onError);
+    }
+
+    @Override
+    public void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError
+    ) {
+        getSelectedPlugin().signInWithSocialWebUI(provider, callingActivity, options, onSuccess, onError);
+    }
+
+    @Override
     public void signInWithWebUI(
             @NonNull Activity callingActivity,
             @NonNull Consumer<AuthSignInResult> onSuccess,
-            @NonNull Consumer<AmplifyException> onError
+            @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().signInWithWebUI(callingActivity, onSuccess, onError);
     }
@@ -119,7 +139,7 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
             @NonNull Activity callingActivity,
             @NonNull AuthWebUISignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
-            @NonNull Consumer<AmplifyException> onError
+            @NonNull Consumer<AuthException> onError
     ) {
         getSelectedPlugin().signInWithWebUI(callingActivity, options, onSuccess, onError);
     }

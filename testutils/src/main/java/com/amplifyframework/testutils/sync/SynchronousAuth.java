@@ -15,13 +15,16 @@
 
 package com.amplifyframework.testutils.sync;
 
+import android.app.Activity;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.AuthCategoryBehavior;
 import com.amplifyframework.auth.AuthException;
+import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
@@ -167,6 +170,40 @@ public final class SynchronousAuth {
     ) throws AuthException {
         return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
                 asyncDelegate.confirmSignIn(confirmationCode, onResult, onError)
+        );
+    }
+
+    /**
+     * Social web UI sign in synchronously.
+     * @param provider The auth provider you want to launch the web ui for (e.g. Facebook, Google, etc.)
+     * @param callingActivity The activity in your app you are calling this from
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignInResult signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity
+    ) throws AuthException {
+        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.signInWithSocialWebUI(provider, callingActivity, onResult, onError)
+        );
+    }
+
+    /**
+     * Web UI sign in synchronously.
+     * @param callingActivity The activity in your app you are calling this from
+     * @param options Advanced options for signing in with an auth provider's hosted web ui.
+     * @return result object
+     * @throws AuthException exception
+     */
+    @NonNull
+    public AuthSignInResult signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options
+    ) throws AuthException {
+        return Await.<AuthSignInResult, AuthException>result(AUTH_OPERATION_TIMEOUT_MS, (onResult, onError) ->
+                asyncDelegate.signInWithWebUI(callingActivity, options, onResult, onError)
         );
     }
 

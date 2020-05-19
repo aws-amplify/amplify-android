@@ -20,7 +20,6 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
@@ -119,8 +118,40 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
-     * Launch a pre-built sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)} method in
-     * your activity's onResume method to capture the response which comes back from the UI flow.
+     * Launch the specified auth provider's web UI sign in experience. You should also put the
+     * {@link #handleWebUISignInResponse(Intent)} method in your activity's onNewIntent method to
+     * capture the response which comes back from the UI flow.
+     * @param provider The auth provider you want to launch the web ui for (e.g. Facebook, Google, etc.)
+     * @param callingActivity The activity in your app you are calling this from
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Launch the specified auth provider's web UI sign in experience. You should also put the
+     * {@link #handleWebUISignInResponse(Intent)} method in your activity's onNewIntent method to
+     * capture the response which comes back from the UI flow.
+     * @param provider The auth provider you want to launch the web ui for (e.g. Facebook, Google, etc.)
+     * @param callingActivity The activity in your app you are calling this from
+     * @param options Advanced options for signing in with an auth provider's hosted web ui.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Launch a hosted web sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)} method in
+     * your activity's onNewIntent method to capture the response which comes back from the UI flow.
      * @param callingActivity The activity in your app you are calling this from
      * @param onSuccess Success callback
      * @param onError Error callback
@@ -128,11 +159,11 @@ public interface AuthCategoryBehavior {
     void signInWithWebUI(
             @NonNull Activity callingActivity,
             @NonNull Consumer<AuthSignInResult> onSuccess,
-            @NonNull Consumer<AmplifyException> onError);
+            @NonNull Consumer<AuthException> onError);
 
     /**
      * Launch a hosted web sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)}
-     * method in your activity's onResume method to capture the response which comes back from the UI flow.
+     * method in your activity's onNewIntent method to capture the response which comes back from the UI flow.
      * @param callingActivity The activity in your app you are calling this from
      * @param options Advanced options for signing in with a hosted web ui.
      * @param onSuccess Success callback
@@ -142,7 +173,7 @@ public interface AuthCategoryBehavior {
             @NonNull Activity callingActivity,
             @NonNull AuthWebUISignInOptions options,
             @NonNull Consumer<AuthSignInResult> onSuccess,
-            @NonNull Consumer<AmplifyException> onError);
+            @NonNull Consumer<AuthException> onError);
 
     /**
      * Handles the response which comes back from {@link #signInWithWebUI(Activity, Consumer, Consumer)}.
