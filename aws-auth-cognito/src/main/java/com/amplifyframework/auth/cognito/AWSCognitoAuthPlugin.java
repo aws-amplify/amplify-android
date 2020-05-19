@@ -22,19 +22,22 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.AuthChannelEventName;
 import com.amplifyframework.auth.AuthCodeDeliveryDetails;
 import com.amplifyframework.auth.AuthException;
 import com.amplifyframework.auth.AuthPlugin;
+import com.amplifyframework.auth.AuthProvider;
 import com.amplifyframework.auth.AuthSession;
 import com.amplifyframework.auth.AuthUser;
 import com.amplifyframework.auth.AuthUserAttribute;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignInOptions;
 import com.amplifyframework.auth.cognito.options.AWSCognitoAuthSignUpOptions;
+import com.amplifyframework.auth.cognito.options.AWSCognitoAuthWebUISignInOptions;
+import com.amplifyframework.auth.cognito.util.AuthProviderConverter;
 import com.amplifyframework.auth.cognito.util.SignInStateConverter;
 import com.amplifyframework.auth.options.AuthSignInOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSessionResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
@@ -43,6 +46,7 @@ import com.amplifyframework.auth.result.step.AuthNextResetPasswordStep;
 import com.amplifyframework.auth.result.step.AuthNextSignInStep;
 import com.amplifyframework.auth.result.step.AuthNextSignUpStep;
 import com.amplifyframework.auth.result.step.AuthResetPasswordStep;
+import com.amplifyframework.auth.result.step.AuthSignInStep;
 import com.amplifyframework.auth.result.step.AuthSignUpStep;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
@@ -55,6 +59,7 @@ import com.amazonaws.mobile.client.Callback;
 import com.amazonaws.mobile.client.HostedUIOptions;
 import com.amazonaws.mobile.client.SignInUIOptions;
 import com.amazonaws.mobile.client.SignOutOptions;
+import com.amazonaws.mobile.client.UserState;
 import com.amazonaws.mobile.client.UserStateDetails;
 import com.amazonaws.mobile.client.results.ForgotPasswordResult;
 import com.amazonaws.mobile.client.results.ForgotPasswordState;
@@ -71,6 +76,7 @@ import org.json.JSONObject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -376,35 +382,74 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     }
 
     @Override
-    public void signInWithUI(
+    public void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
             @NonNull Activity callingActivity,
-            @NonNull final Consumer<String> onSuccess,
-            @NonNull final Consumer<AmplifyException> onException
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
     ) {
-        HostedUIOptions hostedUIOptions = HostedUIOptions.builder()
-                .scopes("openid", "email")
-                .build();
-        SignInUIOptions signInUIOptions = SignInUIOptions.builder()
-                .hostedUIOptions(hostedUIOptions)
-                .build();
-
-        awsMobileClient.showSignIn(callingActivity, signInUIOptions, new Callback<UserStateDetails>() {
-            @Override
-            public void onResult(UserStateDetails details) {
-                fetchAndSetUserId(() -> onSuccess.accept(details.getUserState().toString()));
-            }
-
-            @Override
-            public void onError(Exception error) {
-                onException.accept(
-                    new AmplifyException("Sign in with UI failed", error, "See attached exception for more details")
-                );
-            }
-        });
+        signInWithSocialWebUI(
+                Objects.requireNonNull(provider),
+                Objects.requireNonNull(callingActivity),
+                AuthWebUISignInOptions.builder().build(),
+                Objects.requireNonNull(onSuccess),
+                Objects.requireNonNull(onException)
+        );
     }
 
     @Override
-    public void handleSignInWithUIResponse(@NonNull Intent intent) {
+    public void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        signInWithWebUIHelper(
+                Objects.requireNonNull(provider),
+                Objects.requireNonNull(callingActivity),
+                Objects.requireNonNull(options),
+                Objects.requireNonNull(onSuccess),
+                Objects.requireNonNull(onException)
+        );
+    }
+
+    @Override
+    public void signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull final Consumer<AuthSignInResult> onSuccess,
+            @NonNull final Consumer<AuthException> onException
+    ) {
+        signInWithWebUI(
+                Objects.requireNonNull(callingActivity),
+                AuthWebUISignInOptions.builder().build(),
+                Objects.requireNonNull(onSuccess),
+                Objects.requireNonNull(onException)
+        );
+    }
+
+    @Override
+    public void signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onException
+    ) {
+        // Note that passing a null value for AuthProvider to the private helper method here is intentional.
+        // AuthProvider is a public enum used by customers, and I intentionally don't want to be confusing by adding
+        // a value which would represent no specific AuthProvider since that would make the signWithWithSocialWebUI
+        // method a duplicate of this method (and not make sense in the context of that method) if chosen.
+        signInWithWebUIHelper(
+                null,
+                Objects.requireNonNull(callingActivity),
+                Objects.requireNonNull(options),
+                Objects.requireNonNull(onSuccess),
+                Objects.requireNonNull(onException)
+        );
+    }
+
+    @Override
+    public void handleWebUISignInResponse(@NonNull Intent intent) {
         awsMobileClient.handleAuthResponse(intent);
     }
 
@@ -527,7 +572,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
             @NonNull String oldPassword,
             @NonNull String newPassword,
             @Nullable Action onSuccess,
-            @Nullable Consumer<AuthException> onError
+            @Nullable Consumer<AuthException> onException
     ) {
         awsMobileClient.changePassword(oldPassword, newPassword, new Callback<Void>() {
             @Override
@@ -537,7 +582,7 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
 
             @Override
             public void onError(Exception error) {
-                onError.accept(new AuthException(
+                onException.accept(new AuthException(
                         "Failed to change password",
                         error,
                         "See attached exception for more details"
@@ -585,6 +630,75 @@ public final class AWSCognitoAuthPlugin extends AuthPlugin<AWSMobileClient> {
     @Override
     public AWSMobileClient getEscapeHatch() {
         return awsMobileClient;
+    }
+
+    private void signInWithWebUIHelper(
+        @Nullable AuthProvider authProvider,
+        @NonNull Activity callingActivity,
+        @NonNull AuthWebUISignInOptions options,
+        @NonNull Consumer<AuthSignInResult> onSuccess,
+        @NonNull Consumer<AuthException> onException
+    ) {
+        HostedUIOptions.Builder optionsBuilder = HostedUIOptions.builder();
+
+        if (options != null) {
+            if (options.getScopes() != null) {
+                optionsBuilder.scopes(options.getScopes().toArray(new String[options.getScopes().size()]));
+            }
+
+            if (!options.getSignInQueryParameters().isEmpty()) {
+                optionsBuilder.signInQueryParameters(options.getSignInQueryParameters());
+            }
+
+            if (!options.getSignOutQueryParameters().isEmpty()) {
+                optionsBuilder.signOutQueryParameters(options.getSignOutQueryParameters());
+            }
+
+            if (!options.getTokenQueryParameters().isEmpty()) {
+                optionsBuilder.tokenQueryParameters(options.getTokenQueryParameters());
+            }
+
+            if (options instanceof AWSCognitoAuthWebUISignInOptions) {
+                AWSCognitoAuthWebUISignInOptions cognitoOptions = (AWSCognitoAuthWebUISignInOptions) options;
+                optionsBuilder.idpIdentifier(cognitoOptions.getIdpIdentifier())
+                        .federationProviderName(cognitoOptions.getFederationProviderName());
+            }
+
+            if (authProvider != null) {
+                optionsBuilder.identityProvider(AuthProviderConverter.getIdentityProvider(authProvider));
+            }
+        }
+
+        SignInUIOptions signInUIOptions = SignInUIOptions.builder()
+                .hostedUIOptions(optionsBuilder.build())
+                .build();
+
+        awsMobileClient.showSignIn(callingActivity, signInUIOptions, new Callback<UserStateDetails>() {
+            @Override
+            public void onResult(UserStateDetails details) {
+                fetchAndSetUserId(() -> onSuccess.accept(
+                        new AuthSignInResult(
+                                UserState.SIGNED_IN.equals(details.getUserState()),
+                                new AuthNextSignInStep(
+                                        AuthSignInStep.DONE,
+                                        details.getDetails(),
+                                        null
+                                )
+                        )
+                ));
+            }
+
+            @Override
+            public void onError(Exception error) {
+                onException.accept(
+                        new AuthException(
+                                "Sign in with web UI failed",
+                                error,
+                                "See attached exception for more details"
+                        )
+                );
+            }
+        });
     }
 
     private AuthSession expiredSession() {

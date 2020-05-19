@@ -117,7 +117,7 @@ public final class AuthNextResetPasswordStep {
      */
     @Override
     public String toString() {
-        return "AuthSignUpResult{" +
+        return "AuthNextResetPasswordStep{" +
                 "resetPasswordStep=" + getResetPasswordStep() +
                 ", additionalInfo=" + getAdditionalInfo() +
                 ", codeDeliveryDetails=" + getCodeDeliveryDetails() +
