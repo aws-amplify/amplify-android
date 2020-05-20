@@ -19,6 +19,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.datastore.DataStoreException;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
@@ -74,14 +75,12 @@ interface MutationOutbox {
     /**
      * Remove an item from the outbox. The {@link SyncProcessor} calls this after it successfully
      * publishes an update over the network.
-     * @param pendingMutation A mutation that has been processed, and can be removed from the outbox
-     * @param <T> Type of model to which the mutation makes reference; for example, if the mutation is
-     *            to create a Person, T is Person.
-     * @return A Completable which completes when the requests PendingMutation is deleted,
+     * @param pendingMutationId ID of a mutation that has been processed, and can be removed from the outbox
+     * @return A Completable which completes when the requested PendingMutation is deleted,
      *         -- or, emits an error, if unable to delete it
      */
     @NonNull
-    <T extends Model> Completable remove(@NonNull PendingMutation<T> pendingMutation);
+    Completable remove(@NonNull TimeBasedUuid pendingMutationId);
 
     /**
      * Take a peek at the next item in the outbox.
@@ -89,6 +88,20 @@ interface MutationOutbox {
      */
     @Nullable
     PendingMutation<? extends Model> peek();
+
+    /**
+     * Marks a pending mutation as "in-flight." An in-flight mutation becomes
+     * frozen to any further modifications, until it can be removed from the outbox, entirely.
+     * Mutations enter this state while they are being processed, and published the the cloud.
+     * Mutations leave this state when the are removed from the outbox.
+     * The "in-flight" status is NOT persisted, by design. When the system restarts,
+     * no mutation is regarded as "in-flight."
+     * @param pendingMutationId The ID of a mutation that is in the outbox, and will be marked as in-flight
+     * @return A completable which completes with success if the existing mutation is successfully marked
+     *         as in-flight. If it's already in-flight, still completes successfully. If there is no such
+     *         mutation in the outbox, the completable will emit an {@link DataStoreException}.
+     */
+    Completable markInFlight(@NonNull TimeBasedUuid pendingMutationId);
 
     /**
      * Observe the enqueue events that occur in the mutation outbox.
