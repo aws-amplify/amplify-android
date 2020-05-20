@@ -110,8 +110,8 @@ public final class MergerTest {
         BlogOwner blogOwner = BlogOwner.builder()
             .name("Jameson")
             .build();
-        // Note that putInStore does NOT happen!
-        // putInStore(blogOwner, new ModelMetadata(blogOwner.getId(), false, 1, Time.now()));
+        // Note that storageAdapter.save(...) does NOT happen!
+        // storageAdapter.save(blogOwner, new ModelMetadata(blogOwner.getId(), false, 1, Time.now()));
 
         // Act: try to merge a deletion that refers to an item not in the store
         ModelMetadata deletionMetadata =
@@ -137,7 +137,7 @@ public final class MergerTest {
             .name("Jameson")
             .build();
         ModelMetadata metadata = new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
-        // Note that putInStore is NOT called!
+        // Note that storageAdapter.save(...) is NOT called!
         // storageAdapter.save(blogOwner, metadata);
 
         // Act: merge a creation for an item
