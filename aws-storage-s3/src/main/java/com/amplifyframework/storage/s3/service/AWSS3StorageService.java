@@ -65,7 +65,7 @@ public final class AWSS3StorageService implements StorageService {
      * @param awsAuthProvider Provides AWS specific Auth information
      * @param transferAcceleration Whether or not transfer acceleration
      *                             should be enabled
-     * @throws IllegalStateException Storage requires the correct Auth plugin to be added in order to
+     * @throws IllegalStateException Storage service requires the correct Auth plugin to have been added to Amplify
      */
     public AWSS3StorageService(
             @NonNull Context context,
