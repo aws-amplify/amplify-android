@@ -57,6 +57,7 @@ final class SubscriptionEndpoint {
     private static final int NORMAL_CLOSURE_STATUS = 1000;
 
     private final ApiConfiguration apiConfiguration;
+    private final SubscriptionAuthorizer authorizer;
     private final Map<String, Subscription<?>> subscriptions;
     private final GraphQLResponse.Factory responseFactory;
     private final TimeoutWatchdog timeoutWatchdog;
@@ -66,10 +67,13 @@ final class SubscriptionEndpoint {
 
     SubscriptionEndpoint(
             @NonNull ApiConfiguration apiConfiguration,
-            @NonNull GraphQLResponse.Factory responseFactory) {
+            @NonNull GraphQLResponse.Factory responseFactory,
+            @NonNull SubscriptionAuthorizer authorizer
+    ) {
         this.apiConfiguration = Objects.requireNonNull(apiConfiguration);
         this.subscriptions = new ConcurrentHashMap<>();
         this.responseFactory = Objects.requireNonNull(responseFactory);
+        this.authorizer = Objects.requireNonNull(authorizer);
         this.timeoutWatchdog = new TimeoutWatchdog();
         this.connectionResponse = new CountDownLatch(1);
     }
@@ -127,7 +131,7 @@ final class SubscriptionEndpoint {
                 .put("payload", new JSONObject()
                 .put("data", request.getContent())
                 .put("extensions", new JSONObject()
-                .put("authorization", SubscriptionAuthorizationHeader.from(apiConfiguration))))
+                .put("authorization", authorizer.createHeaderForSubscription(request))))
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
@@ -342,7 +346,7 @@ final class SubscriptionEndpoint {
      */
     private String buildConnectionRequestUrl() throws ApiException {
         // Construct the authorization header for connection request
-        final byte[] rawHeader = SubscriptionAuthorizationHeader.from(apiConfiguration)
+        final byte[] rawHeader = authorizer.createHeaderForConnection()
             .toString()
             .getBytes();
 

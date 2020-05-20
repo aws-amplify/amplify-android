@@ -122,8 +122,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
                 builder.addInterceptor(interceptorFactory.create(apiConfiguration));
             }
             final OkHttpClient okHttpClient = builder.build();
+            final SubscriptionAuthorizer subscriptionAuthorizer =
+                    new SubscriptionAuthorizer(apiConfiguration, authProvider);
             final SubscriptionEndpoint subscriptionEndpoint =
-                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory);
+                    new SubscriptionEndpoint(apiConfiguration, gqlResponseFactory, subscriptionAuthorizer);
             if (EndpointType.REST.equals(endpointType)) {
                 restApis.add(apiName);
             }
