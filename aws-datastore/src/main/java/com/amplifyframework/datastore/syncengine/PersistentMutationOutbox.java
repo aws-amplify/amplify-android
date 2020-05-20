@@ -176,7 +176,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
                     // to get identically the thing that was saved. But we know the save succeeded.
                     // So, let's skip the unwrapping, and use the thing that was enqueued,
                     // the pendingMutation, directly.
-                    updateQueue(pendingMutation);
+                    updateExistingQueueItemOrAppendNew(pendingMutation);
                     LOG.info("Successfully enqueued " + pendingMutation);
                     semaphore.release();
                     subscriber.onComplete();
@@ -189,7 +189,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         }));
     }
 
-    private <T extends Model> void updateQueue(PendingMutation<T> pendingMutation) {
+    private <T extends Model> void updateExistingQueueItemOrAppendNew(PendingMutation<T> pendingMutation) {
         // If there is already a mutation with same ID in the queue,
         // we'll go find it, and then update it, with this contents.
         for (int position = 0; position < mutationQueue.size(); position++) {
