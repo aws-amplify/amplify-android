@@ -60,6 +60,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param <T> The type of the item that has undergone mutation
      * @return A {@link PendingMutation}
      */
+    @NonNull
     static <T extends Model> PendingMutation<T> instance(
             @NonNull TimeBasedUuid mutationId,
             @NonNull T mutatedItem,
@@ -81,6 +82,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param <T> The type of the item that has undergone mutation
      * @return A {@link PendingMutation}
      */
+    @NonNull
     static <T extends Model> PendingMutation<T> instance(
             @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType) {
         return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType);
@@ -93,6 +95,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param <T> The type of created model
      * @return A PendingMutation representing the model creation
      */
+    @NonNull
     static <T extends Model> PendingMutation<T> creation(@NonNull T createdItem, @NonNull Class<T> classOfCreatedItem) {
         return instance(createdItem, classOfCreatedItem, Type.CREATE);
     }
@@ -104,6 +107,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
      */
+    @NonNull
     static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem, @NonNull Class<T> classOfUpdatedItem) {
         return instance(updatedItem, classOfUpdatedItem, Type.UPDATE);
     }
@@ -115,6 +119,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param <T> The type of model that was deleted
      * @return A PendingMutation representing the model deletion
      */
+    @NonNull
     static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem, @NonNull Class<T> classOfDeletedItem) {
         return instance(deletedItem, classOfDeletedItem, Type.DELETE);
     }
@@ -156,7 +161,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     }
 
     @Override
-    public boolean equals(Object thatObject) {
+    public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
             return true;
         }
@@ -181,6 +186,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         return result;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "PendingMutation{" +
@@ -216,7 +222,6 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * referenced model is just a Gson-serialized String version of itself -- handled external
      * to the data modeling system.
      */
-    @SuppressWarnings("unused")
     @ModelConfig(pluralName = "PersistentRecords")
     @Index(fields = "decodedModelClassName", name = "decodedModelClassNameBasedIndex")
     public static final class PersistentRecord implements Model, Comparable<PersistentRecord> {
@@ -326,6 +331,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             return result;
         }
 
+        @NonNull
         @Override
         public String toString() {
             return "Record{" +
@@ -355,7 +361,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
          * @return -1, 0, 1 if this current mutation is smaller, same, or bigger than another
          */
         @Override
-        public int compareTo(PersistentRecord another) {
+        public int compareTo(@NonNull PersistentRecord another) {
             return TimeBasedUuid.fromString(getId())
                 .compareTo(TimeBasedUuid.fromString(another.getId()));
         }

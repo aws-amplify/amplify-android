@@ -79,8 +79,8 @@ public final class Orchestrator {
         Objects.requireNonNull(localStorageAdapter);
 
         this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
-        Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
+        Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
 
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
