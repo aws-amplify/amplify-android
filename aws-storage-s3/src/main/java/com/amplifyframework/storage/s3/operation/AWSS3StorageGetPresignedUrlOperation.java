@@ -22,6 +22,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageGetUrlOperation;
 import com.amplifyframework.storage.result.StorageGetUrlResult;
+import com.amplifyframework.storage.s3.AWSAuthProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageGetPresignedUrlRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
@@ -36,6 +37,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         extends StorageGetUrlOperation<AWSS3StorageGetPresignedUrlRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
+    private final AWSAuthProvider awsAuthProvider;
     private final Consumer<StorageGetUrlResult> onSuccess;
     private final Consumer<StorageException> onError;
 
@@ -44,6 +46,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
      * @param storageService S3 client wrapper
      * @param executorService Executor service used for running
      *                        blocking operations on a separate thread
+     * @param awsAuthProvider Interface to retrieve AWS specific auth information
      * @param request getUrl request parameters
      * @param onSuccess Notified when URL is generated.
      * @param onError Notified upon URL generation error
@@ -51,6 +54,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
     public AWSS3StorageGetPresignedUrlOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
+            @NonNull AWSAuthProvider awsAuthProvider,
             @NonNull AWSS3StorageGetPresignedUrlRequest request,
             @NonNull Consumer<StorageGetUrlResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -58,6 +62,7 @@ public final class AWSS3StorageGetPresignedUrlOperation
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
+        this.awsAuthProvider = awsAuthProvider;
         this.onSuccess = onSuccess;
         this.onError = onError;
     }
@@ -67,11 +72,20 @@ public final class AWSS3StorageGetPresignedUrlOperation
     public void start() {
         executorService.submit(() -> {
             // Obtain S3 service key for storage service
-            String serviceKey = S3Keys.createServiceKey(
-                    getRequest().getAccessLevel(),
-                    getRequest().getTargetIdentityId(),
-                    getRequest().getKey()
-            );
+            String serviceKey;
+
+            try {
+                serviceKey = S3Keys.createServiceKey(
+                        getRequest().getAccessLevel(),
+                        getRequest().getTargetIdentityId() != null
+                                ? getRequest().getTargetIdentityId()
+                                : awsAuthProvider.getIdentityId(),
+                        getRequest().getKey()
+                );
+            } catch (StorageException exception) {
+                onError.accept(exception);
+                return;
+            }
 
             try {
                 URL url = storageService.getPresignedUrl(serviceKey, getRequest().getExpires());

@@ -54,6 +54,7 @@ import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyString;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -80,8 +81,9 @@ public final class StorageComponentTest {
         this.storage = new StorageCategory();
         this.storageService = mock(StorageService.class);
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
-        IdentityIdProvider identityIdProvider = RandomString::string;
-        this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, identityIdProvider));
+        AWSAuthProvider awsAuthProvider = mock(AWSAuthProvider.class);
+        doReturn(RandomString.string()).when(awsAuthProvider).getIdentityId();
+        this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, awsAuthProvider));
         this.storage.configure(buildConfiguration(), getApplicationContext());
         this.storage.initialize(getApplicationContext());
     }

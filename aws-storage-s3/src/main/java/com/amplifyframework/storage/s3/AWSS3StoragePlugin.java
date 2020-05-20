@@ -51,7 +51,6 @@ import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.service.AWSS3StorageService;
 import com.amplifyframework.storage.s3.service.StorageService;
 
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.regions.Region;
 import com.amazonaws.services.s3.AmazonS3Client;
 import org.json.JSONException;
@@ -71,9 +70,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
     private static final String AWS_S3_STORAGE_PLUGIN_KEY = "awsS3StoragePlugin";
 
     private final StorageService.Factory storageServiceFactory;
-    private final IdentityIdProvider identityIdProvider;
     private final ExecutorService executorService;
-
+    private final AWSAuthProvider awsAuthProvider;
     private StorageService storageService;
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
@@ -82,22 +80,27 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     public AWSS3StoragePlugin() {
-        this(
-            (context, region, bucket) ->
-                    new AWSS3StorageService(context, region, bucket, false),
-            () -> AWSMobileClient.getInstance().getIdentityId()
-        );
+        this((context, region, bucket) ->
+                new AWSS3StorageService(context, region, bucket, false),
+                new MobileClientAWSAuthProvider());
+    }
+
+    @VisibleForTesting
+    AWSS3StoragePlugin(AWSAuthProvider awsAuthProvider) {
+        this((context, region, bucket) ->
+                new AWSS3StorageService(context, region, bucket, false),
+                awsAuthProvider);
     }
 
     @VisibleForTesting
     AWSS3StoragePlugin(
             StorageService.Factory storageServiceFactory,
-            IdentityIdProvider identityIdProvider
+            AWSAuthProvider awsAuthProvider
     ) {
         super();
         this.storageServiceFactory = storageServiceFactory;
-        this.identityIdProvider = identityIdProvider;
         this.executorService = Executors.newCachedThreadPool();
+        this.awsAuthProvider = awsAuthProvider;
     }
 
     @NonNull
@@ -192,16 +195,20 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getAccessLevel() != null
                         ? options.getAccessLevel()
                         : defaultAccessLevel,
-                options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : identityIdProvider.getIdentityId(),
+                options.getTargetIdentityId(),
                 options.getExpires() != 0
                         ? options.getExpires()
                         : defaultUrlExpiration
         );
 
         AWSS3StorageGetPresignedUrlOperation operation =
-                new AWSS3StorageGetPresignedUrlOperation(storageService, executorService, request, onSuccess, onError);
+                new AWSS3StorageGetPresignedUrlOperation(
+                        storageService,
+                        executorService,
+                        awsAuthProvider,
+                        request,
+                        onSuccess,
+                        onError);
         operation.start();
 
         return operation;
@@ -233,13 +240,11 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getAccessLevel() != null
                         ? options.getAccessLevel()
                         : defaultAccessLevel,
-                options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : identityIdProvider.getIdentityId()
+                options.getTargetIdentityId()
         );
 
         AWSS3StorageDownloadFileOperation operation =
-                new AWSS3StorageDownloadFileOperation(storageService, request, onSuccess, onError);
+                new AWSS3StorageDownloadFileOperation(storageService, awsAuthProvider, request, onSuccess, onError);
         operation.start();
 
         return operation;
@@ -271,15 +276,13 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getAccessLevel() != null
                         ? options.getAccessLevel()
                         : defaultAccessLevel,
-                options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : identityIdProvider.getIdentityId(),
+                options.getTargetIdentityId(),
                 options.getContentType(),
                 options.getMetadata()
         );
 
         AWSS3StorageUploadFileOperation operation =
-                new AWSS3StorageUploadFileOperation(storageService, request, onSuccess, onError);
+                new AWSS3StorageUploadFileOperation(storageService, awsAuthProvider, request, onSuccess, onError);
 
         operation.start();
 
@@ -309,13 +312,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getAccessLevel() != null
                         ? options.getAccessLevel()
                         : defaultAccessLevel,
-                options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : identityIdProvider.getIdentityId()
+                options.getTargetIdentityId()
         );
 
         AWSS3StorageRemoveOperation operation =
-                new AWSS3StorageRemoveOperation(storageService, executorService, request, onSuccess, onError);
+                new AWSS3StorageRemoveOperation(
+                        storageService,
+                        executorService,
+                        awsAuthProvider,
+                        request,
+                        onSuccess,
+                        onError);
 
         operation.start();
 
@@ -345,13 +352,17 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 options.getAccessLevel() != null
                         ? options.getAccessLevel()
                         : defaultAccessLevel,
-                options.getTargetIdentityId() != null
-                        ? options.getTargetIdentityId()
-                        : identityIdProvider.getIdentityId()
+                options.getTargetIdentityId()
         );
 
         AWSS3StorageListOperation operation =
-                new AWSS3StorageListOperation(storageService, executorService, request, onSuccess, onError);
+                new AWSS3StorageListOperation(
+                        storageService,
+                        executorService,
+                        awsAuthProvider,
+                        request,
+                        onSuccess,
+                        onError);
 
         operation.start();
 

@@ -15,14 +15,16 @@
 
 package com.amplifyframework.storage.s3;
 
+import com.amplifyframework.storage.StorageException;
+
 /**
- * Interface for providing identity ID of the authorized
- * requester.
+ * Internal interface for providing AWS specific Auth information.
  */
-public interface IdentityIdProvider {
+public interface AWSAuthProvider {
     /**
-     * Returns the identity ID.
-     * @return the identity ID
+     * Get the identity ID of the currently logged in user if they are registered in identity pools.
+     * @return the identity ID of the currently logged in user.
+     * @throws StorageException  If the proper Auth plugin isn't added or identity id is unavailable
      */
-    String getIdentityId();
+    String getIdentityId() throws StorageException;
 }

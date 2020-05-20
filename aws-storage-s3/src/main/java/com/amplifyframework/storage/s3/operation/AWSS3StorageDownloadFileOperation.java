@@ -26,6 +26,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageDownloadFileOperation;
 import com.amplifyframework.storage.result.StorageDownloadFileResult;
+import com.amplifyframework.storage.s3.AWSAuthProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageDownloadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
@@ -42,6 +43,7 @@ import java.io.File;
 public final class AWSS3StorageDownloadFileOperation
         extends StorageDownloadFileOperation<AWSS3StorageDownloadFileRequest> {
     private final StorageService storageService;
+    private final AWSAuthProvider awsAuthProvider;
     private final Consumer<StorageDownloadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
@@ -50,18 +52,21 @@ public final class AWSS3StorageDownloadFileOperation
     /**
      * Constructs a new AWSS3StorageDownloadFileOperation.
      * @param storageService S3 client wrapper
+     * @param awsAuthProvider Interface to retrieve AWS specific auth information
      * @param request download request parameters
      * @param onSuccess Notified when download results are available
      * @param onError Notified upon download error
      */
     public AWSS3StorageDownloadFileOperation(
             @NonNull StorageService storageService,
+            @NonNull AWSAuthProvider awsAuthProvider,
             @NonNull AWSS3StorageDownloadFileRequest request,
             @NonNull Consumer<StorageDownloadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         super(request);
         this.storageService = storageService;
+        this.awsAuthProvider = awsAuthProvider;
         this.onSuccess = onSuccess;
         this.onError = onError;
         this.transferObserver = null;
@@ -76,11 +81,20 @@ public final class AWSS3StorageDownloadFileOperation
             return;
         }
 
-        String serviceKey = S3Keys.createServiceKey(
-                getRequest().getAccessLevel(),
-                getRequest().getTargetIdentityId(),
-                getRequest().getKey()
-        );
+        String serviceKey;
+
+        try {
+            serviceKey = S3Keys.createServiceKey(
+                    getRequest().getAccessLevel(),
+                    getRequest().getTargetIdentityId() != null
+                            ? getRequest().getTargetIdentityId()
+                            : awsAuthProvider.getIdentityId(),
+                    getRequest().getKey()
+            );
+        } catch (StorageException exception) {
+            onError.accept(exception);
+            return;
+        }
       
         this.file = getRequest().getLocal();
       
