@@ -2,14 +2,11 @@ package com.amplifyframework.testmodels.meeting;
 
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
-import com.amplifyframework.core.model.AWSTimestamp;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
 import com.amplifyframework.core.model.query.predicate.QueryField;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import java.util.Objects;
 import java.util.UUID;
@@ -28,10 +25,10 @@ public final class Meeting implements Model {
     public static final QueryField TIMESTAMP = field("timestamp");
     private final @ModelField(targetType="ID", isRequired = true) String id;
     private final @ModelField(targetType="String", isRequired = true) String name;
-    private final @ModelField(targetType="AWSDate") AWSDate date;
-    private final @ModelField(targetType="AWSDateTime") AWSDateTime dateTime;
-    private final @ModelField(targetType="AWSTime") AWSTime time;
-    private final @ModelField(targetType="AWSTimestamp") AWSTimestamp timestamp;
+    private final @ModelField(targetType="AWSDate") Temporal.Date date;
+    private final @ModelField(targetType="AWSDateTime") Temporal.DateTime dateTime;
+    private final @ModelField(targetType="AWSTime") Temporal.Time time;
+    private final @ModelField(targetType="AWSTimestamp") Temporal.Timestamp timestamp;
     public String getId() {
         return id;
     }
@@ -40,23 +37,23 @@ public final class Meeting implements Model {
         return name;
     }
 
-    public AWSDate getDate() {
+    public Temporal.Date getDate() {
         return date;
     }
 
-    public AWSDateTime getDateTime() {
+    public Temporal.DateTime getDateTime() {
         return dateTime;
     }
 
-    public AWSTime getTime() {
+    public Temporal.Time getTime() {
         return time;
     }
 
-    public AWSTimestamp getTimestamp() {
+    public Temporal.Timestamp getTimestamp() {
         return timestamp;
     }
 
-    private Meeting(String id, String name, AWSDate date, AWSDateTime dateTime, AWSTime time, AWSTimestamp timestamp) {
+    private Meeting(String id, String name, Temporal.Date date, Temporal.DateTime dateTime, Temporal.Time time, Temporal.Timestamp timestamp) {
         this.id = id;
         this.name = name;
         this.date = date;
@@ -144,20 +141,20 @@ public final class Meeting implements Model {
     public interface BuildStep {
         Meeting build();
         BuildStep id(String id) throws IllegalArgumentException;
-        BuildStep date(AWSDate date);
-        BuildStep dateTime(AWSDateTime dateTime);
-        BuildStep time(AWSTime time);
-        BuildStep timestamp(AWSTimestamp timestamp);
+        BuildStep date(Temporal.Date date);
+        BuildStep dateTime(Temporal.DateTime dateTime);
+        BuildStep time(Temporal.Time time);
+        BuildStep timestamp(Temporal.Timestamp timestamp);
     }
 
 
     public static class Builder implements NameStep, BuildStep {
         private String id;
         private String name;
-        private AWSDate date;
-        private AWSDateTime dateTime;
-        private AWSTime time;
-        private AWSTimestamp timestamp;
+        private Temporal.Date date;
+        private Temporal.DateTime dateTime;
+        private Temporal.Time time;
+        private Temporal.Timestamp timestamp;
         @Override
         public Meeting build() {
             String id = this.id != null ? this.id : UUID.randomUUID().toString();
@@ -179,25 +176,25 @@ public final class Meeting implements Model {
         }
 
         @Override
-        public BuildStep date(AWSDate date) {
+        public BuildStep date(Temporal.Date date) {
             this.date = date;
             return this;
         }
 
         @Override
-        public BuildStep dateTime(AWSDateTime dateTime) {
+        public BuildStep dateTime(Temporal.DateTime dateTime) {
             this.dateTime = dateTime;
             return this;
         }
 
         @Override
-        public BuildStep time(AWSTime time) {
+        public BuildStep time(Temporal.Time time) {
             this.time = time;
             return this;
         }
 
         @Override
-        public BuildStep timestamp(AWSTimestamp timestamp) {
+        public BuildStep timestamp(Temporal.Timestamp timestamp) {
             this.timestamp = timestamp;
             return this;
         }
@@ -224,7 +221,7 @@ public final class Meeting implements Model {
     }
 
     public final class CopyOfBuilder extends Builder {
-        private CopyOfBuilder(String id, String name, AWSDate date, AWSDateTime dateTime, AWSTime time, AWSTimestamp timestamp) {
+        private CopyOfBuilder(String id, String name, Temporal.Date date, Temporal.DateTime dateTime, Temporal.Time time, Temporal.Timestamp timestamp) {
             super.id(id);
             super.name(name)
                     .date(date)
@@ -239,22 +236,22 @@ public final class Meeting implements Model {
         }
 
         @Override
-        public CopyOfBuilder date(AWSDate date) {
+        public CopyOfBuilder date(Temporal.Date date) {
             return (CopyOfBuilder) super.date(date);
         }
 
         @Override
-        public CopyOfBuilder dateTime(AWSDateTime dateTime) {
+        public CopyOfBuilder dateTime(Temporal.DateTime dateTime) {
             return (CopyOfBuilder) super.dateTime(dateTime);
         }
 
         @Override
-        public CopyOfBuilder time(AWSTime time) {
+        public CopyOfBuilder time(Temporal.Time time) {
             return (CopyOfBuilder) super.time(time);
         }
 
         @Override
-        public CopyOfBuilder timestamp(AWSTimestamp timestamp) {
+        public CopyOfBuilder timestamp(Temporal.Timestamp timestamp) {
             return (CopyOfBuilder) super.timestamp(timestamp);
         }
     }

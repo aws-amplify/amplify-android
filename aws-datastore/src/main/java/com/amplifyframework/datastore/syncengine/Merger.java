@@ -43,14 +43,19 @@ import io.reactivex.Completable;
 final class Merger {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
     private final MutationOutbox mutationOutbox;
+    private final VersionRepository versionRepository;
     private final LocalStorageAdapter localStorageAdapter;
 
     /**
      * Constructs a Merger.
      * @param localStorageAdapter A local storage adapter
      */
-    Merger(@NonNull MutationOutbox mutationOutbox, @NonNull LocalStorageAdapter localStorageAdapter) {
+    Merger(
+            @NonNull MutationOutbox mutationOutbox,
+            @NonNull VersionRepository versionRepository,
+            @NonNull LocalStorageAdapter localStorageAdapter) {
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
+        this.versionRepository = Objects.requireNonNull(versionRepository);
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
     }
 
@@ -61,30 +66,30 @@ final class Merger {
      * @return A completable operation to merge the model
      */
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
-        return merge(modelWithMetadata, MergeStrategy.CONSIDER_PENDING_MUTATIONS);
-    }
-
-    /**
-     * Merge an item back into the local store, using a merge strategy.
-     * @param modelWithMetadata A model, combined with metadata about it
-     * @param mergeStrategy A strategy to use while merging - check for pending mutations in outbox?
-     * @param <T> Type of model
-     * @return A completable operation to merge the item
-     */
-    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata, MergeStrategy mergeStrategy) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
         boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
+        int incomingVersion = metadata.getVersion() == null ? -1 : metadata.getVersion();
         T model = modelWithMetadata.getModel();
 
         // Check if there is a pending mutation for this model, in the outbox.
-        boolean checkOutbox = !MergeStrategy.IGNORE_PENDING_MUTATIONS.equals(mergeStrategy);
-        if (checkOutbox && mutationOutbox.hasPendingMutation(model.getId())) {
+        if (mutationOutbox.hasPendingMutation(model.getId())) {
             LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
             return Completable.complete();
         }
-        return (isDelete ? delete(model) : save(model))
-            // Update the metadata for it
-            .andThen(save(metadata))
+
+        return versionRepository.findModelVersion(model)
+            .onErrorReturnItem(-1)
+            // If the incoming version is strictly less than the current version, it's "out of date,"
+            // so don't merge it.
+            // If the incoming version is exactly equal, it might clobber our local changes. So we
+            // *still* won't merge it. Instead, the MutationProcessor would publish the current content,
+            // and the version would get bumped up.
+            .filter(currentVersion -> currentVersion == -1 || incomingVersion > currentVersion)
+            // If we should merge, then do so now, starting with the model data.
+            .flatMapCompletable(shouldMerge ->
+                (isDelete ? delete(model) : save(model))
+                    .andThen(save(metadata))
+            )
             // Let the world know that we've done a good thing.
             .doOnComplete(() -> {
                 announceSuccessfulMerge(modelWithMetadata);

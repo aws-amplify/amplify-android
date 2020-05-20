@@ -13,9 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.scalar;
-
-import com.amplifyframework.core.model.AWSDateTime;
+package com.amplifyframework.core.model.temporal;
 
 import org.junit.Test;
 
@@ -29,12 +27,12 @@ import java.util.TimeZone;
 import static org.junit.Assert.assertEquals;
 
 /**
- * Tests the {@link AWSDateTime}.
+ * Tests the {@link Temporal.DateTime}.
  */
-public final class AWSDateTimeTest {
+public final class TemporalDateTimeTest {
     /**
-     * An {@link AWSDateTime} can be constructed from a range of
-     * different string representations. The formatted version of an {@link AWSDateTime}
+     * An {@link Temporal.DateTime} can be constructed from a range of
+     * different string representations. The formatted version of an {@link Temporal.DateTime}
      * is rendered to string in a consistent format.
      */
     @Test
@@ -46,15 +44,15 @@ public final class AWSDateTimeTest {
                 "2001-02-03T01:30:15.444+05:30:15"
         );
         for (String value : values) {
-            assertEquals(value, new AWSDateTime(value).format());
+            assertEquals(value, new Temporal.DateTime(value).format());
         }
 
         // Seconds for time is optional when parsing, but always present in formatted output.
-        assertEquals("2001-02-03T01:30:00Z", new AWSDateTime("2001-02-03T01:30Z").format());
+        assertEquals("2001-02-03T01:30:00Z", new Temporal.DateTime("2001-02-03T01:30Z").format());
     }
 
     /**
-     * An {@link AWSDateTime} may be constructed from a Java {@link Date}, and
+     * An {@link Temporal.DateTime} may be constructed from a Java {@link Date}, and
      * converted back to one.
      */
     @Test
@@ -66,8 +64,8 @@ public final class AWSDateTimeTest {
         int offsetInMillis = timeZone.getOffset(date.getTime());
         int offsetInSeconds = offsetInMillis / 1000;
 
-        AWSDateTime awsDateTime = new AWSDateTime(date, offsetInSeconds);
-        assertEquals(date, awsDateTime.toDate());
-        assertEquals(offsetInSeconds, awsDateTime.getOffsetTotalSeconds());
+        Temporal.DateTime temporalDateTime = new Temporal.DateTime(date, offsetInSeconds);
+        assertEquals(date, temporalDateTime.toDate());
+        assertEquals(offsetInSeconds, temporalDateTime.getOffsetTotalSeconds());
     }
 }
