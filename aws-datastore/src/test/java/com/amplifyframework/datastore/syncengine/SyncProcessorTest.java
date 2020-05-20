@@ -96,7 +96,8 @@ public final class SyncProcessorTest {
 
         final SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(inMemoryStorageAdapter);
         final MutationOutbox mutationOutbox = new PersistentMutationOutbox(inMemoryStorageAdapter);
-        final Merger merger = new Merger(mutationOutbox, inMemoryStorageAdapter);
+        final VersionRepository versionRepository = new VersionRepository(inMemoryStorageAdapter);
+        final Merger merger = new Merger(mutationOutbox, versionRepository, inMemoryStorageAdapter);
 
         DataStoreConfiguration dataStoreConfiguration = DataStoreConfiguration
             .builder()
