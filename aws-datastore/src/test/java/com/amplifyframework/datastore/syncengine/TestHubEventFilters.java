@@ -17,26 +17,43 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.datastore.DataStoreChannelEventName;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.hub.HubEventFilter;
 
-final class TestHubEventFilters {
+/**
+ * A utility to build {@link HubEventFilter}s that useful when looking for test outcomes.
+ */
+public final class TestHubEventFilters {
     private TestHubEventFilters() {}
 
-    static <T extends Model> HubEventFilter publicationOf(T model) {
+    /**
+     * Creates an {@link HubEventFilter} that will look for an
+     * {@link DataStoreChannelEventName#PUBLISHED_TO_CLOUD} event on the
+     * {@link com.amplifyframework.hub.HubChannel#DATASTORE} channel.
+     * The model that is mentioned in the {@link HubEvent#getData()} must be of the same type,
+     * and have the same ID, as one of the provided models.
+     * @param models A list of models that may be matched by this filter
+     * @param <T> Type of model mentioned in HubEvent
+     * @return A filter that returns true if one of the provided models is matched.
+     */
+    @SuppressWarnings("varargs")
+    @SafeVarargs
+    public static <T extends Model> HubEventFilter publicationOf(T... models) {
         return event -> {
-            DataStoreChannelEventName eventName = DataStoreChannelEventName.fromString(event.getName());
-            if (!DataStoreChannelEventName.PUBLISHED_TO_CLOUD.equals(eventName)) {
+            if (!DataStoreChannelEventName.PUBLISHED_TO_CLOUD.toString().equals(event.getName())) {
                 return false;
             }
             PendingMutation<? extends Model> pendingMutation = (PendingMutation<? extends Model>) event.getData();
             if (pendingMutation == null) {
                 return false;
             }
-            if (!model.getClass().isAssignableFrom(pendingMutation.getClassOfMutatedItem())) {
-                return false;
+            for (Model model : models) {
+                if (model.getClass().isAssignableFrom(pendingMutation.getClassOfMutatedItem()) &&
+                        model.getId().equals(pendingMutation.getMutatedItem().getId())) {
+                    return true;
+                }
             }
-            String actualId = pendingMutation.getMutatedItem().getId();
-            return model.getId().equals(actualId);
+            return false;
         };
     }
 }

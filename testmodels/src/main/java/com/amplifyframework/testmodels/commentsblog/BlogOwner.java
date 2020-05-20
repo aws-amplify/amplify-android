@@ -108,7 +108,18 @@ public final class BlogOwner implements Model {
       id,
       wea);
   }
-  public interface NameStep {
+
+    @Override
+    public String toString() {
+        return "BlogOwner{" +
+            "name='" + name + '\'' +
+            ", id='" + id + '\'' +
+            ", blog=" + blog +
+            ", wea='" + wea + '\'' +
+            '}';
+    }
+
+    public interface NameStep {
     BuildStep name(String name);
   }
   

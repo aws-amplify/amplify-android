@@ -34,10 +34,11 @@ import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
-import com.amplifyframework.testmodels.personcar.AmplifyCliGeneratedModelProvider;
-import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testmodels.commentsblog.BlogOwner;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 import com.amplifyframework.testutils.sync.SynchronousDataStore;
+import com.amplifyframework.util.Time;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,11 +47,14 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowLog;
 
 import java.util.Collections;
+import java.util.Locale;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
+import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -80,8 +84,9 @@ public final class AWSDataStorePluginTest {
      */
     @Before
     public void setup() {
+        ShadowLog.stream = System.out;
         this.context = getApplicationContext();
-        modelProvider = spy(AmplifyCliGeneratedModelProvider.singletonInstance());
+        modelProvider = spy(SimpleModelProvider.withRandomVersion(BlogOwner.class));
         subscriptionCancelledCounter = new AtomicInteger();
         subscriptionStartedCounter = new AtomicInteger();
         modelCount = modelProvider.models().size();
@@ -110,7 +115,7 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
-        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
+        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi(mock(ApiPlugin.class));
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
@@ -140,11 +145,11 @@ public final class AWSDataStorePluginTest {
         // Trick the DataStore since it's not getting initialized as part of the Amplify.initialize call chain
         Amplify.Hub.publish(HubChannel.DATASTORE, HubEvent.create(InitializationStatus.SUCCEEDED));
 
-        Person person1 = createPerson("Test", "Dummy I");
-        synchronousDataStore.save(person1);
-        assertNotNull(person1.getId());
-        Person person1FromDb = synchronousDataStore.get(Person.class, person1.getId());
-        assertEquals(person1, person1FromDb);
+        BlogOwner blogOwner1 = createBlogOwner("Test", "Dummy I");
+        synchronousDataStore.save(blogOwner1);
+        assertNotNull(blogOwner1.getId());
+        BlogOwner blogOwner1FromDb = synchronousDataStore.get(BlogOwner.class, blogOwner1.getId());
+        assertEquals(blogOwner1, blogOwner1FromDb);
     }
 
     /**
@@ -155,9 +160,12 @@ public final class AWSDataStorePluginTest {
      * @throws JSONException on failure to arrange plugin config
      * @throws AmplifyException on failure to arrange API plugin via Amplify facade
      */
+    @SuppressWarnings("unchecked")
     @Test
     public void clearStopsSyncUntilNextInteraction() throws AmplifyException, JSONException {
-        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
+        ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
+        ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi(mockApiPlugin);
+
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
         AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
@@ -170,19 +178,49 @@ public final class AWSDataStorePluginTest {
 
         assertRemoteSubscriptionsStarted();
 
-        Person person1 = createPerson("Test", "Dummy I");
-        Person person2 = createPerson("Test", "Dummy II");
+        BlogOwner blogOwner1 = createBlogOwner("Test", "Dummy I");
+        BlogOwner blogOwner2 = createBlogOwner("Test", "Dummy II");
 
-        synchronousDataStore.save(person1);
-        Person result1 = synchronousDataStore.get(Person.class, person1.getId());
-        assertEquals(person1, result1);
+        when(mockApiPlugin.mutate(any(), any(), any())).thenAnswer(invocation -> {
+            String data = new JSONObject()
+                .put("id", blogOwner1.getId())
+                .put("name", blogOwner1.getName())
+                .put("_deleted", false)
+                .put("_version", 1)
+                .put("_lastSyncedAt", Time.now())
+                .toString();
+            GraphQLResponse<String> response = new GraphQLResponse<>(data, Collections.emptyList());
+            ((Consumer<GraphQLResponse<String>>) invocation.getArgument(1)).accept(response);
+            return /* void */ null;
+        });
+        HubAccumulator blogOwner1Accumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(blogOwner1), 1).start();
+        synchronousDataStore.save(blogOwner1);
+        BlogOwner result1 = synchronousDataStore.get(BlogOwner.class, blogOwner1.getId());
+        assertEquals(blogOwner1, result1);
+        blogOwner1Accumulator.await();
 
         synchronousDataStore.clear();
         assertRemoteSubscriptionsCancelled();
 
-        synchronousDataStore.save(person2);
-        Person result2 = synchronousDataStore.get(Person.class, person2.getId());
-        assertEquals(person2, result2);
+        when(mockApiPlugin.mutate(any(), any(), any())).thenAnswer(invocation -> {
+            String data = new JSONObject()
+                .put("id", blogOwner2.getId())
+                .put("name", blogOwner2.getName())
+                .put("_deleted", false)
+                .put("_version", 1)
+                .put("_lastSyncedAt", Time.now())
+                .toString();
+            GraphQLResponse<String> response = new GraphQLResponse<>(data, Collections.emptyList());
+            ((Consumer<GraphQLResponse<String>>) invocation.getArgument(1)).accept(response);
+            return /* void */ null;
+        });
+        HubAccumulator blogOwner2Accumulator =
+            HubAccumulator.create(HubChannel.DATASTORE, publicationOf(blogOwner2), 1).start();
+        synchronousDataStore.save(blogOwner2);
+        BlogOwner result2 = synchronousDataStore.get(BlogOwner.class, blogOwner2.getId());
+        assertEquals(blogOwner2, result2);
+        blogOwner2Accumulator.await();
 
         verify(mockApiCategory, times(2)).mutate(Mockito.any(), Mockito.any(), Mockito.any());
     }
@@ -219,14 +257,9 @@ public final class AWSDataStorePluginTest {
         assertTrue(syncProcessorNotInvoked);
     }
 
-    private static ApiCategory mockApiCategoryWithoutPlugins() throws JSONException {
-        return spy(ApiCategory.class);
-    }
-
     @SuppressWarnings("unchecked")
-    private ApiCategory mockApiCategoryWithGraphQlApi() throws AmplifyException {
+    private ApiCategory mockApiCategoryWithGraphQlApi(ApiPlugin<?> mockApiPlugin) throws AmplifyException {
         ApiCategory mockApiCategory = spy(ApiCategory.class);
-        ApiPlugin<?> mockApiPlugin = mock(ApiPlugin.class);
         when(mockApiPlugin.getPluginKey()).thenReturn(MOCK_API_PLUGIN_NAME);
         when(mockApiPlugin.getCategoryType()).thenReturn(CategoryType.API);
 
@@ -239,14 +272,9 @@ public final class AWSDataStorePluginTest {
         }).when(mockApiPlugin).query(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 
         // Make believe that mutations return response immediately
-        doAnswer(invocation -> {
-            int indexOfResponseConsumer = 1;
-            Consumer<GraphQLResponse<String>> onResponse = invocation.getArgument(indexOfResponseConsumer);
-            // Calling onResponse with an invalid input generates an error in MutationOutbox.hasPendingMutation.
-            // Disabling it for now since it does not affect the assertions we need for this test.
-            // onResponse.accept(new GraphQLResponse<>("{}", Collections.emptyList()));
-            return null;
-        }).when(mockApiPlugin).mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
+        doAnswer(invocation -> null)
+            .when(mockApiPlugin)
+            .mutate(any(GraphQLRequest.class), any(Consumer.class), any(Consumer.class));
 
         // Make believe that subscriptions return response immediately
         doAnswer(invocation -> {
@@ -317,10 +345,10 @@ public final class AWSDataStorePluginTest {
         return mockApiCategory;
     }
 
-    private Person createPerson(String firstName, String lastName) {
-        return Person.builder()
-            .firstName(firstName)
-            .lastName(lastName)
+    @SuppressWarnings("SameParameterValue")
+    private BlogOwner createBlogOwner(String firstName, String lastName) {
+        return BlogOwner.builder()
+            .name(String.format(Locale.US, "%s, %s", firstName, lastName))
             .build();
     }
 }
