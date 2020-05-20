@@ -24,7 +24,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
 /**
  * Static utility class internal to the plugin to interface with Auth.
  */
-public final class MobileClientCognitoAuthProvider implements CognitoAuthProvider {
+public final class AWSMobileClientAuthProvider implements CognitoAuthProvider {
     private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     @Override

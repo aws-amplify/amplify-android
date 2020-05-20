@@ -80,7 +80,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     public AWSS3StoragePlugin() {
-        this(new MobileClientCognitoAuthProvider());
+        this(new AWSMobileClientAuthProvider());
     }
 
     @VisibleForTesting
