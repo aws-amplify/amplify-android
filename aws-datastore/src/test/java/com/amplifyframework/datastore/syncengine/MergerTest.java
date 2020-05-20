@@ -200,7 +200,7 @@ public final class MergerTest {
         ModelMetadata localMetadata =
             new ModelMetadata(blogOwner.getId(), false, 1, Time.now());
         storageAdapter.save(blogOwner, localMetadata);
-        mutationOutbox.enqueue(PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE));
+        mutationOutbox.enqueue(PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE, null));
 
         // Act: now, cloud sync happens, and the sync engine tries to apply an update
         // for the same model ID, into the store. According to the cloud, this same

@@ -23,6 +23,7 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.annotations.Index;
 import com.amplifyframework.core.model.annotations.ModelConfig;
 import com.amplifyframework.core.model.annotations.ModelField;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 
@@ -42,12 +43,18 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
     private final Class<T> classOfMutatedItem;
     private final Type mutationType;
     private final TimeBasedUuid mutationId;
+    private QueryPredicate predicate;
 
-    private PendingMutation(TimeBasedUuid mutationId, T mutatedItem, Class<T> classOfMutatedItem, Type mutationType) {
+    private PendingMutation(TimeBasedUuid mutationId,
+                            T mutatedItem,
+                            Class<T> classOfMutatedItem,
+                            Type mutationType,
+                            QueryPredicate predicate) {
         this.mutationId = mutationId;
         this.mutatedItem = mutatedItem;
         this.classOfMutatedItem = classOfMutatedItem;
         this.mutationType = mutationType;
+        this.predicate = predicate;
     }
 
     /**
@@ -57,6 +64,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param mutatedItem The item that undergone a mutation
      * @param classOfMutatedItem The class of the item that has undergone mutation
      * @param mutationType Type of mutation
+     * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of the item that has undergone mutation
      * @return A {@link PendingMutation}
      */
@@ -64,12 +72,14 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             @NonNull TimeBasedUuid mutationId,
             @NonNull T mutatedItem,
             @NonNull Class<T> classOfMutatedItem,
-            @NonNull Type mutationType) {
+            @NonNull Type mutationType,
+            @Nullable QueryPredicate predicate) {
         return new PendingMutation<>(
             Objects.requireNonNull(mutationId),
             Objects.requireNonNull(mutatedItem),
             Objects.requireNonNull(classOfMutatedItem),
-            Objects.requireNonNull(mutationType)
+            Objects.requireNonNull(mutationType),
+            predicate
         );
     }
 
@@ -78,12 +88,15 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param mutatedItem The item that undergone a mutation
      * @param classOfMutatedItem The class of the item that has undergone mutation
      * @param mutationType Type of mutation
+     * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of the item that has undergone mutation
      * @return A {@link PendingMutation}
      */
-    static <T extends Model> PendingMutation<T> instance(
-            @NonNull T mutatedItem, @NonNull Class<T> classOfMutatedItem, @NonNull Type mutationType) {
-        return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType);
+    static <T extends Model> PendingMutation<T> instance(@NonNull T mutatedItem,
+                                                         @NonNull Class<T> classOfMutatedItem,
+                                                         @NonNull Type mutationType,
+                                                         @Nullable QueryPredicate predicate) {
+        return instance(TimeBasedUuid.create(), mutatedItem, classOfMutatedItem, mutationType, predicate);
     }
 
     /**
@@ -94,18 +107,21 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @return A PendingMutation representing the model creation
      */
     static <T extends Model> PendingMutation<T> creation(@NonNull T createdItem, @NonNull Class<T> classOfCreatedItem) {
-        return instance(createdItem, classOfCreatedItem, Type.CREATE);
+        return instance(createdItem, classOfCreatedItem, Type.CREATE, null);
     }
 
     /**
      * Creates a {@link PendingMutation} that represents an update to a model.
      * @param updatedItem The model that was updated
      * @param classOfUpdatedItem The class of the updated model
+     * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
      */
-    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem, @NonNull Class<T> classOfUpdatedItem) {
-        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE);
+    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
+                                                       @NonNull Class<T> classOfUpdatedItem,
+                                                       @Nullable QueryPredicate predicate) {
+        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, predicate);
     }
 
     /**
@@ -113,10 +129,13 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * @param deletedItem The model that was deleted
      * @param classOfDeletedItem The class of the deleted model
      * @param <T> The type of model that was deleted
+     * @param predicate A condition to be used when updating the remote store
      * @return A PendingMutation representing the model deletion
      */
-    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem, @NonNull Class<T> classOfDeletedItem) {
-        return instance(deletedItem, classOfDeletedItem, Type.DELETE);
+    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
+                                                         @NonNull Class<T> classOfDeletedItem,
+                                                         @Nullable QueryPredicate predicate) {
+        return instance(deletedItem, classOfDeletedItem, Type.DELETE, predicate);
     }
 
     /**
@@ -155,6 +174,11 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         return mutationType;
     }
 
+    @Nullable
+    QueryPredicate getPredicate() {
+        return predicate;
+    }
+
     @Override
     public boolean equals(Object thatObject) {
         if (this == thatObject) {
@@ -169,7 +193,8 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         return ObjectsCompat.equals(mutationId, that.mutationId) &&
             ObjectsCompat.equals(mutatedItem, that.mutatedItem) &&
             ObjectsCompat.equals(classOfMutatedItem, that.classOfMutatedItem) &&
-            ObjectsCompat.equals(mutationType, that.mutationType);
+            ObjectsCompat.equals(mutationType, that.mutationType) &&
+            ObjectsCompat.equals(predicate, that.predicate);
     }
 
     @Override
@@ -178,6 +203,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
         result = 31 * result + mutatedItem.hashCode();
         result = 31 * result + classOfMutatedItem.hashCode();
         result = 31 * result + mutationType.hashCode();
+        result = 31 * result + predicate.hashCode();
         return result;
     }
 
@@ -188,6 +214,7 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
             ", classOfMutatedItem=" + classOfMutatedItem +
             ", mutationType=" + mutationType +
             ", mutationId=" + mutationId +
+            ", predicate=" + predicate +
             '}';
     }
 

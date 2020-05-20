@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.core.NoOpConsumer;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.testutils.Await;
 
@@ -87,14 +88,15 @@ public final class SynchronousAppSync {
      * @param model An instance of the Model with the values to mutate
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
+     * @param predicate The condition to be applied to the update.
      * @return Response data is from AppSync
      * @throws DataStoreException On failure to obtain response data
      */
     @NonNull
     public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
-        @NonNull T model, @NonNull Integer version) throws DataStoreException {
+        @NonNull T model, @NonNull Integer version, @Nullable QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result(((onResult, onError) ->
-            appSync.update(model, version, onResult, onError)
+            appSync.update(model, version, predicate, onResult, onError)
         ));
     }
 
@@ -103,15 +105,19 @@ public final class SynchronousAppSync {
      * @param clazz The class of the object being deleted
      * @param objectId ID id of the object to delete
      * @param version The version of the model we have
+     * @param version The condition to be applied to the delete.
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data from AppSync.
      * @throws DataStoreException On failure to obtain response data
      */
+    @SuppressWarnings("LineLength")
     @NonNull
-    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
-            @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
+    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(@NonNull Class<T> clazz,
+                                                                   @NonNull String objectId,
+                                                                   @NonNull Integer version,
+                                                                   @Nullable QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
-            appSync.delete(clazz, objectId, version, onResult, onError)
+            appSync.delete(clazz, objectId, version, predicate, onResult, onError)
         );
     }
 

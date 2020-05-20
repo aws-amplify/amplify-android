@@ -146,7 +146,7 @@ public final class AppSyncMocking {
                 // Simulate a successful response callback from the delete() method.
                 final int indexOfModelId = 1;
                 final int indexOfVersion = 2;
-                final int indexOfResultConsumer = 3;
+                final int indexOfResultConsumer = 4;
                 Consumer<GraphQLResponse<ModelWithMetadata<? extends Model>>> onResult =
                     invocation.getArgument(indexOfResultConsumer);
 
@@ -163,6 +163,7 @@ public final class AppSyncMocking {
                 eq(model.getClass()), // Class of the model
                 eq(model.getId()), // model ID
                 anyInt(), // version
+                any(), // predicate
                 any(), // onResponse
                 any() // onFailure
             );

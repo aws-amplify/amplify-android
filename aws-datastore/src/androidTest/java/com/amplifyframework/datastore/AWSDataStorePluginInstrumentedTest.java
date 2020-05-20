@@ -165,7 +165,7 @@ public final class AWSDataStorePluginInstrumentedTest {
 
         // Act: externally, the BlogOwner in the Cloud is updated, to correct the entry's last name
         GraphQLResponse<ModelWithMetadata<BlogOwner>> updateResponse =
-            appSync.update(updatedModel, originalVersion);
+            appSync.update(updatedModel, originalVersion, null);
         ModelMetadata newMetadata = updateResponse.getData().getSyncMetadata();
         assertNotNull(newMetadata.getVersion());
         int newVersion = newMetadata.getVersion();

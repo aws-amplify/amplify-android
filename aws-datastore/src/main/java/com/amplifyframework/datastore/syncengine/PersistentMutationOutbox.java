@@ -157,7 +157,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         TimeBasedUuid id = existingMutation.getMutationId();
         T item = incomingMutation.getMutatedItem();
         Class<T> clazz = incomingMutation.getClassOfMutatedItem();
-        return save(PendingMutation.instance(id, item, clazz, type))
+        return save(PendingMutation.instance(id, item, clazz, type, null))
             .andThen(notifyContentAvailable());
     }
 
