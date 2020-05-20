@@ -678,8 +678,8 @@ public final class PersistentMutationOutboxTest {
         PendingMutation<BlogOwner> firstMutation = PendingMutation.update(originalJoe, BlogOwner.class);
         storage.save(originalJoe, converter.toRecord(firstMutation));
 
-        BlogOwner updatedJoe = BlogOwner.builder()
-            .name("Susan Now Owns the Blog")
+        BlogOwner updatedJoe = originalJoe.copyOfBuilder()
+            .name("Joe Swanson, MD. (He finished med school, I guess?)")
             .build();
         PendingMutation<BlogOwner> secondMutation = PendingMutation.update(updatedJoe, BlogOwner.class);
         storage.save(updatedJoe, converter.toRecord(secondMutation));
