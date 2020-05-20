@@ -15,6 +15,7 @@
 
 package com.amplifyframework.datastore.syncengine;
 
+import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.storage.InMemoryStorageAdapter;
@@ -29,6 +30,7 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -38,6 +40,7 @@ import io.reactivex.observers.TestObserver;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -83,7 +86,7 @@ public final class PersistentMutationOutboxTest {
         // Enqueue an save for a Jameson BlogOwner object,
         // and make sure that it calls back onComplete().
         TestObserver<Void> saveObserver = mutationOutbox.enqueue(createJameson).test();
-        saveObserver.awaitTerminalEvent();
+        saveObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         saveObserver.assertNoErrors().assertComplete();
         saveObserver.dispose();
 
@@ -93,13 +96,12 @@ public final class PersistentMutationOutboxTest {
         queueObserver.dispose();
 
         // Assert that the storage contains the mutation
-        List<PersistentRecord> recordsInStorage =
-            storage.query(PersistentRecord.class);
-        assertEquals(1, recordsInStorage.size());
         assertEquals(
-            converter.toRecord(createJameson),
-            recordsInStorage.get(0)
+            Collections.singletonList(converter.toRecord(createJameson)),
+            storage.query(PersistentRecord.class)
         );
+        assertTrue(mutationOutbox.hasPendingMutation(jameson.getId()));
+        assertEquals(createJameson, mutationOutbox.peek());
     }
 
     /**
@@ -127,6 +129,9 @@ public final class PersistentMutationOutboxTest {
 
         // And nothing is in storage.
         assertTrue(storage.query(PersistentRecord.class).isEmpty());
+
+        // And nothing is peek()ed.
+        assertNull(mutationOutbox.peek());
     }
 
     /**
@@ -150,17 +155,20 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> loadObserver = mutationOutbox.load().test();
 
         // Assert: load worked.
-        loadObserver.awaitTerminalEvent();
+        loadObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         loadObserver.assertNoErrors().assertComplete();
         loadObserver.dispose();
 
         // Assert: items are in the outbox.
         assertTrue(mutationOutbox.hasPendingMutation(tony.getId()));
         assertTrue(mutationOutbox.hasPendingMutation(sam.getId()));
+
+        // Tony is first, since he is the older of the two mutations.
+        assertEquals(updateTony, mutationOutbox.peek());
     }
 
     /**
-     * Tests {@link MutationOutbox#remove(PendingMutation)}.
+     * Tests {@link MutationOutbox#remove(TimeBasedUuid)}.
      * @throws DataStoreException On failure to query results, for assertions
      */
     @Test
@@ -171,14 +179,18 @@ public final class PersistentMutationOutboxTest {
             .build();
         PendingMutation<BlogOwner> deleteBillGates = PendingMutation.deletion(bill, BlogOwner.class, null);
         storage.save(converter.toRecord(deleteBillGates));
+        mutationOutbox.load().blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-        TestObserver<Void> testObserver = mutationOutbox.remove(deleteBillGates).test();
+        TestObserver<Void> testObserver = mutationOutbox.remove(deleteBillGates.getMutationId()).test();
 
-        testObserver.awaitTerminalEvent();
+        testObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         testObserver.assertNoErrors().assertComplete();
         testObserver.dispose();
 
         assertEquals(0, storage.query(PersistentRecord.class).size());
+
+        assertNull(mutationOutbox.peek());
+        assertFalse(mutationOutbox.hasPendingMutation(bill.getId()));
     }
 
     /**
@@ -255,7 +267,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingCreation).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -265,6 +277,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
         assertEquals(existingCreation, mutationOutbox.peek());
     }
 
@@ -295,7 +308,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingCreation).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -305,6 +318,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
         assertEquals(existingUpdate, mutationOutbox.peek());
     }
 
@@ -336,7 +350,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingCreation).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -346,6 +360,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingCreationId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -376,7 +391,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: caused a failure.
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertError(throwable -> throwable instanceof DataStoreException);
 
         // Assert: original mutation is present, but the new one isn't.
@@ -386,6 +401,7 @@ public final class PersistentMutationOutboxTest {
         assertTrue(storage.query(PersistentRecord.class, Where.id(incomingUpdateId)).isEmpty());
 
         // Existing mutation still attainable as next mutation (right now, its the ONLY mutation in outbox)
+        assertTrue(mutationOutbox.hasPendingMutation(modelInExistingMutation.getId()));
         assertEquals(existingDeletion, mutationOutbox.peek());
     }
 
@@ -415,7 +431,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: OK. The new mutation is accepted
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertComplete();
 
         // Assert: the existing mutation is still there, by id ....
@@ -475,7 +491,7 @@ public final class PersistentMutationOutboxTest {
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
         // Assert: OK. The new mutation is accepted
-        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
         enqueueObserver.assertComplete();
 
         // Assert: the existing mutation is still there, by id ....
@@ -510,7 +526,7 @@ public final class PersistentMutationOutboxTest {
 
     /**
      * When there is already a creation pending, and then we get a deletion for the same model ID,
-     * we should just remove the creation. It means like "nevermind, don't actually create."
+     * we should just remove the creation. It means like "never mind, don't actually create."
      * @throws DataStoreException On failure to query storage for mutations state after test action
      */
     @Test
@@ -693,5 +709,68 @@ public final class PersistentMutationOutboxTest {
             firstMutation,
             mutationOutbox.nextMutationForModelId(originalJoe.getId())
         );
+    }
+
+    /**
+     * Ordinarily, a DELETE would remote a CREATE, in front of it. But if that
+     * create is marked in flight, we can't remove it. We have to enqueue the new
+     * mutation.
+     */
+    @Test
+    public void mutationEnqueuedIfExistingMutationIsInFlight() {
+        // Arrange an existing mutation.
+        BlogOwner joe = BlogOwner.builder()
+            .name("Joe")
+            .build();
+        PendingMutation<BlogOwner> creation = PendingMutation.creation(joe, BlogOwner.class);
+        mutationOutbox.enqueue(creation)
+            // Act: mark it as in-flight, after enqueue.
+            .andThen(mutationOutbox.markInFlight(creation.getMutationId()))
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        // Now, look at what happens when we enqueue a new mutation.
+        PendingMutation<BlogOwner> deletion = PendingMutation.deletion(joe, BlogOwner.class, null);
+        mutationOutbox.enqueue(deletion)
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        PendingMutation<? extends Model> next = mutationOutbox.peek();
+        assertNotNull(next);
+        assertEquals(creation, next);
+        mutationOutbox.remove(next.getMutationId())
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        next = mutationOutbox.peek();
+        assertNotNull(next);
+        assertEquals(deletion, next);
+        mutationOutbox.remove(next.getMutationId())
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        assertNull(mutationOutbox.peek());
+    }
+
+    /**
+     * It is an error to mark an item as in-flight, if it isn't even in the dang queue.
+     */
+    @Test
+    public void errorWhenMarkingItemNotInQueue() {
+        // Enqueue and remove a mutation.
+        BlogOwner tabby = BlogOwner.builder()
+            .name("Tabitha Stevens of Beaver Falls, Idaho")
+            .build();
+        PendingMutation<BlogOwner> creation = PendingMutation.creation(tabby, BlogOwner.class);
+        mutationOutbox.enqueue(creation)
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        mutationOutbox.remove(creation.getMutationId())
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        // Now, if we try to make that mutation as in-flight, its an error, since its already processed.
+        TestObserver<Void> observer = mutationOutbox.markInFlight(creation.getMutationId()).test();
+        observer.awaitTerminalEvent(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        observer
+            .assertError(DataStoreException.class)
+            .assertError(error ->
+                error.getMessage() != null &&
+                    error.getMessage().contains("there was no mutation with that ID in the outbox")
+            );
     }
 }
