@@ -61,24 +61,12 @@ final class Merger {
      * @return A completable operation to merge the model
      */
     <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata) {
-        return merge(modelWithMetadata, MergeStrategy.CONSIDER_PENDING_MUTATIONS);
-    }
-
-    /**
-     * Merge an item back into the local store, using a merge strategy.
-     * @param modelWithMetadata A model, combined with metadata about it
-     * @param mergeStrategy A strategy to use while merging - check for pending mutations in outbox?
-     * @param <T> Type of model
-     * @return A completable operation to merge the item
-     */
-    <T extends Model> Completable merge(ModelWithMetadata<T> modelWithMetadata, MergeStrategy mergeStrategy) {
         ModelMetadata metadata = modelWithMetadata.getSyncMetadata();
         boolean isDelete = Boolean.TRUE.equals(metadata.isDeleted());
         T model = modelWithMetadata.getModel();
 
         // Check if there is a pending mutation for this model, in the outbox.
-        boolean checkOutbox = !MergeStrategy.IGNORE_PENDING_MUTATIONS.equals(mergeStrategy);
-        if (checkOutbox && mutationOutbox.hasPendingMutation(model.getId())) {
+        if (mutationOutbox.hasPendingMutation(model.getId())) {
             LOG.info("Mutation outbox has pending mutation for " + model.getId() + ", refusing to merge.");
             return Completable.complete();
         }
