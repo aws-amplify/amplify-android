@@ -472,7 +472,7 @@ public final class PersistentMutationOutboxTest {
 
     /**
      * When there is an existing update mutation, and a new update mutation comes in,
-     * then we need to remove any existing mutations for that modelId and create the new one
+     * then we need to remove any existing mutations for that modelId and create the new one.
      * @throws DataStoreException On failure to query storage for current mutations state
      */
     @Test
