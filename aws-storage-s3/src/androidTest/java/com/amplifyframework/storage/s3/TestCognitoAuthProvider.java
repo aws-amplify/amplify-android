@@ -24,7 +24,7 @@ import com.amazonaws.mobile.client.AWSMobileClient;
  * Allows integration tests to integrate with Auth functionality.
  * TODO: Update Storage integration tests to go through the Auth Category not AWSMobileClient directly.
  */
-public final class TestAWSAuthProvider implements AWSAuthProvider {
+public final class TestCognitoAuthProvider implements CognitoAuthProvider {
     @Override
     public String getIdentityId() throws StorageException {
         try {

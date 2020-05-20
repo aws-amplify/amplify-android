@@ -71,7 +71,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
 
     private final StorageService.Factory storageServiceFactory;
     private final ExecutorService executorService;
-    private final AWSAuthProvider awsAuthProvider;
+    private final CognitoAuthProvider cognitoAuthProvider;
     private StorageService storageService;
     private StorageAccessLevel defaultAccessLevel;
     private int defaultUrlExpiration;
@@ -80,27 +80,25 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
      * Constructs the AWS S3 Storage Plugin initializing the executor service.
      */
     public AWSS3StoragePlugin() {
-        this((context, region, bucket) ->
-                new AWSS3StorageService(context, region, bucket, new MobileClientAWSAuthProvider(), false),
-                new MobileClientAWSAuthProvider());
+        this(new MobileClientCognitoAuthProvider());
     }
 
     @VisibleForTesting
-    AWSS3StoragePlugin(AWSAuthProvider awsAuthProvider) {
+    AWSS3StoragePlugin(CognitoAuthProvider cognitoAuthProvider) {
         this((context, region, bucket) ->
-                new AWSS3StorageService(context, region, bucket, awsAuthProvider, false),
-                awsAuthProvider);
+                new AWSS3StorageService(context, region, bucket, cognitoAuthProvider, false),
+                cognitoAuthProvider);
     }
 
     @VisibleForTesting
     AWSS3StoragePlugin(
             StorageService.Factory storageServiceFactory,
-            AWSAuthProvider awsAuthProvider
+            CognitoAuthProvider cognitoAuthProvider
     ) {
         super();
         this.storageServiceFactory = storageServiceFactory;
         this.executorService = Executors.newCachedThreadPool();
-        this.awsAuthProvider = awsAuthProvider;
+        this.cognitoAuthProvider = cognitoAuthProvider;
     }
 
     @NonNull
@@ -206,7 +204,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 new AWSS3StorageGetPresignedUrlOperation(
                         storageService,
                         executorService,
-                        awsAuthProvider,
+                        cognitoAuthProvider,
                         request,
                         onSuccess,
                         onError);
@@ -245,7 +243,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         );
 
         AWSS3StorageDownloadFileOperation operation =
-                new AWSS3StorageDownloadFileOperation(storageService, awsAuthProvider, request, onSuccess, onError);
+                new AWSS3StorageDownloadFileOperation(storageService, cognitoAuthProvider, request, onSuccess, onError);
         operation.start();
 
         return operation;
@@ -283,7 +281,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
         );
 
         AWSS3StorageUploadFileOperation operation =
-                new AWSS3StorageUploadFileOperation(storageService, awsAuthProvider, request, onSuccess, onError);
+                new AWSS3StorageUploadFileOperation(storageService, cognitoAuthProvider, request, onSuccess, onError);
 
         operation.start();
 
@@ -320,7 +318,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 new AWSS3StorageRemoveOperation(
                         storageService,
                         executorService,
-                        awsAuthProvider,
+                        cognitoAuthProvider,
                         request,
                         onSuccess,
                         onError);
@@ -360,7 +358,7 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
                 new AWSS3StorageListOperation(
                         storageService,
                         executorService,
-                        awsAuthProvider,
+                        cognitoAuthProvider,
                         request,
                         onSuccess,
                         onError);

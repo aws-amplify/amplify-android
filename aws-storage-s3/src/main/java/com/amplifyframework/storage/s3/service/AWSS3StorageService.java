@@ -21,7 +21,7 @@ import androidx.annotation.NonNull;
 
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
-import com.amplifyframework.storage.s3.AWSAuthProvider;
+import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.utils.S3Keys;
 import com.amplifyframework.util.UserAgent;
 
@@ -53,7 +53,7 @@ public final class AWSS3StorageService implements StorageService {
     private final String bucket;
     private final TransferUtility transferUtility;
     private final AmazonS3Client client;
-    private final AWSAuthProvider awsAuthProvider;
+    private final CognitoAuthProvider cognitoAuthProvider;
 
     private boolean transferUtilityServiceStarted = false;
 
@@ -62,7 +62,7 @@ public final class AWSS3StorageService implements StorageService {
      * @param region Region in which the S3 endpoint resides
      * @param context An Android Context
      * @param bucket An S3 bucket name
-     * @param awsAuthProvider Provides AWS specific Auth information
+     * @param cognitoAuthProvider Provides AWS specific Auth information
      * @param transferAcceleration Whether or not transfer acceleration
      *                             should be enabled
      * @throws IllegalStateException Storage service requires the correct Auth plugin to have been added to Amplify
@@ -71,13 +71,13 @@ public final class AWSS3StorageService implements StorageService {
             @NonNull Context context,
             @NonNull Region region,
             @NonNull String bucket,
-            @NonNull AWSAuthProvider awsAuthProvider,
+            @NonNull CognitoAuthProvider cognitoAuthProvider,
             boolean transferAcceleration
     ) {
         try {
             this.context = context;
             this.bucket = bucket;
-            this.awsAuthProvider = awsAuthProvider;
+            this.cognitoAuthProvider = cognitoAuthProvider;
             this.client = createS3Client(region);
 
             if (transferAcceleration) {
@@ -100,7 +100,7 @@ public final class AWSS3StorageService implements StorageService {
     private AmazonS3Client createS3Client(@NonNull Region region) throws StorageException {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
-        return new AmazonS3Client(awsAuthProvider.getCredentialsProvider(), region, configuration);
+        return new AmazonS3Client(cognitoAuthProvider.getCredentialsProvider(), region, configuration);
     }
 
     /**
@@ -237,4 +237,3 @@ public final class AWSS3StorageService implements StorageService {
         return client;
     }
 }
-

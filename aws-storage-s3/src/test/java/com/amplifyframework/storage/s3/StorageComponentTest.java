@@ -81,9 +81,9 @@ public final class StorageComponentTest {
         this.storage = new StorageCategory();
         this.storageService = mock(StorageService.class);
         StorageService.Factory storageServiceFactory = (context, region, bucket) -> storageService;
-        AWSAuthProvider awsAuthProvider = mock(AWSAuthProvider.class);
-        doReturn(RandomString.string()).when(awsAuthProvider).getIdentityId();
-        this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, awsAuthProvider));
+        CognitoAuthProvider cognitoAuthProvider = mock(CognitoAuthProvider.class);
+        doReturn(RandomString.string()).when(cognitoAuthProvider).getIdentityId();
+        this.storage.addPlugin(new AWSS3StoragePlugin(storageServiceFactory, cognitoAuthProvider));
         this.storage.configure(buildConfiguration(), getApplicationContext());
         this.storage.initialize(getApplicationContext());
     }

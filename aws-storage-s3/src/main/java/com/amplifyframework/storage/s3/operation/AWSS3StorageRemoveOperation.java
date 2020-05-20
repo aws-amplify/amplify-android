@@ -21,7 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageRemoveOperation;
 import com.amplifyframework.storage.result.StorageRemoveResult;
-import com.amplifyframework.storage.s3.AWSAuthProvider;
+import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageRemoveRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
@@ -35,7 +35,7 @@ import java.util.concurrent.ExecutorService;
 public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AWSS3StorageRemoveRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
-    private final AWSAuthProvider awsAuthProvider;
+    private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageRemoveResult> onSuccess;
     private final Consumer<StorageException> onError;
 
@@ -43,7 +43,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
      * Constructs a new AWSS3StorageRemoveOperation.
      * @param storageService S3 client wrapper
      * @param executorService Executor service used for running blocking operations on a separate thread
-     * @param awsAuthProvider Interface to retrieve AWS specific auth information
+     * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
      * @param request remove request parameters
      * @param onSuccess notified when remove operation results available
      * @param onError notified when remove operation does not complete due to error
@@ -51,7 +51,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     public AWSS3StorageRemoveOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
-            @NonNull AWSAuthProvider awsAuthProvider,
+            @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageRemoveRequest request,
             @NonNull Consumer<StorageRemoveResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -59,7 +59,7 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
         super(Objects.requireNonNull(request));
         this.storageService = Objects.requireNonNull(storageService);
         this.executorService = Objects.requireNonNull(executorService);
-        this.awsAuthProvider = awsAuthProvider;
+        this.cognitoAuthProvider = cognitoAuthProvider;
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
     }
@@ -69,20 +69,22 @@ public final class AWSS3StorageRemoveOperation extends StorageRemoveOperation<AW
     public void start() {
         executorService.submit(() -> {
             try {
-                String serviceKey;
+                String currentIdentityId;
 
                 try {
-                    serviceKey = S3Keys.createServiceKey(
-                            getRequest().getAccessLevel(),
-                            getRequest().getTargetIdentityId() != null
-                                    ? getRequest().getTargetIdentityId()
-                                    : awsAuthProvider.getIdentityId(),
-                            getRequest().getKey()
-                    );
+                    currentIdentityId = cognitoAuthProvider.getIdentityId();
                 } catch (StorageException exception) {
                     onError.accept(exception);
                     return;
                 }
+
+                String serviceKey = S3Keys.createServiceKey(
+                        getRequest().getAccessLevel(),
+                        getRequest().getTargetIdentityId() != null
+                                ? getRequest().getTargetIdentityId()
+                                : currentIdentityId,
+                        getRequest().getKey()
+                );
 
                 storageService.deleteObject(serviceKey);
 
