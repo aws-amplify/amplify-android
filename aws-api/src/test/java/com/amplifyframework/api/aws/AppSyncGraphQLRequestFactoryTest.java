@@ -20,10 +20,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
-import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testmodels.personcar.MaritalStatus;
 import com.amplifyframework.testmodels.personcar.Person;
@@ -151,10 +148,10 @@ public final class AppSyncGraphQLRequestFactoryTest {
         final Meeting meeting1 = Meeting.builder()
                 .name("meeting1")
                 .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
-                .date(new AWSDate("2001-02-03"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30:15Z"))
-                .time(new AWSTime("01:22:33"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
+                .time(new Temporal.Time("01:22:33"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build();
 
         // Act: build a mutation to create a Meeting

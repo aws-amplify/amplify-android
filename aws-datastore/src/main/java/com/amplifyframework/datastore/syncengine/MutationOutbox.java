@@ -1,5 +1,5 @@
 /*
- * Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License").
  * You may not use this file except in compliance with the License.
@@ -16,26 +16,12 @@
 package com.amplifyframework.datastore.syncengine;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.WorkerThread;
+import androidx.annotation.Nullable;
 
-import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.query.Where;
-import com.amplifyframework.core.model.query.predicate.QueryField;
-import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.datastore.DataStoreException;
-import com.amplifyframework.datastore.storage.LocalStorageAdapter;
-import com.amplifyframework.datastore.storage.StorageItemChange;
-import com.amplifyframework.logging.Logger;
-
-import java.util.Objects;
 
 import io.reactivex.Completable;
 import io.reactivex.Observable;
-import io.reactivex.Single;
-import io.reactivex.schedulers.Schedulers;
-import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 
 /*
  * The {@link MutationOutbox} is a persistently-backed in-order staging ground
@@ -46,98 +32,44 @@ import io.reactivex.subjects.Subject;
  * and written out over the network. When an item is written out over the network successfully,
  * it is safe to remove it from this outbox.
  */
-final class MutationOutbox {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
-
-    private final LocalStorageAdapter storage;
-    private final Subject<PendingMutation<? extends Model>> pendingMutations;
-    private final PendingMutation.Converter converter;
-
-    MutationOutbox(@NonNull final LocalStorageAdapter localStorageAdapter) {
-        this.storage = Objects.requireNonNull(localStorageAdapter);
-        this.pendingMutations = PublishSubject.<PendingMutation<? extends Model>>create().toSerialized();
-        this.converter = new GsonPendingMutationConverter();
-    }
+interface MutationOutbox {
+    /**
+     * Loads any/all previously unhandled mutations, from disk, into memory.
+     * The {@link PendingMutation}s are taken out of durable storage.
+     * That storage may still contain mutations, perhaps remaining from a previously-terminated session.
+     * These mutations should be processed whenever the {@link Orchestrator} comes online.
+     * @return A Completable which succeeds when all mutations have been read from disk.
+     */
+    @NonNull
+    Completable load();
 
     /**
      * Checks to see if there is a pending mutation for a model with the given ID.
+     *
      * @param modelId ID of any model in the system
-     * @return An {@link Single} which emits true if there is a pending mutation for
-     *         the model id, emits false if not, and emits error if not determinable
+     * @return true if there is a pending mutation for the model id, false if not.
      */
-    @NonNull
-    Single<Boolean> hasPendingMutation(@NonNull String modelId) {
-        Objects.requireNonNull(modelId);
-        // Note that the getId() on the mutation is different from the ID of the decoded model.
-        final QueryPredicate hasMatchingId = QueryField.field("decodedModelId").eq(modelId);
-        return Single.create(emitter ->
-            storage.query(PendingMutation.PersistentRecord.class, Where.matches(hasMatchingId),
-                results -> emitter.onSuccess(results.hasNext()),
-                emitter::onError
-            )
-        );
-    }
+    boolean hasPendingMutation(@NonNull String modelId);
 
     /**
      * Write a new {@link PendingMutation} into the outbox.
-     *
+     * <p>
      * This involves:
+     * <p>
+     * 1. Writing a {@link PendingMutation} into a persistent store, by first converting it
+     * to and {@link PendingMutation.PersistentRecord}.
+     * <p>
+     * 2. Notifying the observers of the outbox that there is a new {@link PendingMutation}
+     * that needs to be processed.
      *
-     *   1. Writing a {@link PendingMutation} into a persistent store, by first converting it
-     *      to and {@link PendingMutation.PersistentRecord}.
-     *
-     *   2. Notifying the observers of the outbox that there is a new {@link PendingMutation}
-     *      that needs to be processed.
-     *
-     * @param pendingMutation A mutation to be enqueued into the outbox
-     * @param <T> The type of model to which the mutation refers; e.g., if the PendingMutation
-     *            is intending to create Person object, this type could be Person.
+     * @param incomingMutation A mutation to be enqueued into the outbox
+     * @param <T>              The type of model to which the mutation refers; e.g., if the PendingMutation
+     *                         is intending to create Person object, this type could be Person.
      * @return A Completable that emits success upon successful enqueue, or failure if it is not
-     *         possible to enqueue the mutation
+     * possible to enqueue the mutation
      */
     @NonNull
-    <T extends Model> Completable enqueue(@NonNull PendingMutation<T> pendingMutation) {
-        Objects.requireNonNull(pendingMutation);
-
-        // defer() the creation of a Completable, until someone subscribes enqueue().
-        // When they do, create() a Completable that wraps a save() call to LocalStorageAdapter.
-        return Completable.defer(() -> Completable.create(subscriber -> {
-            // Convert the PendingMutation (that we want to store) into a Record
-            PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
-            // Save it.
-            storage.save(record, StorageItemChange.Initiator.SYNC_ENGINE,
-                saved -> {
-                    // The return value is a record that we saved a record.
-                    // So, we would have to "unwrap" it, to get the item we saved, out.
-                    // Forget that. We know the save succeeded, so just emit the
-                    // original thing enqueue() got as a param.
-                    LOG.info("Successfully enqueued " + pendingMutation);
-                    pendingMutations.onNext(pendingMutation);
-                    subscriber.onComplete();
-                },
-                error -> {
-                    pendingMutations.onError(error);
-                    subscriber.onError(error);
-                }
-            );
-        }));
-    }
-
-    /**
-     * Observe the {@link MutationOutbox}, for newly enqueued {@link PendingMutation}s.
-     * The {@link SyncProcessor} may invoke this method to consume items out of the outbox. After
-     * processing an item on this observable, that item should be removed from the
-     * MutationOutbox via {@link #remove(PendingMutation)}.
-     * @return An observable stream of items that have yet to be published via the network
-     */
-    @WorkerThread
-    @NonNull
-    Observable<PendingMutation<? extends Model>> observe() {
-        return pendingMutations
-            .observeOn(Schedulers.io())
-            .subscribeOn(Schedulers.io())
-            .startWith(previouslyUnprocessedMutations());
-    }
+    <T extends Model> Completable enqueue(@NonNull PendingMutation<T> incomingMutation);
 
     /**
      * Remove an item from the outbox. The {@link SyncProcessor} calls this after it successfully
@@ -149,47 +81,33 @@ final class MutationOutbox {
      *         -- or, emits an error, if unable to delete it
      */
     @NonNull
-    <T extends Model> Completable remove(PendingMutation<T> pendingMutation) {
-        // defer() creation of the Completable until someone subscribe()s via remove() method.
-        // At that time, create() a Completable that wraps a call to LocalStorageAdapter#delete(...).
-        return Completable.defer(() -> Completable.create(subscriber -> {
-            // Convert the PendingMutation into a Record
-            PendingMutation.PersistentRecord record = converter.toRecord(pendingMutation);
-            // Delete it.
-            storage.delete(
-                record,
-                StorageItemChange.Initiator.SYNC_ENGINE,
-                ignored -> subscriber.onComplete(),
-                subscriber::onError
-            );
-        }));
-    }
+    <T extends Model> Completable remove(@NonNull PendingMutation<T> pendingMutation);
 
     /**
-     * Builds an Observable stream onto which any/all previously unhandled mutations are emitted.
-     * The {@link PendingMutation}s on this stream are taken out of durable storage.
-     * That storage may still contain mutations, perhaps remaining from a previously-terminated session.
-     * This contents of this stream should be processed whenever the {@link Orchestrator} comes online.
-     * @return An observable stream of mutations that weren't handled in the last session
+     * Take a peek at the next item in the outbox.
+     * @return The next pending mutation, if there is one. Null otherwise.
      */
-    private Observable<PendingMutation<? extends Model>> previouslyUnprocessedMutations() {
-        // defer() creation of this Observable until someone subscribe()s to previouslyUnprocessedMutations()
-        // when they do, respond by create()ing an Observable which emits the results of a
-        // query to LocalStorageAdapter, for any existing instances of PendingMutation.Record.
-        return Observable.defer(() -> Observable.create(emitter ->
-            storage.query(PendingMutation.PersistentRecord.class,
-                results -> {
-                    while (results.hasNext()) {
-                        try {
-                            emitter.onNext(converter.fromRecord(results.next()));
-                        } catch (DataStoreException conversionFailure) {
-                            emitter.onError(conversionFailure);
-                        }
-                    }
-                    emitter.onComplete();
-                },
-                emitter::onError
-            )
-        ));
+    @Nullable
+    PendingMutation<? extends Model> peek();
+
+    /**
+     * Observe the enqueue events that occur in the mutation outbox.
+     * When one is received, a consumer should inspect {@link #peek()},
+     * to consume the pending mutations in the outbox. Note that it is possible
+     * that the contents of the outbox has changed since the event was dispatched.
+     * @return A stream of {@link OutboxEvent}
+     */
+    @NonNull
+    Observable<OutboxEvent> events();
+
+    /**
+     * Different types of events that may occur in the {@link MutationOutbox}.
+     */
+    enum OutboxEvent {
+        /**
+         * There is content available in the Mutation Outbox.
+         */
+        CONTENT_AVAILABLE
     }
 }
+

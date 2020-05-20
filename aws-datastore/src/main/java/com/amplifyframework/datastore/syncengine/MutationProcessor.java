@@ -30,6 +30,7 @@ import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
 import io.reactivex.Single;
@@ -41,15 +42,15 @@ import io.reactivex.schedulers.Schedulers;
  * {@link AppSync}. The responses to these mutations are themselves forwarded to the Merger,
  * which may again modify the store.
  */
-@SuppressWarnings("CodeBlock2Expr")
 final class MutationProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long ITEM_PROCESSING_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private final VersionRepository versionRepository;
     private final Merger merger;
     private final AppSync appSync;
     private final MutationOutbox mutationOutbox;
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable ongoingOperationsDisposable;
 
     MutationProcessor(
             @NonNull Merger merger,
@@ -60,7 +61,7 @@ final class MutationProcessor {
         this.versionRepository = Objects.requireNonNull(versionRepository);
         this.appSync = Objects.requireNonNull(appSync);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
-        this.disposable = new CompositeDisposable();
+        this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
     /**
@@ -72,16 +73,39 @@ final class MutationProcessor {
      * it again later, when network conditions become favorable again.
      */
     void startDrainingMutationOutbox() {
-        disposable.add(
-            mutationOutbox.observe()
-                .subscribeOn(Schedulers.io())
-                .observeOn(Schedulers.io())
-                .flatMapCompletable(this::processOutboxItem)
-                .subscribe(
-                    () -> LOG.warn("Observation of mutation outbox was completed."),
-                    error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+        ongoingOperationsDisposable.add(mutationOutbox.events()
+            .doOnSubscribe(disposable ->
+                LOG.info(
+                    "Started processing the mutation outbox. " +
+                        "Pending mutations will be published to the cloud."
                 )
+            )
+            .startWith(MutationOutbox.OutboxEvent.CONTENT_AVAILABLE) // To start draining immediately
+            .subscribeOn(Schedulers.single())
+            .observeOn(Schedulers.single())
+            .flatMapCompletable(event -> drainMutationOutbox())
+            .subscribe(
+                () -> LOG.warn("Observation of mutation outbox was completed."),
+                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+            )
         );
+    }
+
+    private Completable drainMutationOutbox() {
+        PendingMutation<? extends Model> next;
+        do {
+            next = mutationOutbox.peek();
+            if (next == null) {
+                return Completable.complete();
+            }
+            boolean itemFailedToProcess = !processOutboxItem(next)
+                .blockingAwait(ITEM_PROCESSING_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            if (itemFailedToProcess) {
+                return Completable.error(new DataStoreException(
+                    "Failed to process " + next, "Check your internet connection."
+                ));
+            }
+        } while (true);
     }
 
     /**
@@ -89,7 +113,7 @@ final class MutationProcessor {
      * @return True if the mutation processor is subscribed the mutation outbox.
      */
     boolean isDrainingMutationOutbox() {
-        return disposable.size() > 0;
+        return ongoingOperationsDisposable.size() > 0;
     }
 
     /**
@@ -101,14 +125,20 @@ final class MutationProcessor {
     private <T extends Model> Completable processOutboxItem(PendingMutation<T> mutationOutboxItem) {
         // First, publish the mutation over the network.
         return publishToNetwork(mutationOutboxItem)
-            // Merge the response back into the local store.
-            .flatMapCompletable(merger::merge)
-            // Lastly, remove the item from the outbox, so we don't process it again.
-            .andThen(mutationOutbox.remove(mutationOutboxItem))
-            .andThen(Completable.fromAction(() -> {
-                LOG.info("Pending mutation was published up to Cloud: " + mutationOutboxItem);
+            .flatMapCompletable(mutation ->
+                // Once the server knows about it, it's safe to remove from the outbox.
+                // This is done before merging, because the merger will refuse to merge
+                // if there are outstanding mutations in the outbox.
+                mutationOutbox.remove(mutationOutboxItem).andThen(merger.merge(mutation))
+            )
+            .doOnComplete(() -> {
+                LOG.debug(
+                    "Pending mutation was published to cloud successfully, " +
+                        "and removed from the mutation outbox: " + mutationOutboxItem
+                );
                 announceSuccessfulPublication(mutationOutboxItem);
-            }));
+            })
+            .doOnError(error -> LOG.warn("Failed to publish a local change = " + mutationOutboxItem, error));
     }
 
     /**
@@ -117,16 +147,18 @@ final class MutationProcessor {
      * @param <T> Type of model
      */
     private <T extends Model> void announceSuccessfulPublication(PendingMutation<T> processedMutation) {
-        HubEvent<PendingMutation<? extends Model>> publishedToCloudEvent =
-            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation);
-        Amplify.Hub.publish(HubChannel.DATASTORE, publishedToCloudEvent);
+        Amplify.Hub.publish(
+            HubChannel.DATASTORE,
+            HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
+        );
     }
 
     /**
      * Don't process any more mutations.
      */
     void stopDrainingMutationOutbox() {
-        disposable.clear();
+        ongoingOperationsDisposable.dispose();
+        //disposable.clear();
     }
 
     /**
@@ -154,11 +186,12 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch an update mutation
     private <T extends Model> Single<ModelWithMetadata<T>> update(PendingMutation<T> mutation) {
-        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
-            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
-                appSync.update(model, version, onSuccess, onError);
-            });
-        });
+        final T updatedItem = mutation.getMutatedItem();
+        return versionRepository.findModelVersion(updatedItem).flatMap(version ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) ->
+                appSync.update(model, version, onSuccess, onError)
+            )
+        );
     }
 
     // For an item in the outbox, dispatch a create mutation
@@ -168,13 +201,13 @@ final class MutationProcessor {
 
     // For an item in the outbox, dispatch a delete mutation
     private <T extends Model> Single<ModelWithMetadata<T>> delete(PendingMutation<T> mutation) {
-        return versionRepository.findModelVersion(mutation.getMutatedItem()).flatMap(version -> {
-            return publishWithStrategy(mutation, (model, onSuccess, onError) -> {
-                final Class<T> modelClass = mutation.getClassOfMutatedItem();
-                final String modelId = mutation.getMutatedItem().getId();
-                appSync.delete(modelClass, modelId, version, onSuccess, onError);
-            });
-        });
+        final T deletedItem = mutation.getMutatedItem();
+        final Class<T> deletedItemClass = mutation.getClassOfMutatedItem();
+        return versionRepository.findModelVersion(deletedItem).flatMap(version ->
+            publishWithStrategy(mutation, (model, onSuccess, onError) ->
+                appSync.delete(deletedItemClass, deletedItem.getId(), version, onSuccess, onError)
+            )
+        );
     }
 
     /**
@@ -187,24 +220,25 @@ final class MutationProcessor {
      */
     private <T extends Model> Single<ModelWithMetadata<T>> publishWithStrategy(
             PendingMutation<T> mutation, PublicationStrategy<T> publicationStrategy) {
-        return Single.defer(() -> Single.create(subscriber -> {
+        T mutatedItem = mutation.getMutatedItem();
+        String modelClassName = mutation.getClassOfMutatedItem().getSimpleName();
+        return Single.defer(() -> Single.create(subscriber ->
             publicationStrategy.publish(
-                mutation.getMutatedItem(),
+                mutatedItem,
                 result -> {
                     if (!result.hasErrors() && result.hasData()) {
                         subscriber.onSuccess(result.getData());
                         return;
                     }
                     subscriber.onError(new DataStoreException(
-                        "Failed to publish an item to the network. AppSync response contained errors: "
-                            + result.getErrors(),
-                        "Verify that your endpoint is configured to accept "
-                            + mutation.getClassOfMutatedItem().getSimpleName() + " models."
+                        "Mutation failed. Failed mutation = " + mutation + ". " +
+                            "AppSync response contained errors = " + result.getErrors(),
+                        "Verify that your AppSync endpoint is able to store " + modelClassName + " models."
                     ));
                 },
                 subscriber::onError
-            );
-        }));
+            )
+        ));
     }
 
     /**

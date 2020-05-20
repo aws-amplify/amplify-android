@@ -33,13 +33,17 @@ import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
 import com.amplifyframework.logging.Logger;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
+import io.reactivex.ObservableSource;
+import io.reactivex.Observer;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.ReplaySubject;
@@ -51,13 +55,13 @@ import io.reactivex.subjects.ReplaySubject;
  * marries mutated models back into the local DataStore, through the {@link Merger}.
  */
 final class SubscriptionProcessor {
-    private static final long SUBSCRIPTION_START_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+    private static final long SUBSCRIPTION_START_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(10);
 
     private final AppSync appSync;
     private final ModelProvider modelProvider;
     private final Merger merger;
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable ongoingOperationsDisposable;
     private final ReplaySubject<SubscriptionEvent<? extends Model>> buffer;
 
     /**
@@ -73,7 +77,7 @@ final class SubscriptionProcessor {
         this.appSync = Objects.requireNonNull(appSync);
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.merger = Objects.requireNonNull(merger);
-        this.disposable = new CompositeDisposable();
+        this.ongoingOperationsDisposable = new CompositeDisposable();
         this.buffer = ReplaySubject.create();
     }
 
@@ -87,9 +91,15 @@ final class SubscriptionProcessor {
                 subscriptions.add(subscriptionObservable(appSync, subscriptionType, clazz));
             }
         }
-        disposable.add(Observable.merge(subscriptions)
+        ongoingOperationsDisposable.add(Observable.merge(subscriptions)
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io())
+            .doOnSubscribe(disposable ->
+                LOG.info(String.format(Locale.US,
+                    "Began buffering subscription events for remote mutations %s to Cloud models of types %s.",
+                    modelProvider.models(), Arrays.toString(SubscriptionType.values())
+                ))
+            )
             .subscribe(
                 buffer::onNext,
                 buffer::onError,
@@ -97,7 +107,7 @@ final class SubscriptionProcessor {
             ));
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // (Class<T>) modelWithMetadata.getModel().getClass()
     private static <T extends Model> Observable<SubscriptionEvent<? extends Model>>
             subscriptionObservable(AppSync appSync, SubscriptionType subscriptionType, Class<T> clazz) {
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
@@ -118,11 +128,13 @@ final class SubscriptionProcessor {
             );
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
-        .doOnError(exception -> {
-            LOG.warn("An error occurred with one of the subscriptions to the remote DataStore for " +
-                "model " + clazz.getSimpleName() + " " + subscriptionType.name(),
-                exception.getCause());
-        })
+        .doOnError(subscriptionError ->
+            LOG.warn(String.format(Locale.US,
+                "An error occurred on the remote %s subscription for model %s.",
+                clazz.getSimpleName(), subscriptionType.name()
+            ), subscriptionError)
+        )
+        .onErrorResumeNext((ObservableSource<GraphQLResponse<ModelWithMetadata<T>>>) Observer::onComplete)
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .map(SubscriptionProcessor::unwrapResponse)
@@ -139,8 +151,11 @@ final class SubscriptionProcessor {
      * This should be called after {@link #startSubscriptions()}.
      */
     void startDrainingMutationBuffer() {
-        disposable.add(
+        ongoingOperationsDisposable.add(
             buffer
+                .doOnSubscribe(disposable ->
+                    LOG.info("Starting processing subscription data buffer.")
+                )
                 .flatMapCompletable(mutation -> merger.merge(mutation.modelWithMetadata()))
                 .subscribe(
                     () -> LOG.warn("Reading from subscriptions buffer is completed."),
@@ -155,7 +170,7 @@ final class SubscriptionProcessor {
      * @return true if there are listeners. False otherwise.
      */
     boolean isObservingSubscriptionEvents() {
-        return disposable.size() > 0;
+        return ongoingOperationsDisposable.size() > 0;
     }
 
     /**
@@ -171,7 +186,7 @@ final class SubscriptionProcessor {
      * Stop any active subscriptions, and stop draining the mutation buffer.
      */
     void stopAllSubscriptionActivity() {
-        disposable.clear();
+        ongoingOperationsDisposable.clear();
     }
 
     @VisibleForTesting

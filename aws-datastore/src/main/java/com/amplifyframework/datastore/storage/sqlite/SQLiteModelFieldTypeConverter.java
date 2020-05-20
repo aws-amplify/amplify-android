@@ -21,13 +21,11 @@ import androidx.annotation.Nullable;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.core.Amplify;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelField;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.core.model.types.JavaFieldType;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.model.ModelFieldTypeConverter;
@@ -106,11 +104,11 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 final Gson jsonConverter = gson != null ? gson : new Gson();
                 return jsonConverter.toJson(value);
             case DATE:
-                return ((AWSDate) value).format();
+                return ((Temporal.Date) value).format();
             case DATE_TIME:
-                return ((AWSDateTime) value).format();
+                return ((Temporal.DateTime) value).format();
             case TIME:
-                return ((AWSTime) value).format();
+                return ((Temporal.Time) value).format();
             default:
                 LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", fieldType));
                 return null;
@@ -139,7 +137,7 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
             }
 
             final String valueAsString = cursor.getString(columnIndex);
-            LOGGER.debug(String.format(
+            LOGGER.verbose(String.format(
                     "Attempt to convert value \"%s\" from field %s of type %s from model %s",
                     valueAsString, field.getName(), field.getType(), modelType.getSimpleName()
             ));
@@ -162,11 +160,11 @@ public final class SQLiteModelFieldTypeConverter implements ModelFieldTypeConver
                 case LONG:
                     return cursor.getLong(columnIndex);
                 case DATE:
-                    return new AWSDate(valueAsString);
+                    return new Temporal.Date(valueAsString);
                 case DATE_TIME:
-                    return new AWSDateTime(valueAsString);
+                    return new Temporal.DateTime(valueAsString);
                 case TIME:
-                    return new AWSTime(valueAsString);
+                    return new Temporal.Time(valueAsString);
                 default:
                     LOGGER.warn(String.format("Field of type %s is not supported. Fallback to null.", javaFieldType));
                     return null;

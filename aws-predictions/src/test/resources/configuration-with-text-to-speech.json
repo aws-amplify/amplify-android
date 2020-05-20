@@ -1,0 +1,11 @@
+{
+  "defaultRegion": "us-west-1",
+  "convert": {
+    "speechGenerator": {
+      "voice": "Aditi",
+      "language": "en-IN",
+      "region": "us-west-2",
+      "defaultNetworkPolicy": "auto"
+    }
+  }
+}

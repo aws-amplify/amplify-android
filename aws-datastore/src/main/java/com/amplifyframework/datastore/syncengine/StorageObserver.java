@@ -38,14 +38,14 @@ final class StorageObserver {
 
     private final LocalStorageAdapter localStorageAdapter;
     private final MutationOutbox mutationOutbox;
-    private final CompositeDisposable disposable;
+    private final CompositeDisposable ongoingOperationsDisposable;
 
     StorageObserver(
             @NonNull LocalStorageAdapter localStorageAdapter,
             @NonNull MutationOutbox mutationOutbox) {
         this.localStorageAdapter = Objects.requireNonNull(localStorageAdapter);
         this.mutationOutbox = Objects.requireNonNull(mutationOutbox);
-        this.disposable = new CompositeDisposable();
+        this.ongoingOperationsDisposable = new CompositeDisposable();
     }
 
     /**
@@ -53,7 +53,13 @@ final class StorageObserver {
      * by the sync engine, then place that change into the mutation outbox.
      */
     void startObservingStorageChanges() {
-        disposable.add(streamOfStorageChanges()
+        ongoingOperationsDisposable.add(
+            Observable.<StorageItemChange<? extends Model>>create(emitter ->
+                localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
+            )
+            .doOnSubscribe(disposable ->
+                LOG.info("Now observing local storage. Local changes will be enqueued to mutation outbox.")
+            )
             .filter(possiblyCyclicChange -> {
                 // Don't continue if the storage change was caused by the sync engine itself
                 return !StorageItemChange.Initiator.SYNC_ENGINE.equals(possiblyCyclicChange.initiator());
@@ -73,7 +79,7 @@ final class StorageObserver {
      * @return true if there are listeners. False otherwise.
      */
     boolean isObservingStorageChanges() {
-        return disposable.size() > 0;
+        return ongoingOperationsDisposable.size() > 0;
     }
 
     private <T extends Model> PendingMutation<T> toPendingMutation(StorageItemChange<T> change) {
@@ -93,12 +99,6 @@ final class StorageObserver {
      * Stop observing changes in the storage adapter.
      */
     void stopObservingStorageChanges() {
-        disposable.clear();
-    }
-
-    private Observable<StorageItemChange<? extends Model>> streamOfStorageChanges() {
-        return Observable.create(emitter ->
-            localStorageAdapter.observe(emitter::onNext, emitter::onError, emitter::onComplete)
-        );
+        ongoingOperationsDisposable.clear();
     }
 }

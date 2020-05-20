@@ -15,10 +15,7 @@
 
 package com.amplifyframework.api.aws;
 
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
-import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
@@ -34,11 +31,11 @@ final class TemporalDeserializers {
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSDateDeserializer implements JsonDeserializer<AWSDate> {
+    static class AWSDateDeserializer implements JsonDeserializer<Temporal.Date> {
         @Override
-        public AWSDate deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        public Temporal.Date deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            return new AWSDate(json.getAsString());
+            return new Temporal.Date(json.getAsString());
         }
     }
 
@@ -47,11 +44,11 @@ final class TemporalDeserializers {
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSDateTimeDeserializer implements JsonDeserializer<AWSDateTime> {
+    static class AWSDateTimeDeserializer implements JsonDeserializer<Temporal.DateTime> {
         @Override
-        public AWSDateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        public Temporal.DateTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            return new AWSDateTime(json.getAsString());
+            return new Temporal.DateTime(json.getAsString());
         }
     }
 
@@ -60,11 +57,11 @@ final class TemporalDeserializers {
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSTimeDeserializer implements JsonDeserializer<AWSTime> {
+    static class AWSTimeDeserializer implements JsonDeserializer<Temporal.Time> {
         @Override
-        public AWSTime deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        public Temporal.Time deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            return new AWSTime(json.getAsString());
+            return new Temporal.Time(json.getAsString());
         }
     }
 
@@ -75,11 +72,11 @@ final class TemporalDeserializers {
      *
      * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
      */
-    static class AWSTimestampDeserializer implements JsonDeserializer<AWSTimestamp> {
+    static class AWSTimestampDeserializer implements JsonDeserializer<Temporal.Timestamp> {
         @Override
-        public AWSTimestamp deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+        public Temporal.Timestamp deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
                 throws JsonParseException {
-            return new AWSTimestamp(json.getAsLong(), TimeUnit.SECONDS);
+            return new Temporal.Timestamp(json.getAsLong(), TimeUnit.SECONDS);
         }
     }
 }

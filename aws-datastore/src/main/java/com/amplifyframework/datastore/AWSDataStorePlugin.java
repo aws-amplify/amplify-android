@@ -24,7 +24,7 @@ import androidx.annotation.WorkerThread;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
-import com.amplifyframework.api.GraphQlBehavior;
+import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
@@ -132,7 +132,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
     /**
      * Constructs an {@link AWSDataStorePlugin} which can warehouse the model types provided by the
      * supplied {@link ModelProvider}. If remote synchronization is enabled, it will be performed
-     * through the provided {@link GraphQlBehavior}.
+     * through the provided {@link GraphQLBehavior}.
      * @param modelProvider Provides the set of models to be warehouse-able by this system
      * @param api Interface to a remote system where models will be synchronized
      */

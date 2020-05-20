@@ -15,7 +15,6 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
@@ -54,6 +53,7 @@ import io.reactivex.schedulers.Schedulers;
  */
 final class SyncProcessor {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private final ModelProvider modelProvider;
     private final ModelSchemaRegistry modelSchemaRegistry;
     private final SyncTimeRegistry syncTimeRegistry;
@@ -113,11 +113,14 @@ final class SyncProcessor {
                         // For each ModelWithMetadata, merge it into the local store.
                         .flatMapCompletable(merger::merge)
                     )
-                    .doOnError(exception -> {
-                        LOG.warn("Remote synchronization failed to start due to an exception.", exception);
-                    })
-                    .onErrorComplete()
                     .andThen(syncTimeRegistry.saveLastSyncTime(modelClass, SyncTime.now()))
+                    .doOnError(failureToSync ->
+                        LOG.warn("Initial cloud sync failed.", failureToSync)
+                    )
+                    .doOnComplete(() ->
+                        LOG.info("Successfully sync'd down model state from cloud.")
+                    )
+                    .onErrorComplete()
             );
     }
 
@@ -160,11 +163,15 @@ final class SyncProcessor {
     private <T extends Model> Single<Iterable<ModelWithMetadata<T>>> syncModel(
             Class<T> modelClass, SyncTime syncTime) {
         final Long lastSyncTimeAsLong = syncTime.exists() ? syncTime.toLong() : null;
-        return Single.create(emitter -> {
+        return Single.<Iterable<ModelWithMetadata<T>>>create(emitter -> {
             final Cancelable cancelable =
                 appSync.sync(modelClass, lastSyncTimeAsLong, metadataEmitter(emitter), emitter::onError);
             emitter.setDisposable(AsyncUtils.asDisposable(cancelable));
-        });
+        }).doOnSuccess(results ->
+            LOG.debug("Successfully sync'd down cloud state for model type = " + modelClass.getSimpleName())
+        ).doOnError(failureToSync ->
+            LOG.warn("Failed to sync down cloud state for model type = " + modelClass.getSimpleName(), failureToSync)
+        );
     }
 
     private static <T extends Model> Consumer<GraphQLResponse<Iterable<ModelWithMetadata<T>>>> metadataEmitter(
@@ -243,7 +250,6 @@ final class SyncProcessor {
             return Builder.this;
         }
 
-        @SuppressLint("SyntheticAccessor")
         @NonNull
         @Override
         public SyncProcessor build() {

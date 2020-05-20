@@ -40,8 +40,10 @@ import io.reactivex.Completable;
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
+
     private final SubscriptionProcessor subscriptionProcessor;
     private final SyncProcessor syncProcessor;
+    private final MutationOutbox mutationOutbox;
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
 
@@ -76,7 +78,7 @@ public final class Orchestrator {
         Objects.requireNonNull(appSync);
         Objects.requireNonNull(localStorageAdapter);
 
-        MutationOutbox mutationOutbox = new MutationOutbox(localStorageAdapter);
+        this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
         Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
         SyncTimeRegistry syncTimeRegistry = new SyncTimeRegistry(localStorageAdapter);
@@ -101,7 +103,26 @@ public final class Orchestrator {
      * @throws DataStoreException If an error occurs while starting the {@link Orchestrator}
      */
     @NonNull
-    public synchronized Completable start() {
+    public Completable start() {
+        return mutationOutbox.load()
+            .andThen(Completable.fromAction(() -> {
+                storageObserver.startObservingStorageChanges();
+                subscriptionProcessor.startSubscriptions();
+                syncProcessor.hydrate().blockingAwait();
+                mutationProcessor.startDrainingMutationOutbox();
+                subscriptionProcessor.startDrainingMutationBuffer();
+                LOG.info("Cloud synchronization is now fully active.");
+            }));
+    }
+
+    /**
+     * Start performing sync operations between the local storage adapter
+     * and the remote GraphQL endpoint.
+     * @return A Completable operation to start the sync engine orchestrator
+     * @throws DataStoreException If an error occurs while starting the {@link Orchestrator}
+     */
+    @NonNull
+    public synchronized Completable mystart() {
         return Completable.fromAction(() -> {
             if (!storageObserver.isObservingStorageChanges()) {
                 LOG.debug("Starting local storage observer.");
@@ -130,11 +151,12 @@ public final class Orchestrator {
     /**
      * Stop all model synchronization.
      */
-    public synchronized void stop() {
-        LOG.debug("Stopping remote synchronization.");
+    public void stop() {
+        LOG.info("Intentionally stopping cloud synchronization, now.");
         storageObserver.stopObservingStorageChanges();
         subscriptionProcessor.stopAllSubscriptionActivity();
         mutationProcessor.stopDrainingMutationOutbox();
         LOG.debug("Stopped remote synchronization.");
     }
 }
+

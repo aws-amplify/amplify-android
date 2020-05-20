@@ -20,9 +20,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -33,18 +30,15 @@ import java.util.concurrent.TimeUnit;
 /**
  * Configuration options for {@link AWSDataStorePlugin}.
  */
+@SuppressWarnings("WeakerAccess") // This is a public API. Public methods available to user's package(s).
 public final class DataStoreConfiguration {
     static final String PLUGIN_CONFIG_KEY = "awsDataStorePlugin";
     @VisibleForTesting
     static final long DEFAULT_SYNC_INTERVAL_MINUTES = TimeUnit.DAYS.toMinutes(1);
     @VisibleForTesting
-    static final long DEFAULT_SYNC_INTERVAL_MS = TimeUnit.MINUTES.toMillis(DEFAULT_SYNC_INTERVAL_MINUTES);
-    @VisibleForTesting 
     static final int DEFAULT_SYNC_MAX_RECORDS = 10_000;
     @VisibleForTesting 
     static final int DEFAULT_SYNC_PAGE_SIZE = 1_000;
-
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
 
     private final DataStoreErrorHandler dataStoreErrorHandler;
     private final DataStoreConflictHandler dataStoreConflictHandler;
@@ -81,11 +75,11 @@ public final class DataStoreConfiguration {
     /**
      * Begin building a new instance of {@link DataStoreConfiguration} by reading DataStore
      * settings from the config file and an optional set of user-provided overrides.
-     * @param pluginJson DataStore plugin configuration from amplicationconfiguration.json
-     * @param userProvidedConfiguration An instance of {@DataStoreConfiguration} with settings specified by the user
+     * @param pluginJson DataStore plugin configuration from amplifyconfiguration.json
+     * @param userProvidedConfiguration An instance of {@link DataStoreConfiguration}
+     *                                 with settings specified by the user
      *                                  which will be used as overrides.
      * @return A new builder instance
-     * @throws DataStoreException exception thrown if there's an unexpected configuration key or
      * an invalid configuration value
      */
     @NonNull
@@ -98,7 +92,6 @@ public final class DataStoreConfiguration {
      * Begin building a new instance of {@link DataStoreConfiguration}.
      * @param pluginJson The dataStore configuration as a JSONObject
      * @return A new builder instance
-     * @throws DataStoreException exception thrown if there's an unexpected configuration key or
      * an invalid configuration value
      */
     @NonNull

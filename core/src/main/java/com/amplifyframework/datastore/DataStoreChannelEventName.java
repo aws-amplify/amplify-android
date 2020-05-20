@@ -47,7 +47,7 @@ public enum DataStoreChannelEventName {
     private final String hubEventName;
 
     /**
-     * Enumerate the name of an even that is published on Hub, on the {@link HubChannel#DATASTORE} channel.
+     * Enumerate the name of an event that is published on Hub, on the {@link HubChannel#DATASTORE} channel.
      * @param hubEventName The name of an event to use when creating an {@link HubEvent}
      */
     DataStoreChannelEventName(@NonNull String hubEventName) {

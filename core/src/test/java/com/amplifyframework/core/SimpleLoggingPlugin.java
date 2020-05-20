@@ -20,9 +20,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.util.ObjectsCompat;
 
-import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.plugin.Plugin;
-import com.amplifyframework.logging.LogLevel;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.logging.LoggingPlugin;
 
@@ -91,25 +89,7 @@ public final class SimpleLoggingPlugin extends LoggingPlugin<Void> {
 
     @NonNull
     @Override
-    public Logger getDefaultLogger() {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public Logger forNamespaceAndThreshold(@Nullable String namespace, @Nullable LogLevel threshold) {
-        return null;
-    }
-
-    @NonNull
-    @Override
     public Logger forNamespace(@Nullable String namespace) {
-        return null;
-    }
-
-    @NonNull
-    @Override
-    public Logger forCategory(@NonNull CategoryType categoryType) {
         return null;
     }
 }
