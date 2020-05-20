@@ -17,6 +17,8 @@ package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.storage.StorageException;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+
 /**
  * Internal interface for providing AWS specific Auth information.
  */
@@ -27,4 +29,12 @@ public interface AWSAuthProvider {
      * @throws StorageException  If the proper Auth plugin isn't added or identity id is unavailable
      */
     String getIdentityId() throws StorageException;
+
+
+    /**
+     * Get an object which implements the AWSCredentialsProvider interface to get the credentials needed by storage.
+     * @return an object which implements the AWSCredentialsProvider interface to get the credentials needed by storage
+     * @throws StorageException  If the proper Auth plugin isn't added
+     */
+    AWSCredentialsProvider getCredentialsProvider() throws StorageException;
 }

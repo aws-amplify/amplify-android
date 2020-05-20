@@ -19,13 +19,13 @@ import android.content.Context;
 import android.content.Intent;
 import androidx.annotation.NonNull;
 
+import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
+import com.amplifyframework.storage.s3.AWSAuthProvider;
 import com.amplifyframework.storage.s3.utils.S3Keys;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferObserver;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferService;
 import com.amazonaws.mobileconnectors.s3.transferutility.TransferUtility;
@@ -53,6 +53,7 @@ public final class AWSS3StorageService implements StorageService {
     private final String bucket;
     private final TransferUtility transferUtility;
     private final AmazonS3Client client;
+    private final AWSAuthProvider awsAuthProvider;
 
     private boolean transferUtilityServiceStarted = false;
 
@@ -61,37 +62,45 @@ public final class AWSS3StorageService implements StorageService {
      * @param region Region in which the S3 endpoint resides
      * @param context An Android Context
      * @param bucket An S3 bucket name
+     * @param awsAuthProvider Provides AWS specific Auth information
      * @param transferAcceleration Whether or not transfer acceleration
      *                             should be enabled
+     * @throws IllegalStateException Storage requires the correct Auth plugin to be added in order to
      */
     public AWSS3StorageService(
             @NonNull Context context,
             @NonNull Region region,
             @NonNull String bucket,
+            @NonNull AWSAuthProvider awsAuthProvider,
             boolean transferAcceleration
     ) {
-        this.context = context;
-        this.bucket = bucket;
-        this.client = createS3Client(region);
+        try {
+            this.context = context;
+            this.bucket = bucket;
+            this.awsAuthProvider = awsAuthProvider;
+            this.client = createS3Client(region);
 
-        if (transferAcceleration) {
-            client.setS3ClientOptions(S3ClientOptions.builder()
-                    .setAccelerateModeEnabled(true)
-                    .build()
-            );
+            if (transferAcceleration) {
+                client.setS3ClientOptions(S3ClientOptions.builder()
+                        .setAccelerateModeEnabled(true)
+                        .build()
+                );
+            }
+
+            this.transferUtility = TransferUtility.builder()
+                    .context(this.context)
+                    .s3Client(client)
+                    .build();
+        } catch (StorageException exception) {
+            throw new IllegalStateException(
+                "AWSS3StoragePlugin depends on AWSCognitoAuthPlugin but it is currently missing.");
         }
-
-        this.transferUtility = TransferUtility.builder()
-                .context(this.context)
-                .s3Client(client)
-                .build();
     }
 
-    private AmazonS3Client createS3Client(@NonNull Region region) {
-        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+    private AmazonS3Client createS3Client(@NonNull Region region) throws StorageException {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
-        return new AmazonS3Client(credentialsProvider, region, configuration);
+        return new AmazonS3Client(awsAuthProvider.getCredentialsProvider(), region, configuration);
     }
 
     /**

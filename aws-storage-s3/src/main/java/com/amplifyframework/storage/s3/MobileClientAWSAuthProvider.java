@@ -18,6 +18,7 @@ package com.amplifyframework.storage.s3;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.storage.StorageException;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 
 /**
@@ -39,6 +40,11 @@ public final class MobileClientAWSAuthProvider implements AWSAuthProvider {
         }
     }
 
+    @Override
+    public AWSCredentialsProvider getCredentialsProvider() throws StorageException {
+        return getMobileClient();
+    }
+
     /**
      * TODO: This is a stop gap measure to quickly and safely integrate the Auth Category before GA. However,
      *  the proper solution is to have categories get AWS credentials from Auth's fetchAuthSession method cast to
@@ -52,10 +58,9 @@ public final class MobileClientAWSAuthProvider implements AWSAuthProvider {
             return (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
         } catch (IllegalStateException exception) {
             throw new StorageException(
-                    "AWSS3StoragePlugin depends on AWSCognitoAuthPlugin but it is currently missing",
-                    exception,
-                    "Before configuring Amplify, where you added AWSS3StoragePlugin, be sure to also add " +
-                            " AWSCognitoAuthPlugin."
+                "AWSS3StoragePlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                exception,
+                "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added AWSS3StoragePlugin."
             );
         }
     }

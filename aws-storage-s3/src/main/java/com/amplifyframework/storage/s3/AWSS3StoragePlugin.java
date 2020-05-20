@@ -81,14 +81,14 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
      */
     public AWSS3StoragePlugin() {
         this((context, region, bucket) ->
-                new AWSS3StorageService(context, region, bucket, false),
+                new AWSS3StorageService(context, region, bucket, new MobileClientAWSAuthProvider(), false),
                 new MobileClientAWSAuthProvider());
     }
 
     @VisibleForTesting
     AWSS3StoragePlugin(AWSAuthProvider awsAuthProvider) {
         this((context, region, bucket) ->
-                new AWSS3StorageService(context, region, bucket, false),
+                new AWSS3StorageService(context, region, bucket, awsAuthProvider, false),
                 awsAuthProvider);
     }
 
@@ -159,7 +159,8 @@ public final class AWSS3StoragePlugin extends StoragePlugin<AmazonS3Client> {
             throw new StorageException(
                     "Failed to create storage service.",
                     exception,
-                    "Have you initialized AWSMobileClient? See included exception for more details."
+                    "Did you make sure to add AWSCognitoAuthPlugin to Amplify? " +
+                            "Check the attached exception for more details."
             );
         }
 

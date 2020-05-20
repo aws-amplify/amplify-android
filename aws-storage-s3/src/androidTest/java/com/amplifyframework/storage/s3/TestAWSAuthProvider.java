@@ -17,6 +17,7 @@ package com.amplifyframework.storage.s3;
 
 import com.amplifyframework.storage.StorageException;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobile.client.AWSMobileClient;
 
 /**
@@ -35,5 +36,10 @@ public final class TestAWSAuthProvider implements AWSAuthProvider {
                     "Please check that you are logged in and that Auth is setup to support identity pools."
             );
         }
+    }
+
+    @Override
+    public AWSCredentialsProvider getCredentialsProvider() {
+        return AWSMobileClient.getInstance();
     }
 }
