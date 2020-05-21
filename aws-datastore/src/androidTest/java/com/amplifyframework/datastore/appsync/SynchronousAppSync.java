@@ -88,6 +88,20 @@ public final class SynchronousAppSync {
      * @param model An instance of the Model with the values to mutate
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
+     * @return Response data is from AppSync
+     * @throws DataStoreException On failure to obtain response data
+     */
+    @NonNull
+    public <T extends Model> GraphQLResponse<ModelWithMetadata<T>> update(
+        @NonNull T model, @NonNull Integer version) throws DataStoreException {
+        return update(model, version, null);
+    }
+
+    /**
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param model An instance of the Model with the values to mutate
+     * @param version The version of the model we have
+     * @param <T> The type of data in the response. Must extend Model.
      * @param predicate The condition to be applied to the update.
      * @return Response data is from AppSync
      * @throws DataStoreException On failure to obtain response data
@@ -105,7 +119,24 @@ public final class SynchronousAppSync {
      * @param clazz The class of the object being deleted
      * @param objectId ID id of the object to delete
      * @param version The version of the model we have
-     * @param version The condition to be applied to the delete.
+     * @param <T> The type of data in the response. Must extend Model.
+     * @return Response data from AppSync.
+     * @throws DataStoreException On failure to obtain response data
+     */
+    @SuppressWarnings("LineLength")
+    @NonNull
+    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(@NonNull Class<T> clazz,
+                                                                   @NonNull String objectId,
+                                                                   @NonNull Integer version) throws DataStoreException {
+        return delete(clazz, objectId, version, null);
+    }
+
+    /**
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param clazz The class of the object being deleted
+     * @param objectId ID id of the object to delete
+     * @param version The version of the model we have
+     * @param predicate The condition to be applied to the delete.
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data from AppSync.
      * @throws DataStoreException On failure to obtain response data

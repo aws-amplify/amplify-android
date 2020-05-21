@@ -80,6 +80,23 @@ public interface AppSync {
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param model An instance of the Model with the values to mutate
      * @param version The version of the model we have
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure Invoked on failure to obtain response data
+     * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
+     */
+    @NonNull
+    <T extends Model> Cancelable update(
+        @NonNull T model,
+        @NonNull Integer version,
+        @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+        @NonNull Consumer<DataStoreException> onFailure
+    );
+
+    /**
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param model An instance of the Model with the values to mutate
+     * @param version The version of the model we have
      * @param predicate Condition to use for the update.
      * @param onResponse Invoked when response data is available.
      * @param onFailure Invoked on failure to obtain response data
@@ -93,6 +110,25 @@ public interface AppSync {
             @Nullable QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure
+    );
+
+    /**
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     * @param clazz The class of the object being deleted
+     * @param objectId ID id of the object to delete
+     * @param version The version of the model we have
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure Invoked on failure to obtain response data
+     * @param <T> The type of data in the response. Must extend Model.
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
+     */
+    @NonNull
+    <T extends Model> Cancelable delete(
+        @NonNull Class<T> clazz,
+        @NonNull String objectId,
+        @NonNull Integer version,
+        @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+        @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**
