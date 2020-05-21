@@ -40,6 +40,7 @@ import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
+
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Field;
@@ -58,7 +59,7 @@ import java.util.Map;
  * with automatically generated GraphQL documents that follow
  * AppSync specifications.
  */
-public final class AppSyncGraphQLRequestFactory {
+final class AppSyncGraphQLRequestFactory {
     private static final int DEFAULT_QUERY_LIMIT = 1000;
     private static final int DEFAULT_LEVEL_DEPTH = 2;
 
@@ -110,7 +111,7 @@ public final class AppSyncGraphQLRequestFactory {
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
     }
 
-    public static <R, T extends Model> GraphQLRequest<R> buildPagedQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildPagedQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
             int limit,
@@ -149,7 +150,7 @@ public final class AppSyncGraphQLRequestFactory {
             if (predicate != null) {
                 variables.put("filter", parsePredicate(predicate));
             }
-            if(nextToken != null) {
+            if (nextToken != null) {
                 variables.put("nextToken", nextToken);
             }
             variables.put("limit", limit);

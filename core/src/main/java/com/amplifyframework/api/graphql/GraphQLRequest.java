@@ -25,7 +25,7 @@ import java.util.Map;
 
 /**
  * A request against a GraphQL endpoint.
- * @param <R> The type of data contained in the GraphQLResponse that results from this request.
+ * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
 public final class GraphQLRequest<R> {
     private final String document;
@@ -35,9 +35,9 @@ public final class GraphQLRequest<R> {
     private final VariablesSerializer variablesSerializer;
 
     /**
-     * Constructor for GraphQLRequest with
-     * specification for type of API call.
+     * Constructor for GraphQLRequest with specification for type of API call.
      * @param document query document to process
+     * @param responseType Type of R, the data contained in the GraphQLResponse expected from this request
      * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
     public GraphQLRequest(
@@ -49,11 +49,10 @@ public final class GraphQLRequest<R> {
     }
 
     /**
-     * Constructor for GraphQLRequest with
-     * specification for type of API call.
+     * Constructor for GraphQLRequest with specification for type of API call.
      * @param document query document to process
      * @param variables variables to be added
-     * @param responseType
+     * @param responseType Type of R, the data contained in the GraphQLResponse expected from this request
      * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
     public GraphQLRequest(
@@ -69,6 +68,11 @@ public final class GraphQLRequest<R> {
         this.variablesSerializer = variablesSerializer;
     }
 
+    /**
+     * Copy constructor for a GraphQLRequest.
+     * @param request GraphQLRequest to be copied
+     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
+     */
     public <R> GraphQLRequest(GraphQLRequest<R> request) {
         this.document = request.document;
         this.variables = new HashMap<>(request.variables);
@@ -77,6 +81,11 @@ public final class GraphQLRequest<R> {
         this.variablesSerializer = request.variablesSerializer;
     }
 
+    /**
+     * Returns a copy of the GraphQLRequest instance.
+     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
+     * @return Copy of the GraphQLRequest object
+     */
     public <R> GraphQLRequest<R> copy() {
         return new GraphQLRequest<R>(this);
     }
@@ -147,23 +156,11 @@ public final class GraphQLRequest<R> {
     }
 
     /**
-     * Returns the Type that should be used for deserializing the response (e.g. GraphQLRequest<Iterable<Post>>>)
+     * Returns the type of data in the GraphQLResponse expected from this request.
      * @return response type
      */
     public Type getResponseType() {
         return responseType;
-    }
-
-    /**
-     * An interface defining the method used to serialize a map of variables to go with a request.
-     */
-    public interface VariablesSerializer {
-        /**
-         * Takes a map and returns it as a serialized string.
-         * @param variables a map of the variables to go with a GraphQL request
-         * @return a string of the map properly serialized to be sent
-         */
-        String serialize(Map<String, Object> variables);
     }
 
     @Override
@@ -175,7 +172,7 @@ public final class GraphQLRequest<R> {
             return false;
         }
 
-        GraphQLRequest request = (GraphQLRequest) thatObject;
+        GraphQLRequest<?> request = (GraphQLRequest<?>) thatObject;
 
         return ObjectsCompat.equals(document, request.document) &&
                 ObjectsCompat.equals(fragments, request.fragments) &&
@@ -203,5 +200,17 @@ public final class GraphQLRequest<R> {
                 ", variables=\'" + variables + "\'" +
                 ", variablesSerializer=\'" + variablesSerializer + "\'" +
                 '}';
+    }
+
+    /**
+     * An interface defining the method used to serialize a map of variables to go with a request.
+     */
+    public interface VariablesSerializer {
+        /**
+         * Takes a map and returns it as a serialized string.
+         * @param variables a map of the variables to go with a GraphQL request
+         * @return a string of the map properly serialized to be sent
+         */
+        String serialize(Map<String, Object> variables);
     }
 }

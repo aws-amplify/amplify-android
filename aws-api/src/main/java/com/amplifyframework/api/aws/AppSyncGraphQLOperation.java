@@ -16,7 +16,6 @@
 package com.amplifyframework.api.aws;
 
 import android.annotation.SuppressLint;
-
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.AmplifyException;

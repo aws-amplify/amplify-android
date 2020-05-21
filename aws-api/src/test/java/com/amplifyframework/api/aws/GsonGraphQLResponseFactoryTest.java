@@ -28,7 +28,6 @@ import com.amplifyframework.testutils.Resources;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -279,8 +278,8 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsJson("base-sync-posts-response.json");
 
         Type responseType = new TypeToken<Iterable<String>>(){}.getType();
-        GraphQLResponse<Iterable<String>> response = responseFactory.buildResponse(null, baseQueryResponseJson.toString(),
-                responseType);
+        GraphQLResponse<Iterable<String>> response =
+                responseFactory.buildResponse(null, baseQueryResponseJson.toString(), responseType);
         final Iterable<String> queryResults = response.getData();
 
         final List<String> resultJsons = new ArrayList<>();

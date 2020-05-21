@@ -32,6 +32,7 @@ import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
+
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;

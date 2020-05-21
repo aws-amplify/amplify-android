@@ -1,6 +1,22 @@
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
+
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -14,16 +30,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-class GraphQLResponseDeserializer implements JsonDeserializer<GraphQLResponse<Object>> {
+final class GraphQLResponseDeserializer implements JsonDeserializer<GraphQLResponse<Object>> {
     private static final String DATA_KEY = "data";
     private static final String ERRORS_KEY = "errors";
 
     @Override
-    public GraphQLResponse<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
-            throws JsonParseException {
-        if(!json.isJsonObject()) {
-            throw new  JsonParseException("Expected a JsonObject while deserialize a GraphQLResponse, but found a " +
-                    json.getClass().getSimpleName());
+    public GraphQLResponse<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context
+    ) throws JsonParseException {
+        if (!json.isJsonObject()) {
+            throw new JsonParseException("Expected a JsonObject while deserializing GraphQLResponse but found " + json);
         }
         JsonObject jsonObject = json.getAsJsonObject();
 

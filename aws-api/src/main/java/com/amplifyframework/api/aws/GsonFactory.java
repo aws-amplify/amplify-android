@@ -22,6 +22,7 @@ import com.amplifyframework.core.model.AWSDate;
 import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.AWSTime;
 import com.amplifyframework.core.model.AWSTimestamp;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 

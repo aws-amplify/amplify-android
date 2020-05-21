@@ -49,6 +49,7 @@ public abstract class GraphQLOperation<R> extends ApiOperation<GraphQLRequest<R>
      * Converts a response json string containing a single object to a formatted
      * {@link GraphQLResponse} object that a response consumer can receive.
      * @param jsonResponse json response from API to be converted
+     * @param type Type of R, the data contained in the GraphQLResponse
      * @return wrapped response object
      * @throws ApiException If the class provided mismatches the data
      */

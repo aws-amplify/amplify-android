@@ -25,6 +25,7 @@ import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
 
+import com.google.gson.reflect.TypeToken;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -33,6 +34,7 @@ import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
 import org.robolectric.RobolectricTestRunner;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
@@ -90,7 +92,8 @@ public final class AppSyncClientTest {
         verify(api).query(requestCaptor.capture(), any(Consumer.class), any(Consumer.class));
         GraphQLRequest<String> capturedRequest = requestCaptor.getValue();
 
-        assertEquals(String.class, capturedRequest.getModelClass());
+        Type type = TypeToken.getParameterized(Iterable.class, String.class).getType();
+        assertEquals(type, capturedRequest.getResponseType());
 
         // The request was sent as JSON. It has a null variables field, and a present query field.
         JSONObject requestJson = new JSONObject(capturedRequest.getContent());

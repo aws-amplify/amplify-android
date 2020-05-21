@@ -1,5 +1,19 @@
-package com.amplifyframework.api.aws;
+/*
+ * Copyright 2020 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
 
+package com.amplifyframework.api.aws;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
@@ -13,13 +27,13 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
-
-public class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
+final class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
     private static final String APP_SYNC_ITEMS_KEY = "items";
 
     @Override
     @SuppressWarnings("unchecked") // Cast from Type to Class<Object>
-    public Iterable<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public Iterable<Object> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context
+    ) throws JsonParseException {
         final Class<Object> templateClassType;
         if (typeOfT instanceof ParameterizedType) {
             // Because this is an Iterable and typeOfT is ParameterizedType we can be sure this is a safe cast.
@@ -54,10 +68,10 @@ public class IterableDeserializer implements JsonDeserializer<Iterable<Object>> 
                 }
             } else {
                 throw new JsonParseException(
-                        "Got JSON from an API call which was supposed to go with a List " +
-                                "but is in the form of an object rather than an array. It also is not in the standard " +
-                                "format of having an items property with the actual array of data so we do not know how " +
-                                "to deserialize it."
+                    "Got JSON from an API call which was supposed to go with a List " +
+                            "but is in the form of an object rather than an array. It also is not in the standard " +
+                            "format of having an items property with the actual array of data so we do not know how " +
+                            "to deserialize it."
                 );
             }
         } else if (json.isJsonArray()) {
