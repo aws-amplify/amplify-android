@@ -18,7 +18,9 @@ package com.amplifyframework.predictions.aws;
 import android.content.Context;
 import android.graphics.Bitmap;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.PredictionsPlugin;
@@ -47,6 +49,8 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobile.client.AWSMobileClient;
 import org.json.JSONObject;
 
 import java.util.concurrent.ExecutorService;
@@ -57,17 +61,25 @@ import java.util.concurrent.Executors;
  */
 public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictionsEscapeHatch> {
     private static final String AWS_PREDICTIONS_PLUGIN_KEY = "awsPredictionsPlugin";
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final ExecutorService executorService;
 
     private AWSPredictionsPluginConfiguration configuration;
     private AWSPredictionsService predictionsService;
+    private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
     /**
      * Constructs the AWS Predictions Plugin initializing the executor service.
      */
     public AWSPredictionsPlugin() {
         this.executorService = Executors.newCachedThreadPool();
+    }
+
+    @VisibleForTesting
+    AWSPredictionsPlugin(AWSCredentialsProvider credentialsProviderOverride) {
+        this();
+        this.credentialsProviderOverride = credentialsProviderOverride;
     }
 
     @NonNull
@@ -79,7 +91,26 @@ public final class AWSPredictionsPlugin extends PredictionsPlugin<AWSPredictions
     @Override
     public void configure(JSONObject pluginConfiguration, @NonNull Context context) throws PredictionsException {
         this.configuration = AWSPredictionsPluginConfiguration.fromJson(pluginConfiguration);
-        this.predictionsService = new AWSPredictionsService(configuration);
+
+        AWSCredentialsProvider credentialsProvider;
+
+        if (credentialsProviderOverride != null) {
+            credentialsProvider = credentialsProviderOverride;
+        } else {
+            try {
+                credentialsProvider =
+                        (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+            } catch (IllegalStateException exception) {
+                throw new PredictionsException(
+                        "AWSPredictionsPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                        exception,
+                        "Before configuring Amplify, be sure to add AWSPredictionsPlugin same as you added " +
+                                "AWSPinpointAnalyticsPlugin."
+                );
+            }
+        }
+
+        this.predictionsService = new AWSPredictionsService(configuration, credentialsProvider);
     }
 
     @NonNull
