@@ -58,10 +58,10 @@ public final class GsonPendingMutationConverter implements PendingMutation.Conve
     @Override
     public <T extends Model> PendingMutation.PersistentRecord toRecord(@NonNull PendingMutation<T> mutation) {
         return PendingMutation.PersistentRecord.builder()
-            .decodedModelId(mutation.getMutatedItem().getId())
-            .decodedModelClassName(mutation.getClassOfMutatedItem().getName())
-            .encodedModelData(gson.toJson(mutation))
-            .recordId(mutation.getMutationId())
+            .containedModelId(mutation.getMutatedItem().getId())
+            .containedModelClassName(mutation.getClassOfMutatedItem().getName())
+            .serializedMutationData(gson.toJson(mutation))
+            .mutationId(mutation.getMutationId())
             .build();
     }
 
@@ -71,17 +71,17 @@ public final class GsonPendingMutationConverter implements PendingMutation.Conve
             @NonNull PendingMutation.PersistentRecord record) throws DataStoreException {
         final Class<?> itemClass;
         try {
-            itemClass = Class.forName(record.getDecodedModelClassName());
+            itemClass = Class.forName(record.getContainedModelClassName());
         } catch (ClassNotFoundException classNotFoundException) {
             throw new DataStoreException(
-                "Could not find a class with the name " + record.getDecodedModelClassName(),
+                "Could not find a class with the name " + record.getContainedModelClassName(),
                 classNotFoundException,
                 "Verify that you have built this model into your project."
             );
         }
         final Type itemType =
             TypeToken.getParameterized(PendingMutation.class, itemClass).getType();
-        return gson.fromJson(record.getEncodedModelData(), itemType);
+        return gson.fromJson(record.getSerializedMutationData(), itemType);
     }
 
     /**
