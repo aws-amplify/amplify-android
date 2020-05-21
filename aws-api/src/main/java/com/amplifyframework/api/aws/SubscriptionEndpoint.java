@@ -131,7 +131,7 @@ final class SubscriptionEndpoint {
                 .put("payload", new JSONObject()
                 .put("data", request.getContent())
                 .put("extensions", new JSONObject()
-                .put("authorization", authorizer.createHeaderForSubscription(request))))
+                .put("authorization", authorizer.createHeadersForSubscription(request))))
                 .toString()
             );
         } catch (JSONException | ApiException exception) {
@@ -246,7 +246,7 @@ final class SubscriptionEndpoint {
             }
         } catch (JSONException exception) {
             throw new ApiException(
-                    "Error processing Json message in subscription endpoint",
+                    "Error processing Json message in subscription endpoint.",
                     exception,
                     AmplifyException.TODO_RECOVERY_SUGGESTION
             );
@@ -346,7 +346,7 @@ final class SubscriptionEndpoint {
      */
     private String buildConnectionRequestUrl() throws ApiException {
         // Construct the authorization header for connection request
-        final byte[] rawHeader = authorizer.createHeaderForConnection()
+        final byte[] rawHeader = authorizer.createHeadersForConnection()
             .toString()
             .getBytes();
 
@@ -357,7 +357,10 @@ final class SubscriptionEndpoint {
             // throwing in a second ...
         }
         if (appSyncEndpoint == null) {
-            throw new RuntimeException("Malformed Api Url" + apiConfiguration.getEndpoint());
+            throw new ApiException(
+                    "Malformed API Url: " + apiConfiguration.getEndpoint(),
+                    "Verify that GraphQL endpoint is properly formatted."
+            );
         }
 
         return new Uri.Builder()

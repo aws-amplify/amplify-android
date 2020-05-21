@@ -75,7 +75,7 @@ public final class SubscriptionAuthorizerTest {
                 .authorizationType(AuthorizationType.API_KEY)
                 .build();
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
-        JSONObject header = authorizer.createHeaderForConnection();
+        JSONObject header = authorizer.createHeadersForConnection();
         assertEquals(authenticationSecret, header.getString("x-api-key"));
     }
 
@@ -93,7 +93,7 @@ public final class SubscriptionAuthorizerTest {
                 .authorizationType(AuthorizationType.AMAZON_COGNITO_USER_POOLS)
                 .build();
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
-        JSONObject header = authorizer.createHeaderForConnection();
+        JSONObject header = authorizer.createHeadersForConnection();
         assertEquals(authenticationSecret, header.getString("Authorization"));
     }
 
@@ -111,7 +111,7 @@ public final class SubscriptionAuthorizerTest {
                 .authorizationType(AuthorizationType.OPENID_CONNECT)
                 .build();
         SubscriptionAuthorizer authorizer = new SubscriptionAuthorizer(config, apiAuthProviders);
-        JSONObject header = authorizer.createHeaderForConnection();
+        JSONObject header = authorizer.createHeadersForConnection();
         assertEquals(authenticationSecret, header.getString("Authorization"));
     }
 
