@@ -21,7 +21,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.Page;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 
 import com.google.gson.Gson;
@@ -46,18 +46,20 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     }
 
     @Override
-    @SuppressWarnings("unchecked") // Cast from GraphQLRequest<R> to GraphQLRequest<Page<Model>>
+    @SuppressWarnings("unchecked") // Cast from GraphQLRequest<R> to GraphQLRequest<PaginatedResult<Model>>
     public <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String responseJson, Type typeOfR
     ) throws ApiException {
         Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, typeOfR);
         try {
-            if (typeOfR instanceof ParameterizedType && ((ParameterizedType) typeOfR).getRawType().equals(Page.class)) {
-                Gson pageGson = gson
+            if (typeOfR instanceof ParameterizedType
+                    && ((ParameterizedType) typeOfR).getRawType().equals(PaginatedResult.class)) {
+                AppSyncPaginatedResultDeserializer paginatedResultDeserializer =
+                        new AppSyncPaginatedResultDeserializer((GraphQLRequest<PaginatedResult<Model>>) request);
+                Gson paginatedResultGson = gson
                         .newBuilder()
-                        .registerTypeAdapter(Page.class,
-                                new AppSyncPageDeserializer((GraphQLRequest<Page<Model>>) request))
+                        .registerTypeAdapter(PaginatedResult.class, paginatedResultDeserializer)
                         .create();
-                return pageGson.fromJson(responseJson, responseType);
+                return paginatedResultGson.fromJson(responseJson, responseType);
             } else {
                 return gson.fromJson(responseJson, responseType);
             }

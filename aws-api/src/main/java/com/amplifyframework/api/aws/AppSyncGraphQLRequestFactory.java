@@ -20,7 +20,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
-import com.amplifyframework.api.graphql.Page;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -109,13 +109,13 @@ final class AppSyncGraphQLRequestFactory {
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
     }
 
-    static <R, T extends Model> GraphQLRequest<R> buildPagedQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
             Class<T> modelClass,
             QueryPredicate predicate,
             int limit,
             String nextToken
     ) throws ApiException {
-        Type dataType = TypeMaker.getParameterizedType(Page.class, modelClass);
+        Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
         return buildQuery(modelClass, predicate, limit, nextToken, dataType);
     }
 

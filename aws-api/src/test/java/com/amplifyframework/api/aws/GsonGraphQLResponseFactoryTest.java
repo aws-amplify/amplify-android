@@ -20,7 +20,7 @@ import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.api.graphql.Page;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
@@ -188,11 +188,11 @@ public final class GsonGraphQLResponseFactoryTest {
 
         String nextToken = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4";
         Map<String, Object> variables = Collections.singletonMap("nextToken", nextToken);
-        Type responseType = TypeMaker.getParameterizedType(Page.class, Todo.class);
+        Type responseType = TypeMaker.getParameterizedType(PaginatedResult.class, Todo.class);
         GsonVariablesSerializer serializer = new GsonVariablesSerializer();
-        GraphQLRequest<Page<Todo>> expectedRequest =
+        GraphQLRequest<PaginatedResult<Todo>> expectedRequest =
                 new GraphQLRequest<>("document", variables, responseType, serializer);
-        final Page<Todo> expectedPage = new AppSyncPage<>(expectedTodos, expectedRequest);
+        final PaginatedResult<Todo> expectedPaginatedResult = new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
 
         final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
@@ -212,14 +212,14 @@ public final class GsonGraphQLResponseFactoryTest {
             expectedErrors.add(new GraphQLResponse.Error(message, locations, path, extensions));
         }
 
-        final GraphQLResponse<Page<Todo>> expectedResponse = new GraphQLResponse<>(expectedPage, expectedErrors);
+        final GraphQLResponse<PaginatedResult<Todo>> expectedResponse = new GraphQLResponse<>(expectedPaginatedResult, expectedErrors);
 
         // Act
         final String partialResponseJson = Resources.readAsString("partial-gql-response.json");
 
-        final GraphQLRequest<Page<Todo>> request =
+        final GraphQLRequest<PaginatedResult<Todo>> request =
                 new GraphQLRequest<>("document", responseType, serializer);
-        final GraphQLResponse<Page<Todo>> response =
+        final GraphQLResponse<PaginatedResult<Todo>> response =
                 responseFactory.buildResponse(request, partialResponseJson, responseType);
 
         // Assert

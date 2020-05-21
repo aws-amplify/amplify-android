@@ -18,13 +18,12 @@ package com.amplifyframework.api.graphql;
 import com.amplifyframework.core.model.Model;
 
 /**
- *
  * Represents a page of results returned from an API.  Specifically, contains the list of items in the page, as well as
- * metadata needed to obtain the next page.
+ * a GraphQLRequest which can be used to obtain the next page.
  *
- * @param <T> Type of item in the list.  Must extend Model.
+ * @param <T> Type of the items in the list.  Must extend Model.
  */
-public abstract class Page<T extends Model> {
+public abstract class PaginatedResult<T extends Model> {
 
     /**
      * Returns the list of items obtained from an API query.
@@ -36,7 +35,7 @@ public abstract class Page<T extends Model> {
      * Returns whether a subsequent page of results is available from the API.
      * @return boolean whether a subsequent page is available
      */
-    public abstract boolean hasNextPage();
+    public abstract boolean hasNextResult();
 
     /**
      * Returns a GraphQLRequest which can be used to obtain the next page of results.  The request itself is identical
@@ -44,5 +43,5 @@ public abstract class Page<T extends Model> {
      *
      * @return GraphQLRequest to obtain the next page of results
      */
-    public abstract GraphQLRequest<Page<T>> getRequestForNextPage();
+    public abstract GraphQLRequest<PaginatedResult<T>> getRequestForNextResult();
 }

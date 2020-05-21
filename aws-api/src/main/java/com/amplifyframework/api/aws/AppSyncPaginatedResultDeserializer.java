@@ -16,7 +16,7 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.Page;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 
 import com.google.gson.JsonDeserializationContext;
@@ -41,19 +41,19 @@ import java.lang.reflect.Type;
  *   "nextToken": "asdf"
  * }
  */
-final class AppSyncPageDeserializer implements JsonDeserializer<Page<Model>> {
+final class AppSyncPaginatedResultDeserializer implements JsonDeserializer<PaginatedResult<Model>> {
     private static final String ITEMS_KEY = "items";
     private static final String NEXT_TOKEN_KEY = "nextToken";
 
-    private final GraphQLRequest<Page<Model>> request;
+    private final GraphQLRequest<PaginatedResult<Model>> request;
 
-    AppSyncPageDeserializer(GraphQLRequest<Page<Model>> request) {
+    AppSyncPaginatedResultDeserializer(GraphQLRequest<PaginatedResult<Model>> request) {
         this.request = request;
     }
 
     @Override
     @SuppressWarnings("unchecked") // Cast Type to Class<Model>
-    public Page<Model> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context
+    public PaginatedResult<Model> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context
     ) throws JsonParseException {
         final Class<Model> templateClassType;
         if (typeOfT instanceof ParameterizedType) {
@@ -71,13 +71,13 @@ final class AppSyncPageDeserializer implements JsonDeserializer<Page<Model>> {
         Iterable<Model> items = context.deserialize(jsonObject.get(ITEMS_KEY), dataType);
 
         JsonElement nextTokenElement = jsonObject.get(NEXT_TOKEN_KEY);
-        GraphQLRequest<Page<Model>> requestForNextPage = null;
+        GraphQLRequest<PaginatedResult<Model>> requestForNextPage = null;
         if (nextTokenElement.isJsonPrimitive()) {
             String nextToken = nextTokenElement.getAsJsonPrimitive().getAsString();
             requestForNextPage = request.copy();
             requestForNextPage.putVariable(NEXT_TOKEN_KEY, nextToken);
         }
 
-        return new AppSyncPage<>(items, requestForNextPage);
+        return new AppSyncPaginatedResult<>(items, requestForNextPage);
     }
 }

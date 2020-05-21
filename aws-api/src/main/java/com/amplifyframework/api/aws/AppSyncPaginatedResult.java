@@ -19,15 +19,16 @@ import androidx.annotation.NonNull;
 import androidx.core.util.ObjectsCompat;
 
 import com.amplifyframework.api.graphql.GraphQLRequest;
-import com.amplifyframework.api.graphql.Page;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.core.model.Model;
 
-final class AppSyncPage<T extends Model> extends Page<T> {
-    private final GraphQLRequest<Page<T>> requestForNextPage;
+final class AppSyncPaginatedResult<T extends Model> extends PaginatedResult<T> {
+    private final GraphQLRequest<PaginatedResult<T>> requestForNextResult;
     private final Iterable<T> items;
 
-    AppSyncPage(@NonNull Iterable<T> items, @NonNull GraphQLRequest<Page<T>> request) {
-        this.requestForNextPage = request;
+    AppSyncPaginatedResult(@NonNull Iterable<T> items,
+                           @NonNull GraphQLRequest<PaginatedResult<T>> requestForNextResult) {
+        this.requestForNextResult = requestForNextResult;
         this.items = items;
     }
 
@@ -37,13 +38,13 @@ final class AppSyncPage<T extends Model> extends Page<T> {
     }
 
     @Override
-    public boolean hasNextPage() {
-        return requestForNextPage != null;
+    public boolean hasNextResult() {
+        return requestForNextResult != null;
     }
 
     @Override
-    public GraphQLRequest<Page<T>> getRequestForNextPage() {
-        return requestForNextPage;
+    public GraphQLRequest<PaginatedResult<T>> getRequestForNextResult() {
+        return requestForNextResult;
     }
 
     @Override
@@ -55,16 +56,16 @@ final class AppSyncPage<T extends Model> extends Page<T> {
             return false;
         }
 
-        AppSyncPage<?> page = (AppSyncPage<?>) thatObject;
+        AppSyncPaginatedResult<?> page = (AppSyncPaginatedResult<?>) thatObject;
 
         return ObjectsCompat.equals(items, page.items) &&
-                ObjectsCompat.equals(requestForNextPage, page.requestForNextPage);
+                ObjectsCompat.equals(requestForNextResult, page.requestForNextResult);
     }
 
     @Override
     public int hashCode() {
         int result = items.hashCode();
-        result = 31 * result + (requestForNextPage != null ? requestForNextPage.hashCode() : 0);
+        result = 31 * result + (requestForNextResult != null ? requestForNextResult.hashCode() : 0);
         return result;
     }
 
@@ -72,7 +73,7 @@ final class AppSyncPage<T extends Model> extends Page<T> {
     public String toString() {
         return "AppSyncPage{" +
                 "items=\'" + items + "\'" +
-                ", requestForNextPage=\'" + requestForNextPage + "\'" +
+                ", requestForNextPage=\'" + requestForNextResult + "\'" +
                 '}';
     }
 }
