@@ -25,6 +25,8 @@ import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.predictions.PredictionsCategory;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+
 import java.util.Objects;
 
 /**
@@ -45,7 +47,7 @@ final class TestPredictionsCategory {
 
         final PredictionsCategory predictionsCategory = new PredictionsCategory();
         try {
-            predictionsCategory.addPlugin(new AWSPredictionsPlugin());
+            predictionsCategory.addPlugin(new AWSPredictionsPlugin(AWSMobileClient.getInstance()));
             CategoryConfiguration predictionsConfiguration = AmplifyConfiguration.fromConfigFile(context, resourceId)
                     .forCategoryType(CategoryType.PREDICTIONS);
             predictionsCategory.configure(predictionsConfiguration, context);

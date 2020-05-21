@@ -33,7 +33,6 @@ import com.amplifyframework.util.UserAgent;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.textract.AmazonTextractClient;
 import com.amazonaws.services.textract.model.AnalyzeDocumentRequest;
 import com.amazonaws.services.textract.model.AnalyzeDocumentResult;
@@ -57,13 +56,13 @@ final class AWSTextractService {
     private final AmazonTextractClient textract;
     private final AWSPredictionsPluginConfiguration pluginConfiguration;
 
-    AWSTextractService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration) {
-        this.textract = createTextractClient();
+    AWSTextractService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration,
+                       @NonNull AWSCredentialsProvider credentialsProvider) {
+        this.textract = createTextractClient(credentialsProvider);
         this.pluginConfiguration = pluginConfiguration;
     }
 
-    private AmazonTextractClient createTextractClient() {
-        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+    private AmazonTextractClient createTextractClient(@NonNull AWSCredentialsProvider credentialsProvider) {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
         return new AmazonTextractClient(credentialsProvider, configuration);
