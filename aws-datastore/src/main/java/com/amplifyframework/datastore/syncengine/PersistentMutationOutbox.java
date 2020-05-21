@@ -84,7 +84,7 @@ final class PersistentMutationOutbox implements MutationOutbox {
         String modelId = incomingMutation.getMutatedItem().getId();
         @SuppressWarnings("unchecked")
         PendingMutation<T> existingMutation = (PendingMutation<T>) nextMutationForModelId(modelId);
-        if (existingMutation == null) {
+        if (existingMutation == null || inFlightMutations.contains(existingMutation.getMutationId())) {
             return save(incomingMutation)
                 .andThen(notifyContentAvailable());
         } else {
