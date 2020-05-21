@@ -26,6 +26,7 @@ import com.amplifyframework.storage.StorageChannelEventName;
 import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.operation.StorageUploadFileOperation;
 import com.amplifyframework.storage.result.StorageUploadFileResult;
+import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageUploadFileRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
@@ -43,6 +44,7 @@ import java.util.Objects;
  */
 public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOperation<AWSS3StorageUploadFileRequest> {
     private final StorageService storageService;
+    private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageUploadFileResult> onSuccess;
     private final Consumer<StorageException> onError;
     private TransferObserver transferObserver;
@@ -50,18 +52,21 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
     /**
      * Constructs a new AWSS3StorageUploadFileOperation.
      * @param storageService S3 client wrapper
+     * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
      * @param request upload request parameters
      * @param onSuccess Will be notified when results of upload are available
      * @param onError Notified when upload fails with an error
      */
     public AWSS3StorageUploadFileOperation(
             @NonNull StorageService storageService,
+            @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageUploadFileRequest request,
             @NonNull Consumer<StorageUploadFileResult> onSuccess,
             @NonNull Consumer<StorageException> onError
     ) {
         super(Objects.requireNonNull(request));
         this.storageService = Objects.requireNonNull(storageService);
+        this.cognitoAuthProvider = cognitoAuthProvider;
         this.onSuccess = Objects.requireNonNull(onSuccess);
         this.onError = Objects.requireNonNull(onError);
         this.transferObserver = null;
@@ -75,10 +80,20 @@ public final class AWSS3StorageUploadFileOperation extends StorageUploadFileOper
             return;
         }
 
-        // Get S3 key for give user and access level
+        String currentIdentityId;
+
+        try {
+            currentIdentityId = cognitoAuthProvider.getIdentityId();
+        } catch (StorageException exception) {
+            onError.accept(exception);
+            return;
+        }
+
         String serviceKey = S3Keys.createServiceKey(
                 getRequest().getAccessLevel(),
-                getRequest().getTargetIdentityId(),
+                getRequest().getTargetIdentityId() != null
+                        ? getRequest().getTargetIdentityId()
+                        : currentIdentityId,
                 getRequest().getKey()
         );
 
