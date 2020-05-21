@@ -78,7 +78,7 @@ public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
     /**
-     * Constructs a new AmazonPinpointAnalyticsPlugin.
+     * Constructs a new {@link AWSPinpointAnalyticsPlugin}.
      *
      * @param application Global application context
      */
