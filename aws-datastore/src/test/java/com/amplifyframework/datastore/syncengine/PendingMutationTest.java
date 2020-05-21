@@ -19,33 +19,22 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
+import com.amplifyframework.testutils.Scattered;
 
-import org.junit.Before;
 import org.junit.Test;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 /**
  * Tests the {@link PendingMutation}.
  */
 public final class PendingMutationTest {
-    private Random random;
-
-    /**
-     * Sets up test dependencies.
-     */
-    @Before
-    public void setup() {
-        random = new Random();
-    }
-
     /**
      * It is possible to sort pending mutations according to their TimeBasedUUID field.
      */
@@ -57,7 +46,7 @@ public final class PendingMutationTest {
         for (int index = 0; index < desiredQuantity; index++) {
             // Populate a few different types of models, according to a random boolean value,
             // to make sure the comparator can work across model types
-            if (random.nextBoolean()) {
+            if (new SecureRandom().nextBoolean()) {
                 BlogOwner blogger = BlogOwner.builder()
                     .name(String.format(Locale.US, "Blogger #%d", index))
                     .build();
@@ -73,10 +62,7 @@ public final class PendingMutationTest {
         }
 
         // Okay! Now, scatter them.
-        List<PendingMutation<? extends Model>> outOfOrder = new ArrayList<>(expectedOrder);
-        //noinspection ComparatorMethodParameterNotUsed Intentional; result is random
-        Collections.sort(outOfOrder, (one, two) -> random.nextInt());
-        assertNotEquals(expectedOrder, outOfOrder);
+        List<PendingMutation<? extends Model>> outOfOrder = Scattered.list(expectedOrder);
 
         // Now sort them according to the item comparator, {@link PendingMutation#compareTo(Object)}.
         List<PendingMutation<? extends Model>> actualOrder = new ArrayList<>(outOfOrder);

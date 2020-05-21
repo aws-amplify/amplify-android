@@ -15,14 +15,14 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import org.junit.Before;
+import com.amplifyframework.testutils.Scattered;
+
 import org.junit.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
@@ -32,16 +32,6 @@ import static org.junit.Assert.assertNotSame;
  * Tests the {@link TimeBasedUuid}.
  */
 public final class TimeBasedUuidTest {
-    private Random random;
-
-    /**
-     * Sets up test dependencies.
-     */
-    @Before
-    public void setup() {
-        this.random = new Random();
-    }
-
     /**
      * Time-based UUIDs should be comparable, and they are compared according
      * to their timestamp. An out-of-order sequence of these UUIDs should be sort-able.
@@ -57,11 +47,7 @@ public final class TimeBasedUuidTest {
         }
 
         // Now, scatter them, into a new array.
-        List<TimeBasedUuid> randomOrder = new ArrayList<>(expectedOrder);
-        while (expectedOrder.equals(randomOrder)) {
-            //noinspection ComparatorMethodParameterNotUsed Intenionally ignored in favor of random result
-            Collections.sort(randomOrder, (one, two) -> random.nextInt());
-        }
+        List<TimeBasedUuid> randomOrder = Scattered.list(expectedOrder);
 
         // Act! sort them using the *default* comparator for the items.
         List<TimeBasedUuid> actualSortedOrder = new ArrayList<>(randomOrder);
