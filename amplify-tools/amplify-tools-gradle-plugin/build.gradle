@@ -22,10 +22,6 @@ apply from: rootProject.file('gradle-mvn-push.gradle')
 
 sourceSets.main.groovy.srcDirs = ["src/main/groovy"]
 
-dependencies {
-    implementation 'androidx.appcompat:appcompat:1.1.0'
-}
-
 publishing {
     publications {
         pluginPublication(MavenPublication) {
@@ -37,5 +33,6 @@ publishing {
     }
 }
 
+// java version
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
