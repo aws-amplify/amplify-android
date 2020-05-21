@@ -41,8 +41,6 @@ import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
 import com.amplifyframework.util.Immutable;
 
-import com.google.gson.reflect.TypeToken;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -107,7 +105,7 @@ final class AppSyncGraphQLRequestFactory {
             Class<T> modelClass,
             QueryPredicate predicate
     ) throws ApiException {
-        Type dataType = TypeToken.getParameterized(Iterable.class, modelClass).getType();
+        Type dataType = TypeMaker.getParameterizedType(Iterable.class, modelClass);
         return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
     }
 
@@ -117,7 +115,7 @@ final class AppSyncGraphQLRequestFactory {
             int limit,
             String nextToken
     ) throws ApiException {
-        Type dataType = TypeToken.getParameterized(Page.class, modelClass).getType();
+        Type dataType = TypeMaker.getParameterizedType(Page.class, modelClass);
         return buildQuery(modelClass, predicate, limit, nextToken, dataType);
     }
 

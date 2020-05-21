@@ -24,7 +24,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -68,7 +67,7 @@ final class AppSyncPageDeserializer implements JsonDeserializer<Page<Model>> {
         }
         JsonObject jsonObject = json.getAsJsonObject();
 
-        Type dataType = TypeToken.getParameterized(Iterable.class, templateClassType).getType();
+        Type dataType = TypeMaker.getParameterizedType(Iterable.class, templateClassType);
         Iterable<Model> items = context.deserialize(jsonObject.get(ITEMS_KEY), dataType);
 
         JsonElement nextTokenElement = jsonObject.get(NEXT_TOKEN_KEY);

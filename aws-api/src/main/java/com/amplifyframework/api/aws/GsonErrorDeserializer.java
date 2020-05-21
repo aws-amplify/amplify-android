@@ -25,7 +25,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonPrimitive;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -66,7 +65,7 @@ final class GsonErrorDeserializer implements JsonDeserializer<GraphQLResponse.Er
                     message = context.deserialize(value, String.class);
                     break;
                 case LOCATIONS_KEY:
-                    Type locationsType = new TypeToken<List<GraphQLLocation>>() {}.getType();
+                    Type locationsType = TypeMaker.getParameterizedType(List.class, GraphQLLocation.class);
                     locations = context.deserialize(value, locationsType);
                     break;
                 case PATH_KEY:

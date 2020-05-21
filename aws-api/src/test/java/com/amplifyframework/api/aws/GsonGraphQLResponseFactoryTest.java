@@ -26,7 +26,6 @@ import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
 
 import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.junit.Before;
@@ -189,7 +188,7 @@ public final class GsonGraphQLResponseFactoryTest {
 
         String nextToken = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4";
         Map<String, Object> variables = Collections.singletonMap("nextToken", nextToken);
-        Type responseType = TypeToken.getParameterized(Page.class, Todo.class).getType();
+        Type responseType = TypeMaker.getParameterizedType(Page.class, Todo.class);
         GsonVariablesSerializer serializer = new GsonVariablesSerializer();
         GraphQLRequest<Page<Todo>> expectedRequest =
                 new GraphQLRequest<>("document", variables, responseType, serializer);
@@ -346,7 +345,7 @@ public final class GsonGraphQLResponseFactoryTest {
         final JSONObject baseQueryResponseJson =
             Resources.readAsJson("base-sync-posts-response.json");
 
-        Type responseType = new TypeToken<Iterable<String>>(){}.getType();
+        Type responseType = TypeMaker.getParameterizedType(Iterable.class, String.class);
         GraphQLRequest<Iterable<String>> request =
                 new GraphQLRequest<>("document", responseType, new GsonVariablesSerializer());
         GraphQLResponse<Iterable<String>> response =

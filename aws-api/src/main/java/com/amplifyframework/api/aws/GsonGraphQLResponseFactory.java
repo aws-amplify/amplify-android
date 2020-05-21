@@ -26,7 +26,6 @@ import com.amplifyframework.core.model.Model;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -50,7 +49,7 @@ final class GsonGraphQLResponseFactory implements GraphQLResponse.Factory {
     @SuppressWarnings("unchecked") // Cast from GraphQLRequest<R> to GraphQLRequest<Page<Model>>
     public <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String responseJson, Type typeOfR
     ) throws ApiException {
-        Type responseType = TypeToken.getParameterized(GraphQLResponse.class, typeOfR).getType();
+        Type responseType = TypeMaker.getParameterizedType(GraphQLResponse.class, typeOfR);
         try {
             if (typeOfR instanceof ParameterizedType && ((ParameterizedType) typeOfR).getRawType().equals(Page.class)) {
                 Gson pageGson = gson

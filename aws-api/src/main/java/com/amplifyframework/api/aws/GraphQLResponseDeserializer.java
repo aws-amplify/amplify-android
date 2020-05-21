@@ -22,7 +22,6 @@ import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
-import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -94,7 +93,7 @@ final class GraphQLResponseDeserializer implements JsonDeserializer<GraphQLRespo
         if (jsonErrors == null || jsonErrors.isJsonNull()) {
             return Collections.emptyList();
         }
-        Type listType = new TypeToken<ArrayList<GraphQLResponse.Error>>() {}.getType();
+        Type listType = TypeMaker.getParameterizedType(ArrayList.class, GraphQLResponse.Error.class);
         return context.deserialize(jsonErrors, listType);
     }
 }
