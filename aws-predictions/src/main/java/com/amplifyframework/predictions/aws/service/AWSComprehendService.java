@@ -39,7 +39,6 @@ import com.amplifyframework.util.UserAgent;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.comprehend.model.DetectDominantLanguageRequest;
 import com.amazonaws.services.comprehend.model.DetectDominantLanguageResult;
@@ -67,13 +66,14 @@ final class AWSComprehendService {
     private final AmazonComprehendClient comprehend;
     private final AWSPredictionsPluginConfiguration pluginConfiguration;
 
-    AWSComprehendService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration) {
-        this.comprehend = createComprehendClient();
+    AWSComprehendService(
+            @NonNull AWSPredictionsPluginConfiguration pluginConfiguration,
+            @NonNull AWSCredentialsProvider credentialsProvider) {
+        this.comprehend = createComprehendClient(credentialsProvider);
         this.pluginConfiguration = pluginConfiguration;
     }
 
-    private AmazonComprehendClient createComprehendClient() {
-        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+    private AmazonComprehendClient createComprehendClient(@NonNull AWSCredentialsProvider credentialsProvider) {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
         return new AmazonComprehendClient(credentialsProvider, configuration);

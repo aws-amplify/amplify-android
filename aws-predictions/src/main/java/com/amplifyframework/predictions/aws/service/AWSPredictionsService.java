@@ -30,6 +30,7 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
@@ -53,14 +54,17 @@ public final class AWSPredictionsService {
     /**
      * Constructs an instance of {@link AWSPredictionsService}.
      * @param configuration the configuration for AWS Predictions Plugin
+     * @param credentialsProvider An instance of an AWSCredentialsProvider implementation to vend auth credentials
      */
-    public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
+    public AWSPredictionsService(
+            @NonNull AWSPredictionsPluginConfiguration configuration,
+            @NonNull AWSCredentialsProvider credentialsProvider) {
         this.configuration = configuration;
-        this.pollyService = new AWSPollyService(configuration);
-        this.translateService = new AWSTranslateService(configuration);
-        this.rekognitionService = new AWSRekognitionService(configuration);
-        this.textractService = new AWSTextractService(configuration);
-        this.comprehendService = new AWSComprehendService(configuration);
+        this.pollyService = new AWSPollyService(configuration, credentialsProvider);
+        this.translateService = new AWSTranslateService(configuration, credentialsProvider);
+        this.rekognitionService = new AWSRekognitionService(configuration, credentialsProvider);
+        this.textractService = new AWSTextractService(configuration, credentialsProvider);
+        this.comprehendService = new AWSComprehendService(configuration, credentialsProvider);
     }
 
     /**

@@ -21,6 +21,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.amplifyframework.auth.options.AuthSignInOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
 import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
@@ -194,6 +195,14 @@ public final class AuthCategory extends Category<AuthPlugin<?>> implements AuthC
     @Override
     public void signOut(@NonNull Action onSuccess, @NonNull Consumer<AuthException> onError) {
         getSelectedPlugin().signOut(onSuccess, onError);
+    }
+
+    @Override
+    public void signOut(
+            @NonNull AuthSignOutOptions options,
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError) {
+        getSelectedPlugin().signOut(options, onSuccess, onError);
     }
 }
 

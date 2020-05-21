@@ -28,7 +28,6 @@ import com.amplifyframework.util.UserAgent;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.polly.AmazonPollyPresigningClient;
 import com.amazonaws.services.polly.model.OutputFormat;
@@ -47,13 +46,13 @@ final class AWSPollyService {
     private final AmazonPollyClient polly;
     private final AWSPredictionsPluginConfiguration pluginConfiguration;
 
-    AWSPollyService(AWSPredictionsPluginConfiguration pluginConfiguration) {
-        this.polly = createPollyClient();
+    AWSPollyService(AWSPredictionsPluginConfiguration pluginConfiguration,
+                    @NonNull AWSCredentialsProvider credentialsProvider) {
+        this.polly = createPollyClient(credentialsProvider);
         this.pluginConfiguration = pluginConfiguration;
     }
 
-    private AmazonPollyClient createPollyClient() {
-        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+    private AmazonPollyClient createPollyClient(@NonNull AWSCredentialsProvider credentialsProvider) {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
         return new AmazonPollyPresigningClient(credentialsProvider, configuration);
