@@ -225,12 +225,6 @@ public final class AppSyncClientInstrumentationTest {
             api.create(model, onResult, onError));
     }
 
-    @NonNull
-    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
-        throws DataStoreException {
-        return update(model, version, null);
-    }
-
     /**
      * Updates an existing item in the App Sync API, whose remote version is the expected value.
      * @param model Updated model, to persist remotely
@@ -240,6 +234,12 @@ public final class AppSyncClientInstrumentationTest {
      * @throws DataStoreException If API update call fails to render any response from AppSync endpoint
      */
     @SuppressWarnings("SameParameterValue") // Keep details in the actual test.
+    @NonNull
+    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
+        throws DataStoreException {
+        return update(model, version, null);
+    }
+
     @NonNull
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version, QueryPredicate predicate)
             throws DataStoreException {
