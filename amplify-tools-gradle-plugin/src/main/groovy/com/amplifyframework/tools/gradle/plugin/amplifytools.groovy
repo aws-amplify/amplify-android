@@ -107,36 +107,36 @@ class amplifytools implements Plugin<Project> {
         project.task('amplifyPush') {
             def AWSCLOUDFORMATIONCONFIG
             if (!accessKeyId || !secretAccessKey || !region) {
-                AWSCLOUDFORMATIONCONFIG = """{\
-\"configLevel\":\"project\",\
-\"useProfile\":true,\
-\"profileName\":\"$profile\"\
-}"""
+                AWSCLOUDFORMATIONCONFIG = [
+                        'configLevel': 'project',
+                        'useProfile': true,
+                        'profileName': profile,
+                ]
             } else {
-                AWSCLOUDFORMATIONCONFIG = """{\
-\"configLevel\":\"project\",\
-\"useProfile\":true,\
-\"profileName\":\"$profile\",\
-\"accessKeyId\":\"$accessKeyId\",\
-\"secretAccessKey\":\"$secretAccessKey\",\
-\"region\":\"$region\"\
-}"""
+                AWSCLOUDFORMATIONCONFIG = [
+                        'configLevel':'project',
+                        'useProfile': true,
+                        'profileName':profile,
+                        'accessKeyId':accessKeyId,
+                        'secretAccessKey':secretAccessKey,
+                        'region':region,
+                ]
             }
 
             def AMPLIFY
             if (!envName) {
-                AMPLIFY = """{\
-\"envName\":\"amplify\"\
-}"""
+                AMPLIFY = JsonOutput.toJson([
+                        'envName':'amplify',
+                ])
             } else {
-                AMPLIFY = """{\
-\"envName\":\"$envName\"\
-}"""
+                AMPLIFY = JsonOutput.toJson([
+                        'envName': envName,
+                ])
             }
 
-            def PROVIDERS = """{\
-\"awscloudformation\":$AWSCLOUDFORMATIONCONFIG\
-}"""
+            def PROVIDERS = JsonOutput.toJson([
+                    'awscloudformation': AWSCLOUDFORMATIONCONFIG,
+            ])
 
             doLast {
                 def doesLocalEnvExist = project.file('./amplify/.config/local-env-info.json').exists()
