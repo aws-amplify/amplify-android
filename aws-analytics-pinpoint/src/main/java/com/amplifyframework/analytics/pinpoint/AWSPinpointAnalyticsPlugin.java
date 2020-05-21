@@ -20,6 +20,7 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+import androidx.annotation.VisibleForTesting;
 
 import com.amplifyframework.analytics.AnalyticsBooleanProperty;
 import com.amplifyframework.analytics.AnalyticsDoubleProperty;
@@ -31,7 +32,10 @@ import com.amplifyframework.analytics.AnalyticsProperties;
 import com.amplifyframework.analytics.AnalyticsPropertyBehavior;
 import com.amplifyframework.analytics.AnalyticsStringProperty;
 import com.amplifyframework.analytics.UserProfile;
+import com.amplifyframework.core.Amplify;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.targeting.TargetingClient;
@@ -51,7 +55,7 @@ import java.util.Objects;
 /**
  * The plugin implementation for Amazon Pinpoint in Analytics category.
  */
-public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
+public final class AWSPinpointAnalyticsPlugin extends AnalyticsPlugin<Object> {
     @Retention(RetentionPolicy.SOURCE)
     @StringDef({
             USER_NAME,
@@ -64,20 +68,28 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
     private static final String USER_NAME = "name";
     private static final String USER_EMAIL = "email";
     private static final String USER_PLAN = "plan";
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private final Application application;
     private AutoEventSubmitter autoEventSubmitter;
     private AnalyticsClient analyticsClient;
     private AutoSessionTracker autoSessionTracker;
     private TargetingClient targetingClient;
+    private AWSCredentialsProvider credentialsProviderOverride; // Currently used for integration testing purposes
 
     /**
      * Constructs a new AmazonPinpointAnalyticsPlugin.
      *
      * @param application Global application context
      */
-    public AmazonPinpointAnalyticsPlugin(final Application application) {
+    public AWSPinpointAnalyticsPlugin(final Application application) {
         this.application = application;
+    }
+
+    @VisibleForTesting
+    AWSPinpointAnalyticsPlugin(final Application application, AWSCredentialsProvider credentialsProviderOverride) {
+        this(application);
+        this.credentialsProviderOverride = credentialsProviderOverride;
     }
 
     /**
@@ -98,9 +110,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         return targetingClient;
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void enable() {
         autoEventSubmitter.start();
@@ -108,9 +117,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         autoSessionTracker.startSessionTracking(application);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void identifyUser(@NonNull String userId, @Nullable UserProfile userProfile) {
         Objects.requireNonNull(userId);
@@ -214,9 +220,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         endpointProfileLocation.setCountry(location.getCountry());
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void disable() {
         autoEventSubmitter.stop();
@@ -224,9 +227,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         autoSessionTracker.stopSessionTracking(application);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordEvent(@NonNull String eventName) {
         final com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent pinpointEvent =
@@ -234,9 +234,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         analyticsClient.recordEvent(pinpointEvent);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void recordEvent(@NonNull AnalyticsEventBehavior analyticsEvent) {
         final com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsEvent pinpointEvent =
@@ -264,9 +261,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void registerGlobalProperties(@NonNull AnalyticsProperties properties) {
         for (Map.Entry<String, AnalyticsPropertyBehavior<?>> entry : properties) {
@@ -287,9 +281,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void unregisterGlobalProperties(@NonNull String... propertyNames) {
         for (String propertyName : propertyNames) {
@@ -298,26 +289,17 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         }
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void flushEvents() {
         analyticsClient.submitEvents();
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @NonNull
     @Override
     public String getPluginKey() {
         return "awsPinpointAnalyticsPlugin";
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public void configure(
             JSONObject pluginConfiguration,
@@ -331,8 +313,27 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             );
         }
 
-        AmazonPinpointAnalyticsPluginConfiguration.Builder configurationBuilder =
-                AmazonPinpointAnalyticsPluginConfiguration.builder();
+        AWSPinpointAnalyticsPluginConfiguration.Builder configurationBuilder =
+                AWSPinpointAnalyticsPluginConfiguration.builder();
+
+        AWSCredentialsProvider credentialsProvider;
+
+        if (credentialsProviderOverride != null) {
+            credentialsProvider = credentialsProviderOverride;
+        } else {
+            try {
+                credentialsProvider =
+                        (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+            } catch (IllegalStateException exception) {
+                throw new AnalyticsException(
+                        "AWSPinpointAnalyticsPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                        exception,
+                        "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added " +
+                                "AWSPinpointAnalyticsPlugin."
+                );
+            }
+        }
+
         // Read all the data from the configuration object to be used for record event
         try {
             configurationBuilder
@@ -364,8 +365,12 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
             );
         }
 
-        AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
-        PinpointManager pinpointManager = PinpointManagerFactory.create(context, pinpointAnalyticsPluginConfiguration);
+        AWSPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration = configurationBuilder.build();
+        PinpointManager pinpointManager = PinpointManagerFactory.create(
+                context,
+                pinpointAnalyticsPluginConfiguration,
+                credentialsProvider
+        );
         this.analyticsClient = pinpointManager.getAnalyticsClient();
         this.targetingClient = pinpointManager.getTargetingClient();
 
@@ -379,9 +384,6 @@ public final class AmazonPinpointAnalyticsPlugin extends AnalyticsPlugin<Object>
         autoSessionTracker.startSessionTracking(application);
     }
 
-    /**
-     * {@inheritDoc}
-     */
     @Override
     public AnalyticsClient getEscapeHatch() {
         return analyticsClient;

@@ -27,6 +27,10 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.testutils.Sleep;
 
+import com.amazonaws.mobile.client.AWSMobileClient;
+import com.amazonaws.mobile.client.Callback;
+import com.amazonaws.mobile.client.UserStateDetails;
+import com.amazonaws.mobile.config.AWSConfiguration;
 import com.amazonaws.mobileconnectors.pinpoint.analytics.AnalyticsClient;
 import com.amazonaws.mobileconnectors.pinpoint.targeting.TargetingClient;
 import com.amazonaws.mobileconnectors.pinpoint.targeting.endpointProfile.EndpointProfile;
@@ -39,21 +43,25 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 /**
- * Validates the functionality of the {@link AmazonPinpointAnalyticsPlugin}.
+ * Validates the functionality of the {@link AWSPinpointAnalyticsPlugin}.
  */
 public class AnalyticsPinpointInstrumentedTest {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
 
     private static final int EVENT_FLUSH_TIMEOUT = 60 /* seconds */;
     private static final int EVENT_FLUSH_WAIT = 2 /* seconds */;
+    private static final long AUTH_TIMEOUT = 5 /* seconds */;
 
     private static AnalyticsClient analyticsClient;
     private static TargetingClient targetingClient;
@@ -65,8 +73,41 @@ public class AnalyticsPinpointInstrumentedTest {
      */
     @BeforeClass
     public static void setUp() throws AmplifyException {
+        final CountDownLatch latch = new CountDownLatch(1);
+        final AtomicReference<Exception> asyncException = new AtomicReference<>();
         Context context = getApplicationContext();
-        AmazonPinpointAnalyticsPlugin plugin = new AmazonPinpointAnalyticsPlugin((Application) context);
+
+        AWSMobileClient.getInstance().initialize(
+                context,
+                new AWSConfiguration(context),
+                new Callback<UserStateDetails>() {
+                    @Override
+                    public void onResult(UserStateDetails result) {
+                        latch.countDown();
+                    }
+
+                    @Override
+                    public void onError(Exception exception) {
+                        asyncException.set(exception);
+                        latch.countDown();
+                    }
+                }
+        );
+
+        try {
+            if (latch.await(AUTH_TIMEOUT, TimeUnit.SECONDS)) {
+                if (asyncException.get() != null) {
+                    fail("Failed to instantiate AWSMobileClient");
+                }
+            } else {
+                fail("Failed to instantiate AWSMobileClient within " + AUTH_TIMEOUT + " seconds");
+            }
+        } catch (InterruptedException error) {
+            fail("Failed to instantiate AWSMobileClient");
+        }
+
+        AWSPinpointAnalyticsPlugin plugin =
+                new AWSPinpointAnalyticsPlugin((Application) context, AWSMobileClient.getInstance());
         Amplify.addPlugin(plugin);
         Amplify.configure(context);
         analyticsClient = plugin.getAnalyticsClient();
