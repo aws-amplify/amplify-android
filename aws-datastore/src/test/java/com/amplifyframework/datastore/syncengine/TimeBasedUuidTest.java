@@ -46,7 +46,7 @@ public final class TimeBasedUuidTest {
         }
 
         // Now, shuffle them, into a new array.
-        List<TimeBasedUuid> shuffled = new ArrayList<>();
+        List<TimeBasedUuid> shuffled = new ArrayList<>(expectedOrder);
         Collections.shuffle(shuffled, new SecureRandom());
 
         // Act! sort them using the *default* comparator for the items.

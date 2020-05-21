@@ -61,7 +61,7 @@ public final class PendingMutationTest {
         }
 
         // Okay! Now, shuffle them.
-        List<PendingMutation<? extends Model>> shuffled = new ArrayList<>();
+        List<PendingMutation<? extends Model>> shuffled = new ArrayList<>(expectedOrder);
         Collections.shuffle(shuffled, new SecureRandom());
 
         // Now sort them according to the item comparator, {@link PendingMutation#compareTo(Object)}.
