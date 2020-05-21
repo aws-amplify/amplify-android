@@ -22,6 +22,7 @@ import com.amplifyframework.storage.StorageException;
 import com.amplifyframework.storage.StorageItem;
 import com.amplifyframework.storage.operation.StorageListOperation;
 import com.amplifyframework.storage.result.StorageListResult;
+import com.amplifyframework.storage.s3.CognitoAuthProvider;
 import com.amplifyframework.storage.s3.request.AWSS3StorageListRequest;
 import com.amplifyframework.storage.s3.service.StorageService;
 import com.amplifyframework.storage.s3.utils.S3Keys;
@@ -36,6 +37,7 @@ import java.util.concurrent.ExecutorService;
 public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3StorageListRequest> {
     private final StorageService storageService;
     private final ExecutorService executorService;
+    private final CognitoAuthProvider cognitoAuthProvider;
     private final Consumer<StorageListResult> onSuccess;
     private final Consumer<StorageException> onError;
 
@@ -43,6 +45,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
      * Constructs a new AWSS3StorageListOperation.
      * @param storageService S3 client wrapper
      * @param executorService Executor service used for running blocking operations on a separate thread
+     * @param cognitoAuthProvider Interface to retrieve AWS specific auth information
      * @param request list request parameters
      * @param onSuccess notified when list operation results are available
      * @param onError notified when list results cannot be obtained due to error
@@ -50,6 +53,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
     public AWSS3StorageListOperation(
             @NonNull StorageService storageService,
             @NonNull ExecutorService executorService,
+            @NonNull CognitoAuthProvider cognitoAuthProvider,
             @NonNull AWSS3StorageListRequest request,
             @NonNull Consumer<StorageListResult> onSuccess,
             @NonNull Consumer<StorageException> onError
@@ -57,6 +61,7 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
         super(request);
         this.storageService = storageService;
         this.executorService = executorService;
+        this.cognitoAuthProvider = cognitoAuthProvider;
         this.onSuccess = onSuccess;
         this.onError = onError;
     }
@@ -66,13 +71,24 @@ public final class AWSS3StorageListOperation extends StorageListOperation<AWSS3S
     public void start() {
         executorService.submit(() -> {
             try {
-                List<StorageItem> listedItems = storageService.listFiles(
-                    S3Keys.createServiceKey(
+                String currentIdentityId;
+
+                try {
+                    currentIdentityId = cognitoAuthProvider.getIdentityId();
+                } catch (StorageException exception) {
+                    onError.accept(exception);
+                    return;
+                }
+
+                String serviceKey = S3Keys.createServiceKey(
                         getRequest().getAccessLevel(),
-                        getRequest().getTargetIdentityId(),
+                        getRequest().getTargetIdentityId() != null
+                                ? getRequest().getTargetIdentityId()
+                                : currentIdentityId,
                         getRequest().getPath()
-                    )
                 );
+
+                List<StorageItem> listedItems = storageService.listFiles(serviceKey);
 
                 onSuccess.accept(StorageListResult.fromItems(listedItems));
             } catch (Exception exception) {
