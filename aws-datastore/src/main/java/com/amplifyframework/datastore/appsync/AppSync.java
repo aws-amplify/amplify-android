@@ -87,10 +87,10 @@ public interface AppSync {
      */
     @NonNull
     <T extends Model> Cancelable update(
-        @NonNull T model,
-        @NonNull Integer version,
-        @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
-        @NonNull Consumer<DataStoreException> onFailure
+            @NonNull T model,
+            @NonNull Integer version,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**

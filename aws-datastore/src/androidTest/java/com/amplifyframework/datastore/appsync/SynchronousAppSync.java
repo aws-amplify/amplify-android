@@ -125,9 +125,8 @@ public final class SynchronousAppSync {
      */
     @SuppressWarnings("LineLength")
     @NonNull
-    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(@NonNull Class<T> clazz,
-                                                                   @NonNull String objectId,
-                                                                   @NonNull Integer version) throws DataStoreException {
+    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
+        @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
         return delete(clazz, objectId, version, null);
     }
 

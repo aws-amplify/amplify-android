@@ -247,13 +247,6 @@ public final class AppSyncClientInstrumentationTest {
             api.update(model, version, predicate, onResult, onError));
     }
 
-    @NonNull
-    private <T extends Model> ModelWithMetadata<T> delete(
-        @NonNull Class<T> clazz, String modelId, int version)
-        throws DataStoreException {
-        return delete(clazz, modelId, version, null);
-    }
-
     /**
      * Deletes an instance of a model.
      * @param clazz The class of model being deleted
@@ -263,7 +256,15 @@ public final class AppSyncClientInstrumentationTest {
      * @return Model hat was deleted from endpoint, coupled with metadata about the deletion
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
+    @NonNull
+    private <T extends Model> ModelWithMetadata<T> delete(
+        @NonNull Class<T> clazz, String modelId, int version)
+        throws DataStoreException {
+        return delete(clazz, modelId, version, null);
+    }
+
     @SuppressWarnings("SameParameterValue") // Reads better with details in one place
+    @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
             @NonNull Class<T> clazz, String modelId, int version, QueryPredicate predicate)
             throws DataStoreException {

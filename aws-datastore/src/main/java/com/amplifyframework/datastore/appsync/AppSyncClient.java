@@ -155,10 +155,11 @@ public final class AppSyncClient implements AppSync {
      */
     @NonNull
     @Override
-    public <T extends Model> Cancelable update(@NonNull T model,
-                                               @NonNull Integer version,
-                                               @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
-                                               @NonNull Consumer<DataStoreException> onFailure) {
+    public <T extends Model> Cancelable update(
+            @NonNull T model,
+            @NonNull Integer version,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure) {
         return update(model, version, null, onResponse, onFailure);
     }
 
@@ -208,11 +209,12 @@ public final class AppSyncClient implements AppSync {
      */
     @NonNull
     @Override
-    public <T extends Model> Cancelable delete(@NonNull Class<T> clazz,
-                                               @NonNull String objectId,
-                                               @NonNull Integer version,
-                                               @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
-                                               @NonNull Consumer<DataStoreException> onFailure) {
+    public <T extends Model> Cancelable delete(
+            @NonNull Class<T> clazz,
+            @NonNull String objectId,
+            @NonNull Integer version,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure) {
         return delete(clazz, objectId, version, null, onResponse, onFailure);
     }
 
