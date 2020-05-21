@@ -21,10 +21,13 @@ import androidx.annotation.RawRes;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategory;
+import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.AmplifyConfiguration;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
+
+import com.amazonaws.mobile.client.AWSMobileClient;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 
@@ -46,7 +49,17 @@ final class TestApiCategory {
     static ApiCategory fromConfiguration(@RawRes int resourceId) throws AmplifyException {
         Context context = getApplicationContext();
         ApiCategory apiCategory = new ApiCategory();
-        apiCategory.addPlugin(new AWSApiPlugin());
+        apiCategory.addPlugin(
+                new AWSApiPlugin(
+                        ApiAuthProviders
+                                .builder()
+                                .awsCredentialsProvider(AWSMobileClient.getInstance())
+                                .cognitoUserPoolsAuthProvider(
+                                        new DefaultCognitoUserPoolsAuthProvider(AWSMobileClient.getInstance())
+                                )
+                                .build()
+                )
+        );
         CategoryConfiguration apiConfiguration =
             AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.API);
