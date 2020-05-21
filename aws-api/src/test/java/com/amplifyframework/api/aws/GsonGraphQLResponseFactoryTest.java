@@ -19,10 +19,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
-import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
 
@@ -294,7 +291,7 @@ public final class GsonGraphQLResponseFactoryTest {
     }
 
     /**
-     * {@link AWSDate}, {@link AWSDateTime}, {@link AWSTime}, and {@link AWSTimestamp} all
+     * {@link Temporal.Date}, {@link Temporal.DateTime}, {@link Temporal.Time}, and {@link Temporal.Timestamp} all
      * have different JSON representations. It must be possible to recover the Java type which
      * models the JSON representation of each.
      * @throws ApiException If the response factory fails to construct a response,
@@ -308,50 +305,50 @@ public final class GsonGraphQLResponseFactoryTest {
             Meeting.builder()
                 .name("meeting0")
                 .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
-                .date(new AWSDate("2001-02-03"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30Z"))
-                .time(new AWSTime("01:22"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30Z"))
+                .time(new Temporal.Time("01:22"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting1")
                 .id("45a5f600-8aa8-41ac-a529-aed75036f5be")
-                .date(new AWSDate("2001-02-03"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30:15Z"))
-                .time(new AWSTime("01:22:33"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15Z"))
+                .time(new Temporal.Time("01:22:33"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting2")
                 .id("7a3d5d76-667e-4714-a882-8c8e00a6ffc9")
-                .date(new AWSDate("2001-02-03Z"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444Z"))
-                .time(new AWSTime("01:22:33.444"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03Z"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15.444Z"))
+                .time(new Temporal.Time("01:22:33.444"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting3")
                 .id("3a880283-5402-4ad7-bc41-052ca6edeba8")
-                .date(new AWSDate("2001-02-03+01:30"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30"))
-                .time(new AWSTime("01:22:33.444Z"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03+01:30"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15.444+05:30"))
+                .time(new Temporal.Time("01:22:33.444Z"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting4")
                 .id("5dfc35eb-f75a-4848-9655-9b8ca813b74d")
-                .date(new AWSDate("2001-02-03+01:30:15"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30:15"))
-                .time(new AWSTime("01:22:33.444+05:30"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03+01:30:15"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15.444+05:30:15"))
+                .time(new Temporal.Time("01:22:33.444+05:30"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build(),
             Meeting.builder()
                 .name("meeting5")
                 .id("3ce161af-14e7-4880-843b-921838efdc9d")
-                .date(new AWSDate("2001-02-03+01:30:15"))
-                .dateTime(new AWSDateTime("2001-02-03T01:30:15.444+05:30:15"))
-                .time(new AWSTime("01:22:33.444+05:30:15"))
-                .timestamp(new AWSTimestamp(1234567890000L, TimeUnit.MILLISECONDS))
+                .date(new Temporal.Date("2001-02-03+01:30:15"))
+                .dateTime(new Temporal.DateTime("2001-02-03T01:30:15.444+05:30:15"))
+                .time(new Temporal.Time("01:22:33.444+05:30:15"))
+                .timestamp(new Temporal.Timestamp(1234567890000L, TimeUnit.MILLISECONDS))
                 .build()
         );
 

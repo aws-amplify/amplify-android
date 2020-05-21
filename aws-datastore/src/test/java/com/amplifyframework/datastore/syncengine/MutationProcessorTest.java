@@ -60,8 +60,8 @@ public final class MutationProcessorTest {
         LocalStorageAdapter localStorageAdapter = InMemoryStorageAdapter.create();
         this.synchronousStorageAdapter = SynchronousStorageAdapter.delegatingTo(localStorageAdapter);
         this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
-        Merger merger = new Merger(mutationOutbox, localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
+        Merger merger = new Merger(mutationOutbox, versionRepository, localStorageAdapter);
         this.appSync = mock(AppSync.class);
         this.mutationProcessor = new MutationProcessor(merger, versionRepository, mutationOutbox, appSync);
     }

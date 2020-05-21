@@ -15,8 +15,8 @@
 
 package com.amplifyframework.datastore.storage.sqlite;
 
-import com.amplifyframework.core.model.AWSDateTime;
 import com.amplifyframework.core.model.query.Where;
+import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.StrictMode;
 import com.amplifyframework.datastore.storage.SynchronousStorageAdapter;
@@ -43,7 +43,8 @@ import static org.junit.Assert.assertNotNull;
  * in question. Now, the test may serve as a "smoke test."
  */
 public final class SQLiteStorageAdapterModelConverterTest {
-    private static final AWSDateTime MAY_THE_FOURTH = new AWSDateTime("2020-05-04T14:20:00-07:00");
+    private static final Temporal.DateTime MAY_THE_FOURTH =
+            new Temporal.DateTime("2020-05-04T14:20:00-07:00");
 
     private SynchronousStorageAdapter adapter;
 

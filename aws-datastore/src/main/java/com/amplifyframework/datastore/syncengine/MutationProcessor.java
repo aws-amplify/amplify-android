@@ -115,12 +115,18 @@ final class MutationProcessor {
      * @return A Completable that emits success when the item is processed, emits failure, otherwise
      */
     private <T extends Model> Completable processOutboxItem(PendingMutation<T> mutationOutboxItem) {
-        // First, publish the mutation over the network.
-        return publishToNetwork(mutationOutboxItem)
-            // Merge the response back into the local store.
-            .flatMapCompletable(mutation -> merger.merge(mutation, Merger.MergeStrategy.IGNORE_PENDING_MUTATIONS))
-            // Lastly, remove the item from the outbox, so we don't process it again.
-            .andThen(mutationOutbox.remove(mutationOutboxItem))
+        // First, mark the item as in-flight.
+        return mutationOutbox.markInFlight(mutationOutboxItem.getMutationId())
+            // Then, put it "into flight"
+            .andThen(publishToNetwork(mutationOutboxItem)
+                .flatMapCompletable(modelWithMetadata ->
+                    // Once the server knows about it, it's safe to remove from the outbox.
+                    // This is done before merging, because the merger will refuse to merge
+                    // if there are outstanding mutations in the outbox.
+                    mutationOutbox.remove(mutationOutboxItem.getMutationId())
+                        .andThen(merger.merge(modelWithMetadata))
+                )
+            )
             .doOnComplete(() -> {
                 LOG.debug(
                     "Pending mutation was published to cloud successfully, " +

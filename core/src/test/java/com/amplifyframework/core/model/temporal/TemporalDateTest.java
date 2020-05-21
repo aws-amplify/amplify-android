@@ -13,9 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.scalar;
-
-import com.amplifyframework.core.model.AWSDate;
+package com.amplifyframework.core.model.temporal;
 
 import org.junit.Test;
 
@@ -31,11 +29,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 /**
- * Tests the {@link AWSDate}.
+ * Tests the {@link Temporal.Date}.
  */
-public final class AWSDateTest {
+public final class TemporalDateTest {
     /**
-     * An {@link AWSDate} may be created from a variety of different formats of String.
+     * An {@link Temporal.Date} may be created from a variety of different formats of String.
      */
     @Test
     public void parsesExpectedFormats() {
@@ -46,12 +44,12 @@ public final class AWSDateTest {
                 "2001-02-03+01:30:15"
         );
         for (String value : values) {
-            assertEquals(value, new AWSDate(value).format());
+            assertEquals(value, new Temporal.Date(value).format());
         }
     }
 
     /**
-     * An {@link AWSDate} may be created from a Java {@link Date}, and can
+     * An {@link Temporal.Date} may be created from a Java {@link Date}, and can
      * be converted back to a Java {@link Date}.
      */
     @Test
@@ -66,13 +64,13 @@ public final class AWSDateTest {
         cal.set(Calendar.MINUTE, 0); // 12:00 AM
         cal.set(Calendar.SECOND, 0); // 12:00:00 AM
         Date date = cal.getTime();
-        AWSDate awsDate = new AWSDate(date);
-        assertEquals(date, awsDate.toDate());
-        assertThrows(IllegalStateException.class, awsDate::getOffsetTotalSeconds);
+        Temporal.Date temporalDate = new Temporal.Date(date);
+        assertEquals(date, temporalDate.toDate());
+        assertThrows(IllegalStateException.class, temporalDate::getOffsetTotalSeconds);
     }
 
     /**
-     * An {@link AWSDate} can be constructed from a Java {@link Date}, along
+     * An {@link Temporal.Date} can be constructed from a Java {@link Date}, along
      * with a timezone offset in seconds.
      */
     @Test
@@ -90,8 +88,8 @@ public final class AWSDateTest {
         Date date = cal.getTime();
         long offsetInMillis = timeZone.getOffset(date.getTime());
         int offsetInSeconds = (int) TimeUnit.MILLISECONDS.toSeconds(offsetInMillis);
-        AWSDate awsDate = new AWSDate(date, offsetInSeconds);
-        assertEquals(date, awsDate.toDate());
-        assertEquals(offsetInSeconds, awsDate.getOffsetTotalSeconds());
+        Temporal.Date temporalDate = new Temporal.Date(date, offsetInSeconds);
+        assertEquals(date, temporalDate.toDate());
+        assertEquals(offsetInSeconds, temporalDate.getOffsetTotalSeconds());
     }
 }

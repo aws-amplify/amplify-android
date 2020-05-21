@@ -13,9 +13,7 @@
  * permissions and limitations under the License.
  */
 
-package com.amplifyframework.core.model.scalar;
-
-import com.amplifyframework.core.model.AWSTime;
+package com.amplifyframework.core.model.temporal;
 
 import org.junit.Test;
 
@@ -31,11 +29,11 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 
 /**
- * Tests the {@link AWSTime}.
+ * Tests the {@link Temporal.Time}.
  */
-public final class AWSTimeTest {
+public final class TemporalTimeTest {
     /**
-     * There are several possible formats of String for which a valid {@link AWSTime}
+     * There are several possible formats of String for which a valid {@link Temporal.Time}
      * can be constructed.
      */
     @Test
@@ -48,15 +46,15 @@ public final class AWSTimeTest {
                 "01:22:33.444+05:30:15"
         );
         for (String value : values) {
-            assertEquals(value, new AWSTime(value).format());
+            assertEquals(value, new Temporal.Time(value).format());
         }
 
         // Seconds for time is optional when parsing, but always present in formatted output.
-        assertEquals("01:22:00", new AWSTime("01:22").format());
+        assertEquals("01:22:00", new Temporal.Time("01:22").format());
     }
 
     /**
-     * An {@link AWSTime} may be converted to and from a Java {@link Date}.
+     * An {@link Temporal.Time} may be converted to and from a Java {@link Date}.
      * When no zone offset is provided, the Date is assumed to be relative to GMT.
      */
     @Test
@@ -71,14 +69,14 @@ public final class AWSTimeTest {
         cal.set(Calendar.MINUTE, 2); // 1:02 AM
         cal.set(Calendar.SECOND, 3); // 1:02:03 AM
         Date date = cal.getTime();
-        AWSTime awsTime = new AWSTime(date);
-        assertEquals(date, awsTime.toDate());
-        assertThrows(IllegalStateException.class, awsTime::getOffsetTotalSeconds);
+        Temporal.Time temporalTime = new Temporal.Time(date);
+        assertEquals(date, temporalTime.toDate());
+        assertThrows(IllegalStateException.class, temporalTime::getOffsetTotalSeconds);
     }
 
     /**
-     * An {@link AWSTime} may be converted to and from a Java {@link Date}.
-     * When an offset time is additionally provided, it may be stored into the {@link AWSTime}
+     * An {@link Temporal.Time} may be converted to and from a Java {@link Date}.
+     * When an offset time is additionally provided, it may be stored into the {@link Temporal.Time}
      * and used for further computations.
      */
     @Test
@@ -96,8 +94,8 @@ public final class AWSTimeTest {
         Date date = cal.getTime();
         long offsetInMillis = timeZone.getOffset(date.getTime());
         int offsetInSeconds = (int) TimeUnit.MILLISECONDS.toSeconds(offsetInMillis);
-        AWSTime awsTime = new AWSTime(date, offsetInSeconds);
-        assertEquals(date, awsTime.toDate());
-        assertEquals(offsetInSeconds, awsTime.getOffsetTotalSeconds());
+        Temporal.Time temporalTime = new Temporal.Time(date, offsetInSeconds);
+        assertEquals(date, temporalTime.toDate());
+        assertEquals(offsetInSeconds, temporalTime.getOffsetTotalSeconds());
     }
 }
