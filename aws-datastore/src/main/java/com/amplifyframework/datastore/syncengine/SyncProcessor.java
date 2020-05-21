@@ -294,7 +294,8 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public HubCategoryBehaviorStep dataStoreConfigurationProvider(@NonNull DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+        public HubCategoryBehaviorStep dataStoreConfigurationProvider(
+                @NonNull DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
             return Builder.this;
         }

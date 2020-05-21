@@ -19,8 +19,7 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
-import com.amplifyframework.core.reachability.Host;
-import com.amplifyframework.core.reachability.SocketHost;
+import com.amplifyframework.core.reachability.Reachability;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -35,34 +34,39 @@ import com.amplifyframework.testutils.HubAccumulator;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowLog;
 
-import java.io.IOException;
 import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Observable;
-import okhttp3.HttpUrl;
-import okhttp3.mockwebserver.MockWebServer;
 
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Tests the {@link Orchestrator}.
  */
 @RunWith(RobolectricTestRunner.class)
 public final class OrchestratorTest {
+    private static final long TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+
     /**
      * When an item is placed into storage, a cascade of
      * things happen which should ultimately result in a mutation call
      * to the API category, with an {@link MutationType} corresponding to the type of
      * modification that was made to the storage.
      * @throws AmplifyException On failure to load model schema into registry
-     * @throws IOException On failure to start mock web server
      */
     @SuppressWarnings("unchecked") // Casting ? in HubEvent<?> to PendingMutation<? extends Model>
     @Test
-    public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException, IOException {
+    public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
+        ShadowLog.stream = System.out;
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()
             .name("Susan Quimby")
@@ -81,10 +85,13 @@ public final class OrchestratorTest {
         modelSchemaRegistry.clear();
         modelSchemaRegistry.load(modelProvider.models());
 
-        MockWebServer mockWebServer = new MockWebServer();
-        mockWebServer.start();
-        HttpUrl url = mockWebServer.url("/");
-        Host host = SocketHost.from(url.host(), url.port());
+        Reachability reachability = mock(Reachability.class);
+        doAnswer(invocation -> {
+            Reachability.OnHostReachableAction action = invocation.getArgument(1);
+            action.onHostReachable(invocation.getArgument(0));
+            return null;
+        }).when(reachability).whenReachable(any(), any());
+        when(reachability.isReachable(any())).thenReturn(true);
 
         Orchestrator orchestrator =
             new Orchestrator(modelProvider,
@@ -92,11 +99,12 @@ public final class OrchestratorTest {
                 localStorageAdapter,
                 appSync,
                 DataStoreConfiguration::defaults,
-                host
+                reachability
             );
 
         // Arrange: storage engine is running
-        orchestrator.start(SyncMode.SYNC_VIA_API).blockingAwait();
+        assertTrue(orchestrator.start(SyncMode.SYNC_VIA_API)
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS));
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
@@ -112,6 +120,5 @@ public final class OrchestratorTest {
         );
 
         orchestrator.stop();
-        mockWebServer.shutdown();
     }
 }

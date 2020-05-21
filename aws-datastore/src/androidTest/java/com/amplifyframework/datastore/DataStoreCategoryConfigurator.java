@@ -26,6 +26,7 @@ import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.category.CategoryConfiguration;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.reachability.Reachability;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.testutils.HubAccumulator;
 
@@ -36,6 +37,7 @@ final class DataStoreCategoryConfigurator {
     @RawRes private Integer resourceId;
     private ModelProvider modelProvider;
     private ApiCategory api;
+    private Reachability reachability;
     private boolean clearRequested;
 
     private DataStoreCategoryConfigurator() {}
@@ -76,6 +78,13 @@ final class DataStoreCategoryConfigurator {
         return DataStoreCategoryConfigurator.this;
     }
 
+    @SuppressWarnings("unused")
+    @NonNull
+    DataStoreCategoryConfigurator reachability(@NonNull Reachability reachability) {
+        this.reachability = Objects.requireNonNull(reachability);
+        return DataStoreCategoryConfigurator.this;
+    }
+
     @NonNull
     DataStoreCategory finish() throws AmplifyException {
         // Make sure everything was supplied.
@@ -100,7 +109,7 @@ final class DataStoreCategoryConfigurator {
             AmplifyConfiguration.fromConfigFile(context, resourceId)
                 .forCategoryType(CategoryType.DATASTORE);
 
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, api);
+        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, api, reachability);
         DataStoreCategory dataStoreCategory = new DataStoreCategory();
         dataStoreCategory.addPlugin(awsDataStorePlugin);
         dataStoreCategory.configure(dataStoreConfiguration, context);

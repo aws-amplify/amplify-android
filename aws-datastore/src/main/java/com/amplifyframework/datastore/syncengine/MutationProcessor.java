@@ -87,10 +87,22 @@ final class MutationProcessor {
             .flatMapCompletable(event -> drainMutationOutbox())
             .subscribe(
                 () -> LOG.warn("Observation of mutation outbox was completed."),
-                error -> LOG.warn("Error ended observation of mutation outbox: ", error)
+                error -> {
+                    LOG.warn("Error ended observation of mutation outbox: ", error);
+                    Amplify.Hub.publish(HubChannel.DATASTORE,
+                        HubEvent.create(DataStoreChannelEventName.LOST_CONNECTION)
+                    );
+                }
             )
         );
         return ongoingOperationsDisposable;
+    }
+
+    /**
+     * Stop draining the mutation outbox.
+     */
+    void stopDrainingMutationOutbox() {
+        ongoingOperationsDisposable.clear();
     }
 
     Completable drainMutationOutbox() {

@@ -30,7 +30,6 @@ import java.util.Locale;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 
 /**
  * Tests the {@link PendingMutation}.
@@ -74,9 +73,10 @@ public final class PendingMutationTest {
 
         // Okay! Now, scatter them.
         List<PendingMutation<? extends Model>> outOfOrder = new ArrayList<>(expectedOrder);
-        //noinspection ComparatorMethodParameterNotUsed Intentional; result is random
-        Collections.sort(outOfOrder, (one, two) -> random.nextInt());
-        assertNotEquals(expectedOrder, outOfOrder);
+        while (!expectedOrder.equals(outOfOrder)) {
+            //noinspection ComparatorMethodParameterNotUsed Intentional; result is random
+            Collections.sort(outOfOrder, (one, two) -> random.nextInt());
+        }
 
         // Now sort them according to the item comparator, {@link PendingMutation#compareTo(Object)}.
         List<PendingMutation<? extends Model>> actualOrder = new ArrayList<>(outOfOrder);

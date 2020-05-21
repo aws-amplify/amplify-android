@@ -17,37 +17,62 @@ package com.amplifyframework.datastore.syncengine;
 
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.reachability.Host;
-import com.amplifyframework.core.reachability.PeriodicReachabilityChecker;
 import com.amplifyframework.core.reachability.Reachability;
 import com.amplifyframework.core.reachability.SocketHost;
 
+import java.util.concurrent.atomic.AtomicReference;
+
 import io.reactivex.Completable;
+import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposables;
 
 /**
  * A utility to wait for AWS to become available.
  */
-public final class AwsReachability {
+final class AwsReachability {
+    private static final String AWS_WEBSITE_HOST_NAME = "aws.amazon.com";
+    private static final int HTTPS_PORT = 443;
+
     private final Host host;
     private final Reachability reachability;
 
-    AwsReachability(Host host) {
+    AwsReachability(Reachability reachability) {
+        this(
+            SocketHost.from(AWS_WEBSITE_HOST_NAME, HTTPS_PORT),
+            reachability
+        );
+    }
+
+    AwsReachability(Host host, Reachability reachability) {
         this.host = host;
-        this.reachability = PeriodicReachabilityChecker.instance();
+        this.reachability = reachability;
+    }
+
+    /**
+     * Checks if AWS is reachable, right now.
+     * @return True if AWS is reachable, false otherwise.
+     */
+    Single<Boolean> isReachable() {
+        return Single.create(emitter -> emitter.onSuccess(reachability.isReachable(host)));
     }
 
     /**
      * Waits for AWS to become reachable.
      * @return A Completable which completes when AWS is reachable again
      */
-    Completable isReachable() {
+    Completable awaitReachable() {
         return Completable.create(emitter -> {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
-            Cancelable cancelable =
-                reachability.whenReachable(host, reachableHost -> emitter.onComplete());
-            disposable.add(Disposables.fromAction(cancelable::cancel));
+            AtomicReference<Cancelable> cancelable = new AtomicReference<>();
+            disposable.add(Disposables.fromRunnable(() -> {
+                Cancelable current = cancelable.get();
+                if (current != null) {
+                    current.cancel();
+                }
+            }));
+            cancelable.set(reachability.whenReachable(host, reachableHost -> emitter.onComplete()));
         });
     }
 }

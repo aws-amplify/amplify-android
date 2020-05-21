@@ -46,8 +46,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Observable;
-import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
@@ -134,13 +132,6 @@ final class SubscriptionProcessor {
             ));
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
-        .doOnError(subscriptionError ->
-            LOG.warn(String.format(Locale.US,
-                "An error occurred on the remote %s subscription for model %s.",
-                clazz.getSimpleName(), subscriptionType.name()
-            ), subscriptionError)
-        )
-        .onErrorResumeNext((ObservableSource<GraphQLResponse<ModelWithMetadata<T>>>) Observer::onComplete)
         .subscribeOn(Schedulers.io())
         .observeOn(Schedulers.io())
         .map(SubscriptionProcessor::unwrapResponse)
@@ -169,6 +160,13 @@ final class SubscriptionProcessor {
                 )
         );
         return ongoingOperationsDisposable;
+    }
+
+    /**
+     * Stop any/all ongoing activities.
+     */
+    void stopAllActivity() {
+        ongoingOperationsDisposable.clear();
     }
 
     @VisibleForTesting

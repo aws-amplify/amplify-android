@@ -36,8 +36,8 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
-import com.amplifyframework.core.reachability.Host;
-import com.amplifyframework.core.reachability.SocketHost;
+import com.amplifyframework.core.reachability.PeriodicReachabilityChecker;
+import com.amplifyframework.core.reachability.Reachability;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
@@ -91,7 +91,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull ApiCategory api,
             @Nullable DataStoreConfiguration userProvidedConfiguration,
-            @NonNull Host host) {
+            @NonNull Reachability reachability) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.api = api;
@@ -102,7 +102,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             sqliteStorageAdapter,
             AppSyncClient.via(api),
             () -> pluginConfiguration,
-            host
+            reachability
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -135,7 +135,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @SuppressWarnings({"unused", "WeakerAccess"}) // This is a public API.
     public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) {
-        this(Objects.requireNonNull(modelProvider), Amplify.API, SocketHost.from("aws.amazon.com", 443));
+        this(Objects.requireNonNull(modelProvider), Amplify.API, PeriodicReachabilityChecker.instance());
     }
 
     /**
@@ -144,16 +144,19 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * through the provided {@link GraphQLBehavior}.
      * @param modelProvider Provides the set of models to be warehouse-able by this system
      * @param api Interface to a remote system where models will be synchronized
-     * @param host A host to check for reachability
+     * @param reachability A mechanism to check for internet connections
      */
     @VisibleForTesting
-    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull ApiCategory api, @NonNull Host host) {
+    AWSDataStorePlugin(
+            @NonNull ModelProvider modelProvider,
+            @NonNull ApiCategory api,
+            @NonNull Reachability reachability) {
         this(
             Objects.requireNonNull(modelProvider),
             ModelSchemaRegistry.instance(),
             Objects.requireNonNull(api),
             null,
-            host
+            reachability
         );
     }
 
