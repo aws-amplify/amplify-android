@@ -150,7 +150,7 @@ final class SubscriptionAuthorizer {
     ) throws ApiException {
         final URI apiUrl = getRequestEndpoint(connectionFlag);
         final String apiRegion = apiUrl.getAuthority().split("\\.")[2];
-        final String requestContent = getRequestContent(request, connectionFlag);
+        final String requestContent = getRequestContent(request);
 
         // Construct a request to be signed
         DefaultRequest<?> canonicalRequest = new DefaultRequest<>("appsync");
@@ -200,15 +200,12 @@ final class SubscriptionAuthorizer {
         }
     }
 
-    private String getRequestContent(GraphQLRequest<?> request, boolean connectionFlag) throws ApiException {
-        if (connectionFlag) {
+    private String getRequestContent(GraphQLRequest<?> request) throws ApiException {
+        if (request == null) {
             return "{}";
         }
         try {
-            return new JSONObject()
-                    .put("query", request.getContent())
-                    .put("variables", new JSONObject(request.getVariables()))
-                    .toString();
+            return new JSONObject(request.getContent()).toString();
         } catch (JSONException jsonException) {
             throw new ApiException(
                     "Error constructing JSON object with the subscription request data.",

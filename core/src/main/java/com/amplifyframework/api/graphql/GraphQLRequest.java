@@ -15,8 +15,6 @@
 
 package com.amplifyframework.api.graphql;
 
-import com.amplifyframework.util.Immutable;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,22 +67,6 @@ public final class GraphQLRequest<T> {
         this.fragments = new ArrayList<>();
         this.modelClass = modelClass;
         this.variablesSerializer = variablesSerializer;
-    }
-
-    /**
-     * Returns the query document string.
-     * @return the query document string
-     */
-    public String getDocument() {
-        return document;
-    }
-
-    /**
-     * Returns the immutable map of request variables.
-     * @return the map of variables
-     */
-    public Map<String, Object> getVariables() {
-        return Immutable.of(variables);
     }
 
     /**
