@@ -166,7 +166,7 @@ public final class GsonGraphQLResponseFactoryTest {
      * @throws ApiException From API configuration
      */
     @Test
-    public void responseRendersAsPage() throws ApiException {
+    public void responseRendersAsPaginatedResult() throws ApiException {
         // Expect
         final List<Todo> expectedTodos = Arrays.asList(
                 Todo.builder()
@@ -192,7 +192,8 @@ public final class GsonGraphQLResponseFactoryTest {
         GsonVariablesSerializer serializer = new GsonVariablesSerializer();
         GraphQLRequest<PaginatedResult<Todo>> expectedRequest =
                 new GraphQLRequest<>("document", variables, responseType, serializer);
-        final PaginatedResult<Todo> expectedPaginatedResult = new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
+        final PaginatedResult<Todo> expectedPaginatedResult =
+                new AppSyncPaginatedResult<>(expectedTodos, expectedRequest);
 
         final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
         for (int i = 0; i < 3; i++) {
@@ -212,7 +213,8 @@ public final class GsonGraphQLResponseFactoryTest {
             expectedErrors.add(new GraphQLResponse.Error(message, locations, path, extensions));
         }
 
-        final GraphQLResponse<PaginatedResult<Todo>> expectedResponse = new GraphQLResponse<>(expectedPaginatedResult, expectedErrors);
+        final GraphQLResponse<PaginatedResult<Todo>> expectedResponse =
+                new GraphQLResponse<>(expectedPaginatedResult, expectedErrors);
 
         // Act
         final String partialResponseJson = Resources.readAsString("partial-gql-response.json");
