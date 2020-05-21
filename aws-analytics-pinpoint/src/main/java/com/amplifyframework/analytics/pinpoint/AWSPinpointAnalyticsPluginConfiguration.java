@@ -18,7 +18,7 @@ package com.amplifyframework.analytics.pinpoint;
 /**
  * Configuration options for Amplify Analytics Pinpoint plugin.
  */
-final class AmazonPinpointAnalyticsPluginConfiguration {
+final class AWSPinpointAnalyticsPluginConfiguration {
 
     private static final long DEFAULT_AUTO_FLUSH_INTERVAL = 30000L;
 
@@ -28,7 +28,7 @@ final class AmazonPinpointAnalyticsPluginConfiguration {
     private final String region;
     private final long autoFlushEventsInterval;
 
-    private AmazonPinpointAnalyticsPluginConfiguration(Builder builder) {
+    private AWSPinpointAnalyticsPluginConfiguration(Builder builder) {
         this.appId = builder.appId;
         this.region = builder.region;
         this.trackAppLifecycleEvents = builder.trackAppLifecycleEvents;
@@ -72,7 +72,7 @@ final class AmazonPinpointAnalyticsPluginConfiguration {
 
     /**
      * Return a builder that can be used to construct a new instance of
-     * {@link AmazonPinpointAnalyticsPluginConfiguration}.
+     * {@link AWSPinpointAnalyticsPluginConfiguration}.
      * @return An {@link PinpointProperties.Builder} instance
      */
     static Builder builder() {
@@ -80,7 +80,7 @@ final class AmazonPinpointAnalyticsPluginConfiguration {
     }
 
     /**
-     * Used for fluent construction of an immutable {@link AmazonPinpointAnalyticsPluginConfiguration} object.
+     * Used for fluent construction of an immutable {@link AWSPinpointAnalyticsPluginConfiguration} object.
      */
     static final class Builder {
         private String appId;
@@ -108,8 +108,8 @@ final class AmazonPinpointAnalyticsPluginConfiguration {
             return this;
         }
 
-        AmazonPinpointAnalyticsPluginConfiguration build() {
-            return new AmazonPinpointAnalyticsPluginConfiguration(this);
+        AWSPinpointAnalyticsPluginConfiguration build() {
+            return new AWSPinpointAnalyticsPluginConfiguration(this);
         }
     }
 }
