@@ -117,8 +117,8 @@ final class AppSyncGraphQLRequestFactory {
             int limit,
             String nextToken
     ) throws ApiException {
-        Type responseType = TypeToken.getParameterized(Page.class, modelClass).getType();
-        return buildQuery(modelClass, predicate, limit, nextToken, responseType);
+        Type dataType = TypeToken.getParameterized(Page.class, modelClass).getType();
+        return buildQuery(modelClass, predicate, limit, nextToken, dataType);
     }
 
     static <R, T extends Model> GraphQLRequest<R> buildQuery(

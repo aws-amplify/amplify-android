@@ -18,7 +18,9 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLLocation;
 import com.amplifyframework.api.graphql.GraphQLPathSegment;
+import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
+import com.amplifyframework.api.graphql.Page;
 import com.amplifyframework.core.model.temporal.Temporal;
 import com.amplifyframework.testmodels.meeting.Meeting;
 import com.amplifyframework.testutils.Resources;
@@ -99,9 +101,10 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsString("partial-gql-response.json");
 
         // Act! Parse it into a model.
-        Type responseType = new TypeToken<ListTodosResult>(){}.getType();
+        GraphQLRequest<ListTodosResult> request =
+                new GraphQLRequest<>("document", ListTodosResult.class, new GsonVariablesSerializer());
         final GraphQLResponse<ListTodosResult> response =
-            responseFactory.buildResponse(null, partialResponseJson, ListTodosResult.class);
+            responseFactory.buildResponse(request, partialResponseJson, ListTodosResult.class);
 
         // Assert that the model contained things...
         assertNotNull(response);
@@ -111,20 +114,20 @@ public final class GsonGraphQLResponseFactoryTest {
         // Assert that all of the fields of the different todos
         // match what we would expect from a manual inspection of the
         // JSON.
-        final List<ListTodosResult.Todo> actualTodos = response.getData().getItems();
+        final List<Todo> actualTodos = response.getData().getItems();
 
-        final List<ListTodosResult.Todo> expectedTodos = Arrays.asList(
-            ListTodosResult.Todo.builder()
+        final List<Todo> expectedTodos = Arrays.asList(
+            Todo.builder()
                 .id("fa1c21cc-0458-4bca-bcb1-101579fb85c7")
                 .name(null)
                 .description("Test")
                 .build(),
-            ListTodosResult.Todo.builder()
+            Todo.builder()
                 .id("68bad242-dec5-415b-acb3-daee3b069ce5")
                 .name(null)
                 .description("Test")
                 .build(),
-            ListTodosResult.Todo.builder()
+            Todo.builder()
                 .id("f64e2e9a-42ad-4455-b8ee-d1cfae7e9f01")
                 .name(null)
                 .description("Test")
@@ -155,6 +158,73 @@ public final class GsonGraphQLResponseFactoryTest {
         }
 
         assertEquals(expectedErrors, response.getErrors());
+    }
+
+    /**
+     * Validates that the converter is able to parse a partial GraphQL
+     * response into a result. In this case, the result contains some
+     * data, but also a list of errors.
+     * @throws ApiException From API configuration
+     */
+    @Test
+    public void responseRendersAsPage() throws ApiException {
+        // Expect
+        final List<Todo> expectedTodos = Arrays.asList(
+                Todo.builder()
+                        .id("fa1c21cc-0458-4bca-bcb1-101579fb85c7")
+                        .name(null)
+                        .description("Test")
+                        .build(),
+                Todo.builder()
+                        .id("68bad242-dec5-415b-acb3-daee3b069ce5")
+                        .name(null)
+                        .description("Test")
+                        .build(),
+                Todo.builder()
+                        .id("f64e2e9a-42ad-4455-b8ee-d1cfae7e9f01")
+                        .name(null)
+                        .description("Test")
+                        .build()
+        );
+
+        String nextToken = "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4";
+        Map<String, Object> variables = Collections.singletonMap("nextToken", nextToken);
+        Type responseType = TypeToken.getParameterized(Page.class, Todo.class).getType();
+        GsonVariablesSerializer serializer = new GsonVariablesSerializer();
+        GraphQLRequest<Page<Todo>> expectedRequest =
+                new GraphQLRequest<>("document", variables, responseType, serializer);
+        final Page<Todo> expectedPage = new AppSyncPage<>(expectedTodos, expectedRequest);
+
+        final List<GraphQLResponse.Error> expectedErrors = new ArrayList<>();
+        for (int i = 0; i < 3; i++) {
+            String message = "failed";
+            List<GraphQLLocation> locations = Collections.singletonList(
+                    new GraphQLLocation(5, 7));
+            List<GraphQLPathSegment> path = Arrays.asList(
+                    new GraphQLPathSegment("listTodos"),
+                    new GraphQLPathSegment("items"),
+                    new GraphQLPathSegment(i),
+                    new GraphQLPathSegment("name")
+            );
+            Map<String, Object> extensions = new HashMap<>();
+            extensions.put("errorType", null);
+            extensions.put("errorInfo", null);
+            extensions.put("data", null);
+            expectedErrors.add(new GraphQLResponse.Error(message, locations, path, extensions));
+        }
+
+        final GraphQLResponse<Page<Todo>> expectedResponse = new GraphQLResponse<>(expectedPage, expectedErrors);
+
+        // Act
+        final String partialResponseJson = Resources.readAsString("partial-gql-response.json");
+
+        final GraphQLRequest<Page<Todo>> request =
+                new GraphQLRequest<>("document", responseType, serializer);
+        final GraphQLResponse<Page<Todo>> response =
+                responseFactory.buildResponse(request, partialResponseJson, responseType);
+
+        // Assert
+        assertEquals(expectedResponse, response);
     }
 
     /**
@@ -254,9 +324,11 @@ public final class GsonGraphQLResponseFactoryTest {
         // Arrange some known JSON response
         final JSONObject partialResponseJson = Resources.readAsJson("partial-gql-response.json");
 
+        GraphQLRequest<String> request =
+                new GraphQLRequest<>("document", String.class, new GsonVariablesSerializer());
         // Act! Parse it into a String data type.
         final GraphQLResponse<String> response =
-                responseFactory.buildResponse(null, partialResponseJson.toString(), String.class);
+                responseFactory.buildResponse(request, partialResponseJson.toString(), String.class);
 
         // Assert that the response data is just the data block as a JSON string
         assertEquals(
@@ -275,8 +347,10 @@ public final class GsonGraphQLResponseFactoryTest {
             Resources.readAsJson("base-sync-posts-response.json");
 
         Type responseType = new TypeToken<Iterable<String>>(){}.getType();
+        GraphQLRequest<Iterable<String>> request =
+                new GraphQLRequest<>("document", responseType, new GsonVariablesSerializer());
         GraphQLResponse<Iterable<String>> response =
-                responseFactory.buildResponse(null, baseQueryResponseJson.toString(), responseType);
+                responseFactory.buildResponse(request, baseQueryResponseJson.toString(), responseType);
         final Iterable<String> queryResults = response.getData();
 
         final List<String> resultJsons = new ArrayList<>();
@@ -355,8 +429,10 @@ public final class GsonGraphQLResponseFactoryTest {
         // Act
         final String responseString = Resources.readAsString("list-meetings-response.json");
 
+        GraphQLRequest<ListMeetingsResult> request =
+                new GraphQLRequest<>("document", ListMeetingsResult.class, new GsonVariablesSerializer());
         final GraphQLResponse<ListMeetingsResult> response =
-                responseFactory.buildResponse(null, responseString, ListMeetingsResult.class);
+                responseFactory.buildResponse(request, responseString, ListMeetingsResult.class);
         final List<Meeting> actualMeetings = response.getData().getItems();
 
         // Assert

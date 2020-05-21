@@ -17,7 +17,8 @@
           "name": null,
           "description": "Test"
         }
-      ]
+      ],
+      "nextToken": "eyJ2ZXJzaW9uIjoyLCJ0b2tlbiI6IkFRSUNBSGg5OUIvN3BjWU41eE96NDZJMW5GeGM4"
     }
   },
   "errors": [

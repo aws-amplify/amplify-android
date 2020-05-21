@@ -70,7 +70,7 @@ final class AppSyncPage<T extends Model> extends Page<T> {
 
     @Override
     public String toString() {
-        return "GraphQLResponse.Error{" +
+        return "AppSyncPage{" +
                 "items=\'" + items + "\'" +
                 ", requestForNextPage=\'" + requestForNextPage + "\'" +
                 '}';
