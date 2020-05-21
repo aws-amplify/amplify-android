@@ -16,10 +16,12 @@
 package com.amplifyframework.api.aws;
 
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
+import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 
 import com.amazonaws.internal.StaticCredentialsProvider;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import java.io.IOException;
 
@@ -36,6 +38,15 @@ import static org.junit.Assert.assertEquals;
 public final class AppSyncSigV4SignerInterceptorFactoryTest {
     private static final String X_API_KEY = "x-api-key";
     private static final String AUTHORIZATION = "authorization";
+    private CognitoUserPoolsAuthProvider authProvider;
+
+    /**
+     * Setup tests with global mock.
+     */
+    @Before
+    public void setup() {
+        this.authProvider = Mockito.mock(CognitoUserPoolsAuthProvider.class);
+    }
 
     /**
      * Test cases for when no custom provider is given
@@ -53,7 +64,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
 
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
-                .cognitoUserPoolsAuthProvider(new DefaultCognitoUserPoolsAuthProvider())
+                .cognitoUserPoolsAuthProvider(authProvider)
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
         InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
@@ -90,7 +101,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
     public void testApiKeyNotProvidedInConfiguration() throws IOException, ApiException {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
-                .cognitoUserPoolsAuthProvider(new DefaultCognitoUserPoolsAuthProvider())
+                .cognitoUserPoolsAuthProvider(authProvider)
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
         InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
@@ -120,7 +131,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "CUSTOM_API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
-                .cognitoUserPoolsAuthProvider(new DefaultCognitoUserPoolsAuthProvider())
+                .cognitoUserPoolsAuthProvider(authProvider)
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
         InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
@@ -148,7 +159,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "CUSTOM_API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
-                .cognitoUserPoolsAuthProvider(new DefaultCognitoUserPoolsAuthProvider())
+                .cognitoUserPoolsAuthProvider(authProvider)
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
         InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
@@ -190,7 +201,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
-                .cognitoUserPoolsAuthProvider(new DefaultCognitoUserPoolsAuthProvider())
+                .cognitoUserPoolsAuthProvider(authProvider)
                 .build();
         InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
 
@@ -215,7 +226,7 @@ public final class AppSyncSigV4SignerInterceptorFactoryTest {
         ApiAuthProviders providers = ApiAuthProviders.builder()
                 .apiKeyAuthProvider(() -> "API_KEY")
                 .awsCredentialsProvider(new StaticCredentialsProvider(null))
-                .cognitoUserPoolsAuthProvider(new DefaultCognitoUserPoolsAuthProvider())
+                .cognitoUserPoolsAuthProvider(authProvider)
                 .oidcAuthProvider(() -> "OIDC_JWT_TOKEN")
                 .build();
         InterceptorFactory factory = new AppSyncSigV4SignerInterceptorFactory(providers);
