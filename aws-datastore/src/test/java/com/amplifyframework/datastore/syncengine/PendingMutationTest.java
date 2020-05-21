@@ -61,11 +61,11 @@ public final class PendingMutationTest {
         }
 
         // Okay! Now, shuffle them.
-        List<PendingMutation<? extends Model>> outOfOrder = new ArrayList<>();
-        Collections.shuffle(outOfOrder, new SecureRandom());
+        List<PendingMutation<? extends Model>> shuffled = new ArrayList<>();
+        Collections.shuffle(shuffled, new SecureRandom());
 
         // Now sort them according to the item comparator, {@link PendingMutation#compareTo(Object)}.
-        List<PendingMutation<? extends Model>> actualOrder = new ArrayList<>(outOfOrder);
+        List<PendingMutation<? extends Model>> actualOrder = new ArrayList<>(shuffled);
         Collections.sort(actualOrder);
 
         assertEquals(expectedOrder, actualOrder);

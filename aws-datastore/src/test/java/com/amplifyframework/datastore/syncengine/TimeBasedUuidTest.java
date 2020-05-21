@@ -45,12 +45,12 @@ public final class TimeBasedUuidTest {
             expectedOrder.add(TimeBasedUuid.create());
         }
 
-        // Now, scatter them, into a new array.
-        List<TimeBasedUuid> randomOrder = new ArrayList<>();
-        Collections.shuffle(randomOrder, new SecureRandom());
+        // Now, shuffle them, into a new array.
+        List<TimeBasedUuid> shuffled = new ArrayList<>();
+        Collections.shuffle(shuffled, new SecureRandom());
 
         // Act! sort them using the *default* comparator for the items.
-        List<TimeBasedUuid> actualSortedOrder = new ArrayList<>(randomOrder);
+        List<TimeBasedUuid> actualSortedOrder = new ArrayList<>(shuffled);
         Collections.sort(actualSortedOrder);
 
         assertEquals(expectedOrder, actualSortedOrder);
