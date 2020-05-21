@@ -270,7 +270,7 @@ final class AppSyncGraphQLRequestFactory {
                 if (cognitoAuth == null) {
                     throw new ApiException(
                         "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                        "Did you initialize AWSMobileClient before making this call?"
+                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
                     );
                 }
 

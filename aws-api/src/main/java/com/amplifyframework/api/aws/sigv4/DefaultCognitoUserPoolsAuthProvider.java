@@ -17,6 +17,7 @@ package com.amplifyframework.api.aws.sigv4;
 
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiException;
+import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.mobile.client.Callback;
@@ -31,17 +32,44 @@ import java.util.concurrent.Semaphore;
  * to successfully fetch the token.
  */
 public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoolsAuthProvider {
-
-    private static final String TAG = DefaultCognitoUserPoolsAuthProvider.class.getSimpleName();
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
 
     private String token;
     private String lastTokenRetrievalFailureMessage;
+    private AWSMobileClient awsMobileClient;
+
+    /**
+     * Creates the object with the instance of AWSMobileClient pulled over from the Auth plugin.
+     * TODO: Once we come up with a proper interface, we will remove the use of AWSMobileClient directly in favor
+     *  of using the AuthSession from Auth.
+     * @throws ApiException Thrown if the AWSCognitoAuth plugin is not added.
+     */
+    public DefaultCognitoUserPoolsAuthProvider() throws ApiException {
+        try {
+            this.awsMobileClient =
+                    (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+        } catch (IllegalStateException exception) {
+            throw new ApiException(
+                    "AWSApiPlugin depends on AWSCognitoAuthPlugin but it is currently missing",
+                    exception,
+                    "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you added AWSApiPlugin."
+            );
+        }
+    }
+
+    /**
+     * Creates this with a specific instance of AWSMobileClient - currently used for testing.
+     * @param awsMobileClient The instance of AWS Mobile Client desired to be used in this.
+     */
+    public DefaultCognitoUserPoolsAuthProvider(AWSMobileClient awsMobileClient) {
+        this.awsMobileClient = awsMobileClient;
+    }
 
     // Fetches token from the mobile client.
     private synchronized void fetchToken() throws ApiException {
         final Semaphore semaphore = new Semaphore(0);
         lastTokenRetrievalFailureMessage = null;
-        AWSMobileClient.getInstance().getTokens(new Callback<Tokens>() {
+        awsMobileClient.getTokens(new Callback<Tokens>() {
             @Override
             public void onResult(Tokens result) {
                 token = result.getAccessToken().getTokenString();
@@ -78,6 +106,6 @@ public final class DefaultCognitoUserPoolsAuthProvider implements CognitoUserPoo
 
     @Override
     public String getUsername() {
-        return AWSMobileClient.getInstance().getUsername();
+        return awsMobileClient.getUsername();
     }
 }
