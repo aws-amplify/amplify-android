@@ -15,10 +15,9 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import com.amplifyframework.testutils.Scattered;
-
 import org.junit.Test;
 
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -47,7 +46,8 @@ public final class TimeBasedUuidTest {
         }
 
         // Now, scatter them, into a new array.
-        List<TimeBasedUuid> randomOrder = Scattered.list(expectedOrder);
+        List<TimeBasedUuid> randomOrder = new ArrayList<>();
+        Collections.shuffle(randomOrder, new SecureRandom());
 
         // Act! sort them using the *default* comparator for the items.
         List<TimeBasedUuid> actualSortedOrder = new ArrayList<>(randomOrder);

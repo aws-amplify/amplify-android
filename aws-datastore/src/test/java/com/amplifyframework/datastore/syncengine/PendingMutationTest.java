@@ -19,7 +19,6 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testmodels.commentsblog.Post;
 import com.amplifyframework.testmodels.commentsblog.PostStatus;
-import com.amplifyframework.testutils.Scattered;
 
 import org.junit.Test;
 
@@ -61,8 +60,9 @@ public final class PendingMutationTest {
             }
         }
 
-        // Okay! Now, scatter them.
-        List<PendingMutation<? extends Model>> outOfOrder = Scattered.list(expectedOrder);
+        // Okay! Now, shuffle them.
+        List<PendingMutation<? extends Model>> outOfOrder = new ArrayList<>();
+        Collections.shuffle(outOfOrder, new SecureRandom());
 
         // Now sort them according to the item comparator, {@link PendingMutation#compareTo(Object)}.
         List<PendingMutation<? extends Model>> actualOrder = new ArrayList<>(outOfOrder);
