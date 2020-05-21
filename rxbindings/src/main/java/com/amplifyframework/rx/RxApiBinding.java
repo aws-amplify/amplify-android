@@ -72,10 +72,8 @@ final class RxApiBinding implements RxApiCategoryBehavior {
     }
 
     @NonNull
-    @Override
-    public <T> Single<GraphQLResponse<Iterable<T>>> query(@NonNull GraphQLRequest<T> graphQlRequest) {
+    public <R> Single<GraphQLResponse<R>> query(@NonNull GraphQLRequest<R> graphQlRequest) {
         return toSingle((onResult, onError) -> api.query(graphQlRequest, onResult, onError));
-
     }
 
     @NonNull
@@ -101,8 +99,8 @@ final class RxApiBinding implements RxApiCategoryBehavior {
 
     @NonNull
     @Override
-    public <T> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull String apiName, @NonNull GraphQLRequest<T> graphQlRequest) {
+    public <R> Single<GraphQLResponse<R>> query(
+            @NonNull String apiName, @NonNull GraphQLRequest<R> graphQlRequest) {
         return toSingle((onResult, onError) -> api.query(apiName, graphQlRequest, onResult, onError));
     }
 

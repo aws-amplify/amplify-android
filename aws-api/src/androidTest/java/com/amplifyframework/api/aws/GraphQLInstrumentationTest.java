@@ -83,7 +83,7 @@ public final class GraphQLInstrumentationTest {
         // Start listening for comments on that event
         TestObserver<GraphQLResponse<Comment>> observer = api.onCreate(
             API_NAME,
-            new GraphQLRequest<>(
+            new GraphQLRequest<Comment>(
                 Assets.readAsString("subscribe-event-comments.graphql"),
                 Collections.singletonMap("eventId", eventId),
                 Comment.class,

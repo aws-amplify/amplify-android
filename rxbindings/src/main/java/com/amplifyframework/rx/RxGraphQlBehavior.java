@@ -43,7 +43,7 @@ public interface RxGraphQlBehavior {
      * configured during the call to {@link RxAmplify#configure(Context)}. If not,
      * this method emits an {@link ApiException} via the returned {@link Single}'s error callback.
      * @param modelClass Class of models to query
-     * @param <T> The type of model being queried
+     * @param <M> The type of model being queried
      * @return A cold Single which emits a {@link GraphQLResponse} on success, or
      *         an {@link ApiException} on failure to obtain a response.
      *         On success, the {@link GraphQLResponse} will contain a list of models
@@ -55,8 +55,8 @@ public interface RxGraphQlBehavior {
      *         invoking {@link Disposable#dispose()} on the {@link Single} subscription.
      */
     @NonNull
-    <T extends Model> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull Class<T> modelClass
+    <M extends Model> Single<GraphQLResponse<Iterable<M>>> query(
+            @NonNull Class<M> modelClass
     );
 
     /**
@@ -66,7 +66,7 @@ public interface RxGraphQlBehavior {
      * this method emits an {@link ApiException} via the returned {@link Single}'s error callback.
      * @param modelClass Class of the unique model instance being queried
      * @param modelId ID of the unique model instance being queried
-     * @param <T> The type of model being queried
+     * @param <M> The type of model being queried
      * @return A cold Single which emits a {@link GraphQLResponse} on success, or
      *         an {@link ApiException} on failure to obtain a response. On success,
      *         the {@link GraphQLResponse} will contain the unique model having the requested
@@ -78,8 +78,8 @@ public interface RxGraphQlBehavior {
      *         by invoking {@link Disposable#dispose()} on the {@link Single} subscription.
      */
     @NonNull
-    <T extends Model> Single<GraphQLResponse<T>> query(
-            @NonNull Class<T> modelClass,
+    <M extends Model> Single<GraphQLResponse<M>> query(
+            @NonNull Class<M> modelClass,
             @NonNull String modelId
     );
 
@@ -93,7 +93,7 @@ public interface RxGraphQlBehavior {
      * @param searchCriteria Additional criteria applied to models of the requested class,
      *                       before being returned to the client. The criteria are evaluated
      *                       on the server.
-     * @param <T> The type of model being queried
+     * @param <M> The type of model being queried
      * @return A cold Single which emits a {@link GraphQLResponse} on success, or
      *         an {@link ApiException} on failure to obtain a response.
      *         On success, the {@link GraphQLResponse} will contain a list of models of the
@@ -106,8 +106,8 @@ public interface RxGraphQlBehavior {
      *         the {@link Single} subscription.
      */
     @NonNull
-    <T extends Model> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull Class<T> modelClass,
+    <M extends Model> Single<GraphQLResponse<Iterable<M>>> query(
+            @NonNull Class<M> modelClass,
             @NonNull QueryPredicate searchCriteria
     );
 
@@ -119,7 +119,7 @@ public interface RxGraphQlBehavior {
      * configured during the call to {@link RxAmplify#configure(Context)}. If not,
      * this method emits an {@link ApiException} via the returned {@link Single}'s error callback.
      * @param graphQlRequest A raw GraphQL query request
-     * @param <T> The type of object being queried
+     * @param <R> The type of object being queried
      * @return A cold Single which emits a {@link GraphQLResponse} on success, or
      *         an {@link ApiException} on failure to obtain a response. On success,
      *         the {@link GraphQLResponse} will contain a list of objects that meet
@@ -131,8 +131,8 @@ public interface RxGraphQlBehavior {
      *         invoking {@link Disposable#dispose()} on the {@link Single} subscription.
      */
     @NonNull
-    <T> Single<GraphQLResponse<Iterable<T>>> query(
-            @NonNull GraphQLRequest<T> graphQlRequest
+    <R> Single<GraphQLResponse<R>> query(
+            @NonNull GraphQLRequest<R> graphQlRequest
     );
 
     /**
@@ -230,7 +230,7 @@ public interface RxGraphQlBehavior {
      *         {@link Single} subscription.
      */
     @NonNull
-    <T> Single<GraphQLResponse<Iterable<T>>> query(
+    <T> Single<GraphQLResponse<T>> query(
             @NonNull String apiName,
             @NonNull GraphQLRequest<T> graphQlRequest
     );
@@ -242,7 +242,7 @@ public interface RxGraphQlBehavior {
      * this method emits an {@link ApiException} via the returned {@link Single}'s error callback.
      * @param model A model to mutate on remote GraphQL API
      * @param mutationType Type of mutation being performed, e.g. {@link MutationType#CREATE}, etc.
-     * @param <T> The type of model being mutated
+     * @param <M> The type of model being mutated
      * @return A cold Single which emits a {@link GraphQLResponse} on success, or
      *         an {@link ApiException} on failure to obtain a response. On success, the
      *         {@link GraphQLResponse} will contain the endpoint's understanding of the model,
@@ -254,8 +254,8 @@ public interface RxGraphQlBehavior {
      *         on the {@link Single} subscription.
      */
     @NonNull
-    <T extends Model> Single<GraphQLResponse<T>> mutate(
-            @NonNull T model,
+    <M extends Model> Single<GraphQLResponse<M>> mutate(
+            @NonNull M model,
             @NonNull MutationType mutationType
     );
 
@@ -270,7 +270,7 @@ public interface RxGraphQlBehavior {
      *                         of the model. If matching, the mutation will be performed. Otherwise,
      *                         the mutation will not be performed.
      * @param mutationType Type of mutation being performed, e.g. {@link MutationType#UPDATE}, etc.
-     * @param <T> The type of model being mutated
+     * @param <M> The type of model being mutated
      * @return A cold Single which emits a {@link GraphQLResponse} on success, or
      *         an {@link ApiException} on failure to obtain a response. On success, the
      *         {@link GraphQLResponse} will contain the endpoint's understanding of the model,
@@ -282,8 +282,8 @@ public interface RxGraphQlBehavior {
      *         on the {@link Single} subscription.
      */
     @NonNull
-    <T extends Model> Single<GraphQLResponse<T>> mutate(
-            @NonNull T model,
+    <M extends Model> Single<GraphQLResponse<M>> mutate(
+            @NonNull M model,
             @NonNull QueryPredicate mutationCriteria,
             @NonNull MutationType mutationType
     );
@@ -487,7 +487,7 @@ public interface RxGraphQlBehavior {
      *                `amplifyconfiguration.json` that was used during the call to
      *                {@link RxAmplify#configure(Context)}.
      * @param graphQlRequest A raw GraphQL subscription request
-     * @param <T> The type of object for which notifications will be dispatched
+     * @param <R> The type of object for which notifications will be dispatched
      * @return An {@link Observable} which emits 0..n {@link GraphQLResponse}s when mutations
      *         occur for objects of the requested type. The stream of responses may terminate at
      *         any point with failure, emitted via the Observable's error callback. When the
@@ -501,8 +501,8 @@ public interface RxGraphQlBehavior {
      *         the GraphQL network subscription will be closed.
      */
     @NonNull
-    <T> Observable<GraphQLResponse<T>> subscribe(
+    <R> Observable<GraphQLResponse<R>> subscribe(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQlRequest
+            @NonNull GraphQLRequest<R> graphQlRequest
     );
 }
