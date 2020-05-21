@@ -17,62 +17,25 @@ package com.amplifyframework.analytics.pinpoint;
 
 import android.content.Context;
 
-import com.amplifyframework.analytics.AnalyticsException;
-import com.amplifyframework.core.Amplify;
-import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.UserAgent;
 
 import com.amazonaws.ClientConfiguration;
-import com.amazonaws.mobile.client.AWSMobileClient;
-import com.amazonaws.mobile.client.Callback;
-import com.amazonaws.mobile.client.UserStateDetails;
-import com.amazonaws.mobile.config.AWSConfiguration;
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.mobileconnectors.pinpoint.PinpointConfiguration;
 import com.amazonaws.mobileconnectors.pinpoint.PinpointManager;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.pinpoint.model.ChannelType;
 
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.TimeUnit;
-
 /**
  * Factory class to vend out pinpoint analytics client.
  */
 final class PinpointManagerFactory {
-    private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-analytics");
-    private static final long INITIALIZATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
-
     private PinpointManagerFactory() {}
 
     static PinpointManager create(
             Context context,
-            AmazonPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration)
-            throws AnalyticsException {
-        // Initialize the AWSMobileClient
-        AWSConfiguration awsConfiguration = new AWSConfiguration(context);
-        CountDownLatch mobileClientLatch = new CountDownLatch(1);
-        AWSMobileClient.getInstance().initialize(context, awsConfiguration, new Callback<UserStateDetails>() {
-            @Override
-            public void onResult(UserStateDetails userStateDetails) {
-                LOG.info("Mobile client initialized");
-                mobileClientLatch.countDown();
-            }
-
-            @Override
-            public void onError(Exception exception) {
-                LOG.error("Error initializing AWS Mobile Client", exception);
-            }
-        });
-        try {
-            if (!mobileClientLatch.await(INITIALIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                throw new AnalyticsException(
-                    "Failed to initialize mobile client.", "Please check your awsconfiguration json."
-                );
-            }
-        } catch (InterruptedException exception) {
-            throw new RuntimeException("Failed to initialize mobile client." + exception);
-        }
-
+            AWSPinpointAnalyticsPluginConfiguration pinpointAnalyticsPluginConfiguration,
+            AWSCredentialsProvider credentialsProvider) {
         ClientConfiguration clientConfiguration = new ClientConfiguration();
         clientConfiguration.setUserAgent(UserAgent.string());
 
@@ -82,7 +45,7 @@ final class PinpointManagerFactory {
                 pinpointAnalyticsPluginConfiguration.getAppId(),
                 Regions.fromName(pinpointAnalyticsPluginConfiguration.getRegion()),
                 ChannelType.GCM,
-                AWSMobileClient.getInstance()
+                credentialsProvider
         ).withClientConfiguration(clientConfiguration);
 
         return new PinpointManager(pinpointConfiguration);
