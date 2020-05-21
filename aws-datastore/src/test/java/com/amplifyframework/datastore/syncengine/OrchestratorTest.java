@@ -19,6 +19,8 @@ import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.reachability.Host;
+import com.amplifyframework.core.reachability.SocketHost;
 import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncMocking;
@@ -34,9 +36,12 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
 
+import java.io.IOException;
 import java.util.Collections;
 
 import io.reactivex.Observable;
+import okhttp3.HttpUrl;
+import okhttp3.mockwebserver.MockWebServer;
 
 import static com.amplifyframework.datastore.syncengine.TestHubEventFilters.publicationOf;
 import static org.junit.Assert.assertEquals;
@@ -53,10 +58,11 @@ public final class OrchestratorTest {
      * to the API category, with an {@link MutationType} corresponding to the type of
      * modification that was made to the storage.
      * @throws AmplifyException On failure to load model schema into registry
+     * @throws IOException On failure to start mock web server
      */
     @SuppressWarnings("unchecked") // Casting ? in HubEvent<?> to PendingMutation<? extends Model>
     @Test
-    public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException {
+    public void itemsPlacedInStorageArePublishedToNetwork() throws AmplifyException, IOException {
         // Arrange: create a BlogOwner
         final BlogOwner susan = BlogOwner.builder()
             .name("Susan Quimby")
@@ -75,16 +81,22 @@ public final class OrchestratorTest {
         modelSchemaRegistry.clear();
         modelSchemaRegistry.load(modelProvider.models());
 
+        MockWebServer mockWebServer = new MockWebServer();
+        mockWebServer.start();
+        HttpUrl url = mockWebServer.url("/");
+        Host host = SocketHost.from(url.host(), url.port());
+
         Orchestrator orchestrator =
             new Orchestrator(modelProvider,
                 modelSchemaRegistry,
                 localStorageAdapter,
                 appSync,
-                DataStoreConfiguration::defaults
+                DataStoreConfiguration::defaults,
+                host
             );
 
         // Arrange: storage engine is running
-        orchestrator.start().blockingAwait();
+        orchestrator.start(SyncMode.SYNC_VIA_API).blockingAwait();
 
         // Act: Put BlogOwner into storage, and wait for it to complete.
         SynchronousStorageAdapter.delegatingTo(localStorageAdapter).save(susan);
@@ -100,5 +112,6 @@ public final class OrchestratorTest {
         );
 
         orchestrator.stop();
+        mockWebServer.shutdown();
     }
 }

@@ -35,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import io.reactivex.Completable;
 import io.reactivex.Single;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 
 /**
@@ -72,7 +73,7 @@ final class MutationProcessor {
      * we have to keep the mutation in the outbox, so that we can try to publish
      * it again later, when network conditions become favorable again.
      */
-    void startDrainingMutationOutbox() {
+    Disposable startDrainingMutationOutbox() {
         ongoingOperationsDisposable.add(mutationOutbox.events()
             .doOnSubscribe(disposable ->
                 LOG.info(
@@ -89,9 +90,10 @@ final class MutationProcessor {
                 error -> LOG.warn("Error ended observation of mutation outbox: ", error)
             )
         );
+        return ongoingOperationsDisposable;
     }
 
-    private Completable drainMutationOutbox() {
+    Completable drainMutationOutbox() {
         PendingMutation<? extends Model> next;
         do {
             next = mutationOutbox.peek();
@@ -147,13 +149,6 @@ final class MutationProcessor {
             HubChannel.DATASTORE,
             HubEvent.create(DataStoreChannelEventName.PUBLISHED_TO_CLOUD, processedMutation)
         );
-    }
-
-    /**
-     * Don't process any more mutations.
-     */
-    void stopDrainingMutationOutbox() {
-        ongoingOperationsDisposable.dispose();
     }
 
     /**

@@ -25,10 +25,14 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.hub.HubCategoryBehavior;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 import com.amplifyframework.util.Time;
 
@@ -61,6 +65,7 @@ final class SyncProcessor {
     private final AppSync appSync;
     private final Merger merger;
     private final DataStoreConfigurationProvider dataStoreConfigurationProvider;
+    private final HubCategoryBehavior hub;
 
     private SyncProcessor(
             ModelProvider modelProvider,
@@ -68,13 +73,15 @@ final class SyncProcessor {
             SyncTimeRegistry syncTimeRegistry,
             AppSync appSync,
             Merger merger,
-            DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+            DataStoreConfigurationProvider dataStoreConfigurationProvider,
+            HubCategoryBehavior hub) {
         this.modelProvider = Objects.requireNonNull(modelProvider);
         this.modelSchemaRegistry = Objects.requireNonNull(modelSchemaRegistry);
         this.syncTimeRegistry = Objects.requireNonNull(syncTimeRegistry);
         this.appSync = Objects.requireNonNull(appSync);
         this.merger = Objects.requireNonNull(merger);
         this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
+        this.hub = hub;
     }
 
     /**
@@ -118,9 +125,13 @@ final class SyncProcessor {
                     .doOnError(failureToSync ->
                         LOG.warn("Initial cloud sync failed.", failureToSync)
                     )
-                    .doOnComplete(() ->
-                        LOG.info("Successfully sync'd down model state from cloud.")
-                    )
+                    .doOnComplete(() -> {
+                        LOG.info("Successfully sync'd down model state from cloud.");
+                        hub.publish(
+                            HubChannel.DATASTORE,
+                            HubEvent.create(DataStoreChannelEventName.SYNC_COMPLETE)
+                        );
+                    })
                     .onErrorComplete()
             );
     }
@@ -229,14 +240,22 @@ final class SyncProcessor {
     /**
      * Builds instances of {@link SyncProcessor}s.
      */
-    public static final class Builder implements ModelProviderStep, ModelSchemaRegistryStep,
-            SyncTimeRegistryStep, AppSyncStep, MergerStep, DataStoreConfigurationProviderStep, BuildStep {
+    public static final class Builder implements
+            ModelProviderStep,
+            ModelSchemaRegistryStep,
+            SyncTimeRegistryStep,
+            AppSyncStep,
+            MergerStep,
+            DataStoreConfigurationProviderStep,
+            HubCategoryBehaviorStep,
+            BuildStep {
         private ModelProvider modelProvider;
         private ModelSchemaRegistry modelSchemaRegistry;
         private SyncTimeRegistry syncTimeRegistry;
         private AppSync appSync;
         private Merger merger;
         private DataStoreConfigurationProvider dataStoreConfigurationProvider;
+        private HubCategoryBehavior hub;
 
         @NonNull
         @Override
@@ -275,8 +294,15 @@ final class SyncProcessor {
 
         @NonNull
         @Override
-        public BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfigurationProvider) {
+        public HubCategoryBehaviorStep dataStoreConfigurationProvider(@NonNull DataStoreConfigurationProvider dataStoreConfigurationProvider) {
             this.dataStoreConfigurationProvider = dataStoreConfigurationProvider;
+            return Builder.this;
+        }
+
+        @NonNull
+        @Override
+        public BuildStep hub(@NonNull HubCategoryBehavior hub) {
+            this.hub = hub;
             return Builder.this;
         }
 
@@ -289,7 +315,8 @@ final class SyncProcessor {
                 syncTimeRegistry,
                 appSync,
                 merger,
-                dataStoreConfigurationProvider
+                dataStoreConfigurationProvider,
+                hub
             );
         }
     }
@@ -321,7 +348,12 @@ final class SyncProcessor {
 
     interface DataStoreConfigurationProviderStep {
         @NonNull
-        BuildStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
+        HubCategoryBehaviorStep dataStoreConfigurationProvider(DataStoreConfigurationProvider dataStoreConfiguration);
+    }
+
+    interface HubCategoryBehaviorStep {
+        @NonNull
+        BuildStep hub(HubCategoryBehavior hub);
     }
 
     interface BuildStep {

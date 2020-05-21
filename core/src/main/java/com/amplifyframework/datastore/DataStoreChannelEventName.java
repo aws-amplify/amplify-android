@@ -42,7 +42,22 @@ public enum DataStoreChannelEventName {
      * An event that uses this value for {@link HubEvent#getName()} will contain a model object
      * in the {@link HubEvent#getData()}.
      */
-    RECEIVED_FROM_CLOUD("received_from_cloud");
+    RECEIVED_FROM_CLOUD("received_from_cloud"),
+
+    /**
+     * The DataStore has lost connection to the internet.
+     */
+    LOST_CONNECTION("lost_connection"),
+
+    /**
+     * The DataStore has regained connection to the internet.
+     */
+    REGAINED_CONNECTION("regained_connection"),
+
+    /**
+     * An initial base/delta sync has completed.
+     */
+    SYNC_COMPLETE("sync_complete");
 
     private final String hubEventName;
 

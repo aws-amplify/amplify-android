@@ -28,9 +28,12 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.DataStoreChannelEventName;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
+import com.amplifyframework.hub.HubChannel;
+import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.logging.Logger;
 
 import java.util.Arrays;
@@ -46,6 +49,7 @@ import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
 import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.ReplaySubject;
 
@@ -85,7 +89,7 @@ final class SubscriptionProcessor {
     /**
      * Start subscribing to model mutations.
      */
-    void startSubscriptions() {
+    Disposable startSubscriptions() {
         Set<Observable<SubscriptionEvent<? extends Model>>> subscriptions = new HashSet<>();
         for (Class<? extends Model> clazz : modelProvider.models()) {
             for (SubscriptionType subscriptionType : SubscriptionType.values()) {
@@ -103,9 +107,14 @@ final class SubscriptionProcessor {
             )
             .subscribe(
                 buffer::onNext,
-                buffer::onError,
-                buffer::onComplete
+                failure -> Amplify.Hub.publish(
+                    HubChannel.DATASTORE,
+                    HubEvent.create(DataStoreChannelEventName.LOST_CONNECTION, failure)
+                ),
+                () -> LOG.warn("Subscriptions stream completed.")
             ));
+
+        return ongoingOperationsDisposable;
     }
 
     @SuppressWarnings("unchecked") // (Class<T>) modelWithMetadata.getModel().getClass()
@@ -147,7 +156,7 @@ final class SubscriptionProcessor {
      * Start draining mutations out of the mutation buffer.
      * This should be called after {@link #startSubscriptions()}.
      */
-    void startDrainingMutationBuffer() {
+    Disposable startDrainingMutationBuffer() {
         ongoingOperationsDisposable.add(
             buffer
                 .doOnSubscribe(disposable ->
@@ -159,13 +168,7 @@ final class SubscriptionProcessor {
                     failure -> LOG.warn("Reading subscriptions buffer has failed.", failure)
                 )
         );
-    }
-
-    /**
-     * Stop any active subscriptions, and stop draining the mutation buffer.
-     */
-    void stopAllSubscriptionActivity() {
-        ongoingOperationsDisposable.clear();
+        return ongoingOperationsDisposable;
     }
 
     @VisibleForTesting

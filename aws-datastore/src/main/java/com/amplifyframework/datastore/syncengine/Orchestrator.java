@@ -15,26 +15,29 @@
 
 package com.amplifyframework.datastore.syncengine;
 
-import android.content.Context;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
+import com.amplifyframework.core.reachability.Host;
+import com.amplifyframework.datastore.DataStoreConfiguration;
 import com.amplifyframework.datastore.DataStoreConfigurationProvider;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.logging.Logger;
 
-import org.json.JSONObject;
-
 import java.util.Objects;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
+import io.reactivex.disposables.CompositeDisposable;
+import io.reactivex.schedulers.Schedulers;
 
 /**
- * Synchronizes changed data between the {@link LocalStorageAdapter}
- * and {@link AppSync}.
+ * Orchestrates the various components of the Sync Engine. The Sync Engine
+ * is responsible for synchronizing data back and forth between the device and an
+ * AppSync endpoint.
  */
 public final class Orchestrator {
     private static final Logger LOG = Amplify.Logging.forNamespace("amplify:aws-datastore");
@@ -44,37 +47,32 @@ public final class Orchestrator {
     private final MutationOutbox mutationOutbox;
     private final MutationProcessor mutationProcessor;
     private final StorageObserver storageObserver;
+    private final CompositeDisposable reachabilityObservation;
+    private final CompositeDisposable onlineOperations;
+    private final OnlineState onlineState;
 
     /**
      * Constructs a new Orchestrator.
-     * The Orchestrator will synchronize data between the {@link AppSync}
-     * and the {@link LocalStorageAdapter}.
+     * The Orchestrator will synchronize data between {@link AppSync} and the {@link LocalStorageAdapter}.
      * @param modelProvider A provider of the models to be synchronized
      * @param modelSchemaRegistry A registry of model schema
-     * @param localStorageAdapter Interface to local storage, used to
-     *                       durably store offline changes until
-     *                       then can be written to the network
+     * @param localStorageAdapter Local storage, to manage models as well as system metadata
      * @param appSync An AppSync Endpoint
-     * @param dataStoreConfigurationProvider An instance that implements {@link DataStoreConfigurationProvider}
-     *                       Note that the provider-style interface is needed because
-     *                       at the time this constructor is called from the
-     *                       {@link com.amplifyframework.datastore.AWSDataStorePlugin}'s constructor,
-     *                       the plugin is not fully configured yet. The reference to the
-     *                       variable returned by the provider only get set after the plugin's
-     *                       #{@link com.amplifyframework.datastore.AWSDataStorePlugin#configure(JSONObject, Context)}
-     *                       is invoked by Amplify.
-     *
+     * @param dataStoreConfigurationProvider A provider of {@link DataStoreConfiguration}
      */
     public Orchestrator(
             @NonNull final ModelProvider modelProvider,
             @NonNull final ModelSchemaRegistry modelSchemaRegistry,
             @NonNull final LocalStorageAdapter localStorageAdapter,
             @NonNull final AppSync appSync,
-            @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider) {
-        Objects.requireNonNull(modelSchemaRegistry);
+            @NonNull final DataStoreConfigurationProvider dataStoreConfigurationProvider,
+            @NonNull final Host host) {
         Objects.requireNonNull(modelProvider);
-        Objects.requireNonNull(appSync);
+        Objects.requireNonNull(modelSchemaRegistry);
         Objects.requireNonNull(localStorageAdapter);
+        Objects.requireNonNull(appSync);
+        Objects.requireNonNull(dataStoreConfigurationProvider);
+        Objects.requireNonNull(host);
 
         this.mutationOutbox = new PersistentMutationOutbox(localStorageAdapter);
         VersionRepository versionRepository = new VersionRepository(localStorageAdapter);
@@ -89,9 +87,14 @@ public final class Orchestrator {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(dataStoreConfigurationProvider)
+            .hub(Amplify.Hub)
             .build();
         this.subscriptionProcessor = new SubscriptionProcessor(appSync, modelProvider, merger);
         this.storageObserver = new StorageObserver(localStorageAdapter, mutationOutbox);
+
+        this.reachabilityObservation = new CompositeDisposable();
+        this.onlineOperations = new CompositeDisposable();
+        this.onlineState = new OnlineState(Amplify.Hub, new AwsReachability(host));
     }
 
     /**
@@ -100,16 +103,49 @@ public final class Orchestrator {
      * @return A Completable operation to start the sync engine orchestrator
      */
     @NonNull
-    public Completable start() {
+    public Completable start(SyncMode syncMode) {
         return mutationOutbox.load()
-            .andThen(Completable.fromAction(() -> {
-                storageObserver.startObservingStorageChanges();
-                subscriptionProcessor.startSubscriptions();
-                syncProcessor.hydrate().blockingAwait();
-                mutationProcessor.startDrainingMutationOutbox();
-                subscriptionProcessor.startDrainingMutationBuffer();
-                LOG.info("Cloud synchronization is now fully active.");
+            .doOnComplete(() -> {
+                LOG.info("Loaded...");
+            })
+            .andThen(Completable.fromAction(storageObserver::startObservingStorageChanges))
+            .doOnComplete(() -> {
+                LOG.info("bserving changed...");
+            })
+            .andThen(Completable.create(emitter -> {
+                LOG.info(("inside fianl block "));
+                if (!SyncMode.SYNC_VIA_API.equals(syncMode)) {
+                    LOG.info("emitting complete cause mode is not API");
+                    emitter.onComplete();
+                    return;
+                }
+                LOG.info(" About to detect... ");
+                onlineOperations.add(onlineState.startDetecting());
+                LOG.info("About to observer ....");
+                reachabilityObservation.add(onlineState.observe()
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .subscribe(this::toggleState));
+                LOG.info("About to complete ...");
+                emitter.onComplete();
             }));
+    }
+
+    private synchronized void toggleState(boolean isOnline) {
+        LOG.info("Setting the online state to = " + isOnline);
+        if (!isOnline) {
+            onlineOperations.clear();
+            return;
+        }
+        onlineOperations.add(subscriptionProcessor.startSubscriptions());
+        onlineOperations.add(syncProcessor.hydrate()
+            .andThen(mutationProcessor.drainMutationOutbox())
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .andThen(Single.just(mutationProcessor.startDrainingMutationOutbox()))
+            .blockingGet());
+        onlineOperations.add(subscriptionProcessor.startDrainingMutationBuffer());
+        LOG.info("Cloud synchronization is now fully active.");
     }
 
     /**
@@ -117,9 +153,7 @@ public final class Orchestrator {
      */
     public void stop() {
         LOG.info("Intentionally stopping cloud synchronization, now.");
-        storageObserver.stopObservingStorageChanges();
-        subscriptionProcessor.stopAllSubscriptionActivity();
-        mutationProcessor.stopDrainingMutationOutbox();
+        reachabilityObservation.clear();
+        onlineOperations.clear();
     }
 }
-

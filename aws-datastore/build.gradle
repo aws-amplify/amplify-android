@@ -35,6 +35,7 @@ dependencies {
         exclude group: 'com.google.auto.service', module: 'auto-service'
     }
     testImplementation dependency.androidx.test.core
+    testImplementation dependency.okhttp.mockwebserver
 
     androidTestImplementation project(path: ':testmodels')
     androidTestImplementation project(path: ':testutils')

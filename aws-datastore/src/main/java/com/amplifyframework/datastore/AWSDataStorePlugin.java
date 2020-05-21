@@ -36,12 +36,15 @@ import com.amplifyframework.core.model.ModelSchemaRegistry;
 import com.amplifyframework.core.model.query.QueryOptions;
 import com.amplifyframework.core.model.query.Where;
 import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.reachability.Host;
+import com.amplifyframework.core.reachability.SocketHost;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.model.ModelProviderLocator;
 import com.amplifyframework.datastore.storage.LocalStorageAdapter;
 import com.amplifyframework.datastore.storage.StorageItemChange;
 import com.amplifyframework.datastore.storage.sqlite.SQLiteStorageAdapter;
 import com.amplifyframework.datastore.syncengine.Orchestrator;
+import com.amplifyframework.datastore.syncengine.SyncMode;
 import com.amplifyframework.hub.HubChannel;
 
 import org.json.JSONObject;
@@ -49,13 +52,18 @@ import org.json.JSONObject;
 import java.util.Iterator;
 import java.util.Objects;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
+import io.reactivex.Single;
+import io.reactivex.schedulers.Schedulers;
 
 /**
  * An AWS implementation of the {@link DataStorePlugin}.
  */
 public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
+    private static final long INITIALIZATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(5);
+
     // Reference to an implementation of the Local Storage Adapter that
     // manages the persistence of data on-device.
     private final LocalStorageAdapter sqliteStorageAdapter;
@@ -82,16 +90,19 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
             @NonNull ModelProvider modelProvider,
             @NonNull ModelSchemaRegistry modelSchemaRegistry,
             @NonNull ApiCategory api,
-            @Nullable DataStoreConfiguration userProvidedConfiguration) {
+            @Nullable DataStoreConfiguration userProvidedConfiguration,
+            @NonNull Host host) {
         this.sqliteStorageAdapter = SQLiteStorageAdapter.forModels(modelSchemaRegistry, modelProvider);
         this.categoryInitializationsPending = new CountDownLatch(1);
         this.api = api;
+        // A host to check periodically, for an internet connection
         this.orchestrator = new Orchestrator(
             modelProvider,
             modelSchemaRegistry,
             sqliteStorageAdapter,
             AppSyncClient.via(api),
-            () -> pluginConfiguration
+            () -> pluginConfiguration,
+            host
         );
         this.userProvidedConfiguration = userProvidedConfiguration;
     }
@@ -113,7 +124,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @SuppressWarnings("unused") // This is a public API.
     public AWSDataStorePlugin() throws DataStoreException {
-        this(ModelProviderLocator.locate(), Amplify.API);
+        this(ModelProviderLocator.locate());
     }
 
     /**
@@ -124,7 +135,7 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      */
     @SuppressWarnings({"unused", "WeakerAccess"}) // This is a public API.
     public AWSDataStorePlugin(@NonNull ModelProvider modelProvider) {
-        this(Objects.requireNonNull(modelProvider), Amplify.API);
+        this(Objects.requireNonNull(modelProvider), Amplify.API, SocketHost.from("aws.amazon.com", 443));
     }
 
     /**
@@ -133,14 +144,16 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
      * through the provided {@link GraphQLBehavior}.
      * @param modelProvider Provides the set of models to be warehouse-able by this system
      * @param api Interface to a remote system where models will be synchronized
+     * @param host A host to check for reachability
      */
     @VisibleForTesting
-    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull ApiCategory api) {
+    AWSDataStorePlugin(@NonNull ModelProvider modelProvider, @NonNull ApiCategory api, @NonNull Host host) {
         this(
             Objects.requireNonNull(modelProvider),
             ModelSchemaRegistry.instance(),
             Objects.requireNonNull(api),
-            null
+            null,
+            host
         );
     }
 
@@ -185,24 +198,25 @@ public final class AWSDataStorePlugin extends DataStorePlugin<Void> {
 
     @WorkerThread
     @Override
-    public void initialize(@NonNull Context context) {
-        Completable completable = initializeStorageAdapter(context);
-        if (!api.getPlugins().isEmpty()) {
-            completable = completable.andThen(orchestrator.start());
-        }
-        completable.blockingAwait();
-    }
+    public void initialize(@NonNull Context context) throws DataStoreException {
+        boolean ok =
+            Completable.create(emitter ->
+                sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(), emitter::onError)
+            )
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .andThen(Single.just(!api.getPlugins().isEmpty())
+                .map(hasApi -> hasApi ? SyncMode.SYNC_VIA_API : SyncMode.OFFLINE_ONLY)
+                .flatMapCompletable(orchestrator::start)
+            )
+            .blockingAwait(INITIALIZATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
 
-    /**
-     * Initializes the storage adapter, and gets the result as a {@link Completable}.
-     * @param context An Android Context
-     * @return A Completable which will initialize the storage adapter when subscribed.
-     */
-    @WorkerThread
-    private Completable initializeStorageAdapter(Context context) {
-        return Completable.defer(() -> Completable.create(emitter ->
-            sqliteStorageAdapter.initialize(context, schemaList -> emitter.onComplete(), emitter::onError)
-        ));
+        if (!ok) {
+            throw new DataStoreException(
+                "Failed to initialize within " + INITIALIZATION_TIMEOUT_MS + "ms.",
+                AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION
+            );
+        }
     }
 
     /**

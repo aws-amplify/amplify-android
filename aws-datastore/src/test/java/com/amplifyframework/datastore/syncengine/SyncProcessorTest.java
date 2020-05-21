@@ -18,6 +18,7 @@ package com.amplifyframework.datastore.syncengine;
 import android.util.Range;
 
 import com.amplifyframework.AmplifyException;
+import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
 import com.amplifyframework.core.model.ModelSchemaRegistry;
@@ -111,6 +112,7 @@ public final class SyncProcessorTest {
             .appSync(appSync)
             .merger(merger)
             .dataStoreConfigurationProvider(() -> dataStoreConfiguration)
+            .hub(Amplify.Hub)
             .build();
     }
 

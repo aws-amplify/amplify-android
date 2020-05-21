@@ -28,23 +28,32 @@ import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.InitializationStatus;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.core.reachability.Host;
+import com.amplifyframework.core.reachability.SocketHost;
 import com.amplifyframework.datastore.model.SimpleModelProvider;
 import com.amplifyframework.hub.HubChannel;
 import com.amplifyframework.hub.HubEvent;
 import com.amplifyframework.testmodels.personcar.Person;
+import com.amplifyframework.testutils.HubAccumulator;
 import com.amplifyframework.testutils.random.RandomString;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.RobolectricTestRunner;
+import org.robolectric.shadows.ShadowLog;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
 import io.reactivex.Completable;
+import okhttp3.HttpUrl;
+import okhttp3.mockwebserver.MockResponse;
+import okhttp3.mockwebserver.MockWebServer;
 
 import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
@@ -62,8 +71,10 @@ import static org.mockito.Mockito.when;
 @RunWith(RobolectricTestRunner.class)
 public final class AWSDataStorePluginTest {
     private static final long OPERATION_TIMEOUT_MS = TimeUnit.SECONDS.toMillis(1);
+
     private Context context;
     private ModelProvider modelProvider;
+    private Host host;
 
     /**
      * Sets up the test. The {@link SimpleModelProvider} is spy'd, so that
@@ -72,12 +83,14 @@ public final class AWSDataStorePluginTest {
      * running, or it is running but not functioning as we expect it to.
      */
     @Before
-    public void setup() {
+    public void setup() throws IOException {
         this.context = getApplicationContext();
         modelProvider = spy(SimpleModelProvider.builder()
             .version(RandomString.string())
             .addModel(Person.class)
             .build());
+        host = mock(Host.class);
+        when(host.isReachable()).thenReturn(true);
     }
 
     /**
@@ -89,7 +102,8 @@ public final class AWSDataStorePluginTest {
     public void configureAndInitializeInLocalMode() throws AmplifyException {
         //Configure DataStore with an empty config (All defaults)
         ApiCategory emptyApiCategory = spy(ApiCategory.class);
-        AWSDataStorePlugin standAloneDataStorePlugin = new AWSDataStorePlugin(modelProvider, emptyApiCategory);
+        AWSDataStorePlugin standAloneDataStorePlugin =
+            new AWSDataStorePlugin(modelProvider, emptyApiCategory, host);
         standAloneDataStorePlugin.configure(new JSONObject(), context);
         standAloneDataStorePlugin.initialize(context);
         assertSyncProcessorNotStarted();
@@ -104,10 +118,12 @@ public final class AWSDataStorePluginTest {
      */
     @Test
     public void configureAndInitializeInApiMode() throws JSONException, AmplifyException {
+        ShadowLog.stream = System.out;
         ApiCategory mockApiCategory = mockApiCategoryWithGraphQlApi();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin =
+            new AWSDataStorePlugin(modelProvider, mockApiCategory, host);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
         assertSyncProcessorStarted();
@@ -126,7 +142,8 @@ public final class AWSDataStorePluginTest {
         ApiCategory mockApiCategory = mockApiPluginWithExceptions();
         JSONObject dataStorePluginJson = new JSONObject()
             .put("syncIntervalInMinutes", 60);
-        AWSDataStorePlugin awsDataStorePlugin = new AWSDataStorePlugin(modelProvider, mockApiCategory);
+        AWSDataStorePlugin awsDataStorePlugin =
+            new AWSDataStorePlugin(modelProvider, mockApiCategory, host);
         awsDataStorePlugin.configure(dataStorePluginJson, context);
         awsDataStorePlugin.initialize(context);
 
@@ -150,9 +167,9 @@ public final class AWSDataStorePluginTest {
                     single.onSuccess(true);
                 }, single::onError);
             })
-        ).doOnError(error -> {
-            fail(error.getMessage());
-        }).blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+        ).doOnError(error -> fail(error.getMessage()))
+            .blockingGet(OPERATION_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
         if (exception != null) {
             throw new AmplifyException("Unexpected exception.", exception, "Look at the stacktrace.");
         }
@@ -258,6 +275,7 @@ public final class AWSDataStorePluginTest {
         return mockApiCategory;
     }
 
+    @SuppressWarnings("SameParameterValue")
     private Person createPerson(String firstName, String lastName) {
         return Person.builder()
             .firstName(firstName)
