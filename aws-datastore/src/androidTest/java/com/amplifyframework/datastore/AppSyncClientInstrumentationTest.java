@@ -170,7 +170,7 @@ public final class AppSyncClientInstrumentationTest {
             .build();
         Long updateBlogStartTime = new Date().getTime();
 
-        ModelWithMetadata<Blog> blogUpdateResult = update(updatedBlog, 1, Blog.ID.eq(updatedBlog.getId()));
+        ModelWithMetadata<Blog> blogUpdateResult = update(updatedBlog, 1);
 
         assertEquals(updatedBlog.getName(), blogUpdateResult.getModel().getName());
         assertEquals(updatedBlog.getOwner().getId(), blogUpdateResult.getModel().getOwner().getId());
@@ -183,7 +183,7 @@ public final class AppSyncClientInstrumentationTest {
         assertTrue(updatedBlogLastChangedAt > updateBlogStartTime);
 
         // Delete one of the posts
-        ModelWithMetadata<Post> post1DeleteResult = delete(Post.class, post1.getId(), 1, null);
+        ModelWithMetadata<Post> post1DeleteResult = delete(Post.class, post1.getId(), 1);
         assertEquals(
             post1.copyOfBuilder()
                 .blog(Blog.justId(blog.getId()))
@@ -194,8 +194,7 @@ public final class AppSyncClientInstrumentationTest {
         assertEquals(Boolean.TRUE, isDeleted);
 
         // Try to delete a post with a bad version number
-        List<GraphQLResponse.Error> post2DeleteErrors =
-            deleteExpectingResponseErrors(Post.class, post2.getId(), 0, null);
+        List<GraphQLResponse.Error> post2DeleteErrors = deleteExpectingResponseErrors(Post.class, post2.getId(), 0);
         assertEquals("Conflict resolver rejects mutation.", post2DeleteErrors.get(0).getMessage());
 
         // Run sync on Blogs
@@ -236,6 +235,12 @@ public final class AppSyncClientInstrumentationTest {
      */
     @SuppressWarnings("SameParameterValue") // Keep details in the actual test.
     @NonNull
+    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
+        throws DataStoreException {
+        return update(model, version, null);
+    }
+
+    @NonNull
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version, QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
@@ -251,7 +256,15 @@ public final class AppSyncClientInstrumentationTest {
      * @return Model hat was deleted from endpoint, coupled with metadata about the deletion
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
+    @NonNull
+    private <T extends Model> ModelWithMetadata<T> delete(
+        @NonNull Class<T> clazz, String modelId, int version)
+        throws DataStoreException {
+        return delete(clazz, modelId, version, null);
+    }
+
     @SuppressWarnings("SameParameterValue") // Reads better with details in one place
+    @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
             @NonNull Class<T> clazz, String modelId, int version, QueryPredicate predicate)
             throws DataStoreException {
@@ -271,11 +284,11 @@ public final class AppSyncClientInstrumentationTest {
      */
     @SuppressWarnings("SameParameterValue") // It'll read better if we keep details in the call line
     private <T extends Model> List<GraphQLResponse.Error> deleteExpectingResponseErrors(
-            @NonNull Class<T> clazz, String modelId, int version, QueryPredicate predicate)
+            @NonNull Class<T> clazz, String modelId, int version)
             throws DataStoreException {
         return awaitResponseErrors(
             (Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResult, Consumer<DataStoreException> onError) ->
-                api.delete(clazz, modelId, version, predicate, onResult, onError)
+                api.delete(clazz, modelId, version, onResult, onError)
         );
     }
 
