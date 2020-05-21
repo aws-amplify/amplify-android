@@ -51,7 +51,7 @@ public interface GraphQLBehavior {
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T extends Model> GraphQLOperation<T> query(
+    <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull Class<T> modelClass,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
             @NonNull Consumer<ApiException> onFailure
@@ -106,7 +106,7 @@ public interface GraphQLBehavior {
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T extends Model> GraphQLOperation<T> query(
+    <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
@@ -125,14 +125,14 @@ public interface GraphQLBehavior {
      * @param graphQlRequest Wrapper for request details
      * @param onResponse Invoked when a response is available; may contain errors from endpoint
      * @param onFailure Invoked when a response is not available due to operational failures
-     * @param <T> The type of data in the response, if available
+     * @param <R> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T> GraphQLOperation<T> query(
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+    <R> GraphQLOperation<R> query(
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure
     );
 
@@ -154,7 +154,7 @@ public interface GraphQLBehavior {
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T extends Model> GraphQLOperation<T> query(
+    <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
@@ -207,7 +207,7 @@ public interface GraphQLBehavior {
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T extends Model> GraphQLOperation<T> query(
+    <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
@@ -225,15 +225,15 @@ public interface GraphQLBehavior {
      * @param graphQlRequest Wrapper for request details
      * @param onResponse Invoked when a response is available; may contain errors from endpoint
      * @param onFailure Invoked when a response is not available due to operational failures
-     * @param <T> The type of data in the response, if available
+     * @param <R> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T> GraphQLOperation<T> query(
+    <R> GraphQLOperation<R> query(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure
     );
 
@@ -394,15 +394,15 @@ public interface GraphQLBehavior {
      * @param graphQlRequest Wrapper for request details
      * @param onResponse Invoked when a response is available; may contain errors from endpoint
      * @param onFailure Invoked when a response is not available due to operational failures
-     * @param <T> The type of data in the response, if available
+     * @param <R> The type of data in the response, if available
      * @return An {@link ApiOperation} to track progress and provide
      *         a means to cancel the asynchronous operation
      */
     @Nullable
-    <T> GraphQLOperation<T> mutate(
+    <R> GraphQLOperation<R> mutate(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure
     );
 
@@ -476,14 +476,14 @@ public interface GraphQLBehavior {
      * @param onSubscriptionComplete
      *        Called when a subscription has ended gracefully (without failure).
      *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param <T> The type of data expected in the subscription stream
+     * @param <R> The type of data expected in the subscription stream
      * @return An {@link GraphQLOperation} representing this ongoing subscription
      */
     @Nullable
-    <T> GraphQLOperation<T> subscribe(
-            @NonNull GraphQLRequest<T> graphQlRequest,
+    <R> GraphQLOperation<R> subscribe(
+            @NonNull GraphQLRequest<R> graphQlRequest,
             @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete
     );
@@ -554,15 +554,15 @@ public interface GraphQLBehavior {
      * @param onSubscriptionComplete
      *        Called when a subscription has ended gracefully (without failure).
      *        This is a terminal event following 0..n many calls to onNextResponse.
-     * @param <T> The type of data expected in the subscription stream
+     * @param <R> The type of data expected in the subscription stream
      * @return An {@link GraphQLOperation} representing this ongoing subscription
      */
     @Nullable
-    <T> GraphQLOperation<T> subscribe(
+    <R> GraphQLOperation<R> subscribe(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQlRequest,
+            @NonNull GraphQLRequest<R> graphQlRequest,
             @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete
     );

@@ -22,6 +22,7 @@ import androidx.core.util.ObjectsCompat;
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.util.Immutable;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,10 +31,10 @@ import java.util.Objects;
 /**
  * Wrapper for GraphQL response containing both
  * response data and error information.
- * @param <T> queried data type
+ * @param <R> queried data type
  */
-public final class GraphQLResponse<T> {
-    private final T data;
+public final class GraphQLResponse<R> {
+    private final R data;
     private final List<Error> errors;
 
     /**
@@ -42,7 +43,7 @@ public final class GraphQLResponse<T> {
      * @param errors list of error responses as defined
      *               by GraphQL doc
      */
-    public GraphQLResponse(@Nullable T data, @Nullable List<Error> errors) {
+    public GraphQLResponse(@Nullable R data, @Nullable List<Error> errors) {
         this.data = data;
         this.errors = new ArrayList<>();
         if (errors != null) {
@@ -71,7 +72,7 @@ public final class GraphQLResponse<T> {
      * Gets the data sent back by API.
      * @return API response body
      */
-    public T getData() {
+    public R getData() {
         return data;
     }
 
@@ -231,33 +232,16 @@ public final class GraphQLResponse<T> {
      */
     public interface Factory {
         /**
-         * Builds a response containing a single data object from JSON returned by an API.
-         * @param apiResponseJson
-         *        Response from the endpoint, containing a string response
-         * @param classToCast
-         *        The class type to which the JSON string should be
-         *        interpreted
-         * @param <T> The type of the data field in the response object
-         * @return An instance of the casting class which models the data
-         *         provided in the response JSON string
+         * Deserializes a JSON String returned by an API into an object of the provided typeOfR.
+         * @param request The request which resulted in this GraphQLResponse
+         * @param apiResponseJson Response from the endpoint, containing a string response
+         *
+         * @param typeOfR The typeOfR to which the JSON string should be interpreted
+         * @param <R> The typeOfR of the response object
+         * @return An instance of provided typeOfR which models the data provided in the response JSON string
          * @throws ApiException If the class provided mismatches the data
          */
-        <T> GraphQLResponse<T> buildSingleItemResponse(String apiResponseJson, Class<T> classToCast)
-            throws ApiException;
-
-        /**
-         * Builds a response containing a list of data objects from JSON returned by an API.
-         * @param apiResponseJson
-         *        Response from the endpoint, containing a string response
-         * @param classToCast
-         *        The class type to which the JSON string should be
-         *        interpreted
-         * @param <T> The type of the elements in the data field list in the response object
-         * @return An instance of the casting class which models the data
-         *         provided in the response JSON string
-         * @throws ApiException If the class provided mismatches the data
-         */
-        <T> GraphQLResponse<Iterable<T>> buildSingleArrayResponse(String apiResponseJson, Class<T> classToCast)
+        <R> GraphQLResponse<R> buildResponse(GraphQLRequest<R> request, String apiResponseJson, Type typeOfR)
             throws ApiException;
     }
 }
