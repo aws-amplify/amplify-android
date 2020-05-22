@@ -194,7 +194,7 @@ final class MutationProcessor {
         final T updatedItem = mutation.getMutatedItem();
         return versionRepository.findModelVersion(updatedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
-                appSync.update(model, version, onSuccess, onError)
+                appSync.update(model, version, mutation.getPredicate(), onSuccess, onError)
             )
         );
     }
@@ -210,7 +210,9 @@ final class MutationProcessor {
         final Class<T> deletedItemClass = mutation.getClassOfMutatedItem();
         return versionRepository.findModelVersion(deletedItem).flatMap(version ->
             publishWithStrategy(mutation, (model, onSuccess, onError) ->
-                appSync.delete(deletedItemClass, deletedItem.getId(), version, onSuccess, onError)
+                appSync.delete(
+                    deletedItemClass, deletedItem.getId(), version, mutation.getPredicate(), onSuccess, onError
+                )
             )
         );
     }

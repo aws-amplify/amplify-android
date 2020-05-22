@@ -31,6 +31,7 @@ import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.DataStoreException;
 
 import com.google.gson.reflect.TypeToken;
@@ -147,7 +148,15 @@ public final class AppSyncClient implements AppSync {
         return new NoOpCancelable();
     }
 
-    @SuppressWarnings("unchecked") // (Class<T>)
+    /**
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     *
+     * @param model      An instance of the Model with the values to mutate
+     * @param version    The version of the model we have
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure  Invoked on failure to obtain response data
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
+     */
     @NonNull
     @Override
     public <T extends Model> Cancelable update(
@@ -155,8 +164,20 @@ public final class AppSyncClient implements AppSync {
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
+        return update(model, version, null, onResponse, onFailure);
+    }
+
+    @SuppressWarnings("unchecked") // (Class<T>)
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable update(
+            @NonNull T model,
+            @NonNull Integer version,
+            @Nullable QueryPredicate predicate,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass());
+            final String doc = AppSyncRequestFactory.buildUpdateDoc(model.getClass(), predicate != null);
 
             Class<T> modelClass = (Class<T>) model.getClass();
             ModelSchema schema = ModelSchema.fromModelClass(modelClass);
@@ -165,6 +186,9 @@ public final class AppSyncClient implements AppSync {
             updateInput.put("_version", version);
 
             final Map<String, Object> variables = Collections.singletonMap("input", updateInput);
+            if (predicate != null) {
+                variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
+            }
 
             return mutation(doc, variables, (Class<T>) model.getClass(), onResponse, onFailure);
         } catch (AmplifyException amplifyException) {
@@ -177,6 +201,16 @@ public final class AppSyncClient implements AppSync {
         return new NoOpCancelable();
     }
 
+    /**
+     * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
+     *
+     * @param clazz      The class of the object being deleted
+     * @param objectId   ID id of the object to delete
+     * @param version    The version of the model we have
+     * @param onResponse Invoked when response data is available.
+     * @param onFailure  Invoked on failure to obtain response data
+     * @return A {@link Cancelable} to provide a means to cancel the asynchronous operation
+     */
     @NonNull
     @Override
     public <T extends Model> Cancelable delete(
@@ -185,14 +219,29 @@ public final class AppSyncClient implements AppSync {
             @NonNull Integer version,
             @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
             @NonNull Consumer<DataStoreException> onFailure) {
+        return delete(clazz, objectId, version, null, onResponse, onFailure);
+    }
+
+    @NonNull
+    @Override
+    public <T extends Model> Cancelable delete(
+            @NonNull Class<T> clazz,
+            @NonNull String objectId,
+            @NonNull Integer version,
+            @Nullable QueryPredicate predicate,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure) {
         try {
-            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz);
+            final String doc = AppSyncRequestFactory.buildDeletionDoc(clazz, predicate != null);
 
             final Map<String, Object> deleteInput = new HashMap<>();
             deleteInput.put("id", objectId);
             deleteInput.put("_version", version);
 
             final Map<String, Object> variables = Collections.singletonMap("input", deleteInput);
+            if (predicate != null) {
+                variables.put("condition", AppSyncRequestFactory.parsePredicate(predicate));
+            }
 
             return mutation(doc, variables, clazz, onResponse, onFailure);
         } catch (DataStoreException dataStoreException) {

@@ -23,14 +23,30 @@ import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
+import com.amplifyframework.core.model.query.predicate.BeginsWithQueryOperator;
+import com.amplifyframework.core.model.query.predicate.BetweenQueryOperator;
+import com.amplifyframework.core.model.query.predicate.ContainsQueryOperator;
+import com.amplifyframework.core.model.query.predicate.EqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.GreaterOrEqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.GreaterThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.LessOrEqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.LessThanQueryOperator;
+import com.amplifyframework.core.model.query.predicate.NotEqualQueryOperator;
+import com.amplifyframework.core.model.query.predicate.QueryOperator;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateGroup;
+import com.amplifyframework.core.model.query.predicate.QueryPredicateOperation;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.util.Casing;
 import com.amplifyframework.util.FieldFinder;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 /**
  * A factory to generate requests against an AppSync endpoint.
@@ -172,16 +188,115 @@ final class AppSyncRequestFactory {
         return builder.toString();
     }
 
-    static <T extends Model> String buildDeletionDoc(Class<T> modelClass) throws DataStoreException {
-        return buildMutation(modelClass, MutationType.DELETE);
+    static <T extends Model> String buildDeletionDoc(Class<T> modelClass, boolean includePredicate)
+        throws DataStoreException {
+        return buildMutation(modelClass, includePredicate, MutationType.DELETE);
     }
 
-    static <T extends Model> String buildUpdateDoc(Class<T> modelClass) throws DataStoreException {
-        return buildMutation(modelClass, MutationType.UPDATE);
+    static <T extends Model> String buildUpdateDoc(Class<T> modelClass, boolean includePredicate)
+        throws DataStoreException {
+        return buildMutation(modelClass, includePredicate, MutationType.UPDATE);
     }
 
     static <T extends Model> String buildCreationDoc(Class<T> modelClass) throws DataStoreException {
-        return buildMutation(modelClass, MutationType.CREATE);
+        return buildMutation(modelClass, false, MutationType.CREATE);
+    }
+
+    static Map<String, Object> parsePredicate(QueryPredicate queryPredicate) throws DataStoreException {
+        if (queryPredicate instanceof QueryPredicateOperation) {
+            QueryPredicateOperation<?> qpo = (QueryPredicateOperation) queryPredicate;
+            QueryOperator<?> op = qpo.operator();
+            return Collections.singletonMap(
+                qpo.field(),
+                Collections.singletonMap(appSyncOpType(op.type()), appSyncOpValue(op))
+            );
+        } else if (queryPredicate instanceof QueryPredicateGroup) {
+            QueryPredicateGroup qpg = (QueryPredicateGroup) queryPredicate;
+
+            if (QueryPredicateGroup.Type.NOT.equals(qpg.type())) {
+                try {
+                    return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
+                } catch (IndexOutOfBoundsException exception) {
+                    throw new DataStoreException(
+                        "Predicate group of type NOT must include a value to negate.",
+                        exception,
+                        "Check if you created a NOT condition in your Predicate with no included value."
+                    );
+                }
+            } else {
+                List<Map<String, Object>> predicates = new ArrayList<>();
+
+                for (QueryPredicate predicate : qpg.predicates()) {
+                    predicates.add(parsePredicate(predicate));
+                }
+
+                return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
+            }
+        } else {
+            throw new DataStoreException(
+                "Tried to parse an unsupported QueryPredicate",
+                "Try changing to one of the supported values: QueryPredicateOperation, QueryPredicateGroup."
+            );
+        }
+    }
+
+    private static String appSyncOpType(QueryOperator.Type type) throws DataStoreException {
+        switch (type) {
+            case NOT_EQUAL:
+                return "ne";
+            case EQUAL:
+                return "eq";
+            case LESS_OR_EQUAL:
+                return "le";
+            case LESS_THAN:
+                return "lt";
+            case GREATER_OR_EQUAL:
+                return "ge";
+            case GREATER_THAN:
+                return "gt";
+            case CONTAINS:
+                return "contains";
+            case BETWEEN:
+                return "between";
+            case BEGINS_WITH:
+                return "beginsWith";
+            default:
+                throw new DataStoreException(
+                    "Tried to parse an unsupported QueryOperator type",
+                    "Check if a new QueryOperator.Type enum has been created which is not supported " +
+                        "in the AppSyncGraphQLRequestFactory."
+                );
+        }
+    }
+
+    private static Object appSyncOpValue(QueryOperator<?> qOp) throws DataStoreException {
+        switch (qOp.type()) {
+            case NOT_EQUAL:
+                return ((NotEqualQueryOperator) qOp).value();
+            case EQUAL:
+                return ((EqualQueryOperator) qOp).value();
+            case LESS_OR_EQUAL:
+                return ((LessOrEqualQueryOperator) qOp).value();
+            case LESS_THAN:
+                return ((LessThanQueryOperator) qOp).value();
+            case GREATER_OR_EQUAL:
+                return ((GreaterOrEqualQueryOperator) qOp).value();
+            case GREATER_THAN:
+                return ((GreaterThanQueryOperator) qOp).value();
+            case CONTAINS:
+                return ((ContainsQueryOperator) qOp).value();
+            case BETWEEN:
+                BetweenQueryOperator<?> betweenOp = (BetweenQueryOperator) qOp;
+                return Arrays.asList(betweenOp.start(), betweenOp.end());
+            case BEGINS_WITH:
+                return ((BeginsWithQueryOperator) qOp).value();
+            default:
+                throw new DataStoreException(
+                    "Tried to parse an unsupported QueryOperator type",
+                    "Check if a new QueryOperator.Type enum has been created which is not supported " +
+                        "in the AppSyncGraphQLRequestFactory."
+                );
+        }
     }
 
     /**
@@ -191,9 +306,9 @@ final class AppSyncRequestFactory {
      * @param <T> Type of model being mutated
      * @return Mutation doc
      */
-    private static <T extends Model> String buildMutation(Class<T> modelClass, MutationType mutationType)
-            throws DataStoreException {
-
+    private static <T extends Model> String buildMutation(Class<T> modelClass,
+                                                          boolean includePredicate,
+                                                          MutationType mutationType) throws DataStoreException {
         final String capitalizedModelName = Casing.capitalizeFirst(modelClass.getSimpleName());
         int indent = 0;
         StringBuilder doc = new StringBuilder();
@@ -218,11 +333,24 @@ final class AppSyncRequestFactory {
 
         // mutation CreateBlogOwner($input:CreateBlogOwnerInput!) {
         doc.append("mutation ").append(verb).append(capitalizedModelName)
-            .append("($input:").append(verb).append(capitalizedModelName).append("Input!) {\n");
+            .append("($input:").append(verb).append(capitalizedModelName).append("Input!");
+
+        if (includePredicate) {
+            doc.append(", $condition:Model")
+                .append(capitalizedModelName)
+                .append("ConditionInput");
+        }
 
         //   createBlogOwner(input:$input)
-        doc.append(padBy(++indent)).append(verb.toLowerCase(Locale.US)).append(capitalizedModelName)
-            .append("(input:$input) {\n");
+        doc.append(") {\n")
+            .append(padBy(++indent)).append(verb.toLowerCase(Locale.US)).append(capitalizedModelName)
+            .append("(input:$input");
+
+        if (includePredicate) {
+            doc.append(", condition:$condition");
+        }
+
+        doc.append(") {\n");
 
         ++indent;
         doc.append(buildSelectionPortion(modelClass, indent, WALK_DEPTH));
