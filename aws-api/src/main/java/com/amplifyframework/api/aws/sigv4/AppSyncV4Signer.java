@@ -26,38 +26,65 @@ import java.net.URI;
  * Signer that signs the request with AppSync-specific
  * service name and region.
  */
-final class AppSyncV4Signer extends AWS4Signer {
+public final class AppSyncV4Signer extends AWS4Signer {
 
     private static final String TAG = AppSyncV4Signer.class.getSimpleName();
 
     private static final String SERVICE_NAME_SCOPE = "appsync";
     private static final String RESOURCE_PATH = "/graphql";
+    private static final String CONNECTION_PATH = "/connect";
 
-    AppSyncV4Signer(String region) {
+    private final boolean isWebSocketConnectionWithIam;
+
+    /**
+     * Construct an instance of SigV4 signer for AppSync service using default
+     * resource path.
+     * @param region the signer region
+     */
+    public AppSyncV4Signer(String region) {
+        this(region, false);
+    }
+
+    /**
+     * Construct an instance of SigV4 signer for AppSync with an explicit flag
+     * whether it's signing for a connection request via AWS IAM or not.
+     *
+     * A signer that is created with this flag set to true will append "/connect"
+     * to its resource path.
+     * @param region the signer region
+     * @param isWebSocketConnectionWithIam true if signing for web socket connection
+     *          request with AWS IAM authentication
+     */
+    public AppSyncV4Signer(String region, boolean isWebSocketConnectionWithIam) {
         super(true);
+        this.isWebSocketConnectionWithIam = isWebSocketConnectionWithIam;
         setRegionName(region);
     }
 
     @Override
-    protected String extractServiceName(URI endpoint) {
+    public String extractServiceName(URI endpoint) {
         return SERVICE_NAME_SCOPE;
     }
 
     @Override
-    protected String getCanonicalizedResourcePath(String resourcePath) {
-        return RESOURCE_PATH;
+    public String getCanonicalizedResourcePath(String resourcePath) {
+        return isWebSocketConnectionWithIam
+                ? RESOURCE_PATH + CONNECTION_PATH
+                : RESOURCE_PATH;
     }
 
     @Override
-    protected String getCanonicalizedResourcePath(String resourcePath, boolean urlEncode) {
-        return RESOURCE_PATH;
+    public String getCanonicalizedResourcePath(String resourcePath, boolean urlEncode) {
+        return isWebSocketConnectionWithIam
+                ? RESOURCE_PATH + CONNECTION_PATH
+                : RESOURCE_PATH;
     }
 
     @Override
-    protected String calculateContentHash(Request<?> request) {
+    public String calculateContentHash(Request<?> request) {
         final InputStream payloadStream = request.getContent();
         payloadStream.mark(-1);
-        // We will not reset this as ok http does not allow reset of stream.
+        // We will not reset this as OkHttp does not allow reset of stream.
         return BinaryUtils.toHex(hash(payloadStream));
     }
 }

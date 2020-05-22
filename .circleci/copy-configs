@@ -22,6 +22,7 @@ readonly sources=(
     # API
     "s3://$config_bucket/API/amplifyconfiguration.json"
     "s3://$config_bucket/API/awsconfiguration.json"
+    "s3://$config_bucket/API/credentials.json"
 
     # DataStore
     "s3://$config_bucket/DataStore/amplifyconfiguration.json"
@@ -47,6 +48,7 @@ readonly targets=(
     # API
     "aws-api/src/androidTest/res/raw/amplifyconfiguration.json"
     "aws-api/src/androidTest/res/raw/awsconfiguration.json"
+    "aws-api/src/androidTest/res/raw/credentials.json"
 
     # DataStore
     "aws-datastore/src/androidTest/res/raw/amplifyconfiguration.json"
