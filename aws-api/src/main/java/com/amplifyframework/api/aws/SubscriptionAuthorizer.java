@@ -25,6 +25,7 @@ import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.DefaultCognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.aws.sigv4.OidcAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
+import com.amplifyframework.core.Amplify;
 
 import com.amazonaws.DefaultRequest;
 import com.amazonaws.auth.AWSCredentialsProvider;
@@ -39,6 +40,8 @@ import java.net.URISyntaxException;
 import java.util.Map;
 
 final class SubscriptionAuthorizer {
+    private static final String AUTH_DEPENDENCY_PLUGIN_KEY = "awsCognitoAuthPlugin";
+
     private final ApiConfiguration configuration;
     private final ApiAuthProviders authProviders;
 
@@ -76,7 +79,7 @@ final class SubscriptionAuthorizer {
             case AWS_IAM:
                 AWSCredentialsProvider credentialsProvider = authProviders.getAWSCredentialsProvider();
                 if (credentialsProvider == null) {
-                    credentialsProvider = AWSMobileClient.getInstance();
+                    credentialsProvider = getAWSMobileClient();
                 }
                 return forIam(credentialsProvider, request, connectionFlag);
             case AMAZON_COGNITO_USER_POOLS:
@@ -189,6 +192,19 @@ final class SubscriptionAuthorizer {
                     "Error constructing canonical URI for IAM request signature",
                     uriException,
                     "Verify that the API configuration contains valid GraphQL endpoint."
+            );
+        }
+    }
+
+    private AWSCredentialsProvider getAWSMobileClient() throws ApiException {
+        try {
+            return (AWSMobileClient) Amplify.Auth.getPlugin(AUTH_DEPENDENCY_PLUGIN_KEY).getEscapeHatch();
+        } catch (IllegalStateException exception) {
+            throw new ApiException(
+                    "AWSApiPlugin depends on AWSCognitoAuthPlugin, but it is currently missing.",
+                    exception,
+                    "Before configuring Amplify, be sure to add AWSCognitoAuthPlugin same as you " +
+                            "added AWSApiPlugin."
             );
         }
     }
