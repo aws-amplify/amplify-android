@@ -117,6 +117,19 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
      * Creates a {@link PendingMutation} that represents an update to a model.
      * @param updatedItem The model that was updated
      * @param classOfUpdatedItem The class of the updated model
+     * @param <T> The type of updated model
+     * @return A PendingMutation representing the model update
+     */
+    @NonNull
+    static <T extends Model> PendingMutation<T> update(@NonNull T updatedItem,
+                                                       @NonNull Class<T> classOfUpdatedItem) {
+        return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, null);
+    }
+
+    /**
+     * Creates a {@link PendingMutation} that represents an update to a model.
+     * @param updatedItem The model that was updated
+     * @param classOfUpdatedItem The class of the updated model
      * @param predicate A condition to be used when updating the remote store
      * @param <T> The type of updated model
      * @return A PendingMutation representing the model update
@@ -126,6 +139,19 @@ public final class PendingMutation<T extends Model> implements Comparable<Pendin
                                                        @NonNull Class<T> classOfUpdatedItem,
                                                        @Nullable QueryPredicate predicate) {
         return instance(updatedItem, classOfUpdatedItem, Type.UPDATE, predicate);
+    }
+
+    /**
+     * Creates a {@link PendingMutation} that represents the deletion of a model.
+     * @param deletedItem The model that was deleted
+     * @param classOfDeletedItem The class of the deleted model
+     * @param <T> The type of model that was deleted
+     * @return A PendingMutation representing the model deletion
+     */
+    @NonNull
+    static <T extends Model> PendingMutation<T> deletion(@NonNull T deletedItem,
+                                                         @NonNull Class<T> classOfDeletedItem) {
+        return instance(deletedItem, classOfDeletedItem, Type.DELETE, null);
     }
 
     /**

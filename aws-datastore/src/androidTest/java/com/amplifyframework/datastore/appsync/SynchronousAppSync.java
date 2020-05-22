@@ -85,7 +85,7 @@ public final class SynchronousAppSync {
 
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
-     * @param model An instance of the Model with the values to mutate
+     * @param model An instance of the model with the values to mutate
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data is from AppSync
@@ -117,13 +117,12 @@ public final class SynchronousAppSync {
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param clazz The class of the object being deleted
-     * @param objectId ID id of the object to delete
+     * @param objectId Id of the object to delete
      * @param version The version of the model we have
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data from AppSync.
      * @throws DataStoreException On failure to obtain response data
      */
-    @SuppressWarnings("LineLength")
     @NonNull
     <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
         @NonNull Class<T> clazz, @NonNull String objectId, @NonNull Integer version) throws DataStoreException {
@@ -133,19 +132,19 @@ public final class SynchronousAppSync {
     /**
      * Uses Amplify API to make a mutation which will only apply if the version sent matches the server version.
      * @param clazz The class of the object being deleted
-     * @param objectId ID id of the object to delete
+     * @param objectId Id of the object to delete
      * @param version The version of the model we have
      * @param predicate The condition to be applied to the delete.
      * @param <T> The type of data in the response. Must extend Model.
      * @return Response data from AppSync.
      * @throws DataStoreException On failure to obtain response data
      */
-    @SuppressWarnings("LineLength")
     @NonNull
-    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(@NonNull Class<T> clazz,
-                                                                   @NonNull String objectId,
-                                                                   @NonNull Integer version,
-                                                                   @Nullable QueryPredicate predicate) throws DataStoreException {
+    <T extends Model> GraphQLResponse<ModelWithMetadata<T>> delete(
+            @NonNull Class<T> clazz,
+            @NonNull String objectId,
+            @NonNull Integer version,
+            @Nullable QueryPredicate predicate) throws DataStoreException {
         return Await.<GraphQLResponse<ModelWithMetadata<T>>, DataStoreException>result((onResult, onError) ->
             appSync.delete(clazz, objectId, version, predicate, onResult, onError)
         );

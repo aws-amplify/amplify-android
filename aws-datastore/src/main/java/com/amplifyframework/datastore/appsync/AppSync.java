@@ -124,11 +124,11 @@ public interface AppSync {
      */
     @NonNull
     <T extends Model> Cancelable delete(
-        @NonNull Class<T> clazz,
-        @NonNull String objectId,
-        @NonNull Integer version,
-        @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
-        @NonNull Consumer<DataStoreException> onFailure
+            @NonNull Class<T> clazz,
+            @NonNull String objectId,
+            @NonNull Integer version,
+            @NonNull Consumer<GraphQLResponse<ModelWithMetadata<T>>> onResponse,
+            @NonNull Consumer<DataStoreException> onFailure
     );
 
     /**

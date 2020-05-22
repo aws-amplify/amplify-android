@@ -233,7 +233,6 @@ public final class AppSyncClientInstrumentationTest {
      * @return Server's version of the model after update, along with new metadata
      * @throws DataStoreException If API update call fails to render any response from AppSync endpoint
      */
-    @SuppressWarnings("SameParameterValue") // Keep details in the actual test.
     @NonNull
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
         throws DataStoreException {
@@ -263,7 +262,6 @@ public final class AppSyncClientInstrumentationTest {
         return delete(clazz, modelId, version, null);
     }
 
-    @SuppressWarnings("SameParameterValue") // Reads better with details in one place
     @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
             @NonNull Class<T> clazz, String modelId, int version, QueryPredicate predicate)
@@ -282,7 +280,6 @@ public final class AppSyncClientInstrumentationTest {
      * @return List of GraphQLResponse.Error which explain why delete failed
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
-    @SuppressWarnings("SameParameterValue") // It'll read better if we keep details in the call line
     private <T extends Model> List<GraphQLResponse.Error> deleteExpectingResponseErrors(
             @NonNull Class<T> clazz, String modelId, int version)
             throws DataStoreException {
@@ -331,7 +328,7 @@ public final class AppSyncClientInstrumentationTest {
     }
 
     private <T extends Model> Observable<GraphQLResponse<ModelWithMetadata<T>>> onCreate(
-            @SuppressWarnings("SameParameterValue") @NonNull Class<T> clazz) {
+            @NonNull Class<T> clazz) {
         return Observable.create(emitter -> {
             CompositeDisposable disposable = new CompositeDisposable();
             emitter.setDisposable(disposable);
