@@ -201,7 +201,7 @@ public final class MergerTest {
         storageAdapter.save(blogOwner, localMetadata);
 
         PendingMutation<BlogOwner> pendingMutation =
-            PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE);
+            PendingMutation.instance(blogOwner, BlogOwner.class, PendingMutation.Type.CREATE, null);
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(pendingMutation).test();
         enqueueObserver.awaitTerminalEvent(REASONABLE_WAIT_TIME, TimeUnit.MILLISECONDS);
         enqueueObserver.assertNoErrors().assertComplete();

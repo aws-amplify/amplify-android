@@ -29,6 +29,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
 import com.amplifyframework.core.category.CategoryType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.AppSyncClient;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -230,12 +231,17 @@ public final class AppSyncClientInstrumentationTest {
      * @return Server's version of the model after update, along with new metadata
      * @throws DataStoreException If API update call fails to render any response from AppSync endpoint
      */
-    @SuppressWarnings("SameParameterValue") // Keep details in the actual test.
     @NonNull
     private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version)
+        throws DataStoreException {
+        return update(model, version, null);
+    }
+
+    @NonNull
+    private <T extends Model> ModelWithMetadata<T> update(@NonNull T model, int version, QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
-            api.update(model, version, onResult, onError));
+            api.update(model, version, predicate, onResult, onError));
     }
 
     /**
@@ -247,12 +253,19 @@ public final class AppSyncClientInstrumentationTest {
      * @return Model hat was deleted from endpoint, coupled with metadata about the deletion
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
-    @SuppressWarnings("SameParameterValue") // Reads better with details in one place
+    @NonNull
     private <T extends Model> ModelWithMetadata<T> delete(
-            @NonNull Class<T> clazz, String modelId, int version)
+        @NonNull Class<T> clazz, String modelId, int version)
+        throws DataStoreException {
+        return delete(clazz, modelId, version, null);
+    }
+
+    @NonNull
+    private <T extends Model> ModelWithMetadata<T> delete(
+            @NonNull Class<T> clazz, String modelId, int version, QueryPredicate predicate)
             throws DataStoreException {
         return awaitResponseData((onResult, onError) ->
-            api.delete(clazz, modelId, version, onResult, onError));
+            api.delete(clazz, modelId, version, predicate, onResult, onError));
     }
 
     /**
@@ -265,7 +278,6 @@ public final class AppSyncClientInstrumentationTest {
      * @return List of GraphQLResponse.Error which explain why delete failed
      * @throws DataStoreException If API delete call fails to render any response from AppSync endpoint
      */
-    @SuppressWarnings("SameParameterValue") // It'll read better if we keep details in the call line
     private <T extends Model> List<GraphQLResponse.Error> deleteExpectingResponseErrors(
             @NonNull Class<T> clazz, String modelId, int version)
             throws DataStoreException {

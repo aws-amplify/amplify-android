@@ -1,0 +1,13 @@
+mutation DeletePerson($input:DeletePersonInput!, $condition:ModelPersonConditionInput) {
+  deletePerson(input:$input, condition:$condition) {
+    age
+    dob
+    first_name
+    id
+    last_name
+    relationship
+    _version
+    _deleted
+    _lastChangedAt
+  }
+}

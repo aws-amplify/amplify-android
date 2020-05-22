@@ -90,9 +90,9 @@ final class StorageObserver {
             case CREATE:
                 return PendingMutation.creation(change.item(), change.itemClass());
             case UPDATE:
-                return PendingMutation.update(change.item(), change.itemClass());
+                return PendingMutation.update(change.item(), change.itemClass(), change.predicate());
             case DELETE:
-                return PendingMutation.deletion(change.item(), change.itemClass());
+                return PendingMutation.deletion(change.item(), change.itemClass(), change.predicate());
             default:
                 throw new IllegalStateException("Unknown mutation type = " + change.type());
         }
