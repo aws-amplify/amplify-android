@@ -121,7 +121,6 @@ public final class AWSDataStorePluginInstrumentedTest {
         publishedMutationsAccumulator.await();
 
         // Try to get Charley from the backend.
-//        BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
         BlogOwner remoteCharley = api.get(BlogOwner.class, localCharley.getId());
 
         // A Charley is a Charley is a Charley, right?

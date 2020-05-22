@@ -46,7 +46,7 @@ public final class ModelPagination {
      * @return todo.
      */
     public static ModelPagination nextToken(@Nullable String nextToken) {
-        return new ModelPagination(DEFAULT_LIMIT, null);
+        return new ModelPagination(DEFAULT_LIMIT, nextToken);
     }
 
     /**

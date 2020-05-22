@@ -93,7 +93,7 @@ final class AppSyncGraphQLRequestFactory {
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
-            throw new InvalidGraphQLRequestRuntimeException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
                     exception
             );
@@ -159,7 +159,7 @@ final class AppSyncGraphQLRequestFactory {
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
-            throw new InvalidGraphQLRequestRuntimeException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
                     exception
             );
@@ -235,7 +235,7 @@ final class AppSyncGraphQLRequestFactory {
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
-            throw new InvalidGraphQLRequestRuntimeException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
                     exception
             );
@@ -320,7 +320,7 @@ final class AppSyncGraphQLRequestFactory {
                 );
             }
         } catch (AmplifyException exception) {
-            throw new InvalidGraphQLRequestRuntimeException(
+            throw new IllegalStateException(
                     "Could not generate a schema for the specified class",
                     exception
             );
@@ -342,7 +342,7 @@ final class AppSyncGraphQLRequestFactory {
                 try {
                     return Collections.singletonMap("not", parsePredicate(qpg.predicates().get(0)));
                 } catch (IndexOutOfBoundsException exception) {
-                    throw new InvalidGraphQLRequestRuntimeException(
+                    throw new IllegalStateException(
                         "Predicate group of type NOT must include a value to negate.",
                         exception
                     );
@@ -357,7 +357,7 @@ final class AppSyncGraphQLRequestFactory {
                 return Collections.singletonMap(qpg.type().toString().toLowerCase(Locale.getDefault()), predicates);
             }
         } else {
-            throw new InvalidGraphQLRequestRuntimeException(
+            throw new IllegalStateException(
                 "Invalid predicate type, supported values: QueryPredicateOperation, QueryPredicateGroup."
             );
         }
@@ -384,7 +384,7 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return "beginsWith";
             default:
-                throw new InvalidGraphQLRequestRuntimeException(
+                throw new IllegalStateException(
                     "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
                     "has been created which is not supported in the AppSyncGraphQLRequestFactory."
                 );
@@ -413,7 +413,7 @@ final class AppSyncGraphQLRequestFactory {
             case BEGINS_WITH:
                 return ((BeginsWithQueryOperator) qOp).value();
             default:
-                throw new InvalidGraphQLRequestRuntimeException(
+                throw new IllegalStateException(
                     "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum" +
                     "has been created which is not implemented yet."
                 );
@@ -457,18 +457,5 @@ final class AppSyncGraphQLRequestFactory {
         }
 
         return result.toString();
-    }
-
-    static final class InvalidGraphQLRequestRuntimeException extends RuntimeException {
-
-        private static final long serialVersionUID = 1L;
-
-        InvalidGraphQLRequestRuntimeException(final String message, final Exception rootCause) {
-            super(message + "\n" + AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION, rootCause);
-        }
-
-        InvalidGraphQLRequestRuntimeException(final String message) {
-            this(message + "\n" + AmplifyException.REPORT_BUG_TO_AWS_SUGGESTION, null);
-        }
     }
 }

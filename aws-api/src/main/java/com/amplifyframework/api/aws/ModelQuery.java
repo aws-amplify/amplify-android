@@ -47,15 +47,14 @@ public final class ModelQuery {
     /**
      * TODO write docs.
      * @param modelType todo.
-     * @param filter todo.
+     * @param predicate todo.
      * @param <M> todo.
      * @return todo.
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(
             @NonNull Class<M> modelType,
-            @Nullable ModelFilter filter
+            @Nullable QueryPredicate predicate
     ) {
-        final QueryPredicate predicate = filter != null ? filter.getPredicate() : null;
         return AppSyncGraphQLRequestFactory.buildQuery(modelType, predicate);
     }
 
@@ -66,24 +65,24 @@ public final class ModelQuery {
      * @return todo.
      */
     public static <M extends Model> GraphQLRequest<Iterable<M>> list(@NonNull Class<M> modelType) {
-        return list(modelType, (ModelFilter) null);
+        return list(modelType, (QueryPredicate) null);
     }
 
     /**
      * TODO write docs.
      * @param modelType todo.
-     * @param filter todo.
+     * @param predicate todo.
      * @param pagination todo.
      * @param <M> todo.
      * @return todo.
      */
     public static <M extends Model> GraphQLRequest<PaginatedResult<M>> list(
             @NonNull Class<M> modelType,
-            @NonNull ModelFilter filter,
+            @NonNull QueryPredicate predicate,
             @NonNull ModelPagination pagination
     ) {
         return AppSyncGraphQLRequestFactory.buildPaginatedResultQuery(
-                modelType, filter.getPredicate(), pagination.getLimit(), pagination.getNextToken());
+                modelType, predicate, pagination.getLimit(), pagination.getNextToken());
     }
 
     /**

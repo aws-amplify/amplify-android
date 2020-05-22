@@ -36,4 +36,35 @@ public final class ModelSubscription {
     public static <M extends Model> GraphQLRequest<M> of(Class<M> modelType, SubscriptionType type) {
         return AppSyncGraphQLRequestFactory.buildSubscription(modelType, type);
     }
+
+    /**
+     * TODO docs.
+     * @param modelType todo.
+     * @param <M> todo.
+     * @return todo.
+     */
+    public static <M extends Model> GraphQLRequest<M> onCreate(Class<M> modelType) {
+        return of(modelType, SubscriptionType.ON_CREATE);
+    }
+
+    /**
+     * TODO docs.
+     * @param modelType todo.
+     * @param <M> todo.
+     * @return todo.
+     */
+    public static <M extends Model> GraphQLRequest<M> onDelete(Class<M> modelType) {
+        return of(modelType, SubscriptionType.ON_DELETE);
+    }
+
+    /**
+     * TODO docs.
+     * @param modelType todo.
+     * @param <M> todo.
+     * @return todo.
+     */
+    public static <M extends Model> GraphQLRequest<M> onUpdate(Class<M> modelType) {
+        return of(modelType, SubscriptionType.ON_UPDATE);
+    }
+
 }

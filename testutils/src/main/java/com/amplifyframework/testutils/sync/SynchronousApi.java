@@ -20,7 +20,6 @@ import androidx.annotation.NonNull;
 import com.amplifyframework.api.ApiCategory;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.aws.ModelFilter;
 import com.amplifyframework.api.aws.ModelMutation;
 import com.amplifyframework.api.aws.ModelQuery;
 import com.amplifyframework.api.aws.ModelSubscription;
@@ -131,8 +130,7 @@ public final class SynchronousApi {
     public <T extends Model> T update(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
         return awaitResponseData((onResponse, onFailure) -> {
-            GraphQLRequest<T> updateRequest = ModelMutation.update(model, ModelFilter.filter(predicate));
-            asyncDelegate.mutate(apiName, updateRequest, onResponse, onFailure);
+            asyncDelegate.mutate(apiName, ModelMutation.update(model, predicate), onResponse, onFailure);
         });
     }
 
@@ -166,8 +164,7 @@ public final class SynchronousApi {
     public <T extends Model> List<GraphQLResponse.Error> updateExpectingErrors(
             @NonNull String apiName, @NonNull T model, @NonNull QueryPredicate predicate) throws ApiException {
         return this.<T>awaitResponseErrors((onResponse, onFailure) -> {
-            GraphQLRequest<T> updateRequest = ModelMutation.update(model, ModelFilter.filter(predicate));
-            asyncDelegate.mutate(apiName, updateRequest, onResponse, onFailure);
+            asyncDelegate.mutate(apiName, ModelMutation.update(model, predicate), onResponse, onFailure);
         });
     }
 
@@ -248,8 +245,7 @@ public final class SynchronousApi {
             @NonNull Class<T> clazz,
             @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate) throws ApiException {
         final Iterable<T> queryResults = awaitResponseData((onResponse, onFailure) -> {
-            GraphQLRequest<Iterable<T>> listRequest = ModelQuery.list(clazz, ModelFilter.filter(predicate));
-            asyncDelegate.query(apiName, listRequest, onResponse, onFailure);
+            asyncDelegate.query(apiName, ModelQuery.list(clazz, predicate), onResponse, onFailure);
         });
         final List<T> results = new ArrayList<>();
         for (T item : queryResults) {
@@ -304,7 +300,7 @@ public final class SynchronousApi {
                 (onSubscriptionStarted, onError) -> {
                     Cancelable cancelable = asyncDelegate.subscribe(
                             apiName,
-                            ModelSubscription.of(clazz, SubscriptionType.ON_CREATE),
+                            ModelSubscription.onCreate(clazz),
                             onSubscriptionStarted,
                             emitter::onNext,
                             onError,

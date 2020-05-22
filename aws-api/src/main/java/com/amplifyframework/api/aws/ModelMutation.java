@@ -18,6 +18,7 @@ package com.amplifyframework.api.aws;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
 import com.amplifyframework.core.model.Model;
+import com.amplifyframework.core.model.query.predicate.QueryPredicate;
 
 /**
  * TODO docs.
@@ -40,12 +41,12 @@ public final class ModelMutation {
     /**
      * TODO docs.
      * @param model todo.
-     * @param filter todo.
+     * @param predicate todo.
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> update(M model, ModelFilter filter) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, filter.getPredicate(), MutationType.UPDATE);
+    public static <M extends Model> GraphQLRequest<M> update(M model, QueryPredicate predicate) {
+        return AppSyncGraphQLRequestFactory.buildMutation(model, predicate, MutationType.UPDATE);
     }
 
     /**
@@ -61,12 +62,12 @@ public final class ModelMutation {
     /**
      * TODO docs.
      * @param model todo.
-     * @param filter todo.
+     * @param predicate todo.
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> delete(M model, ModelFilter filter) {
-        return AppSyncGraphQLRequestFactory.buildMutation(model, filter.getPredicate(), MutationType.DELETE);
+    public static <M extends Model> GraphQLRequest<M> delete(M model, QueryPredicate predicate) {
+        return AppSyncGraphQLRequestFactory.buildMutation(model, predicate, MutationType.DELETE);
     }
 
     /**
