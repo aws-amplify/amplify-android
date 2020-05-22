@@ -63,11 +63,11 @@ final class GsonVariablesSerializer implements GraphQLRequest.VariablesSerialize
         return 0;
     }
 
-        /**
-         * Serializer of {@link Temporal.Date}, an extended ISO-8601 Date string, with an optional timezone offset.
-         *
-         * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
-         */
+    /**
+     * Serializer of {@link Temporal.Date}, an extended ISO-8601 Date string, with an optional timezone offset.
+     *
+     * https://docs.aws.amazon.com/appsync/latest/devguide/scalars.html
+     */
     static class TemporalDateSerializer implements JsonSerializer<Temporal.Date> {
         @Override
         public JsonElement serialize(Temporal.Date date, Type typeOfSrc, JsonSerializationContext context) {
