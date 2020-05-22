@@ -458,7 +458,7 @@ public final class AppSyncGraphQLRequestFactory {
                 return ((BeginsWithQueryOperator) qOp).value();
             default:
                 throw new IllegalStateException(
-                    "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum" +
+                    "Tried to parse an unsupported QueryOperator type. Check if a new QueryOperator.Type enum " +
                     "has been created which is not implemented yet."
                 );
         }
