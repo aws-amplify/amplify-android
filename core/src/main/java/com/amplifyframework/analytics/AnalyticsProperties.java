@@ -16,6 +16,8 @@
 package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -70,7 +72,6 @@ public final class AnalyticsProperties implements Iterable<Map.Entry<String, Ana
      *
      * @return The number of properties
      */
-    @NonNull
     public int size() {
         return properties.size();
     }
@@ -101,6 +102,31 @@ public final class AnalyticsProperties implements Iterable<Map.Entry<String, Ana
     @NonNull
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        AnalyticsProperties entries = (AnalyticsProperties) thatObject;
+        return ObjectsCompat.equals(properties, entries.properties);
+    }
+
+    @Override
+    public int hashCode() {
+        return properties.hashCode();
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AnalyticsProperties{" +
+            "properties=" + properties +
+            '}';
     }
 
     /**

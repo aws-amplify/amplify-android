@@ -16,6 +16,8 @@
 package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
 
@@ -48,5 +50,31 @@ public final class AnalyticsDoubleProperty implements AnalyticsPropertyBehavior<
     @NonNull
     public static AnalyticsDoubleProperty from(@NonNull Double value) {
         return new AnalyticsDoubleProperty(Objects.requireNonNull(value));
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        AnalyticsDoubleProperty that = (AnalyticsDoubleProperty) thatObject;
+        return ObjectsCompat.equals(getValue(), that.getValue());
+    }
+
+    @Override
+    public int hashCode() {
+        return getValue().hashCode();
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AnalyticsDoubleProperty{" +
+            "value=" + value +
+            '}';
     }
 }
