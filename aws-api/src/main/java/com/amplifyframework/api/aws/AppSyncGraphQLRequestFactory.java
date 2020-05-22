@@ -201,6 +201,7 @@ public final class AppSyncGraphQLRequestFactory {
      * @param <R> todo.
      * @param <T> todo.
      * @return todo.
+     * @throws IllegalStateException todo.
      */
     @SuppressWarnings("unchecked")
     public static <R, T extends Model> GraphQLRequest<R> buildMutation(
@@ -252,10 +253,9 @@ public final class AppSyncGraphQLRequestFactory {
                 try {
                     variables.put("input", schema.getMapOfFieldNameAndValues(model));
                 } catch (AmplifyException exception) {
-                    throw new ApiException(
+                    throw new IllegalStateException(
                             "Failed to build the map of variables for this mutation.",
-                            exception,
-                            "See included AmplifyException for more details and a recovery suggestion."
+                            exception
                     );
                 }
             }
