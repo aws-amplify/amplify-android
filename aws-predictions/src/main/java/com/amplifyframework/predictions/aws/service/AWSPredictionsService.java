@@ -21,6 +21,7 @@ import com.amplifyframework.core.Consumer;
 import com.amplifyframework.predictions.PredictionsException;
 import com.amplifyframework.predictions.aws.AWSPredictionsPluginConfiguration;
 import com.amplifyframework.predictions.aws.models.AWSVoiceType;
+import com.amplifyframework.predictions.models.IdentifyAction;
 import com.amplifyframework.predictions.models.LabelType;
 import com.amplifyframework.predictions.models.LanguageType;
 import com.amplifyframework.predictions.models.TextFormatType;
@@ -29,6 +30,7 @@ import com.amplifyframework.predictions.result.InterpretResult;
 import com.amplifyframework.predictions.result.TextToSpeechResult;
 import com.amplifyframework.predictions.result.TranslateTextResult;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.comprehend.AmazonComprehendClient;
 import com.amazonaws.services.polly.AmazonPollyClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
@@ -42,6 +44,7 @@ import java.nio.ByteBuffer;
  */
 public final class AWSPredictionsService {
 
+    private final AWSPredictionsPluginConfiguration configuration;
     private final AWSPollyService pollyService;
     private final AWSTranslateService translateService;
     private final AWSRekognitionService rekognitionService;
@@ -51,13 +54,17 @@ public final class AWSPredictionsService {
     /**
      * Constructs an instance of {@link AWSPredictionsService}.
      * @param configuration the configuration for AWS Predictions Plugin
+     * @param credentialsProvider An instance of an AWSCredentialsProvider implementation to vend auth credentials
      */
-    public AWSPredictionsService(@NonNull AWSPredictionsPluginConfiguration configuration) {
-        this.pollyService = new AWSPollyService(configuration);
-        this.translateService = new AWSTranslateService(configuration);
-        this.rekognitionService = new AWSRekognitionService(configuration);
-        this.textractService = new AWSTextractService(configuration);
-        this.comprehendService = new AWSComprehendService(configuration);
+    public AWSPredictionsService(
+            @NonNull AWSPredictionsPluginConfiguration configuration,
+            @NonNull AWSCredentialsProvider credentialsProvider) {
+        this.configuration = configuration;
+        this.pollyService = new AWSPollyService(configuration, credentialsProvider);
+        this.translateService = new AWSTranslateService(configuration, credentialsProvider);
+        this.rekognitionService = new AWSRekognitionService(configuration, credentialsProvider);
+        this.textractService = new AWSTextractService(configuration, credentialsProvider);
+        this.comprehendService = new AWSComprehendService(configuration, credentialsProvider);
     }
 
     /**
@@ -104,12 +111,19 @@ public final class AWSPredictionsService {
      * @param onError triggered upon encountering error
      */
     public void detectLabels(
-            @NonNull LabelType type,
+            @NonNull IdentifyAction type,
             @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        rekognitionService.detectLabels(type, imageData, onSuccess, onError);
+        final LabelType labelType;
+        try {
+            labelType = getLabelType(type);
+        } catch (PredictionsException error) {
+            onError.accept(error);
+            return;
+        }
+        rekognitionService.detectLabels(labelType, imageData, onSuccess, onError);
     }
 
     /**
@@ -141,33 +155,34 @@ public final class AWSPredictionsService {
     }
 
     /**
-     * Delegate to {@link AWSRekognitionService} to detect plain text.
-     * @param imageData the image data
-     * @param onSuccess triggered upon successful result
-     * @param onError triggered upon encountering error
-     */
-    public void detectPlainText(
-            @NonNull ByteBuffer imageData,
-            @NonNull Consumer<IdentifyResult> onSuccess,
-            @NonNull Consumer<PredictionsException> onError
-    ) {
-        rekognitionService.detectPlainText(imageData, onSuccess, onError);
-    }
-
-    /**
-     * Delegate to {@link AWSTextractService} to detect document text.
+     * Delegate to {@link AWSRekognitionService} to detect plain text
+     * or to {@link AWSTextractService} to detect document text.
      * @param type the type of text format to detect
      * @param imageData the image data
      * @param onSuccess triggered upon successful result
      * @param onError triggered upon encountering error
      */
-    public void detectDocumentText(
-            @NonNull TextFormatType type,
+    public void detectText(
+            @NonNull IdentifyAction type,
             @NonNull ByteBuffer imageData,
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
-        textractService.detectDocumentText(type, imageData, onSuccess, onError);
+        final TextFormatType textType;
+        try {
+            textType = getTextFormatType(type);
+        } catch (PredictionsException error) {
+            onError.accept(error);
+            return;
+        }
+
+        if (TextFormatType.PLAIN.equals(textType)) {
+            // Delegate to Amazon Rekognition for plain text detection
+            rekognitionService.detectPlainText(imageData, onSuccess, onError);
+        } else {
+            // Delegate to Amazon Textract for document text detection
+            textractService.detectDocumentText(textType, imageData, onSuccess, onError);
+        }
     }
 
     /**
@@ -182,6 +197,32 @@ public final class AWSPredictionsService {
             @NonNull Consumer<PredictionsException> onError
     ) {
         comprehendService.comprehend(text, onSuccess, onError);
+    }
+
+    /**
+     * If {@link IdentifyAction} is an instance of {@link LabelType} and
+     * cast if true. Otherwise check configuration for default action type.
+     * Throw if label detection is not configured.
+     */
+    private LabelType getLabelType(IdentifyAction actionType) throws PredictionsException {
+        try {
+            return (LabelType) actionType;
+        } catch (ClassCastException error) {
+            return configuration.getIdentifyLabelsConfiguration().getType();
+        }
+    }
+
+    /**
+     * If {@link IdentifyAction} is an instance of {@link TextFormatType} and
+     * cast if true. Otherwise check configuration for default action type.
+     * Throw if text detection is not configured.
+     */
+    private TextFormatType getTextFormatType(IdentifyAction actionType) throws PredictionsException {
+        try {
+            return (TextFormatType) actionType;
+        } catch (ClassCastException error) {
+            return configuration.getIdentifyTextConfiguration().getFormat();
+        }
     }
 
     /**

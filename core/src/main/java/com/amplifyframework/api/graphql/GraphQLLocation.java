@@ -15,6 +15,9 @@
 
 package com.amplifyframework.api.graphql;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  * Location mapping to a particular line and column in the request.
  */
@@ -51,7 +54,7 @@ public final class GraphQLLocation {
     }
 
     @Override
-    public boolean equals(Object thatObject) {
+    public boolean equals(@Nullable Object thatObject) {
         if (this == thatObject) {
             return true;
         }
@@ -71,6 +74,7 @@ public final class GraphQLLocation {
         return result;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return "GraphQLLocation{" +

@@ -27,7 +27,6 @@ import com.amplifyframework.util.UserAgent;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.translate.AmazonTranslateClient;
 import com.amazonaws.services.translate.model.TranslateTextRequest;
 
@@ -38,13 +37,13 @@ final class AWSTranslateService {
     private final AmazonTranslateClient translate;
     private final AWSPredictionsPluginConfiguration pluginConfiguration;
 
-    AWSTranslateService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration) {
-        this.translate = createTranslateClient();
+    AWSTranslateService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration,
+                        @NonNull AWSCredentialsProvider credentialsProvider) {
+        this.translate = createTranslateClient(credentialsProvider);
         this.pluginConfiguration = pluginConfiguration;
     }
 
-    private AmazonTranslateClient createTranslateClient() {
-        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+    private AmazonTranslateClient createTranslateClient(@NonNull AWSCredentialsProvider credentialsProvider) {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
         return new AmazonTranslateClient(credentialsProvider, configuration);

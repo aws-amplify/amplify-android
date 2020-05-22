@@ -20,6 +20,7 @@ import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.aws.sigv4.CognitoUserPoolsAuthProvider;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
+import com.amplifyframework.api.graphql.PaginatedResult;
 import com.amplifyframework.api.graphql.SubscriptionType;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
@@ -42,6 +43,7 @@ import com.amplifyframework.util.Immutable;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,7 +64,7 @@ final class AppSyncGraphQLRequestFactory {
     // This class should not be instantiated
     private AppSyncGraphQLRequestFactory() { }
 
-    static <T extends Model> GraphQLRequest<T> buildQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             String objectId
     ) throws ApiException {
@@ -99,9 +101,30 @@ final class AppSyncGraphQLRequestFactory {
         }
     }
 
-    static <T extends Model> GraphQLRequest<T> buildQuery(
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
             Class<T> modelClass,
             QueryPredicate predicate
+    ) throws ApiException {
+        Type dataType = TypeMaker.getParameterizedType(Iterable.class, modelClass);
+        return buildQuery(modelClass, predicate, DEFAULT_QUERY_LIMIT, null, dataType);
+    }
+
+    static <R, T extends Model> GraphQLRequest<R> buildPaginatedResultQuery(
+            Class<T> modelClass,
+            QueryPredicate predicate,
+            int limit,
+            String nextToken
+    ) throws ApiException {
+        Type dataType = TypeMaker.getParameterizedType(PaginatedResult.class, modelClass);
+        return buildQuery(modelClass, predicate, limit, nextToken, dataType);
+    }
+
+    static <R, T extends Model> GraphQLRequest<R> buildQuery(
+            Class<T> modelClass,
+            QueryPredicate predicate,
+            int limit,
+            String nextToken,
+            Type responseType
     ) throws ApiException {
         try {
             StringBuilder doc = new StringBuilder();
@@ -124,13 +147,16 @@ final class AppSyncGraphQLRequestFactory {
 
             if (predicate != null) {
                 variables.put("filter", parsePredicate(predicate));
-                variables.put("limit", DEFAULT_QUERY_LIMIT);
             }
+            if (nextToken != null) {
+                variables.put("nextToken", nextToken);
+            }
+            variables.put("limit", limit);
 
             return new GraphQLRequest<>(
                     doc.toString(),
                     variables,
-                    modelClass,
+                    responseType,
                     new GsonVariablesSerializer()
             );
         } catch (AmplifyException exception) {
@@ -143,7 +169,7 @@ final class AppSyncGraphQLRequestFactory {
     }
 
     @SuppressWarnings("unchecked")
-    static <T extends Model> GraphQLRequest<T> buildMutation(
+    static <R, T extends Model> GraphQLRequest<R> buildMutation(
             T model,
             QueryPredicate predicate,
             MutationType type
@@ -220,14 +246,14 @@ final class AppSyncGraphQLRequestFactory {
     }
 
     @SuppressWarnings("SameParameterValue")
-    static <T extends Model> GraphQLRequest<T> buildSubscription(
+    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type
     ) throws ApiException {
         return buildSubscription(modelClass, type, null);
     }
 
-    static <T extends Model> GraphQLRequest<T> buildSubscription(
+    static <R, T extends Model> GraphQLRequest<R> buildSubscription(
             Class<T> modelClass,
             SubscriptionType type,
             CognitoUserPoolsAuthProvider cognitoAuth
@@ -270,7 +296,7 @@ final class AppSyncGraphQLRequestFactory {
                 if (cognitoAuth == null) {
                     throw new ApiException(
                         "Attempted to subscribe to a model with owner based authorization without a Cognito provider",
-                        "Did you initialize AWSMobileClient before making this call?"
+                        "Did you add the AWSCognitoAuthPlugin to Amplify before configuring it?"
                     );
                 }
 

@@ -25,9 +25,9 @@ import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Amplify;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.async.Cancelable;
-import com.amplifyframework.core.async.NoOpCancelable;
 import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelProvider;
+import com.amplifyframework.datastore.AmplifyDisposables;
 import com.amplifyframework.datastore.DataStoreException;
 import com.amplifyframework.datastore.appsync.AppSync;
 import com.amplifyframework.datastore.appsync.ModelWithMetadata;
@@ -40,7 +40,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
@@ -114,15 +113,14 @@ final class SubscriptionProcessor {
         return Observable.<GraphQLResponse<ModelWithMetadata<T>>>create(emitter -> {
             CountDownLatch latch = new CountDownLatch(1);
             SubscriptionMethod method = subscriptionMethodFor(appSync, subscriptionType);
-            AtomicReference<Cancelable> cancelable = new AtomicReference<>(NoOpCancelable::new);
-            emitter.setCancellable(cancelable::get);
-            cancelable.set(method.subscribe(
+            Cancelable cancelable = method.subscribe(
                 clazz,
                 token -> latch.countDown(),
                 emitter::onNext,
                 emitter::onError,
                 emitter::onComplete
-            ));
+            );
+            emitter.setDisposable(AmplifyDisposables.fromCancelable(cancelable));
             latch.await(SUBSCRIPTION_START_TIMEOUT_MS, TimeUnit.MILLISECONDS);
         })
         .doOnError(subscriptionError ->

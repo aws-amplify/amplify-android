@@ -143,8 +143,8 @@ public class SqlCommandTest {
             // expected
             new SqlCommand(
                 "PersistentRecord",
-                "CREATE INDEX IF NOT EXISTS decodedModelClassNameBasedIndex " +
-                    "ON PersistentRecord (decodedModelClassName);"
+                "CREATE INDEX IF NOT EXISTS containedModelClassNameBasedIndex " +
+                    "ON PersistentRecord (containedModelClassName);"
             ),
             // actual
             sqlCommandIterator.next()

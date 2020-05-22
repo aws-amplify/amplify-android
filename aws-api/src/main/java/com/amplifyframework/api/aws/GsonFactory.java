@@ -18,10 +18,7 @@ package com.amplifyframework.api.aws;
 import androidx.annotation.NonNull;
 
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.model.AWSDate;
-import com.amplifyframework.core.model.AWSDateTime;
-import com.amplifyframework.core.model.AWSTime;
-import com.amplifyframework.core.model.AWSTimestamp;
+import com.amplifyframework.core.model.temporal.Temporal;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -48,19 +45,22 @@ final class GsonFactory {
     private static void withSerializers(GsonBuilder builder) {
         builder
             .registerTypeAdapter(Date.class, new GsonVariablesSerializer.DateSerializer())
-            .registerTypeAdapter(AWSTimestamp.class, new GsonVariablesSerializer.AWSTimestampSerializer())
-            .registerTypeAdapter(AWSDate.class, new GsonVariablesSerializer.AWSDateSerializer())
-            .registerTypeAdapter(AWSDateTime.class, new GsonVariablesSerializer.AWSDateTimeSerializer())
-            .registerTypeAdapter(AWSTime.class, new GsonVariablesSerializer.AWSTimeSerializer());
+            .registerTypeAdapter(Temporal.Timestamp.class, new GsonVariablesSerializer.TemporalTimestampSerializer())
+            .registerTypeAdapter(Temporal.Date.class, new GsonVariablesSerializer.TemporalDateSerializer())
+            .registerTypeAdapter(Temporal.DateTime.class, new GsonVariablesSerializer.TemporalDateTimeSerializer())
+            .registerTypeAdapter(Temporal.Time.class, new GsonVariablesSerializer.TemporalTimeSerializer());
     }
 
     private static void withDeserializers(GsonBuilder builder) {
         builder
-            .registerTypeAdapter(AWSDate.class, new TemporalDeserializers.AWSDateDeserializer())
-            .registerTypeAdapter(AWSTime.class, new TemporalDeserializers.AWSTimeDeserializer())
-            .registerTypeAdapter(AWSTimestamp.class, new TemporalDeserializers.AWSTimestampDeserializer())
-            .registerTypeAdapter(AWSDateTime.class, new TemporalDeserializers.AWSDateTimeDeserializer())
-            .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer());
+            .registerTypeAdapter(Temporal.Date.class, new TemporalDeserializers.AWSDateDeserializer())
+            .registerTypeAdapter(Temporal.Time.class, new TemporalDeserializers.AWSTimeDeserializer())
+            .registerTypeAdapter(Temporal.Timestamp.class, new TemporalDeserializers.AWSTimestampDeserializer())
+            .registerTypeAdapter(Temporal.DateTime.class, new TemporalDeserializers.AWSDateTimeDeserializer())
+            .registerTypeAdapter(GraphQLResponse.class, new GraphQLResponseDeserializer())
+            .registerTypeAdapter(GraphQLResponse.Error.class, new GsonErrorDeserializer())
+            .registerTypeHierarchyAdapter(Iterable.class, new IterableDeserializer())
+            .registerTypeAdapter(String.class, new StringDeserializer());
     }
 
     private static void withAdditionalAdapters(GsonBuilder builder, Map<Class<?>, Object> additionalAdapters) {

@@ -16,6 +16,8 @@
 package com.amplifyframework.analytics;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.util.ObjectsCompat;
 
 import java.util.Objects;
 
@@ -75,6 +77,37 @@ public final class AnalyticsEvent implements AnalyticsEventBehavior {
     @NonNull
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+        AnalyticsEvent that = (AnalyticsEvent) thatObject;
+        if (!ObjectsCompat.equals(getName(), that.getName())) {
+            return false;
+        }
+        return ObjectsCompat.equals(getProperties(), that.getProperties());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = getName().hashCode();
+        result = 31 * result + getProperties().hashCode();
+        return result;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "AnalyticsEvent{" +
+            "name='" + name + '\'' +
+            ", properties=" + properties +
+            '}';
     }
 
     /**

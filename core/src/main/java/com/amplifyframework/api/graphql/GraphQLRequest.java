@@ -15,6 +15,9 @@
 
 package com.amplifyframework.api.graphql;
 
+import androidx.core.util.ObjectsCompat;
+
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,51 +25,69 @@ import java.util.Map;
 
 /**
  * A request against a GraphQL endpoint.
- * @param <T> Class for the model in this operation
+ * @param <R> The type of data contained in the GraphQLResponse expected from this request.
  */
-public final class GraphQLRequest<T> {
+public final class GraphQLRequest<R> {
     private final String document;
     private final Map<String, Object> variables;
     private final List<String> fragments;
-    private final Class<T> modelClass;
+    private final Type responseType;
     private final VariablesSerializer variablesSerializer;
 
     /**
-     * Constructor for GraphQLRequest with
-     * specification for type of API call.
+     * Constructor for GraphQLRequest with specification for type of API call.
      * @param document query document to process
-     * @param modelClass class instance of model
-     *                   to operate on
+     * @param responseType Type of R, the data contained in the GraphQLResponse expected from this request
      * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
     public GraphQLRequest(
             String document,
-            Class<T> modelClass,
+            Type responseType,
             VariablesSerializer variablesSerializer
     ) {
-        this(document, new HashMap<>(), modelClass, variablesSerializer);
+        this(document, new HashMap<>(), responseType, variablesSerializer);
     }
 
     /**
-     * Constructor for GraphQLRequest with
-     * specification for type of API call.
+     * Constructor for GraphQLRequest with specification for type of API call.
      * @param document query document to process
      * @param variables variables to be added
-     * @param modelClass class instance of model
-     *                   to operate on
+     * @param responseType Type of R, the data contained in the GraphQLResponse expected from this request
      * @param variablesSerializer an object which can take a map of variables and serialize it properly
      */
     public GraphQLRequest(
             String document,
             Map<String, Object> variables,
-            Class<T> modelClass,
+            Type responseType,
             VariablesSerializer variablesSerializer
     ) {
         this.document = document;
         this.variables = variables;
         this.fragments = new ArrayList<>();
-        this.modelClass = modelClass;
+        this.responseType = responseType;
         this.variablesSerializer = variablesSerializer;
+    }
+
+    /**
+     * Copy constructor for a GraphQLRequest.
+     * @param request GraphQLRequest to be copied
+     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
+     */
+    public <R> GraphQLRequest(GraphQLRequest<R> request) {
+        this.document = request.document;
+        this.variables = new HashMap<>(request.variables);
+        this.fragments = new ArrayList<>(request.fragments);
+        this.responseType = request.responseType;
+        this.variablesSerializer = request.variablesSerializer;
+    }
+
+    /**
+     * Returns a copy of the GraphQLRequest instance.
+     * @param <R> The type of data contained in the GraphQLResponse expected from this request.
+     * @return Copy of the GraphQLRequest object
+     */
+    public <R> GraphQLRequest<R> copy() {
+        return new GraphQLRequest<R>(this);
     }
 
     /**
@@ -119,7 +140,7 @@ public final class GraphQLRequest<T> {
      * @param value variable value
      * @return this query object for chaining
      */
-    public GraphQLRequest<T> addVariable(String key, Object value) {
+    public GraphQLRequest<R> putVariable(String key, Object value) {
         variables.put(key, value);
         return this;
     }
@@ -129,18 +150,56 @@ public final class GraphQLRequest<T> {
      * @param fragment fragment
      * @return this query object for chaining
      */
-    public GraphQLRequest<T> addFragment(String fragment) {
+    public GraphQLRequest<R> addFragment(String fragment) {
         fragments.add(fragment);
         return this;
     }
 
     /**
-     * Returns the class of model that this request
-     * is operating on.
-     * @return the class of entity
+     * Returns the type of data in the GraphQLResponse expected from this request.
+     * @return response type
      */
-    public Class<T> getModelClass() {
-        return modelClass;
+    public Type getResponseType() {
+        return responseType;
+    }
+
+    @Override
+    public boolean equals(Object thatObject) {
+        if (this == thatObject) {
+            return true;
+        }
+        if (thatObject == null || getClass() != thatObject.getClass()) {
+            return false;
+        }
+
+        GraphQLRequest<?> request = (GraphQLRequest<?>) thatObject;
+
+        return ObjectsCompat.equals(document, request.document) &&
+                ObjectsCompat.equals(fragments, request.fragments) &&
+                ObjectsCompat.equals(responseType, request.responseType) &&
+                ObjectsCompat.equals(variables, request.variables) &&
+                ObjectsCompat.equals(variablesSerializer, request.variablesSerializer);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = document.hashCode();
+        result = 31 * result + (fragments != null ? fragments.hashCode() : 0);
+        result = 31 * result + (responseType != null ? responseType.hashCode() : 0);
+        result = 31 * result + (variables != null ? variables.hashCode() : 0);
+        result = 31 * result + (variablesSerializer != null ? variablesSerializer.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "GraphQLRequest{" +
+                "document=\'" + document + "\'" +
+                ", fragments=\'" + fragments + "\'" +
+                ", responseType=\'" + responseType + "\'" +
+                ", variables=\'" + variables + "\'" +
+                ", variablesSerializer=\'" + variablesSerializer + "\'" +
+                '}';
     }
 
     /**

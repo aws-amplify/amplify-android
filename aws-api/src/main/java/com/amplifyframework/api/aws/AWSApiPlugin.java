@@ -148,7 +148,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull Class<T> modelClass,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
@@ -181,7 +181,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull Class<T> modelClass,
             @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
@@ -198,9 +198,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> query(
-            @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+    public <R> GraphQLOperation<R> query(
+            @NonNull GraphQLRequest<R> graphQLRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
@@ -214,7 +214,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
@@ -234,7 +234,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         try {
             GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, objectId);
             final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, request, onResponse, onFailure);
+                buildAppSyncGraphQLOperation(apiName, request, onResponse, onFailure);
             operation.start();
             return operation;
         } catch (ApiException exception) {
@@ -245,14 +245,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T extends Model> GraphQLOperation<T> query(
+    public <T extends Model> GraphQLOperation<Iterable<T>> query(
             @NonNull String apiName,
             @NonNull Class<T> modelClass,
             @SuppressWarnings("NullableProblems") @NonNull QueryPredicate predicate,
             @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         try {
-            GraphQLRequest<T> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
+            GraphQLRequest<Iterable<T>> request = AppSyncGraphQLRequestFactory.buildQuery(modelClass, predicate);
             return query(apiName, request, onResponse, onFailure);
         } catch (ApiException exception) {
             onFailure.accept(exception);
@@ -262,14 +262,14 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> query(
+    public <R> GraphQLOperation<R> query(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull GraphQLRequest<R> graphQLRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         try {
-            final GraphQLOperation<T> operation =
-                buildMultiResponseOperation(apiName, graphQLRequest, onResponse, onFailure);
+            final GraphQLOperation<R> operation =
+                buildAppSyncGraphQLOperation(apiName, graphQLRequest, onResponse, onFailure);
             operation.start();
             return operation;
         } catch (ApiException exception) {
@@ -315,9 +315,9 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> mutate(
-            @NonNull GraphQLRequest<T> graphQlRequest,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
+    public <R> GraphQLOperation<R> mutate(
+            @NonNull GraphQLRequest<R> graphQlRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure) {
         final String apiName;
         try {
@@ -376,7 +376,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             @NonNull Consumer<ApiException> onFailure) {
         try {
             final GraphQLOperation<T> operation =
-                buildSingleResponseOperation(apiName, graphQLRequest, onResponse, onFailure);
+                buildAppSyncGraphQLOperation(apiName, graphQLRequest, onResponse, onFailure);
             operation.start();
             return operation;
         } catch (ApiException exception) {
@@ -414,10 +414,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
 
     @Nullable
     @Override
-    public <T> GraphQLOperation<T> subscribe(
-            @NonNull GraphQLRequest<T> graphQLRequest,
+    public <R> GraphQLOperation<R> subscribe(
+            @NonNull GraphQLRequest<R> graphQLRequest,
             @NonNull Consumer<String> onSubscriptionEstablished,
-            @NonNull Consumer<GraphQLResponse<T>> onNextResponse,
+            @NonNull Consumer<GraphQLResponse<R>> onNextResponse,
             @NonNull Consumer<ApiException> onSubscriptionFailure,
             @NonNull Action onSubscriptionComplete) {
         final String apiName;
@@ -755,35 +755,10 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
         return apiClients.iterator().next();
     }
 
-    private <T> SingleItemResultOperation<T> buildSingleResponseOperation(
+    private <R> AppSyncGraphQLOperation<R> buildAppSyncGraphQLOperation(
             @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<GraphQLResponse<T>> onResponse,
-            @NonNull Consumer<ApiException> onFailure)
-            throws ApiException {
-        final ClientDetails clientDetails = apiDetails.get(apiName);
-        if (clientDetails == null) {
-            throw new ApiException(
-                    "No client information for API named " + apiName,
-                    "Check your amplify configuration to make sure there " +
-                    "is a correctly configured section for " + apiName
-            );
-        }
-
-        return SingleItemResultOperation.<T>builder()
-                .endpoint(clientDetails.apiConfiguration().getEndpoint())
-                .client(clientDetails.okHttpClient())
-                .request(graphQLRequest)
-                .responseFactory(gqlResponseFactory)
-                .onResponse(onResponse)
-                .onFailure(onFailure)
-                .build();
-    }
-
-    private <T> SingleArrayResultOperation<T> buildMultiResponseOperation(
-            @NonNull String apiName,
-            @NonNull GraphQLRequest<T> graphQLRequest,
-            @NonNull Consumer<GraphQLResponse<Iterable<T>>> onResponse,
+            @NonNull GraphQLRequest<R> graphQLRequest,
+            @NonNull Consumer<GraphQLResponse<R>> onResponse,
             @NonNull Consumer<ApiException> onFailure)
             throws ApiException {
         final ClientDetails clientDetails = apiDetails.get(apiName);
@@ -795,7 +770,7 @@ public final class AWSApiPlugin extends ApiPlugin<Map<String, OkHttpClient>> {
             );
         }
 
-        return SingleArrayResultOperation.<T>builder()
+        return AppSyncGraphQLOperation.<R>builder()
                 .endpoint(clientDetails.apiConfiguration().getEndpoint())
                 .client(clientDetails.okHttpClient())
                 .request(graphQLRequest)

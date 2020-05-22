@@ -29,7 +29,6 @@ import java.util.Set;
 import io.reactivex.Observable;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -75,27 +74,6 @@ public final class HubAccumulatorTest {
         RuntimeException timeoutError = assertThrows(RuntimeException.class, accumulator::await);
         assertNotNull(timeoutError.getMessage());
         assertTrue(timeoutError.getMessage().contains("Failed to count down"));
-    }
-
-    /**
-     * The accumulator only starts accumulating after you call {@link HubAccumulator#start()}.
-     */
-    @Test
-    public void accumulatorReceivesNothingBeforeStart() {
-        HubAccumulator accumulator = HubAccumulator.create(HubChannel.HUB, 1);
-        // accumulator.start() NOTE THAT THIS IS NOT CALLED YET!
-
-        publish(Fruit.KIWI, "Kiwis are totes sweet.");
-
-        accumulator.start();
-        publish(Fruit.BANANA, "Banana 1");
-        publish(Fruit.APPLE, "Honeycrisps are the best.");
-        publish(Fruit.BANANA, "Another banana");
-
-        for (HubEvent<?> event : accumulator.await()) {
-            // None of them should say kiwi!
-            assertNotEquals(Fruit.KIWI, Fruit.valueOf(event.getName()));
-        }
     }
 
     /**

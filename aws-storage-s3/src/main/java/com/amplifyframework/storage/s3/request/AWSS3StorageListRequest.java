@@ -16,6 +16,7 @@
 package com.amplifyframework.storage.s3.request;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.amplifyframework.storage.StorageAccessLevel;
 
@@ -31,13 +32,13 @@ public final class AWSS3StorageListRequest {
      * Constructs a new AWSS3StorageListRequest.
      * @param path the path in S3 to list items from
      * @param accessLevel Storage access level
-     * @param targetIdentityId The user id for the user to list S3 storage items for
-     *                         (to override it from assuming the currently logged in user)
+     * @param targetIdentityId If set, this should override the current user's identity ID.
+     *                         If null, the operation will fetch the current identity ID.
      */
     public AWSS3StorageListRequest(
             @NonNull String path,
             @NonNull StorageAccessLevel accessLevel,
-            @NonNull String targetIdentityId
+            @Nullable String targetIdentityId
     ) {
         this.path = path;
         this.accessLevel = accessLevel;
@@ -63,10 +64,10 @@ public final class AWSS3StorageListRequest {
     }
 
     /**
-     * Gets the target identity id.
-     * @return target identity id
+     * Gets the target identity id override. If null, the operation gets the default, current user's identity ID.
+     * @return target identity id override
      */
-    @NonNull
+    @Nullable
     public String getTargetIdentityId() {
         return targetIdentityId;
     }

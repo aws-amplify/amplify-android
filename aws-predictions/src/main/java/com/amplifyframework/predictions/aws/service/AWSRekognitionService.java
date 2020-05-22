@@ -50,7 +50,6 @@ import com.amplifyframework.util.UserAgent;
 import com.amazonaws.AmazonClientException;
 import com.amazonaws.ClientConfiguration;
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.mobile.client.AWSMobileClient;
 import com.amazonaws.services.rekognition.AmazonRekognitionClient;
 import com.amazonaws.services.rekognition.model.Attribute;
 import com.amazonaws.services.rekognition.model.ComparedFace;
@@ -89,13 +88,13 @@ final class AWSRekognitionService {
     private final AmazonRekognitionClient rekognition;
     private final AWSPredictionsPluginConfiguration pluginConfiguration;
 
-    AWSRekognitionService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration) {
-        this.rekognition = createRekognitionClient();
+    AWSRekognitionService(@NonNull AWSPredictionsPluginConfiguration pluginConfiguration,
+                          @NonNull AWSCredentialsProvider credentialsProvider) {
+        this.rekognition = createRekognitionClient(credentialsProvider);
         this.pluginConfiguration = pluginConfiguration;
     }
 
-    private AmazonRekognitionClient createRekognitionClient() {
-        AWSCredentialsProvider credentialsProvider = AWSMobileClient.getInstance();
+    private AmazonRekognitionClient createRekognitionClient(@NonNull AWSCredentialsProvider credentialsProvider) {
         ClientConfiguration configuration = new ClientConfiguration();
         configuration.setUserAgent(UserAgent.string());
         return new AmazonRekognitionClient(credentialsProvider, configuration);
@@ -133,9 +132,19 @@ final class AWSRekognitionService {
             @NonNull Consumer<IdentifyResult> onSuccess,
             @NonNull Consumer<PredictionsException> onError
     ) {
+        final IdentifyEntitiesConfiguration config;
         try {
-            List<CelebrityDetails> celebrities = detectCelebrities(imageData);
-            onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
+            config = pluginConfiguration.getIdentifyEntitiesConfiguration();
+            if (config.isCelebrityDetectionEnabled()) {
+                List<CelebrityDetails> celebrities = detectCelebrities(imageData);
+                onSuccess.accept(IdentifyCelebritiesResult.fromCelebrities(celebrities));
+            } else {
+                onError.accept(new PredictionsException("Celebrity detection is disabled.",
+                        "Please enable celebrity detection via Amplify CLI. This feature " +
+                                "should be accessible by running `amplify update predictions` " +
+                                "in the console and updating entities detection resource with " +
+                                "advanced configuration setting."));
+            }
         } catch (PredictionsException exception) {
             onError.accept(exception);
         }

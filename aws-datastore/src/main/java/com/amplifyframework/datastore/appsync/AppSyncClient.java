@@ -21,7 +21,7 @@ import androidx.annotation.Nullable;
 import com.amplifyframework.AmplifyException;
 import com.amplifyframework.api.ApiCategoryBehavior;
 import com.amplifyframework.api.ApiException;
-import com.amplifyframework.api.GraphQlBehavior;
+import com.amplifyframework.api.graphql.GraphQLBehavior;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.api.graphql.SubscriptionType;
@@ -33,6 +33,9 @@ import com.amplifyframework.core.model.Model;
 import com.amplifyframework.core.model.ModelSchema;
 import com.amplifyframework.datastore.DataStoreException;
 
+import com.google.gson.reflect.TypeToken;
+
+import java.lang.reflect.Type;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,7 +52,7 @@ import java.util.Map;
  * assumptions about the structure of data types (unique IDs, versioning information), etc.
  */
 public final class AppSyncClient implements AppSync {
-    private final GraphQlBehavior api;
+    private final GraphQLBehavior api;
     private final GraphQLRequest.VariablesSerializer variablesSerializer;
     private final ResponseDeserializer responseDeserializer;
 
@@ -57,7 +60,7 @@ public final class AppSyncClient implements AppSync {
      * Constructs a new AppSyncClient.
      * @param api The API Category, configured with a DataStore API
      */
-    private AppSyncClient(GraphQlBehavior api) {
+    private AppSyncClient(GraphQLBehavior api) {
         this.api = api;
         this.variablesSerializer = new AppSyncVariablesSerializer();
         this.responseDeserializer = new AppSyncResponseDeserializer();
@@ -70,7 +73,7 @@ public final class AppSyncClient implements AppSync {
      * @return An App Sync API instance
      */
     @NonNull
-    public static AppSyncClient via(@NonNull GraphQlBehavior api) {
+    public static AppSyncClient via(@NonNull GraphQLBehavior api) {
         return new AppSyncClient(api);
     }
 
@@ -90,8 +93,9 @@ public final class AppSyncClient implements AppSync {
             return new NoOpCancelable();
         }
 
-        final GraphQLRequest<String> request =
-            new GraphQLRequest<>(queryDoc, Collections.emptyMap(), String.class, variablesSerializer);
+        Type responseType = new TypeToken<Iterable<String>>(){}.getType();
+        final GraphQLRequest<Iterable<String>> request =
+            new GraphQLRequest<>(queryDoc, Collections.emptyMap(), responseType, variablesSerializer);
 
         final Consumer<GraphQLResponse<Iterable<String>>> responseConsumer = apiQueryResponse -> {
             if (apiQueryResponse.hasErrors()) {
@@ -266,6 +270,7 @@ public final class AppSyncClient implements AppSync {
             onSubscriptionFailure.accept(docGenerationException);
             return new NoOpCancelable();
         }
+
         final GraphQLRequest<String> request =
             new GraphQLRequest<>(document, Collections.emptyMap(), String.class, variablesSerializer);
 

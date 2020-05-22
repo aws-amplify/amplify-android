@@ -20,9 +20,10 @@ import android.content.Intent;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.amplifyframework.AmplifyException;
 import com.amplifyframework.auth.options.AuthSignInOptions;
+import com.amplifyframework.auth.options.AuthSignOutOptions;
 import com.amplifyframework.auth.options.AuthSignUpOptions;
+import com.amplifyframework.auth.options.AuthWebUISignInOptions;
 import com.amplifyframework.auth.result.AuthResetPasswordResult;
 import com.amplifyframework.auth.result.AuthSignInResult;
 import com.amplifyframework.auth.result.AuthSignUpResult;
@@ -118,22 +119,68 @@ public interface AuthCategoryBehavior {
             @NonNull Consumer<AuthException> onError);
 
     /**
-     * Launch a pre-built sign in UI flow. You should also put the {@link #handleSignInWithUIResponse(Intent)} method in
-     * your activity's onResume method to capture the response which comes back from the UI flow.
+     * Launch the specified auth provider's web UI sign in experience. You should also put the
+     * {@link #handleWebUISignInResponse(Intent)} method in your activity's onNewIntent method to
+     * capture the response which comes back from the UI flow.
+     * @param provider The auth provider you want to launch the web ui for (e.g. Facebook, Google, etc.)
      * @param callingActivity The activity in your app you are calling this from
      * @param onSuccess Success callback
      * @param onError Error callback
      */
-    void signInWithUI(
+    void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
             @NonNull Activity callingActivity,
-            @NonNull Consumer<String> onSuccess,
-            @NonNull Consumer<AmplifyException> onError);
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
 
     /**
-     * Handles the response which comes back from {@link #signInWithUI(Activity, Consumer, Consumer)}.
+     * Launch the specified auth provider's web UI sign in experience. You should also put the
+     * {@link #handleWebUISignInResponse(Intent)} method in your activity's onNewIntent method to
+     * capture the response which comes back from the UI flow.
+     * @param provider The auth provider you want to launch the web ui for (e.g. Facebook, Google, etc.)
+     * @param callingActivity The activity in your app you are calling this from
+     * @param options Advanced options for signing in with an auth provider's hosted web ui.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signInWithSocialWebUI(
+            @NonNull AuthProvider provider,
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Launch a hosted web sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)} method in
+     * your activity's onNewIntent method to capture the response which comes back from the UI flow.
+     * @param callingActivity The activity in your app you are calling this from
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Launch a hosted web sign in UI flow. You should also put the {@link #handleWebUISignInResponse(Intent)}
+     * method in your activity's onNewIntent method to capture the response which comes back from the UI flow.
+     * @param callingActivity The activity in your app you are calling this from
+     * @param options Advanced options for signing in with a hosted web ui.
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signInWithWebUI(
+            @NonNull Activity callingActivity,
+            @NonNull AuthWebUISignInOptions options,
+            @NonNull Consumer<AuthSignInResult> onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Handles the response which comes back from {@link #signInWithWebUI(Activity, Consumer, Consumer)}.
      * @param intent The app activity's intent
      */
-    void handleSignInWithUIResponse(Intent intent);
+    void handleWebUISignInResponse(Intent intent);
 
     /**
      * Retrieve the user's current session information - by default just whether they are signed out or in.
@@ -193,12 +240,22 @@ public interface AuthCategoryBehavior {
     AuthUser getCurrentUser();
 
     /**
-     * Sign out of all devices. The current credentials cached on other devices will be valid but will not be able to
-     * be refreshed without signing in again so will expire shortly.
+     * Sign out of the current device.
      * @param onSuccess Success callback
      * @param onError Error callback
      */
     void signOut(
+            @NonNull Action onSuccess,
+            @NonNull Consumer<AuthException> onError);
+
+    /**
+     * Sign out with advanced options.
+     * @param options Advanced options for sign out (e.g. whether to sign out of all devices globally)
+     * @param onSuccess Success callback
+     * @param onError Error callback
+     */
+    void signOut(
+            @NonNull AuthSignOutOptions options,
             @NonNull Action onSuccess,
             @NonNull Consumer<AuthException> onError);
 }

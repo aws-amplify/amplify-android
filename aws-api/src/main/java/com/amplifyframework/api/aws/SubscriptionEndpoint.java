@@ -32,6 +32,7 @@ import com.amplifyframework.util.UserAgent;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Type;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashSet;
@@ -144,7 +145,7 @@ final class SubscriptionEndpoint {
 
         Subscription<T> subscription = new Subscription<>(
             onNextItem, onSubscriptionError, onSubscriptionComplete,
-            responseFactory, request.getModelClass()
+            responseFactory, request.getResponseType()
         );
         subscriptions.put(subscriptionId, subscription);
         if (subscription.awaitSubscriptionReady()) {
@@ -381,7 +382,7 @@ final class SubscriptionEndpoint {
         private final Consumer<ApiException> onSubscriptionError;
         private final Action onSubscriptionComplete;
         private final GraphQLResponse.Factory responseFactory;
-        private final Class<T> classToCast;
+        private final Type responseType;
         private final CountDownLatch subscriptionReadyAcknowledgment;
         private final CountDownLatch subscriptionCompletionAcknowledgement;
 
@@ -390,12 +391,12 @@ final class SubscriptionEndpoint {
                 Consumer<ApiException> onSubscriptionError,
                 Action onSubscriptionComplete,
                 GraphQLResponse.Factory responseFactory,
-                Class<T> classToCast) {
+                Type responseType) {
             this.onNextItem = onNextItem;
             this.onSubscriptionError = onSubscriptionError;
             this.onSubscriptionComplete = onSubscriptionComplete;
             this.responseFactory = responseFactory;
-            this.classToCast = classToCast;
+            this.responseType = responseType;
             this.subscriptionReadyAcknowledgment = new CountDownLatch(1);
             this.subscriptionCompletionAcknowledgement = new CountDownLatch(1);
         }
@@ -448,7 +449,7 @@ final class SubscriptionEndpoint {
 
         void dispatchNextMessage(String message) {
             try {
-                onNextItem.accept(responseFactory.buildSingleItemResponse(message, classToCast));
+                onNextItem.accept(responseFactory.buildResponse(null, message, responseType));
             } catch (ApiException exception) {
                 dispatchError(exception);
             }
@@ -486,7 +487,7 @@ final class SubscriptionEndpoint {
             if (!ObjectsCompat.equals(responseFactory, that.responseFactory)) {
                 return false;
             }
-            if (!ObjectsCompat.equals(classToCast, that.classToCast)) {
+            if (!ObjectsCompat.equals(responseType, that.responseType)) {
                 return false;
             }
             if (!ObjectsCompat.equals(subscriptionReadyAcknowledgment, that.subscriptionReadyAcknowledgment)) {
@@ -504,7 +505,7 @@ final class SubscriptionEndpoint {
             result = 31 * result + onSubscriptionError.hashCode();
             result = 31 * result + onSubscriptionComplete.hashCode();
             result = 31 * result + responseFactory.hashCode();
-            result = 31 * result + classToCast.hashCode();
+            result = 31 * result + responseType.hashCode();
             result = 31 * result + subscriptionReadyAcknowledgment.hashCode();
             result = 31 * result + subscriptionCompletionAcknowledgement.hashCode();
             return result;
