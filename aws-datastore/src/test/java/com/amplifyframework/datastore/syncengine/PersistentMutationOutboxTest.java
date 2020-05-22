@@ -406,12 +406,12 @@ public final class PersistentMutationOutboxTest {
     }
 
     /**
-     * When there is an existing update mutation, and a new update mutation comes in,
-     * then the existing one should be updated.
+     * When there is an existing update mutation, and a new update mutation with condition
+     * comes in, then the existing one should remain and the new one should be appended.
      * @throws DataStoreException On failure to query storage for current mutations state
      */
     @Test
-    public void existingUpdateIncomingUpdateRewritesExistingMutation() throws DataStoreException {
+    public void existingUpdateIncomingUpdateWithConditionAppendsMutation() throws DataStoreException {
         // Arrange an existing update mutation
         BlogOwner modelInExistingMutation = BlogOwner.builder()
             .name("Papa Tony")
@@ -426,7 +426,7 @@ public final class PersistentMutationOutboxTest {
             .name("Tony Jr.")
             .build();
         PendingMutation<BlogOwner> incomingUpdate =
-            PendingMutation.update(modelInIncomingMutation, BlogOwner.class);
+            PendingMutation.update(modelInIncomingMutation, BlogOwner.class, BlogOwner.NAME.eq("Papa Tony"));
         String incomingUpdateId = incomingUpdate.getMutationId().toString();
         TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
 
@@ -439,27 +439,81 @@ public final class PersistentMutationOutboxTest {
             storage.query(PersistentRecord.class, Where.id(existingUpdateId));
         assertEquals(1, recordsForExistingMutationId.size());
 
-        // And the new one is not, by ID...
+        // Assert: And the new one is also there
         List<PendingMutation.PersistentRecord> recordsForIncomingMutationId =
             storage.query(PersistentRecord.class, Where.id(incomingUpdateId));
-        assertEquals(0, recordsForIncomingMutationId.size());
+        assertEquals(1, recordsForIncomingMutationId.size());
 
-        // However, the original mutation has been updated to include the contents of the
-        // incoming mutation. This is true even whilst the mutation retains its original ID.
-        PendingMutation<BlogOwner> storedMutation = converter.fromRecord(recordsForExistingMutationId.get(0));
+        // The original mutation should remain as is
+        PendingMutation<BlogOwner> existingStoredMutation = converter.fromRecord(recordsForExistingMutationId.get(0));
         // This is the name from the second model, not the first!!
-        assertEquals("Tony Jr.", storedMutation.getMutatedItem().getName());
+        assertEquals(modelInExistingMutation.getName(), existingStoredMutation.getMutatedItem().getName());
 
-        // There is a mutation in the outbox, it has the original ID
-        // It is still an update. But it has the new model data.
+        PendingMutation<? extends Model> next = mutationOutbox.peek();
+        assertNotNull(next);
+        // The first one should be the existing mutation
         assertEquals(
-            PendingMutation.instance(
-                existingUpdate.getMutationId(),
-                modelInIncomingMutation,
-                BlogOwner.class,
-                PendingMutation.Type.UPDATE,
-                null
-            ),
+            existingUpdate,
+            next
+        );
+        // Remove the first one from the queue
+        mutationOutbox.remove(existingUpdate.getMutationId())
+            .blockingAwait(TIMEOUT_MS, TimeUnit.MILLISECONDS);
+
+        // Get the next one
+        next = mutationOutbox.peek();
+        assertNotNull(next);
+        // The first one should be the existing mutation
+        assertEquals(
+            incomingUpdate,
+            next
+        );
+    }
+
+    /**
+     * When there is an existing update mutation, and a new update mutation comes in,
+     * then we need to remove any existing mutations for that modelId and create the new one.
+     * @throws DataStoreException On failure to query storage for current mutations state
+     */
+    @Test
+    public void existingUpdateIncomingUpdateWithoutConditionRewritesExistingMutation() throws DataStoreException {
+        // Arrange an existing update mutation
+        BlogOwner modelInExistingMutation = BlogOwner.builder()
+            .name("Papa Tony")
+            .build();
+        PendingMutation<BlogOwner> existingUpdate =
+            PendingMutation.update(modelInExistingMutation, BlogOwner.class, null);
+        String existingUpdateId = existingUpdate.getMutationId().toString();
+        mutationOutbox.enqueue(existingUpdate).blockingAwait();
+
+        // Act: try to enqueue a new update mutation when there already is one
+        BlogOwner modelInIncomingMutation = modelInExistingMutation.copyOfBuilder()
+            .name("Tony Jr.")
+            .build();
+        PendingMutation<BlogOwner> incomingUpdate =
+            PendingMutation.update(modelInIncomingMutation, BlogOwner.class, null);
+        String incomingUpdateId = incomingUpdate.getMutationId().toString();
+        TestObserver<Void> enqueueObserver = mutationOutbox.enqueue(incomingUpdate).test();
+
+        // Assert: OK. The new mutation is accepted
+        enqueueObserver.awaitTerminalEvent();
+        enqueueObserver.assertComplete();
+
+        // Assert: the existing mutation has been removed
+        assertRecordCountForMutationId(existingUpdateId, 0);
+
+        // And the new one has been added to the queue
+        assertRecordCountForMutationId(incomingUpdateId, 1);
+
+        // Ensure the new one is in storage.
+        PendingMutation<BlogOwner> storedMutation =
+            converter.fromRecord(getPendingMutationRecordFromStorage(incomingUpdateId).get(0));
+        // This is the name from the second model, not the first!!
+        assertEquals(modelInIncomingMutation.getName(), storedMutation.getMutatedItem().getName());
+
+        // The mutation in the outbox is the incoming one.
+        assertEquals(
+            incomingUpdate,
             mutationOutbox.peek()
         );
     }
@@ -772,5 +826,14 @@ public final class PersistentMutationOutboxTest {
                 error.getMessage() != null &&
                     error.getMessage().contains("there was no mutation with that ID in the outbox")
             );
+    }
+
+    private void assertRecordCountForMutationId(String mutationId, int expectedCount) throws DataStoreException {
+        List<PersistentRecord> recordsForExistingMutationId = getPendingMutationRecordFromStorage(mutationId);
+        assertEquals(expectedCount, recordsForExistingMutationId.size());
+    }
+
+    private List<PersistentRecord> getPendingMutationRecordFromStorage(String mutationId) throws DataStoreException {
+        return storage.query(PersistentRecord.class, Where.id(mutationId));
     }
 }
