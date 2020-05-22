@@ -15,62 +15,75 @@
 
 package com.amplifyframework.api.graphql.model;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 /**
- * TODO.
+ * Helper class that provides methods configure a paginated model-based request.
  */
 public final class ModelPagination {
 
+    /**
+     * Default page size.
+     */
     private static final int DEFAULT_LIMIT = 1000;
 
     private int limit;
     private final String nextToken;
 
+    /**
+     * This class should be created using the factory methods {@link #firstPage()} and {@link #nextToken(String)}.
+     * @param limit the page size.
+     * @param nextToken the next page token.
+     */
     private ModelPagination(int limit, String nextToken) {
         this.limit = limit;
         this.nextToken = nextToken;
     }
 
     /**
-     * TODO.
-     * @return todo.
+     * Creates a reference to the first page. Same as {@link #nextToken(String)} passing {@code null}.
+     * @return an instance of {@link ModelPagination}.
      */
+    @NonNull
     public static ModelPagination firstPage() {
         return nextToken(null);
     }
 
     /**
-     * TODO.
-     * @param nextToken todo.
-     * @return todo.
+     * Creates a {@link ModelPagination} with the given {@code nextToken}.
+     * @param nextToken the value of the nextToken.
+     * @return an instance of {@link ModelPagination}.
      */
+    @NonNull
     public static ModelPagination nextToken(@Nullable String nextToken) {
         return new ModelPagination(DEFAULT_LIMIT, nextToken);
     }
 
     /**
-     * TODO.
-     * @param limit todo.
-     * @return todo.
+     * Sets the page size/limit.
+     * @param limit the size for each page.
+     * @return the current instance with the new {@code limit} set.
      */
+    @NonNull
     public ModelPagination withLimit(int limit) {
         this.limit = limit;
         return this;
     }
 
     /**
-     * TODO.
-     * @return todo.
+     * Returns the {@code limit} property.
+     * @return the {@code limit} property.
      */
     public int getLimit() {
         return limit;
     }
 
     /**
-     * TODO.
-     * @return todo.
+     * Returns the {@code nextToken} property.
+     * @return the {@code nextToken} property.
      */
+    @Nullable
     public String getNextToken() {
         return nextToken;
     }

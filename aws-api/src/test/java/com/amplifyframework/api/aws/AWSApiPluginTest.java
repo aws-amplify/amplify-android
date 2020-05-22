@@ -19,9 +19,9 @@ import androidx.test.core.app.ApplicationProvider;
 
 import com.amplifyframework.api.ApiException;
 import com.amplifyframework.api.graphql.GraphQLResponse;
-import com.amplifyframework.core.Consumer;
 import com.amplifyframework.api.graphql.model.ModelMutation;
 import com.amplifyframework.api.graphql.model.ModelQuery;
+import com.amplifyframework.core.Consumer;
 import com.amplifyframework.testmodels.commentsblog.BlogOwner;
 import com.amplifyframework.testutils.Await;
 import com.amplifyframework.testutils.Resources;
