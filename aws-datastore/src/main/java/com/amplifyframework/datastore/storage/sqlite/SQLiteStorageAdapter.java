@@ -94,7 +94,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
     private final ModelSchemaRegistry modelSchemaRegistry;
 
     // ThreadPool for SQLite operations.
-    private final ExecutorService threadPool;
+    private ExecutorService threadPool;
 
     // Data is read from SQLite and de-serialized using GSON
     // into a strongly typed Java object.
@@ -137,7 +137,6 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
             ModelProvider systemModelsProvider) {
         this.modelSchemaRegistry = modelSchemaRegistry;
         this.modelsProvider = CompoundModelProvider.of(systemModelsProvider, userModelsProvider);
-        this.threadPool = Executors.newCachedThreadPool();
         this.insertSqlPreparedStatements = Collections.emptyMap();
         this.gson = new Gson();
         this.itemChangeSubject = PublishSubject.<StorageItemChange<? extends Model>>create().toSerialized();
@@ -172,6 +171,7 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
         Objects.requireNonNull(context);
         Objects.requireNonNull(onSuccess);
         Objects.requireNonNull(onError);
+        this.threadPool = Executors.newCachedThreadPool();
         this.context = context;
         threadPool.submit(() -> {
             try {
@@ -581,7 +581,10 @@ public final class SQLiteStorageAdapter implements LocalStorageAdapter {
                                    @NonNull Consumer<DataStoreException> onError) {
         try {
             LOG.debug("Shutting down thread pool for the storage adapter.");
-            threadPool.awaitTermination(THREAD_POOL_TERMINATE_TIMEOUT, TimeUnit.MILLISECONDS);
+            threadPool.shutdown();
+            if (!threadPool.awaitTermination(THREAD_POOL_TERMINATE_TIMEOUT, TimeUnit.MILLISECONDS)) {
+                threadPool.shutdownNow();
+            }
             LOG.debug("Storage adapter thread pool shutdown.");
         } catch (InterruptedException exception) {
             LOG.warn("Storage adapter thread pool was interrupted during shutdown.", exception);
