@@ -15,6 +15,8 @@
 
 package com.amplifyframework.core.model.graphql;
 
+import androidx.annotation.NonNull;
+
 import com.amplifyframework.api.aws.AppSyncGraphQLRequestFactory;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.MutationType;
@@ -35,7 +37,7 @@ public final class ModelMutation {
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> create(M model) {
+    public static <M extends Model> GraphQLRequest<M> create(@NonNull M model) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.CREATE);
     }
 
@@ -46,7 +48,10 @@ public final class ModelMutation {
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> update(M model, QueryPredicate predicate) {
+    public static <M extends Model> GraphQLRequest<M> update(
+            @NonNull M model,
+            @NonNull QueryPredicate predicate
+    ) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, predicate, MutationType.UPDATE);
     }
 
@@ -56,7 +61,7 @@ public final class ModelMutation {
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> update(M model) {
+    public static <M extends Model> GraphQLRequest<M> update(@NonNull M model) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.UPDATE);
     }
 
@@ -67,7 +72,10 @@ public final class ModelMutation {
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> delete(M model, QueryPredicate predicate) {
+    public static <M extends Model> GraphQLRequest<M> delete(
+            @NonNull M model,
+            @NonNull QueryPredicate predicate
+    ) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, predicate, MutationType.DELETE);
     }
 
@@ -77,7 +85,7 @@ public final class ModelMutation {
      * @param <M> todo.
      * @return todo.
      */
-    public static <M extends Model> GraphQLRequest<M> delete(M model) {
+    public static <M extends Model> GraphQLRequest<M> delete(@NonNull M model) {
         return AppSyncGraphQLRequestFactory.buildMutation(model, null, MutationType.DELETE);
     }
 

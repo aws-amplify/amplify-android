@@ -29,9 +29,6 @@ import com.amplifyframework.api.rest.RestResponse;
 import com.amplifyframework.core.Action;
 import com.amplifyframework.core.Consumer;
 import com.amplifyframework.core.model.Model;
-import com.amplifyframework.core.model.graphql.ModelMutation;
-import com.amplifyframework.core.model.graphql.ModelQuery;
-import com.amplifyframework.core.model.graphql.ModelSubscription;
 import com.amplifyframework.testutils.random.RandomModel;
 import com.amplifyframework.testutils.random.RandomString;
 
@@ -85,7 +82,7 @@ public final class RxApiBindingTest {
     public void queryEmitsResults() {
         GraphQLResponse<Iterable<Model>> response =
             new GraphQLResponse<>(Collections.singleton(RandomModel.model()), Collections.emptyList());
-        GraphQLRequest<Iterable<Model>> listRequest = ModelQuery.list(Model.class);
+        GraphQLRequest<Iterable<Model>> listRequest = createMockListRequest(Model.class);
         doAnswer(invocation -> {
             final int positionOfResultConsumer = 1; // 0 = clazz, 1 = onResult, 2 = onFailure
             Consumer<GraphQLResponse<Iterable<Model>>> onResponse = invocation.getArgument(positionOfResultConsumer);
@@ -112,7 +109,7 @@ public final class RxApiBindingTest {
     public void queryEmitsFailure() {
         // Arrange: category behavior emits a failure
         ApiException expectedFailure = new ApiException("Expected", "Failure");
-        GraphQLRequest<Iterable<Model>> listRequest = ModelQuery.list(Model.class);
+        GraphQLRequest<Iterable<Model>> listRequest = createMockListRequest(Model.class);
         doAnswer(invocation -> {
             final int positionOfOnFailure = 2; // 0 = clazz, 1 = onResponse, 2 = onFailure
             Consumer<ApiException> onFailure = invocation.getArgument(positionOfOnFailure);
@@ -140,9 +137,9 @@ public final class RxApiBindingTest {
         // Arrange: category behaviour will yield a response
         Model model = RandomModel.model();
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
-        GraphQLRequest<Model> deleteRequest = ModelMutation.delete(model);
+        GraphQLRequest<Model> deleteRequest = createMockMutationRequest(Model.class);
         doAnswer(invocation -> {
-            final int positionOfResultConsumer = 2;
+            final int positionOfResultConsumer = 1;
             Consumer<GraphQLResponse<Model>> onResponse = invocation.getArgument(positionOfResultConsumer);
             onResponse.accept(response);
             return null;
@@ -168,9 +165,9 @@ public final class RxApiBindingTest {
         // Arrange category behavior to fail
         Model model = RandomModel.model();
         ApiException expectedFailure = new ApiException("Expected", "Failure");
-        GraphQLRequest<Model> deleteRequest = ModelMutation.delete(model);
+        GraphQLRequest<Model> deleteRequest = createMockMutationRequest(Model.class);
         doAnswer(invocation -> {
-            final int positionOfFailureConsumer = 3;
+            final int positionOfFailureConsumer = 2;
             Consumer<ApiException> onFailure = invocation.getArgument(positionOfFailureConsumer);
             onFailure.accept(expectedFailure);
             return null;
@@ -198,11 +195,11 @@ public final class RxApiBindingTest {
         String token = RandomString.string();
         Model model = RandomModel.model();
         GraphQLResponse<Model> response = new GraphQLResponse<>(model, Collections.emptyList());
-        GraphQLRequest<Model> request = ModelSubscription.onCreate(Model.class);
+        GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
         doAnswer(invocation -> {
-            final int onStartPosition = 2;
-            final int onNextPosition = 3;
-            final int onCompletePosition = 5;
+            final int onStartPosition = 1;
+            final int onNextPosition = 2;
+            final int onCompletePosition = 4;
             Consumer<String> onStart = invocation.getArgument(onStartPosition);
             Consumer<GraphQLResponse<Model>> onNext = invocation.getArgument(onNextPosition);
             Action onComplete = invocation.getArgument(onCompletePosition);
@@ -236,10 +233,10 @@ public final class RxApiBindingTest {
         // Arrange a category behavior which starts and then fails
         ApiException expectedFailure = new ApiException("Expected", "Failure");
         String token = RandomString.string();
-        final GraphQLRequest<Model> request = ModelSubscription.onCreate(Model.class);
+        final GraphQLRequest<Model> request = createMockSubscriptionRequest(Model.class);
         doAnswer(invocation -> {
-            final int onStartPosition = 2;
-            final int onFailurePosition = 4;
+            final int onStartPosition = 1;
+            final int onFailurePosition = 3;
             Consumer<String> onStart = invocation.getArgument(onStartPosition);
             Consumer<ApiException> onFailure = invocation.getArgument(onFailurePosition);
             onStart.accept(token);
@@ -380,5 +377,17 @@ public final class RxApiBindingTest {
 
         verify(delegate)
             .post(eq(options), anyConsumer(), anyConsumer());
+    }
+
+    private static <R> GraphQLRequest<R> createMockMutationRequest(Class<R> responseType) {
+        return new GraphQLRequest<R>("", responseType, null);
+    }
+
+    private static <R> GraphQLRequest<Iterable<R>> createMockListRequest(Class<R> responseType) {
+        return new GraphQLRequest<Iterable<R>>("", responseType, null);
+    }
+
+    private static <R> GraphQLRequest<R> createMockSubscriptionRequest(Class<R> responseType) {
+        return new GraphQLRequest<R>("", responseType, null);
     }
 }

@@ -60,7 +60,7 @@ final class RxApiBinding implements RxApiCategoryBehavior {
 
     @NonNull
     @Override
-    public <T> Single<GraphQLResponse<T>> mutate(@NonNull GraphQLRequest<T> graphQlRequest) {
+    public <R> Single<GraphQLResponse<R>> mutate(@NonNull GraphQLRequest<R> graphQlRequest) {
         return toSingle((onResult, onError) -> api.mutate(graphQlRequest, onResult, onError));
     }
 
