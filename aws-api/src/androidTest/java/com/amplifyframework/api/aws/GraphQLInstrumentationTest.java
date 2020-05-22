@@ -22,9 +22,13 @@ import com.amplifyframework.api.aws.test.R;
 import com.amplifyframework.api.graphql.GraphQLRequest;
 import com.amplifyframework.api.graphql.GraphQLResponse;
 import com.amplifyframework.testutils.Assets;
+import com.amplifyframework.testutils.Resources;
 import com.amplifyframework.testutils.sync.SynchronousApi;
+import com.amplifyframework.testutils.sync.SynchronousMobileClient;
 
-import org.junit.BeforeClass;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Collections;
@@ -34,6 +38,7 @@ import java.util.UUID;
 
 import io.reactivex.observers.TestObserver;
 
+import static androidx.test.core.app.ApplicationProvider.getApplicationContext;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -52,17 +57,87 @@ import static org.junit.Assert.assertEquals;
  * 3. Run the test. From the command line, you can do ./gradlew aws-amplify-api-aws:connectedAndroidTest
  */
 public final class GraphQLInstrumentationTest {
-    private static final String API_NAME = "eventsApi";
+    private static final String API_WITH_API_KEY = "eventsApi";
+    private static final String API_WITH_AWS_IAM = "eventsApiWithIam";
+    private static final String API_WITH_COGNITO_USER_POOLS = "eventsApiWithUserPools";
+
     private static SynchronousApi api;
+    private static SynchronousMobileClient mobileClient;
+
+    private String currentApiName;
 
     /**
      * Configure the Amplify framework, if that hasn't already happened in this process instance.
      * @throws AmplifyException From Amplify configuration
+     * @throws SynchronousMobileClient.MobileClientException From failure to initialize auth
      */
-    @BeforeClass
-    public static void onceBeforeTests() throws AmplifyException {
+    @Before
+    public void setUp() throws AmplifyException, SynchronousMobileClient.MobileClientException {
+        // Set up and configure API category
         ApiCategory asyncDelegate = TestApiCategory.fromConfiguration(R.raw.amplifyconfiguration);
         api = SynchronousApi.delegatingTo(asyncDelegate);
+
+        // Set up Auth
+        mobileClient = SynchronousMobileClient.instance();
+        mobileClient.initialize();
+        mobileClient.signOut();
+    }
+
+    /**
+     * Test that subscription is authorized properly when using API key as
+     * authorization provider.
+     * @throws ApiException On failure to reach the endpoint or receive
+     *          expected response from the endpoint
+     */
+    @Test
+    public void subscriptionReceivesMutationOverApiKey() throws ApiException {
+        currentApiName = API_WITH_API_KEY;
+        subscriptionReceivesMutation();
+    }
+
+    /**
+     * Test that subscription is authorized properly when using AWS IAM as
+     * authorization provider.
+     * @throws ApiException On failure to reach the endpoint or receive
+     *          expected response from the endpoint
+     */
+    @Test
+    public void subscriptionReceivesMutationOverAwsIam() throws ApiException {
+        currentApiName = API_WITH_AWS_IAM;
+        subscriptionReceivesMutation();
+    }
+
+    /**
+     * Test that subscription is authorized properly when using Cognito
+     * User Pools as authorization provider.
+     * @throws ApiException On failure to reach the endpoint or receive
+     *          expected response from the endpoint
+     * @throws JSONException On failure to obtain credentials from test
+     *          resources
+     * @throws SynchronousMobileClient.MobileClientException On failure
+     *          to sign in as a valid user
+     */
+    @Test
+    public void subscriptionReceivesMutationOverCognitoUserPools() throws
+            ApiException, JSONException, SynchronousMobileClient.MobileClientException {
+        currentApiName = API_WITH_COGNITO_USER_POOLS;
+        JSONObject credentials = Resources.readAsJson(getApplicationContext(), R.raw.credentials);
+        String username = credentials.getString("username");
+        String password = credentials.getString("password");
+        mobileClient.signIn(username, password);
+        subscriptionReceivesMutation();
+    }
+
+    /**
+     * Test that subscription fails when using Cognito User Pools as
+     * authorization provider, and is not signed in.
+     * @throws ApiException On failure to reach the endpoint or receive
+     *          expected response from the endpoint
+     */
+    @Test(expected = ApiException.class)
+    public void subscriptionWithCognitoUserPoolsFailsAsGuest() throws ApiException {
+        currentApiName = API_WITH_COGNITO_USER_POOLS;
+        subscriptionReceivesMutation();
     }
 
     /**
@@ -75,14 +150,13 @@ public final class GraphQLInstrumentationTest {
      * 5. Validate that the subscription can be torn down gracefully.
      * @throws ApiException On failure to obtain a valid response from endpoint
      */
-    @Test
-    public void subscriptionReceivesMutation() throws ApiException {
+    private void subscriptionReceivesMutation() throws ApiException {
         // Create an event
         String eventId = createEvent();
 
         // Start listening for comments on that event
         TestObserver<GraphQLResponse<Comment>> observer = api.onCreate(
-            API_NAME,
+            currentApiName,
             new GraphQLRequest<Comment>(
                 Assets.readAsString("subscribe-event-comments.graphql"),
                 Collections.singletonMap("eventId", eventId),
@@ -117,7 +191,7 @@ public final class GraphQLInstrumentationTest {
         variables.put("createdAt", Iso8601Timestamp.now());
 
         Comment createdComment = api.create(
-            API_NAME,
+            currentApiName,
             new GraphQLRequest<>(
                 Assets.readAsString("create-comment.graphql"),
                 variables,
@@ -144,7 +218,7 @@ public final class GraphQLInstrumentationTest {
         variables.put("description", "RSVP for the best possible pizza toppings.");
 
         Event createdEvent = api.create(
-            API_NAME,
+            currentApiName,
             new GraphQLRequest<>(
                 Assets.readAsString("create-event.graphql"),
                 variables,
