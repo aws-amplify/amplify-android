@@ -61,11 +61,7 @@ final class IterableDeserializer implements JsonDeserializer<Iterable<Object>> {
             // ...and it is in the format we expect from AppSync for a list of objects in a relationship
             if (jsonObject.has(APP_SYNC_ITEMS_KEY) && jsonObject.get(APP_SYNC_ITEMS_KEY).isJsonArray()) {
                 JsonArray items = jsonObject.get(APP_SYNC_ITEMS_KEY).getAsJsonArray();
-                if (items.size() == 0) {
-                    return null;
-                } else {
-                    return toList(items, templateClassType, context);
-                }
+                return toList(items, templateClassType, context);
             } else {
                 throw new JsonParseException(
                     "Got JSON from an API call which was supposed to go with a List " +
